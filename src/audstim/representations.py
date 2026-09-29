@@ -10,8 +10,8 @@ import numpy as np
 from scipy.signal import ShortTimeFFT, welch
 from scipy.signal.windows import hann
 
-from sigtools.sound import Sound
-from sigtools.utils import amp_to_db, as_rng
+from audstim.sound import Sound
+from audstim.utils import amp_to_db, as_rng
 
 __all__ = [
     "Spectrum",
@@ -62,12 +62,12 @@ class Spectrum:
 
     def to_noise(self, duration: float, fs: float, rng=None, **kwargs) -> Sound:
         """Gaussian noise with this spectral shape."""
-        from sigtools.generators import gaussian_noise
+        from audstim.generators import gaussian_noise
 
         return gaussian_noise(duration, fs, spectrum=self, rng=rng, **kwargs)
 
     def plot(self, ax=None, **kwargs):
-        from sigtools.plotting import plot_spectrum
+        from audstim.plotting import plot_spectrum
 
         return plot_spectrum(self, ax=ax, **kwargs)
 
@@ -181,7 +181,7 @@ class STFT:
         return STFT._from(self, c).to_sound()
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
-        from sigtools.plotting import plot_stft
+        from audstim.plotting import plot_stft
 
         return plot_stft(self, ax=ax, channel=channel, **kwargs)
 
@@ -201,7 +201,7 @@ class Mask:
         return NotImplemented
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
-        from sigtools.plotting import plot_mask
+        from audstim.plotting import plot_mask
 
         return plot_mask(self, ax=ax, channel=channel, **kwargs)
 
@@ -241,6 +241,6 @@ class ModulationSpectrum:
         self.level = amp_to_db(np.fft.fftshift(F[keep], axes=1), floor_db=_FLOOR_DB)
 
     def plot(self, ax=None, **kwargs):
-        from sigtools.plotting import plot_modulation_spectrum
+        from audstim.plotting import plot_modulation_spectrum
 
         return plot_modulation_spectrum(self, ax=ax, **kwargs)

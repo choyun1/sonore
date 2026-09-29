@@ -13,8 +13,8 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.signal import butter, hilbert, sosfiltfilt
 
-from sigtools.sound import Sound
-from sigtools.utils import as_rng, erb_to_freq, freq_to_erb
+from audstim.sound import Sound
+from audstim.utils import as_rng, erb_to_freq, freq_to_erb
 
 __all__ = ["ERBFilterbank", "Subbands", "subbands", "noise_vocode"]
 
@@ -134,7 +134,7 @@ class Subbands:
         return Sound(np.fft.irfft(X.sum(axis=1), n=n, axis=0), self.fs)
 
     def plot(self, axes=None, channel: int = 0, **kwargs):
-        from sigtools.plotting import plot_subbands
+        from audstim.plotting import plot_subbands
 
         return plot_subbands(self, axes=axes, channel=channel, **kwargs)
 
@@ -157,7 +157,7 @@ def noise_vocode(
     fb = ERBFilterbank(n_bands, f_lo, min(f_hi, 0.95 * sound.fs / 2))
     sb = fb.analyze(sound)
     if isinstance(carrier, str):
-        from sigtools.generators import gaussian_noise
+        from audstim.generators import gaussian_noise
 
         if carrier == "noise":
             carrier = gaussian_noise(sound.duration, sound.fs, n_channels=sound.n_channels, rng=as_rng(rng))

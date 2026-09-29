@@ -23,7 +23,7 @@ from numpy.typing import ArrayLike
 from scipy.signal import fftconvolve, resample_poly
 from scipy.spatial import ConvexHull, Delaunay
 
-from sigtools.sound import Sound
+from audstim.sound import Sound
 
 __all__ = [
     "rect_to_sph",

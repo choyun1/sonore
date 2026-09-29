@@ -16,7 +16,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import fftconvolve, hilbert, resample_poly
 
-from sigtools.utils import amp_to_db, db_to_amp, rms, time_axis
+from audstim.units import Decibels
+from audstim.utils import amp_to_db, db_to_amp, rms, time_axis
 
 __all__ = ["Sound", "load"]
 
@@ -36,9 +37,10 @@ class Sound:
     Notes
     -----
     Arithmetic works the way you'd expect for signals: ``a + b`` mixes,
-    ``a * b`` multiplies sample-by-sample (e.g. an envelope), ``2 * a`` scales.
-    Mono sounds broadcast against multichannel ones. Use :meth:`gain_db` for
-    level changes in dB and :meth:`pad` / :func:`sigtools.pad` to match lengths.
+    ``a * b`` multiplies sample-by-sample (e.g. an envelope), ``2 * a`` scales,
+    and ``a + 6*dB`` / ``a - 3*dB`` change the level (``from audstim import dB``).
+    Mono sounds broadcast against multichannel ones. Use :meth:`pad` /
+    :func:`audstim.pad` to match lengths.
 
     Indexing with a slice selects by *time in seconds*: ``snd[0.1:0.5]``.
     """
@@ -173,12 +175,12 @@ class Sound:
         if isinstance(other, Sound):
             if other.fs != self.fs:
                 raise ValueError(
-                    f"sampling rates differ ({self.fs} vs {other.fs}); use .resample() or sigtools.match_fs()"
+                    f"sampling rates differ ({self.fs} vs {other.fs}); use .resample() or audstim.match_fs()"
                 )
             if len(other) != len(self):
                 raise ValueError(
                     f"lengths differ ({len(self)} vs {len(other)} samples); "
-                    "use sigtools.pad() or sigtools.truncate() first"
+                    "use audstim.pad() or audstim.truncate() first"
                 )
             return other._data
         if isinstance(other, numbers.Real):
@@ -197,23 +199,27 @@ class Sound:
         return Sound(op(o, self._data) if reflected else op(self._data, o), self.fs)
 
     def __add__(self, other):
+        if isinstance(other, Decibels):
+            return self * other.gain
         if isinstance(other, numbers.Real) and not isinstance(other, bool):
             if other == 0:  # lets built-in sum() work
                 return self
             raise TypeError(
-                "adding a number to a Sound is ambiguous; use snd.gain_db(x) "
-                "for a level change or snd + x*np.ones(len(snd)) for a DC offset"
+                f"adding a bare number to a Sound is ambiguous; write snd + {other!r}*dB "
+                "for a level change (from audstim import dB), or add an array for a DC offset"
             )
         return self._binary(other, np.add)
 
     __radd__ = __add__
 
     def __sub__(self, other):
-        if isinstance(other, numbers.Real):
+        if isinstance(other, Decibels | numbers.Real) and not isinstance(other, bool):
             return self + (-other)
         return self._binary(other, np.subtract)
 
     def __rsub__(self, other):
+        if isinstance(other, Decibels):
+            raise TypeError("dB - Sound is undefined; did you mean snd - x*dB?")
         return (-self) + other
 
     def __neg__(self):
@@ -240,9 +246,9 @@ class Sound:
         return Sound(self._data[start:stop], self.fs)
 
     # ------------------------------------------------------------- operations
-    def gain_db(self, db: float) -> Sound:
-        """Change level by ``db`` decibels."""
-        return self * float(db_to_amp(db))
+    def gain_db(self, db: float | Decibels) -> Sound:
+        """Change level by ``db`` decibels. Same as ``snd + db*dB``."""
+        return self * float(db_to_amp(float(db)))
 
     def normalize(self, rms: float | None = 1.0, peak: float | None = None) -> Sound:
         """Scale to a target RMS (default 1) or, if ``peak`` is given, a target peak."""
@@ -294,7 +300,7 @@ class Sound:
         Integer-sample delays are exact. Fractional delays use an FFT phase ramp
         (band-limited interpolation); the output is ``ceil(delay)`` samples
         longer, so sinc ringing past the end is cut off. That's inaudible for
-        ramped stimuli; for impulse responses use :func:`sigtools.simple_bir`.
+        ramped stimuli; for impulse responses use :func:`audstim.simple_bir`.
         """
         if seconds < 0:
             raise ValueError("delay must be non-negative")
@@ -343,7 +349,7 @@ class Sound:
             import sounddevice as sd
         except (ImportError, OSError) as e:
             raise RuntimeError(
-                "playback needs sounddevice and PortAudio: pip install 'sigtools[play]'. "
+                "playback needs sounddevice and PortAudio: pip install 'audstim[play]'. "
                 "In a notebook, just display the Sound instead."
             ) from e
         sd.play(self._data, self.fs, blocking=blocking, **kwargs)
@@ -361,7 +367,7 @@ class Sound:
 
     def plot(self, ax=None, **kwargs):
         """Waveform plot; returns the matplotlib Axes."""
-        from sigtools.plotting import plot_waveform
+        from audstim.plotting import plot_waveform
 
         return plot_waveform(self, ax=ax, **kwargs)
 

@@ -209,7 +209,7 @@ def overview(sound, win_dur=20e-3, figsize=(12, 8), fmax=None):
     (replaces the old ``display_STFT``). Returns the Figure."""
     import matplotlib.pyplot as plt
 
-    from sigtools.representations import STFT, ModulationSpectrum, long_term_spectrum
+    from audstim.representations import STFT, ModulationSpectrum, long_term_spectrum
 
     S = STFT(sound.mono(), win_dur)
     fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")
