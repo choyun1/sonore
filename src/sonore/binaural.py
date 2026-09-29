@@ -13,12 +13,12 @@ from numpy.lib.stride_tricks import sliding_window_view
 from scipy.signal import hilbert
 from scipy.signal.windows import hann
 
-from audstim.filterbank import ERBFilterbank
-from audstim.generators import gaussian_noise
-from audstim.processing import pad
-from audstim.sound import Sound
-from audstim.units import dB
-from audstim.utils import time_axis
+from sonore.filterbank import ERBFilterbank
+from sonore.generators import gaussian_noise
+from sonore.processing import pad
+from sonore.sound import Sound
+from sonore.units import dB
+from sonore.utils import time_axis
 
 __all__ = [
     "apply_itd_ild",
@@ -87,7 +87,7 @@ class InterauralCues:
     cfs: np.ndarray | None = None
 
     def plot(self, ax=None, **kwargs):
-        from audstim.plotting import plot_interaural_cues
+        from sonore.plotting import plot_interaural_cues
 
         return plot_interaural_cues(self, ax=ax, **kwargs)
 

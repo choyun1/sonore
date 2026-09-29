@@ -27,7 +27,7 @@ import numpy as np
 from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
-from audstim.sound import Sound
+from sonore.sound import Sound
 
 __all__ = ["PVAnalysis", "pv_analyze", "time_stretch", "pitch_shift"]
 

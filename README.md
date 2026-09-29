@@ -1,8 +1,8 @@
-# audstim
+# sonore
 
 **Signals and stimuli for auditory research, built for Jupyter.**
 
-audstim is a small Python library for making, manipulating, and analyzing sounds
+sonore is a small Python library for making, manipulating, and analyzing sounds
 the way hearing scientists think about them: tones and complexes, shaped and
 correlated noises, ERB-spaced subbands, invertible spectrograms, a phase
 vocoder, interaural cues, HRIR spatialization of moving sources, and synthetic
@@ -10,7 +10,14 @@ room reverberation.
 Levels are written as levels (`snd + 6*dB`), times as seconds (`snd[0.1:0.5]`),
 and any sound at the end of a notebook cell plays.
 
-![Overview of an iterated rippled noise](docs/images/overview_irn.png)
+The name comes from Pierre Schaeffer's *objet sonore*, the "sound object": a
+sound taken as a thing in its own right and studied for how it is heard rather
+than for what produced it. Schaeffer called that mode of listening
+*acousmatic*, after the *akousmatikoi*, Pythagoras's students who listened to
+his teaching from behind a veil. The `Sound` object at the center of this
+library is meant in the same spirit.
+
+![Overview of an iterated rippled noise](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/overview_irn.png)
 
 ## What it's for
 
@@ -36,15 +43,21 @@ and any sound at the end of a notebook cell plays.
 - **Teaching and demos.** One-call overview plots (waveform, spectrum,
   spectrogram, modulation spectrum) next to an audio player.
 
-audstim is not an experiment runner and does not calibrate to dB SPL; see
-[Related projects](#related-projects) for those.
+sonore is not an experiment runner and does not calibrate to dB SPL; see
+"Related projects" below for those.
 
 ## Install
 
 ```bash
-git clone https://github.com/choyun1/audstim
-cd audstim
-pip install -e ".[notebook]"    # extras: sofa (HRIR files), play (sounddevice), dev (tests)
+pip install "sonore[notebook]"   # extras: sofa (HRIR files), play (sounddevice), dev (tests)
+```
+
+or, for the development version:
+
+```bash
+git clone https://github.com/choyun1/sonore
+cd sonore
+pip install -e ".[notebook]"
 ```
 
 Requires Python ≥ 3.10, numpy, scipy ≥ 1.12, matplotlib, and soundfile.
@@ -52,15 +65,15 @@ Requires Python ≥ 3.10, numpy, scipy ≥ 1.12, matplotlib, and soundfile.
 ## A short tour
 
 ```python
-import audstim as au
-from audstim import dB
+import sonore as so
+from sonore import dB
 
 fs = 44100
 
 # Stimuli: every generator returns a Sound with RMS = 1
-tone = au.pure_tone(0.5, fs, 1000).ramp(10e-3)
-complex_ = au.harmonic_complex(0.5, fs, f0=200, harmonics=range(1, 21), phases="schroeder+")
-noise = au.gaussian_noise(0.5, fs, band=(100, 8000), tilt=-3, rng=0)  # pink, band-limited
+tone = so.pure_tone(0.5, fs, 1000).ramp(10e-3)
+complex_ = so.harmonic_complex(0.5, fs, f0=200, harmonics=range(1, 21), phases="schroeder+")
+noise = so.gaussian_noise(0.5, fs, band=(100, 8000), tilt=-3, rng=0)  # pink, band-limited
 
 # Levels are dB units: + changes level, + with a Sound mixes
 target_in_noise = tone + (noise + 5 * dB)  # tone at -5 dB SNR
@@ -70,20 +83,20 @@ quieter = complex_ - 12 * dB
 middle = target_in_noise[0.1:0.4]
 
 # Binaural: positive ITD/ILD = toward the right
-lateral = au.apply_itd_ild(noise, itd=300e-6, ild=6)
-cues = au.interaural_cues(lateral, win_dur=20e-3)
+lateral = so.apply_itd_ild(noise, itd=300e-6, ild=6)
+cues = so.interaural_cues(lateral, win_dur=20e-3)
 cues.plot()
 
 # Time and pitch (phase vocoder)
-longer = au.time_stretch(complex_, 1.5)  # same pitch, 50% longer
-up_a_fifth = au.pitch_shift(complex_, 7)  # same duration, +7 semitones
+longer = so.time_stretch(complex_, 1.5)  # same pitch, 50% longer
+up_a_fifth = so.pitch_shift(complex_, 7)  # same duration, +7 semitones
 
 # Analysis
-au.overview(target_in_noise)  # waveform, spectrum, spectrogram, modulation spectrum
+so.overview(target_in_noise)  # waveform, spectrum, spectrogram, modulation spectrum
 target_in_noise  # in a notebook: an audio player
 ```
 
-The [recipes notebook](notebooks/recipes.ipynb) has worked examples of
+The [recipes notebook](https://github.com/choyun1/sonore/blob/main/notebooks/recipes.ipynb) has worked examples of
 everything below, including speech-shaped noise, moving sources with reverb,
 and the classic binaural stimuli.
 
@@ -92,32 +105,32 @@ and the classic binaural stimuli.
 **Ideal binary mask.** A gliding harmonic target at −5 dB SNR, the IBM computed
 from the separate STFTs, and the masked mixture resynthesized.
 
-![Ideal binary mask](docs/images/ibm.png)
+![Ideal binary mask](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ibm.png)
 
 ```python
-S_t, S_m, S_x = (au.STFT(s, 25e-3) for s in (target, masker, target + masker))
-separated = (S_x * au.ideal_binary_mask(S_t, S_m, lc_db=0)).to_sound()
+S_t, S_m, S_x = (so.STFT(s, 25e-3) for s in (target, masker, target + masker))
+separated = (S_x * so.ideal_binary_mask(S_t, S_m, lc_db=0)).to_sound()
 ```
 
 **Oscor and Phasewarp** (Siveke et al., 2008). The zero-lag interaural
 correlation follows sin and cos of the modulation rate, respectively.
 
-![Binaural cues of Oscor and Phasewarp](docs/images/binaural_cues.png)
+![Binaural cues of Oscor and Phasewarp](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/binaural_cues.png)
 
 **Noise vocoding.** Eight ERB-spaced bands; envelopes survive, harmonic fine
 structure doesn't.
 
-![Noise vocoder](docs/images/vocoder.png)
+![Noise vocoder](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/vocoder.png)
 
 **Phase vocoder.** A 220 Hz complex with 5 Hz vibrato, stretched to twice the
 duration (the vibrato slows too, since every temporal feature is stretched),
 shifted up a fifth (vibrato rate unchanged), and resynthesized through an
 oscillator bank with every partial moved up 110 Hz, which makes it inharmonic.
 
-![Phase vocoder](docs/images/phase_vocoder.png)
+![Phase vocoder](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/phase_vocoder.png)
 
 ```python
-analysis = au.pv_analyze(snd)
+analysis = so.pv_analyze(snd)
 inharmonic = analysis.resynthesize(freq_map=lambda f: f + 110)
 ```
 
@@ -193,32 +206,32 @@ Figures are regenerated by `python docs/make_figures.py`.
 
 ## Migrating from sigtools
 
-audstim was previously named `sigtools` (renamed to avoid a clash with an
-unrelated PyPI package). The 0.2 rewrite also changed the API:
+sonore was previously `sigtools`, renamed to avoid a clash with an unrelated
+PyPI package of that name. Version 0.2 also redesigned the API:
 
-| sigtools 0.1 | audstim |
+| sigtools 0.1 | sonore |
 |---|---|
-| `from sigtools.sounds import *` etc. | `import audstim as au` |
-| `PureTone(dur, fs, f)`, `GaussianNoise(...)`, ... | `au.pure_tone(dur, fs, f)`, `au.gaussian_noise(...)`, ... |
-| `GaussianNoise(dur, fs, lo, hi, tilt)` | `au.gaussian_noise(dur, fs, band=(lo, hi), tilt=...)`; tilt is now dB/octave |
-| `SchroederPhase(dur, fs, f0, n)` | `au.schroeder_complex(dur, fs, f0, n)` |
-| `SoundLoader(path)`, `Silence(dur, fs)` | `au.load(path)`, `au.silence(dur, fs)` |
+| `from sigtools.sounds import *` etc. | `import sonore as so` |
+| `PureTone(dur, fs, f)`, `GaussianNoise(...)`, ... | `so.pure_tone(dur, fs, f)`, `so.gaussian_noise(...)`, ... |
+| `GaussianNoise(dur, fs, lo, hi, tilt)` | `so.gaussian_noise(dur, fs, band=(lo, hi), tilt=...)`; tilt is now dB/octave |
+| `SchroederPhase(dur, fs, f0, n)` | `so.schroeder_complex(dur, fs, f0, n)` |
+| `SoundLoader(path)`, `Silence(dur, fs)` | `so.load(path)`, `so.silence(dur, fs)` |
 | `snd + 6` (dB gain) | `snd + 6*dB` |
 | `snd.make_binaural()`, `snd.extract_envelope()` | `snd.to_stereo()`, `snd.envelope()` |
 | `ramp_edges(snd, d)` | `snd.ramp(d)` |
-| `butter_bandpass_filter(snd, lo, hi)` | `au.bandpass(snd, lo, hi)` (no longer RMS-normalizes) |
-| `equalize_fs`, `zeropad_sounds`, `center_sounds`, `truncate_sounds` | `au.match_fs`, `au.pad(align="start"/"center")`, `au.truncate` |
-| `normalize_rms`, `zero_mean`, `concat_sounds`, `compare_relative_db` | `au.normalize`, `snd.zero_mean()`, `au.concat`, `au.relative_db` |
-| `sum(zeropad_sounds([a, b]))` | `au.mix([a, b])` |
-| `MagnitudeSpectrum(s).to_Noise(dur, fs)` | `au.long_term_spectrum(s).to_noise(dur, fs)` |
-| `STFT(snd, win)`, `S.to_Sound()`, `method="GLA"` | `au.STFT(snd, win)`, `S.to_sound()`, `S.griffin_lim()` |
-| `IBM = S_t > S_m + lc`; `IBM * S_mix` | `au.ideal_binary_mask(S_t, S_m, lc_db=lc)`; `S_mix * mask` |
-| `Subbands(snd, n)`, `.extract_envelopes()`, `.to_Sound()` | `au.subbands(snd, n)`, `.envelopes()`, `.synthesize()` |
-| `InterauralCues(snd, win)` | `au.interaural_cues(snd, win)` |
-| `SimpleBIR(fs, itd, ild)` | `au.simple_bir(fs, itd, ild)` or `au.apply_itd_ild(snd, itd, ild)` |
-| `SynthIR(drr, rt60, dB_thresh, fs)` | `au.synth_ir(rt60, fs, drr_db=..., decay_db=-dB_thresh)` |
-| `move_sound(traj, snd)` | `au.move_sound(snd, traj, hrirs)` with `au.HRIRSet.from_pku_ioa(dir)` or `.from_sofa(path)` |
-| `display_STFT(x, S)`, `AudioControl(snd).display()` | `au.overview(x)`; put `snd` at the end of a cell |
+| `butter_bandpass_filter(snd, lo, hi)` | `so.bandpass(snd, lo, hi)` (no longer RMS-normalizes) |
+| `equalize_fs`, `zeropad_sounds`, `center_sounds`, `truncate_sounds` | `so.match_fs`, `so.pad(align="start"/"center")`, `so.truncate` |
+| `normalize_rms`, `zero_mean`, `concat_sounds`, `compare_relative_db` | `so.normalize`, `snd.zero_mean()`, `so.concat`, `so.relative_db` |
+| `sum(zeropad_sounds([a, b]))` | `so.mix([a, b])` |
+| `MagnitudeSpectrum(s).to_Noise(dur, fs)` | `so.long_term_spectrum(s).to_noise(dur, fs)` |
+| `STFT(snd, win)`, `S.to_Sound()`, `method="GLA"` | `so.STFT(snd, win)`, `S.to_sound()`, `S.griffin_lim()` |
+| `IBM = S_t > S_m + lc`; `IBM * S_mix` | `so.ideal_binary_mask(S_t, S_m, lc_db=lc)`; `S_mix * mask` |
+| `Subbands(snd, n)`, `.extract_envelopes()`, `.to_Sound()` | `so.subbands(snd, n)`, `.envelopes()`, `.synthesize()` |
+| `InterauralCues(snd, win)` | `so.interaural_cues(snd, win)` |
+| `SimpleBIR(fs, itd, ild)` | `so.simple_bir(fs, itd, ild)` or `so.apply_itd_ild(snd, itd, ild)` |
+| `SynthIR(drr, rt60, dB_thresh, fs)` | `so.synth_ir(rt60, fs, drr_db=..., decay_db=-dB_thresh)` |
+| `move_sound(traj, snd)` | `so.move_sound(snd, traj, hrirs)` with `so.HRIRSet.from_pku_ioa(dir)` or `.from_sofa(path)` |
+| `display_STFT(x, S)`, `AudioControl(snd).display()` | `so.overview(x)`; put `snd` at the end of a cell |
 
 Results computed with 0.1 can differ, because these 0.1 bugs were fixed:
 spectrum and STFT "dB" were half the true value; the bandpass filter filtered
@@ -239,5 +252,5 @@ ruff check . && ruff format .
 
 ## License and citation
 
-MIT; see [LICENSE](LICENSE). If audstim is useful in your research, please cite
-it using [CITATION.cff](CITATION.cff).
+MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). If sonore is useful in your research, please cite
+it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff).

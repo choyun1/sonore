@@ -16,8 +16,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import fftconvolve, hilbert, resample_poly
 
-from audstim.units import Decibels
-from audstim.utils import amp_to_db, db_to_amp, rms, time_axis
+from sonore.units import Decibels
+from sonore.utils import amp_to_db, db_to_amp, rms, time_axis
 
 __all__ = ["Sound", "load"]
 
@@ -38,9 +38,9 @@ class Sound:
     -----
     Arithmetic works the way you'd expect for signals: ``a + b`` mixes,
     ``a * b`` multiplies sample-by-sample (e.g. an envelope), ``2 * a`` scales,
-    and ``a + 6*dB`` / ``a - 3*dB`` change the level (``from audstim import dB``).
+    and ``a + 6*dB`` / ``a - 3*dB`` change the level (``from sonore import dB``).
     Mono sounds broadcast against multichannel ones. Use :meth:`pad` /
-    :func:`audstim.pad` to match lengths.
+    :func:`sonore.pad` to match lengths.
 
     Indexing with a slice selects by *time in seconds*: ``snd[0.1:0.5]``.
     """
@@ -175,12 +175,12 @@ class Sound:
         if isinstance(other, Sound):
             if other.fs != self.fs:
                 raise ValueError(
-                    f"sampling rates differ ({self.fs} vs {other.fs}); use .resample() or audstim.match_fs()"
+                    f"sampling rates differ ({self.fs} vs {other.fs}); use .resample() or sonore.match_fs()"
                 )
             if len(other) != len(self):
                 raise ValueError(
                     f"lengths differ ({len(self)} vs {len(other)} samples); "
-                    "use audstim.pad() or audstim.truncate() first"
+                    "use sonore.pad() or sonore.truncate() first"
                 )
             return other._data
         if isinstance(other, numbers.Real):
@@ -206,7 +206,7 @@ class Sound:
                 return self
             raise TypeError(
                 f"adding a bare number to a Sound is ambiguous; write snd + {other!r}*dB "
-                "for a level change (from audstim import dB), or add an array for a DC offset"
+                "for a level change (from sonore import dB), or add an array for a DC offset"
             )
         return self._binary(other, np.add)
 
@@ -300,7 +300,7 @@ class Sound:
         Integer-sample delays are exact. Fractional delays use an FFT phase ramp
         (band-limited interpolation); the output is ``ceil(delay)`` samples
         longer, so sinc ringing past the end is cut off. That's inaudible for
-        ramped stimuli; for impulse responses use :func:`audstim.simple_bir`.
+        ramped stimuli; for impulse responses use :func:`sonore.simple_bir`.
         """
         if seconds < 0:
             raise ValueError("delay must be non-negative")
@@ -349,7 +349,7 @@ class Sound:
             import sounddevice as sd
         except (ImportError, OSError) as e:
             raise RuntimeError(
-                "playback needs sounddevice and PortAudio: pip install 'audstim[play]'. "
+                "playback needs sounddevice and PortAudio: pip install 'sonore[play]'. "
                 "In a notebook, just display the Sound instead."
             ) from e
         sd.play(self._data, self.fs, blocking=blocking, **kwargs)
@@ -367,7 +367,7 @@ class Sound:
 
     def plot(self, ax=None, **kwargs):
         """Waveform plot; returns the matplotlib Axes."""
-        from audstim.plotting import plot_waveform
+        from sonore.plotting import plot_waveform
 
         return plot_waveform(self, ax=ax, **kwargs)
 

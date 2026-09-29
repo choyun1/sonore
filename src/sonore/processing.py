@@ -7,8 +7,8 @@ from collections.abc import Sequence
 import numpy as np
 from scipy.signal import butter, sosfilt, sosfiltfilt
 
-from audstim.sound import Sound
-from audstim.utils import amp_to_db, time_axis
+from sonore.sound import Sound
+from sonore.utils import amp_to_db, time_axis
 
 __all__ = [
     "match_fs",

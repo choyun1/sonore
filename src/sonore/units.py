@@ -1,7 +1,7 @@
 """A decibel unit, so level changes read like arithmetic: ``snd + 6*dB``.
 
 ``6*dB`` is a :class:`Decibels` value, not a number. Adding it to a
-:class:`~audstim.Sound` changes the level; adding a Sound mixes; adding a bare
+:class:`~sonore.Sound` changes the level; adding a Sound mixes; adding a bare
 number is an error. That keeps ``snd + 0.5`` from silently meaning either
 "+0.5 dB" or "add a DC offset of 0.5".
 """
@@ -38,7 +38,7 @@ class Decibels:
     def __mul__(self, other):
         if isinstance(other, numbers.Real) and not isinstance(other, bool):
             return Decibels(self.value * float(other))
-        from audstim.sound import Sound
+        from sonore.sound import Sound
 
         if isinstance(other, Sound):
             raise TypeError(

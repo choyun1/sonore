@@ -1,17 +1,17 @@
-"""audstim: signals and stimuli for auditory research.
+"""sonore: signals and stimuli for auditory research.
 
 Typical use in a notebook::
 
-    import audstim as au
-    from audstim import dB
+    import sonore as so
+    from sonore import dB
 
-    x = au.pure_tone(1.0, 44100, 440).ramp(0.01)
-    y = x + (au.gaussian_noise(1.0, 44100, rng=0) - 10 * dB)   # tone at +10 dB SNR
+    x = so.pure_tone(1.0, 44100, 440).ramp(0.01)
+    y = x + (so.gaussian_noise(1.0, 44100, rng=0) - 10 * dB)   # tone at +10 dB SNR
     y                      # displays an audio player
-    au.overview(y)         # waveform, spectrum, spectrogram, modulation spectrum
+    so.overview(y)         # waveform, spectrum, spectrogram, modulation spectrum
 """
 
-from audstim.binaural import (
+from sonore.binaural import (
     InterauralCues,
     apply_itd_ild,
     interaural_cues,
@@ -19,8 +19,8 @@ from audstim.binaural import (
     phasewarp,
     simple_bir,
 )
-from audstim.filterbank import ERBFilterbank, Subbands, noise_vocode, subbands
-from audstim.generators import (
+from sonore.filterbank import ERBFilterbank, Subbands, noise_vocode, subbands
+from sonore.generators import (
     correlated_noise,
     exponential_chirp,
     gaussian_noise,
@@ -34,9 +34,9 @@ from audstim.generators import (
     silence,
     square_wave,
 )
-from audstim.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
-from audstim.plotting import overview
-from audstim.processing import (
+from sonore.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
+from sonore.plotting import overview
+from sonore.processing import (
     amplitude_modulate,
     bandpass,
     butter_filter,
@@ -49,7 +49,7 @@ from audstim.processing import (
     relative_db,
     truncate,
 )
-from audstim.representations import (
+from sonore.representations import (
     STFT,
     Mask,
     ModulationSpectrum,
@@ -58,9 +58,9 @@ from audstim.representations import (
     ideal_ratio_mask,
     long_term_spectrum,
 )
-from audstim.reverb import synth_ir
-from audstim.sound import Sound, load
-from audstim.spatialization import (
+from sonore.reverb import synth_ir
+from sonore.sound import Sound, load
+from sonore.spatialization import (
     HRIRSet,
     circular_trajectory,
     distance_gain_db,
@@ -70,8 +70,8 @@ from audstim.spatialization import (
     rect_to_hcc,
     spatialize,
 )
-from audstim.units import Decibels, dB
-from audstim.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
+from sonore.units import Decibels, dB
+from sonore.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
 
 __version__ = "0.2.0"
 

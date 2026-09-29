@@ -1,6 +1,6 @@
 """Stimulus generators.
 
-Every generator returns a :class:`~audstim.Sound` normalized to RMS = 1.
+Every generator returns a :class:`~sonore.Sound` normalized to RMS = 1.
 Anything random takes an ``rng`` argument (a seed or ``np.random.Generator``)
 so stimuli can be regenerated exactly.
 """
@@ -14,8 +14,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import chirp
 
-from audstim.sound import Sound
-from audstim.utils import as_rng, n_samples, time_axis
+from sonore.sound import Sound
+from sonore.utils import as_rng, n_samples, time_axis
 
 __all__ = [
     "silence",
@@ -200,7 +200,7 @@ def _spectral_gain(
         with np.errstate(divide="ignore"):
             gain *= np.where(f > 0, (f / tilt_ref) ** (tilt / (20 * np.log10(2))), 0.0)
     if spectrum is not None:
-        if hasattr(spectrum, "level_at"):  # a audstim Spectrum
+        if hasattr(spectrum, "level_at"):  # a sonore Spectrum
             db = spectrum.level_at(f)
         elif callable(spectrum):
             db = spectrum(f)
@@ -230,7 +230,7 @@ def gaussian_noise(
     tilt
         Spectral slope in dB/octave (``-3`` = pink, ``-6`` = brown).
     spectrum
-        Target spectrum level in dB: a :class:`~audstim.Spectrum`, a
+        Target spectrum level in dB: a :class:`~sonore.Spectrum`, a
         function ``f -> dB``, or a ``(freqs, dB)`` pair to interpolate.
     n_channels
         Independent noise in each channel.

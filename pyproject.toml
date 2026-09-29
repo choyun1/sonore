@@ -3,8 +3,8 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-name = "audstim"
-version = "0.2.0"
+name = "sonore"
+dynamic = ["version"]
 description = "Signals and stimuli for auditory research: generators, filterbanks, STFTs, binaural cues, HRIR spatialization, synthetic reverb."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,8 +27,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/choyun1/audstim"
-Issues = "https://github.com/choyun1/audstim/issues"
+Homepage = "https://github.com/choyun1/sonore"
+Issues = "https://github.com/choyun1/sonore/issues"
 
 [project.optional-dependencies]
 play = ["sounddevice>=0.4"]
@@ -36,8 +36,11 @@ sofa = ["h5py>=3.8"]
 notebook = ["ipykernel", "ipython", "ipywidgets", "tqdm"]
 dev = ["pytest>=8", "ruff>=0.5", "h5py>=3.8"]
 
+[tool.hatch.version]
+path = "src/sonore/__init__.py"
+
 [tool.hatch.build.targets.wheel]
-packages = ["src/audstim"]
+packages = ["src/sonore"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

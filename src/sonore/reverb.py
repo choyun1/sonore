@@ -8,17 +8,17 @@ from importlib.resources import files
 
 import numpy as np
 
-from audstim.filterbank import ERBFilterbank
-from audstim.generators import gaussian_noise
-from audstim.sound import Sound
-from audstim.utils import as_rng, db_to_amp
+from sonore.filterbank import ERBFilterbank
+from sonore.generators import gaussian_noise
+from sonore.sound import Sound
+from sonore.utils import as_rng, db_to_amp
 
 __all__ = ["synth_ir"]
 
 
 @cache
 def _model() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    d = files("audstim") / "data"
+    d = files("sonore") / "data"
     load = lambda name: np.load(d / name)  # noqa: E731
     return load("fit_DRR.npy"), load("fit_RT60.npy"), load("fit_freqs.npy")
 

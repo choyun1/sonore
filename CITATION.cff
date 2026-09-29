@@ -1,13 +1,12 @@
 cff-version: 1.2.0
-message: "If you use audstim in your research, please cite it as below."
-title: "audstim: signals and stimuli for auditory research"
+message: "If you use sonore in your research, please cite it as below."
+title: "sonore: signals and stimuli for auditory research"
 type: software
 authors:
   - family-names: Cho
     given-names: Adrian Y.
 license: MIT
-repository-code: "https://github.com/choyun1/audstim"
-version: 0.2.0
+repository-code: "https://github.com/choyun1/sonore"
 keywords:
   - psychoacoustics
   - binaural hearing
