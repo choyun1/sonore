@@ -121,31 +121,56 @@ def plot_modulation_spectrum(
     return ax
 
 
-def plot_subbands(sb, axes=None, channel=0, kind="waveform", cmap="magma"):
-    """``kind="waveform"``: stacked traces (one axis per band, low at bottom).
-    ``kind="image"``: bands as an image on a single axis."""
+def _band_labels(cfs, edges=True):
+    """CF labels; the first and last filters are the lowpass/highpass edges."""
+    labels = [f"{c:.0f}" for c in cfs]
+    if edges:
+        labels[0] = f"< {cfs[0]:.0f}"
+        labels[-1] = f"> {cfs[-1]:.0f}"
+    return labels
+
+
+def plot_subbands(sb, axes=None, channel=0, kind="waveform", cmap="magma", sharey=True, color=None):
+    """Plot subband signals.
+
+    ``kind="waveform"``: one trace per filter, lowest band at the bottom. With
+    ``sharey=True`` (default) all traces share one amplitude scale, so relative
+    band levels are visible. The bottom and top traces are the lowpass and
+    highpass edge filters (labelled ``< f_lo`` and ``> f_hi``).
+    ``kind="image"``: bands as an image on a single axis.
+    """
     import matplotlib.pyplot as plt
 
     n, B, _ = sb.data.shape
     t = np.arange(n) / sb.fs
+    data = sb.data[:, :, channel]
+    labels = _band_labels(sb.cfs)
     if kind == "image":
         ax = _ax(axes)
-        im = ax.pcolormesh(
-            t, np.arange(B), sb.data[:, :, channel].T, cmap=cmap, shading="auto", rasterized=True
-        )
-        ax.set_yticks(np.arange(B)[:: max(1, B // 8)], [f"{c:.0f}" for c in sb.cfs[:: max(1, B // 8)]])
-        ax.set(xlabel="Time [s]", ylabel="CF [Hz]", title="Subbands")
+        im = ax.pcolormesh(t, np.arange(B), data.T, cmap=cmap, shading="auto", rasterized=True)
+        step = max(1, B // 8)
+        ax.set_yticks(np.arange(B)[::step], labels[::step])
+        ax.set(xlabel="Time [s]", ylabel="Band [Hz]", title="Subbands")
         ax.figure.colorbar(im, ax=ax)
         return ax
     if axes is None:
-        _, axes = plt.subplots(B, 1, figsize=(8, 0.45 * B), sharex=True)
+        _, axes = plt.subplots(B, 1, figsize=(8, 0.5 * B + 0.6), sharex=True)
+    axes = list(axes)
+    if len(axes) != B:
+        raise ValueError(f"need {B} axes (one per filter, including the 2 edge filters), got {len(axes)}")
+    lim = 1.05 * np.max(np.abs(data)) or 1.0
     for i, ax in enumerate(axes[::-1]):
-        ax.plot(t, sb.data[:, i, channel], lw=0.6)
+        ax.plot(t, data[:, i], lw=0.6, color=color)
         ax.set_yticks([])
-        ax.set_ylabel(f"{sb.cfs[i]:.0f}", rotation=0, ha="right", va="center", fontsize=8)
+        ax.set_xlim(0, n / sb.fs)
+        if sharey:
+            ax.set_ylim(-lim, lim)
+        ax.set_ylabel(labels[i], rotation=0, ha="right", va="center", fontsize=8)
         for side in ("top", "right", "left"):
             ax.spines[side].set_visible(False)
-    axes[0].set_title("Subbands (CF in Hz)")
+        if ax is not axes[-1]:
+            ax.tick_params(labelbottom=False)
+    axes[0].set_title("Subbands [Hz]")
     axes[-1].set_xlabel("Time [s]")
     return axes
 
@@ -167,8 +192,8 @@ def plot_interaural_cues(cues, ax=None, show_iac=True):
             vmax=lim,
             shading="auto",
         )
-        B = len(cues.cfs)
-        ax.set_yticks(np.arange(B)[:: max(1, B // 8)], [f"{c:.0f}" for c in cues.cfs[:: max(1, B // 8)]])
+        B, step = len(cues.cfs), max(1, len(cues.cfs) // 8)
+        ax.set_yticks(np.arange(B)[::step], _band_labels(cues.cfs)[::step])
         ax.set(xlabel="Time [s]", ylabel="CF [Hz]", title="ITD per band (+ = right leads)")
         ax.figure.colorbar(im, ax=ax, label="ITD [µs]")
         return ax

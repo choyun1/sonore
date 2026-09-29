@@ -465,3 +465,17 @@ class TestPhaseVocoder:
         stretched = a.resynthesize(time_scale=2.0)
         assert len(stretched) == 2 * len(x)
         assert abs(cents(dominant_freq(stretched[0.4:1.6]), 500)) < 2
+
+
+def test_subband_plot_labels_and_scale():
+    import matplotlib
+
+    matplotlib.use("Agg")
+    sb = so.subbands(so.exponential_chirp(0.2, FS, 100, 6000), n_bands=6, f_lo=100, f_hi=6000)
+    axes = sb.plot()
+    assert len(axes) == 8
+    labels = [ax.get_ylabel() for ax in axes]
+    assert labels[0] == "> 6000" and labels[-1] == "< 100"
+    assert len({ax.get_ylim() for ax in axes}) == 1  # shared amplitude scale
+    with pytest.raises(ValueError, match="need 8 axes"):
+        sb.plot(axes[:6])

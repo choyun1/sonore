@@ -117,6 +117,19 @@ correlation follows sin and cos of the modulation rate, respectively.
 
 ![Binaural cues of Oscor and Phasewarp](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/binaural_cues.png)
 
+**ERB filterbank with perfect reconstruction.** An exponential sweep split
+into 6 ERB-spaced bands, plus the lowpass and highpass edge filters that make
+the bank power-complementary, then summed back together. The reconstruction
+error is at the level of floating-point rounding.
+
+![Filterbank decomposition and reconstruction](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/filterbank.png)
+
+```python
+sb = so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)  # 8 filters: 6 bands + 2 edges
+sb.plot()  # stacked waveforms, shared scale
+reconstructed = sb.synthesize()  # == sweep to ~1e-15
+```
+
 **Noise vocoding.** Eight ERB-spaced bands; envelopes survive, harmonic fine
 structure doesn't.
 

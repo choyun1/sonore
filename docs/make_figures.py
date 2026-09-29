@@ -95,3 +95,29 @@ for ax, (title, s) in zip(axes, panels, strict=True):
     so.STFT(s, 46e-3).plot(ax, fmax=3000, colorbar=False, db_range=70)
     ax.set_title(title, fontsize=9, family="monospace")
 save(fig, "phase_vocoder.png")
+
+# 6. filterbank: decompose an exponential sweep into 6 ERB-spaced bands and reconstruct it
+sweep = so.exponential_chirp(1.0, FS, 100, 6000).ramp(20e-3)
+sb = so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)  # 6 bandpass + lowpass/highpass edges
+recon = sb.synthesize()
+err = recon - sweep
+
+fig = plt.figure(figsize=(13, 5.2), layout="constrained")
+left, right = fig.subfigures(1, 2, width_ratios=[1.35, 1])
+band_axes = left.subplots(len(sb), 1, sharex=True)
+sb.plot(band_axes)  # the built-in stacked-waveform plot
+band_axes[0].set_title(
+    "so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).plot()", family="monospace", fontsize=9
+)
+
+r_axes = right.subplots(3, 1, sharex=True)
+sweep.plot(r_axes[0], color="k")
+r_axes[0].set_title("Original: exponential sweep, 100 Hz to 6 kHz")
+recon.plot(r_axes[1], color="tab:blue")
+r_axes[1].set_title("Reconstruction: sb.synthesize()")
+r_axes[2].plot(err.t, 1e15 * err.data[:, 0], color="tab:red", lw=0.6)
+r_axes[2].set(title=f"Difference (max |error| = {err.peak:.1e})", ylabel="× 1e-15", xlabel="Time [s]")
+r_axes[2].grid(ls=":")
+for ax in r_axes[:2]:
+    ax.set_xlabel("")
+save(fig, "filterbank.png")
