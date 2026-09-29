@@ -34,6 +34,7 @@ from audstim.generators import (
     silence,
     square_wave,
 )
+from audstim.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
 from audstim.plotting import overview
 from audstim.processing import (
     amplitude_modulate,
@@ -75,6 +76,10 @@ from audstim.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
 __version__ = "0.2.0"
 
 __all__ = [
+    "time_stretch",
+    "pv_analyze",
+    "pitch_shift",
+    "PVAnalysis",
     "amp_to_db",
     "amplitude_modulate",
     "apply_itd_ild",

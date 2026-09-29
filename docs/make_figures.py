@@ -76,3 +76,22 @@ axes[0].set_title("Original")
 au.STFT(voc, 25e-3).plot(axes[1], fmax=6000, colorbar=False)
 axes[1].set_title("au.noise_vocode(snd, n_bands=8)")
 save(fig, "vocoder.png")
+
+# 5. phase vocoder: time stretch, pitch shift, and an oscillator-bank frequency remap
+t2 = np.arange(int(1.0 * FS)) / FS
+vib = 2 * np.pi * np.cumsum(220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * t2))) / FS
+sung = au.Sound(sum(np.cos(k * vib) / k for k in range(1, 20)), FS).normalize().ramp(30e-3)
+panels = [
+    ("original (220 Hz, 5 Hz vibrato)", sung),
+    ("au.time_stretch(snd, 2)", au.time_stretch(sung, 2)),
+    ("au.pitch_shift(snd, 7)", au.pitch_shift(sung, 7)),
+    (
+        "pv_analyze(snd).resynthesize(freq_map=lambda f: f + 110)",
+        au.pv_analyze(sung).resynthesize(freq_map=lambda f: f + 110),
+    ),
+]
+fig, axes = plt.subplots(1, 4, figsize=(16, 3.6), sharey=True, layout="constrained")
+for ax, (title, s) in zip(axes, panels, strict=True):
+    au.STFT(s, 46e-3).plot(ax, fmax=3000, colorbar=False, db_range=70)
+    ax.set_title(title, fontsize=9, family="monospace")
+save(fig, "phase_vocoder.png")
