@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sigtools"
+version = "0.2.0"
+description = "Signals and stimuli for auditory research: generators, filterbanks, STFTs, binaural cues, HRIR spatialization, synthetic reverb."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Adrian Cho", email = "choyun1@gmail.com" }]
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.12",      # ShortTimeFFT
+    "matplotlib>=3.8",
+    "soundfile>=0.12",
+]
+
+[project.optional-dependencies]
+play = ["sounddevice>=0.4"]
+sofa = ["h5py>=3.8"]
+notebook = ["ipykernel", "ipython", "tqdm"]
+dev = ["pytest>=8", "ruff>=0.5", "h5py>=3.8"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sigtools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.ruff]
+line-length = 110
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "NPY"]
+ignore = ["E741"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/sigtools/__init__.py" = ["F401"]
