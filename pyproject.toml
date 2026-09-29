@@ -20,7 +20,7 @@ dependencies = [
 [project.optional-dependencies]
 play = ["sounddevice>=0.4"]
 sofa = ["h5py>=3.8"]
-notebook = ["ipykernel", "ipython", "tqdm"]
+notebook = ["ipykernel", "ipython", "ipywidgets", "tqdm"]
 dev = ["pytest>=8", "ruff>=0.5", "h5py>=3.8"]
 
 [tool.hatch.build.targets.wheel]

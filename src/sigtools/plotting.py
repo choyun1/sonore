@@ -69,11 +69,22 @@ def _tf_image(ax, values, t, f, cmap, vmin, vmax, colorbar, label):
     return im
 
 
-def plot_stft(stft, ax=None, channel=0, db_range=80.0, cmap="magma", colorbar=True, fmax=None):
+def _interior(stft):
+    """Frames whose window lies entirely inside the signal (edge frames are
+    zero-padded, which looks like a click)."""
+    start = np.round(stft.t * stft.fs).astype(int) - stft.sft.m_num_mid
+    ok = np.flatnonzero((start >= 0) & (start + stft.sft.m_num <= stft.n_samples))
+    return slice(ok[0], ok[-1] + 1) if len(ok) else slice(None)
+
+
+def plot_stft(
+    stft, ax=None, channel=0, db_range=80.0, cmap="magma", colorbar=True, fmax=None, trim_edges=True
+):
     ax = _ax(ax)
-    d = stft.db[channel]
+    keep = _interior(stft) if trim_edges else slice(None)
+    d = stft.db[channel][:, keep]
     vmax = d.max()
-    _tf_image(ax, d, stft.t, stft.f, cmap, vmax - db_range, vmax, colorbar, "dB")
+    _tf_image(ax, d, stft.t[keep], stft.f, cmap, vmax - db_range, vmax, colorbar, "dB")
     ax.set_title("Spectrogram")
     ax.set_xlim(0, stft.n_samples / stft.fs)
     if fmax:
@@ -101,9 +112,10 @@ def plot_modulation_spectrum(
         title="Modulation spectrum", xlabel="Temporal modulation [Hz]", ylabel="Spectral modulation [cyc/kHz]"
     )
     if wt_max:
+        wt_max = min(wt_max, np.abs(ms.w_t).max())
         ax.set_xlim(-wt_max, wt_max)
     if wf_max:
-        ax.set_ylim(0, wf_max)
+        ax.set_ylim(0, min(wf_max, ms.w_f.max()))
     if colorbar:
         ax.figure.colorbar(im, ax=ax, label="dB")
     return ax
@@ -181,8 +193,11 @@ def plot_interaural_cues(cues, ax=None, show_iac=True):
     ax.legend(loc="upper left")
     tw.legend(loc="upper right")
     if iac_ax is not None:
-        iac_ax.plot(cues.t, cues.iac, color="k", alpha=0.7)
-        iac_ax.set(ylabel="IAC", xlabel="Time [s]", ylim=(-1.05, 1.05))
+        iac_ax.plot(cues.t, cues.iac, color="k", alpha=0.7, label="coherence (peak)")
+        iac_ax.plot(cues.t, cues.corr0, color="tab:orange", alpha=0.7, label="correlation (lag 0)")
+        iac_ax.axhline(0, color="k", alpha=0.25, lw=0.8)
+        iac_ax.set(ylabel="Interaural corr.", xlabel="Time [s]", ylim=(-1.05, 1.05))
+        iac_ax.legend(loc="lower right", fontsize=8)
         iac_ax.grid(ls=":")
     else:
         ax.set_xlabel("Time [s]")

@@ -82,6 +82,7 @@ class InterauralCues:
     itd: np.ndarray
     ild: np.ndarray
     iac: np.ndarray
+    corr0: np.ndarray
     cfs: np.ndarray | None = None
 
     def plot(self, ax=None, **kwargs):
@@ -101,9 +102,11 @@ def interaural_cues(
     """Windowed ITD, ILD and interaural coherence.
 
     ITD is the lag (within ``±max_itd``) of the peak of the normalized
-    cross-correlation, refined by parabolic interpolation. IAC is that peak's
-    height. Frames more than ``silence_db`` below the loudest frame are NaN.
-    If a ``filterbank`` is given, cues are computed per band.
+    cross-correlation, refined by parabolic interpolation. ``iac`` is that
+    peak's height (interaural coherence); ``corr0`` is the zero-lag
+    correlation, which can be negative (use it for Oscor/Phasewarp).
+    Frames more than ``silence_db`` below the loudest frame are NaN. If a
+    ``filterbank`` is given, cues are computed per band.
     """
     if sound.n_channels != 2:
         raise ValueError("interaural_cues needs a 2-channel sound")
@@ -150,16 +153,17 @@ def interaural_cues(
     itd = (lag + delta) / fs
     iac = np.minimum(iac - 0.25 * (y0 - y2) * delta, 1.0)
 
+    corr0 = ncc[..., 0]
     energy = eL + eR
     with np.errstate(divide="ignore"):
         e_db = 10 * np.log10(energy / np.max(energy, axis=0, keepdims=True))
     silent = e_db < silence_db
-    itd, ild, iac = (np.where(silent, np.nan, a) for a in (itd, ild, iac))
+    itd, ild, iac, corr0 = (np.where(silent, np.nan, a) for a in (itd, ild, iac, corr0))
 
     t = (np.arange(frames.shape[0]) * hop + nwin / 2) / fs
     if filterbank is None:
-        itd, ild, iac = itd[:, 0], ild[:, 0], iac[:, 0]
-    return InterauralCues(t, itd, ild, iac, cfs)
+        itd, ild, iac, corr0 = itd[:, 0], ild[:, 0], iac[:, 0], corr0[:, 0]
+    return InterauralCues(t, itd, ild, iac, corr0, cfs)
 
 
 def oscor(duration: float, fs: float, f_mod: float, rng=None, **noise_kwargs) -> Sound:

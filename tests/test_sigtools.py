@@ -322,3 +322,11 @@ class TestSpatialization:
         still = st.spatialize(x, st.hcc_to_rect(100, 0, 0), hs)
         moving = st.move_sound(x, np.repeat([st.hcc_to_rect(100, 0, 0)], 50, axis=0), hs)
         np.testing.assert_allclose(moving.data[: len(still)], still.data, atol=1e-9)
+
+
+def test_zero_lag_correlation_tracks_oscor():
+    s = st.oscor(2, FS, 2, rng=0)
+    c = st.interaural_cues(s, 10e-3)
+    ok = np.isfinite(c.corr0)
+    r = np.corrcoef(c.corr0[ok], np.sin(2 * np.pi * 2 * c.t[ok]))[0, 1]
+    assert r > 0.95
