@@ -1,6 +1,6 @@
 # Frames, step 1: the interface and its contract
 
-Status: proposal. Nothing here is implemented yet.
+Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Not yet implemented.
 
 The Frame work is split into three steps. This document covers only step 1.
 
@@ -190,7 +190,7 @@ operator, not the coefficients.
   covered. They need phase retrieval (for example `STFT.griffin_lim`), which
   has no global guarantee.
 
-## Decisions for you
+## Decisions (accepted 2026-09-30)
 
 **D1. Padding with non-tight filterbanks.** C6 shows that "circular dual on
 the padded grid, then crop" is exact but not the canonical dual on R^N. There
@@ -204,27 +204,27 @@ are three options:
   slower.
 - (c) Do (a) by default and offer (b) as an option.
 
-I recommend (a) now, with (b) added in step 2 only if an experiment needs it.
+**Decided: (a).** Option (b) will be added in step 2 only if an experiment needs it.
 The 1% difference is about where masked energy that lands in the padding
 goes, and (a) is honest about it.
 
-**D2. Coefficient norm.** I propose that a frame expose `energy(coefs)`,
+**D2. Coefficient norm.** **Decided:** a frame exposes `energy(coefs)`,
 which uses the C3 weights, so that bounds, SNRs and tests all use the same
-norm. The alternative is to keep the weights private to the tests.
+norm.
 
 **D3. Bounds depend on the grid.** For a filterbank, s is sampled on the DFT
 grid of the (padded) length. For a Gabor frame, the frame operator is
-evaluated over the signal extent. So `frame_bounds` takes `(n_samples, fs)`
-rather than being a property. For the cosine banks the result is (1, 1)
+evaluated over the signal extent. **Decided:** `frame_bounds` takes
+`(n_samples, fs)` rather than being a property. For the cosine banks the result is (1, 1)
 regardless.
 
-**D4. Non-frames.** I propose that `analyze` always works. A filterbank with
+**D4. Non-frames.** **Decided:** `analyze` always works. A filterbank with
 gaps in coverage is still a fine way to get a cochleagram. `synthesize`
 raises when A ≤ 1e-12·B.
 
 A Gabor frame already raises at construction, because SciPy builds the dual
-window eagerly. I'd keep that but re-raise the error with a clearer message
-that includes the bounds.
+window eagerly. sonore keeps that behavior but re-raises the error with a
+clearer message that includes the bounds.
 
 ## API sketch
 
@@ -233,7 +233,7 @@ class Frame(ABC):
     def analyze(self, sound: Sound, **kw) -> Coefficients: ...
     def synthesize(self, coefs: Coefficients) -> Sound: ...
     def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]: ...
-    def energy(self, coefs) -> np.ndarray: ...  # per channel, if D2 is accepted
+    def energy(self, coefs) -> np.ndarray: ...  # per channel (D2)
 
 class Filterbank(Frame):              # frequency-domain, undecimated (C4)
     tight: bool = False               # True skips the division by s
