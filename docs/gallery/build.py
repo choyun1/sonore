@@ -707,7 +707,9 @@ def render_figure(demo) -> tuple[bytes, list[dict], tuple[int, int]]:
     fig.canvas.draw()
     regions = []
     for ax in time_axes:
-        box, (t0, t1) = ax.get_position(), ax.get_xlim()
+        # ax.bbox is in display units; converting through the *figure* transform gives true figure
+        # fractions even for axes inside subfigures (whose get_position() is relative to the subfigure).
+        box, (t0, t1) = ax.bbox.transformed(fig.transFigure.inverted()), ax.get_xlim()
         regions.append(
             {"x0": box.x0, "x1": box.x1, "top": 1 - box.y1, "bottom": 1 - box.y0, "t0": t0, "t1": t1}
         )

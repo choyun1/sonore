@@ -284,6 +284,13 @@ sound from the gallery's demo list so the two can't drift apart.
 - Faster `move_sound` via batched frequency-domain filtering.
 - On-demand download of public HRIR databases.
 - Differentiable (JAX) versions of the core renderers.
+- Texture synthesis: rebalance the objective so modulation power converges
+  (it reaches 30 dB SNR when imposed without the correlation classes, but
+  18–23 dB in full synthesis).
+- Texture synthesis: impose several channels at once; the per-channel
+  objective is now overhead-bound (about 2 s per iteration for 5 s of sound).
+- Texture synthesis: validate against the MATLAB toolbox's published examples
+  by running both on the same original recordings.
 
 ## References
 
