@@ -5,9 +5,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from fractions import Fraction
 
 import numpy as np
-from scipy.signal import ShortTimeFFT, welch
+from scipy.signal import ShortTimeFFT, resample_poly, welch
 from scipy.signal.windows import hann
 
 from sonore.sound import Sound
@@ -221,24 +222,80 @@ def ideal_ratio_mask(target: STFT, masker: STFT, beta: float = 0.5) -> Mask:
 
 # ------------------------------------------------------ modulation spectrum
 class ModulationSpectrum:
-    """2-D Fourier transform of a dB spectrogram (Singh & Theunissen, 2003).
+    """2-D Fourier transform of a time-frequency envelope (Singh & Theunissen,
+    2003; Chi et al., 1999).
 
-    Temporal modulation [Hz] on one axis, spectral modulation [cycles/kHz] on
-    the other. Spectral modulations are w.r.t. *linear* frequency here.
+    ``ModulationSpectrum(stft)`` uses a dB spectrogram, so spectral modulation
+    is w.r.t. *linear* frequency (cycles/kHz). :meth:`octave` uses subband
+    envelopes on a log-frequency axis (cycles/octave), the axis on which
+    ripples (:mod:`sonore.ripples`) are defined.
+
+    Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at
+    ``(+rate, +density)``. Only non-negative spectral modulations are kept
+    (the other half is the complex conjugate).
     """
 
     def __init__(self, stft: STFT, channel: int = 0):
         d = stft.db[channel]
-        d = d - d.mean()
-        F = np.fft.fft2(d)
         df = stft.f[1] - stft.f[0]
         dt = stft.sft.hop / stft.fs
-        w_f = np.fft.fftfreq(d.shape[0], d=df / 1000)
-        w_t = np.fft.fftfreq(d.shape[1], d=dt)
+        self._compute(d, dt=dt, dx=df / 1000, spectral_unit="cyc/kHz")
+
+    def _compute(self, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> None:
+        """``env`` is (frequency, time)."""
+        env = env - env.mean()
+        F = np.fft.fft2(env)
+        w_f = np.fft.fftfreq(env.shape[0], d=dx)
+        w_t = np.fft.fftfreq(env.shape[1], d=dt)
         keep = w_f >= 0
         self.w_f = w_f[keep]
         self.w_t = np.fft.fftshift(w_t)
         self.level = amp_to_db(np.fft.fftshift(F[keep], axes=1), floor_db=_FLOOR_DB)
+        self.spectral_unit = spectral_unit
+
+    @classmethod
+    def octave(
+        cls,
+        sound: Sound,
+        bands_per_octave: float = 12,
+        f_lo: float = 125.0,
+        f_hi: float = 8000.0,
+        env_fs: float = 1000.0,
+        scale: str = "linear",
+    ) -> ModulationSpectrum:
+        """Modulation spectrum on a log-frequency axis [cycles/octave].
+
+        Subband envelopes from an :class:`~sonore.filterbank.OctaveFilterbank`
+        (edge filters dropped) are resampled to ``env_fs`` and 2-D Fourier
+        transformed. ``scale="db"`` analyzes log envelopes instead of linear.
+        """
+        from sonore.filterbank import OctaveFilterbank
+
+        fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, min(f_hi, 0.95 * sound.fs / 2))
+        env = fb.analyze(sound.mono()).envelopes().data[:, 1:-1, 0]  # (n, B)
+        ratio = Fraction(env_fs / sound.fs).limit_denominator(1000)
+        env = resample_poly(env, ratio.numerator, ratio.denominator, axis=0)
+        if scale == "db":
+            env = amp_to_db(np.maximum(env, 0) + 1e-12 * env.max())
+        elif scale != "linear":
+            raise ValueError("scale must be 'linear' or 'db'")
+        new = cls.__new__(cls)
+        new._compute(env.T, dt=1 / float(env_fs), dx=fb.spacing, spectral_unit="cyc/oct")
+        return new
+
+    def peak(self, exclude_dc: bool = True) -> tuple[float, float]:
+        """``(temporal Hz, spectral)`` coordinates of the largest component.
+
+        At zero spectral modulation, ``+rate`` and ``-rate`` are mirror images
+        (the envelope is the same at every frequency, so it has no direction),
+        and the rate is reported as non-negative.
+        """
+        level = self.level.copy()
+        if exclude_dc:
+            level[np.ix_(self.w_f == 0, self.w_t == 0)] = -np.inf
+        i, j = np.unravel_index(np.argmax(level), level.shape)
+        rate = float(self.w_t[j])
+        return (abs(rate) if self.w_f[i] == 0 else rate), float(self.w_f[i])
 
     def plot(self, ax=None, **kwargs):
         from sonore.plotting import plot_modulation_spectrum

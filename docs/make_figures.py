@@ -121,3 +121,46 @@ r_axes[2].grid(ls=":")
 for ax in r_axes[:2]:
     ax.set_xlabel("")
 save(fig, "filterbank.png")
+
+# 7. spectrotemporal ripples: pattern as designed -> sound -> measured modulation spectrum
+patterns = [
+    ("so.Ripple(4, 1)", so.Ripple(4, 1)),
+    (
+        "so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45)",
+        so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45),
+    ),
+    ("so.DynamicRipple(rate_range=(-40, 40), seed=3)", so.DynamicRipple(rate_range=(-40, 40), seed=3)),
+]
+fig, axes = plt.subplots(3, 3, figsize=(15, 10.5), layout="constrained")
+for col, (label, pattern) in enumerate(patterns):
+    pattern.plot(duration=1.0, f_lo=250, f_hi=8000, ax=axes[0, col], colorbar=False)
+    axes[0, col].set_title(label, family="monospace", fontsize=9)
+    snd = so.ripple_sound(pattern, 1.0, FS, rng=rng)
+    fb = so.OctaveFilterbank.per_octave(24, 250, 8000)
+    env = fb.analyze(snd).envelopes(lowpass=200).data[::44, 1:-1, 0]
+    db = 20 * np.log10(env / env.mean() + 1e-3)
+    axes[1, col].pcolormesh(
+        np.arange(env.shape[0]) * 44 / FS,
+        fb.cfs[1:-1],
+        db.T,
+        cmap="magma",
+        vmin=db.max() - 30,
+        vmax=db.max(),
+        shading="auto",
+        rasterized=True,
+    )
+    axes[1, col].set(
+        yscale="log",
+        xlabel="Time [s]",
+        ylabel="Frequency [Hz]",
+        title="so.ripple_sound(pattern, 1.0, fs): subband envelopes",
+    )
+    dmr = isinstance(pattern, so.DynamicRipple)
+    ms = so.ModulationSpectrum.octave(
+        snd, bands_per_octave=12, f_lo=250, f_hi=8000, scale="db" if dmr else "linear"
+    )
+    ms.plot(axes[2, col], db_range=30, wt_max=50, wf_max=4, colorbar=False)
+    axes[2, col].set_title(
+        'ModulationSpectrum.octave(sound, scale="db")' if dmr else "ModulationSpectrum.octave(sound)"
+    )
+save(fig, "ripples.png")

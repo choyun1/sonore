@@ -19,7 +19,7 @@ from sonore.binaural import (
     phasewarp,
     simple_bir,
 )
-from sonore.filterbank import ERBFilterbank, Subbands, noise_vocode, subbands
+from sonore.filterbank import ERBFilterbank, OctaveFilterbank, Subbands, noise_vocode, subbands
 from sonore.generators import (
     correlated_noise,
     exponential_chirp,
@@ -59,6 +59,7 @@ from sonore.representations import (
     long_term_spectrum,
 )
 from sonore.reverb import synth_ir
+from sonore.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
 from sonore.sound import Sound, load
 from sonore.spatialization import (
     HRIRSet,
@@ -76,6 +77,11 @@ from sonore.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
 __version__ = "0.2.0"
 
 __all__ = [
+    "ripple_sound",
+    "RippleSum",
+    "Ripple",
+    "DynamicRipple",
+    "OctaveFilterbank",
     "time_stretch",
     "pv_analyze",
     "pitch_shift",

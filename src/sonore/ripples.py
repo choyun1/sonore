@@ -1,0 +1,359 @@
+"""Spectrotemporal ripples: sounds defined by their modulation content.
+
+A *pattern* is an envelope over time and log-frequency, ``E(t, x)``, where
+``x`` is octaves above ``f_lo``. :func:`ripple_sound` imposes a pattern on a
+*carrier*, which supplies the fine structure.
+
+Patterns
+--------
+:class:`Ripple`
+    A moving ripple (Kowalski, Depireux & Shamma, 1996; Chi et al., 1999):
+    ``1 + depth * sin(2*pi*(rate*t + density*x) + phase)``. ``rate`` is in Hz
+    and ``density`` in cycles/octave. With positive rate and density the
+    ripple drifts *downward* in frequency; a negative rate drifts upward.
+    Ripples add: ``Ripple(4, 1) + Ripple(-8, 2)`` is a :class:`RippleSum`.
+:class:`DynamicRipple`
+    A dynamic moving ripple (Escabí & Schreiner, 2002) whose rate and density
+    wander slowly and randomly within given ranges, for STRF estimation.
+Any callable ``f(t, x)``
+    Evaluated with ``t`` as a row and ``x`` as a column, so ordinary numpy
+    broadcasting works, e.g. ``lambda t, x: 1 + 0.5 * np.sin(2*np.pi*(3*t + x**2))``.
+
+Carriers
+--------
+``"tones"``: log-spaced tones with random phases, the classic ripple carrier.
+``"harmonic"``: harmonics of ``f0``. ``"noise"``: narrowband Gaussian noise
+per channel. ``"low-noise"``: the fine structure of that noise with its
+envelope flattened, so it adds no envelope fluctuations of its own. Or any
+:class:`~sonore.Sound`, whose fine structure is used the same way.
+
+All carriers are scaled to equal energy per octave, so switching carriers
+changes the fine structure but not the long-term spectrum.
+"""
+
+from __future__ import annotations
+
+import warnings
+from collections.abc import Callable
+from dataclasses import dataclass, field
+
+import numpy as np
+from scipy.signal import butter, sosfiltfilt
+from scipy.special import ndtr
+
+from sonore.filterbank import OctaveFilterbank
+from sonore.generators import gaussian_noise
+from sonore.sound import Sound
+from sonore.utils import as_rng, n_samples, time_axis
+
+__all__ = ["Ripple", "RippleSum", "DynamicRipple", "ripple_sound"]
+
+_SCALES = ("linear", "db")
+
+
+class _Pattern:
+    """Shared behaviour: addition into sums, and plotting."""
+
+    def __add__(self, other):
+        if isinstance(other, int | float) and other == 0:  # lets sum() work
+            return self
+        if isinstance(other, Ripple | RippleSum) and isinstance(self, Ripple | RippleSum):
+            return RippleSum(_components(self) + _components(other))
+        return NotImplemented
+
+    __radd__ = __add__
+
+    def plot(self, duration: float = 1.0, f_lo: float = 250.0, f_hi: float = 8000.0, ax=None, **kwargs):
+        """Show the envelope pattern (in dB) over time and frequency."""
+        from sonore.plotting import plot_ripple_pattern
+
+        return plot_ripple_pattern(self, duration, f_lo, f_hi, ax=ax, **kwargs)
+
+
+def _components(p) -> tuple[Ripple, ...]:
+    return (p,) if isinstance(p, Ripple) else p.components
+
+
+@dataclass(frozen=True)
+class Ripple(_Pattern):
+    """A moving ripple ``1 + depth*sin(2*pi*(rate*t + density*x) + phase)``.
+
+    Parameters
+    ----------
+    rate
+        Temporal modulation [Hz]. Positive: drifts down in frequency.
+    density
+        Spectral modulation [cycles/octave].
+    depth
+        ``scale="linear"``: modulation depth in [0, 1].
+        ``scale="db"``: peak-to-peak depth in dB (the envelope is
+        ``10**((depth/2)*sin(...)/20)``).
+    phase
+        Starting phase [radians].
+    """
+
+    rate: float
+    density: float
+    depth: float = 0.9
+    phase: float = 0.0
+    scale: str = "linear"
+
+    def __post_init__(self):
+        if self.scale not in _SCALES:
+            raise ValueError(f"scale must be one of {_SCALES}")
+        if self.scale == "linear" and not 0 <= self.depth <= 1:
+            raise ValueError("linear depth must be in [0, 1]; use scale='db' for dB depths")
+
+    def __repr__(self) -> str:
+        depth = f"{self.depth:g}" if self.scale == "linear" else f"{self.depth:g} dB"
+        phase = f", phase {self.phase:g}" if self.phase else ""
+        return f"Ripple({self.rate:g} Hz, {self.density:g} cyc/oct, depth {depth}{phase})"
+
+    @property
+    def direction(self) -> str:
+        if self.rate == 0 or self.density == 0:
+            return "static" if self.rate == 0 else "temporal only"
+        return "downward" if self.rate * self.density > 0 else "upward"
+
+    def envelope(self, t: np.ndarray, x: np.ndarray) -> np.ndarray:
+        return RippleSum((self,)).envelope(t, x)
+
+
+@dataclass(frozen=True)
+class RippleSum(_Pattern):
+    """A sum of ripples sharing one depth scale. Linear depths must total <= 1
+    so the envelope stays non-negative."""
+
+    components: tuple[Ripple, ...]
+
+    def __post_init__(self):
+        scales = {c.scale for c in self.components}
+        if len(scales) > 1:
+            raise ValueError("cannot add linear-scale and dB-scale ripples")
+        if scales == {"linear"} and sum(c.depth for c in self.components) > 1 + 1e-12:
+            raise ValueError("linear ripple depths sum to more than 1; the envelope would go negative")
+
+    def __repr__(self) -> str:
+        return " + ".join(repr(c) for c in self.components)
+
+    @property
+    def scale(self) -> str:
+        return self.components[0].scale
+
+    def envelope(self, t: np.ndarray, x: np.ndarray) -> np.ndarray:
+        t, x = np.asarray(t, float), np.asarray(x, float)
+        total = np.zeros((len(x), len(t)))
+        for c in self.components:
+            mod = np.sin(2 * np.pi * (c.rate * t[None, :] + c.density * x[:, None]) + c.phase)
+            total += (c.depth if self.scale == "linear" else c.depth / 2) * mod
+        return 1 + total if self.scale == "linear" else 10 ** (total / 20)
+
+
+@dataclass(frozen=True)
+class DynamicRipple(_Pattern):
+    """Dynamic moving ripple (Escabí & Schreiner, 2002).
+
+    The envelope is ``10**((depth/2) * sin(2*pi*density(t)*x + Phi(t)) / 20)``
+    with ``Phi(t) = 2*pi * integral of rate(t)``. ``rate(t)`` and
+    ``density(t)`` are independent, slowly varying random processes, uniformly
+    distributed over their ranges, whose fastest changes are limited to
+    ``rate_change`` and ``density_change`` Hz.
+
+    Note that ``rate(t)`` is the temporal modulation at ``x = 0`` (``f_lo``).
+    Elsewhere the local rate is ``rate(t) + x * d(density)/dt``, because a
+    changing density fans the ripple out across frequency. With fast density
+    changes, a good share of the modulation energy lies outside
+    ``rate_range`` (about 40% for the defaults over 5 octaves, under 10% with
+    ``density_change=0.25``). Analyze with
+    ``ModulationSpectrum.octave(..., scale="db")``, since the pattern is
+    defined in dB.
+
+    The defaults follow the ranges commonly used after Escabí & Schreiner
+    (2002); check them against the study you are matching.
+
+    The pattern is fully determined by ``seed`` (drawn at random if not
+    given, and stored), and it doesn't depend on the sampling rate.
+    """
+
+    rate_range: tuple[float, float] = (-350.0, 350.0)
+    density_range: tuple[float, float] = (0.0, 4.0)
+    rate_change: float = 3.0
+    density_change: float = 6.0
+    depth: float = 45.0
+    seed: int | None = None
+    grid_fs: float = field(default=1000.0, repr=False)
+
+    def __post_init__(self):
+        if self.seed is None:
+            object.__setattr__(self, "seed", int(np.random.default_rng().integers(2**32)))
+
+    @property
+    def scale(self) -> str:
+        return "db"
+
+    def trajectories(self, t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """``rate(t)`` [Hz] and ``density(t)`` [cycles/octave] at times ``t``."""
+        t = np.asarray(t, float)
+        n = int(np.ceil(t[-1] * self.grid_fs)) + 2
+        grid = np.arange(n) / self.grid_fs
+        rng = as_rng(self.seed)
+        out = []
+        for (lo, hi), cutoff in (
+            (self.rate_range, self.rate_change),
+            (self.density_range, self.density_change),
+        ):
+            z = rng.standard_normal(n + 2 * int(self.grid_fs))  # extra samples avoid edge effects
+            sos = butter(4, cutoff, fs=self.grid_fs, output="sos")
+            z = sosfiltfilt(sos, z)[int(self.grid_fs) : int(self.grid_fs) + n]
+            u = ndtr((z - z.mean()) / z.std())  # Gaussian -> uniform on (0, 1)
+            out.append(np.interp(t, grid, lo + (hi - lo) * u))
+        return out[0], out[1]
+
+    def envelope(self, t: np.ndarray, x: np.ndarray) -> np.ndarray:
+        t, x = np.asarray(t, float), np.asarray(x, float)
+        rate, density = self.trajectories(t)
+        dt = t[1] - t[0] if len(t) > 1 else 1.0
+        phi = 2 * np.pi * np.cumsum(rate) * dt
+        s = (self.depth / 2) * np.sin(2 * np.pi * density[None, :] * x[:, None] + phi[None, :])
+        return 10 ** (s / 20)
+
+
+Pattern = Ripple | RippleSum | DynamicRipple | Callable[[np.ndarray, np.ndarray], np.ndarray]
+
+
+def _evaluate(pattern: Pattern, t: np.ndarray, x: np.ndarray) -> np.ndarray:
+    """Envelope with shape ``(len(x), len(t))``."""
+    if hasattr(pattern, "envelope"):
+        env = pattern.envelope(t, x)
+    else:
+        env = np.broadcast_to(pattern(t[None, :], x[:, None]), (len(x), len(t)))
+    if np.any(env < 0):
+        raise ValueError("the envelope pattern must be non-negative")
+    return env
+
+
+def _max_density(pattern: Pattern) -> float | None:
+    if isinstance(pattern, Ripple | RippleSum):
+        return max(abs(c.density) for c in _components(pattern))
+    if isinstance(pattern, DynamicRipple):
+        return max(abs(d) for d in pattern.density_range)
+    return None
+
+
+def _max_rate(pattern: Pattern) -> float | None:
+    if isinstance(pattern, Ripple | RippleSum):
+        return max(abs(c.rate) for c in _components(pattern))
+    if isinstance(pattern, DynamicRipple):
+        return max(abs(r) for r in pattern.rate_range)
+    return None
+
+
+def _check_resolution(pattern: Pattern, per_octave: float, what: str) -> None:
+    density = _max_density(pattern)
+    if density is not None and density > per_octave / 2:
+        warnings.warn(
+            f"ripple density {density:g} cyc/oct exceeds the spectral Nyquist limit of the "
+            f"{what} ({per_octave / 2:.3g} cyc/oct); the pattern will alias there",
+            stacklevel=3,
+        )
+
+
+def ripple_sound(
+    pattern: Pattern,
+    duration: float,
+    fs: float,
+    f_lo: float = 250.0,
+    f_hi: float = 8000.0,
+    carrier: str | Sound = "tones",
+    tones_per_octave: float = 20.0,
+    f0: float = 100.0,
+    bands_per_octave: float = 24.0,
+    rng=None,
+    chunk: int = 32,
+) -> Sound:
+    """Synthesize a sound whose spectrotemporal envelope is ``pattern``.
+
+    Parameters
+    ----------
+    pattern
+        A :class:`Ripple`, :class:`RippleSum`, :class:`DynamicRipple`, or a
+        function ``f(t, x)`` of time [s] and octaves above ``f_lo``.
+    f_lo, f_hi
+        Frequency range [Hz]; ``x`` runs from 0 to ``log2(f_hi/f_lo)``.
+    carrier
+        ``"tones"``, ``"harmonic"``, ``"noise"``, ``"low-noise"``, or a Sound.
+    tones_per_octave
+        Density of the tone carrier. Spectral modulation up to half this
+        (cycles/octave) is representable.
+    f0
+        Fundamental of the harmonic carrier. Harmonic spacing in octaves is
+        coarse at low harmonic numbers, which limits the representable ripple
+        density there; a warning is issued when it's exceeded.
+    bands_per_octave
+        Channel density for noise and Sound carriers.
+
+    The result has RMS = 1. Phases (tones, harmonics) and noise are drawn from
+    ``rng``.
+    """
+    rng = as_rng(rng)
+    N = n_samples(duration, fs)
+    t = time_axis(N, fs)
+    if f_hi >= fs / 2:
+        raise ValueError("f_hi must be below Nyquist")
+    out = np.zeros(N)
+
+    if isinstance(carrier, str) and carrier in ("tones", "harmonic"):
+        if carrier == "tones":
+            _check_resolution(pattern, tones_per_octave, "tone carrier")
+            k = np.arange(int(np.floor(tones_per_octave * np.log2(f_hi / f_lo))) + 1)
+            freqs = f_lo * 2 ** (k / tones_per_octave)
+            weights = np.ones(len(freqs))
+        else:
+            n = np.arange(int(np.ceil(f_lo / f0)), int(np.floor(f_hi / f0)) + 1)
+            if len(n) == 0:
+                raise ValueError("no harmonics of f0 fall between f_lo and f_hi")
+            freqs = n * f0
+            weights = 1 / np.sqrt(n)  # equal energy per octave
+            _check_resolution(
+                pattern,
+                1 / np.log2((n[0] + 1) / n[0]),
+                f"harmonic carrier's lowest harmonics (f0={f0:g} Hz, near {n[0] * f0:g} Hz)",
+            )
+        x = np.log2(freqs / f_lo)
+        phases = rng.uniform(0, 2 * np.pi, len(freqs))
+        for s in range(0, len(freqs), chunk):
+            sl = slice(s, s + chunk)
+            env = _evaluate(pattern, t, x[sl])
+            out += np.sum(
+                weights[sl, None] * env * np.sin(2 * np.pi * freqs[sl, None] * t[None, :] + phases[sl, None]),
+                axis=0,
+            )
+        return Sound(out, fs).normalize()
+
+    # channel carriers: noise, low-noise, or an existing sound's fine structure
+    _check_resolution(pattern, bands_per_octave, "channel carrier")
+    fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
+    if isinstance(carrier, Sound):
+        if carrier.fs != fs or len(carrier) < N:
+            raise ValueError("carrier sound must have the same fs and be at least as long")
+        source, flatten = Sound(carrier.mono().data[:N], fs), True
+    elif carrier in ("noise", "low-noise"):
+        source, flatten = gaussian_noise(duration, fs, rng=rng), carrier == "low-noise"
+    else:
+        raise ValueError("carrier must be 'tones', 'harmonic', 'noise', 'low-noise', or a Sound")
+
+    if flatten:
+        bands = fb.analyze(source).tfs().data[:, :, 0]  # unit-amplitude fine structure
+    else:
+        # Filter with |H|^2 (the squared responses sum to 1), so the channels add
+        # back to a flat spectrum without re-filtering. That keeps modulation
+        # sidebands intact, which re-filtering would attenuate at high rates.
+        H = fb.rfft_response(N, fs)
+        X = np.fft.rfft(source.data[:, 0])
+        bands = np.fft.irfft(X[:, None] * H**2, n=N, axis=0)
+        bands /= np.sqrt(np.mean(bands**2, axis=0, keepdims=True)) + 1e-30
+    x = np.log2(fb.cfs / f_lo)
+    inner = slice(1, -1)  # the lowpass/highpass edge channels lie outside [f_lo, f_hi]
+    env = _evaluate(pattern, t, x[inner])  # (B, N)
+    out = np.sum(bands[:, inner] * env.T, axis=1)
+    return Sound(out, fs).normalize()

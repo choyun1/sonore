@@ -16,6 +16,7 @@ __all__ = [
     "plot_modulation_spectrum",
     "plot_subbands",
     "plot_interaural_cues",
+    "plot_ripple_pattern",
     "overview",
 ]
 
@@ -109,7 +110,9 @@ def plot_modulation_spectrum(
         ms.w_t, ms.w_f, ms.level, cmap=cmap, vmin=vmax - db_range, vmax=vmax, shading="auto", rasterized=True
     )
     ax.set(
-        title="Modulation spectrum", xlabel="Temporal modulation [Hz]", ylabel="Spectral modulation [cyc/kHz]"
+        title="Modulation spectrum",
+        xlabel="Temporal modulation [Hz]",
+        ylabel=f"Spectral modulation [{getattr(ms, 'spectral_unit', 'cyc/kHz')}]",
     )
     if wt_max:
         wt_max = min(wt_max, np.abs(ms.w_t).max())
@@ -226,6 +229,29 @@ def plot_interaural_cues(cues, ax=None, show_iac=True):
         iac_ax.grid(ls=":")
     else:
         ax.set_xlabel("Time [s]")
+    return ax
+
+
+def plot_ripple_pattern(
+    pattern, duration=1.0, f_lo=250.0, f_hi=8000.0, ax=None, cmap="RdBu_r", colorbar=True, n_t=None, n_x=200
+):
+    """Envelope of a ripple pattern (dB re its mean level) over time and
+    log-frequency, before any sound is made."""
+    from sonore.ripples import _evaluate, _max_rate
+
+    ax = _ax(ax)
+    if n_t is None:  # resolve the fastest modulation with ~8 points per cycle
+        n_t = int(max(400, np.ceil(duration * 8 * (_max_rate(pattern) or 0))))
+    t = np.linspace(0, duration, n_t)
+    x = np.linspace(0, np.log2(f_hi / f_lo), n_x)
+    env = _evaluate(pattern, t, x)
+    db = 20 * np.log10(np.maximum(env, 1e-6) / np.mean(env))
+    lim = np.max(np.abs(db)) or 1.0
+    im = ax.pcolormesh(t, f_lo * 2**x, db, cmap=cmap, vmin=-lim, vmax=lim, shading="auto", rasterized=True)
+    ax.set_yscale("log")
+    ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Ripple pattern")
+    if colorbar:
+        ax.figure.colorbar(im, ax=ax, label="Envelope [dB]")
     return ax
 
 

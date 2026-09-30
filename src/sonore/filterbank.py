@@ -1,9 +1,13 @@
-"""ERB-spaced cosine filterbank and subband representation.
+"""Cosine filterbanks and the subband representation.
 
-The filters follow McDermott & Simoncelli (2011): half-cycle cosines on the
-ERB-number scale, each spanning two band spacings, plus a lowpass and highpass
-at the edges. Their squared responses sum to exactly 1, so filtering on
-analysis *and* synthesis reconstructs the input perfectly.
+The filters follow McDermott & Simoncelli (2011): half-cycle cosines on a
+perceptual frequency scale, each spanning two band spacings, plus a lowpass and
+a highpass at the edges. Their squared responses sum to exactly 1, so filtering
+on analysis *and* synthesis reconstructs the input perfectly.
+
+Two scales are provided: :class:`ERBFilterbank` (ERB-number, the auditory
+default) and :class:`OctaveFilterbank` (log2 frequency, the axis on which
+spectral modulation is measured in cycles/octave).
 """
 
 from __future__ import annotations
@@ -16,34 +20,50 @@ from scipy.signal import butter, hilbert, sosfiltfilt
 from sonore.sound import Sound
 from sonore.utils import as_rng, erb_to_freq, freq_to_erb
 
-__all__ = ["ERBFilterbank", "Subbands", "subbands", "noise_vocode"]
+__all__ = ["CosineFilterbank", "ERBFilterbank", "OctaveFilterbank", "Subbands", "subbands", "noise_vocode"]
 
 
 @dataclass(frozen=True)
-class ERBFilterbank:
-    """``n_bands`` bandpass filters between ``f_lo`` and ``f_hi`` [Hz], plus a
-    lowpass below ``f_lo`` and a highpass above ``f_hi`` (``n_bands + 2`` total)."""
+class CosineFilterbank:
+    """``n_bands`` bandpass filters equally spaced on some frequency scale
+    between ``f_lo`` and ``f_hi`` [Hz], plus a lowpass below ``f_lo`` and a
+    highpass above ``f_hi`` (``n_bands + 2`` filters in total). Subclasses
+    define the scale."""
 
     n_bands: int = 30
     f_lo: float = 50.0
     f_hi: float = 8000.0
 
+    @staticmethod
+    def to_scale(freq: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
+    @staticmethod
+    def from_scale(value: np.ndarray) -> np.ndarray:
+        raise NotImplementedError
+
     @property
     def _knots(self) -> np.ndarray:
-        return np.linspace(freq_to_erb(self.f_lo), freq_to_erb(self.f_hi), self.n_bands + 2)
+        return np.linspace(self.to_scale(self.f_lo), self.to_scale(self.f_hi), self.n_bands + 2)
+
+    @property
+    def spacing(self) -> float:
+        """Distance between adjacent filter centers, in scale units."""
+        k = self._knots
+        return float(k[1] - k[0])
 
     @property
     def cfs(self) -> np.ndarray:
         """Center frequencies [Hz] of all filters (edges at ``f_lo``/``f_hi``)."""
-        return erb_to_freq(self._knots)
+        return self.from_scale(self._knots)
 
     def response(self, freqs: np.ndarray) -> np.ndarray:
         """Magnitude responses, shape ``(len(freqs), n_bands + 2)``."""
-        e = freq_to_erb(freqs)[:, None]
+        with np.errstate(divide="ignore"):
+            e = self.to_scale(np.asarray(freqs, float))[:, None]
         k = self._knots
-        step = k[1] - k[0]
-        u = (e - k[None, :]) / step  # distance from each center in band spacings
-        H = np.where(np.abs(u) < 1, np.cos(np.pi / 2 * u), 0.0)
+        u = (e - k[None, :]) / self.spacing  # distance from each center in band spacings
+        H = np.where(np.abs(u) < 1, np.cos(np.pi / 2 * np.clip(u, -1, 1)), 0.0)
         H[:, 0] = np.where(e[:, 0] <= k[0], 1.0, H[:, 0])
         H[:, -1] = np.where(e[:, 0] >= k[-1], 1.0, H[:, -1])
         return H
@@ -58,6 +78,41 @@ class ERBFilterbank:
         X = np.fft.rfft(sound.data, axis=0)  # (F, C)
         bands = np.fft.irfft(X[:, None, :] * H[:, :, None], n=n, axis=0)  # (n, B, C)
         return Subbands(bands, sound.fs, self)
+
+
+@dataclass(frozen=True)
+class ERBFilterbank(CosineFilterbank):
+    """Filters equally spaced on the ERB-number scale (Glasberg & Moore, 1990)."""
+
+    @staticmethod
+    def to_scale(freq):
+        return freq_to_erb(freq)
+
+    @staticmethod
+    def from_scale(value):
+        return erb_to_freq(value)
+
+
+@dataclass(frozen=True)
+class OctaveFilterbank(CosineFilterbank):
+    """Filters equally spaced in log2 frequency (octaves)."""
+
+    f_lo: float = 125.0
+
+    @staticmethod
+    def to_scale(freq):
+        return np.log2(freq)
+
+    @staticmethod
+    def from_scale(value):
+        return np.exp2(value)
+
+    @classmethod
+    def per_octave(cls, bands_per_octave: float, f_lo: float, f_hi: float) -> OctaveFilterbank:
+        """Choose ``n_bands`` so filter centers are about ``1/bands_per_octave``
+        octaves apart between ``f_lo`` and ``f_hi``."""
+        n = max(1, int(round(bands_per_octave * np.log2(f_hi / f_lo))) - 1)
+        return cls(n, f_lo, f_hi)
 
 
 def subbands(sound: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float | None = None) -> Subbands:
