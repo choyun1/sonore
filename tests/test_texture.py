@@ -90,3 +90,18 @@ def test_save_load_and_replace(tmp_path):
         assert np.array_equal(a.get(c), b.get(c), equal_nan=True)
     h = a.replace(mod_power=np.zeros_like(a.mod_power))
     assert np.all(h.mod_power == 0) and h.env_mean is a.env_mean
+
+
+def test_snr():
+    a = TextureStats.measure(so.gaussian_noise(2, FS, tilt=-3, rng=0))
+    b = TextureStats.measure(so.gaussian_noise(2, FS, tilt=-3, rng=1))
+    c = TextureStats.measure(am_noise(10))
+    assert all(v == float("inf") for v in a.snr(a).values())
+    same, diff = a.snr(b), a.snr(c)
+    assert set(same) == set(so.texture.PAPER_CLASSES)
+    # another sample of the same texture matches better than a different texture
+    for k in ("env_var", "env_kurt", "mod_power"):
+        assert same[k] > diff[k] + 3, k
+    # channels outside the 30 dB range are ignored
+    quiet = a.replace(subband_var=np.where(np.arange(32) < 16, 1e-6, 1.0) * a.subband_var)
+    assert quiet.channel_mask().sum() == 16

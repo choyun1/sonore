@@ -276,6 +276,37 @@ class TextureStats:
 
         return replace(self, **changes)
 
+    def channel_mask(self, range_db: float = 30.0) -> np.ndarray:
+        """Channels whose subband variance is within ``range_db`` of the
+        loudest. Quieter channels are ignored by :meth:`snr` (as in the
+        toolbox): their statistics are dominated by noise and inaudible."""
+        v = np.maximum(self.subband_var, 1e-300)
+        return 10 * np.log10(v / v.max()) > -range_db
+
+    def snr(self, other: TextureStats, classes=PAPER_CLASSES, range_db: float = 30.0) -> dict[str, float]:
+        """How well ``other`` matches these (target) statistics, per class:
+        ``10*log10(sum |target|**2 / sum |target - other|**2)`` in dB, over
+        channels within ``range_db`` of the loudest. Pairwise classes (C, C1)
+        count a pair only if both channels qualify."""
+        if isinstance(classes, str):
+            classes = (classes,)
+        ok = self.channel_mask(range_db)
+        B = len(ok)
+        out = {}
+        for c in classes:
+            t, o = self.get(c), other.get(c)
+            if c in ("env_corr", "c1"):
+                offsets = self.model.corr_offsets if c == "env_corr" else self.model.c1_offsets
+                pair = np.array([[ok[j] and j + d < B and ok[j + d] for d in offsets] for j in range(B)])
+                sel = pair[:, None, :] if c == "c1" else pair
+                sel = np.broadcast_to(sel, t.shape)
+            else:
+                sel = np.broadcast_to(ok.reshape((B,) + (1,) * (t.ndim - 1)), t.shape)
+            tv, ov = t[sel], o[sel]
+            err = np.sum(np.abs(tv - ov) ** 2)
+            out[c] = float("inf") if err == 0 else float(10 * np.log10(np.sum(np.abs(tv) ** 2) / err))
+        return out
+
     def save(self, path) -> None:
         arrays = {c: getattr(self, c) for c in STAT_CLASSES}
         meta = {"model": asdict(self.model), "duration": self.duration, "version": 1}
