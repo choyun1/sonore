@@ -6,19 +6,17 @@
 playable next to its plots, with a playhead that follows the sound.
 
 sonore is a small Python library for making, manipulating, and analyzing sounds
-the way hearing scientists think about them: tones and complexes, shaped and
-correlated noises, ERB-spaced subbands, invertible spectrograms, a phase
-vocoder, interaural cues, HRIR spatialization of moving sources, and synthetic
-room reverberation.
-Levels are written as levels (`snd + 6*dB`), times as seconds (`snd[0.1:0.5]`),
-and any sound at the end of a notebook cell plays.
+the way hearing scientists think about them. Its analysis and synthesis tools
+cover tones, harmonic complexes, shaped and correlated noises, ERB-spaced
+subbands, invertible spectrograms, a phase vocoder, interaural cues, HRIR
+spatialization of moving sources, synthetic room reverberation, and sound
+texture synthesis. Levels are written as levels (`snd + 6*dB`), times as
+seconds (`snd[0.1:0.5]`), and any sound at the end of a notebook cell plays.
 
 The name comes from Pierre Schaeffer's *objet sonore*, the "sound object": a
 sound taken as a thing in its own right and studied for how it is heard rather
-than for what produced it. Schaeffer called that mode of listening
-*acousmatic*, after the *akousmatikoi*, Pythagoras's students who listened to
-his teaching from behind a veil. The `Sound` object at the center of this
-library is meant in the same spirit.
+than for what produced it. The `Sound` object at the center of this library is
+meant in the same spirit.
 
 ![Overview of an iterated rippled noise](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/overview_irn.png)
 
@@ -365,6 +363,26 @@ Tags name the module(s) in [What's in it](#whats-in-it) that implement or follow
 - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In *Speech Separation by Humans and Machines*. `representations`
 - Yost (1996). Pitch of iterated rippled noise. *JASA* 100. `generators`
 
+### Reference implementations
+
+Implementations by a paper's authors or widely used ports, with how sonore
+relates to each. "Cross-checked" means a script in `tools/` compares the two
+numerically; "consulted" means the code was read for behavior but not copied.
+
+- [Sound Texture Synthesis Toolbox v1.7](https://mcdermottlab.mit.edu/downloads.html) (MATLAB), McDermott lab: the
+  authors' implementation of McDermott & Simoncelli (2011). Consulted; sonore
+  is a clean-room implementation from the paper, and every deliberate
+  difference is listed in `so.texture.DIFFERENCES_FROM_TOOLBOX`. `texture` `filterbank` `modulation`
+- [wil-j-wil/texture_stats](https://github.com/wil-j-wil/texture_stats) (Python, MIT): a port of the toolbox's
+  statistics. Cross-checked by `tools/crosscheck_texture_stats.py`. `texture`
+- [mcdermottLab/pycochleagram](https://github.com/mcdermottLab/pycochleagram) (Python): the lab's port of the
+  toolbox's cochleagram code, including the cosine filterbank. Not yet
+  cross-checked. `filterbank`
+- [LTFAT](https://ltfat.github.io/) (MATLAB/Octave, GPLv3): `frsynabs` with `'fgriflim'` is the fast Griffin-Lim from
+  the group of Perraudin, Balazs & Søndergaard (2013);
+  [`librosa.griffinlim`](https://librosa.org/doc/latest/generated/librosa.griffinlim.html) is a widely used Python
+  version. Neither is cross-checked yet. `representations`
+
 ## Migrating from sigtools
 
 sonore was previously `sigtools`, renamed to avoid a clash with an unrelated
@@ -411,6 +429,38 @@ pytest                             # ~40 s; one test file per module
 ruff check . && ruff format .
 python docs/gallery/build.py       # regenerate the listening gallery (a few minutes)
 ```
+
+## How sonore was developed
+
+sonore began as sigtools, the code I (Adrian Cho) wrote in graduate school to
+make psychoacoustic stimuli. The 0.2 redesign and everything since were
+developed together with Claude, Anthropic's AI assistant, in chat sessions
+during 2026.
+
+**What Claude did.** Wrote most of the code, tests, documentation, and
+gallery since 0.2, delivered as patches; drafted design documents; ran
+numerical checks and profiling; and looked up and checked citations.
+
+**What I did.** Decided what sonore is for and what goes in it, including
+its API conventions, the texture work and its milestones, and the roadmap and
+architecture. I chose and documented the texture recordings and set the
+working rules: implement from the papers, verify every claim numerically,
+document every deviation and data choice, and write a design document before
+large features. I reviewed and applied each patch.
+
+**How it is verified.** I have not read every line by hand. What I rely on
+instead is the following:
+
+- The test suite, with one file per module.
+- Finite-difference and dense-matrix checks of the mathematics.
+- Cross-checks against independent implementations (see "Reference
+  implementations").
+- Written records of every decision (`DIFFERENCES_FROM_TOOLBOX`,
+  `docs/textures/SOURCES.md`, `docs/design/`).
+- The listening gallery, since these are sounds and should be heard.
+
+I am responsible for sonore's correctness. If something is wrong, please
+open an issue.
 
 ## License and citation
 
