@@ -1,6 +1,8 @@
 # Frames, step 1: the interface and its contract
 
-Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Not yet implemented.
+Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Step 1, patch 1
+(`Frame`, `Filterbank`, cosine-bank retrofit) implemented; `GaborFrame` and the
+oracle tests pending.
 
 The Frame work is split into three steps. This document covers only step 1.
 
@@ -217,6 +219,11 @@ grid of the (padded) length. For a Gabor frame, the frame operator is
 evaluated over the signal extent. **Decided:** `frame_bounds` takes
 `(n_samples, fs)` rather than being a property. For the cosine banks the result is (1, 1)
 regardless.
+
+*Implementation note:* `Filterbank.frame_bounds(n_samples, fs, pad="auto")` adds
+an optional `pad` matching `analyze`, so the bounds are those of the grid the
+coefficients actually live on (D1). `Filterbank.frame_power(n, fs)` exposes s on
+the rfft grid of n samples.
 
 **D4. Non-frames.** **Decided:** `analyze` always works. A filterbank with
 gaps in coverage is still a fine way to get a cochleagram. `synthesize`

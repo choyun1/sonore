@@ -13,11 +13,11 @@ spectral modulation is measured in cycles/octave).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import lru_cache
 
 import numpy as np
 from scipy.signal import hilbert
 
+from sonore.frames import Filterbank
 from sonore.sound import Sound
 from sonore.utils import as_rng, erb_to_freq, freq_to_erb
 
@@ -25,16 +25,25 @@ __all__ = ["CosineFilterbank", "ERBFilterbank", "OctaveFilterbank", "Subbands", 
 
 
 @dataclass(frozen=True)
-class CosineFilterbank:
+class CosineFilterbank(Filterbank):
     """``n_bands`` bandpass filters equally spaced on some frequency scale
     between ``f_lo`` and ``f_hi`` [Hz], plus a lowpass below ``f_lo`` and a
     highpass above ``f_hi`` (``n_bands + 2`` filters in total). Subclasses
-    define the scale."""
+    define the scale.
+
+    A tight :class:`~sonore.frames.Filterbank`: the squared responses sum to
+    exactly 1, so the frame bounds are ``(1, 1)`` and synthesis re-filters
+    with the analysis filters."""
 
     n_bands: int = 30
     f_lo: float = 50.0
     f_hi: float = 8000.0
     unit = "unit"  # name of one step on the scale, e.g. "oct" or "ERB"
+    tight = True
+
+    @property
+    def n_filters(self) -> int:
+        return self.n_bands + 2
 
     @staticmethod
     def to_scale(freq: np.ndarray) -> np.ndarray:
@@ -69,49 +78,6 @@ class CosineFilterbank:
         H[:, 0] = np.where(e[:, 0] <= k[0], 1.0, H[:, 0])
         H[:, -1] = np.where(e[:, 0] >= k[-1], 1.0, H[:, -1])
         return H
-
-    def rfft_response(self, n: int, fs: float) -> np.ndarray:
-        return self.response(np.fft.rfftfreq(n, 1 / fs))
-
-    def ringing(self, fs: float, level_db: float = -60.0) -> int:
-        """How long [samples] the filters ring: the longest time, over all
-        filters, before the zero-phase impulse response stays below
-        ``level_db`` re its peak (capped at 2 s). Used to size the padding."""
-        return _ringing_samples(self, float(fs), float(level_db))
-
-    def analyze(self, sound: Sound, pad: float | str = "auto") -> Subbands:
-        """Split ``sound`` into subbands (zero-phase, via FFT).
-
-        By default the sound is zero-padded by the filters' ringing time
-        (:meth:`ringing`), so filter ringing near one end can't wrap around to
-        the other. The padding travels with the Subbands (and any Envelopes
-        derived from them) and is removed on output, so ``.data`` and
-        :meth:`Subbands.synthesize` have the sound's own length, and
-        analysis followed by synthesis is exact.
-
-        ``pad=0`` makes the analysis circular, which is what you want for
-        periodic signals and for texture synthesis (seamless loops). A number
-        pads by that many seconds.
-        """
-        if pad == "auto":
-            p = self.ringing(sound.fs)
-        else:
-            p = int(round(float(pad) * sound.fs))
-        x = np.pad(sound.data, ((p, p), (0, 0))) if p else sound.data
-        n = x.shape[0]
-        H = self.rfft_response(n, sound.fs)  # (F, B)
-        X = np.fft.rfft(x, axis=0)  # (F, C)
-        bands = np.fft.irfft(X[:, None, :] * H[:, :, None], n=n, axis=0)  # (n, B, C)
-        return Subbands(bands, sound.fs, self, pad=p)
-
-
-@lru_cache(maxsize=64)
-def _ringing_samples(fb: CosineFilterbank, fs: float, level_db: float) -> int:
-    n = 1 << int(np.ceil(np.log2(4 * fs)))  # a 4 s grid: impulse responses up to 2 s each side
-    h = np.abs(np.fft.irfft(fb.rfft_response(n, fs), n=n, axis=0)[: n // 2])
-    above = h > h.max(axis=0, keepdims=True) * 10 ** (level_db / 20)
-    last = np.array([np.flatnonzero(col).max() for col in above.T])
-    return int(last.max()) + 1
 
 
 @dataclass(frozen=True)
@@ -160,7 +126,7 @@ def subbands(sound: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float | 
 
 
 class Subbands:
-    """The output of a filterbank: one band-limited :class:`~sonore.Sound` per filter.
+    """The output of a :class:`~sonore.frames.Filterbank`: one band-limited :class:`~sonore.Sound` per filter.
 
     ``sb[i]`` is a Sound, iterating yields Sounds, and ``sb.cfs`` labels them.
     The first and last bands are the filterbank's lowpass and highpass edges.
@@ -176,10 +142,10 @@ class Subbands:
     so a vocoder is ``(speech.envelopes() * carrier.tfs()).synthesize()``.
     """
 
-    def __init__(self, data: np.ndarray, fs: float, filterbank: CosineFilterbank, pad: int = 0):
+    def __init__(self, data: np.ndarray, fs: float, filterbank: Filterbank, pad: int = 0):
         arr = np.asarray(data, dtype=float)
-        if arr.ndim != 3 or arr.shape[1] != filterbank.n_bands + 2:
-            raise ValueError(f"expected shape (n_samples, {filterbank.n_bands + 2}, n_channels)")
+        if arr.ndim != 3 or arr.shape[1] != filterbank.n_filters:
+            raise ValueError(f"expected shape (n_samples, {filterbank.n_filters}, n_channels)")
         if 2 * pad >= arr.shape[0]:
             raise ValueError("padding is longer than the data")
         arr.flags.writeable = False
@@ -235,14 +201,13 @@ class Subbands:
         return self._new(np.cos(np.angle(self._analytic())))
 
     def synthesize(self) -> Sound:
-        """Re-filter each band and sum: the exact inverse of
-        :meth:`CosineFilterbank.analyze`. Use this after modifying bands; with
-        the default padding, re-filtering can't wrap around either."""
-        n = self._full.shape[0]
-        H = self.filterbank.rfft_response(n, self.fs)
-        X = np.fft.rfft(self._full, axis=0) * H[:, :, None]
-        out = np.fft.irfft(X.sum(axis=1), n=n, axis=0)
-        return Sound(out[self.pad : n - self.pad], self.fs)
+        """Back to a Sound with the filterbank's canonical dual
+        (:meth:`~sonore.frames.Filterbank.synthesize`): the exact inverse of
+        :meth:`~sonore.frames.Filterbank.analyze`, and the least-squares
+        signal after the bands are modified. For the cosine banks this is
+        re-filtering each band and summing; with the default padding,
+        re-filtering can't wrap around either."""
+        return self.filterbank.synthesize(self)
 
     def sum(self) -> Sound:
         """Add the bands without re-filtering. :meth:`synthesize` is almost

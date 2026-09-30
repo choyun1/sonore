@@ -29,6 +29,7 @@ from sonore.filterbank import (
     noise_vocode,
     subbands,
 )
+from sonore.frames import Filterbank, Frame
 from sonore.generators import (
     correlated_noise,
     exponential_chirp,
@@ -94,6 +95,8 @@ __all__ = [
     "measure_rt60",
     "band_rt60s",
     "CosineFilterbank",
+    "Filterbank",
+    "Frame",
     "Envelopes",
     "Envelope",
     "ripple_sound",

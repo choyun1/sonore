@@ -8,8 +8,9 @@ to a sound. The types reflect that:
 - :class:`Envelopes` is one envelope per frequency band of a filterbank, i.e. a
   spectrotemporal envelope. This is conceptually the same thing as a
   **cochleagram** (the envelope of each cochlear-filter output over time);
-  here the "cochlea" is whichever :class:`~sonore.filterbank.CosineFilterbank`
-  produced it. ``Envelopes * Subbands`` modulates each band.
+  here the "cochlea" is whichever :class:`~sonore.frames.Filterbank` (by
+  default a :class:`~sonore.filterbank.CosineFilterbank`) produced it.
+  ``Envelopes * Subbands`` modulates each band.
 
 The Hilbert decomposition of a band is then literal::
 
@@ -32,7 +33,7 @@ from scipy.signal import butter, resample_poly, sosfiltfilt
 from sonore.utils import amp_to_db
 
 if TYPE_CHECKING:
-    from sonore.filterbank import CosineFilterbank
+    from sonore.frames import Filterbank
     from sonore.representations import ModulationSpectrum
     from sonore.sound import Sound
 
@@ -207,13 +208,13 @@ class Envelopes:
 
     __array_ufunc__ = None
 
-    def __init__(self, data, fs: float, filterbank: CosineFilterbank, pad: int = 0):
+    def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
         arr = np.array(data, dtype=float)
         if arr.ndim == 2:
             arr = arr[:, :, None]
-        if arr.ndim != 3 or arr.shape[1] != filterbank.n_bands + 2:
+        if arr.ndim != 3 or arr.shape[1] != filterbank.n_filters:
             raise ValueError(
-                f"expected shape (n_samples, {filterbank.n_bands + 2}, n_channels), got {arr.shape}"
+                f"expected shape (n_samples, {filterbank.n_filters}, n_channels), got {arr.shape}"
             )
         if 2 * pad >= arr.shape[0]:
             raise ValueError("padding is longer than the data")
@@ -343,6 +344,13 @@ class Envelopes:
         """
         from sonore.representations import ModulationSpectrum
 
+        fb = self.filterbank
+        if getattr(fb, "spacing", None) is None or getattr(fb, "unit", None) is None:
+            raise TypeError(
+                "modulation_spectrum needs filters evenly spaced on a frequency scale (a filterbank "
+                "with 'spacing' and 'unit', such as ERBFilterbank or OctaveFilterbank); "
+                f"{type(fb).__name__} has none"
+            )
         env = self.data.mean(axis=2)  # (n, B), channels averaged
         if drop_edges:
             env = env[:, 1:-1]
@@ -351,7 +359,7 @@ class Envelopes:
         elif scale != "linear":
             raise ValueError("scale must be 'linear' or 'db'")
         return ModulationSpectrum.from_array(
-            env.T, dt=1 / self.fs, dx=self.filterbank.spacing, spectral_unit=f"cyc/{self.filterbank.unit}"
+            env.T, dt=1 / self.fs, dx=fb.spacing, spectral_unit=f"cyc/{fb.unit}"
         )
 
     def plot(self, ax=None, **kwargs):
