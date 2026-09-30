@@ -145,8 +145,10 @@ def texture_sections() -> list[tuple[str, str, list[Demo]]]:
             "Sound textures",
             "After McDermott & Simoncelli (2011): a texture is summarized by time-averaged statistics of a cochlear "
             "model, and a new sample is synthesized by imposing those statistics on noise. Each original is followed "
-            "by its synthesis; the synthesis shares no waveform with the original, only statistics. Right panels: "
-            "envelope variance by band and modulation power, for this sound (solid) and the original (dashed). "
+            "by its synthesis; the synthesis shares no waveform with the original, only statistics. Plots: spectrogram, "
+            "long-term spectrum, and three of the model's own statistics: modulation power at each rate in each band "
+            "(the model's modulation spectrum), envelope sparsity (variance / mean² of each band's envelope), and "
+            "modulation power averaged over bands. For syntheses and ablations, the original is overlaid in dashed black. "
             "Recordings and excerpt choices: docs/textures/SOURCES.md. Synthesis takes about a minute per texture, "
             "so these are precomputed by tools/make_texture_synths.py.",
             items,
@@ -641,30 +643,50 @@ def filterbank_fig(snd, original):
 
 
 def texture_fig(snd, original, synthetic=False):
+    """General-purpose plots (spectrogram, long-term spectrum) plus the texture
+    model's own statistics drawn with plain matplotlib: modulation power by
+    band and rate (the model's modulation spectrum), envelope sparsity, and
+    band-averaged modulation power. Dashed black: the original."""
     from sonore.texture import TextureStats
 
-    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
-    gs = fig.add_gridspec(2, 2, width_ratios=[1.7, 1])
-    ax_c, ax_v, ax_m = fig.add_subplot(gs[:, 0]), fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, 1])
-    so.subbands(snd.resample(20000), 30, 20, 10000).envelopes(fs=400).plot(ax_c, db_range=50, colorbar=False)
-    ax_c.set_title("Cochleagram (the texture model's filterbank, 50 dB range)")
+    fig = plt.figure(figsize=(10, 6.6), layout="constrained")
+    gs = fig.add_gridspec(2, 3)
+    ax_s = fig.add_subplot(gs[0, :2])
+    ax_l, ax_m, ax_v, ax_p = (fig.add_subplot(gs[r, c]) for r, c in ((0, 2), (1, 0), (1, 1), (1, 2)))
+    so.STFT(snd, 20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
+    ax_s.set_title("Spectrogram")
+    so.long_term_spectrum(snd).plot(ax_l, lw=1.2, label="this sound")
+    if synthetic:
+        so.long_term_spectrum(original).plot(ax_l, color="k", ls="--", lw=1, label="original")
+        ax_l.legend(fontsize=7)
+    ax_l.set(xlim=(20, 10000), ylim=(-70, 3), title="Long-term spectrum")
     target = TextureStats.measure(original)
     this = TextureStats.measure(snd, window="uniform" if synthetic else "ramped")  # syntheses are circular
     cfs = target.model.filterbank.cfs[1:-1]
-    ax_v.semilogx(cfs, this.env_var[1:-1], lw=1.2, label="this sound")
-    ax_v.semilogx(cfs, target.env_var[1:-1], "k--", lw=1, label="original")
-    ax_v.set(xlabel="Band center [Hz]", ylabel="var / mean²", title="Envelope variance (sparsity)")
-    ax_v.legend(fontsize=8)
-    mcf = target.model.mod_bank.cfs
     ok = target.channel_mask()
-    ax_m.loglog(mcf, this.mod_power[ok].mean(0), lw=1.2)
-    ax_m.loglog(mcf, target.mod_power[ok].mean(0), "k--", lw=1)
+    # The model's modulation spectrum: power at each modulation rate, in each cochlear band.
+    mcf = target.model.mod_bank.cfs
+    lev = 10 * np.log10(np.maximum(this.mod_power[1:-1], 1e-6))
+    ax_m.pcolormesh(mcf, cfs, lev, cmap="magma", vmin=lev.max() - 25, vmax=lev.max(), shading="nearest")
     ax_m.set(
-        xlabel="Modulation frequency [Hz]", ylabel="Power / variance", title="Modulation power (band average)"
+        xscale="log",
+        yscale="log",
+        xlabel="Modulation rate [Hz]",
+        ylabel="Band center [Hz]",
+        title="Modulation spectrum by band",
     )
-    for ax in (ax_v, ax_m):
+    ax_v.semilogx(cfs, this.env_var[1:-1], lw=1.2)
+    ax_p.loglog(target.model.mod_bank.cfs, this.mod_power[ok].mean(0), lw=1.2)
+    if synthetic:
+        ax_v.semilogx(cfs, target.env_var[1:-1], "k--", lw=1)
+        ax_p.loglog(target.model.mod_bank.cfs, target.mod_power[ok].mean(0), "k--", lw=1)
+    ax_v.set(xlabel="Band center [Hz]", ylabel="var / mean²", title="Envelope sparsity by band")
+    ax_p.set(
+        xlabel="Modulation rate [Hz]", ylabel="Power / variance", title="Modulation power (band average)"
+    )
+    for ax in (ax_v, ax_p):
         ax.grid(ls=":", which="both", lw=0.5)
-    return fig, [ax_c]
+    return fig, [ax_s]
 
 
 FIGURES = {
