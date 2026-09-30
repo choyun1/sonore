@@ -277,20 +277,64 @@ sound from the gallery's demo list so the two can't drift apart.
 
 ## Roadmap
 
+**Next, in order**
+
+1. **Frames.** A `Frame` abstraction for invertible time-frequency
+   decompositions: `analyze`, `synthesize` (canonical dual) and
+   `frame_bounds()`. For undecimated filterbanks applied in the frequency
+   domain, the dual filters are `H_k / sum_j |H_j|^2`, so *any* filter shape
+   (cosine, gammatone, wavelet-shaped) is exactly invertible wherever the
+   summed squared response is nonzero, and the frame bounds are its minimum
+   and maximum. The STFT (a Gabor frame) and the cosine filterbanks become
+   instances; a decimated, invertible constant-Q transform (nonstationary
+   Gabor frames) can follow. Tests enforce `synthesize(analyze(x)) == x` and
+   the reported bounds. Written as pure array functions so a JAX version is
+   mechanical. Documented distinction: synthesis is exact for unmodified
+   coefficients and a least-squares projection for modified ones.
+2. **JAX spike.** Port the texture channel objective to JAX, check it
+   against the NumPy reference with the existing tests, and measure it
+   against today's ~2 s per iteration. On the evidence, decide on an optional
+   `sonore[jax]` backend for the heavy, optimization-shaped parts (texture
+   synthesis now; the differentiable forward models that source inference
+   needs later). The core stays NumPy.
+3. **Cepstrum.** A `Cepstrum` representation built on the STFT: liftering,
+   resynthesis with the original phase (exact when unliftered) or minimum
+   phase, and classic cepstral F0.
+4. **Speech synthesis.** Source-filter vowels (glottal source, formant
+   resonators, radiation), then the Klatt synthesizer (Klatt, 1980; KLSYN88,
+   Klatt & Klatt, 1990).
+
+**Texture synthesis**
+
+- Rebalance the objective so modulation power converges (it reaches 30 dB
+  SNR when imposed without the correlation classes, but 18-23 dB in full
+  synthesis); try joint imposition of all channels.
+- Impose several channels at once; the per-channel objective is
+  overhead-bound (about 2 s per iteration for 5 s of sound).
+- Validate against the MATLAB toolbox's published examples by running both
+  on the same original recordings.
+
+**Architecture**
+
+- Layering: model subpackages (`sonore.texture`, later `sonore.speech`)
+  depend on the core (Sound, units, generators, frames, representations,
+  plotting); the core never imports them, enforced by a test. Heavy
+  dependencies go in optional extras.
+- Split a component into its own distribution only when it needs a heavy
+  dependency, a different release cadence, or a separate audience.
+- Bayesian inference of sound sources will be a separate package built on
+  sonore (JAX plus a probabilistic-programming layer), using sonore's
+  generators, frames and texture statistics as its differentiable forward
+  model.
+
+**Other**
+
 - Free-form modulation patterns: specify a modulation spectrum and synthesize it.
 - A high-quality speech analysis/resynthesis model with robust F0 tracking
   (STRAIGHT, Kawahara et al., 1999, or its open successor WORLD, Morise et al., 2016).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - Faster `move_sound` via batched frequency-domain filtering.
 - On-demand download of public HRIR databases.
-- Differentiable (JAX) versions of the core renderers.
-- Texture synthesis: rebalance the objective so modulation power converges
-  (it reaches 30 dB SNR when imposed without the correlation classes, but
-  18–23 dB in full synthesis).
-- Texture synthesis: impose several channels at once; the per-channel
-  objective is now overhead-bound (about 2 s per iteration for 5 s of sound).
-- Texture synthesis: validate against the MATLAB toolbox's published examples
-  by running both on the same original recordings.
 
 ## References
 
