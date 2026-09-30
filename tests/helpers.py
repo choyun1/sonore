@@ -5,6 +5,11 @@ import numpy as np
 import sonore as so
 
 FS = 44100
+# A lower rate for spectral and modulation tests. These check where modulation
+# peaks and decay rates land, which doesn't need CD-quality audio; octave
+# filterbank analyses at 44.1 kHz dominated the suite's runtime.
+FAST = 16000
+FAST_HI = 6000  # upper frequency limit comfortably below FAST's Nyquist
 
 
 def peak_freq(s: so.Sound) -> float:

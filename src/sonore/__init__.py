@@ -66,7 +66,7 @@ from sonore.representations import (
     ideal_ratio_mask,
     long_term_spectrum,
 )
-from sonore.reverb import synth_ir
+from sonore.reverb import band_rt60s, measure_rt60, synth_ir
 from sonore.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
 from sonore.sound import Sound, load
 from sonore.spatialization import (
@@ -85,6 +85,8 @@ from sonore.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
 __version__ = "0.2.0"
 
 __all__ = [
+    "measure_rt60",
+    "band_rt60s",
     "CosineFilterbank",
     "Envelopes",
     "Envelope",

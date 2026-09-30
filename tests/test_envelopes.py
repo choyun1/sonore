@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from helpers import FS
+from helpers import FAST, FAST_HI, FS
 
 import sonore as so
 
@@ -60,11 +60,12 @@ class TestEnvelopes:
             so.Envelope(np.ones(FS), FS) * self.x
 
     def test_modulation_spectrum_from_envelopes(self):
-        fb = so.OctaveFilterbank.per_octave(12, 125, 8000)
-        direct = so.ModulationSpectrum.octave(self.x)
-        via = fb.analyze(self.x.mono()).envelopes(fs=1000).modulation_spectrum()
+        x = so.harmonic_complex(0.5, FAST, 150, np.arange(1, 30), phases="random", rng=0)
+        fb = so.OctaveFilterbank.per_octave(12, 125, FAST_HI)
+        direct = so.ModulationSpectrum.octave(x, f_hi=FAST_HI)
+        via = fb.analyze(x).envelopes(fs=1000).modulation_spectrum()
         np.testing.assert_allclose(via.level, direct.level)
-        erb = so.subbands(self.x, 20).envelopes(fs=1000).modulation_spectrum()
+        erb = so.subbands(x, 20).envelopes(fs=1000).modulation_spectrum()
         assert erb.spectral_unit == "cyc/ERB" and via.spectral_unit == "cyc/oct"
 
     def test_rendered_pattern_matches_its_parameters(self):

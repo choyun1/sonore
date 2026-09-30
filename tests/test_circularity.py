@@ -11,7 +11,7 @@ above the values measured when the padding was introduced.
 
 import numpy as np
 import pytest
-from helpers import FS
+from helpers import FAST, FAST_HI, FS
 
 import sonore as so
 
@@ -96,6 +96,6 @@ def test_unpadded_envelopes_combine_with_padded_bands():
 def test_modulation_spectrum_with_fractional_cycles():
     # 8.5 cycles of 8 Hz AM: without a taper, leakage from the periodic
     # extension let the static spectral tilt win and misplaced the peak
-    x = so.amplitude_modulate(so.gaussian_noise(1.0625, FS, rng=1), 8, depth=1)
-    rate, density = so.ModulationSpectrum.octave(x).peak()
+    x = so.amplitude_modulate(so.gaussian_noise(1.0625, FAST, rng=1), 8, depth=1)
+    rate, density = so.ModulationSpectrum.octave(x, f_hi=FAST_HI).peak()
     assert rate == pytest.approx(8, abs=1) and density == 0

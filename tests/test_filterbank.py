@@ -24,10 +24,10 @@ class TestFilterbank:
 
 
 def test_octave_filterbank_reconstructs():
-    fb = so.OctaveFilterbank.per_octave(12, 125, 8000)
+    fb = so.OctaveFilterbank.per_octave(12, 125, 6000)
     H = fb.response(np.linspace(0, FS / 2, 5000))
     np.testing.assert_allclose((H**2).sum(axis=1), 1, atol=1e-12)
-    g = so.gaussian_noise(0.5, FS, rng=0)
+    g = so.gaussian_noise(0.5, 16000, rng=0)
     np.testing.assert_allclose(fb.analyze(g).synthesize().data, g.data, atol=1e-10)
 
 

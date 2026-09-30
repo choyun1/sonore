@@ -39,6 +39,9 @@ dev = ["pytest>=8", "ruff>=0.5", "h5py>=3.8"]
 [tool.hatch.version]
 path = "src/sonore/__init__.py"
 
+[tool.hatch.build.targets.sdist]
+exclude = ["docs/gallery/audio", "docs/gallery/img", "docs/gallery/index.html", "docs/images"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/sonore"]
 
@@ -49,6 +52,9 @@ filterwarnings = ["error::RuntimeWarning"]
 [tool.ruff]
 line-length = 110
 src = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"docs/gallery/build.py" = ["E501"]  # prose in string literals
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "NPY"]
