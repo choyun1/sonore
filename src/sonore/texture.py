@@ -30,8 +30,20 @@ from sonore.sound import Sound
 
 __all__ = ["TextureModel", "TextureStats", "measurement_window", "STAT_CLASSES", "DIFFERENCES_FROM_TOOLBOX"]
 
-STAT_CLASSES = ("env_mean", "env_var", "env_skew", "env_kurt", "env_corr", "mod_power", "c1", "c2", "subband_var")
-PAPER_CLASSES = STAT_CLASSES[:-1]  # subband variance is used by synthesis but isn't one of the paper's statistics
+STAT_CLASSES = (
+    "env_mean",
+    "env_var",
+    "env_skew",
+    "env_kurt",
+    "env_corr",
+    "mod_power",
+    "c1",
+    "c2",
+    "subband_var",
+)
+PAPER_CLASSES = STAT_CLASSES[
+    :-1
+]  # subband variance is used by synthesis but isn't one of the paper's statistics
 
 DIFFERENCES_FROM_TOOLBOX = """\
 Deliberate differences from the MATLAB Sound Texture Synthesis Toolbox v1.7:

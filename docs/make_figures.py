@@ -1,20 +1,36 @@
-"""Regenerate the README figures: ``python docs/make_figures.py``."""
+"""Regenerate the README figures: ``python docs/make_figures.py``.
 
+Every README example is a subset of the listening gallery: the sounds are taken
+from the gallery's own demo list (``docs/gallery/build.py``) by key, so the
+README can't drift from what the gallery plays. Each README figure links to
+its gallery entries (``gallery/#d-<key>``).
+"""
+
+import sys
 from pathlib import Path
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
 
 import sonore as so  # noqa: E402
-from sonore import dB  # noqa: E402
 
-OUT = Path(__file__).parent / "images"
+HERE = Path(__file__).parent
+OUT = HERE / "images"
 OUT.mkdir(exist_ok=True)
-FS = 44100
-rng = np.random.default_rng(1)
+
+_rc = dict(plt.rcParams)
+sys.path.insert(0, str(HERE / "gallery"))
+import build as gallery  # noqa: E402
+
+plt.rcParams.update(_rc)  # keep the README's own figure style
+FS = gallery.FS
+DEMOS = {d.key: d for _, _, items in gallery.demos() for d in items}
+
+
+def demo(key):
+    return DEMOS[key]
 
 
 def save(fig, name):
@@ -24,25 +40,20 @@ def save(fig, name):
 
 
 # 1. overview of iterated rippled noise: pitch at 1/delay, spectral ripple at 8 cyc/kHz
-irn = so.iterated_ripple_noise(1.0, FS, delay=8e-3, iterations=16, rng=rng)
+irn = demo("09").sound
 fig = so.overview(irn, win_dur=50e-3, figsize=(11, 6.5), fmax=4000)
-fig.suptitle("so.overview(so.iterated_ripple_noise(1.0, 44100, delay=8e-3))", family="monospace")
+fig.suptitle("so.overview(so.iterated_ripple_noise(2, 44100, delay=8e-3, iterations=16))", family="monospace")
 save(fig, "overview_irn.png")
 
-# 2. ideal binary mask: a gliding harmonic target in noise at -5 dB SNR
-t = np.arange(FS) / FS
-f0 = 150 + 100 * t
-phase = 2 * np.pi * np.cumsum(f0) / FS
-target = so.Sound(sum(np.cos(k * phase) / k for k in range(1, 30)), FS).normalize()
-target = target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))
-masker = so.gaussian_noise(1.0, FS, tilt=-3, rng=rng)
-mixture = target + (masker + 5 * dB)
-S_t, S_m, S_x = (so.STFT(s, 25e-3) for s in (target, masker, mixture))
-separated = (S_x * so.ideal_binary_mask(S_t, S_m)).to_sound()
+# 2. ideal binary mask: gallery 24 (mixture) and 25 (masked resynthesis)
+mixture, separated = demo("24").sound, demo("25").sound
+mask = demo("24").extra["mask"]
+S_x = so.STFT(mixture, 25e-3)
 fig, axes = plt.subplots(1, 3, figsize=(13, 3.6), sharey=True, layout="constrained")
 S_x.plot(axes[0], fmax=5000, colorbar=False)
 axes[0].set_title("Mixture (target at -5 dB SNR)")
-so.ideal_binary_mask(S_t, S_m).plot(axes[1])
+mask.plot(axes[1])
+axes[1].set_ylim(0, 5)
 axes[1].set_title("Ideal binary mask")
 so.STFT(separated, 25e-3).plot(axes[2], fmax=5000, colorbar=False)
 axes[2].set_title("Masked resynthesis")
@@ -52,8 +63,8 @@ save(fig, "ibm.png")
 fig, axes = plt.subplots(2, 2, figsize=(12, 5.5), sharex=True, layout="constrained")
 for col, (name, snd) in enumerate(
     [
-        ("so.oscor(3, fs, f_mod=2)", so.oscor(3, FS, 2, rng=rng)),
-        ("so.phasewarp(3, fs, f_mod=2)", so.phasewarp(3, FS, 2, rng=rng)),
+        ("so.oscor(4, fs, f_mod=3)", demo("07").sound),
+        ("so.phasewarp(4, fs, f_mod=2)", demo("08").sound),
     ]
 ):
     c = so.interaural_cues(snd, 10e-3)
@@ -68,8 +79,7 @@ axes[1, 0].legend(loc="lower left", fontsize=8)
 save(fig, "binaural_cues.png")
 
 # 4. noise vocoder: subband envelopes of the target drive noise carriers
-syllables = target * np.sin(2 * np.pi * 4 * t).clip(0) ** 2  # syllable-like 4 Hz on/off
-voc = so.noise_vocode(syllables, n_bands=8, rng=rng)
+voc, syllables = demo("15").sound, demo("15").extra["source"]
 fig, axes = plt.subplots(1, 2, figsize=(12, 3.6), sharey=True, layout="constrained")
 so.STFT(syllables, 25e-3).plot(axes[0], fmax=6000, colorbar=False)
 axes[0].set_title("Original")
@@ -78,17 +88,11 @@ axes[1].set_title("so.noise_vocode(snd, n_bands=8)")
 save(fig, "vocoder.png")
 
 # 5. phase vocoder: time stretch, pitch shift, and an oscillator-bank frequency remap
-t2 = np.arange(int(1.0 * FS)) / FS
-vib = 2 * np.pi * np.cumsum(220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * t2))) / FS
-sung = so.Sound(sum(np.cos(k * vib) / k for k in range(1, 20)), FS).normalize().ramp(30e-3)
 panels = [
-    ("original (220 Hz, 5 Hz vibrato)", sung),
-    ("so.time_stretch(snd, 2)", so.time_stretch(sung, 2)),
-    ("so.pitch_shift(snd, 7)", so.pitch_shift(sung, 7)),
-    (
-        "pv_analyze(snd).resynthesize(freq_map=lambda f: f + 70)",
-        so.pv_analyze(sung).resynthesize(freq_map=lambda f: f + 70),
-    ),
+    ("original (220 Hz, 5 Hz vibrato)", demo("11").sound),
+    ("so.time_stretch(snd, 2)", demo("12").sound),
+    ("so.pitch_shift(snd, 7)", demo("13").sound),
+    ("pv_analyze(snd).resynthesize(freq_map=lambda f: f + 70)", demo("14").sound),
 ]
 fig, axes = plt.subplots(1, 4, figsize=(16, 3.6), sharey=True, layout="constrained")
 for ax, (title, s) in zip(axes, panels, strict=True):
@@ -97,7 +101,7 @@ for ax, (title, s) in zip(axes, panels, strict=True):
 save(fig, "phase_vocoder.png")
 
 # 6. filterbank: decompose an exponential sweep into 6 ERB-spaced bands and reconstruct it
-sweep = so.exponential_chirp(1.0, FS, 100, 6000).ramp(20e-3)
+sweep = demo("26").extra["original"]
 sb = so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)  # 6 bandpass + lowpass/highpass edges
 recon = sb.synthesize()
 err = recon - sweep
@@ -124,18 +128,15 @@ save(fig, "filterbank.png")
 
 # 7. spectrotemporal ripples: pattern as designed -> sound -> measured modulation spectrum
 patterns = [
-    ("so.Ripple(4, 1)", so.Ripple(4, 1)),
-    (
-        "so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45)",
-        so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45),
-    ),
-    ("so.DynamicRipple(rate_range=(-40, 40), seed=3)", so.DynamicRipple(rate_range=(-40, 40), seed=3)),
+    ("so.Ripple(4, 1)", demo("01")),
+    ("so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45)", demo("03")),
+    ("so.DynamicRipple(rate_range=(-40, 40), seed=3)", demo("06")),
 ]
 fig, axes = plt.subplots(3, 3, figsize=(15, 10.5), layout="constrained")
-for col, (label, pattern) in enumerate(patterns):
-    pattern.plot(duration=1.0, f_lo=250, f_hi=8000, ax=axes[0, col], colorbar=False)
+for col, (label, d) in enumerate(patterns):
+    pattern, snd = d.extra["pattern"], d.sound
+    pattern.plot(duration=snd.duration, f_lo=250, f_hi=8000, ax=axes[0, col], colorbar=False)
     axes[0, col].set_title(label, family="monospace", fontsize=9)
-    snd = so.ripple_sound(pattern, 1.0, FS, rng=rng)
     fb = so.OctaveFilterbank.per_octave(24, 250, 8000)
     fb.analyze(snd).envelopes(lowpass=200, fs=1000).plot(axes[1, col], db_range=30, colorbar=False)
     axes[1, col].set_title("the synthesized sound's .envelopes()")
@@ -152,8 +153,8 @@ save(fig, "ripples.png")
 # 8. waveforms of ripple sounds: flat overall, the pattern lives across bands
 fig = plt.figure(figsize=(15, 8.5), layout="constrained")
 columns = fig.subfigures(1, 3)
-for sub, (label, pattern) in zip(columns, patterns, strict=True):
-    snd = so.ripple_sound(pattern, 1.0, FS, rng=rng).ramp(20e-3)
+for sub, (label, d) in zip(columns, patterns, strict=True):
+    snd = d.sound[0:1.0].ramp(20e-3)  # the first second, so the band waveforms are legible
     sb = so.OctaveFilterbank.per_octave(8, 250, 8000).analyze(snd)  # narrow bands: 1/4 octave wide
     show = range(3, len(sb) - 1, 5)  # every 5th band, ~0.6 octave apart
     top, bottom = sub.subfigures(2, 1, height_ratios=[1, 3.3])

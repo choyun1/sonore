@@ -27,6 +27,7 @@ from PIL import Image  # noqa: E402
 from scipy.signal import butter, sosfilt  # noqa: E402
 
 import sonore as so  # noqa: E402
+from sonore import dB  # noqa: E402
 
 HERE = Path(__file__).parent
 FS = 44100
@@ -62,6 +63,14 @@ def starter_pistol():
     t = np.arange(int(0.03 * FS)) / FS
     x = sosfilt(butter(2, 300, "highpass", fs=FS, output="sos"), np.exp(-t / 0.15e-3))
     return so.Sound(x, FS).pad(before=0.05, after=0.05)
+
+
+def gliding_target(dur=2.0):
+    """A harmonic complex gliding 150 -> 250 Hz with a 3 Hz level fluctuation: a stand-in for speech."""
+    t = np.arange(int(dur * FS)) / FS
+    phase = 2 * np.pi * np.cumsum(150 + 50 * t) / FS
+    target = so.Sound(sum(np.cos(k * phase) / k for k in range(1, 30)), FS).normalize()
+    return (target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))).ramp(20e-3)
 
 
 def demos() -> list[tuple[str, str, list[Demo]]]:
@@ -227,6 +236,45 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
         ),
     ]
 
+    target = gliding_target()
+    masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
+    mixture = target + (masker + 5 * dB)
+    S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
+    ibm = {"target": target, "masker": masker, "mask": so.ideal_binary_mask(S_t, S_m, lc_db=0)}
+    speech_in_noise = [
+        Demo(
+            "24",
+            "Target in noise",
+            "A gliding harmonic target (a stand-in for a voice) in pink noise at −5 dB SNR.",
+            mixture,
+            "ibm",
+            ibm,
+        ),
+        Demo(
+            "25",
+            "Ideal binary mask",
+            "The same mixture with every time-frequency cell where the noise dominates switched off. "
+            "The mask is computed from the separate target and noise, which is what makes it ideal "
+            "(Wang, 2005); the resynthesis is exact.",
+            (S_x * ibm["mask"]).to_sound(),
+            "ibm",
+            ibm,
+        ),
+    ]
+    sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
+    filterbanks = [
+        Demo(
+            "26",
+            "Perfect reconstruction",
+            "An exponential sweep split into 6 ERB-spaced bands plus the lowpass and highpass edge filters, "
+            "then summed back. What you hear is the reconstruction; it differs from the original only at the "
+            "level of floating-point rounding.",
+            so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize(),
+            "filterbank",
+            {"original": sweep},
+        ),
+    ]
+
     pistol = starter_pistol()
     rooms = [
         Demo(
@@ -315,6 +363,16 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             binaural,
         ),
         ("Pitch from delay", "", pitch),
+        (
+            "Filterbanks",
+            "Cosine filterbanks whose squared responses sum to 1, so analysis followed by synthesis is exact.",
+            filterbanks,
+        ),
+        (
+            "Speech in noise",
+            "Time-frequency masking: the STFT is invertible, so a masked spectrogram is a sound.",
+            speech_in_noise,
+        ),
         (
             "Phase vocoder",
             "The first sound is the reference; the others change its duration, pitch, or partials.",
@@ -458,7 +516,44 @@ def reverb_fig(snd, ir, kw=None):
     return fig, time_axes
 
 
+def ibm_fig(snd, target, masker, mask):
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), sharex=True, layout="constrained")
+    snd.plot(axes[0, 0], lw=0.4)
+    axes[0, 0].set_title("Waveform")
+    mask.plot(axes[0, 1])
+    axes[0, 1].set(title="Ideal binary mask (target > noise)", ylim=(0, 5))
+    so.STFT(snd, 25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
+    axes[1, 0].set_title("Spectrogram of this sound")
+    so.STFT(target, 25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
+    axes[1, 1].set_title("The target alone (not played)")
+    return fig, [axes[0, 0], axes[1, 0]]
+
+
+def filterbank_fig(snd, original):
+    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
+    left, right = fig.subfigures(1, 2, width_ratios=[1.35, 1])
+    sb = so.subbands(original, n_bands=6, f_lo=100, f_hi=6000)
+    band_axes = left.subplots(len(sb), 1, sharex=True)
+    sb.plot(band_axes)
+    band_axes[0].set_title(
+        "so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)", family="monospace", fontsize=8
+    )
+    r = right.subplots(3, 1, sharex=True)
+    original.plot(r[0], color="k", lw=0.4)
+    r[0].set(title="Original sweep, 100 Hz to 6 kHz", xlabel="")
+    recon = sb.synthesize()  # recomputed: the played sound has been level-normalized
+    recon.plot(r[1], color="tab:blue", lw=0.4)
+    r[1].set(title="Reconstruction: sb.synthesize()", xlabel="")
+    err = recon - original
+    r[2].plot(err.t, 1e15 * err.data[:, 0], color="tab:red", lw=0.5)
+    r[2].set(title=f"Difference (max |error| = {err.peak:.1e})", ylabel="× 1e-15", xlabel="Time [s]")
+    r[2].grid(ls=":")
+    return fig, list(band_axes) + list(r)
+
+
 FIGURES = {
+    "ibm": lambda d: ibm_fig(d.sound, **d.extra),
+    "filterbank": lambda d: filterbank_fig(d.sound, **d.extra),
     "ripple": lambda d: ripple_fig(d.sound, d.extra["pattern"], d.extra.get("dmr", False)),
     "binaural": lambda d: binaural_fig(d.sound),
     "overview": lambda d: overview_fig(d.sound),
@@ -525,6 +620,8 @@ h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem;
 .section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
 .sound { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 2rem; align-items: start; padding: 1.75rem 0; }
 .sound + .sound { border-top: 1px dotted var(--rule); }
+article.sound { scroll-margin-top: 1.5rem; }
+article.sound:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
 .headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
@@ -654,7 +751,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
                 audio_src, img_src, d=d, hp=hp, name=name, snd=snd, chan=chan, regions=regions, w=w, h=h
             ):
                 return f"""
-<article class="sound" data-regions="{html.escape(json.dumps(regions))}">
+<article class="sound" id="d-{d.key}" data-regions="{html.escape(json.dumps(regions))}">
   <div class="about">
     <h3>{html.escape(d.title)}</h3>
     {hp}

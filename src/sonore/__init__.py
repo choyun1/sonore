@@ -11,6 +11,7 @@ Typical use in a notebook::
     so.overview(y)         # waveform, spectrum, spectrogram, modulation spectrum
 """
 
+from sonore import texture
 from sonore.binaural import (
     InterauralCues,
     apply_itd_ild,
@@ -42,7 +43,6 @@ from sonore.generators import (
     silence,
     square_wave,
 )
-from sonore import texture
 from sonore.modulation import ConstantQModulationFilterbank, ModulationFilterbank, OctaveModulationFilterbank
 from sonore.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
 from sonore.plotting import overview

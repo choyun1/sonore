@@ -71,7 +71,9 @@ def test_noise_is_lower_bound_of_envelope_moments():
     noise = TextureStats.measure(so.gaussian_noise(2, FS, tilt=-3, rng=0))
     rng = np.random.default_rng(1)
     clicks = np.zeros(2 * FS)
-    clicks[rng.choice(len(clicks), 8, replace=False)] = rng.choice([-1, 1], 8)  # 4/s: sparse even in low channels
+    clicks[rng.choice(len(clicks), 8, replace=False)] = rng.choice(
+        [-1, 1], 8
+    )  # 4/s: sparse in low channels too
     sparse = TextureStats.measure(so.Sound(clicks, FS))
     ch = slice(3, 29)
     for c in ("env_var", "env_skew", "env_kurt"):

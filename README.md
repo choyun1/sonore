@@ -2,6 +2,9 @@
 
 **Signals and stimuli for auditory research, built for Jupyter.**
 
+**[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
+playable next to its plots, with a playhead that follows the sound.
+
 sonore is a small Python library for making, manipulating, and analyzing sounds
 the way hearing scientists think about them: tones and complexes, shaped and
 correlated noises, ERB-spaced subbands, invertible spectrograms, a phase
@@ -18,9 +21,6 @@ his teaching from behind a veil. The `Sound` object at the center of this
 library is meant in the same spirit.
 
 ![Overview of an iterated rippled noise](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/overview_irn.png)
-
-**[Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every stimulus
-below, playable, next to its plots, with a playhead that follows the sound.
 
 ## What it's for
 
@@ -111,8 +111,13 @@ and the classic binaural stimuli.
 
 ## Gallery
 
+These are a selection from the [listening gallery](https://choyun1.github.io/sonore/gallery/); the ▶ links play
+each sound there. The `so.overview` of iterated rippled noise at the top is
+[▶ iterated rippled noise](https://choyun1.github.io/sonore/gallery/#d-09).
+
 **Ideal binary mask.** A gliding harmonic target at −5 dB SNR, the IBM computed
 from the separate STFTs, and the masked mixture resynthesized.
+[▶ mixture](https://choyun1.github.io/sonore/gallery/#d-24) [▶ masked](https://choyun1.github.io/sonore/gallery/#d-25)
 
 ![Ideal binary mask](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ibm.png)
 
@@ -122,14 +127,15 @@ separated = (S_x * so.ideal_binary_mask(S_t, S_m, lc_db=0)).to_sound()
 ```
 
 **Oscor and Phasewarp** (Siveke et al., 2008). The zero-lag interaural
-correlation follows sin and cos of the modulation rate, respectively.
+correlation swings between +1 and −1 at the modulation rate (3 and 2 Hz here).
+Headphones needed. [▶ Oscor](https://choyun1.github.io/sonore/gallery/#d-07) [▶ Phasewarp](https://choyun1.github.io/sonore/gallery/#d-08)
 
 ![Binaural cues of Oscor and Phasewarp](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/binaural_cues.png)
 
 **ERB filterbank with perfect reconstruction.** An exponential sweep split
 into 6 ERB-spaced bands, plus the lowpass and highpass edge filters that make
 the bank power-complementary, then summed back together. The reconstruction
-error is at the level of floating-point rounding.
+error is at the level of floating-point rounding. [▶ reconstruction](https://choyun1.github.io/sonore/gallery/#d-26)
 
 ![Filterbank decomposition and reconstruction](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/filterbank.png)
 
@@ -144,6 +150,7 @@ inspect before any sound exists. Top: the patterns as specified. Middle: the
 synthesized sounds' subband envelopes. Bottom: their measured modulation
 spectra. The single and summed ripples land exactly at their specified
 (rate, density); the dynamic ripple fills its range.
+[▶ single](https://choyun1.github.io/sonore/gallery/#d-01) [▶ sum of two](https://choyun1.github.io/sonore/gallery/#d-03) [▶ dynamic](https://choyun1.github.io/sonore/gallery/#d-06)
 
 ![Ripples](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ripples.png)
 
@@ -154,13 +161,13 @@ snd = so.ripple_sound(pattern, 1.0, fs, carrier="tones")  # or "harmonic", "nois
 so.ModulationSpectrum.octave(snd).plot()  # peaks at (4, 1) and (-12, 2.5)
 ```
 
-The same three sounds as waveforms. The broadband waveform (top) hardly shows
+The first second of the same three sounds as waveforms. The broadband waveform (top) hardly shows
 the pattern, because a ripple spanning a cycle or more across frequency averages
 out when all bands are summed. It lives across bands: in narrow bands (bottom,
 every fifth quarter-octave band), the single ripple's 4 Hz modulation arrives
 later in each lower band, which is the downward drift. The dynamic ripple shows
-up in the broadband waveform only near 0.3 s, where its density passes near
-zero and every band is modulated in phase.
+up in the broadband waveform only where its density passes near zero and every
+band is modulated in phase.
 
 ![Ripple waveforms](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ripple_waveforms.png)
 
@@ -177,6 +184,7 @@ changes the fine structure but not the long-term spectrum.
 structure doesn't. `so.noise_vocode` is shorthand for the typed pipeline
 `(speech.envelopes(lowpass=50) * noise.tfs()).synthesize()`, where `speech`
 and `noise` are the two sounds' `Subbands` on the same filterbank.
+[▶ vocoded](https://choyun1.github.io/sonore/gallery/#d-15)
 
 ![Noise vocoder](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/vocoder.png)
 
@@ -187,6 +195,7 @@ oscillator bank with every partial moved up 70 Hz, which makes it inharmonic
 (290, 510, 730 Hz, ...: still 220 Hz apart, but no longer harmonics of anything
 nearby). A shift of exactly half the spacing would not: +110 Hz gives odd
 harmonics of 110 Hz, a clarinet-like tone an octave down.
+[▶ original](https://choyun1.github.io/sonore/gallery/#d-11) [▶ stretched](https://choyun1.github.io/sonore/gallery/#d-12) [▶ up a fifth](https://choyun1.github.io/sonore/gallery/#d-13) [▶ +70 Hz](https://choyun1.github.io/sonore/gallery/#d-14) [▶ +110 Hz](https://choyun1.github.io/sonore/gallery/#d-14b)
 
 ![Phase vocoder](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/phase_vocoder.png)
 
@@ -195,7 +204,8 @@ analysis = so.pv_analyze(snd)
 inharmonic = analysis.resynthesize(freq_map=lambda f: f + 70)
 ```
 
-Figures are regenerated by `python docs/make_figures.py`.
+Figures are regenerated by `python docs/make_figures.py`, which takes every
+sound from the gallery's demo list so the two can't drift apart.
 
 ## Conventions
 
