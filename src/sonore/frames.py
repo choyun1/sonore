@@ -17,6 +17,12 @@ by their responses on the DFT grid. Its frame operator is diagonal in frequency,
 (claim C4). Banks whose ``s`` is identically 1 set ``tight = True`` and skip
 the division, as :class:`~sonore.filterbank.CosineFilterbank` does.
 
+:class:`GaborFrame` is the one-sided STFT (wrapping
+:class:`scipy.signal.ShortTimeFFT`). Its frame operator is diagonal in time,
+``s(t) = K sum_q |w(t - q hop)|**2`` with ``K = n_fft`` (claim C5), and its
+coefficient norm weights each stored bin by 2 except DC and, for even ``K``,
+Nyquist (claim C3).
+
 The code is written as pure array functions (no in-place mutation) so that a
 JAX port is mechanical.
 """
@@ -24,27 +30,31 @@ JAX port is mechanical.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import numpy as np
+from scipy.signal import ShortTimeFFT, get_window
 
 from sonore.sound import Sound
 
 if TYPE_CHECKING:
     from sonore.filterbank import Subbands
+    from sonore.representations import STFT
 
-__all__ = ["Frame", "Filterbank"]
+__all__ = ["Frame", "Filterbank", "GaborFrame"]
 
 # synthesize() refuses when A <= NOT_A_FRAME * B (decision D4).
 NOT_A_FRAME = 1e-12
 
 
-def _check_frame(lower: float, upper: float, what: str) -> None:
+def _check_frame(lower: float, upper: float, what: str, note: str = " analyze() still works.") -> None:
     if not lower > NOT_A_FRAME * upper:
         raise ValueError(
             f"{what} is not a frame (bounds A={lower:.3g}, B={upper:.3g}): some part of the signal "
-            "is not covered, so it cannot be synthesized. analyze() still works."
+            f"is not covered, so it cannot be synthesized.{note}"
         )
 
 
@@ -193,3 +203,136 @@ def _ringing_samples(fb: Filterbank, fs: float, level_db: float) -> int:
     above = h > h.max(axis=0, keepdims=True) * 10 ** (level_db / 20)
     last = np.array([np.flatnonzero(col).max() if col.any() else 0 for col in above.T])
     return int(last.max()) + 1
+
+
+@dataclass(frozen=True)
+class GaborFrame(Frame):
+    """The one-sided short-time Fourier transform as a frame.
+
+    Parameters
+    ----------
+    win_dur
+        Window length [s].
+    hop_dur
+        Hop [s]; defaults to a quarter window (75% overlap).
+    window
+        A :func:`scipy.signal.get_window` spec (name or tuple), sampled
+        periodically, or a callable ``n -> array`` of length ``n``.
+    n_fft
+        FFT length K (``>=`` the window length); defaults to the window length.
+
+    Durations are rounded to samples per sampling rate, and the
+    :class:`~scipy.signal.ShortTimeFFT` is built once per rate
+    (:meth:`sft`). ``analyze`` returns an :class:`~sonore.STFT`.
+
+    A window/hop pair that leaves gaps (A = 0) is refused when the frame is
+    first used at a sampling rate, because SciPy builds the dual window
+    eagerly; the error gives the frame bounds (decision D4). A hop longer than
+    the window is refused at construction.
+    """
+
+    win_dur: float
+    hop_dur: float | None = None
+    window: str | tuple | Callable[[int], np.ndarray] = "hann"
+    n_fft: int | None = None
+
+    def __post_init__(self):
+        if not self.win_dur > 0:
+            raise ValueError("win_dur must be positive")
+        if self.hop_dur is not None and not 0 < self.hop_dur <= self.win_dur:
+            raise ValueError(
+                f"hop_dur must be in (0, win_dur]: a hop of {self.hop_dur:g} s with a {self.win_dur:g} s "
+                "window leaves gaps, so it is not a frame"
+            )
+
+    def lengths(self, fs: float) -> tuple[int, int, int]:
+        """``(window, hop, n_fft)`` in samples at ``fs``."""
+        n_win = int(round(self.win_dur * fs))
+        hop = max(1, int(round((self.hop_dur if self.hop_dur is not None else self.win_dur / 4) * fs)))
+        n_fft = n_win if self.n_fft is None else int(self.n_fft)
+        if n_win < 1:
+            raise ValueError(f"win_dur {self.win_dur:g} s is shorter than one sample at {fs:g} Hz")
+        if n_fft < n_win:
+            raise ValueError(f"n_fft ({n_fft}) must be at least the window length ({n_win})")
+        return n_win, hop, n_fft
+
+    def window_samples(self, fs: float) -> np.ndarray:
+        """The analysis window at ``fs``."""
+        n_win = self.lengths(fs)[0]
+        if callable(self.window):
+            w = np.asarray(self.window(n_win), dtype=float)
+            if w.shape != (n_win,):
+                raise ValueError(f"window callable returned shape {w.shape}, expected ({n_win},)")
+            return w
+        return get_window(self.window, n_win, fftbins=True)
+
+    def sft(self, fs: float) -> ShortTimeFFT:
+        """The :class:`~scipy.signal.ShortTimeFFT` at ``fs`` (cached)."""
+        return _gabor_sft(self, float(fs))
+
+    def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
+        """``s(t) = K sum_q |w(t - q hop)|**2`` for ``t`` in ``0..n_samples-1``:
+        the diagonal of the frame operator (claim C5). Sums over every frame
+        that overlaps the signal; frames SciPy leaves out overlap it only
+        where the window is zero, so they add nothing."""
+        n = int(n_samples)
+        w2 = np.abs(self.window_samples(fs)) ** 2
+        n_win, hop, n_fft = self.lengths(fs)
+        mid = n_win // 2
+        q = np.arange((mid - n_win) // hop + 1, -(-(n + mid) // hop))
+        t = q[:, None] * hop - mid + np.arange(n_win)[None, :]
+        inside = (t >= 0) & (t < n)
+        weights = np.broadcast_to(w2, t.shape)[inside]
+        return n_fft * np.bincount(t[inside], weights=weights, minlength=n)
+
+    def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]:
+        """``(min s, max s)`` over a signal of ``n_samples`` at ``fs``, in the
+        weighted coefficient norm of :meth:`energy` (claims C3, C5)."""
+        s = self.frame_power(n_samples, fs)
+        return (float(s.min()), float(s.max()))
+
+    def bin_weights(self, fs: float) -> np.ndarray:
+        """Weight of each stored frequency bin (claim C3): 1 for DC and, for
+        even ``n_fft``, Nyquist; 2 for the rest."""
+        n_fft = self.lengths(fs)[2]
+        w = np.full(n_fft // 2 + 1, 2.0)
+        w[0] = 1.0
+        if n_fft % 2 == 0:
+            w[-1] = 1.0
+        return w
+
+    def analyze(self, sound: Sound) -> STFT:
+        """The STFT of ``sound``, data shape ``(n_channels, n_freqs, n_frames)``."""
+        from sonore.representations import STFT
+
+        return STFT(sound, frame=self)
+
+    def synthesize(self, coefs: STFT) -> Sound:
+        """SciPy's ``istft``: the weighted real least-squares signal for
+        ``coefs`` (claims C3, C6), exact for unmodified coefficients."""
+        sft = self.sft(coefs.fs)
+        if coefs.data.shape[-2] != sft.f_pts:
+            raise ValueError(f"expected {sft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
+        x = sft.istft(coefs.data, k1=coefs.n_samples)
+        return Sound(np.real(x).T, coefs.fs)
+
+    def energy(self, coefs: STFT) -> np.ndarray:
+        """Weighted coefficient energy per channel (claim C3): the energy of
+        the full two-sided STFT."""
+        w = self.bin_weights(coefs.fs)
+        return np.einsum("f,cft->c", w, np.abs(coefs.data) ** 2)
+
+
+@lru_cache(maxsize=64)
+def _gabor_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
+    win = frame.window_samples(fs)
+    n_win, hop, n_fft = frame.lengths(fs)
+    lower, upper = frame.frame_bounds(2 * (n_win + hop), fs)  # s is hop-periodic: this covers a period
+    try:
+        sft = ShortTimeFFT(win, hop=hop, fs=fs, mfft=n_fft, fft_mode="onesided")
+    except ValueError as err:
+        raise ValueError(
+            f"{frame} at {fs:g} Hz is not a frame (bounds A={lower:.3g}, B={upper:.3g}); SciPy: {err}"
+        ) from err
+    _check_frame(lower, upper, f"{frame} at {fs:g} Hz", note="")
+    return sft

@@ -126,7 +126,7 @@ for tight in (False, True):
     )
 
 # ------------------------------------------------------------ C3, C5, C6: Gabor
-w = hann(16, sym=False) ** 1.5  # deliberately not a tight window
+w = hann(16, sym=False) ** 1.5  # not tight at hop 5 (it would be at hop 4: sin^6 over 4 shifts)
 hop = 5
 for mode in ("twosided", "onesided"):
     sft = ShortTimeFFT(w, hop=hop, fs=1, fft_mode=mode)

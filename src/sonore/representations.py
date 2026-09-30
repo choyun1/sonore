@@ -7,9 +7,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.signal import ShortTimeFFT, welch
-from scipy.signal.windows import hann
+from scipy.signal import welch
 
+from sonore.frames import GaborFrame
 from sonore.sound import Sound
 from sonore.utils import amp_to_db, as_rng
 
@@ -94,7 +94,12 @@ class STFT:
     """Short-time Fourier transform (wraps :class:`scipy.signal.ShortTimeFFT`).
 
     ``data`` has shape ``(n_channels, n_freqs, n_frames)``. Resynthesis with
-    :meth:`to_sound` is exact for an unmodified STFT.
+    :meth:`to_sound` is exact for an unmodified STFT, and the least-squares
+    signal for a modified one.
+
+    ``STFT(sound, win_dur, hop_dur)`` is
+    ``GaborFrame(win_dur, hop_dur).analyze(sound)``; the frame is kept as
+    :attr:`frame` and SciPy's transform as :attr:`sft`.
 
     Parameters
     ----------
@@ -102,6 +107,9 @@ class STFT:
         Window length [s] (periodic Hann).
     hop_dur
         Hop [s]; defaults to a quarter window (75% overlap).
+    frame
+        A :class:`~sonore.frames.GaborFrame` to use instead (other windows,
+        zero-padded FFTs); ``win_dur`` and ``hop_dur`` are then ignored.
     """
 
     __array_ufunc__ = None
@@ -112,24 +120,19 @@ class STFT:
         win_dur: float = 20e-3,
         hop_dur: float | None = None,
         *,
-        _data=None,
-        _sft=None,
+        frame: GaborFrame | None = None,
     ):
-        self.fs = sound.fs if sound is not None else _sft.fs
-        if _sft is None:
-            nwin = int(round(win_dur * self.fs))
-            hop = max(1, int(round((hop_dur if hop_dur is not None else win_dur / 4) * self.fs)))
-            _sft = ShortTimeFFT(hann(nwin, sym=False), hop=hop, fs=self.fs, fft_mode="onesided")
-        self.sft = _sft
-        if _data is None:
-            self.n_samples = len(sound)
-            _data = _sft.stft(sound.data.T, axis=-1)
-        self.data = _data
+        self.frame = GaborFrame(win_dur, hop_dur) if frame is None else frame
+        self.fs = sound.fs
+        self.sft = self.frame.sft(sound.fs)
+        self.n_samples = len(sound)
+        self.data = self.sft.stft(sound.data.T, axis=-1)
 
     @classmethod
     def _from(cls, template: STFT, data: np.ndarray) -> STFT:
-        new = cls(None, _data=data, _sft=template.sft)
-        new.n_samples = template.n_samples
+        new = cls.__new__(cls)
+        new.frame, new.fs, new.sft = template.frame, template.fs, template.sft
+        new.n_samples, new.data = template.n_samples, data
         return new
 
     def __repr__(self) -> str:
@@ -161,9 +164,9 @@ class STFT:
     __rmul__ = __mul__
 
     def to_sound(self) -> Sound:
-        """Inverse STFT (least-squares overlap-add)."""
-        x = self.sft.istft(self.data, k1=self.n_samples)
-        return Sound(np.real(x).T, self.fs)
+        """Inverse STFT (least-squares overlap-add); see
+        :meth:`~sonore.frames.GaborFrame.synthesize`."""
+        return self.frame.synthesize(self)
 
     def griffin_lim(self, n_iter: int = 100, momentum: float = 0.99, rng=None) -> Sound:
         """Reconstruct a signal from the magnitude only (fast Griffin-Lim,

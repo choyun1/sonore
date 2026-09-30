@@ -29,7 +29,7 @@ from sonore.filterbank import (
     noise_vocode,
     subbands,
 )
-from sonore.frames import Filterbank, Frame
+from sonore.frames import Filterbank, Frame, GaborFrame
 from sonore.generators import (
     correlated_noise,
     exponential_chirp,
@@ -97,6 +97,7 @@ __all__ = [
     "CosineFilterbank",
     "Filterbank",
     "Frame",
+    "GaborFrame",
     "Envelopes",
     "Envelope",
     "ripple_sound",

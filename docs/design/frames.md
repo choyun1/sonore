@@ -1,8 +1,8 @@
 # Frames, step 1: the interface and its contract
 
-Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Step 1, patch 1
-(`Frame`, `Filterbank`, cosine-bank retrofit) implemented; `GaborFrame` and the
-oracle tests pending.
+Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Step 1, patches 1–2
+(`Frame`, `Filterbank`, cosine-bank retrofit; `GaborFrame`, STFT retrofit)
+implemented; the oracle tests are pending.
 
 The Frame work is split into three steps. This document covers only step 1.
 
@@ -233,6 +233,13 @@ A Gabor frame already raises at construction, because SciPy builds the dual
 window eagerly. sonore keeps that behavior but re-raises the error with a
 clearer message that includes the bounds.
 
+*Implementation note:* `GaborFrame` is defined in seconds, so "construction"
+of the SciPy object happens per sampling rate, at the frame's first use at
+that rate (`GaborFrame.sft(fs)`, cached). A coverage gap raises there, with
+the bounds computed from s(t). A hop longer than the window raises when the
+`GaborFrame` itself is constructed. `frame_bounds` never needs SciPy's object,
+so it reports A = 0 for a gap frame.
+
 ## API sketch
 
 ```python
@@ -258,6 +265,18 @@ class GaborFrame(Frame):              # wraps ShortTimeFFT (C5)
     window: str = "hann"              # scipy.signal.get_window, periodic
     n_fft: int | None = None          # default: window length
 ```
+
+As implemented, `window` also accepts a `get_window` tuple or a callable
+`n -> array`, which is how a non-standard window such as Hann^1.5 is given
+while keeping the frame hashable. `GaborFrame` also exposes `lengths(fs)`,
+`window_samples(fs)`, `frame_power(n, fs)` (s(t), summed over every frame that
+overlaps the signal; the frames SciPy leaves out overlap only where the window
+is zero) and `bin_weights(fs)` (C3). `STFT` gains a keyword `frame=`, and its
+private `_data`/`_sft` constructor arguments are gone.
+
+Hann^1.5 is only non-tight for some hops. Its squared window is sin⁶, and a
+sum of sin^(2m) over M equal shifts is constant when M > m, so it is tight at
+hop = win/4. The checks use hops that don't divide the window evenly.
 
 The `Frame` base, `Filterbank` and `GaborFrame` go in a new module,
 `sonore.frames`. `CosineFilterbank` stays in `sonore.filterbank` and
