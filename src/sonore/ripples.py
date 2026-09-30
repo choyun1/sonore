@@ -41,12 +41,13 @@ import numpy as np
 from scipy.signal import butter, sosfiltfilt
 from scipy.special import ndtr
 
-from sonore.filterbank import OctaveFilterbank
+from sonore.envelopes import Envelopes
+from sonore.filterbank import OctaveFilterbank, Subbands
 from sonore.generators import gaussian_noise
 from sonore.sound import Sound
 from sonore.utils import as_rng, n_samples, time_axis
 
-__all__ = ["Ripple", "RippleSum", "DynamicRipple", "ripple_sound"]
+__all__ = ["Ripple", "RippleSum", "DynamicRipple", "ripple_sound", "render"]
 
 _SCALES = ("linear", "db")
 
@@ -62,6 +63,11 @@ class _Pattern:
         return NotImplemented
 
     __radd__ = __add__
+
+    def render(self, filterbank: OctaveFilterbank, duration: float, fs: float) -> Envelopes:
+        """The pattern evaluated at each band center of ``filterbank`` (with
+        ``x`` in octaves above ``filterbank.f_lo``), as Envelopes."""
+        return render(self, filterbank, duration, fs)
 
     def plot(self, duration: float = 1.0, f_lo: float = 250.0, f_hi: float = 8000.0, ax=None, **kwargs):
         """Show the envelope pattern (in dB) over time and frequency."""
@@ -258,6 +264,30 @@ def _check_resolution(pattern: Pattern, per_octave: float, what: str) -> None:
         )
 
 
+def render(pattern: Pattern, filterbank: OctaveFilterbank, duration: float, fs: float) -> Envelopes:
+    """Evaluate any pattern (including a plain ``f(t, x)``) on the band centers
+    of an octave filterbank, giving :class:`~sonore.envelopes.Envelopes`.
+    Compare it with a sound's measured envelopes on the same filterbank."""
+    if not isinstance(filterbank, OctaveFilterbank):
+        raise TypeError("patterns are defined in octaves; use an OctaveFilterbank")
+    t = time_axis(n_samples(duration, fs), fs)
+    x = np.log2(filterbank.cfs / filterbank.f_lo)
+    return Envelopes(_evaluate(pattern, t, x).T, fs, filterbank)
+
+
+def _flat_noise_bands(noise: Sound, filterbank: OctaveFilterbank) -> Subbands:
+    """Noise bands shaped by the *squared* filter responses and scaled to equal
+    RMS. Because the squared responses sum to 1, these bands add up to a flat
+    spectrum without re-filtering, so modulation sidebands survive intact
+    (re-filtering with :meth:`Subbands.synthesize` would attenuate fast
+    modulations in narrow low-frequency bands)."""
+    n = len(noise)
+    H = filterbank.rfft_response(n, noise.fs)
+    bands = np.fft.irfft(np.fft.rfft(noise.data[:, 0])[:, None] * H**2, n=n, axis=0)
+    bands /= np.sqrt(np.mean(bands**2, axis=0, keepdims=True)) + 1e-30
+    return Subbands(bands[:, :, None], noise.fs, filterbank)
+
+
 def ripple_sound(
     pattern: Pattern,
     duration: float,
@@ -330,30 +360,18 @@ def ripple_sound(
             )
         return Sound(out, fs).normalize()
 
-    # channel carriers: noise, low-noise, or an existing sound's fine structure
+    # channel carriers: pattern envelopes x the carrier's band fine structure
     _check_resolution(pattern, bands_per_octave, "channel carrier")
     fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
     if isinstance(carrier, Sound):
         if carrier.fs != fs or len(carrier) < N:
             raise ValueError("carrier sound must have the same fs and be at least as long")
-        source, flatten = Sound(carrier.mono().data[:N], fs), True
-    elif carrier in ("noise", "low-noise"):
-        source, flatten = gaussian_noise(duration, fs, rng=rng), carrier == "low-noise"
+        fine = fb.analyze(Sound(carrier.mono().data[:N], fs)).tfs()
+    elif carrier == "low-noise":
+        fine = fb.analyze(gaussian_noise(duration, fs, rng=rng)).tfs()
+    elif carrier == "noise":
+        fine = _flat_noise_bands(gaussian_noise(duration, fs, rng=rng), fb)
     else:
         raise ValueError("carrier must be 'tones', 'harmonic', 'noise', 'low-noise', or a Sound")
-
-    if flatten:
-        bands = fb.analyze(source).tfs().data[:, :, 0]  # unit-amplitude fine structure
-    else:
-        # Filter with |H|^2 (the squared responses sum to 1), so the channels add
-        # back to a flat spectrum without re-filtering. That keeps modulation
-        # sidebands intact, which re-filtering would attenuate at high rates.
-        H = fb.rfft_response(N, fs)
-        X = np.fft.rfft(source.data[:, 0])
-        bands = np.fft.irfft(X[:, None] * H**2, n=N, axis=0)
-        bands /= np.sqrt(np.mean(bands**2, axis=0, keepdims=True)) + 1e-30
-    x = np.log2(fb.cfs / f_lo)
-    inner = slice(1, -1)  # the lowpass/highpass edge channels lie outside [f_lo, f_hi]
-    env = _evaluate(pattern, t, x[inner])  # (B, N)
-    out = np.sum(bands[:, inner] * env.T, axis=1)
-    return Sound(out, fs).normalize()
+    envelopes = render(pattern, fb, duration, fs).without_edges()  # edges lie outside f_lo..f_hi
+    return (envelopes * fine).sum().normalize()

@@ -19,7 +19,15 @@ from sonore.binaural import (
     phasewarp,
     simple_bir,
 )
-from sonore.filterbank import ERBFilterbank, OctaveFilterbank, Subbands, noise_vocode, subbands
+from sonore.envelopes import Envelope, Envelopes
+from sonore.filterbank import (
+    CosineFilterbank,
+    ERBFilterbank,
+    OctaveFilterbank,
+    Subbands,
+    noise_vocode,
+    subbands,
+)
 from sonore.generators import (
     correlated_noise,
     exponential_chirp,
@@ -77,6 +85,9 @@ from sonore.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
 __version__ = "0.2.0"
 
 __all__ = [
+    "CosineFilterbank",
+    "Envelopes",
+    "Envelope",
     "ripple_sound",
     "RippleSum",
     "Ripple",

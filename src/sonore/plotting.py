@@ -15,6 +15,8 @@ __all__ = [
     "plot_mask",
     "plot_modulation_spectrum",
     "plot_subbands",
+    "plot_envelope",
+    "plot_envelopes",
     "plot_interaural_cues",
     "plot_ripple_pattern",
     "overview",
@@ -133,29 +135,18 @@ def _band_labels(cfs, edges=True):
     return labels
 
 
-def plot_subbands(sb, axes=None, channel=0, kind="waveform", cmap="magma", sharey=True, color=None):
-    """Plot subband signals.
-
-    ``kind="waveform"``: one trace per filter, lowest band at the bottom. With
-    ``sharey=True`` (default) all traces share one amplitude scale, so relative
-    band levels are visible. The bottom and top traces are the lowpass and
-    highpass edge filters (labelled ``< f_lo`` and ``> f_hi``).
-    ``kind="image"``: bands as an image on a single axis.
-    """
+def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None):
+    """One trace per band, lowest at the bottom. With ``sharey=True`` (default)
+    all traces share one amplitude scale, so relative band levels are visible.
+    The bottom and top traces are the lowpass and highpass edge filters
+    (labelled ``< f_lo`` and ``> f_hi``). For an image, plot the envelopes:
+    ``sb.envelopes().plot()``."""
     import matplotlib.pyplot as plt
 
     n, B, _ = sb.data.shape
     t = np.arange(n) / sb.fs
     data = sb.data[:, :, channel]
     labels = _band_labels(sb.cfs)
-    if kind == "image":
-        ax = _ax(axes)
-        im = ax.pcolormesh(t, np.arange(B), data.T, cmap=cmap, shading="auto", rasterized=True)
-        step = max(1, B // 8)
-        ax.set_yticks(np.arange(B)[::step], labels[::step])
-        ax.set(xlabel="Time [s]", ylabel="Band [Hz]", title="Subbands")
-        ax.figure.colorbar(im, ax=ax)
-        return ax
     if axes is None:
         _, axes = plt.subplots(B, 1, figsize=(8, 0.5 * B + 0.6), sharex=True)
     axes = list(axes)
@@ -176,6 +167,37 @@ def plot_subbands(sb, axes=None, channel=0, kind="waveform", cmap="magma", share
     axes[0].set_title("Subbands [Hz]")
     axes[-1].set_xlabel("Time [s]")
     return axes
+
+
+def plot_envelope(env, ax=None, db=False, **kwargs):
+    """A single :class:`~sonore.envelopes.Envelope` over time."""
+    ax = _ax(ax)
+    ax.plot(env.t, env.db if db else env.data, **kwargs)
+    ax.set(
+        title="Envelope",
+        xlabel="Time [s]",
+        ylabel="Envelope [dB]" if db else "Envelope",
+        xlim=(0, env.duration),
+    )
+    ax.grid(ls=":")
+    return ax
+
+
+def plot_envelopes(env, ax=None, channel=0, db_range=40.0, cmap="magma", colorbar=True, edges=False):
+    """Envelopes (a cochleagram) as an image: time x band, in dB re the maximum.
+    Edge bands are hidden unless ``edges=True``."""
+    ax = _ax(ax)
+    sel = slice(None) if edges else slice(1, -1)
+    db = env.db[:, sel, channel]
+    vmax = db.max()
+    im = ax.pcolormesh(
+        env.t, env.cfs[sel], db.T, cmap=cmap, vmin=vmax - db_range, vmax=vmax, shading="auto", rasterized=True
+    )
+    ax.set_yscale("log")
+    ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Envelopes (cochleagram)")
+    if colorbar:
+        ax.figure.colorbar(im, ax=ax, label="dB")
+    return ax
 
 
 def plot_interaural_cues(cues, ax=None, show_iac=True):

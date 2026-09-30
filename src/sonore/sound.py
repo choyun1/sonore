@@ -338,9 +338,13 @@ class Sound:
             h = h[:, None]
         return Sound(fftconvolve(self._data, h, axes=0), self.fs)
 
-    def envelope(self) -> Sound:
-        """Hilbert envelope of each channel."""
-        return Sound(np.abs(hilbert(self._data, axis=0)), self.fs)
+    def envelope(self):
+        """Hilbert envelope of each channel, as an :class:`~sonore.envelopes.Envelope`
+        (not a Sound: you apply an envelope to a sound rather than listen to it).
+        ``snd / snd.envelope()`` is the fine structure."""
+        from sonore.envelopes import Envelope
+
+        return Envelope(np.abs(hilbert(self._data, axis=0)), self.fs)
 
     # ---------------------------------------------------------------- output
     def play(self, blocking: bool = False, **kwargs) -> None:

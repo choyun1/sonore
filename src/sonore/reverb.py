@@ -8,6 +8,7 @@ from importlib.resources import files
 
 import numpy as np
 
+from sonore.envelopes import Envelopes
 from sonore.filterbank import ERBFilterbank
 from sonore.generators import gaussian_noise
 from sonore.sound import Sound
@@ -78,8 +79,8 @@ def synth_ir(
         env_db = env_db[::-1]
     elif envelope != "exponential":
         raise ValueError("envelope must be 'exponential' or 'time_reversed'")
-    sb = fb.analyze(noise)
-    tail = (sb * db_to_amp(env_db)[:, :, None]).synthesize().normalize()
+    decay = Envelopes(db_to_amp(env_db), fs, fb)  # one exponential decay per band
+    tail = (decay * fb.analyze(noise)).synthesize().normalize()
 
     if drr_db is None:
         return tail

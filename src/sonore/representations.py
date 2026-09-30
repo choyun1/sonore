@@ -5,10 +5,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from fractions import Fraction
 
 import numpy as np
-from scipy.signal import ShortTimeFFT, resample_poly, welch
+from scipy.signal import ShortTimeFFT, welch
 from scipy.signal.windows import hann
 
 from sonore.sound import Sound
@@ -228,7 +227,8 @@ class ModulationSpectrum:
     ``ModulationSpectrum(stft)`` uses a dB spectrogram, so spectral modulation
     is w.r.t. *linear* frequency (cycles/kHz). :meth:`octave` uses subband
     envelopes on a log-frequency axis (cycles/octave), the axis on which
-    ripples (:mod:`sonore.ripples`) are defined.
+    ripples (:mod:`sonore.ripples`) are defined; more generally, any
+    :class:`~sonore.envelopes.Envelopes` has ``.modulation_spectrum()``.
 
     Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at
     ``(+rate, +density)``. Only non-negative spectral modulations are kept
@@ -241,8 +241,15 @@ class ModulationSpectrum:
         dt = stft.sft.hop / stft.fs
         self._compute(d, dt=dt, dx=df / 1000, spectral_unit="cyc/kHz")
 
+    @classmethod
+    def from_array(cls, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> ModulationSpectrum:
+        """From a (frequency, time) envelope array sampled every ``dt`` seconds
+        and ``dx`` scale units."""
+        new = cls.__new__(cls)
+        new._compute(env, dt, dx, spectral_unit)
+        return new
+
     def _compute(self, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> None:
-        """``env`` is (frequency, time)."""
         env = env - env.mean()
         F = np.fft.fft2(env)
         w_f = np.fft.fftfreq(env.shape[0], d=dx)
@@ -265,23 +272,15 @@ class ModulationSpectrum:
     ) -> ModulationSpectrum:
         """Modulation spectrum on a log-frequency axis [cycles/octave].
 
-        Subband envelopes from an :class:`~sonore.filterbank.OctaveFilterbank`
-        (edge filters dropped) are resampled to ``env_fs`` and 2-D Fourier
-        transformed. ``scale="db"`` analyzes log envelopes instead of linear.
+        Shorthand for::
+
+            fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
+            fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
         """
         from sonore.filterbank import OctaveFilterbank
 
         fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, min(f_hi, 0.95 * sound.fs / 2))
-        env = fb.analyze(sound.mono()).envelopes().data[:, 1:-1, 0]  # (n, B)
-        ratio = Fraction(env_fs / sound.fs).limit_denominator(1000)
-        env = resample_poly(env, ratio.numerator, ratio.denominator, axis=0)
-        if scale == "db":
-            env = amp_to_db(np.maximum(env, 0) + 1e-12 * env.max())
-        elif scale != "linear":
-            raise ValueError("scale must be 'linear' or 'db'")
-        new = cls.__new__(cls)
-        new._compute(env.T, dt=1 / float(env_fs), dx=fb.spacing, spectral_unit="cyc/oct")
-        return new
+        return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
 
     def peak(self, exclude_dc: bool = True) -> tuple[float, float]:
         """``(temporal Hz, spectral)`` coordinates of the largest component.

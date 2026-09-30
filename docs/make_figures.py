@@ -137,24 +137,8 @@ for col, (label, pattern) in enumerate(patterns):
     axes[0, col].set_title(label, family="monospace", fontsize=9)
     snd = so.ripple_sound(pattern, 1.0, FS, rng=rng)
     fb = so.OctaveFilterbank.per_octave(24, 250, 8000)
-    env = fb.analyze(snd).envelopes(lowpass=200).data[::44, 1:-1, 0]
-    db = 20 * np.log10(env / env.mean() + 1e-3)
-    axes[1, col].pcolormesh(
-        np.arange(env.shape[0]) * 44 / FS,
-        fb.cfs[1:-1],
-        db.T,
-        cmap="magma",
-        vmin=db.max() - 30,
-        vmax=db.max(),
-        shading="auto",
-        rasterized=True,
-    )
-    axes[1, col].set(
-        yscale="log",
-        xlabel="Time [s]",
-        ylabel="Frequency [Hz]",
-        title="so.ripple_sound(pattern, 1.0, fs): subband envelopes",
-    )
+    fb.analyze(snd).envelopes(lowpass=200, fs=1000).plot(axes[1, col], db_range=30, colorbar=False)
+    axes[1, col].set_title("the synthesized sound's .envelopes()")
     dmr = isinstance(pattern, so.DynamicRipple)
     ms = so.ModulationSpectrum.octave(
         snd, bands_per_octave=12, f_lo=250, f_hi=8000, scale="db" if dmr else "linear"
