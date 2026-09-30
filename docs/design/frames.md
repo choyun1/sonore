@@ -335,3 +335,21 @@ The following are not part of step 1:
   have not been checked.
 - SciPy `ShortTimeFFT` (≥ 1.12). C3, C5 and C6 were checked against version
   1.17.1.
+
+## Reference implementations
+
+These are for development-time cross-checks only. Their licenses keep them
+out of the package: sonore is MIT, LTFAT is GPLv3, and nsgt uses the Artistic
+License 2.0.
+
+- [LTFAT](https://ltfat.github.io/) (MATLAB/Octave, GPLv3) is the reference implementation for frames in audio:
+  - filterbank, Gabor and nonstationary Gabor frames;
+  - canonical duals and frame-bound estimation.
+
+  Its partial Python port, `ltfatpy`, is based on the older LTFAT 2.1.
+- [nsgt](https://github.com/grrrr/nsgt) (Python, Artistic License 2.0) is Thomas Grill's port of the
+  NUHAG MATLAB code for nonstationary Gabor transforms (Balazs et al. 2011;
+  Holighaus et al. 2013). It is the natural cross-check, or optional wrapper,
+  for the invertible constant-Q transform.
+- SciPy's `ShortTimeFFT` is already a dependency. It is the implementation
+  behind `GaborFrame`, and C3, C5 and C6 are checked against it.
