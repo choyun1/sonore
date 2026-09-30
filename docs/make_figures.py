@@ -6,6 +6,7 @@ README can't drift from what the gallery plays. Each README figure links to
 its gallery entries (``gallery/#d-<key>``).
 """
 
+import json
 import sys
 from pathlib import Path
 
@@ -13,8 +14,10 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 
 import sonore as so  # noqa: E402
+from sonore.texture import TextureStats  # noqa: E402
 
 HERE = Path(__file__).parent
 OUT = HERE / "images"
@@ -162,3 +165,35 @@ for sub, (label, d) in zip(columns, patterns, strict=True):
     top.suptitle(label, family="monospace", fontsize=9)
     sb.plot(bottom.subplots(len(show), 1, sharex=True), bands=show, color="tab:purple")
 save(fig, "ripple_waveforms.png")
+
+# 9. sound texture: a stream recording and a synthesis from its statistics (gallery t01a / t01b)
+original, synth = demo("t01a").sound, demo("t01b").sound
+info = json.loads((gallery.TEXTURES / "synth" / "stream.json").read_text())
+snr = np.mean(list(info["snr_all_classes"].values()))
+target = TextureStats.measure(original)
+this = TextureStats.measure(synth, window="uniform")  # syntheses are circular
+cfs, ok, mcf = target.model.filterbank.cfs[1:-1], target.channel_mask(), target.model.mod_bank.cfs
+
+fig = plt.figure(figsize=(13, 7), layout="constrained")
+top, bottom = fig.subfigures(2, 1, height_ratios=[1.15, 1])
+ax_o, ax_s = top.subplots(1, 2, sharey=True)
+so.STFT(original[0 : synth.duration], 20e-3).plot(ax_o, fmax=10000, db_range=70, colorbar=False)
+ax_o.set_title("Original: water over rocks in a creek (first 5 s)")
+so.STFT(synth, 20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
+ax_s.set_title(
+    f"Synthesized from noise: {info['best_iteration']} iterations, average statistic SNR {snr:.0f} dB"
+)
+ax_l, ax_v, ax_p = bottom.subplots(1, 3)
+so.long_term_spectrum(synth).plot(ax_l, lw=1.2, label="synthesized")
+so.long_term_spectrum(original).plot(ax_l, color="k", ls="--", lw=1, label="original")
+ax_l.set(xlim=(20, 10000), ylim=(-40, 3), title="Long-term spectrum")
+ax_v.semilogx(cfs, this.env_var[1:-1], lw=1.2)
+ax_v.semilogx(cfs, target.env_var[1:-1], "k--", lw=1)
+ax_v.set(xlabel="Band center [Hz]", ylabel="var / mean²", title="Envelope sparsity by band")
+ax_p.loglog(mcf, this.mod_power[ok].mean(0), lw=1.2)
+ax_p.loglog(mcf, target.mod_power[ok].mean(0), "k--", lw=1)
+ax_p.set(xlabel="Modulation rate [Hz]", ylabel="Power / variance", title="Modulation power (band average)")
+for ax in (ax_v, ax_p):
+    ax.grid(ls=":", which="both", lw=0.5)
+ax_l.legend(fontsize=8)
+save(fig, "texture_stream.png")
