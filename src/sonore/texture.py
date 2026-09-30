@@ -220,13 +220,31 @@ class TextureStats:
     @classmethod
     def from_subbands(cls, sb: np.ndarray, model: TextureModel, window: str = "ramped") -> TextureStats:
         env = model.envelopes(sb)
-        n_env, n = env.shape[0], sb.shape[0]
+        n_env = env.shape[0]
+        w = cls._window(model, n_env, window)
+        wf = np.repeat(w, model.decimation) / model.decimation  # the window at the full rate
+        sub_var = wf @ (sb - wf @ sb) ** 2
+        return cls.from_envelopes(env, sub_var, model, window)
+
+    @staticmethod
+    def _window(model: TextureModel, n_env: int, window: str) -> np.ndarray:
         if window == "ramped":
-            w = measurement_window(n_env, int(round(n / model.fs)))
+            w = measurement_window(n_env, int(round(n_env / model.env_fs)))
         elif window == "uniform":
             w = np.full(n_env, 1.0 / n_env)
         else:
             raise ValueError("window must be 'ramped' or 'uniform'")
+        return w
+
+    @classmethod
+    def from_envelopes(
+        cls, env: np.ndarray, subband_var: np.ndarray, model: TextureModel, window: str = "uniform"
+    ) -> TextureStats:
+        """Statistics of compressed, downsampled envelopes ``(n_env, B)``
+        (subband variances are passed through). Used during synthesis."""
+        n_env = env.shape[0]
+        w = cls._window(model, n_env, window)
+        n = n_env * model.decimation
 
         mu = w @ env
         dev = env - mu
@@ -250,9 +268,7 @@ class TextureStats:
             np.tensordot(w, doubled * hi.imag, axes=(0, 0)), den
         )
 
-        wf = np.repeat(w, model.decimation) / model.decimation  # the window at the full rate
-        sb_mu = wf @ sb
-        sub_var = wf @ (sb - sb_mu) ** 2
+        sub_var = np.asarray(subband_var)
         return cls(model, mu, env_var, skew, kurt, corr, mod_power, c1, c2, sub_var, n / model.fs)
 
     # -- bookkeeping -------------------------------------------------------
