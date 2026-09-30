@@ -309,7 +309,7 @@ class Sound:
         frac = d - d_int
         data = np.pad(self._data, ((d_int, 0), (0, 0)))
         if frac > 1e-9:
-            guard = 64
+            guard = data.shape[0]  # sinc tails decay slowly; keep them from wrapping around
             n = data.shape[0] + 1 + guard
             spec = np.fft.rfft(data, n=n, axis=0)
             f = np.fft.rfftfreq(n)
@@ -338,18 +338,21 @@ class Sound:
             h = h[:, None]
         return Sound(fftconvolve(self._data, h, axes=0), self.fs)
 
-    def envelope(self):
+    def envelope(self, pad: float | str = "auto"):
         """Hilbert envelope of each channel, as an :class:`~sonore.envelopes.Envelope`
         (not a Sound: you apply an envelope to a sound rather than listen to it).
         ``snd / snd.envelope()`` is the fine structure.
 
-        The Hilbert transform is FFT-based, so a loud start can leak into the
-        last few milliseconds of the envelope (and vice versa). When the ends
-        matter, e.g. measuring a decay, pad first: ``snd.pad(after=0.5).envelope()``.
+        The Hilbert transform is FFT-based. By default the sound is zero-padded
+        by its own length on each side first, so a loud start can't leak into
+        the end of the envelope (or vice versa). ``pad=0`` is circular;
+        a number pads by that many seconds.
         """
         from sonore.envelopes import Envelope
 
-        return Envelope(np.abs(hilbert(self._data, axis=0)), self.fs)
+        p = self.n_samples if pad == "auto" else int(round(float(pad) * self.fs))
+        x = np.pad(self._data, ((p, p), (0, 0))) if p else self._data
+        return Envelope(np.abs(hilbert(x, axis=0))[p : p + self.n_samples], self.fs)
 
     # ---------------------------------------------------------------- output
     def play(self, blocking: bool = False, **kwargs) -> None:

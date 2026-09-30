@@ -368,7 +368,8 @@ def ripple_sound(
             raise ValueError("carrier sound must have the same fs and be at least as long")
         fine = fb.analyze(Sound(carrier.mono().data[:N], fs)).tfs()
     elif carrier == "low-noise":
-        fine = fb.analyze(gaussian_noise(duration, fs, rng=rng)).tfs()
+        # our own noise is periodic, so circular analysis (pad=0) is exact here
+        fine = fb.analyze(gaussian_noise(duration, fs, rng=rng), pad=0).tfs()
     elif carrier == "noise":
         fine = _flat_noise_bands(gaussian_noise(duration, fs, rng=rng), fb)
     else:

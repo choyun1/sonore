@@ -250,7 +250,12 @@ class ModulationSpectrum:
         return new
 
     def _compute(self, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> None:
-        env = env - env.mean()
+        # Taper in time: the 2-D FFT treats the envelope as periodic, and the jump
+        # between its end and start otherwise leaks energy across modulation rates
+        # (enough to misplace the peak when a modulation isn't a whole number of
+        # cycles long). Removing each band's own mean instead would also work but
+        # would erase static spectral structure (rate-0 ripples).
+        env = (env - env.mean()) * np.hanning(env.shape[1])[None, :]
         F = np.fft.fft2(env)
         w_f = np.fft.fftfreq(env.shape[0], d=dx)
         w_t = np.fft.fftfreq(env.shape[1], d=dt)

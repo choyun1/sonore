@@ -197,11 +197,17 @@ class Envelopes:
     ``env[i]`` is an :class:`Envelope`; ``env * subbands`` modulates each band;
     ``env.modulation_spectrum()`` gives its 2-D modulation spectrum on the
     filterbank's frequency scale (cycles/octave or cycles/ERB).
+
+    Envelopes derived from padded Subbands carry the same zero-padding
+    (``pad`` samples at each end, hidden from :attr:`data`), so that
+    modulating and re-synthesizing bands can't wrap around. Envelopes made
+    from scratch (e.g. a rendered ripple pattern) have ``pad=0`` and are
+    zero outside their own extent when combined with padded bands.
     """
 
     __array_ufunc__ = None
 
-    def __init__(self, data, fs: float, filterbank: CosineFilterbank):
+    def __init__(self, data, fs: float, filterbank: CosineFilterbank, pad: int = 0):
         arr = np.array(data, dtype=float)
         if arr.ndim == 2:
             arr = arr[:, :, None]
@@ -209,13 +215,16 @@ class Envelopes:
             raise ValueError(
                 f"expected shape (n_samples, {filterbank.n_bands + 2}, n_channels), got {arr.shape}"
             )
+        if 2 * pad >= arr.shape[0]:
+            raise ValueError("padding is longer than the data")
         arr = _nonnegative(arr)
         arr.flags.writeable = False
-        self._data, self.fs, self.filterbank = arr, fs, filterbank
+        self._full, self.fs, self.filterbank, self.pad = arr, fs, filterbank, int(pad)
 
     @property
     def data(self) -> np.ndarray:
-        return self._data
+        """Envelopes without the padding, shape ``(n_samples, n_bands, n_channels)``."""
+        return self._full[self.pad : self._full.shape[0] - self.pad]
 
     @property
     def cfs(self) -> np.ndarray:
@@ -223,17 +232,17 @@ class Envelopes:
 
     def __len__(self) -> int:
         """Number of bands (including the two edge filters)."""
-        return self._data.shape[1]
+        return self._full.shape[1]
 
     def __getitem__(self, i: int) -> Envelope:
-        return Envelope(self._data[:, i, :], self.fs)
+        return Envelope(self.data[:, i, :], self.fs)
 
     def __iter__(self):
         return (self[i] for i in range(len(self)))
 
     @property
     def n_samples(self) -> int:
-        return self._data.shape[0]
+        return self._full.shape[0] - 2 * self.pad
 
     @property
     def duration(self) -> float:
@@ -245,27 +254,55 @@ class Envelopes:
 
     @property
     def db(self) -> np.ndarray:
-        return amp_to_db(self._data)
+        return amp_to_db(self.data)
 
     def __repr__(self) -> str:
-        n, b, c = self._data.shape
+        n, b, c = self.data.shape
         return f"Envelopes({b} bands, {n / self.fs:.3f} s, {self.fs:g} Hz, {c} ch)"
 
-    def _new(self, data, fs=None) -> Envelopes:
-        return Envelopes(data, self.fs if fs is None else fs, self.filterbank)
+    def _new(self, full, fs=None, pad=None) -> Envelopes:
+        return Envelopes(
+            full, self.fs if fs is None else fs, self.filterbank, self.pad if pad is None else pad
+        )
 
     def lowpass(self, cutoff: float, order: int = 4) -> Envelopes:
-        return self._new(_lowpass(self._data, cutoff, self.fs, order))
+        return self._new(_lowpass(self._full, cutoff, self.fs, order))
 
     def resample(self, fs: float) -> Envelopes:
-        return self if fs == self.fs else self._new(_resample(self._data, self.fs, fs), fs)
+        if fs == self.fs:
+            return self
+        ratio = Fraction(fs / self.fs).limit_denominator(10000)
+        # extend the front padding so it maps to a whole number of samples at
+        # the new rate: the inner signal then starts exactly on a sample
+        extra = (-self.pad) % ratio.denominator
+        full = np.pad(self._full, ((extra, 0), (0, 0), (0, 0))) if extra else self._full
+        full = _resample(full, self.fs, fs)
+        pad = (self.pad + extra) * ratio.numerator // ratio.denominator
+        total = pad + int(round(self.n_samples * float(ratio))) + pad
+        if full.shape[0] < total:
+            full = np.pad(full, [(0, total - full.shape[0])] + [(0, 0)] * 2, mode="edge")
+        return self._new(full[:total], fs, pad)
 
     def without_edges(self) -> Envelopes:
         """Zero the lowpass and highpass edge bands (which lie outside
         ``f_lo..f_hi``), keeping the band count unchanged."""
-        data = self._data.copy()
-        data[:, [0, -1], :] = 0.0
-        return self._new(data)
+        full = self._full.copy()
+        full[:, [0, -1], :] = 0.0
+        return self._new(full)
+
+    def _on_grid(self, fs: float, n_inner: int, pad: int) -> np.ndarray:
+        """These envelopes on another time grid (``n_inner`` samples at ``fs``
+        with ``pad`` samples each side), zero outside their own extent."""
+        full, own_pad = self._full, self.pad
+        if fs != self.fs:
+            n_up = int(round(full.shape[0] * fs / self.fs))
+            full = _upsample_to(full, self.fs, n_up, fs)
+            own_pad = int(round(self.pad * fs / self.fs))
+        out = np.zeros((n_inner + 2 * pad,) + full.shape[1:])
+        shift = pad - own_pad  # where our sample 0 lands on the target grid
+        lo, hi = max(0, shift), min(out.shape[0], shift + full.shape[0])
+        out[lo:hi] = full[lo - shift : hi - shift]
+        return out
 
     def __mul__(self, other):
         from sonore.filterbank import Subbands
@@ -273,21 +310,27 @@ class Envelopes:
         if isinstance(other, Subbands):
             if len(other) != len(self):
                 raise ValueError(f"band counts differ ({len(self)} vs {len(other)})")
-            _check_duration(self.n_samples, self.fs, other.data.shape[0], other.fs)
-            env = self._data
-            if self.fs != other.fs or self.n_samples != other.data.shape[0]:
-                env = _upsample_to(env, self.fs, other.data.shape[0], other.fs)
-            return Subbands(other.data * env, other.fs, other.filterbank)
+            _check_duration(self.n_samples, self.fs, other.n_samples, other.fs)
+            pad = max(other.pad, int(round(self.pad * other.fs / self.fs)))
+            extra = pad - other.pad
+            bands = np.pad(other._full, ((extra, extra), (0, 0), (0, 0))) if extra else other._full
+            env = self._on_grid(other.fs, other.n_samples, pad)
+            return Subbands(bands * env, other.fs, other.filterbank, pad=pad)
         if isinstance(other, Envelopes):
-            if other._data.shape != self._data.shape or other.fs != self.fs:
-                raise ValueError("Envelopes must share shape and fs")
-            return self._new(self._data * other._data)
+            if other.fs != self.fs or other.n_samples != self.n_samples or len(other) != len(self):
+                raise ValueError("Envelopes must share fs, length and band count")
+            pad = max(self.pad, other.pad)
+            a = self._on_grid(self.fs, self.n_samples, pad)
+            b = other._on_grid(self.fs, self.n_samples, pad)
+            return self._new(a * b, pad=pad)
         if isinstance(other, Envelope):
             if other.fs != self.fs or len(other) != self.n_samples:
                 raise ValueError("Envelope must share fs and length")
-            return self._new(self._data * other.data[:, None, :])
+            gain = np.zeros((self._full.shape[0], 1, other.data.shape[1]))
+            gain[self.pad : self.pad + self.n_samples, 0, :] = other.data
+            return self._new(self._full * gain)
         if isinstance(other, numbers.Real) and not isinstance(other, bool):
-            return self._new(self._data * float(other))
+            return self._new(self._full * float(other))
         return NotImplemented
 
     __rmul__ = __mul__
@@ -300,7 +343,7 @@ class Envelopes:
         """
         from sonore.representations import ModulationSpectrum
 
-        env = self._data.mean(axis=2)  # (n, B), channels averaged
+        env = self.data.mean(axis=2)  # (n, B), channels averaged
         if drop_edges:
             env = env[:, 1:-1]
         if scale == "db":
