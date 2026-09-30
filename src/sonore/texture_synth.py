@@ -25,7 +25,9 @@ the toolbox, listed in :data:`sonore.texture.DIFFERENCES_FROM_TOOLBOX`.
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
+from functools import cached_property
 
 import numpy as np
 from scipy.optimize import minimize
@@ -88,8 +90,9 @@ class ChannelObjective:
             out.append(("c1", lambda s, o=others: tg.c1(s, o, ctx), np.stack(rows, axis=-1)))
         return out
 
-    def __call__(self, s: np.ndarray, per_term: bool = False):
-        """Loss ``0.5 * sum |f(s) - target|**2`` and its gradient."""
+    def reference(self, s: np.ndarray, per_term: bool = False):
+        """The objective computed class by class from :meth:`terms` (the
+        straightforward, separately tested path; :meth:`__call__` must agree)."""
         loss, grad, parts = 0.0, np.zeros_like(s), {}
         for name, f, tgt in self.terms():
             val, vjp = f(s)
@@ -100,6 +103,75 @@ class ChannelObjective:
             parts[name] = e
             loss += e
             grad += vjp(err)
+        return (loss, grad, parts) if per_term else (loss, grad)
+
+    @cached_property
+    def _fixed(self) -> dict:
+        """Everything that doesn't depend on ``s``: targets, and the neighbors'
+        centered envelopes and octave bands (computed once per channel instead
+        of on every objective call)."""
+        t, k, ctx, use = self.target, self.k, self.ctx, set(self.classes)
+        f = {"mask": np.array([m in use for m in MOMENTS], float)}
+        f["moments"] = np.array([t.env_mean[k], t.env_var[k], t.env_skew[k], t.env_kurt[k]])
+        idx, rows = self._pairs(t.model.corr_offsets, t.env_corr)
+        if idx and "env_corr" in use:
+            f["corr"] = (self.env[:, idx], np.array(rows))
+        idx, rows = self._pairs(t.model.c1_offsets, t.c1)
+        if idx and "c1" in use:
+            bands = list(t.model.c1_bands)
+            f["c1"] = (bands, ctx.analytic_many(self.env[:, idx], bands).real, np.stack(rows, axis=-1))
+        return f
+
+    def __call__(self, s: np.ndarray, per_term: bool = False):
+        """Loss ``0.5 * sum |f(s) - target|**2`` and its gradient.
+
+        Fused: one forward transform per filterbank shared by all classes,
+        and the band-domain cotangents of C2 and C1 summed before a single
+        adjoint transform."""
+        t, k, ctx, w, fx = self.target, self.k, self.ctx, self.ctx.w, self._fixed
+        use = set(self.classes)
+        loss, grad, parts = 0.0, np.zeros_like(s), {}
+
+        def add(name, err, g):
+            nonlocal loss, grad
+            e = 0.5 * float(np.sum(np.abs(err) ** 2))
+            parts[name] = e
+            loss += e
+            if g is not None:
+                grad += g
+
+        d = s - w @ s
+        if fx["mask"].any():
+            val, vjp = tg.env_moments(s, ctx)
+            err = (val - fx["moments"]) * fx["mask"]
+            add("env_moments", err, vjp(err))
+        if "mod_power" in use:
+            val, vjp = tg.mod_power_core(ctx.mod_filter(s), d, w)
+            err = val - t.mod_power[k]
+            G, direct = vjp(err)
+            add("mod_power", err, ctx.mod_adjoint(G) + direct)
+        if "c2" in use or "c1" in fx:
+            K = ctx.A_oct.shape[1]
+            A = ctx.analytic(s, range(K))
+            G = np.zeros((len(s), K), complex)  # cotangent of Re A + i * cotangent of Im A
+            if "c2" in use:
+                val, vjp = tg.c2_core(A, w)
+                err = val - t.c2[k]
+                g_re, g_im = vjp(err)
+                G += g_re + 1j * g_im
+                add("c2", err, None)
+            if "c1" in fx:
+                bands, Ro, tgt = fx["c1"]
+                val, vjp = tg.c1_core(A[:, bands].real, Ro, w)
+                err = val - tgt
+                G[:, bands] += vjp(err)
+                add("c1", err, None)
+            grad += ctx.analytic_adjoint(G.real, G.imag, range(K))
+        if "corr" in fx:
+            others, tgt = fx["corr"]
+            val, vjp = tg.env_corr(s, others, ctx)
+            err = val - tgt
+            add("env_corr", err, vjp(err))
         return (loss, grad, parts) if per_term else (loss, grad)
 
 
@@ -181,6 +253,7 @@ def synthesize(
     converged_db: float = 20.0,
     init: Sound | None = None,
     callback=None,
+    progress: bool = False,
 ) -> tuple[Sound, dict]:
     """Synthesize a sound whose statistics match ``target``.
 
@@ -197,6 +270,14 @@ def synthesize(
     Stops when every class in ``classes`` is at least ``stop_db`` SNR, or
     after ``max_iter`` iterations. The synthesis counts as converged if the
     average SNR over ``classes`` is at least ``converged_db``.
+
+    **Run time.** Cost is linear in ``duration`` and in the number of
+    iterations: about 0.4 s per iteration per second of sound on one core
+    (2 s per iteration for 5 s), so the default 60 iterations of 5 s take
+    about 2 minutes. Most textures are close to their final quality by 20-30
+    iterations; use ``max_iter`` to trade quality for time, ``progress=True``
+    to print one line per iteration, or ``callback(iteration, sound, snr)``
+    to watch or stop from your own code.
 
     Returns the sound (at ``target.model.fs``, RMS ``target.model.rms``) and a
     report: ``snr`` (per-iteration dicts), ``converged``, ``iterations``,
@@ -217,12 +298,34 @@ def synthesize(
     ctx = tg.ChannelContext.build(model, n_env)
     order = channel_order(target.env_mean)
     history, best = [], (-np.inf, x, 0)
-    for it in range(1, max_iter + 1):
+
+    def analyze(x):
         sb = model.subbands(x)
         analytic = hilbert(sb, axis=0)
-        fine = np.cos(np.angle(analytic))
         comp = np.abs(analytic) ** model.compression
         env = np.maximum(_resample(comp, n_env), 0.0)
+        return sb, analytic, comp, env
+
+    def score(it, x, sb, env):
+        """SNR of iterate ``x``, from the analysis the next iteration needs anyway."""
+        nonlocal best
+        sub_var = np.mean(sb**2, axis=0) - np.mean(sb, axis=0) ** 2
+        snr = target.snr(TextureStats.from_envelopes(env, sub_var, model, window="uniform"), classes)
+        history.append(snr)
+        avg = float(np.mean(list(snr.values())))
+        if avg > best[0]:
+            best = (avg, x, it)
+        if callback is not None:
+            callback(it, Sound(x, model.fs), snr)
+        if progress:
+            elapsed = time.time() - t_start
+            print(f"iteration {it:3d}/{max_iter}  average SNR {avg:5.1f} dB  ({elapsed:6.1f} s)", flush=True)
+        return min(snr.values()) >= stop_db
+
+    t_start = time.time()
+    sb, analytic, comp, env = analyze(x)
+    for it in range(1, max_iter + 1):
+        fine = np.cos(np.angle(analytic))
         residual = comp - _resample(env, N)
 
         adjusted = np.zeros(env.shape[1], bool)
@@ -238,15 +341,8 @@ def synthesize(
         y = Subbands(new_sb[:, :, None], model.fs, fb).synthesize().data[:, 0]
         x = y * (model.rms / np.sqrt(np.mean(y**2)))
 
-        stats = TextureStats.from_subbands(model.subbands(x), model, window="uniform")
-        snr = target.snr(stats, classes)
-        history.append(snr)
-        avg = float(np.mean(list(snr.values())))
-        if avg > best[0]:
-            best = (avg, x, it)
-        if callback is not None:
-            callback(it, Sound(x, model.fs), snr)
-        if min(snr.values()) >= stop_db:
+        sb, analytic, comp, env = analyze(x)
+        if score(it, x, sb, env):
             break
     report = {
         "snr": history,

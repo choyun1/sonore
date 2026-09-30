@@ -117,3 +117,17 @@ def test_synthesis_restricted_classes():
     classes = ("env_mean", "env_var", "mod_power")
     _, report = synth.synthesize(target, duration=1, rng=1, max_iter=2, classes=classes)
     assert set(report["snr"][0]) == set(classes)
+
+
+@pytest.mark.parametrize("k", [0, 15, 31])
+@pytest.mark.parametrize("classes", [None, ("env_var", "c1"), ("mod_power", "c2", "env_corr")])
+def test_fused_objective_matches_reference(setup, k, classes):
+    target, _, env, adjusted = setup
+    ctx = tg.ChannelContext.build(M, env.shape[0])
+    args = () if classes is None else (classes,)
+    obj = ChannelObjective(ctx, target, k, env, np.ones(env.shape[1], bool), *args)
+    s = env[:, k] * 1.1 + 0.01
+    fast, ref = obj(s, per_term=True), obj.reference(s, per_term=True)
+    assert fast[0] == pytest.approx(ref[0], rel=1e-10)
+    assert np.allclose(fast[1], ref[1], rtol=1e-8, atol=1e-12 * np.abs(ref[1]).max())
+    assert fast[2].keys() == ref[2].keys()

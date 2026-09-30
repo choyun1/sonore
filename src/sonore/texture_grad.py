@@ -26,7 +26,17 @@ import numpy as np
 
 from sonore.texture import TextureModel
 
-__all__ = ["ChannelContext", "env_moments", "mod_power", "env_corr", "c1", "c2"]
+__all__ = [
+    "ChannelContext",
+    "env_moments",
+    "mod_power",
+    "env_corr",
+    "c1",
+    "c2",
+    "mod_power_core",
+    "c1_core",
+    "c2_core",
+]
 
 
 @dataclass(frozen=True, eq=False)
@@ -71,10 +81,13 @@ class ChannelContext:
         return np.fft.ifft(np.fft.fft(X, axis=0)[:, None, :] * self.A_oct[:, list(bands), None], axis=0)
 
     def analytic_adjoint(self, g_re: np.ndarray, g_im: np.ndarray, bands) -> np.ndarray:
-        """Adjoint of ``x -> (Re A x, Im A x)`` for the given bands, summed over bands."""
-        Z = np.fft.ifft(np.fft.fft(g_re, axis=0) * self.A_oct[:, list(bands)], axis=0)
-        Zi = np.fft.ifft(np.fft.fft(g_im, axis=0) * self.A_oct[:, list(bands)], axis=0)
-        return (Z.real - Zi.imag).sum(axis=1)
+        """Adjoint of ``x -> (Re A x, Im A x)`` for the given bands, summed over bands.
+
+        Since ``A`` is Hermitian, this is ``Re(A g_re) - Im(A g_im)``
+        ``= Re(A (g_re + i g_im))``: one complex FFT, and the sum over bands
+        is taken before the inverse transform."""
+        G = np.fft.fft(g_re + 1j * g_im, axis=0)
+        return np.fft.ifft((G * self.A_oct[:, list(bands)]).sum(axis=1)).real
 
 
 def _central(s, w):
@@ -87,33 +100,47 @@ def env_moments(s: np.ndarray, ctx: ChannelContext):
     """``[mean, var/mean**2, skew, kurtosis]`` of the envelope."""
     w = ctx.w
     mu, d = _central(s, w)
-    m2, m3, m4 = w @ d**2, w @ d**3, w @ d**4
+    d2 = d * d
+    d3 = d2 * d
+    m2, m3, m4 = w @ d2, w @ d3, w @ (d2 * d2)
     val = np.array([mu, m2 / mu**2, m3 / m2**1.5, m4 / m2**2])
 
     def vjp(g):
-        # derivatives of the central moments (w @ d**(p-1) terms use w @ d = 0)
-        dm2 = 2 * w * d
-        dm3 = 3 * w * d**2 - 3 * m2 * w
-        dm4 = 4 * w * d**3 - 4 * m3 * w
-        dvar = dm2 / mu**2 - 2 * m2 / mu**3 * w
-        dskew = dm3 / m2**1.5 - 1.5 * m3 / m2**2.5 * dm2
-        dkurt = dm4 / m2**2 - 2 * m4 / m2**3 * dm2
-        return g[0] * w + g[1] * dvar + g[2] * dskew + g[3] * dkurt
+        # Derivatives of the central moments (the w @ d**(p-1) terms use w @ d = 0):
+        #   dm2 = 2 w d,  dm3 = 3 w d^2 - 3 m2 w,  dm4 = 4 w d^3 - 4 m3 w.
+        # Collected as coefficients of w, w*d, w*d^2, w*d^3 to avoid n-length temporaries.
+        c_var = g[1] / mu**2
+        c_skew = g[2] / m2**1.5
+        c_kurt = g[3] / m2**2
+        c_dm2 = c_var - c_skew * 1.5 * m3 / m2 - c_kurt * 2 * m4 / m2
+        c_w = g[0] - g[1] * 2 * m2 / mu**3 - 3 * m2 * c_skew - 4 * m3 * c_kurt
+        return w * (c_w + 2 * c_dm2 * d + 3 * c_skew * d2 + 4 * c_kurt * d3)
 
     return val, vjp
 
 
 def mod_power(s: np.ndarray, ctx: ChannelContext):
     """Modulation power in each constant-Q band, relative to envelope variance."""
-    w = ctx.w
-    _, d = _central(s, w)
-    m2 = w @ d**2
-    B = ctx.mod_filter(s)  # (n, M)
-    P = w @ B**2  # (M,)
-    val = P / m2
+    _, d = _central(s, ctx.w)
+    val, core_vjp = mod_power_core(ctx.mod_filter(s), d, ctx.w)
 
     def vjp(g):
-        return 2 * ctx.mod_adjoint(w[:, None] * B * g[None, :]) / m2 - (g @ val) / m2 * (2 * w * d)
+        G, direct = core_vjp(g)
+        return ctx.mod_adjoint(G) + direct
+
+    return val, vjp
+
+
+def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray):
+    """:func:`mod_power` from the filtered envelope ``B`` ``(n, M)`` and the
+    centered envelope ``d``. ``vjp(g)`` returns ``(G, direct)``: the cotangent
+    of ``B`` (to be passed through the filter adjoint) and the gradient term
+    that reaches ``s`` directly through the variance."""
+    m2 = w @ d**2
+    val = (w @ B**2) / m2
+
+    def vjp(g):
+        return 2 * w[:, None] * B * g[None, :] / m2, -(g @ val) / m2 * (2 * w * d)
 
     return val, vjp
 
@@ -140,17 +167,25 @@ def c1(s: np.ndarray, others: np.ndarray, ctx: ChannelContext, bands=None):
     of each column of ``others`` ``(n, k)``. Shape ``(len(bands), k)``. No
     mean subtraction (paper Eq. 6)."""
     bands = ctx.model.c1_bands if bands is None else bands
-    w = ctx.w
-    R = ctx.analytic(s, bands).real  # (n, K)
-    Ro = ctx.analytic_many(others, bands).real  # (n, K, k)
+    val, core_vjp = c1_core(ctx.analytic(s, bands).real, ctx.analytic_many(others, bands).real, ctx.w)
+
+    def vjp(g):
+        gR = core_vjp(g)
+        return ctx.analytic_adjoint(gR, np.zeros_like(gR), bands)
+
+    return val, vjp
+
+
+def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray):
+    """:func:`c1` from the octave bands of ``s`` (``R``, ``(n, K)``) and of the
+    neighbors (``Ro``, ``(n, K, k)``). ``vjp(g)`` returns the cotangent of ``R``."""
     ps = w @ R**2  # (K,)
     po = np.einsum("t,tkj->kj", w, Ro**2)
     den = np.sqrt(ps[:, None] * po)
     val = np.einsum("t,tk,tkj->kj", w, R, Ro) / den
 
     def vjp(g):
-        gR = w[:, None] * (np.einsum("tkj,kj->tk", Ro, g / den) - R * ((g * val).sum(1) / ps)[None, :])
-        return ctx.analytic_adjoint(gR, np.zeros_like(gR), bands)
+        return w[:, None] * (np.einsum("tkj,kj->tk", Ro, g / den) - R * ((g * val).sum(1) / ps)[None, :])
 
     return val, vjp
 
@@ -159,9 +194,20 @@ def c2(s: np.ndarray, ctx: ChannelContext):
     """C2 within one channel: correlation of each octave band, frequency-doubled,
     with the next band up. Complex ``(n_oct - 1,)``: real part against the
     band's real part, imaginary part against its imaginary (quadrature) part."""
-    w = ctx.w
     K = ctx.A_oct.shape[1]
-    A = ctx.analytic(s, range(K))
+    val, core_vjp = c2_core(ctx.analytic(s, range(K)), ctx.w)
+
+    def vjp(g):
+        g_re, g_im = core_vjp(g)
+        return ctx.analytic_adjoint(g_re, g_im, range(K))
+
+    return val, vjp
+
+
+def c2_core(A: np.ndarray, w: np.ndarray):
+    """:func:`c2` from all analytic octave bands ``A`` ``(n, K)``. ``vjp(g)``
+    returns the cotangents ``(g_re, g_im)`` of ``A.real`` and ``A.imag``."""
+    K = A.shape[1]
     x, y = A.real, A.imag
     lo, hx, hy = slice(0, K - 1), x[:, 1:], y[:, 1:]
     r = np.maximum(np.abs(A[:, lo]), 1e-300)
@@ -185,6 +231,6 @@ def c2(s: np.ndarray, ctx: ChannelContext):
         g_im[:, lo] += gyl
         g_re[:, 1:] += ghx
         g_im[:, 1:] += ghy
-        return ctx.analytic_adjoint(g_re, g_im, range(K))
+        return g_re, g_im
 
     return cre + 1j * cim, vjp

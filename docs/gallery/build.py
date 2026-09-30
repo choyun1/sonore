@@ -73,6 +73,94 @@ def gliding_target(dur=2.0):
     return (target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))).ramp(20e-3)
 
 
+TEXTURES = HERE.parent / "textures"
+TEXTURE_INFO = {  # name: (title, description of the recording)
+    "rain": ("Rain", "Steady rain (nick121087, Freesound, CC0)."),
+    "stream": ("Stream", "Water burbling over rocks in a small creek (cognito perceptu, Freesound, CC0)."),
+    "crickets": ("Crickets", "Crickets around midnight (sengjinn, Freesound, CC0)."),
+    "applause": (
+        "Applause",
+        "About thirty people clapping (Breviceps, Freesound, CC0). Only 3.5 s of original.",
+    ),
+    "fire": ("Fire", "A small backyard fire: sparse pops over a low rumble (Sauron974, Freesound, CC0)."),
+    "mud": (
+        "Bubbling mud",
+        "Gas venting through a Yellowstone mud pot (NPS / Jennifer Jerrett, public domain).",
+    ),
+    "wind_rain": ("Wind and rain", "A winter storm, wind with heavy rain (sonicwars, Freesound, CC0)."),
+}
+ABLATION_TEXT = {
+    "marginals": "Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band's envelope).",
+    "marginals_modpower": "Envelope marginals plus modulation power; no correlations across bands or "
+    "modulation bands.",
+}
+
+
+def _synth_snr(name: str) -> str:
+    info = json.loads((TEXTURES / "synth" / f"{name}.json").read_text())
+    snr = info["snr_all_classes"]
+    return f"Average statistic SNR {np.mean(list(snr.values())):.0f} dB after {info['best_iteration']} iterations."
+
+
+def texture_sections() -> list[tuple[str, str, list[Demo]]]:
+    """Originals and syntheses, precomputed by tools/make_texture_synths.py."""
+    if not (TEXTURES / "synth").exists():
+        return []
+    items = []
+    for i, (name, (title, about)) in enumerate(TEXTURE_INFO.items()):
+        orig = so.load(TEXTURES / f"{name}.flac")
+        synth = so.load(TEXTURES / "synth" / f"{name}.flac")
+        extra = {"original": orig}
+        items.append(Demo(f"t{i:02d}a", f"{title}, original", about, orig, "texture", extra))
+        items.append(
+            Demo(
+                f"t{i:02d}b",
+                f"{title}, synthesized",
+                "Gaussian noise adjusted until its statistics match the original's. " + _synth_snr(name),
+                synth.resample(FS),
+                "texture",
+                {**extra, "synthetic": True},
+            )
+        )
+    ablations = []
+    for i, name in enumerate(["applause", "stream", "fire"]):
+        title = TEXTURE_INFO[name][0]
+        orig = so.load(TEXTURES / f"{name}.flac")
+        for j, (tag, text) in enumerate(ABLATION_TEXT.items()):
+            path = TEXTURES / "synth" / f"{name}__{tag}.flac"
+            if path.exists():
+                label = "marginals only" if tag == "marginals" else "marginals and modulation power"
+                ablations.append(
+                    Demo(
+                        f"u{i}{j}",
+                        f"{title}, {label}",
+                        text,
+                        so.load(path).resample(FS),
+                        "texture",
+                        {"original": orig, "synthetic": True},
+                    )
+                )
+    return [
+        (
+            "Sound textures",
+            "After McDermott & Simoncelli (2011): a texture is summarized by time-averaged statistics of a cochlear "
+            "model, and a new sample is synthesized by imposing those statistics on noise. Each original is followed "
+            "by its synthesis; the synthesis shares no waveform with the original, only statistics. Right panels: "
+            "envelope variance by band and modulation power, for this sound (solid) and the original (dashed). "
+            "Recordings and excerpt choices: docs/textures/SOURCES.md. Synthesis takes about a minute per texture, "
+            "so these are precomputed by tools/make_texture_synths.py.",
+            items,
+        ),
+        (
+            "What the statistics do",
+            "The same textures synthesized with only some of the statistics imposed. Compare with the full "
+            "syntheses above: the marginals alone give the right sparsity but not the right rhythm or the "
+            "coordination across bands.",
+            ablations,
+        ),
+    ]
+
+
 def demos() -> list[tuple[str, str, list[Demo]]]:
     rip = {
         "01": so.Ripple(4, 1),
@@ -387,6 +475,7 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             "so some differences in loudness and length remain. Presented diotically, as in the paper.",
             rooms,
         ),
+        *texture_sections(),
     ]
 
 
@@ -551,7 +640,35 @@ def filterbank_fig(snd, original):
     return fig, list(band_axes) + list(r)
 
 
+def texture_fig(snd, original, synthetic=False):
+    from sonore.texture import TextureStats
+
+    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.7, 1])
+    ax_c, ax_v, ax_m = fig.add_subplot(gs[:, 0]), fig.add_subplot(gs[0, 1]), fig.add_subplot(gs[1, 1])
+    so.subbands(snd.resample(20000), 30, 20, 10000).envelopes(fs=400).plot(ax_c, db_range=50, colorbar=False)
+    ax_c.set_title("Cochleagram (the texture model's filterbank, 50 dB range)")
+    target = TextureStats.measure(original)
+    this = TextureStats.measure(snd, window="uniform" if synthetic else "ramped")  # syntheses are circular
+    cfs = target.model.filterbank.cfs[1:-1]
+    ax_v.semilogx(cfs, this.env_var[1:-1], lw=1.2, label="this sound")
+    ax_v.semilogx(cfs, target.env_var[1:-1], "k--", lw=1, label="original")
+    ax_v.set(xlabel="Band center [Hz]", ylabel="var / mean²", title="Envelope variance (sparsity)")
+    ax_v.legend(fontsize=8)
+    mcf = target.model.mod_bank.cfs
+    ok = target.channel_mask()
+    ax_m.loglog(mcf, this.mod_power[ok].mean(0), lw=1.2)
+    ax_m.loglog(mcf, target.mod_power[ok].mean(0), "k--", lw=1)
+    ax_m.set(
+        xlabel="Modulation frequency [Hz]", ylabel="Power / variance", title="Modulation power (band average)"
+    )
+    for ax in (ax_v, ax_m):
+        ax.grid(ls=":", which="both", lw=0.5)
+    return fig, [ax_c]
+
+
 FIGURES = {
+    "texture": lambda d: texture_fig(d.sound, d.extra["original"], d.extra.get("synthetic", False)),
     "ibm": lambda d: ibm_fig(d.sound, **d.extra),
     "filterbank": lambda d: filterbank_fig(d.sound, **d.extra),
     "ripple": lambda d: ripple_fig(d.sound, d.extra["pattern"], d.extra.get("dmr", False)),
