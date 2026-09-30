@@ -309,7 +309,12 @@ class TextureStats:
         """How well ``other`` matches these (target) statistics, per class:
         ``10*log10(sum |target|**2 / sum |target - other|**2)`` in dB, over
         channels within ``range_db`` of the loudest. Pairwise classes (C, C1)
-        count a pair only if both channels qualify."""
+        count a pair only if both channels qualify.
+
+        The SNR is relative to the target's own magnitude, so classes whose
+        targets are near zero (C, C1, C2 and skew of noise-like textures)
+        score low even between two samples of the same texture: sampling
+        fluctuation dominates the ratio."""
         if isinstance(classes, str):
             classes = (classes,)
         ok = self.channel_mask(range_db)
