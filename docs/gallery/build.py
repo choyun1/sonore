@@ -745,7 +745,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
             )
             name = f"{d.key}_{d.title.lower().replace(' ', '_').replace(',', '')}"
             chan = "stereo" if snd.n_channels == 2 else "mono"
-            hp = f'<p class="headphones">{ICON}<span>Headphones</span></p>' if d.headphones else ""
+            hp = f'\n    <p class="headphones">{ICON}<span>Headphones</span></p>' if d.headphones else ""
 
             def article(
                 audio_src, img_src, d=d, hp=hp, name=name, snd=snd, chan=chan, regions=regions, w=w, h=h
@@ -753,8 +753,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
                 return f"""
 <article class="sound" id="d-{d.key}" data-regions="{html.escape(json.dumps(regions))}">
   <div class="about">
-    <h3>{html.escape(d.title)}</h3>
-    {hp}
+    <h3>{html.escape(d.title)}</h3>{hp}
     <p class="desc">{html.escape(d.text)}</p>
     <audio controls preload="metadata" src="{audio_src}"></audio>
     <p class="file">{html.escape(name)}.flac, {snd.duration:.1f} s, {chan}</p>
