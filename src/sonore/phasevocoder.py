@@ -80,8 +80,10 @@ class PVAnalysis:
         interpolated between frames and whose phase is the running integral of
         frequency. ``time_scale`` stretches the time axis; ``freq_map`` is a
         ratio (e.g. ``1.5``) or a function mapping frequencies in Hz to new
-        frequencies (e.g. ``lambda f: f + 100`` to make a harmonic sound
-        inharmonic). Bins that never come within ``floor_db`` of the loudest
+        frequencies. For example ``lambda f: f + 70`` makes a 220 Hz harmonic
+        complex inharmonic; note that shifting by a multiple of half the f0
+        keeps it harmonic (``f + 110`` gives odd harmonics of 110 Hz).
+        Bins that never come within ``floor_db`` of the loudest
         bin are skipped, and partials mapped above Nyquist are dropped.
 
         This is designed for tonal sounds, which it reconstructs closely

@@ -86,8 +86,8 @@ panels = [
     ("so.time_stretch(snd, 2)", so.time_stretch(sung, 2)),
     ("so.pitch_shift(snd, 7)", so.pitch_shift(sung, 7)),
     (
-        "pv_analyze(snd).resynthesize(freq_map=lambda f: f + 110)",
-        so.pv_analyze(sung).resynthesize(freq_map=lambda f: f + 110),
+        "pv_analyze(snd).resynthesize(freq_map=lambda f: f + 70)",
+        so.pv_analyze(sung).resynthesize(freq_map=lambda f: f + 70),
     ),
 ]
 fig, axes = plt.subplots(1, 4, figsize=(16, 3.6), sharey=True, layout="constrained")

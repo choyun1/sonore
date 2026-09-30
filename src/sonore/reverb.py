@@ -9,7 +9,7 @@ from importlib.resources import files
 import numpy as np
 
 from sonore.envelopes import Envelopes
-from sonore.filterbank import ERBFilterbank
+from sonore.filterbank import ERBFilterbank, Subbands
 from sonore.generators import gaussian_noise
 from sonore.sound import Sound
 from sonore.utils import as_rng, db_to_amp
@@ -80,7 +80,13 @@ def synth_ir(
     elif envelope != "exponential":
         raise ValueError("envelope must be 'exponential' or 'time_reversed'")
     decay = Envelopes(db_to_amp(env_db), fs, fb)  # one exponential decay per band
-    tail = (decay * fb.analyze(noise)).synthesize().normalize()
+    shaped = decay * fb.analyze(noise)
+    # Re-filtering is FFT-based (circular), and the zero-phase filters smear a
+    # little of the loud onset to just before t = 0, which would wrap around to
+    # the end of the IR. Zero-pad first so that smear lands in discarded padding.
+    n, pad = len(noise), len(noise)
+    padded = Subbands(np.pad(shaped.data, ((pad, pad), (0, 0), (0, 0))), fs, fb)
+    tail = Sound(padded.synthesize().data[pad : pad + n], fs).normalize()
 
     if drr_db is None:
         return tail

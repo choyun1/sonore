@@ -341,7 +341,12 @@ class Sound:
     def envelope(self):
         """Hilbert envelope of each channel, as an :class:`~sonore.envelopes.Envelope`
         (not a Sound: you apply an envelope to a sound rather than listen to it).
-        ``snd / snd.envelope()`` is the fine structure."""
+        ``snd / snd.envelope()`` is the fine structure.
+
+        The Hilbert transform is FFT-based, so a loud start can leak into the
+        last few milliseconds of the envelope (and vice versa). When the ends
+        matter, e.g. measuring a decay, pad first: ``snd.pad(after=0.5).envelope()``.
+        """
         from sonore.envelopes import Envelope
 
         return Envelope(np.abs(hilbert(self._data, axis=0)), self.fs)

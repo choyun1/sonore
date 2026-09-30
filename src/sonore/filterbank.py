@@ -73,7 +73,13 @@ class CosineFilterbank:
         return self.response(np.fft.rfftfreq(n, 1 / fs))
 
     def analyze(self, sound: Sound) -> Subbands:
-        """Split ``sound`` into subbands (zero-phase, via FFT)."""
+        """Split ``sound`` into subbands (zero-phase, via FFT).
+
+        The filtering is circular: filter ringing near one end of the sound
+        wraps around to the other. That's harmless for sounds that are
+        stationary or start and end quietly; otherwise zero-pad first
+        (``sound.pad(before=..., after=...)``).
+        """
         n = len(sound)
         H = self.rfft_response(n, sound.fs)  # (F, B)
         X = np.fft.rfft(sound.data, axis=0)  # (F, C)
@@ -193,7 +199,8 @@ class Subbands:
 
     def synthesize(self) -> Sound:
         """Re-filter each band and sum: the exact inverse of
-        :meth:`CosineFilterbank.analyze`. Use this after modifying bands."""
+        :meth:`CosineFilterbank.analyze`. Use this after modifying bands.
+        Like ``analyze``, the filtering is circular (see there)."""
         n = self._data.shape[0]
         H = self.filterbank.rfft_response(n, self.fs)
         X = np.fft.rfft(self._data, axis=0) * H[:, :, None]
