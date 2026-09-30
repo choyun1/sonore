@@ -148,3 +148,16 @@ for col, (label, pattern) in enumerate(patterns):
         'ModulationSpectrum.octave(sound, scale="db")' if dmr else "ModulationSpectrum.octave(sound)"
     )
 save(fig, "ripples.png")
+
+# 8. waveforms of ripple sounds: flat overall, the pattern lives across bands
+fig = plt.figure(figsize=(15, 8.5), layout="constrained")
+columns = fig.subfigures(1, 3)
+for sub, (label, pattern) in zip(columns, patterns, strict=True):
+    snd = so.ripple_sound(pattern, 1.0, FS, rng=rng).ramp(20e-3)
+    sb = so.OctaveFilterbank.per_octave(8, 250, 8000).analyze(snd)  # narrow bands: 1/4 octave wide
+    show = range(3, len(sb) - 1, 5)  # every 5th band, ~0.6 octave apart
+    top, bottom = sub.subfigures(2, 1, height_ratios=[1, 3.3])
+    snd.plot(top.subplots(), lw=0.4)
+    top.suptitle(label, family="monospace", fontsize=9)
+    sb.plot(bottom.subplots(len(show), 1, sharex=True), bands=show, color="tab:purple")
+save(fig, "ripple_waveforms.png")

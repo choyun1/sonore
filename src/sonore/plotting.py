@@ -135,23 +135,29 @@ def _band_labels(cfs, edges=True):
     return labels
 
 
-def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None):
+def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None):
     """One trace per band, lowest at the bottom. With ``sharey=True`` (default)
     all traces share one amplitude scale, so relative band levels are visible.
     The bottom and top traces are the lowpass and highpass edge filters
-    (labelled ``< f_lo`` and ``> f_hi``). For an image, plot the envelopes:
-    ``sb.envelopes().plot()``."""
+    (labelled ``< f_lo`` and ``> f_hi``).
+
+    ``bands`` selects which bands to show (indices), e.g.
+    ``range(1, len(sb) - 1, 5)`` for every fifth band of a fine filterbank.
+    For an image of all bands, plot the envelopes: ``sb.envelopes().plot()``.
+    """
     import matplotlib.pyplot as plt
 
-    n, B, _ = sb.data.shape
+    n = sb.data.shape[0]
+    idx = np.arange(sb.data.shape[1]) if bands is None else np.asarray(list(bands))
+    B = len(idx)
     t = np.arange(n) / sb.fs
-    data = sb.data[:, :, channel]
-    labels = _band_labels(sb.cfs)
+    data = sb.data[:, idx, channel]
+    labels = [_band_labels(sb.cfs)[i] for i in idx]
     if axes is None:
         _, axes = plt.subplots(B, 1, figsize=(8, 0.5 * B + 0.6), sharex=True)
     axes = list(axes)
     if len(axes) != B:
-        raise ValueError(f"need {B} axes (one per filter, including the 2 edge filters), got {len(axes)}")
+        raise ValueError(f"need {B} axes (one per band shown), got {len(axes)}")
     lim = 1.05 * np.max(np.abs(data)) or 1.0
     for i, ax in enumerate(axes[::-1]):
         ax.plot(t, data[:, i], lw=0.6, color=color)

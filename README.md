@@ -149,6 +149,21 @@ snd = so.ripple_sound(pattern, 1.0, fs, carrier="tones")  # or "harmonic", "nois
 so.ModulationSpectrum.octave(snd).plot()  # peaks at (4, 1) and (-12, 2.5)
 ```
 
+The same three sounds as waveforms. The broadband waveform (top) hardly shows
+the pattern, because a ripple spanning a cycle or more across frequency averages
+out when all bands are summed. It lives across bands: in narrow bands (bottom,
+every fifth quarter-octave band), the single ripple's 4 Hz modulation arrives
+later in each lower band, which is the downward drift. The dynamic ripple shows
+up in the broadband waveform only near 0.3 s, where its density passes near
+zero and every band is modulated in phase.
+
+![Ripple waveforms](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ripple_waveforms.png)
+
+```python
+sb = so.OctaveFilterbank.per_octave(8, 250, 8000).analyze(snd)  # quarter-octave bands
+sb.plot(bands=range(3, len(sb) - 1, 5))  # every fifth band
+```
+
 Positive rates drift downward in frequency (Chi et al., 1999 convention).
 Carriers are scaled to equal energy per octave, so changing the carrier
 changes the fine structure but not the long-term spectrum.

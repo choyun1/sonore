@@ -479,6 +479,8 @@ def test_subband_plot_labels_and_scale():
     assert len({ax.get_ylim() for ax in axes}) == 1  # shared amplitude scale
     with pytest.raises(ValueError, match="need 8 axes"):
         sb.plot(axes[:6])
+    chosen = sb.plot(bands=[1, 3, 5])
+    assert [ax.get_ylabel() for ax in chosen] == [f"{sb.cfs[i]:.0f}" for i in (5, 3, 1)]
 
 
 # ------------------------------------------------------------------ ripples
