@@ -42,6 +42,8 @@ from sonore.generators import (
     silence,
     square_wave,
 )
+from sonore import texture
+from sonore.modulation import ConstantQModulationFilterbank, ModulationFilterbank, OctaveModulationFilterbank
 from sonore.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
 from sonore.plotting import overview
 from sonore.processing import (
@@ -85,6 +87,10 @@ from sonore.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
 __version__ = "0.2.0"
 
 __all__ = [
+    "texture",
+    "ConstantQModulationFilterbank",
+    "ModulationFilterbank",
+    "OctaveModulationFilterbank",
     "measure_rt60",
     "band_rt60s",
     "CosineFilterbank",
