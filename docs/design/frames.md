@@ -344,6 +344,8 @@ The following are not part of step 1:
   to keep only positive frequencies; that decision belongs to step 2.
 - Wrapping the external `nsgt` package.
 
+Step 2's decisions on these are in docs/design/frames-step2.md.
+
 ## References
 
 - Balazs, P., Dörfler, M., Jaillet, F., Holighaus, N. & Velasco, G. (2011).
