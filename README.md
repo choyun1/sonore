@@ -254,8 +254,9 @@ sound from the gallery's demo list so the two can't drift apart.
 | `units` | `dB`, `Decibels` |
 | `generators` | `silence`, `pure_tone`, `harmonic_complex`, `schroeder_complex`, `square_wave`, `sawtooth_wave`, `pulse_train`, `linear_chirp`, `exponential_chirp`, `gaussian_noise`, `correlated_noise`, `iterated_ripple_noise` |
 | `processing` | `pad`, `truncate`, `concat`, `mix`, `normalize`, `match_fs`, `match_channels`, `relative_db`, `bandpass`, `butter_filter`, `amplitude_modulate` |
-| `representations` | `Spectrum`, `long_term_spectrum`, `STFT` (exact inverse, fast Griffin-Lim), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
-| `filterbank` | `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`), `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`), `noise_vocode` |
+| `representations` | `Spectrum`, `long_term_spectrum`, `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
+| `frames` | `Frame` (invertible analyses: `analyze`, `synthesize` as least squares, `frame_bounds`, `energy`), `Filterbank` (frequency-domain filters, any shape; canonical dual), `GaborFrame` (the STFT as a frame; any window, zero-padded FFTs) |
+| `filterbank` | `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`), `noise_vocode` |
 | `envelopes` | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`) |
 | `ripples` | `Ripple`, `RippleSum`, `DynamicRipple`, `ripple_sound`; patterns can also be any function `f(t, x)` of time and octaves, and `pattern.render(filterbank, dur, fs)` gives their `Envelopes` |
 | `phasevocoder` | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `resynthesize` with `time_scale` and `freq_map`) |
@@ -343,7 +344,10 @@ sound from the gallery's demo list so the two can't drift apart.
 
 Tags name the module(s) in [What's in it](#whats-in-it) that implement or follow each work.
 
+- Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011). Theory, implementation and applications of nonstationary Gabor frames. *J. Comput. Appl. Math.* 236(6). `frames`
 - Chi, Gao, Guyton, Ru & Shamma (1999). Spectro-temporal modulation transfer functions and speech intelligibility. *JASA* 106. `ripples` `representations`
+- Christensen (2003). *An Introduction to Frames and Riesz Bases*. Birkhäuser. `frames`
+- Daubechies, Grossmann & Meyer (1986). Painless nonorthogonal expansions. *J. Math. Phys.* 27(5). `frames`
 - Dolson (1986). The phase vocoder: A tutorial. *Computer Music Journal* 10(4). `phasevocoder`
 - Escabí & Schreiner (2002). Nonlinear spectrotemporal sound analysis by neurons in the auditory midbrain. *J. Neurosci.* 22. `ripples`
 - Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45. `phasevocoder`
@@ -382,6 +386,12 @@ numerically; "consulted" means the code was read for behavior but not copied.
   the group of Perraudin, Balazs & Søndergaard (2013);
   [`librosa.griffinlim`](https://librosa.org/doc/latest/generated/librosa.griffinlim.html) is a widely used Python
   version. Neither is cross-checked yet. `representations`
+- [SciPy `ShortTimeFFT`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.ShortTimeFFT.html)
+  (BSD-3): wrapped by `GaborFrame`. Its frame operator, bounds and least-squares
+  inverse are cross-checked against dense matrices in the tests and in
+  `tools/check_frame_claims.py` (docs/design/frames.md). `frames` `representations`
+- [LTFAT](https://ltfat.github.io/) (GPLv3) and [nsgt](https://github.com/grrrr/nsgt) (Artistic License 2.0):
+  frame theory in code, for dev-time cross-checks only because of their licenses. Not yet cross-checked. `frames`
 
 ## Migrating from sigtools
 

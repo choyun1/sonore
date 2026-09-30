@@ -56,3 +56,46 @@ class GaussianFilterbank(so.Filterbank):
         sd = self.width * self.f_hi / (self.n - 1)
         u = (np.asarray(freqs, float)[:, None] - self.cfs[None, :]) / sd
         return np.where(np.abs(u) <= 3, np.exp(-0.5 * u**2), 0.0)
+
+
+# ------------------------------------------------ dense-matrix frame oracle
+# docs/design/frames.md: small dense matrices, built from the fast path itself
+# by analyzing unit impulses, so the oracle tests what the code actually does.
+
+
+def coef_matrix(coefs) -> np.ndarray:
+    """Coefficients as a matrix, one column per channel: ``Subbands`` in
+    (time, band) order including padding, ``STFT`` in (freq, frame) order."""
+    if isinstance(coefs, so.Subbands):
+        return coefs._full.reshape(-1, coefs._full.shape[2])
+    return np.moveaxis(coefs.data, 0, -1).reshape(-1, coefs.data.shape[0])
+
+
+def coef_weights(frame, coefs) -> np.ndarray:
+    """The C3 weight of each row of :func:`coef_matrix`."""
+    if isinstance(frame, so.GaborFrame):
+        return np.repeat(frame.bin_weights(coefs.fs), coefs.data.shape[2])
+    return np.ones(coef_matrix(coefs).shape[0])
+
+
+def dense_operator(frame, n, fs, pad=None):
+    """Analysis matrix ``T`` (coefficients x ``n``) and C3 weights, from
+    ``frame.analyze`` of the ``n`` unit impulses (``pad`` for filterbanks)."""
+    kw = {} if pad is None else {"pad": pad}
+    eye, batch = np.eye(n), 64  # Sound caps the channel count (it suspects channels-first data)
+    parts = [frame.analyze(so.Sound(eye[:, i : i + batch], fs), **kw) for i in range(0, n, batch)]
+    return np.hstack([coef_matrix(c) for c in parts]), coef_weights(frame, parts[0])
+
+
+def weighted_frame_operator(T, w) -> np.ndarray:
+    """``S = Re(T^H W T)``, the frame operator on real signals."""
+    return np.real(T.conj().T @ (w[:, None] * T))
+
+
+def canonical_lstsq(T, w, c) -> np.ndarray:
+    """The real ``x`` minimizing ``sum w |T x - c|^2``: canonical-dual synthesis."""
+    r = np.sqrt(w)[:, None] * T
+    b = np.sqrt(w) * c
+    A = np.vstack([r.real, r.imag]) if np.iscomplexobj(r) else r
+    y = np.concatenate([b.real, b.imag]) if np.iscomplexobj(b) else b
+    return np.linalg.lstsq(A, y, rcond=None)[0]

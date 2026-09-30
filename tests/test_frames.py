@@ -1,15 +1,16 @@
 """Frames: the Frame/Filterbank contract (docs/design/frames.md).
 
-The dense-matrix oracle checks (bounds as eigenvalues, masked coefficients vs.
-canonical least squares) come with the oracle helper; these tests cover the
-interface, the tight/general equivalence and the non-frame behaviour.
+The first sections cover the interface, the tight/general equivalence and the
+non-frame behaviour; the last checks every frame against the dense-matrix
+oracle in tests/helpers.py (bounds as eigenvalues, masked coefficients vs.
+canonical least squares, and the documented D1 exception).
 """
 
 from dataclasses import dataclass
 
 import numpy as np
 import pytest
-from helpers import GaussianFilterbank
+from helpers import GaussianFilterbank, canonical_lstsq, coef_matrix, dense_operator, weighted_frame_operator
 from scipy.signal.windows import hann
 
 import sonore as so
@@ -200,3 +201,117 @@ def test_gabor_rejects_bad_parameters():
     S = GABORS["hann"].analyze(_noise())
     with pytest.raises(ValueError, match="frequency bins"):
         GABORS["hann^1.5, n_fft 48"].synthesize(S)
+
+
+# ------------------------------------------------------------------ oracle
+# Every frame against dense matrices built from its own fast path (helpers):
+# bounds are the extreme eigenvalues of the weighted S, and synthesis of
+# masked coefficients is the canonical weighted least squares, except for the
+# documented D1 behaviour of padded non-tight filterbanks.
+
+ORACLE = {
+    "erb": (so.ERBFilterbank(10, 50, 3000), ["auto", 0]),
+    "octave": (so.OctaveFilterbank(6, 125, 3000), ["auto", 0]),
+    "gaussian": (GaussianFilterbank(), ["auto", 0]),
+    **{f"gabor {k}": (v, [None]) for k, v in GABORS.items()},
+}
+ORACLE_CASES = [(name, pad) for name, (_, pads) in ORACLE.items() for pad in pads]
+
+
+def _rel(a, b):
+    return np.linalg.norm(a - b) / np.linalg.norm(b)
+
+
+def _bounds(frame, pad):
+    return frame.frame_bounds(N, FS) if pad is None else frame.frame_bounds(N, FS, pad=pad)
+
+
+def _analyze(frame, x, pad):
+    return frame.analyze(x) if pad is None else frame.analyze(x, pad=pad)
+
+
+def _masked(coefs, seed=0):
+    rng = np.random.default_rng(seed)
+    if isinstance(coefs, so.Subbands):
+        m = rng.random(coefs._full.shape[:2])[:, :, None]
+        return so.Subbands(coefs._full * m, coefs.fs, coefs.filterbank, coefs.pad)
+    return so.STFT._from(coefs, coefs.data * rng.random(coefs.data.shape[1:]))
+
+
+def _is_d1_case(frame, pad):
+    """Padded non-tight filterbank: least squares on the padded grid (D1)."""
+    return isinstance(frame, so.Filterbank) and not frame.tight and pad != 0
+
+
+@pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)
+def test_oracle_matches_fast_analysis_and_energy(name, pad):
+    frame = ORACLE[name][0]
+    T, w = dense_operator(frame, N, FS, pad)
+    x = _noise(2, 5)
+    coefs = _analyze(frame, x, pad)
+    assert np.allclose(coef_matrix(coefs), T @ x.data, rtol=0, atol=1e-10)
+    assert np.allclose(frame.energy(coefs), w @ np.abs(coef_matrix(coefs)) ** 2, rtol=1e-12)
+
+
+@pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)
+def test_bounds_are_extreme_eigenvalues(name, pad):
+    frame = ORACLE[name][0]
+    eig = np.linalg.eigvalsh(weighted_frame_operator(*dense_operator(frame, N, FS, pad)))
+    lo, hi = _bounds(frame, pad)
+    if not _is_d1_case(frame, pad):
+        assert np.allclose([eig[0], eig[-1]], [lo, hi], rtol=1e-10, atol=0)
+        return
+    # D1: the bounds are those of the circular operator on the padded grid;
+    # zero-padded signals are a subspace, so their spectrum lies inside.
+    p = frame.ringing(FS) if pad == "auto" else int(round(pad * FS))
+    grid = np.linalg.eigvalsh(weighted_frame_operator(*dense_operator(frame, N + 2 * p, FS, 0)))
+    assert np.allclose([grid[0], grid[-1]], [lo, hi], rtol=1e-10, atol=0)
+    assert lo * (1 - 1e-10) <= eig[0] and eig[-1] <= hi * (1 + 1e-10)
+
+
+@pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)
+def test_masked_synthesis_is_the_documented_least_squares(name, pad):
+    frame = ORACLE[name][0]
+    x = _noise(2, 6)
+    masked = _masked(_analyze(frame, x, pad))
+    y = frame.synthesize(masked).data
+    C = coef_matrix(masked)
+    T, w = dense_operator(frame, N, FS, pad)
+    canonical = np.stack([canonical_lstsq(T, w, C[:, ch]) for ch in range(2)], axis=1)
+    if not _is_d1_case(frame, pad):
+        assert _rel(y, canonical) < 1e-10
+        return
+    # D1: least squares on the padded circular grid, then crop. This is NOT
+    # the canonical dual on R^N (masked energy that lands in the padding is
+    # treated differently), and the test says so.
+    p = masked.pad
+    Tp, wp = dense_operator(frame, N + 2 * p, FS, 0)
+    d1 = np.stack([canonical_lstsq(Tp, wp, C[:, ch]) for ch in range(2)], axis=1)[p : p + N]
+    assert _rel(y, d1) < 1e-10
+    assert _rel(y, canonical) > 1e-4
+
+
+@dataclass(frozen=True)
+class _WronglyTightGaussian(GaussianFilterbank):
+    """Re-filters with H instead of H/s: what the oracle must catch."""
+
+    tight = True
+
+
+def test_oracle_catches_a_wrong_dual():
+    good, bad = GaussianFilterbank(), _WronglyTightGaussian()
+    masked = _masked(good.analyze(_noise(1, 7), pad=0))
+    T, w = dense_operator(good, N, FS, 0)
+    canonical = canonical_lstsq(T, w, coef_matrix(masked)[:, 0])
+    assert _rel(good.synthesize(masked).data[:, 0], canonical) < 1e-10
+    assert _rel(bad.synthesize(masked).data[:, 0], canonical) > 1e-2
+
+
+def test_gabor_least_squares_needs_the_half_spectrum_weights():
+    frame = GABORS["hann^1.5"]
+    masked = _masked(frame.analyze(_noise(1, 8)))
+    T, w = dense_operator(frame, N, FS)
+    c = coef_matrix(masked)[:, 0]
+    y = frame.synthesize(masked).data[:, 0]
+    assert _rel(y, canonical_lstsq(T, w, c)) < 1e-10
+    assert _rel(y, canonical_lstsq(T, np.ones_like(w), c)) > 1e-3  # C3: unweighted is a different problem

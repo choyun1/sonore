@@ -1,8 +1,8 @@
 # Frames, step 1: the interface and its contract
 
-Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Step 1, patches 1–2
-(`Frame`, `Filterbank`, cosine-bank retrofit; `GaborFrame`, STFT retrofit)
-implemented; the oracle tests are pending.
+Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Step 1 is
+implemented (`Frame`, `Filterbank`, `GaborFrame`, the cosine-bank and STFT
+retrofits), with the dense-matrix oracle tests in tests/test_frames.py.
 
 The Frame work is split into three steps. This document covers only step 1.
 
