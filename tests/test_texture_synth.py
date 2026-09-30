@@ -3,6 +3,7 @@ import pytest
 
 import sonore as so
 from sonore import texture_grad as tg
+from sonore import texture_synth as synth
 from sonore.texture import TextureModel, TextureStats
 from sonore.texture_synth import ChannelObjective, impose_channel
 
@@ -76,3 +77,43 @@ def test_more_iterations_do_better(setup):
     target, _, env, adjusted = setup
     losses = [impose_channel(target, env, 15, adjusted, n_iter=n)[1]["after"] for n in (1, 5, 20)]
     assert losses[0] > losses[1] > losses[2]
+
+
+def test_channel_order():
+    assert synth.channel_order(np.array([0, 1, 5, 2, 0])) == [2, 3, 1, 4, 0]
+    assert sorted(synth.channel_order(np.random.default_rng(0).random(32))) == list(range(32))
+
+
+def test_affine_correction_sets_mean_and_variance(setup):
+    target, _, env, adjusted = setup
+    ctx = tg.ChannelContext.build(M, env.shape[0])
+    s, _ = impose_channel(target, env, 15, adjusted, n_iter=2, ctx=ctx)
+    mom = tg.env_moments(s, ctx)[0]
+    assert mom[0] == pytest.approx(target.env_mean[15], rel=1e-9)
+    assert mom[1] == pytest.approx(target.env_var[15], rel=1e-9)
+
+
+def test_synthesis_converges_on_am_noise():
+    """Full loop, kept short for the suite (1 s, 6 iterations); see
+    tools/texture_benchmark.py for the synthetic-texture benchmark."""
+    t = np.arange(FS) / FS
+    tex = so.gaussian_noise(1, FS, rng=0) * so.Sound(1 + 0.9 * np.sin(2 * np.pi * 6 * t), FS)
+    target = TextureStats.measure(tex)
+    seen = []
+    snd, report = synth.synthesize(
+        target, duration=1, rng=1, max_iter=6, callback=lambda i, s, snr: seen.append(i)
+    )
+    assert seen == list(range(1, report["iterations"] + 1))
+    avg = [np.mean(list(h.values())) for h in report["snr"]]
+    assert avg[-1] > avg[0] + 5
+    assert report["converged"] and report["average_snr"] >= 20
+    assert snd.fs == M.fs and len(snd) == FS and snd.rms == pytest.approx(M.rms)
+    # the result is a new sound, not the original
+    assert abs(np.corrcoef(snd.data[:, 0], M.prepare(tex))[0, 1]) < 0.1
+
+
+def test_synthesis_restricted_classes():
+    target = TextureStats.measure(so.gaussian_noise(1, FS, tilt=-3, rng=0))
+    classes = ("env_mean", "env_var", "mod_power")
+    _, report = synth.synthesize(target, duration=1, rng=1, max_iter=2, classes=classes)
+    assert set(report["snr"][0]) == set(classes)

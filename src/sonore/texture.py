@@ -68,6 +68,12 @@ Deliberate differences from the MATLAB Sound Texture Synthesis Toolbox v1.7:
 6. Subband variance is weighted by the measurement window (toolbox: unweighted).
 7. The sound is truncated to a whole number of envelope samples, so that
    downsampling to the envelope rate is exact.
+8. Synthesis: after the conjugate-gradient steps for each channel, the
+   envelope's mean and variance are set exactly by an affine map (see
+   :func:`sonore.texture_synth.impose_channel`). All other statistics are
+   invariant to it, and without it those two directions, nearly flat in the
+   objective, converge very slowly (on AM noise: envelope-mean SNR 31 -> 59
+   dB and envelope-variance SNR 15 -> 52 dB after 20 iterations).
 """
 
 
