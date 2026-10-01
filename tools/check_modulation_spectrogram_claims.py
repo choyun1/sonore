@@ -1,14 +1,18 @@
-"""Numerical checks for the claims in docs/design/modulation-spectrogram.md (C1-C9).
+"""Numerical checks for the claims in docs/design/modulation-spectrogram.md (C1-C10).
 
 Like the other design checkers, this is deliberately independent of sonore:
-only NumPy and SciPy, with every filter, window and transform written out
+only NumPy, SciPy and soundfile (to read the gallery sentence), with every
+filter, window and transform written out
 from its formula. Each line prints the claim number and the number that
 supports it.
 
     python tools/check_modulation_spectrogram_claims.py
 """
 
+from pathlib import Path
+
 import numpy as np
+import soundfile as sf
 from scipy.signal import fftconvolve, resample_poly
 
 FS = 16000.0  # audio rate [Hz]
@@ -16,6 +20,7 @@ FE = 1000.0  # envelope rate [Hz]
 HOP = 0.010  # frame hop [s]
 CYCLES = 3  # constant-Q kernels hold this many cycles of their own rate
 rng = np.random.default_rng(0)
+SPEECH = Path(__file__).resolve().parent.parent / "docs" / "speech"
 
 
 def report(claim, text, value):
@@ -103,17 +108,34 @@ def erb_bank(n_bands, f_lo, f_hi, n):
     return erb_freq(knots[1:-1]), H
 
 
-def band_envelopes(x, n_bands=24, f_lo=100.0, f_hi=7000.0):
-    """Hilbert envelope of every band, resampled to FE: shape (n, n_bands)."""
-    n = len(x)
-    cfs, H = erb_bank(n_bands, f_lo, f_hi, n)
-    X = np.fft.rfft(x)[:, None] * H
+def gammatone_bank(n_bands, f_lo, f_hi, n):
+    """4th-order gammatone filters (b = 1.019 ERB) at the same centres as
+    erb_bank, causal phase, unit gain at the centre: the Fourier transform of
+    t**3 exp(-2 pi b t) exp(i 2 pi cf t), kept for positive frequencies.
+    Returns (cfs, complex responses on rfft bins)."""
+    knots = np.linspace(erb_number(f_lo), erb_number(f_hi), n_bands + 2)
+    cfs = erb_freq(knots[1:-1])
+    f = np.fft.rfftfreq(n, 1 / FS)[:, None]
+    b = 1.019 * 24.7 * (4.37 * cfs / 1000 + 1)
+    return cfs, (1 + 1j * (f - cfs) / b) ** -4
+
+
+def band_envelopes(x, n_bands=24, f_lo=100.0, f_hi=7000.0, shape="cosine", power=1.0):
+    """Hilbert envelope of every band, raised to ``power`` and resampled to
+    FE: shape (n, n_bands). The sound is padded by 0.25 s of zeros at each
+    end while filtering, so filter tails can't wrap around."""
+    pad = int(0.25 * FS)
+    xp = np.pad(x, pad)
+    n = len(xp)
+    bank = erb_bank if shape == "cosine" else gammatone_bank
+    cfs, H = bank(n_bands, f_lo, f_hi, n)
+    X = np.fft.rfft(xp)[:, None] * H
     full = np.zeros((n, n_bands), complex)
     full[: X.shape[0]] = X
     full[1 : (n + 1) // 2] *= 2
     if n % 2 == 0:
         full[n // 2] = X[-1]
-    env = np.abs(np.fft.ifft(full, axis=0))
+    env = np.abs(np.fft.ifft(full, axis=0))[pad : pad + len(x)] ** power
     env = resample_poly(env, int(FE), int(FS), axis=0)
     return cfs, np.maximum(env, 0.0)
 
@@ -375,6 +397,105 @@ def c9():
     )
 
 
+# ==================================================================== C10
+FRONT_ENDS = (
+    ("cosine ERB, linear", "cosine", 1.0),
+    ("gammatone, linear", "gammatone", 1.0),
+    ("cosine ERB, ^0.3", "cosine", 0.3),
+    ("gammatone, ^0.3", "gammatone", 0.3),
+)
+
+
+def analyse(env, rates):
+    """y and local mean for every band and rate, centred, at 10 ms frames:
+    shapes (n_frames, n_bands, n_rates). Also a mask of frames at least half
+    a kernel from either end."""
+    frames = np.arange(0, env.shape[0], int(HOP * FE))
+    Y = np.zeros((len(frames), env.shape[1], len(rates)), complex)
+    M = np.zeros(Y.shape)
+    ok = np.zeros((len(frames), len(rates)), bool)
+    for j, f in enumerate(rates):
+        L = cq_length(f)
+        h, w = kernel(f, L)
+        for b in range(env.shape[1]):
+            y, m = sliding(env[:, b], h, w)
+            Y[:, b, j], M[:, b, j] = y[frames], m[frames]
+        ok[:, j] = (frames >= L // 2) & (frames < env.shape[0] - L // 2)
+    return Y, M, ok
+
+
+def pooled_depth(Y, M):
+    """Depth pooled over bands, weighting bands by level: (n_frames, n_rates).
+    Frames whose window sees only digital silence give NaN; they lie at the
+    ends, outside the cells compared."""
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return 2 * np.sqrt(np.sum(np.abs(Y) ** 2, axis=1)) / np.sqrt(np.sum(M**2, axis=1))
+
+
+def corr(a, b):
+    a, b = a - a.mean(), b - b.mean()
+    return float(a @ b / np.sqrt((a @ a) * (b @ b)))
+
+
+def c10():
+    """How much the front end (filter shape, compression) changes the picture."""
+    # the 4 Hz AM tone of C3, steady part
+    x, _ = sam_tone(1000.0, 4.0, 0.5, 3.0)
+    for label, shape, pw in FRONT_ENDS:
+        cfs, env = band_envelopes(x, shape=shape, power=pw)
+        Y, M, ok = analyse(env, [4.0])
+        sel = ok[:, 0]
+        P = np.mean(np.abs(2 * Y[sel, :, 0]) ** 2, axis=0)
+        b = int(np.argmax(P))
+        d = np.mean(depth(Y[sel, b, 0], M[sel, b, 0]))
+        report("C10", f"4 Hz AM, depth 0.5, {label}: depth in the loudest band [dB]", db(d))
+        report("C10", f"  {label}: bands within 10 dB of its modulation power", np.sum(P > P[b] / 10))
+
+    # the gallery sentence
+    x, fs = sf.read(SPEECH / "bdl_arctic_a0131.flac")
+    assert fs == FS
+    rates = mod_bands(2.0, 32.0, 2)
+    res = {}
+    for label, shape, pw in FRONT_ENDS:
+        _, env = band_envelopes(x, shape=shape, power=pw)
+        res[label] = analyse(env, rates)
+    ok = res[FRONT_ENDS[0][0]][2]
+    for label, _, _ in FRONT_ENDS:
+        Y, M, _ = res[label]
+        D = pooled_depth(Y, M)
+        avg = np.array([D[ok[:, j], j].mean() for j in range(len(rates))])
+        j = int(np.argmax(avg))
+        report("C10", f"sentence, {label}: rate of the largest mean pooled depth [Hz]", rates[j])
+        report("C10", f"  {label}: mean pooled depth at 4 Hz [dB]", db(avg[rates == 4.0][0]))
+
+    def image(label):
+        Y, M, _ = res[label]
+        return db(pooled_depth(Y, M))[ok]
+
+    def band_image(label):
+        Y, M, _ = res[label]
+        j = int(np.flatnonzero(rates == 4.0)[0])
+        P = np.abs(2 * Y[ok[:, j], :, j]) ** 2
+        return 10 * np.log10(P + 1e-30 * P.max()).ravel()
+
+    a, g, ac, gc = (lab for lab, _, _ in FRONT_ENDS)
+    report(
+        "C10",
+        "sentence: correlation of rate x time depth [dB], cosine vs gammatone",
+        corr(image(a), image(g)),
+    )
+    report("C10", "sentence: same, linear vs ^0.3 (cosine)", corr(image(a), image(ac)))
+    report(
+        "C10",
+        "sentence: band x time power at 4 Hz [dB], cosine vs gammatone",
+        corr(band_image(a), band_image(g)),
+    )
+    Ya, Ma, _ = res[a]
+    Yc, Mc, _ = res[ac]
+    ratio = pooled_depth(Yc, Mc)[ok] / pooled_depth(Ya, Ma)[ok]
+    report("C10", "sentence: depth with ^0.3 / depth linear, median over cells", np.median(ratio))
+
+
 if __name__ == "__main__":
-    for fn in (c1, c2, c3, c4, c5, c6, c7, c8, c9):
+    for fn in (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10):
         fn()

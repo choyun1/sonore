@@ -24,9 +24,9 @@ As in `frames.md` and `cepstrum.md`, each claim is numbered and tagged:
 
 - **[proof]**: a short argument given here.
 - **[check]**: a number printed by `tools/check_modulation_spectrogram_claims.py`.
-  The script uses only NumPy and SciPy, writes every filter and transform
-  out from its formula, and shares no code with sonore. It runs in about
-  20 s. The numbers below come from NumPy 2.4.6 and SciPy 1.17.1.
+  The script uses only NumPy, SciPy and soundfile (to read the gallery
+  sentence), writes every filter and transform out from its formula, and
+  shares no code with sonore. It runs in about 30 s. The numbers below come from NumPy 2.4.6 and SciPy 1.17.1.
 - **[source]**: a published result (see References).
 
 ## What "modulation spectrogram" has meant
@@ -126,11 +126,11 @@ only. Envelopes from 24 half-cosine ERB-spaced bands (100–7000 Hz) at
 
 - The largest modulation power, averaged over 1.5–2.5 s, is in the audio
   band centred at 1052 Hz and the 4 Hz modulation band.
-- The depth there is −6.03 dB (20 log10 0.5 = −6.02), constant to 7e-12 dB.
+- The depth there is −6.03 dB (20 log10 0.5 = −6.02), constant to 3e-11 dB.
   The neighbouring modulation bands read −10.6 dB (5.66 Hz) and −15.8 dB
   (2.83 Hz): with Q ≈ 2, half-octave bands overlap, so a pure modulation
   spreads into its neighbours, as a pure tone does in a ⅓-octave analysis.
-- Outside the modulated stretch, the depth is below −170 dB.
+- Outside the modulated stretch, the depth is below −160 dB.
 - The depth reaches half its value at 1.01 s and falls back at 3.01 s: the
   centred kernel puts the onset and offset where they are.
 - The band below (903 Hz) also passes the tone, through its skirt. It reads
@@ -208,6 +208,34 @@ sound back needs the fine structure as well (sonore already does
 possible with the existing circular banks. Atlas & Shamma (2003) discuss the
 constraints a joint representation needs to be invertible.
 
+**C10. The choice of audio filter barely changes the picture; compression
+changes its scale.** [check] There is no standard front end for a modulation
+spectrogram, so the checker runs the same analysis through four: the
+half-cosine ERB bank (sonore's `ERBFilterbank`) and 4th-order gammatone
+filters (b = 1.019 ERB, causal phase) at the same 24 centres, each with
+linear Hilbert envelopes and with envelopes raised to the power 0.3 (the
+compression McDermott & Simoncelli use).
+
+- The 4 Hz AM tone of C3 (depth 0.5) reads −6.03 dB with either bank. With
+  0.3 compression it reads −16.0 dB with either bank, a depth of 0.16: the
+  compressed envelope (1 + 0.5 cos)^0.3 is close to 1 + 0.15 cos. With
+  linear envelopes, 2 audio bands carry modulation power within 10 dB of
+  the loudest for both banks; with compression the gammatone's wider skirts
+  bring that to 5 (cosine: still 2).
+- The gallery sentence (`bdl_arctic_a0131`, half-octave rates 2–32 Hz,
+  frames at least half a window from either end): with all four front ends
+  the largest time-averaged pooled depth is in the 5.7 Hz band. The pooled
+  depth at 4 Hz is −5.05 dB (cosine) and −5.05 dB (gammatone), and −11.7 and
+  −11.6 dB compressed. Over all rate × time cells, the depth images in dB
+  correlate 0.98 between the two banks, and 0.95 between linear and
+  compressed envelopes. At 4 Hz, the band × time power images of the two
+  banks correlate 0.98. Compression multiplies depth by 0.45 (median over
+  cells).
+
+So the filter shape is a minor choice for this representation, and the
+compression is a major one: it rescales depth by a factor of 2 to 3 and has
+to be stated with any number read off the picture.
+
 ## Decisions
 
 **D1. A new module and type.** `sonore/analysis/modspectrogram.py` with a
@@ -249,7 +277,13 @@ analysed as they are; `Envelopes` already offers dB conversion where wanted.
 
 **D4. Acoustic bands from any filterbank; unmeasurable cells marked.** Any
 `Envelopes` works, so the acoustic axis is whatever bank made them (ERB,
-octave, gammatone); edge bands are dropped, as in `modulation_spectrum`. A
+octave, gammatone); edge bands are dropped, as in `modulation_spectrum`.
+The class does not choose a front end. The default in the docs, the gallery
+and the API sketch is `ERBFilterbank` with linear Hilbert envelopes: it is
+what the rest of sonore uses, the gammatone gives nearly the same picture
+(C10), and with linear envelopes depth keeps its textbook meaning (100% AM
+is 0 dB). Compressed envelopes are a documented alternative, with C10's
+factor stated, not a default. A
 boolean `valid` of shape `(n_bands, n_mod, n_frames)` is False where the
 modulation rate exceeds the band's width (C6) and within half a kernel of
 either end of the envelopes (C3), and plots grey those cells. The band
