@@ -1236,6 +1236,18 @@ The sentence and its F0 track live under `docs/`, not in the package.
   whole signal (0.84 in the interior, lowest at 1.69 s where the track
   jumps briefly), and synthesis is exact to 3e-16. That is lower than
   C20's 0.97 because the real track moves faster than C20's glides.
+- **Patch 4, reassignment.** `reassigned_spectrogram(sound, frame,
+  threshold_db=-60)` returns a `ReassignedSpectrogram` (`t_hat`, `f_hat`,
+  `power`, `keep`, all per STFT cell) with `binned(t_edges, f_edges) ->
+  TFPower`. The three STFTs are SciPy `ShortTimeFFT`s with the frame's hop
+  and FFT length and windows w, τw and w′, each given `dual_win = w` so
+  SciPy does not try to build a dual for τw. The window is checked against
+  its formula, so a mismatch with SciPy's `get_window` would raise. Tests
+  reproduce C18 through the library: off-bin tone within 0.2 Hz, impulse
+  exact, chirp within 0.2 Hz of its line, for Hann and Gaussian. On the
+  sentence, a 1 ms hop with n_fft 1024 takes 0.5–0.7 s; about half the
+  cells survive the −60 dB threshold. librosa's `reassigned_spectrogram`
+  is still not cross-checked.
 
 ### Out of scope for step 3
 

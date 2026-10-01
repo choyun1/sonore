@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
-from scipy.signal import welch
+from scipy.signal import ShortTimeFFT, welch
 
 from sonore.frames import GaborFrame, TVGaborFrame
 from sonore.sound import Sound
@@ -20,6 +20,8 @@ __all__ = [
     "TVSTFT",
     "TFPower",
     "tandem_power",
+    "ReassignedSpectrogram",
+    "reassigned_spectrogram",
     "Mask",
     "ideal_binary_mask",
     "ideal_ratio_mask",
@@ -307,6 +309,102 @@ def tandem_power(
     b = TVGaborFrame(t + quarter, durs, n_fft=n_fft, window=window).analyze(sound)
     power = (np.abs(a.data) ** 2 + np.abs(b.data) ** 2) / 2
     return TFPower(power, t, a.f)
+
+
+# ---------------------------------------------------------------- reassignment
+@dataclass(frozen=True)
+class ReassignedSpectrogram:
+    """Spectrogram cells moved to their reassigned times and frequencies.
+
+    ``t_hat``, ``f_hat`` and ``power`` have shape ``(n_channels, n_freqs,
+    n_frames)``, one entry per STFT cell; ``keep`` marks the cells within
+    the threshold of the maximum. :meth:`binned` sums the kept power onto a
+    grid for display. There is no synthesis: reassignment is not linear.
+    """
+
+    t_hat: np.ndarray
+    f_hat: np.ndarray
+    power: np.ndarray
+    keep: np.ndarray
+
+    def binned(self, t_edges: np.ndarray, f_edges: np.ndarray) -> TFPower:
+        """Kept power summed into the cells of ``t_edges`` x ``f_edges``
+        [s, Hz]; points outside the edges are dropped."""
+        t_edges, f_edges = np.asarray(t_edges, float), np.asarray(f_edges, float)
+        out = np.stack(
+            [
+                np.histogram2d(f[k], t[k], bins=(f_edges, t_edges), weights=p[k])[0]
+                for t, f, p, k in zip(self.t_hat, self.f_hat, self.power, self.keep, strict=True)
+            ]
+        )
+        return TFPower(out, (t_edges[:-1] + t_edges[1:]) / 2, (f_edges[:-1] + f_edges[1:]) / 2)
+
+
+def reassigned_spectrogram(
+    sound: Sound, frame: GaborFrame, threshold_db: float = -60.0
+) -> ReassignedSpectrogram:
+    """The reassigned spectrogram (Kodera et al., 1978; Auger & Flandrin, 1995).
+
+    Each cell of ``frame``'s spectrogram is moved from its frame time ``t``
+    and bin frequency ``f`` to
+
+    - ``t_hat = t + Re(X_tw conj X) / |X|**2``,
+    - ``f_hat = f - Im(X_dw conj X) / (2 pi |X|**2)``,
+
+    where ``X`` uses the window ``w``, ``X_tw`` the time-weighted window
+    ``tau w(tau)`` and ``X_dw`` its derivative ``w'(tau)``, with ``tau`` in
+    seconds from the window's middle sample, which is where SciPy (and so
+    ``GaborFrame``) references each frame's phase. A tone off the bin grid,
+    an impulse and a linear chirp land on their true frequency, time and
+    instantaneous-frequency line.
+
+    The derivative is taken from the window's formula, so only ``"hann"`` and
+    ``("gaussian", std)`` windows are accepted. Cells more than
+    ``threshold_db`` below the maximum (per channel) are marked not kept:
+    their positions are mostly noise.
+    """
+    n_win, hop, n_fft = frame.lengths(sound.fs)
+    w = frame.window_samples(sound.fs)
+    tau, dw = _window_tau_and_derivative(frame.window, n_win, sound.fs)
+    if not np.allclose(w, _window_from_formula(frame.window, n_win)):
+        raise ValueError(f"window {frame.window!r} does not match its formula")
+
+    def stft(win):
+        sft = ShortTimeFFT(win, hop=hop, fs=sound.fs, mfft=n_fft, fft_mode="onesided", dual_win=w)
+        return sft, sft.stft(sound.data.T)
+
+    sft, X = stft(w)
+    Xt = stft(tau * w)[1]
+    Xd = stft(dw)[1]
+    p = np.abs(X) ** 2
+    with np.errstate(divide="ignore", invalid="ignore"):
+        t_hat = sft.t(len(sound))[None, None, :] + np.real(Xt * X.conj()) / p
+        f_hat = sft.f[None, :, None] - np.imag(Xd * X.conj()) / p / (2 * np.pi)
+    peak = p.max(axis=(1, 2), keepdims=True)
+    keep = (p > peak * 10 ** (threshold_db / 10)) & np.isfinite(t_hat) & np.isfinite(f_hat)
+    return ReassignedSpectrogram(t_hat, f_hat, p, keep)
+
+
+def _window_from_formula(spec, n: int) -> np.ndarray:
+    k = np.arange(n)
+    if spec == "hann":
+        return 0.5 - 0.5 * np.cos(2 * np.pi * k / n)
+    if isinstance(spec, tuple) and len(spec) == 2 and spec[0] == "gaussian":
+        return np.exp(-0.5 * ((k - n / 2) / spec[1]) ** 2)
+    raise ValueError(f"reassignment needs a 'hann' or ('gaussian', std) window, not {spec!r}")
+
+
+def _window_tau_and_derivative(spec, n: int, fs: float) -> tuple[np.ndarray, np.ndarray]:
+    """Time from the middle sample [s] and the window's derivative [1/s],
+    both at the periodic window's samples."""
+    k = np.arange(n)
+    tau = (k - n // 2) / fs
+    w = _window_from_formula(spec, n)
+    if spec == "hann":
+        dw = 0.5 * (2 * np.pi / n) * np.sin(2 * np.pi * k / n) * fs
+    else:
+        dw = -(k - n / 2) / spec[1] ** 2 * w * fs
+    return tau, dw
 
 
 # ------------------------------------------------------------------- masks
