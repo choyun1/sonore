@@ -6,6 +6,11 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+- A starter notebook, `docs/notebooks/start.ipynb`, with an "Open in Colab"
+  badge in the README: a first tour that installs sonore from PyPI and runs
+  in the browser. `tests/test_notebook.py` runs its code cells.
+
 ## [0.3.0] - 2026-10-01
 
 First release on PyPI.
