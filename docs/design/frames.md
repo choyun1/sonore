@@ -1248,6 +1248,18 @@ The sentence and its F0 track live under `docs/`, not in the package.
   sentence, a 1 ms hop with n_fft 1024 takes 0.5–0.7 s; about half the
   cells survive the −60 dB threshold. librosa's `reassigned_spectrogram`
   is still not cross-checked.
+- **Patch 5, display.** `GammatoneFilterbank.envelope_peak_delay`,
+  `plot_envelopes(..., align="peak", fscale="linear", fmax=None)`,
+  `plot_tf_db`, and `TVSTFT.plot` and `TFPower.plot` on top of it.
+  Defaults are unchanged. The README figures regenerate byte-identical to
+  main's in the same environment, though neither matches the committed
+  PNGs here (matplotlib 3.11.2 in this container), so they were left as
+  committed. `align="peak"` uses per-row time coordinates in `pcolormesh`,
+  so the drawn shift is exact. The tests check a click: envelope peaks
+  spread more than 5 ms uncompensated, and less than 0.2 ms after the
+  shift (C19). Each panel's dB range is a plot argument; the gallery
+  passes 60 dB (D18), while the existing defaults (80 dB for spectrograms,
+  40 dB for cochleagrams) are kept so existing figures don't change.
 
 ### Out of scope for step 3
 

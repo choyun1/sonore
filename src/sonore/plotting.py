@@ -17,6 +17,7 @@ __all__ = [
     "plot_subbands",
     "plot_envelope",
     "plot_envelopes",
+    "plot_tf_db",
     "plot_interaural_cues",
     "plot_ripple_pattern",
     "overview",
@@ -189,20 +190,73 @@ def plot_envelope(env, ax=None, db=False, **kwargs):
     return ax
 
 
-def plot_envelopes(env, ax=None, channel=0, db_range=40.0, cmap="magma", colorbar=True, edges=False):
+def plot_envelopes(
+    env,
+    ax=None,
+    channel=0,
+    db_range=40.0,
+    cmap="magma",
+    colorbar=True,
+    edges=False,
+    align=None,
+    fscale="log",
+    fmax=None,
+):
     """Envelopes (a cochleagram) as an image: time x band, in dB re the maximum.
-    Edge bands are hidden unless ``edges=True``."""
+    Edge bands are hidden unless ``edges=True``.
+
+    ``align="peak"`` draws each band earlier by its filter's
+    ``envelope_peak_delay`` (a causal gammatone bank's latency), so a click
+    is a vertical line; only the drawing moves, not the data.
+    ``fscale="linear"`` draws frequency linearly in kHz, matching
+    :func:`plot_stft`, with an optional ``fmax`` [Hz].
+    """
     ax = _ax(ax)
     sel = slice(None) if edges else slice(1, -1)
     db = env.db[:, sel, channel]
     vmax = db.max()
+    cfs = env.cfs[sel] / (1000 if fscale == "linear" else 1)
+    if fscale not in ("log", "linear"):
+        raise ValueError("fscale must be 'log' or 'linear'")
+    if align is None:
+        t, f = env.t, cfs
+    elif align == "peak":
+        delay = getattr(env.filterbank, "envelope_peak_delay", None)
+        if delay is None:
+            raise TypeError(f"{type(env.filterbank).__name__} has no envelope_peak_delay to align by")
+        t = env.t[None, :] - np.asarray(delay)[sel][:, None]  # one time axis per band
+        f = np.broadcast_to(cfs[:, None], t.shape)
+    else:
+        raise ValueError("align must be None or 'peak'")
     im = ax.pcolormesh(
-        env.t, env.cfs[sel], db.T, cmap=cmap, vmin=vmax - db_range, vmax=vmax, shading="auto", rasterized=True
+        t, f, db.T, cmap=cmap, vmin=vmax - db_range, vmax=vmax, shading="auto", rasterized=True
     )
-    ax.set_yscale("log")
-    ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Envelopes (cochleagram)")
+    if fscale == "log":
+        ax.set_yscale("log")
+        ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Envelopes (cochleagram)")
+    else:
+        ax.set(xlabel="Time [s]", ylabel="Frequency [kHz]", title="Envelopes (cochleagram)")
+        if fmax:
+            ax.set_ylim(0, fmax / 1000)
+    if align == "peak":
+        ax.set_xlim(env.t[0], env.t[-1])
     if colorbar:
         ax.figure.colorbar(im, ax=ax, label="dB")
+    return ax
+
+
+def plot_tf_db(db, t, f, ax=None, db_range=60.0, cmap="magma", colorbar=True, fmax=None, title=None):
+    """A time-frequency image from levels ``db`` (shape ``(n_freqs, n_frames)``)
+    at frame times ``t`` [s] and frequencies ``f`` [Hz], which need not be
+    uniform: each cell extends halfway to its neighbors. Frequency is linear
+    in kHz, as in :func:`plot_stft`."""
+    ax = _ax(ax)
+    vmax = np.max(db)
+    _tf_image(ax, db, np.asarray(t), np.asarray(f), cmap, vmax - db_range, vmax, colorbar, "dB")
+    if fmax:
+        ax.set_ylim(0, fmax / 1000)
+    if title:
+        ax.set_title(title)
     return ax
 
 

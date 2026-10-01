@@ -87,3 +87,33 @@ class TestEnvelopes:
         sb = so.subbands(self.x, n_bands=8)
         assert sb.envelopes().plot().get_title() == "Envelopes (cochleagram)"
         assert sb[2].envelope().plot().get_title() == "Envelope"
+
+
+def test_gammatone_peak_delay_aligns_a_click():
+    """Shifting each band by its envelope peak lines a click up to within 0.2 ms
+    (the group delay would leave a sweep of several ms)."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    fs = 16000
+    x = np.zeros(int(0.1 * fs))
+    x[int(0.03 * fs)] = 1.0
+    fb = so.GammatoneFilterbank(n_bands=16, f_lo=100, f_hi=5000)
+    env = fb.analyze(so.Sound(x, fs)).envelopes()
+    delay = fb.envelope_peak_delay
+    assert delay[0] == delay[-1] == 0 and len(delay) == fb.n_filters
+    np.testing.assert_allclose(delay[1:-1], 3 / (2 * np.pi * fb.b))
+    peaks = np.argmax(env.data[:, 1:-1, 0], axis=0) / fs
+    assert np.ptp(peaks) > 5e-3
+    assert np.ptp(peaks - delay[1:-1]) < 0.2e-3
+    ax = env.plot(align="peak", fscale="linear", fmax=5000)
+    mesh = ax.collections[0].get_coordinates()  # (rows + 1, cols + 1, 2) cell corners
+    row_left = mesh[:-1, 0, 0]
+    assert np.ptp(row_left) > 5e-3  # each row starts at its own, shifted time
+    assert ax.get_ylim() == (0, 5.0)
+    zero = so.GammatoneFilterbank(n_bands=16, f_lo=100, f_hi=5000, phase="zero")
+    assert not np.any(zero.envelope_peak_delay)
+    with pytest.raises(TypeError, match="envelope_peak_delay"):
+        so.MorletFilterbank(n_bands=8, f_lo=100, f_hi=5000).analyze(so.Sound(x, fs)).envelopes().plot(
+            align="peak"
+        )
