@@ -99,3 +99,14 @@ def test_modulation_spectrum_with_fractional_cycles():
     x = so.amplitude_modulate(so.gaussian_noise(1.0625, FAST, rng=1), 8, depth=1)
     rate, density = so.ModulationSpectrum.octave(x, f_hi=FAST_HI).peak()
     assert rate == pytest.approx(8, abs=1) and density == 0
+
+
+def test_auto_padding_covers_the_ringing_at_a_fast_fft_length():
+    from sonore.core.fft import _is_fast
+
+    s = burst()
+    for fb in (ERB, so.GammatoneFilterbank(20, 80.0, 6000.0)):
+        sb = fb.analyze(s)
+        n = sb._full.shape[0]
+        assert sb.pad >= fb.ringing(FS) and _is_fast(n)
+        assert n - len(s) - 2 * fb.ringing(FS) < 0.05 * len(s)

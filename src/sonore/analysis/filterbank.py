@@ -24,6 +24,7 @@ import numpy as np
 from scipy.signal import hilbert
 
 from sonore.analysis.frames import Filterbank
+from sonore.core.fft import threads
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng, erb_bandwidth, erb_to_freq, freq_to_erb
 
@@ -422,7 +423,8 @@ class Subbands:
         return Subbands(full, self.fs, self.filterbank, self.pad if pad is None else pad)
 
     def _analytic(self) -> np.ndarray:
-        return hilbert(self._full, axis=0)
+        with threads():
+            return hilbert(self._full, axis=0)
 
     def envelopes(self, lowpass: float | None = None, fs: float | None = None):
         """Hilbert envelope of every band, as :class:`~sonore.analysis.envelopes.Envelopes`.

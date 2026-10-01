@@ -49,8 +49,10 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import numpy as np
+import scipy.fft as sp_fft
 from scipy.signal import ShortTimeFFT, get_window
 
+from sonore.core.fft import fast_padding, threads
 from sonore.core.sound import Sound
 
 if TYPE_CHECKING:
@@ -156,26 +158,30 @@ class Filterbank(Frame):
     def ringing(self, fs: float, level_db: float = -60.0) -> int:
         """How long [samples] the filters ring: the longest time, over all
         filters, before the zero-phase impulse response stays below
-        ``level_db`` re its peak (capped at 2 s). Used to size the padding."""
+        ``level_db`` re its peak (capped at 2 s). The minimum padding of
+        ``pad="auto"``."""
         try:
             return _ringing_samples(self, float(fs), float(level_db))
         except TypeError:  # unhashable subclass: compute without the cache
             return _ringing_samples.__wrapped__(self, float(fs), float(level_db))
 
-    def _pad_samples(self, pad: float | str, fs: float) -> int:
+    def _pad_samples(self, pad: float | str, fs: float, n_samples: int) -> int:
         if pad == "auto":
-            return self.ringing(fs)
+            # at least the ringing, rounded up to an FFT length without large prime factors
+            return fast_padding(int(n_samples), self.ringing(fs))
         return int(round(float(pad) * fs))
 
     def analyze(self, sound: Sound, pad: float | str = "auto") -> Subbands:
         """Split ``sound`` into subbands (zero-phase, via FFT).
 
-        By default the sound is zero-padded by the filters' ringing time
-        (:meth:`ringing`), so filter ringing near one end can't wrap around to
-        the other. The padding travels with the Subbands (and any Envelopes
-        derived from them) and is removed on output, so ``.data`` and
-        :meth:`Subbands.synthesize` have the sound's own length, and
-        analysis followed by synthesis is exact.
+        By default the sound is zero-padded by at least the filters' ringing
+        time (:meth:`ringing`), so filter ringing near one end can't wrap
+        around to the other. The padding is rounded up (typically by well
+        under 1% of the length) so the FFT length has no large prime factor,
+        which makes the transforms several times faster. The padding travels
+        with the Subbands (and any Envelopes derived from them) and is
+        removed on output, so ``.data`` and :meth:`Subbands.synthesize` have
+        the sound's own length, and analysis followed by synthesis is exact.
 
         ``pad=0`` makes the analysis circular, which is what you want for
         periodic signals and for texture synthesis (seamless loops). A number
@@ -183,12 +189,13 @@ class Filterbank(Frame):
         """
         from sonore.analysis.filterbank import Subbands
 
-        p = self._pad_samples(pad, sound.fs)
+        p = self._pad_samples(pad, sound.fs, sound.data.shape[0])
         x = np.pad(sound.data, ((p, p), (0, 0))) if p else sound.data
         n = x.shape[0]
         H = self.rfft_response(n, sound.fs)  # (F, B)
-        X = np.fft.rfft(x, axis=0)  # (F, C)
-        bands = np.fft.irfft(X[:, None, :] * H[:, :, None], n=n, axis=0)  # (n, B, C)
+        with threads():
+            X = sp_fft.rfft(x, axis=0)  # (F, C)
+            bands = sp_fft.irfft(X[:, None, :] * H[:, :, None], n=n, axis=0)  # (n, B, C)
         return Subbands(bands, sound.fs, self, pad=p)
 
     def synthesize(self, coefs: Subbands) -> Sound:
@@ -211,13 +218,15 @@ class Filterbank(Frame):
         n = full.shape[0]
         H = self.rfft_response(n, fs)
         if self.tight:
-            X = np.fft.rfft(full, axis=0) * H[:, :, None]
-            out = np.fft.irfft(X.sum(axis=1), n=n, axis=0)
+            with threads():
+                X = sp_fft.rfft(full, axis=0) * H[:, :, None]
+                out = sp_fft.irfft(X.sum(axis=1), n=n, axis=0)
         else:
             s = np.sum(np.abs(H) ** 2, axis=1)
             _check_frame(float(s.min()), float(s.max()), type(self).__name__)
-            X = np.fft.rfft(full, axis=0) * np.conj(H)[:, :, None]
-            out = np.fft.irfft(X.sum(axis=1) / s[:, None], n=n, axis=0)
+            with threads():
+                X = sp_fft.rfft(full, axis=0) * np.conj(H)[:, :, None]
+                out = sp_fft.irfft(X.sum(axis=1) / s[:, None], n=n, axis=0)
         return Sound(out[p : n - p], fs)
 
     def frame_bounds(self, n_samples: int, fs: float, pad: float | str = "auto") -> tuple[float, float]:
@@ -227,7 +236,7 @@ class Filterbank(Frame):
         the signal length and rate (hence a method, not a property). Tight banks return ``(1.0, 1.0)``."""
         if self.tight:
             return (1.0, 1.0)
-        s = self.frame_power(int(n_samples) + 2 * self._pad_samples(pad, fs), fs)
+        s = self.frame_power(int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples), fs)
         return (float(s.min()), float(s.max()))
 
     def energy(self, coefs: Subbands) -> np.ndarray:
@@ -241,8 +250,9 @@ class Filterbank(Frame):
         cropping). For a tight bank this equals :meth:`synthesize`."""
         full, fs, p = coefs._full, coefs.fs, coefs.pad
         n = full.shape[0]
-        X = np.fft.rfft(full, axis=0) * np.conj(self.rfft_response(n, fs))[:, :, None]
-        out = np.fft.irfft(X.sum(axis=1), n=n, axis=0)
+        with threads():
+            X = sp_fft.rfft(full, axis=0) * np.conj(self.rfft_response(n, fs))[:, :, None]
+            out = sp_fft.irfft(X.sum(axis=1), n=n, axis=0)
         return Sound(out[p : n - p], fs)
 
 

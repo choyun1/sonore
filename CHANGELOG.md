@@ -6,6 +6,23 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+- `so.set_fft_workers` and `so.fft_workers`: the large FFTs (filterbank
+  analysis and synthesis, Hilbert envelopes, FFT resampling in texture
+  synthesis, modulation filtering in `ModulationSpectrogram`) now use every
+  available core by default. Results are bit-identical for any number of
+  threads. Use `so.set_fft_workers(1)`, or the same in a `with` block, when
+  running several jobs in parallel.
+
+### Changed
+- `Filterbank.analyze` with the default `pad="auto"` rounds the padding up
+  so that the FFT length has no prime factor above 11 (typically 0.2% longer,
+  at most a few percent). Subbands and envelopes are 3 to 4 times faster for
+  most lengths, and differ from before by about 1e-4 of their peak: the
+  wrap-around of ringing below the -60 dB padding threshold, which a longer
+  padding reduces. Texture statistics and synthesis are unchanged (they use
+  `pad=0`).
+
 ## [0.3.1] - 2026-10-01
 
 The first release archived on Zenodo, which gives it a DOI. No change to the

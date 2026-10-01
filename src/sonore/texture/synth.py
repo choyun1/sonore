@@ -34,6 +34,7 @@ from scipy.optimize import minimize
 from scipy.signal import hilbert, resample
 
 from sonore.analysis.filterbank import Subbands
+from sonore.core.fft import threads
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng
 from sonore.texture import grad as tg
@@ -240,7 +241,8 @@ def channel_order(env_mean: np.ndarray) -> list[int]:
 
 def _resample(x: np.ndarray, n: int) -> np.ndarray:
     """Circular (FFT) resampling along axis 0."""
-    return resample(x, n, axis=0)
+    with threads():
+        return resample(x, n, axis=0)
 
 
 def synthesize(
@@ -301,7 +303,8 @@ def synthesize(
 
     def analyze(x):
         sb = model.subbands(x)
-        analytic = hilbert(sb, axis=0)
+        with threads():
+            analytic = hilbert(sb, axis=0)
         comp = np.abs(analytic) ** model.compression
         env = np.maximum(_resample(comp, n_env), 0.0)
         return sb, analytic, comp, env

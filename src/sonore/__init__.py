@@ -46,6 +46,7 @@ from sonore.analysis.representations import (
     reassigned_spectrogram,
     tandem_power,
 )
+from sonore.core.fft import fft_workers, set_fft_workers
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
 from sonore.core.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
@@ -150,6 +151,7 @@ __all__ = [
     "erb_to_freq",
     "ERBFilterbank",
     "exponential_chirp",
+    "fft_workers",
     "freq_to_erb",
     "gaussian_noise",
     "harmonic_complex",
@@ -185,6 +187,7 @@ __all__ = [
     "sawtooth_wave",
     "schroeder_complex",
     "silence",
+    "set_fft_workers",
     "simple_bir",
     "Sound",
     "spatialize",

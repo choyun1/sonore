@@ -28,6 +28,8 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.signal import fftconvolve
 
+from sonore.core.fft import threads
+
 __all__ = [
     "ModulationFilterbank",
     "ConstantQModulationFilterbank",
@@ -264,6 +266,7 @@ def _correlate(x: np.ndarray, h: np.ndarray, align: str) -> np.ndarray:
     (centred)."""
     n, L = x.shape[0], len(h)
     g = np.conj(h)[::-1].reshape((L,) + (1,) * (x.ndim - 1))
-    full = fftconvolve(x, g, axes=0)  # full[m] = sum_j x[m - L + 1 + j] conj(h[j])
+    with threads():
+        full = fftconvolve(x, g, axes=0)  # full[m] = sum_j x[m - L + 1 + j] conj(h[j])
     start = 0 if align == "causal" else (L - 1) // 2
     return full[start : start + n]
