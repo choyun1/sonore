@@ -324,6 +324,7 @@ also at the top level as `so.name`; the texture ones are under
 **Next, in order**
 
 1. **Release.** A CI workflow that runs the tests, then publishing to PyPI.
+   An on-demand loader for the PKU-IOA HRTF SOFA files is in progress.
 2. **JAX spike.** Port the texture channel objective to JAX, check it
    against the NumPy reference with the existing tests, and measure it
    against today's ~2 s per iteration. On the evidence, decide on an optional
@@ -367,7 +368,9 @@ also at the top level as `so.name`; the texture ones are under
   (STRAIGHT, Kawahara et al., 1999, or its open successor WORLD, Morise et al., 2016).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - Faster `move_sound` via batched frequency-domain filtering.
-- On-demand download of public HRIR databases.
+- On-demand download of other public HRIR databases.
+- Revisit the moving-sound renderer (linear trajectories sound unconvincing): level with distance,
+  travel-time delay, Doppler, room reverberation, or the earlier unwindowed overlapping convolutions.
 
 ## References
 
