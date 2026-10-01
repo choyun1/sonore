@@ -11,6 +11,7 @@ points, so a flipped azimuth convention shows up) and carry the same IRs.
 """
 
 import argparse
+import sys
 import tempfile
 from pathlib import Path
 
@@ -33,10 +34,12 @@ def main():
     db = hrir_data.HRIR_DATABASES["pku-ioa"]
     cache = args.cache or Path(tempfile.mkdtemp(prefix="pku-ioa-"))
     paths = {}
-    print("SHA-256 for HRIR_DATABASES['pku-ioa']:")
+    print(f"Downloading {len(db.files)} SOFA files (about 13 MB each) into {cache}", file=sys.stderr)
+    print("Checksums to paste into HRIR_DATABASES['pku-ioa'] (nothing to type here):")
     for d, (fname, _) in db.files.items():
         path = cache / fname
         if not path.exists():
+            print(f"  downloading {fname} ...", file=sys.stderr, flush=True)
             hrir_data._download(db.base_url + fname, path)
         paths[d] = path
         print(f'            {d}: ("{fname}", "{hrir_data._sha256(path)}"),')
