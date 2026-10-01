@@ -13,8 +13,9 @@ version (0.x.y) only fixes bugs.
   available core by default. Results are bit-identical for any number of
   threads. Use `so.set_fft_workers(1)`, or the same in a `with` block, when
   running several jobs in parallel.
-- An API reference generated from the docstrings (`docs/api/`, served next to
-  the gallery), with a `docs` extra for building it. A test keeps every public
+- An API reference generated from the docstrings (source in `docs/api/source`),
+  built by a new pages workflow and served next to the gallery, with a `docs`
+  extra for building it locally. A test keeps every public
   name documented; the names still waiting are listed in
   `tests/undocumented.txt`.
 

@@ -7,4 +7,5 @@ dist/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
-docs/api/.buildinfo
+docs/api/*
+!docs/api/source/

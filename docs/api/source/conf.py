@@ -1,7 +1,8 @@
 """Sphinx configuration for the sonore API reference.
 
-Build from the repository root (the output is committed and served by GitHub
-Pages next to the gallery, at https://choyun1.github.io/sonore/api/)::
+The pages workflow builds it on every push to main and serves it next to the
+gallery, at https://choyun1.github.io/sonore/api/. To build it locally, from
+the repository root (the output is not committed)::
 
     python -m pip install -e ".[docs]"
     python -m sphinx -b html -E -d /tmp/sonore-doctrees docs/api/source docs/api
