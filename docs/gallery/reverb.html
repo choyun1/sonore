@@ -79,14 +79,14 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html">Cepstral analysis</a><a href="resynthesis.html">Analysis and resynthesis</a><a href="pv.html">Phase vocoder</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="reverb.html" aria-current="page">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html">Cepstral analysis</a><a href="resynthesis.html">Analysis and resynthesis</a><a href="pv.html">Phase vocoder</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="classic.html">Classic stimuli</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="reverb.html" aria-current="page">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a></nav>
 <header>
   <h1>Synthetic reverberation</h1>
 <p>A room's reverberation is its impulse response (IR): what a microphone records after a single
 click. Convolve any dry sound with it and the sound is in that room. Traer &amp; McDermott (2016)
 measured the IRs of 271 real rooms and found them tightly constrained, and <code>so.synth_ir</code> builds
 new ones from their statistics.</p>
-<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a spoken sentence in a synthetic room that listeners can't tell from a real one.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which listeners hear as wrong.</li></ul>
+<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a spoken sentence in a synthetic room that listeners can't tell from a real one.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which listeners hear as wrong.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -249,6 +249,33 @@ reverberation fills the gaps between words and smears each syllable into the nex
   <details class="code" open><summary>Code</summary><pre><code class="language-python">sentence = so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;).resample(FS)
 sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-farther-away">
+<h2 id="h-farther-away">Farther away</h2>
+<p>The direct sound from a point source falls 6 dB for every doubling of distance (the inverse
+square law; <code>so.distance_gain_db</code>). The reverberant tail, built up from reflections off every
+wall, stays at about the same level anywhere in the room. So moving a talker away lowers the
+direct-to-reverberant ratio by as much as it lowers the direct sound, and that ratio is one of
+the cues to how far away a source is. Here the talker is four times farther than above.</p>
+<div class="cell"><pre><code class="language-python">print(so.distance_gain_db([1, 2, 4]))</code></pre><pre class="out">[ -0.          -6.02059991 -12.04119983]</pre></div>
+
+<article class="sound" id="d-r2" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+  <div class="about">
+    <h3>The same sentence, four times farther</h3>
+    <div class="desc"><p>The same sentence and the same room, with the direct sound 12 dB weaker: the
+direct-to-reverberant ratio drops from −3 to −15 dB. Every sound on this page is played at the
+same RMS, so what changes is not the loudness but how much of the sentence is room.</p></div>
+    <audio controls preload="metadata" src="audio/r2_the_same_sentence_four_times_farther.flac"></audio>
+    <p class="file">r2_the_same_sentence_four_times_farther.flac, 3.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r2_the_same_sentence_four_times_farther.png" width="1000" height="620" alt="Plots of the the same sentence, four times farther sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">ir_far = so.synth_ir(1.0, FS, drr_db=-3 + so.distance_gain_db(4), rng=5)
+sound = finish(sentence.convolve(ir_far))
+fig, playhead = show(sound, ir_far)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-rooms-that-break-the-rules">
