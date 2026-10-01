@@ -9,7 +9,7 @@ it is implemented and delivered as a stack of patches.
 |---|---|---|---|---|---|
 | 1 | [The interface and its contract](#step-1-the-interface-and-its-contract) | C1–C7 | D1–D4 | `tools/check_frames_step1_claims.py` | Implemented |
 | 2 | [New filter shapes, time-varying Gabor, adjoints](#step-2-new-filter-shapes-time-varying-gabor-adjoints) | C8–C14 | D5–D11 | `tools/check_frames_step2_claims.py` | Implemented |
-| 3 | [Seeing speech](#step-3-seeing-speech) | C15–C20 | D12–D22 | `tools/check_frames_step3_claims.py` | Design agreed in part |
+| 3 | [Seeing speech](#step-3-seeing-speech) | C15–C20 | D12–D22 | `tools/check_frames_step3_claims.py` | Implemented |
 
 Claim and decision numbers run on across the steps, so a number names one
 claim in this whole file. The plan as first written:
@@ -799,9 +799,10 @@ agree.
 
 ## Step 3: seeing speech
 
-Status: design agreed in part, 2026-10-01. Cho accepted the recommendations
+Status: implemented, 2026-10-01. Cho accepted the recommendations
 for the four open decisions (D12, D13, D17, D18) on 2026-10-01; the other
-decisions stand as recommended. No code has been written for step 3.
+decisions stand as recommended. Implemented in patches 2–6 (see the
+implementation notes below).
 
 Steps 1 and 2 built the frames: the cosine, gammatone and Morlet banks, the STFT, and the
 time-varying Gabor frame. Step 3 uses them. It adds one gallery section,
@@ -1260,6 +1261,23 @@ The sentence and its F0 track live under `docs/`, not in the package.
   shift (C19). Each panel's dB range is a plot argument; the gallery
   passes 60 dB (D18), while the existing defaults (80 dB for spectrograms,
   40 dB for cochleagrams) are kept so existing figures don't change.
+- **Patch 6, the gallery section.** "Seeing speech" sits after "Speech in
+  noise", with the four articles of D20 (keys 27–30). The introduction's
+  resynthesis errors are computed at build time on the sound as played; in
+  this container they are 2.7e-16 to 1.5e-15 of the peak (largest:
+  gammatone). Banks: 54 Morlet wavelets and 60 causal gammatones (2 per
+  ERB), 70 Hz to 7 kHz with edge filters, envelopes at 1 kHz; on that
+  bank the envelope-peak latency reaches 14 ms, and the article quotes the
+  number from the bank. The F0 track is drawn as 10 × F0 so it lies on the
+  tenth harmonic instead of along the bottom of a 5 kHz axis. One change to
+  D18's numbers: the reassigned points are binned at 5 ms by 20 Hz, not
+  1 ms by 10 Hz. Those panels are about 400 by 260 pixels, so a pixel is
+  about 6 ms by 19 Hz, and 1 ms bins were drawn by skipping cells, which
+  left the reassigned panels speckled; D18's rule (about one pixel) is
+  kept. The four articles add about 15 s to the gallery build, within
+  D21's estimate. As in patch 5, the existing gallery images regenerate
+  differently in this container, so only the new section's files and its
+  part of `index.html` are committed.
 
 ### Out of scope for step 3
 

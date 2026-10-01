@@ -50,7 +50,7 @@ footer a { color: var(--accent); }
 <main>
 <header>
   <h1>Listening to sonore</h1>
-  <p>47 sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
+  <p>51 sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
   the same audio you hear.</p>
   <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
@@ -243,6 +243,62 @@ footer a { color: var(--accent); }
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/25_ideal_binary_mask.png" width="1000" height="620" alt="Plots of the ideal binary mask sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+</article>
+</section>
+<section aria-labelledby="h-seeing-speech">
+<h2 id="h-seeing-speech">Seeing speech</h2>
+<p class="section-intro">One sentence, “Providence had delivered him through the maelstrom,” spoken by a man (CMU ARCTIC, speaker bdl, 16 kHz), through several analyses. An invertible frame loses nothing: resynthesized from its coefficients, every frame here returns the sentence to within 1.5e-15 of its peak (wideband 2.7e-16, narrowband 4.0e-16, Morlet 4.7e-16, gammatone 1.5e-15, pitch-adaptive 5.4e-16). The time-frequency tradeoff appears only once the phase is discarded and the magnitudes are drawn, and which magnitude shows speech best depends on what you look for. Every panel is in dB re its own maximum over 60 dB, on the same time axis and a linear 0 to 5 kHz axis. The TANDEM-style and reassigned panels are not frames.</p>
+
+<article class="sound" id="d-27" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.031757207207207205, &quot;bottom&quot;: 0.20768862963377, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.2516459869911276, &quot;bottom&quot;: 0.5715213004939685, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.6193845412738107, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Two classic spectrograms</h3>
+    <p class="desc">Hann windows with a 1 ms hop. The 5 ms window, about 300 Hz wide, makes a wideband spectrogram: each glottal pulse is a vertical striation and the formants are broad bands. The 33.3 ms window, about 45 Hz wide, makes a narrowband one: the harmonics are horizontal lines and the pulses are smeared out. Neither shows both.</p>
+    <audio controls preload="metadata" src="audio/27_two_classic_spectrograms.flac"></audio>
+    <p class="file">27_two_classic_spectrograms.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/27_two_classic_spectrograms.png" width="1000" height="740" alt="Plots of the two classic spectrograms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+</article>
+
+<article class="sound" id="d-28" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.03175720720720743, &quot;bottom&quot;: 0.3023492625437937, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.35021250332363596, &quot;bottom&quot;: 0.6208045586602227, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.6686677994400649, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Constant-Q and the cochlea</h3>
+    <p class="desc">Here the bandwidth grows with frequency, so the low bands resolve single harmonics while the high bands are short enough to show each pulse. Top: 54 Morlet wavelets of 6 cycles, zero-phase. Middle: 60 causal gammatone filters, 2 per ERB. A gammatone is what a cochlear filter does, and its low bands respond later: their envelopes peak up to 15 ms after the high bands&#x27;, so each pulse is drawn as a sweep. Bottom: the same envelopes, each band drawn earlier by its envelope-peak latency. Only the drawing moves; the data are unchanged.</p>
+    <audio controls preload="metadata" src="audio/28_constant-q_and_the_cochlea.flac"></audio>
+    <p class="file">28_constant-q_and_the_cochlea.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/28_constant-q_and_the_cochlea.png" width="1000" height="740" alt="Plots of the constant-q and the cochlea sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+</article>
+
+<article class="sound" id="d-29" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.03175720720720743, &quot;bottom&quot;: 0.3023492625437937, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.35021250332363596, &quot;bottom&quot;: 0.6208045586602227, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.6686677994400649, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Following the pitch</h3>
+    <p class="desc">Top: the narrowband spectrogram with ten times the F0 track (WORLD Harvest, where voiced), which should lie on the tenth harmonic. Middle: a time-varying frame whose Hann windows are 3 pitch periods long, so neighboring harmonics are separated equally well at every F0; the F0 is bridged through unvoiced stretches. Bottom: a TANDEM-STRAIGHT-style power spectrum, two Blackman windows 2.5 periods long a quarter period either side of each center, averaged, which cancels the flicker at the period rate. It is a power spectrum only, not TANDEM-STRAIGHT: no smoothing, no aperiodicity, no synthesis.</p>
+    <audio controls preload="metadata" src="audio/29_following_the_pitch.flac"></audio>
+    <p class="file">29_following_the_pitch.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/29_following_the_pitch.png" width="1000" height="740" alt="Plots of the following the pitch sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+</article>
+
+<article class="sound" id="d-30" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.440524101855759, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4541401836217517, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.4663547843155351, &quot;x1&quot;: 0.8654311787060163, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4541401836217517, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.440524101855759, &quot;top&quot;: 0.511267277455757, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.4663547843155351, &quot;x1&quot;: 0.8654311787060163, &quot;top&quot;: 0.511267277455757, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Reassignment</h3>
+    <p class="desc">Left: the 5 ms and 33.3 ms spectrograms. Right: the same, with each cell&#x27;s energy moved to its center of gravity in time and frequency, then summed into bins of about one pixel, 5 ms by 20 Hz (cells more than 60 dB below the maximum are dropped). Reassignment sharpens what the window already resolves, pulses with the short window and harmonics with the long one; it does not escape the choice of window. It is not a frame and has no synthesis.</p>
+    <audio controls preload="metadata" src="audio/30_reassignment.flac"></audio>
+    <p class="file">30_reassignment.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/30_reassignment.png" width="1000" height="620" alt="Plots of the reassignment sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
 </article>

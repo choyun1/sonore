@@ -73,6 +73,59 @@ def gliding_target(dur=2.0):
     return (target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))).ramp(20e-3)
 
 
+SPEECH = HERE.parent / "speech"
+
+
+def speech_sentence():
+    """The CMU ARCTIC sentence (bdl, arctic_a0131) at its native 16 kHz, and
+    its F0 track (WORLD Harvest, 0 where unvoiced); see docs/speech/SOURCES.md."""
+    snd = so.load(SPEECH / "bdl_arctic_a0131.flac")
+    track = np.loadtxt(SPEECH / "bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2)
+    return snd, track[:, 0], track[:, 1]
+
+
+# The analyses of the "Seeing speech" section. The fixed windows share a 1 ms hop and a
+# 1024-point FFT so their time axes match; the banks reach past the 5 kHz display.
+SPEECH_FMAX = 5000
+SPEECH_DB = 60
+
+
+def speech_wide():
+    return so.GaborFrame(0.005, 0.001, n_fft=1024)
+
+
+def speech_narrow():
+    return so.GaborFrame(0.0333, 0.001, n_fft=1024)
+
+
+def speech_morlet():
+    return so.MorletFilterbank(54, 70, 7000, cycles=6)
+
+
+def speech_gammatone():
+    return so.GammatoneFilterbank(60, 70, 7000)
+
+
+def speech_adaptive(snd, f0_times, f0):
+    # t_end runs half a longest window past the end, so the last sample is covered evenly.
+    return so.TVGaborFrame.pitch_adaptive(f0_times, f0, t_end=snd.duration + 0.02, periods=3)
+
+
+def speech_errors(snd, f0_times, f0) -> dict[str, float]:
+    """Largest resynthesis error of each frame on the sentence, relative to its peak."""
+    frames = {
+        "wideband": speech_wide(),
+        "narrowband": speech_narrow(),
+        "Morlet": speech_morlet(),
+        "gammatone": speech_gammatone(),
+        "pitch-adaptive": speech_adaptive(snd, f0_times, f0),
+    }
+    return {
+        name: float(np.max(np.abs(fr.synthesize(fr.analyze(snd)).data - snd.data)) / snd.peak)
+        for name, fr in frames.items()
+    }
+
+
 TEXTURES = HERE.parent / "textures"
 TEXTURE_INFO = {  # name: (title, description of the recording)
     "rain": ("Rain", "Steady rain (nick121087, Freesound, CC0)."),
@@ -438,6 +491,59 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
         ir = so.synth_ir(1.0, FS, drr_db=-3, rng=5, **kw)
         rooms.append(Demo(key, title, text, pistol.convolve(ir), "reverb", {"ir": ir, "kw": kw}))
 
+    sentence, f0_times, f0 = speech_sentence()
+    errors = speech_errors(finish(sentence), f0_times, f0)  # on the sound as played
+    latency = 1e3 * speech_gammatone().envelope_peak_delay[1:-1]
+    seeing_speech = [
+        Demo(
+            "27",
+            "Two classic spectrograms",
+            "Hann windows with a 1 ms hop. The 5 ms window, about 300 Hz wide, makes a wideband "
+            "spectrogram: each glottal pulse is a vertical striation and the formants are broad bands. The "
+            "33.3 ms window, about 45 Hz wide, makes a narrowband one: the harmonics are horizontal lines and "
+            "the pulses are smeared out. Neither shows both.",
+            sentence,
+            "speech_classic",
+        ),
+        Demo(
+            "28",
+            "Constant-Q and the cochlea",
+            "Here the bandwidth grows with frequency, so the low bands resolve single harmonics while the "
+            "high bands are short enough to show each pulse. Top: 54 Morlet wavelets of 6 cycles, zero-phase. "
+            "Middle: 60 causal gammatone filters, 2 per ERB. A gammatone is what a cochlear filter does, and "
+            f"its low bands respond later: their envelopes peak up to {latency.max():.0f} ms after the high "
+            "bands', so each pulse is drawn as a sweep. Bottom: the same envelopes, each band drawn earlier by "
+            "its envelope-peak latency. Only the drawing moves; the data are unchanged.",
+            sentence,
+            "speech_cq",
+        ),
+        Demo(
+            "29",
+            "Following the pitch",
+            "Top: the narrowband spectrogram with ten times the F0 track (WORLD Harvest, where voiced), which "
+            "should lie on the tenth harmonic. Middle: a time-varying frame whose Hann windows are 3 pitch "
+            "periods long, so neighboring harmonics are separated equally well at every F0; the F0 is bridged "
+            "through unvoiced stretches. Bottom: a TANDEM-STRAIGHT-style power spectrum, two Blackman windows "
+            "2.5 periods long a quarter period either side of each center, averaged, which cancels the flicker "
+            "at the period rate. It is a power spectrum only, not TANDEM-STRAIGHT: no smoothing, no "
+            "aperiodicity, no synthesis.",
+            sentence,
+            "speech_pitch",
+            {"f0_times": f0_times, "f0": f0},
+        ),
+        Demo(
+            "30",
+            "Reassignment",
+            "Left: the 5 ms and 33.3 ms spectrograms. Right: the same, with each cell's energy moved to its "
+            "center of gravity in time and frequency, then summed into bins of about one pixel, 5 ms by 20 Hz "
+            "(cells more than 60 dB below the maximum are dropped). Reassignment sharpens what the window "
+            "already resolves, pulses with the short window and harmonics with the long one; it does not "
+            "escape the choice of window. It is not a frame and has no synthesis.",
+            sentence,
+            "speech_reassign",
+        ),
+    ]
+
     return [
         (
             "Spectrotemporal ripples",
@@ -462,6 +568,19 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             "Speech in noise",
             "Time-frequency masking: the STFT is invertible, so a masked spectrogram is a sound.",
             speech_in_noise,
+        ),
+        (
+            "Seeing speech",
+            "One sentence, “Providence had delivered him through the maelstrom,” spoken by a man "
+            "(CMU ARCTIC, speaker bdl, 16 kHz), through several analyses. An invertible frame loses nothing: "
+            "resynthesized from its coefficients, every frame here returns the sentence to within "
+            f"{max(errors.values()):.1e} of its peak ("
+            + ", ".join(f"{name} {err:.1e}" for name, err in errors.items())
+            + "). The time-frequency tradeoff appears only once the phase is discarded and the magnitudes "
+            "are drawn, and which magnitude shows speech best depends on what you look for. Every panel is "
+            "in dB re its own maximum over 60 dB, on the same time axis and a linear 0 to 5 kHz axis. The "
+            "TANDEM-style and reassigned panels are not frames.",
+            seeing_speech,
         ),
         (
             "Phase vocoder",
@@ -689,6 +808,79 @@ def texture_fig(snd, original, synthetic=False):
     return fig, [ax_s]
 
 
+def speech_panels(n, height_ratios=None, height=7.4):
+    fig = plt.figure(figsize=(10, height), layout="constrained")
+    return fig, fig.subplots(n, 1, sharex=True, height_ratios=height_ratios)
+
+
+def speech_finish(fig, snd, axes, images):
+    """Shared time axis and one colorbar: every image is in dB re its own maximum (D18)."""
+    for ax in np.ravel(axes):
+        ax.set_xlim(0, snd.duration)
+        ax.set_xlabel("")
+    for ax in np.atleast_1d(axes[-1]):  # the bottom row
+        ax.set_xlabel("Time [s]")
+    sm = matplotlib.cm.ScalarMappable(matplotlib.colors.Normalize(-SPEECH_DB, 0), "magma")
+    fig.colorbar(sm, ax=list(np.ravel(images)), label="dB re panel maximum", shrink=0.9)
+    return fig, list(np.ravel(axes))
+
+
+def speech_image(ax, rep, title, **kwargs):
+    rep.plot(ax, db_range=SPEECH_DB, colorbar=False, fmax=SPEECH_FMAX, **kwargs)
+    ax.set_title(title)
+
+
+def classic_fig(snd):
+    fig, axes = speech_panels(3, [0.55, 1, 1])
+    snd.plot(axes[0], color="k", lw=0.4)
+    axes[0].set_title("Waveform")
+    speech_image(axes[1], speech_wide().analyze(snd), "Wideband: Hann 5 ms (about 300 Hz)")
+    speech_image(axes[2], speech_narrow().analyze(snd), "Narrowband: Hann 33.3 ms (about 45 Hz)")
+    return speech_finish(fig, snd, axes, axes[1:])
+
+
+def constant_q_fig(snd):
+    fig, axes = speech_panels(3)
+    kw = {"db_range": SPEECH_DB, "colorbar": False, "fscale": "linear", "fmax": SPEECH_FMAX}
+    speech_morlet().analyze(snd).envelopes(fs=1000).plot(axes[0], **kw)
+    axes[0].set_title("Morlet wavelets, 6 cycles")
+    env = speech_gammatone().analyze(snd).envelopes(fs=1000)
+    env.plot(axes[1], **kw)
+    axes[1].set_title("Gammatone, causal: low bands respond later")
+    env.plot(axes[2], align="peak", **kw)
+    axes[2].set_title("The same, each band drawn earlier by its envelope-peak latency")
+    return speech_finish(fig, snd, axes, axes)
+
+
+def pitch_fig(snd, f0_times, f0):
+    fig, axes = speech_panels(3)
+    speech_image(axes[0], speech_narrow().analyze(snd), "Narrowband, Hann 33.3 ms, with 10 × F0 (dashed)")
+    voiced = np.where(f0 > 0, 10 * f0 / 1000, np.nan)
+    axes[0].plot(f0_times, voiced, color="w", ls="--", lw=0.9)
+    speech_image(axes[1], speech_adaptive(snd, f0_times, f0).analyze(snd), "Pitch-adaptive: Hann, 3 periods")
+    speech_image(
+        axes[2],
+        so.tandem_power(snd, f0_times, f0),
+        "TANDEM-style: Blackman pair, 2.5 periods, ±¼ period",
+    )
+    return speech_finish(fig, snd, axes, axes)
+
+
+def reassign_fig(snd):
+    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
+    axes = fig.subplots(2, 2, sharex=True, sharey=True)
+    # Bins of about one pixel of these panels (5 ms by 20 Hz): finer bins would be drawn by
+    # skipping cells, coarser ones would blur what reassignment sharpened.
+    t_edges = np.arange(0, snd.duration + 5e-3, 5e-3)
+    f_edges = np.arange(0, SPEECH_FMAX + 20, 20)
+    for row, (frame, name) in enumerate(((speech_wide(), "5 ms"), (speech_narrow(), "33.3 ms"))):
+        speech_image(axes[row, 0], frame.analyze(snd), f"Hann {name}")
+        rs = so.reassigned_spectrogram(snd, frame).binned(t_edges, f_edges)
+        speech_image(axes[row, 1], rs, f"Hann {name}, reassigned")
+        axes[row, 1].set_ylabel("")
+    return speech_finish(fig, snd, axes, axes)
+
+
 FIGURES = {
     "texture": lambda d: texture_fig(d.sound, d.extra["original"], d.extra.get("synthetic", False)),
     "ibm": lambda d: ibm_fig(d.sound, **d.extra),
@@ -699,6 +891,10 @@ FIGURES = {
     "pv": lambda d: pv_fig(d.sound),
     "vocoder": lambda d: vocoder_fig(d.sound, d.extra["source"]),
     "reverb": lambda d: reverb_fig(d.sound, d.extra["ir"], d.extra.get("kw")),
+    "speech_classic": lambda d: classic_fig(d.sound),
+    "speech_cq": lambda d: constant_q_fig(d.sound),
+    "speech_pitch": lambda d: pitch_fig(d.sound, **d.extra),
+    "speech_reassign": lambda d: reassign_fig(d.sound),
 }
 
 
