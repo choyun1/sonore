@@ -25,8 +25,10 @@ from sonore.analysis.filterbank import (
     subbands,
 )
 from sonore.analysis.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
+from sonore.analysis.modspectrogram import ModulationSpectrogram
 from sonore.analysis.modulation import (
     ConstantQModulationFilterbank,
+    HannModulationFilterbank,
     ModulationFilterbank,
     OctaveModulationFilterbank,
 )
@@ -103,7 +105,9 @@ __version__ = "0.3.1"
 __all__ = [
     "texture",
     "ConstantQModulationFilterbank",
+    "HannModulationFilterbank",
     "ModulationFilterbank",
+    "ModulationSpectrogram",
     "OctaveModulationFilterbank",
     "measure_rt60",
     "band_rt60s",
