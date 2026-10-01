@@ -86,6 +86,7 @@ EXAMPLE_PAGES = [
     "speech",
     "cepstrum",
     "resynthesis",
+    "pv",
     "ripples",
     "irn",
     "binaural",
@@ -399,6 +400,7 @@ NAV = [
     ("speech.html", "Seeing speech"),
     ("cepstrum.html", "Cepstral analysis"),
     ("resynthesis.html", "Analysis and resynthesis"),
+    ("pv.html", "Phase vocoder"),
     ("ripples.html", "Spectrotemporal ripples"),
     ("irn.html", "Iterated rippled noise"),
     ("binaural.html", "Binaural cues"),
@@ -623,10 +625,8 @@ TOPICS = [
         [
             ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
             ("cepstrum.html", "separating a voice's pitch from its timbre."),
-            (
-                "resynthesis.html",
-                "filterbanks that reconstruct exactly, spectrogram masking, and the phase vocoder.",
-            ),
+            ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
+            ("pv.html", "how it works, and duration, pitch and partials changed independently."),
         ],
     ),
     (
