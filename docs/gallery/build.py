@@ -127,13 +127,15 @@ def read_cells(path: Path) -> list[Cell]:
     return cells
 
 
-INLINE = re.compile(r"\$\$(.+?)\$\$|\$(.+?)\$|\[`([^`]+)`\]\(([^)\s]+)\)|`([^`]+)`", re.S)
+# A link target may hold one level of parentheses, as DOIs such as 10.1016/S0167-6393(98)00032-6 do.
+URL = r"((?:[^()\s]|\([^()\s]*\))+)"
+INLINE = re.compile(r"\$\$(.+?)\$\$|\$(.+?)\$|\[`([^`]+)`\]\(" + URL + r"\)|`([^`]+)`", re.S)
 
 
 def _marks(s: str) -> str:
-    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', s)
-    s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
-    return re.sub(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])", r"<em>\1</em>", s)
+    s = re.sub(r"\[([^\]]+)\]\(" + URL + r"\)", r'<a href="\2">\1</a>', s)
+    s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s, flags=re.S)
+    return re.sub(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])", r"<em>\1</em>", s, flags=re.S)
 
 
 def inline(text: str) -> str:
@@ -252,6 +254,7 @@ header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted);
 nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
 nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.repo { margin-left: auto; }
 a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
 h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
@@ -475,6 +478,7 @@ NAV = [
 def nav(current: str) -> str:
     current_attr = ' aria-current="page"'
     links = [f'<a href="{href}"{current_attr if href == current else ""}>{label}</a>' for href, label in NAV]
+    links.append('<a class="repo" href="https://github.com/choyun1/sonore">sonore on GitHub</a>')
     return f'<nav class="pages" aria-label="Gallery pages">{"".join(links)}</nav>'
 
 
