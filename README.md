@@ -307,20 +307,23 @@ also at the top level as `so.name`; the texture ones are under
 
 ## Roadmap
 
+**Done**
+
+- **Frames.** A `Frame` contract for invertible time-frequency
+  analyses: `analyze`, `synthesize` (canonical dual, least-squares for
+  modified coefficients), `frame_bounds()` and `adjoint`. The STFT
+  (`GaborFrame`), the cosine, gammatone and Morlet filterbanks, and a
+  time-varying Gabor frame with pitch-adaptive windows are all frames; tests
+  enforce `synthesize(analyze(x)) == x` and the reported bounds. Reassigned
+  spectrograms and a TANDEM-STRAIGHT-style power spectrum are drawn beside
+  them in the [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html) page.
+- **Package layout.** One subpackage per layer (`core`, `signals`,
+  `analysis`, `stimuli`, `texture`), with imports pointing down a layer,
+  enforced by `tests/test_layers.py`; see `docs/design/layout.md`.
+
 **Next, in order**
 
-1. **Frames.** A `Frame` abstraction for invertible time-frequency
-   decompositions: `analyze`, `synthesize` (canonical dual) and
-   `frame_bounds()`. For undecimated filterbanks applied in the frequency
-   domain, the dual filters are `H_k / sum_j |H_j|^2`, so *any* filter shape
-   (cosine, gammatone, wavelet-shaped) is exactly invertible wherever the
-   summed squared response is nonzero, and the frame bounds are its minimum
-   and maximum. The STFT (a Gabor frame) and the cosine filterbanks become
-   instances; a decimated, invertible constant-Q transform (nonstationary
-   Gabor frames) can follow. Tests enforce `synthesize(analyze(x)) == x` and
-   the reported bounds. Written as pure array functions so a JAX version is
-   mechanical. Documented distinction: synthesis is exact for unmodified
-   coefficients and a least-squares projection for modified ones.
+1. **Release.** A CI workflow that runs the tests, then publishing to PyPI.
 2. **JAX spike.** Port the texture channel objective to JAX, check it
    against the NumPy reference with the existing tests, and measure it
    against today's ~2 s per iteration. On the evidence, decide on an optional
@@ -346,10 +349,9 @@ also at the top level as `so.name`; the texture ones are under
 
 **Architecture**
 
-- Layering: model subpackages (`sonore.texture`, later `sonore.speech`)
-  depend on the core (Sound, units, generators, frames, representations,
-  plotting); the core never imports them, enforced by a test. Heavy
-  dependencies go in optional extras.
+- Model subpackages (`sonore.texture`, later `sonore.speech`) sit on top of
+  the layers below them and are never imported by them. Heavy dependencies
+  go in optional extras.
 - Split a component into its own distribution only when it needs a heavy
   dependency, a different release cadence, or a separate audience.
 - Bayesian inference of sound sources will be a separate package built on
@@ -360,6 +362,7 @@ also at the top level as `so.name`; the texture ones are under
 **Other**
 
 - Free-form modulation patterns: specify a modulation spectrum and synthesize it.
+- A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - A high-quality speech analysis/resynthesis model with robust F0 tracking
   (STRAIGHT, Kawahara et al., 1999, or its open successor WORLD, Morise et al., 2016).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
