@@ -15,9 +15,9 @@ seconds (`snd[0.1:0.5]`), and any sound at the end of a notebook cell plays.
 
 It brings the sounds and representations of hearing research together in
 one coherent system, held to a standard most audio code is not: every
-transform inverts exactly, every mathematical claim is checked by an
-independent script, and every example in the gallery can be heard beside
-the code that made it. It is built to learn from and to build on.
+transform inverts exactly, the mathematics in its design documents is
+checked by independent scripts, and every example in the gallery can be
+heard beside the code that made it. It is built to learn from and to build on.
 
 The name comes from Pierre Schaeffer's *objet sonore*, the "sound object": a
 sound taken as a thing in its own right and studied for how it is heard rather
