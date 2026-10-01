@@ -22,8 +22,8 @@ clearly; keep the original authors' names. This folder meets them by
 shipping that file next to the recordings, by the "Modifications" note
 below, and by the citation above.
 
-**The sentence text** has not been checked against the corpus prompt list
-(`etc/txt.done.data` in the release).
+**The sentence:** "Providence had delivered him through the maelstrom."
+From the release's prompt list, `etc/txt.done.data`, line 131.
 
 ## Processing
 
