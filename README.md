@@ -286,40 +286,41 @@ Where to go for what sonore leaves out:
   (Qu et al., 2009) on first use, checks each file's checksum and caches it,
   correcting the left-right mirroring of its SOFA copy; see
   `docs/design/hrir-data.md`.
-- **Gallery pages.** The gallery is split into pages, each a runnable script
-  shown with its code: [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html) (a short course in
-  time-frequency analysis), [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html),
-  [Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html) (liftering, minimum phase and
-  cepstral F0, cross-checked against SciPy, MATLAB's `rceps` and Praat by
-  `tools/crosscheck_cepstrum.py`), [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) (cochlear-implant simulation
-  with `so.noise_vocode`), and [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) (a target
-  talker swinging in azimuth between two still maskers, after Cho & Kidd,
-  2022, with interaural cues and a top-down view that follows playback).
+- **Gallery pages.** Thirteen pages, listed under [Gallery](#gallery), each
+  a runnable script shown with its code. The Cepstral analysis page is
+  cross-checked against SciPy, MATLAB's `rceps` and Praat by
+  `tools/crosscheck_cepstrum.py`; the Moving talkers page follows Cho & Kidd
+  (2022), with interaural cues and a top-down view that follows playback.
 - **The MSM archive.** The experiment code behind Cho & Kidd (2022), written
   with sigtools 0.1, stays a separate archive at
   [choyun1/MSM](https://github.com/choyun1/MSM) rather than being folded in;
   the Moving talkers page carries its stimuli forward.
+- **PyPI, Zenodo and Colab.** sonore is on [PyPI](https://pypi.org/project/sonore/) from
+  0.3.0, and each GitHub release is archived on Zenodo with a DOI (from
+  0.3.1). A starter notebook runs in Colab with nothing to install.
+- **Faster filterbanks.** FFT lengths padded to fast sizes and the large
+  FFTs spread over all cores (`so.set_fft_workers`); subbands and envelopes
+  are 3 to 4 times faster, and texture synthesis is unchanged bit for bit.
+- **JAX trial, decided against for now.** A JAX port of the texture channel
+  objective matched the NumPy gradient to about 1e-15 but ran no faster
+  (about 2 ms per call either way, plus compile time), and float32 would
+  break bit-for-bit output. The core stays NumPy. An optional `sonore[jax]`
+  extra is worth revisiting only if inference work needs gradients through
+  the whole model.
 
 **Next, in order**
 
-1. **First PyPI release.** The workflows are in place; what remains is
-   publishing 0.3 to TestPyPI and then PyPI.
-2. **JAX spike.** Port the texture channel objective to JAX, check it
-   against the NumPy reference with the existing tests, and measure it
-   against today's ~2 s per iteration. On the evidence, decide on an optional
-   `sonore[jax]` backend for the heavy, optimization-shaped parts (texture
-   synthesis now; the differentiable forward models that source inference
-   needs later). The core stays NumPy.
-3. **Texture modulation convergence.** Rebalance the objective so
-   modulation power converges (see Texture synthesis below).
-4. **Speech analysis and synthesis.** A WORLD-style model (Morise et al.,
-   2016; after STRAIGHT, Kawahara et al., 1999) built on the cepstrum and
-   the pitch-adaptive frame: an F0 tracker, a CheapTrick-style spectral
+1. **F0 tracking.** A robust F0 tracker in the manner of WORLD (Morise et
+   al., 2016) and its Harvest estimator, with a voiced/unvoiced decision,
+   compared frame by frame with the cepstral F0 that `Cepstrum` gives.
+2. **Speech analysis and synthesis.** The rest of a WORLD-style model
+   (after STRAIGHT, Kawahara et al., 1999), built on the F0 tracker, the
+   cepstrum and the pitch-adaptive frame: a CheapTrick-style spectral
    envelope (Morise, 2015), aperiodicity, and pulse-plus-noise synthesis.
    Alongside it, source-filter vowels (glottal source, formant resonators,
    radiation) and the Klatt synthesizer (Klatt, 1980; KLSYN88, Klatt &
    Klatt, 1990).
-5. **Moving-sound renderer.** Revisit `move_sound`, since linear
+3. **Moving-sound renderer.** Revisit `move_sound`, since linear
    trajectories sound unconvincing: sources that change distance (level
    change, travel-time delay, Doppler shift and room reverberation), a
    sinusoidal azimuth trajectory like the one in Cho & Kidd (2022), and
@@ -327,6 +328,8 @@ Where to go for what sonore leaves out:
    methods are reviewed by Brandtsegg et al. (2018); sonore's windowed
    switching with onset-aligned interpolation is described on the
    [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) page.
+4. **Texture modulation convergence.** Rebalance the objective so
+   modulation power converges (see Texture synthesis below).
 
 **Texture synthesis**
 
@@ -356,6 +359,10 @@ Where to go for what sonore leaves out:
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - On-demand download of other public HRIR databases.
+- A block-by-block (streaming) modulation spectrogram, as the reference for a
+  live version on a phone: the modulation spectrum of everyday sounds as they happen.
+- Gallery build: draw each figure once rather than twice (about 75 s of a
+  6.5 min build).
 
 ## References
 

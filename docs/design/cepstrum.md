@@ -2,8 +2,8 @@
 
 The design of `sonore.analysis.cepstrum`: a `Cepstrum` representation built
 on sonore's STFTs, with liftering, resynthesis with the original or minimum
-phase, and classic cepstral F0. This is item 3 of the README roadmap. It is
-also the first step toward a WORLD-style analysis and synthesis: the
+phase, and classic cepstral F0. This was item 3 of the README roadmap (now
+Done). It is also the first step toward a WORLD-style analysis and synthesis: the
 liftering and minimum phase are what a CheapTrick-style envelope and a
 pulse-based vocoder need, and cepstral F0 is a baseline that a real F0
 tracker must beat.

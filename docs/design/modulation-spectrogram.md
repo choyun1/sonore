@@ -22,7 +22,8 @@ implemented: `HannModulationFilterbank` in `src/sonore/analysis/modulation.py`
 and `ModulationSpectrogram` in `src/sonore/analysis/modspectrogram.py`,
 tested in `tests/test_modspectrogram.py`. Patch 3 (display) is
 implemented too: `plot`, `pooled_depth`, `slices` and `animate`, with the
-plot functions in `src/sonore/plotting.py`. The gallery page is next.
+plot functions in `src/sonore/plotting.py`. Patch 4, the gallery page, is
+`docs/gallery/modspectrogram.py`. All four patches are merged.
 
 ## How the claims are verified
 
