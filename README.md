@@ -500,7 +500,7 @@ architecture. I chose and documented the texture recordings and set the
 working rules: implement from the papers, verify every claim numerically,
 document every deviation and data choice, and write a design document before
 large features. I reviewed and applied each patch. The design principles that came out of
-this are summarized in [docs/design/philosophy.md](docs/design/philosophy.md).
+this are summarized in [docs/design/philosophy.md](https://github.com/choyun1/sonore/blob/main/docs/design/philosophy.md).
 
 **How it is verified.** I have not read every line by hand. What I rely on
 instead is the following:
