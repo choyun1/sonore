@@ -21,6 +21,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   and the parameters that shape it.
 # - [Natural rooms](#h-natural-rooms): a starter pistol and a spoken sentence in a synthetic room
 #   that listeners can't tell from a real one.
+# - [Farther away](#h-farther-away): the same sentence four times as far from the listener,
+#   where less of what arrives is direct sound.
 # - [Rooms that break the rules](#h-rooms-that-break-the-rules): the paper's atypical rooms,
 #   which listeners hear as wrong.
 
@@ -172,6 +174,28 @@ fig, playhead = show(sound, ir)
 sentence = so.load("docs/speech/bdl_arctic_a0131.flac").resample(FS)
 sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)
+
+# %% [markdown]
+# ## Farther away
+#
+# The direct sound from a point source falls 6 dB for every doubling of distance (the inverse
+# square law; `so.distance_gain_db`). The reverberant tail, built up from reflections off every
+# wall, stays at about the same level anywhere in the room. So moving a talker away lowers the
+# direct-to-reverberant ratio by as much as it lowers the direct sound, and that ratio is one of
+# the cues to how far away a source is. Here the talker is four times farther than above.
+
+# %%
+print(so.distance_gain_db([1, 2, 4]))
+
+# %% [about]
+# The same sentence and the same room, with the direct sound 12 dB weaker: the
+# direct-to-reverberant ratio drops from −3 to −15 dB. Every sound on this page is played at the
+# same RMS, so what changes is not the loudness but how much of the sentence is room.
+
+# %% [demo r2] The same sentence, four times farther
+ir_far = so.synth_ir(1.0, FS, drr_db=-3 + so.distance_gain_db(4), rng=5)
+sound = finish(sentence.convolve(ir_far))
+fig, playhead = show(sound, ir_far)
 
 # %% [markdown]
 # ## Rooms that break the rules
