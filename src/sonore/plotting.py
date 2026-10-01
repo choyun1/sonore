@@ -265,12 +265,14 @@ def plot_cepstrum(cep, ax=None, channel=0, q_range=(1e-3, 15e-3), cmap="magma", 
     """A cepstrum as an image: time [s] across, quefrency [ms] up, from
     ``q_range`` [s]. The default, 1 to 15 ms, leaves out the low quefrencies
     (the spectral envelope, which would set the color scale) and covers the
-    periods of voices from about 67 Hz up. Negative values are drawn as 0."""
+    periods of voices from about 67 Hz up. Negative values are drawn as 0, and
+    the color scale tops out at the 99.5th percentile, so that a few isolated
+    peaks do not darken the rest."""
     ax = _ax(ax)
     q = cep.q
     sel = (q >= q_range[0]) & (q <= q_range[1])
     values = np.maximum(cep.data[channel][sel], 0)
-    vmax = values.max() or 1.0
+    vmax = np.percentile(values, 99.5) or values.max() or 1.0
     qm = q[sel] * 1e3
     im = ax.pcolormesh(cep.t, qm, values, cmap=cmap, vmin=0, vmax=vmax, shading="auto", rasterized=True)
     ax.set(title="Cepstrum", xlabel="Time [s]", ylabel="Quefrency [ms]")

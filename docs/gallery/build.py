@@ -604,7 +604,7 @@ def file_name(key: str, title: str) -> str:
 
 
 # ------------------------------------------------------------- example pages
-# The example pages (speech, textures, moving, vocoder) are runnable scripts in percent format,
+# The example pages (speech, textures, moving, vocoder, cepstrum) are runnable scripts in percent format,
 # where "# %%" starts a cell:
 #
 #   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
@@ -617,7 +617,7 @@ def file_name(key: str, title: str) -> str:
 # Every code cell is shown on the page exactly as it ran. Prose may use $TeX$, $$display TeX$$,
 # `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
 # where the cell stands. The scripts run from the repository root.
-EXAMPLE_PAGES = ["speech", "textures", "moving", "vocoder"]
+EXAMPLE_PAGES = ["speech", "textures", "moving", "vocoder", "cepstrum"]
 ROOT = HERE.parent.parent
 CELL = re.compile(r"# %%(?: \[(\w+)(?: (\w+))?\])?(?: (.*))?")
 
@@ -927,6 +927,7 @@ NAV = [
     ("textures.html", "Sound textures"),
     ("moving.html", "Moving talkers"),
     ("vocoder.html", "Hearing through a vocoder"),
+    ("cepstrum.html", "Cepstral analysis"),
 ]
 
 
@@ -1166,11 +1167,12 @@ def build(out_dir: Path | None, single: Path | None) -> None:
         ' if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>'
     )
     header = f"""  <p>{n} sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear. Four topics have pages of their own, with the code for every example beside it:
+  the same audio you hear. Five topics have pages of their own, with the code for every example beside it:
   <a href="speech.html">Seeing speech</a>, a short course in time-frequency analysis on one spoken sentence;
   <a href="textures.html">Sound textures</a>, recordings and their syntheses from statistics;
-  <a href="moving.html">Moving talkers</a>, three talkers rendered through measured HRIRs, one of them moving; and
-  <a href="vocoder.html">Hearing through a vocoder</a>, a simulation of cochlear-implant hearing.</p>
+  <a href="moving.html">Moving talkers</a>, three talkers rendered through measured HRIRs, one of them moving;
+  <a href="vocoder.html">Hearing through a vocoder</a>, a simulation of cochlear-implant hearing; and
+  <a href="cepstrum.html">Cepstral analysis</a>, separating a voice's pitch from its timbre.</p>
   {HOW}"""
     site.write(
         "index.html",
