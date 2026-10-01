@@ -33,3 +33,22 @@ def test_gallery_playhead_regions_do_not_overlap():
                 overlap_x = min(a["x1"], b["x1"]) - max(a["x0"], b["x0"])
                 overlap_y = min(a["bottom"], b["bottom"]) - max(a["top"], b["top"])
                 assert overlap_x <= 1e-6 or overlap_y <= 1e-6, f"overlapping playhead regions in d-{key}"
+
+
+def test_readme_source_links_point_at_definitions():
+    """Reference tags link to src/ files and, for named functions or classes,
+    to the line that defines them. Fix drifted lines with
+    ``python tools/update_readme_source_links.py``."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("links", ROOT / "tools" / "update_readme_source_links.py")
+    links = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(links)
+    readme = (ROOT / "README.md").read_text()
+    found = links.LINK.findall(readme)
+    assert len(found) >= 30
+    assert readme.count(links.BLOB + "src/") == len(found), (
+        "a source link does not match the `module.name` form"
+    )
+    drifted = "README source links have drifted; run python tools/update_readme_source_links.py"
+    assert links.fixed(readme) == readme, drifted
