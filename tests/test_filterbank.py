@@ -50,7 +50,7 @@ def test_subband_plot_labels_and_scale():
 
 # ------------------------------------------- gammatone and Morlet (frames step 2)
 # Checks the gammatone formulas, the edge filters' coverage, the Nyquist rule
-# and the gammatone phase options (derivations in docs/design/frames-step2.md).
+# and the gammatone phase options (derivations in docs/design/frames.md, step 2).
 
 
 def _gammatone_formula(f, fc):
@@ -135,7 +135,7 @@ class TestMorlet:
 
 
 def _edge_banks(width):
-    """The two banks of the edge-coverage table in docs/design/frames-step2.md
+    """The two banks of the edge-coverage table in docs/design/frames.md, step 2
     (gammatone 1/ERB, Morlet 4/oct, 50-7000 Hz)."""
     e = so.freq_to_erb(50.0)
     n = len(np.arange(e, so.freq_to_erb(7000.0), 1.0))

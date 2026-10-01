@@ -397,10 +397,10 @@ numerically; "consulted" means the code was read for behavior but not copied.
 - [SciPy `ShortTimeFFT`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.ShortTimeFFT.html)
   (BSD-3): wrapped by `GaborFrame`. Its frame operator, bounds and least-squares
   inverse are cross-checked against dense matrices in the tests and in
-  `tools/check_frame_claims.py` (docs/design/frames.md). `frames` `representations`
+  `tools/check_frames_step1_claims.py` (docs/design/frames.md, step 1). `frames` `representations`
 - Gammatone filterbanks in Slaney's Auditory Toolbox and MATLAB's `gammatoneFilterBank` are time-domain IIR
   approximations; `GammatoneFilterbank` uses the exact frequency response instead (derivation in
-  docs/design/frames-step2.md). Consulted for conventions only. `filterbank`
+  docs/design/frames.md, step 2). Consulted for conventions only. `filterbank`
 - [LTFAT](https://ltfat.github.io/) (GPLv3) and [nsgt](https://github.com/grrrr/nsgt) (Artistic License 2.0):
   frame theory in code, for dev-time cross-checks only because of their licenses. Not yet cross-checked. `frames`
 
