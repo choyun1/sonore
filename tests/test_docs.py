@@ -3,7 +3,14 @@
 import re
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parent.parent
+
+# The source distribution on PyPI carries the code and tests but not the docs.
+pytestmark = pytest.mark.skipif(
+    not (ROOT / "docs" / "gallery" / "index.html").exists(), reason="docs are not in the sdist"
+)
 
 
 def test_readme_links_point_to_gallery_entries():
