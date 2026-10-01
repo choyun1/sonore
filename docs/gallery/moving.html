@@ -87,7 +87,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 If one of them moves, does that help? Cho &amp; Kidd (2022) asked this with stimuli like the ones
 on this page; the experiment's code, written with sonore's predecessor sigtools, is archived at
 <a href="https://github.com/choyun1/MSM">github.com/choyun1/MSM</a>.</p>
-<ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a>: three sentences, and the paths the target takes.</li><li><a href="#h-one-talker--moving">One talker, moving</a>: what motion alone sounds like.</li><li><a href="#h-three-talkers">Three talkers</a>: the target swinging back and forth in azimuth while the other two stay still.</li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a>: filtering with HRIRs that change over time, without clicks.</li></ul>
+<ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a>: three sentences, and the paths the target takes.</li><li><a href="#h-one-talker-moving">One talker, moving</a>: what motion alone sounds like.</li><li><a href="#h-three-talkers">Three talkers</a>: the target swinging back and forth in azimuth while the other two stay still.</li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a>: filtering with HRIRs that change over time, without clicks.</li></ul>
 <p>For the interaural cues one at a time, timing alone and correlation that changes, see <a href="binaural.html">Binaural
 cues</a>.</p>
 <p>Every sound here is rendered through measured head-related impulse responses (HRIRs) of a
@@ -199,8 +199,8 @@ def show(mix, target_alone, t, azimuths, title):
     axes[-1].set_xlabel(&quot;Time [s]&quot;)
     return fig, list(axes)</code></pre><pre class="out">HRIRSet(793 positions, 1024 taps, 65536 Hz)</pre></div>
 </section>
-<section aria-labelledby="h-one-talker--moving">
-<h2 id="h-one-talker--moving">One talker, moving</h2>
+<section aria-labelledby="h-one-talker-moving">
+<h2 id="h-one-talker-moving">One talker, moving</h2>
 <p>Alone, a talker swinging 30° to each side twice a second is easy to hear moving. The motion
 reaches the ears as interaural differences that change over time: the sound arrives earlier
 and louder at the ear it moves toward. The view from above, beside each example, follows the

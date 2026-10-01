@@ -20,7 +20,7 @@ the PKU-IOA head-related impulse responses at 1 m (about 13 MB) the first time i
 #
 # - [The talkers and the trajectories](#h-the-talkers-and-the-trajectories): three sentences, and
 #   the paths the target takes.
-# - [One talker, moving](#h-one-talker--moving): what motion alone sounds like.
+# - [One talker, moving](#h-one-talker-moving): what motion alone sounds like.
 # - [Three talkers](#h-three-talkers): the target swinging back and forth in azimuth while the
 #   other two stay still.
 # - [How the motion is rendered](#h-how-the-motion-is-rendered): filtering with HRIRs that change
