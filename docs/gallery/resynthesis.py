@@ -14,17 +14,16 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # Many of sonore's analyses can be run backwards: split a sound into bands or time-frequency
 # cells, change what you find there, and synthesize a sound from the result. This page goes from
-# doing nothing to doing a lot.
+# doing nothing to removing the noise from a mixture.
 #
 # - [Perfect reconstruction](#h-perfect-reconstruction): a filterbank whose bands sum back to the
 #   original exactly.
 # - [Masking the spectrogram](#h-masking-the-spectrogram): switching off the cells where noise
 #   dominates, the ideal binary mask.
-# - [Phase vocoder](#h-phase-vocoder): changing a sound's duration, pitch or partials.
 #
-# Two other pages do the same with particular parts of a sound: [Hearing through a
-# vocoder](vocoder.html) keeps only band envelopes, and [Cepstral analysis](cepstrum.html) splits a
-# voice into its vocal tract and its source.
+# Three other pages go further: the [Phase vocoder](pv.html) changes a sound's duration, pitch or
+# partials, [Hearing through a vocoder](vocoder.html) keeps only band envelopes, and [Cepstral
+# analysis](cepstrum.html) splits a voice into its vocal tract and its source.
 
 # %%
 import matplotlib.pyplot as plt
@@ -144,101 +143,8 @@ sound = finish((S_x * mask).to_sound())
 fig, playhead = show_mask(sound, target, mask)
 
 # %% [markdown]
-# ## Phase vocoder
-#
-# The phase vocoder (Flanagan & Golden, 1966; Dolson, 1986) measures, in each STFT bin, how fast
-# the phase advances from one frame to the next, and so the frequency of the partial in that bin
-# far more precisely than the bin spacing. With frequency and amplitude in hand, a sound can be
-# resynthesized with its frames spaced further apart (longer, same pitch), then resampled (same
-# length, new pitch), or with every partial moved by a rule of your choosing. sonore locks the
-# phases of the bins around each spectral peak when stretching, which keeps partials from
-# smearing (Laroche & Dolson, 1999).
-#
-# The first sound is the reference; the others change its duration, pitch, or partials.
-
-
-# %%
-def vibrato_complex(dur=2.0):
-    t = np.arange(int(dur * FS)) / FS
-    phase = 2 * np.pi * np.cumsum(220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * t))) / FS
-    return so.Sound(sum(np.cos(k * phase) / k for k in range(1, 20)), FS).normalize().ramp(30e-3)
-
-
-def show_pv(snd):
-    """Waveform, spectrogram (Hann 46 ms) and long-term spectrum.
-    Returns the figure and the panels the playhead follows."""
-    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
-    gs = fig.add_gridspec(2, 2, height_ratios=[1, 1.6], width_ratios=[1.6, 1])
-    ax_w, ax_s, ax_f = fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])
-    snd.plot(ax_w, lw=0.5)
-    so.STFT(snd, 46e-3).plot(ax_s, fmax=3000, colorbar=False, db_range=70)
-    spec = so.long_term_spectrum(snd, nperseg=16384)
-    ax_f.plot(spec.f, spec.level - spec.level.max(), lw=0.8)
-    ax_f.set(
-        xlim=(0, 3000),
-        ylim=(-70, 3),
-        xlabel="Frequency [Hz]",
-        ylabel="Level [dB]",
-        title="Long-term spectrum",
-    )
-    ax_f.grid(ls=":")
-    return fig, [ax_w, ax_s]
-
-
-sung = vibrato_complex()
-pv = so.pv_analyze(sung)
-
-# %% [about]
-# A 220 Hz harmonic complex with a 5 Hz, ±3% vibrato.
-
-# %% [demo 11] Reference
-sound = finish(sung)
-fig, playhead = show_pv(sound)
-
-# %% [about]
-# Same pitch, double duration. The vibrato slows to 2.5 Hz as well: time stretching stretches
-# every temporal feature.
-
-# %% [demo 12] Twice as long
-sound = finish(so.time_stretch(sung, 2))
-fig, playhead = show_pv(sound)
-
-# %% [about]
-# Seven semitones higher, same duration, same 5 Hz vibrato.
-
-# %% [demo 13] Up a fifth
-sound = finish(so.pitch_shift(sung, 7))
-fig, playhead = show_pv(sound)
-
-# %% [about]
-# Oscillator-bank resynthesis with every partial moved up 70 Hz, to 290, 510, 730 Hz and on:
-# still 220 Hz apart, but no longer harmonics of anything nearby, so the tone turns metallic and
-# its pitch less certain.
-
-# %% [demo 14] Partials shifted up 70 Hz
-sound = finish(pv.resynthesize(freq_map=lambda f: f + 70))
-fig, playhead = show_pv(sound)
-
-# %% [about]
-# The same with half the spacing: 330, 550, 770 Hz are exactly the odd harmonics of 110 Hz. The
-# result is harmonic again, a hollow, clarinet-like tone an octave below the reference.
-
-# %% [demo 14b] Partials shifted up 110 Hz
-sound = finish(pv.resynthesize(freq_map=lambda f: f + 110))
-fig, playhead = show_pv(sound)
-
-# %% [markdown]
 # ## References
 #
-# - Dolson (1986). The phase vocoder: a tutorial. *Computer Music Journal* 10(4), 14–27.
-#   [Semantic Scholar](https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e).
-#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
-# - Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45(9), 1493–1509.
-#   [doi:10.1002/j.1538-7305.1966.tb01706.x](https://doi.org/10.1002/j.1538-7305.1966.tb01706.x).
-#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
-# - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans.
-#   Speech Audio Process.* 7(3), 323–332. [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/).
-#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L157)
 # - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). The
