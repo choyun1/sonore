@@ -18,6 +18,8 @@ __all__ = [
     "long_term_spectrum",
     "STFT",
     "TVSTFT",
+    "TFPower",
+    "tandem_power",
     "Mask",
     "ideal_binary_mask",
     "ideal_ratio_mask",
@@ -244,6 +246,67 @@ class TVSTFT:
         """Least-squares resynthesis; see
         :meth:`~sonore.frames.TVGaborFrame.synthesize`."""
         return self.frame.synthesize(self)
+
+
+# ------------------------------------------------- magnitude-only analyses
+@dataclass(frozen=True)
+class TFPower:
+    """A time-frequency power that is not a frame's coefficients, so it has
+    no synthesis: for example :func:`tandem_power`.
+
+    ``power`` has shape ``(n_channels, n_freqs, n_frames)``, on frequencies
+    :attr:`f` [Hz] and frame times :attr:`t` [s], which need not be uniform.
+    """
+
+    power: np.ndarray
+    t: np.ndarray
+    f: np.ndarray
+
+    @property
+    def db(self) -> np.ndarray:
+        """``10*log10(power)``, floored like the other representations."""
+        with np.errstate(divide="ignore"):
+            return np.maximum(10 * np.log10(self.power), _FLOOR_DB)
+
+
+def tandem_power(
+    sound: Sound,
+    f0_times: Sequence[float],
+    f0: Sequence[float],
+    periods: float = 2.5,
+    overlap: float = 4,
+    window: str | tuple = "blackman",
+) -> TFPower:
+    """A TANDEM-STRAIGHT-style power spectrogram: the average of two
+    pitch-adaptive spectrograms whose windows sit a quarter period before
+    and after each frame center.
+
+    For a periodic sound, the power through a window centered at ``t``
+    fluctuates with period T0 as the window slides across the glottal
+    pulses. Averaging the powers at ``t - T0/4`` and ``t + T0/4`` (half a
+    period apart) cancels the odd harmonics of that fluctuation, including
+    the largest, so a short window shows the spectral envelope steadily.
+    The defaults, a Blackman window 2.5 periods long, are those of
+    Kawahara et al. (2011). Only this averaging is implemented, not
+    TANDEM-STRAIGHT's smoothing or aperiodicity analysis.
+
+    The schedule is :meth:`~sonore.frames.TVGaborFrame.pitch_adaptive` over
+    the sound, with F0 bridged across unvoiced stretches. The result is
+    magnitude only: synthesizing from the pair would need a union of two
+    frames, which sonore does not provide.
+    """
+    f = np.asarray(f0, dtype=float)
+    longest = periods / np.min(f[np.isfinite(f) & (f > 0)], initial=np.inf)
+    base = TVGaborFrame.pitch_adaptive(
+        f0_times, f0, t_end=sound.duration + longest / 2, periods=periods, overlap=overlap, window=window
+    )
+    t, durs = np.asarray(base.times), np.asarray(base.win_durs)
+    quarter = durs / periods / 4
+    n_fft = int(base.layout(sound.fs).n_fft)
+    a = TVGaborFrame(t - quarter, durs, n_fft=n_fft, window=window).analyze(sound)
+    b = TVGaborFrame(t + quarter, durs, n_fft=n_fft, window=window).analyze(sound)
+    power = (np.abs(a.data) ** 2 + np.abs(b.data) ** 2) / 2
+    return TFPower(power, t, a.f)
 
 
 # ------------------------------------------------------------------- masks

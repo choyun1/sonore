@@ -490,6 +490,39 @@ class TVGaborFrame(Frame):
             t += d / overlap
         return cls(tuple(times), tuple(durs), **kwargs)
 
+    @classmethod
+    def pitch_adaptive(
+        cls,
+        f0_times: Sequence[float],
+        f0: Sequence[float],
+        t_end: float,
+        periods: float = 3.0,
+        overlap: float = 4,
+        t_start: float = 0.0,
+        **kwargs,
+    ) -> TVGaborFrame:
+        """Windows ``periods`` fundamental periods long, following an F0 track.
+
+        ``f0`` [Hz] at ``f0_times`` [s] is 0 or NaN where unvoiced. F0 is
+        carried through unvoiced stretches, log-linearly between the voiced
+        neighbors and held constant before the first and after the last voiced
+        point, so the window length never jumps: jumps are what cost frame
+        bounds, not the adaptation itself. The hop is ``window / overlap``, as
+        in :meth:`from_function`, from ``t_start`` to ``t_end``; to cover a
+        sound evenly up to its last sample, ``t_end`` should be its duration
+        plus half the longest window.
+
+        Three periods is the shortest whole number of periods at which
+        neighboring harmonics separate clearly (a peak-to-dip ratio of about
+        12 dB with a Hann window, the same at every F0) while the flicker at
+        the period rate cancels; it is also the window length of WORLD's
+        CheapTrick (Morise, 2015). Other arguments go to the constructor.
+        """
+        f0_of_t = _bridged_f0(f0_times, f0)
+        return cls.from_function(
+            lambda t: periods / f0_of_t(t), t_end, overlap=overlap, t_start=t_start, **kwargs
+        )
+
     def layout(self, fs: float) -> _TVLayout:
         """Window lengths, centers and FFT length in samples at ``fs`` (cached)."""
         return _tv_layout(self, float(fs))
@@ -559,6 +592,22 @@ class TVGaborFrame(Frame):
         """Weighted coefficient energy per channel, as for :class:`GaborFrame`."""
         w = self.bin_weights(coefs.fs)
         return np.einsum("f,cft->c", w, np.abs(coefs.data) ** 2)
+
+
+def _bridged_f0(f0_times: Sequence[float], f0: Sequence[float]) -> Callable[[float], float]:
+    """F0 [Hz] as a function of time, bridged log-linearly across unvoiced
+    points (0 or NaN) and held constant beyond the voiced extent."""
+    t = np.asarray(f0_times, dtype=float)
+    f = np.asarray(f0, dtype=float)
+    if t.shape != f.shape or t.ndim != 1:
+        raise ValueError("f0_times and f0 must be 1-D and of equal length")
+    if np.any(np.diff(t) <= 0):
+        raise ValueError("f0_times must be strictly increasing")
+    voiced = np.isfinite(f) & (f > 0)
+    if not voiced.any():
+        raise ValueError("the F0 track has no voiced points")
+    tv, log_f = t[voiced], np.log(f[voiced])
+    return lambda u: float(np.exp(np.interp(u, tv, log_f)))
 
 
 @dataclass(frozen=True)

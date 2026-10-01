@@ -492,3 +492,50 @@ def test_nyquist_rule_leaves_real_responses_alone():
     fb = so.ERBFilterbank(10, 50, FS / 2)
     H = fb.rfft_response(N, FS)
     assert H.dtype == float and np.array_equal(H, fb.response(np.fft.rfftfreq(N, 1 / FS)))
+
+
+# ------------------------------------------------------- pitch-adaptive schedules
+def _glide_track(gap=None):
+    """An F0 track every 5 ms over 0.5 s, gliding 100 -> 200 Hz; zero (unvoiced) inside ``gap``."""
+    t = np.arange(0, 0.5, 0.005)
+    f0 = 100 * 2 ** (t / 0.5)
+    if gap:
+        f0[(t >= gap[0]) & (t < gap[1])] = 0.0
+    return t, f0
+
+
+def test_pitch_adaptive_windows_follow_f0():
+    t, f0 = _glide_track()
+    tv = so.TVGaborFrame.pitch_adaptive(t, f0, t_end=0.5, periods=3)
+    expected = 3 / np.exp(np.interp(tv.times, t, np.log(f0)))
+    np.testing.assert_allclose(tv.win_durs, expected, rtol=1e-12)
+    hops = np.diff(tv.times)
+    np.testing.assert_allclose(hops, np.array(tv.win_durs[:-1]) / 4, rtol=1e-12)
+
+
+def test_pitch_adaptive_bridges_unvoiced_stretches():
+    """No jump in window length across a gap; held constant beyond the voiced extent."""
+    t, f0 = _glide_track(gap=(0.2, 0.3))
+    f0[:10] = np.nan  # unvoiced start, as NaN
+    tv = so.TVGaborFrame.pitch_adaptive(t, f0, t_end=0.5)
+    d = np.asarray(tv.win_durs)
+    assert np.max(np.abs(np.diff(np.log(d)))) < 0.03
+    assert d[0] == pytest.approx(3 / f0[10])
+    x = so.gaussian_noise(0.5, FS, rng=0)
+    np.testing.assert_allclose(tv.synthesize(tv.analyze(x)).data, x.data, atol=1e-12)
+
+
+def test_pitch_adaptive_constant_f0_is_evenly_covered():
+    """Hann^2 at hop = window/4 sums to a constant, so the interior s(t) is flat."""
+    t = np.arange(0, 0.5, 0.005)
+    tv = so.TVGaborFrame.pitch_adaptive(t, np.full_like(t, 125.0), t_end=0.5)
+    s = tv.frame_power(int(0.5 * FS), FS)[400:-400]
+    assert s.min() / s.max() > 0.97  # rounding to samples at 8 kHz leaves a little ripple
+
+
+def test_pitch_adaptive_rejects_bad_tracks():
+    t = np.arange(0, 0.1, 0.01)
+    with pytest.raises(ValueError, match="no voiced"):
+        so.TVGaborFrame.pitch_adaptive(t, np.zeros_like(t), t_end=0.1)
+    with pytest.raises(ValueError, match="increasing"):
+        so.TVGaborFrame.pitch_adaptive(t[::-1], np.full_like(t, 100.0), t_end=0.1)

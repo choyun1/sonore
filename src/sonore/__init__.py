@@ -68,9 +68,11 @@ from sonore.representations import (
     Mask,
     ModulationSpectrum,
     Spectrum,
+    TFPower,
     ideal_binary_mask,
     ideal_ratio_mask,
     long_term_spectrum,
+    tandem_power,
 )
 from sonore.reverb import band_rt60s, measure_rt60, synth_ir
 from sonore.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
@@ -105,6 +107,8 @@ __all__ = [
     "MorletFilterbank",
     "TVGaborFrame",
     "TVSTFT",
+    "TFPower",
+    "tandem_power",
     "Envelopes",
     "Envelope",
     "ripple_sound",
