@@ -16,7 +16,8 @@ its syllabic modulation near 4 Hz comes and goes with the syllables, and the
 mobile idea in the README (the modulation spectrum of everyday sounds, live)
 needs a version that runs block by block.
 
-Status: proposed. No library code until the decisions below are accepted.
+Status: D2–D9 accepted 2026-10-01 as recommended below; D1 open (whether
+the kernels become their own modulation filterbank). No library code yet.
 
 ## How the claims are verified
 
@@ -249,7 +250,19 @@ the acoustic axis) and stores `power` and `mean` of shape
 (`env.modulation_spectrogram()`), to keep `envelopes.py` (371 lines) about
 envelopes; a thin method can be added later if notebooks want the chain.
 
-**D2. The analysis window is a parameter, set in one of two ways.** As in
+Relation to existing types: it is to `Envelopes` what an `STFT` is to a
+`Sound`. Its closest relative is `TFPower` (power on a time grid, no
+inverse). `ModulationSpectrum` (rate × spectral density, whole sound) is a
+sibling with different axes, and the texture statistics' `mod_power` is the
+same quantity as its time average (C7). Recommended (open): the windowed
+kernels live in `modulation.py` as a third bank, `HannModulationFilterbank`,
+with a time-domain `filter` that supports both alignments, so the
+spectrogram is "envelopes through a modulation filterbank, sampled every
+hop", as `Subbands` is a sound through a filterbank, and the kernels can be
+used on their own (for example for modulation filtering). The alternative
+keeps them private to the new class.
+
+**D2. The analysis window is a parameter, set in one of two ways. (accepted 2026-10-01)** As in
 an STFT, the window length decides the trade between time and modulation
 resolution (C1, C5), so it is the main knob. `cycles=3` (the default) gives
 each modulation band a window of `cycles / f_k` seconds: long for slow rates,
@@ -268,14 +281,14 @@ reaches about 1.25 × `f_hi`); the constructor raises otherwise, and the docs re
 The existing `ConstantQModulationFilterbank` is not reused: it is defined in
 frequency and circular, so it has no causal form (C8).
 
-**D3. Store power and mean; show depth.** `power` (envelope units squared)
+**D3. Store power and mean; show depth. (accepted 2026-10-01)** `power` (envelope units squared)
 and `mean` are stored; `depth` is a property, 2|y| / mean, with 0 dB = 100%
 sinusoidal modulation (C3). Plots default to depth in dB, because it is
 comparable across bands and sounds; power is what to use when loud and quiet
 bands should count differently (C3's 903 Hz band). Linear envelopes are
 analysed as they are; `Envelopes` already offers dB conversion where wanted.
 
-**D4. Acoustic bands from any filterbank; unmeasurable cells marked.** Any
+**D4. Acoustic bands from any filterbank; unmeasurable cells marked. (accepted 2026-10-01)** Any
 `Envelopes` works, so the acoustic axis is whatever bank made them (ERB,
 octave, gammatone); edge bands are dropped, as in `modulation_spectrum`.
 The class does not choose a front end. The default in the docs, the gallery
@@ -290,7 +303,7 @@ either end of the envelopes (C3), and plots grey those cells. The band
 width comes from the filterbank's own responses (its −3 dB width), not from
 a formula, so it is right for every bank.
 
-**D5. Centred frames offline; ends not padded away.** Offline analysis is
+**D5. Centred frames offline; ends not padded away. (accepted 2026-10-01)** Offline analysis is
 centred (`align="center"`), so a modulation shows up where it happens (C3)
 and bands with different kernel lengths line up. `align="causal"` gives what
 a live analysis would see (C8). Outside its extent the envelope is taken to
@@ -298,7 +311,7 @@ be zero, so the abrupt start and end of a sound read as modulation; those
 frames are marked invalid (D4) rather than hidden by mirroring or tapering,
 which would invent signal. Frames every 10 ms by default.
 
-**D6. Streaming: designed for, built later.** The block formulation of C8
+**D6. Streaming: designed for, built later. (accepted 2026-10-01)** The block formulation of C8
 is the contract: a later `ModulationTracker` would keep the last L_k − 1
 envelope samples per band and emit frames as blocks arrive, matching
 `align="causal"` exactly. Not in this step, because the audio filterbanks
@@ -306,7 +319,7 @@ in sonore are FFT-based and whole-signal, so a live version also needs a
 causal audio stage (gammatone as IIR, envelope by rectify and lowpass). That
 belongs with the phone work (`notes/distribution/pypi-browser-phone.md`).
 
-**D7. Display.** `msg.plot()` draws modulation rate (log axis) against time,
+**D7. Display. (accepted 2026-10-01)** `msg.plot()` draws modulation rate (log axis) against time,
 depth in dB, pooled over acoustic bands as 2 sqrt(Σ_b |y_b|²) / sqrt(Σ_b μ_b²),
 which weights bands by their level. `plot(band=...)` shows one acoustic band.
 `plot(rate=4)` shows acoustic band against time at one modulation rate,
@@ -328,12 +341,12 @@ band × rate image is not the existing `ModulationSpectrum` (rate × spectral
 density, a 2-D Fourier transform); a moving version of that one is the
 cortical view left out of scope.
 
-**D8. No inversion.** No `to_sound` or `to_envelopes` (C9). The docstring
+**D8. No inversion. (accepted 2026-10-01)** No `to_sound` or `to_envelopes` (C9). The docstring
 says so and points to the circular modulation banks for modulation
 filtering. If a later step wants modulation-domain editing, keeping the
 complex y is the route, and C9 says it would work for the envelope.
 
-**D9. Docs.** A README module-table row and a reference entry for each
+**D9. Docs. (accepted 2026-10-01)** A README module-table row and a reference entry for each
 source. A gallery page (the chirped AM of C4, the 4 Hz AM of C3, the gallery
 sentence with its syllables showing at 2–8 Hz) comes in a follow-up PR once
 the class exists. Its centrepiece is the three linked slices of D7 with the
