@@ -23,6 +23,15 @@ the division, as :class:`~sonore.filterbank.CosineFilterbank` does.
 coefficient norm weights each stored bin by 2 except DC and, for even ``K``,
 Nyquist (claim C3).
 
+Every frame also has :meth:`Frame.adjoint`, the adjoint of ``analyze`` for
+the coefficient inner product that ``energy`` uses (decision D10 of
+docs/design/frames-step2.md): synthesis without the division by ``s``.
+
+:class:`TVGaborFrame` is the Gabor frame with one window per position
+(nonstationary Gabor, painless case): every window fits in one FFT length
+``M``, so the frame operator is again diagonal in time,
+``s(t) = M sum_q |w_q(t - a_q)|**2`` (step 2, claim C12).
+
 The code is written as pure array functions (no in-place mutation) so that a
 JAX port is mechanical.
 """
@@ -30,7 +39,7 @@ JAX port is mechanical.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import TYPE_CHECKING
@@ -42,9 +51,9 @@ from sonore.sound import Sound
 
 if TYPE_CHECKING:
     from sonore.filterbank import Subbands
-    from sonore.representations import STFT
+    from sonore.representations import STFT, TVSTFT
 
-__all__ = ["Frame", "Filterbank", "GaborFrame"]
+__all__ = ["Frame", "Filterbank", "GaborFrame", "TVGaborFrame"]
 
 # synthesize() refuses when A <= NOT_A_FRAME * B (decision D4).
 NOT_A_FRAME = 1e-12
@@ -79,6 +88,15 @@ class Frame(ABC):
         """Coefficient energy per channel, in the norm the bounds and the least
         squares are defined in (decision D2)."""
 
+    @abstractmethod
+    def adjoint(self, coefs) -> Sound:
+        """The adjoint of :meth:`analyze`: the signal ``y`` with
+        ``<analyze(x), coefs> == <x, y>`` for every ``x``, the coefficient
+        inner product being the one :meth:`energy` uses (step 2, decision
+        D10). It is :meth:`synthesize` without the division by the frame
+        operator, and the gradient of a loss on the coefficients with respect
+        to the signal."""
+
 
 class Filterbank(Frame):
     """Undecimated filters applied by multiplication on the DFT grid.
@@ -110,8 +128,17 @@ class Filterbank(Frame):
         """Responses at ``freqs`` [Hz] (all >= 0), shape ``(len(freqs), n_filters)``."""
 
     def rfft_response(self, n: int, fs: float) -> np.ndarray:
-        """Responses on the ``rfft`` grid of an ``n``-sample signal."""
-        return self.response(np.fft.rfftfreq(n, 1 / fs))
+        """Responses on the ``rfft`` grid of an ``n``-sample signal.
+
+        On an even grid, a complex response is replaced by its real part at
+        Nyquist: ``irfft`` keeps only the real part of that bin, so this is
+        the filter actually applied, and analysis, :meth:`frame_power` and
+        :meth:`synthesize` must all see the same one (step 2, claim C14 and
+        decision D8). Real responses are returned unchanged."""
+        H = self.response(np.fft.rfftfreq(n, 1 / fs))
+        if n % 2 == 0 and np.iscomplexobj(H):
+            H = np.concatenate([H[:-1], H[-1:].real.astype(H.dtype)])
+        return H
 
     def frame_power(self, n: int, fs: float) -> np.ndarray:
         """``s(f) = sum_k |H_k(f)|**2`` on the ``rfft`` grid of ``n`` samples:
@@ -194,6 +221,16 @@ class Filterbank(Frame):
         """Sum of squares of the subbands, padding included, per channel.
         Subbands are real, so every sample has weight 1 (claim C3)."""
         return np.sum(coefs._full**2, axis=(0, 1))
+
+    def adjoint(self, coefs: Subbands) -> Sound:
+        """Filter each band with ``conj(H)`` and sum, with no division by
+        ``s``, then remove the padding (the adjoint of zero-padding is
+        cropping). For a tight bank this equals :meth:`synthesize`."""
+        full, fs, p = coefs._full, coefs.fs, coefs.pad
+        n = full.shape[0]
+        X = np.fft.rfft(full, axis=0) * np.conj(self.rfft_response(n, fs))[:, :, None]
+        out = np.fft.irfft(X.sum(axis=1), n=n, axis=0)
+        return Sound(out[p : n - p], fs)
 
 
 @lru_cache(maxsize=64)
@@ -322,6 +359,15 @@ class GaborFrame(Frame):
         w = self.bin_weights(coefs.fs)
         return np.einsum("f,cft->c", w, np.abs(coefs.data) ** 2)
 
+    def adjoint(self, coefs: STFT) -> Sound:
+        """``n_fft`` times SciPy's ``istft`` with ``dual_win = win``: the
+        adjoint for the C3-weighted inner product (step 2, claim C13)."""
+        sft = _gabor_adjoint_sft(self, float(coefs.fs))
+        if coefs.data.shape[-2] != sft.f_pts:
+            raise ValueError(f"expected {sft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
+        x = sft.mfft * sft.istft(coefs.data, k1=coefs.n_samples)
+        return Sound(np.real(x).T, coefs.fs)
+
 
 @lru_cache(maxsize=64)
 def _gabor_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
@@ -336,3 +382,207 @@ def _gabor_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
         ) from err
     _check_frame(lower, upper, f"{frame} at {fs:g} Hz", note="")
     return sft
+
+
+@lru_cache(maxsize=64)
+def _gabor_adjoint_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
+    win = frame.window_samples(fs)
+    _, hop, n_fft = frame.lengths(fs)
+    return ShortTimeFFT(win, hop=hop, fs=fs, mfft=n_fft, dual_win=win, fft_mode="onesided")
+
+
+def _window(spec, n: int) -> np.ndarray:
+    """A periodic window of ``n`` samples from a get_window spec or a callable."""
+    if callable(spec):
+        w = np.asarray(spec(n), dtype=float)
+        if w.shape != (n,):
+            raise ValueError(f"window callable returned shape {w.shape}, expected ({n},)")
+        return w
+    return get_window(spec, n, fftbins=True)
+
+
+@dataclass(frozen=True)
+class TVGaborFrame(Frame):
+    """A Gabor frame with a time-varying window (step 2, decision D9).
+
+    Window ``q`` is ``win_durs[q]`` long and centered at ``times[q]`` [s];
+    each windowed segment is zero-padded to one FFT length ``n_fft`` and
+    transformed, with the phase referenced to the window's center, as
+    :class:`GaborFrame` (SciPy) does. Every window must fit in ``n_fft``
+    samples, the painless condition that keeps the frame operator diagonal
+    (claim C12); ``n_fft`` defaults to the longest window. Durations and
+    times are rounded to samples at each sampling rate, and a window longer
+    than ``n_fft`` is refused when the frame is first used at a rate.
+
+    Parameters
+    ----------
+    times
+        Window centers [s], strictly increasing.
+    win_durs
+        Window lengths [s], one per center.
+    n_fft
+        FFT length [samples], at least the longest window.
+    window
+        A :func:`scipy.signal.get_window` spec, sampled periodically at each
+        window's length, or a callable ``n -> array``.
+
+    ``analyze`` returns a :class:`~sonore.representations.TVSTFT`, data shape
+    ``(n_channels, n_fft // 2 + 1, len(times))``. The signal is zero outside
+    its own extent, as in :class:`GaborFrame`. A constant schedule over the
+    frames SciPy uses reproduces :class:`GaborFrame` exactly.
+    """
+
+    times: Sequence[float]
+    win_durs: Sequence[float]
+    n_fft: int | None = None
+    window: str | tuple | Callable[[int], np.ndarray] = "hann"
+
+    def __post_init__(self):
+        times = tuple(float(t) for t in np.atleast_1d(np.asarray(self.times, float)))
+        durs = tuple(float(d) for d in np.atleast_1d(np.asarray(self.win_durs, float)))
+        if len(times) != len(durs) or not times:
+            raise ValueError("times and win_durs must be non-empty and of equal length")
+        if not np.all(np.isfinite(times)) or np.any(np.diff(times) <= 0):
+            raise ValueError("times must be finite and strictly increasing")
+        if not min(durs) > 0:
+            raise ValueError("win_durs must be positive")
+        object.__setattr__(self, "times", times)
+        object.__setattr__(self, "win_durs", durs)
+
+    @classmethod
+    def from_function(
+        cls,
+        win_dur_of_t: Callable[[float], float],
+        t_end: float,
+        overlap: float = 4,
+        t_start: float = 0.0,
+        **kwargs,
+    ) -> TVGaborFrame:
+        """A schedule that steps from ``t_start`` to ``t_end`` [s] with hop
+        ``win_dur_of_t(t) / overlap`` at each center ``t``. Use ``t_end`` at
+        least the signal's duration so the windows cover it. Other arguments
+        go to the constructor."""
+        if not overlap >= 1:
+            raise ValueError("overlap must be at least 1, or the windows leave gaps")
+        times, durs, t = [], [], float(t_start)
+        while t <= t_end:
+            d = float(win_dur_of_t(t))
+            if not d > 0:
+                raise ValueError(f"win_dur_of_t({t:g}) = {d:g} is not positive")
+            times.append(t)
+            durs.append(d)
+            t += d / overlap
+        return cls(tuple(times), tuple(durs), **kwargs)
+
+    def layout(self, fs: float) -> _TVLayout:
+        """Window lengths, centers and FFT length in samples at ``fs`` (cached)."""
+        return _tv_layout(self, float(fs))
+
+    def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
+        """``s(t) = M sum_q |w_q(t - a_q)|**2`` for ``t`` in ``0..n_samples-1``:
+        the diagonal of the frame operator (claim C12)."""
+        lay, n = self.layout(fs), int(n_samples)
+        t, valid = lay.positions(n)
+        return lay.n_fft * np.bincount(t[valid], weights=np.abs(lay.windows[valid]) ** 2, minlength=n)
+
+    def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]:
+        """``(min s, max s)`` over a signal of ``n_samples`` at ``fs``, in the
+        weighted coefficient norm of :meth:`energy`."""
+        s = self.frame_power(n_samples, fs)
+        return (float(s.min()), float(s.max()))
+
+    def bin_weights(self, fs: float) -> np.ndarray:
+        """Weight of each stored frequency bin (claim C3), as for :class:`GaborFrame`."""
+        n_fft = self.layout(fs).n_fft
+        w = np.full(n_fft // 2 + 1, 2.0)
+        w[0] = 1.0
+        if n_fft % 2 == 0:
+            w[-1] = 1.0
+        return w
+
+    def analyze(self, sound: Sound) -> TVSTFT:
+        """The time-varying STFT of ``sound``, data shape ``(n_channels, n_freqs, n_frames)``."""
+        from sonore.representations import TVSTFT
+
+        lay, n = self.layout(sound.fs), len(sound)
+        t, valid = lay.positions(n)
+        segs = np.where(valid, lay.windows, 0.0) * sound.data[np.clip(t, 0, n - 1)].transpose(2, 0, 1)
+        data = np.fft.rfft(segs, axis=-1).transpose(0, 2, 1)
+        return TVSTFT(data, sound.fs, n, self)
+
+    def _check(self, coefs: TVSTFT) -> _TVLayout:
+        lay = self.layout(coefs.fs)
+        expected = (lay.n_fft // 2 + 1, len(self.times))
+        if coefs.data.shape[1:] != expected:
+            raise ValueError(f"expected (n_freqs, n_frames) = {expected}, got {coefs.data.shape[1:]}")
+        return lay
+
+    def _overlap_add(self, coefs: TVSTFT, lay: _TVLayout) -> np.ndarray:
+        n = coefs.n_samples
+        t, valid = lay.positions(n)
+        y = lay.n_fft * np.fft.irfft(coefs.data, n=lay.n_fft, axis=1).transpose(0, 2, 1)  # (C, Q, M)
+        contrib = y * np.conj(lay.windows)[None]
+        out = [np.bincount(t[valid], weights=c[valid], minlength=n) for c in contrib]
+        return np.stack(out, axis=1)
+
+    def adjoint(self, coefs: TVSTFT) -> Sound:
+        """Conjugate-window overlap-add of ``n_fft * irfft`` of each frame,
+        without dividing by ``s`` (decision D10)."""
+        return Sound(self._overlap_add(coefs, self._check(coefs)), coefs.fs)
+
+    def synthesize(self, coefs: TVSTFT) -> Sound:
+        """The adjoint divided by ``s(t)``: the canonical dual (claim C12,
+        generalizing C5), so the weighted least-squares signal for ``coefs``,
+        exact for unmodified ones. Raises if the windows leave part of the
+        signal uncovered (D4)."""
+        lay = self._check(coefs)
+        s = self.frame_power(coefs.n_samples, coefs.fs)
+        _check_frame(float(s.min()), float(s.max()), f"{type(self).__name__} at {coefs.fs:g} Hz")
+        return Sound(self._overlap_add(coefs, lay) / s[:, None], coefs.fs)
+
+    def energy(self, coefs: TVSTFT) -> np.ndarray:
+        """Weighted coefficient energy per channel (claim C3)."""
+        w = self.bin_weights(coefs.fs)
+        return np.einsum("f,cft->c", w, np.abs(coefs.data) ** 2)
+
+
+@dataclass(frozen=True)
+class _TVLayout:
+    """A :class:`TVGaborFrame` in samples at one rate. Row ``q`` of
+    ``offsets``/``windows`` is FFT buffer index ``j`` of frame ``q``: the
+    signal sample ``centers[q] + offsets[q, j]`` and its window weight (0 in
+    the zero padding). Index 0 is the window's middle sample, as in SciPy."""
+
+    lengths: np.ndarray
+    centers: np.ndarray
+    n_fft: int
+    offsets: np.ndarray
+    windows: np.ndarray
+
+    def positions(self, n: int) -> tuple[np.ndarray, np.ndarray]:
+        """Signal indices ``(Q, n_fft)`` and where they hold real signal samples."""
+        t = self.centers[:, None] + self.offsets
+        return t, (t >= 0) & (t < n) & (self.windows != 0)
+
+
+@lru_cache(maxsize=64)
+def _tv_layout(frame: TVGaborFrame, fs: float) -> _TVLayout:
+    lengths = np.array([int(round(d * fs)) for d in frame.win_durs])
+    if lengths.min() < 1:
+        raise ValueError(f"a window in win_durs is shorter than one sample at {fs:g} Hz")
+    n_fft = int(lengths.max()) if frame.n_fft is None else int(frame.n_fft)
+    if n_fft < lengths.max():
+        raise ValueError(
+            f"n_fft ({n_fft}) must be at least the longest window ({lengths.max()} samples at {fs:g} Hz): "
+            "longer windows break the painless condition (claim C12)"
+        )
+    centers = np.round(np.asarray(frame.times) * fs).astype(int)
+    j = np.arange(n_fft)
+    m = (j[None, :] + lengths[:, None] // 2) % n_fft  # window sample at buffer index j
+    inside = m < lengths[:, None]
+    windows = np.zeros((len(lengths), n_fft))
+    for q, L in enumerate(lengths):
+        w = _window(frame.window, int(L))
+        windows[q, inside[q]] = w[m[q, inside[q]]]
+    offsets = np.where(inside, m - lengths[:, None] // 2, 0)
+    return _TVLayout(lengths, centers, n_fft, offsets, windows)

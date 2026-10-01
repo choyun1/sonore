@@ -1,8 +1,8 @@
 # Frames, step 2: new filter shapes, time-varying Gabor, adjoints
 
-Status: draft for review, 2026-09-30. D5, D6, D7 and D11 were agreed with Cho
-in discussion; D7's transition width, D8, D9 and D10 are recommendations
-awaiting review. No code yet.
+Status: accepted, 2026-09-30. D5, D6, D7 and D11 were agreed with Cho in
+discussion; D7's transition width, D8, D9 and D10 were accepted as
+recommended on 2026-09-30. Implemented in patches 2-4 (see the patch plan).
 
 Step 1 (docs/design/frames.md) fixed what `analyze`, `synthesize` and
 `frame_bounds` mean and retrofitted the cosine banks and the STFT. Step 2
@@ -169,8 +169,8 @@ well-conditioned frame on the whole band, as the cosine banks do with their
 two extra filters. `n_filters = n_bands + 2`, and `cfs` gets the edge
 filters' nominal centers at DC and Nyquist, matching the cosine banks.
 
-- *To review:* the edge design. The recommendation is **raised cosine, one
-  filter spacing wide** (C11): A/B ≈ 0.5–0.6, with ringing roughly 2–3 times
+- The edge design (accepted as recommended, 2026-09-30): **raised cosine,
+  one filter spacing wide** (C11): A/B ≈ 0.5–0.6, with ringing roughly 2–3 times
   the bank's own. Exact fill gives better A/B but pads by about half a
   second. Two spacings halves the ringing again but gives A/B of 0.2–0.3.
   The transition width can be a constructor argument with that default.
@@ -180,14 +180,15 @@ filters' nominal centers at DC and Nyquist, matching the cosine banks.
 - `edges=False` gives the bare bank for cochleagram use. By D4, `analyze`
   still works, and `synthesize` raises if the bounds say it is not a frame.
 
-**D8. The Nyquist rule.** (Recommended; a correctness fix.)
+**D8. The Nyquist rule.** (Accepted as recommended, 2026-09-30; a
+correctness fix.)
 `Filterbank.rfft_response` takes the real part of the Nyquist bin on even
 grids, so analysis, `frame_power` and `synthesize` all see the filter that is
 actually applied (C14). This is a base-class change. It is a no-op for real
 responses, so the cosine banks and texture synthesis stay bit-for-bit
 unchanged; this will be checked against a worktree of the previous commit.
 
-**D9. Time-varying Gabor.** (Recommended.)
+**D9. Time-varying Gabor.** (Accepted as recommended, 2026-09-30.)
 
 - **Specification:** an explicit schedule, `TVGaborFrame(times, win_durs,
   n_fft=None, window="hann")`, in seconds like `GaborFrame`, rounded to
@@ -207,7 +208,8 @@ unchanged; this will be checked against a worktree of the previous commit.
   into a schedule), and a TANDEM-STRAIGHT-style pair of schedules offset by
   half a period. Both use this class; neither needs new frame theory.
 
-**D10. `Frame.adjoint(coefs) -> Sound`.** (Recommended.) The adjoint for the
+**D10. `Frame.adjoint(coefs) -> Sound`.** (Accepted as recommended,
+2026-09-30.) The adjoint for the
 coefficient inner product that `energy` uses (D2):
 
 - filterbanks: filter with conj(H), with no division by s;
@@ -287,6 +289,56 @@ gammatone has `spacing` in ERB-number with `unit = "ERB"`, and Morlet has
 4. `TVGaborFrame` and its coefficient type.
 
 Each patch carries its own tests. README entries come with patches 3 and 4.
+
+## Implementation notes
+
+Details settled while implementing, recorded so the code and this document
+agree.
+
+- **Patch 2.** `Filterbank.rfft_response` applies the Nyquist rule only to
+  complex responses, returning real ones untouched, so the cosine banks are
+  bit-for-bit unchanged. The tests exercise the rule with a test-only
+  Gaussian bank with a fractional delay, which needs no step 2 bank.
+- **Patch 3, the shared mechanism.** `BandpassFilterbank` holds the edge
+  filters; subclasses give the scale and `band_response`. The `n_bands`
+  centers run from `f_lo` to `f_hi` inclusive. `s_floor` is the minimum on a
+  grid of 64 points per spacing between the outer centers. The raised-cosine
+  transition is linear in Hz between its endpoints, which are set on the
+  bank's scale, exactly as in the checker. `edge_width` (default 1) is the
+  width in spacings.
+- **Edge centers.** D7 said the edge filters' nominal centers would be at
+  DC and Nyquist, but a bank does not know fs. `cfs` instead puts them where
+  the transitions start, `edge_width` spacings outside the band (clamped at
+  0 Hz). That is one spacing beyond the outer bandpass, the same place the
+  cosine banks put theirs.
+- **C11 reproduced.** The tests rebuild the two C11 banks and find A/B 0.530
+  and 0.585, with edges ringing 107 and 234 ms. The gammatone figure differs
+  from the table's 0.532 because sonore's ERB-number scale,
+  9.265 ln(1 + f/228.8), differs from the checker's 21.4 log10(1 + 0.00437 f)
+  by 0.3%. Two further differences from the table are expected, not errors.
+  First, `Filterbank.ringing` gives 73 ms for the causal gammatone bank,
+  against the table's 44 ms for its zero-phase magnitude. Second, the bare
+  causal bank's A/B on an even grid is lower than the table's, because
+  under the Nyquist rule the bank applies Re H(fs/2), which is smaller than
+  |H(fs/2)|.
+- **Edge test.** The test plan's "A ≥ s_floor" holds only for exact fill.
+  With raised-cosine edges, A falls below s_floor in the transitions, by the
+  amount C11 reports. The tests check C11's A/B and ringing instead.
+- **`Envelopes.without_edges`** returns the envelopes unchanged for a bank
+  built with `edges=False`, which has no edge bands to zero.
+
+- **Patch 4, `TVGaborFrame`.** `times` are window centers, rounded to
+  samples, and must be strictly increasing. Each windowed segment is placed
+  in the FFT buffer with the window's middle sample at index 0, which is
+  SciPy's phase convention, so a constant schedule over SciPy's frames
+  reproduces `GaborFrame`'s coefficients exactly (equal to 0.0 in the
+  checks). `n_fft` is in samples, like `GaborFrame`'s, while window lengths
+  depend on fs. A window longer than `n_fft` is therefore refused when the
+  frame is first used at a rate, not at construction as the test plan says.
+  The coefficient type is `TVSTFT` (`data`, `f`, `t`, `magnitude`, `db`,
+  masking by multiplication, `to_sound`). `from_function(win_dur_of_t,
+  t_end, overlap=4, t_start=0)` steps from `t_start` while the center is at
+  most `t_end`.
 
 ## Out of scope for step 2
 

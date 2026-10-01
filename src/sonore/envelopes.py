@@ -286,7 +286,10 @@ class Envelopes:
 
     def without_edges(self) -> Envelopes:
         """Zero the lowpass and highpass edge bands (which lie outside
-        ``f_lo..f_hi``), keeping the band count unchanged."""
+        ``f_lo..f_hi``), keeping the band count unchanged. A bank built with
+        ``edges=False`` has none, and its envelopes are returned as they are."""
+        if getattr(self.filterbank, "edges", True) is False:
+            return self
         full = self._full.copy()
         full[:, [0, -1], :] = 0.0
         return self._new(full)

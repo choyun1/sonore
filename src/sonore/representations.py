@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.signal import welch
 
-from sonore.frames import GaborFrame
+from sonore.frames import GaborFrame, TVGaborFrame
 from sonore.sound import Sound
 from sonore.utils import amp_to_db, as_rng
 
@@ -17,6 +17,7 @@ __all__ = [
     "Spectrum",
     "long_term_spectrum",
     "STFT",
+    "TVSTFT",
     "Mask",
     "ideal_binary_mask",
     "ideal_ratio_mask",
@@ -187,6 +188,62 @@ class STFT:
         from sonore.plotting import plot_stft
 
         return plot_stft(self, ax=ax, channel=channel, **kwargs)
+
+
+class TVSTFT:
+    """Coefficients of a :class:`~sonore.frames.TVGaborFrame`: a short-time
+    Fourier transform whose window changes over time.
+
+    ``data`` has shape ``(n_channels, n_freqs, n_frames)`` like
+    :class:`STFT`, on one frequency grid :attr:`f` (every window is
+    zero-padded to the same FFT length) and at non-uniform frame centers
+    :attr:`t`. :meth:`to_sound` is exact for unmodified coefficients and the
+    least-squares signal for modified ones. Multiply by an array to mask.
+    """
+
+    __array_ufunc__ = None
+
+    def __init__(self, data: np.ndarray, fs: float, n_samples: int, frame: TVGaborFrame):
+        self.data, self.fs, self.n_samples, self.frame = data, fs, int(n_samples), frame
+
+    @classmethod
+    def _from(cls, template: TVSTFT, data: np.ndarray) -> TVSTFT:
+        return cls(data, template.fs, template.n_samples, template.frame)
+
+    def __repr__(self) -> str:
+        c, f, t = self.data.shape
+        lengths = self.frame.layout(self.fs).lengths / self.fs * 1e3
+        return (
+            f"TVSTFT({f} freqs x {t} frames, {c} ch, "
+            f"win {lengths.min():.1f}-{lengths.max():.1f} ms, n_fft {self.frame.layout(self.fs).n_fft})"
+        )
+
+    @property
+    def f(self) -> np.ndarray:
+        return np.fft.rfftfreq(self.frame.layout(self.fs).n_fft, 1 / self.fs)
+
+    @property
+    def t(self) -> np.ndarray:
+        """Frame center times [s], rounded to samples."""
+        return self.frame.layout(self.fs).centers / self.fs
+
+    @property
+    def magnitude(self) -> np.ndarray:
+        return np.abs(self.data)
+
+    @property
+    def db(self) -> np.ndarray:
+        return amp_to_db(self.data, floor_db=_FLOOR_DB)
+
+    def __mul__(self, other):
+        return TVSTFT._from(self, self.data * other)
+
+    __rmul__ = __mul__
+
+    def to_sound(self) -> Sound:
+        """Least-squares resynthesis; see
+        :meth:`~sonore.frames.TVGaborFrame.synthesize`."""
+        return self.frame.synthesize(self)
 
 
 # ------------------------------------------------------------------- masks

@@ -24,12 +24,14 @@ from sonore.envelopes import Envelope, Envelopes
 from sonore.filterbank import (
     CosineFilterbank,
     ERBFilterbank,
+    GammatoneFilterbank,
+    MorletFilterbank,
     OctaveFilterbank,
     Subbands,
     noise_vocode,
     subbands,
 )
-from sonore.frames import Filterbank, Frame, GaborFrame
+from sonore.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
 from sonore.generators import (
     correlated_noise,
     exponential_chirp,
@@ -62,6 +64,7 @@ from sonore.processing import (
 )
 from sonore.representations import (
     STFT,
+    TVSTFT,
     Mask,
     ModulationSpectrum,
     Spectrum,
@@ -98,6 +101,10 @@ __all__ = [
     "Filterbank",
     "Frame",
     "GaborFrame",
+    "GammatoneFilterbank",
+    "MorletFilterbank",
+    "TVGaborFrame",
+    "TVSTFT",
     "Envelopes",
     "Envelope",
     "ripple_sound",
