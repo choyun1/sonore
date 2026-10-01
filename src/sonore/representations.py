@@ -9,9 +9,9 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.signal import ShortTimeFFT, welch
 
+from sonore.core.sound import Sound
+from sonore.core.utils import amp_to_db, as_rng
 from sonore.frames import GaborFrame, TVGaborFrame
-from sonore.sound import Sound
-from sonore.utils import amp_to_db, as_rng
 
 __all__ = [
     "Spectrum",
@@ -67,7 +67,7 @@ class Spectrum:
 
     def to_noise(self, duration: float, fs: float, rng=None, **kwargs) -> Sound:
         """Gaussian noise with this spectral shape."""
-        from sonore.generators import gaussian_noise
+        from sonore.signals.generators import gaussian_noise
 
         return gaussian_noise(duration, fs, spectrum=self, rng=rng, **kwargs)
 

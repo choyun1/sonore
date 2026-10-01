@@ -51,7 +51,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.signal import ShortTimeFFT, get_window
 
-from sonore.sound import Sound
+from sonore.core.sound import Sound
 
 if TYPE_CHECKING:
     from sonore.filterbank import Subbands

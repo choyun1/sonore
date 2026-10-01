@@ -41,11 +41,11 @@ import numpy as np
 from scipy.signal import butter, sosfiltfilt
 from scipy.special import ndtr
 
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng, n_samples, time_axis
 from sonore.envelopes import Envelopes
 from sonore.filterbank import OctaveFilterbank, Subbands
-from sonore.generators import gaussian_noise
-from sonore.sound import Sound
-from sonore.utils import as_rng, n_samples, time_axis
+from sonore.signals.generators import gaussian_noise
 
 __all__ = ["Ripple", "RippleSum", "DynamicRipple", "ripple_sound", "render"]
 

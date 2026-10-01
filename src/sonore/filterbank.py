@@ -23,9 +23,9 @@ from functools import lru_cache
 import numpy as np
 from scipy.signal import hilbert
 
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng, erb_bandwidth, erb_to_freq, freq_to_erb
 from sonore.frames import Filterbank
-from sonore.sound import Sound
-from sonore.utils import as_rng, erb_bandwidth, erb_to_freq, freq_to_erb
 
 __all__ = [
     "CosineFilterbank",
@@ -486,7 +486,7 @@ def noise_vocode(
             raise ValueError("carrier is shorter than the sound")
         fine = fb.analyze(Sound(carrier.data[: len(sound)], carrier.fs)).tfs()
     elif carrier == "noise":
-        from sonore.generators import gaussian_noise
+        from sonore.signals.generators import gaussian_noise
 
         noise = gaussian_noise(sound.duration, sound.fs, n_channels=sound.n_channels, rng=as_rng(rng))
         fine = fb.analyze(noise, pad=0).tfs()  # generated noise is periodic: circular is exact

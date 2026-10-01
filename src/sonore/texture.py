@@ -24,9 +24,9 @@ from dataclasses import asdict, dataclass, field, fields
 import numpy as np
 from scipy.signal import hilbert, resample
 
+from sonore.core.sound import Sound
 from sonore.filterbank import ERBFilterbank
 from sonore.modulation import ConstantQModulationFilterbank, OctaveModulationFilterbank
-from sonore.sound import Sound
 
 __all__ = ["TextureModel", "TextureStats", "measurement_window", "STAT_CLASSES", "DIFFERENCES_FROM_TOOLBOX"]
 

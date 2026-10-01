@@ -8,11 +8,11 @@ from importlib.resources import files
 
 import numpy as np
 
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng, db_to_amp
 from sonore.envelopes import Envelopes
 from sonore.filterbank import ERBFilterbank
-from sonore.generators import gaussian_noise
-from sonore.sound import Sound
-from sonore.utils import as_rng, db_to_amp
+from sonore.signals.generators import gaussian_noise
 
 __all__ = ["synth_ir", "band_rt60s", "measure_rt60", "DECAY_SHAPES", "RT60_PROFILES", "DRR_PROFILES"]
 

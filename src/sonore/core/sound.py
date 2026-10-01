@@ -16,8 +16,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import fftconvolve, hilbert, resample_poly
 
-from sonore.units import Decibels
-from sonore.utils import amp_to_db, db_to_amp, rms, time_axis
+from sonore.core.units import Decibels
+from sonore.core.utils import amp_to_db, db_to_amp, rms, time_axis
 
 __all__ = ["Sound", "load"]
 

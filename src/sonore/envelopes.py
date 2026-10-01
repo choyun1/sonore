@@ -30,12 +30,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.signal import butter, resample_poly, sosfiltfilt
 
-from sonore.utils import amp_to_db
+from sonore.core.utils import amp_to_db
 
 if TYPE_CHECKING:
+    from sonore.core.sound import Sound
     from sonore.frames import Filterbank
     from sonore.representations import ModulationSpectrum
-    from sonore.sound import Sound
 
 __all__ = ["Envelope", "Envelopes"]
 
@@ -153,7 +153,7 @@ class Envelope:
         return NotImplemented
 
     def __mul__(self, other):
-        from sonore.sound import Sound
+        from sonore.core.sound import Sound
 
         if isinstance(other, Sound):
             return Sound(other.data * self._values_for(other), other.fs)
@@ -167,7 +167,7 @@ class Envelope:
         return NotImplemented if o is NotImplemented else Envelope(self._data / o, self.fs)
 
     def __rtruediv__(self, other):
-        from sonore.sound import Sound
+        from sonore.core.sound import Sound
 
         if isinstance(other, Sound):
             env = self._values_for(other)

@@ -13,12 +13,12 @@ from numpy.lib.stride_tricks import sliding_window_view
 from scipy.signal import hilbert
 from scipy.signal.windows import hann
 
+from sonore.core.sound import Sound
+from sonore.core.units import dB
+from sonore.core.utils import time_axis
 from sonore.filterbank import ERBFilterbank
-from sonore.generators import gaussian_noise
-from sonore.processing import pad
-from sonore.sound import Sound
-from sonore.units import dB
-from sonore.utils import time_axis
+from sonore.signals.generators import gaussian_noise
+from sonore.signals.processing import pad
 
 __all__ = [
     "apply_itd_ild",
