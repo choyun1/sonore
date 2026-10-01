@@ -75,7 +75,8 @@ def file_name(key: str, title: str) -> str:
 #   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
 #   # %% [about]               the description of the example that follows
 #   # %% [demo KEY] Title      code that leaves `sound`, `fig` and `playhead` (the axes the playhead follows),
-#                              and optionally `scene`, sources to draw from above as the sound plays
+#                              and optionally `scene`, sources to draw from above as the sound plays,
+#                              and `live`, an image that changes frame by frame as the sound plays
 #   # %% [figure KEY] Title    code that leaves `fig`: a figure without sound
 #   # %%                       any other code; what it prints is shown under it
 #
@@ -85,6 +86,7 @@ def file_name(key: str, title: str) -> str:
 EXAMPLE_PAGES = [
     "speech",
     "cepstrum",
+    "modspectrogram",
     "resynthesis",
     "pv",
     "ripples",
@@ -209,6 +211,8 @@ def example_page(path: Path) -> dict:
                 part.update(sound=snd, audio=flac_bytes(snd), png=png, regions=regions, size=size)
                 if "scene" in ns:
                     part["scene"] = scene_json(ns.pop("scene"))
+                if "live" in ns:
+                    part["live"] = live_json(ns.pop("live"))
             elif cell.kind == "figure":
                 png, _, size = encode_figure(ns.pop("fig"), [])
                 part.update(png=png, size=size)
@@ -266,6 +270,7 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
   font-size: 0.9rem; font-weight: 700; color: var(--accent); }
 audio { width: 100%; max-width: 19rem; display: block; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
@@ -306,7 +311,15 @@ JS = """
     });
     const canvas = el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
+    const liveCanvas = el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live };
   });
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
@@ -347,8 +360,47 @@ JS = """
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
   }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the colour bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
   function draw(item) {
     drawScene(item);
+    drawLive(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -361,12 +413,18 @@ JS = """
   function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
   items.forEach((item) => {
     drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      if (item.live) item.live.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
@@ -400,6 +458,7 @@ NAV = [
     ("index.html", "Listening gallery"),
     ("speech.html", "Seeing speech"),
     ("cepstrum.html", "Cepstral analysis"),
+    ("modspectrogram.html", "Modulation spectrogram"),
     ("resynthesis.html", "Analysis and resynthesis"),
     ("pv.html", "Phase vocoder"),
     ("ripples.html", "Spectrotemporal ripples"),
@@ -480,8 +539,57 @@ def scene_json(scene: list[dict], rate: float = 50.0) -> str:
     return json.dumps(out, separators=(",", ":"))
 
 
+LIVE_TICKS = [0.25, 0.5, 1, 2, 4, 8, 16, 32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
+
+
+def live_json(live: dict, rate: float = 20.0) -> str:
+    """An image for the page to show frame by frame as the sound plays.
+
+    ``live`` holds ``t`` (frame times [s]), ``image`` (rows x columns x frames, NaN drawn
+    grey), ``x`` and ``y`` (the column and row centres, log-spaced), ``range`` (the values
+    at the two ends of the colour map ``cmap``), ``xlabel``, ``ylabel`` and ``title``, and
+    optionally ``start``, the time shown before the sound plays. The frames are resampled
+    to ``rate`` Hz and quantised to 255 levels to keep the page small."""
+    t = np.asarray(live["t"], float)
+    image = np.asarray(live["image"], float)
+    grid = np.arange(0.0, t[-1] + 0.5 / rate, 1 / rate)
+    idx = np.clip(np.searchsorted(t, grid), 0, len(t) - 1)
+    frames = np.moveaxis(image[:, :, idx], -1, 0)  # (n, rows, columns)
+    lo, hi = live["range"]
+    q = np.clip(np.round((frames - lo) / (hi - lo) * 254), 0, 254)
+    q = np.where(np.isfinite(frames), q, 255).astype(np.uint8)
+    cmap = matplotlib.colormaps[live.get("cmap", "magma")]
+    colors = [matplotlib.colors.to_hex(cmap(i / 254)) for i in range(255)]
+
+    def ticks(centres):  # (fractional cell position, label) for round values inside the axis
+        lc = np.log(np.asarray(centres, float))
+        return [
+            [round(float(np.interp(np.log(v), lc, np.arange(len(lc)))), 3), f"{v:g}"]
+            for v in LIVE_TICKS
+            if centres[0] <= v <= centres[-1]
+        ]
+
+    return json.dumps(
+        {
+            "dt": 1 / rate,
+            "rows": frames.shape[1],
+            "cols": frames.shape[2],
+            "data": base64.b64encode(q.tobytes()).decode(),
+            "colors": colors,
+            "range": [round(float(lo)), round(float(hi))],
+            "xticks": ticks(live["x"]),
+            "yticks": ticks(live["y"]),
+            "xlabel": live["xlabel"],
+            "ylabel": live["ylabel"],
+            "title": live["title"],
+            "start": float(live.get("start", 0.0)),
+        },
+        separators=(",", ":"),
+    )
+
+
 def sound_article(
-    key, title, desc_html, snd, audio_src, img_src, regions, size, extra="", code="", scene=None
+    key, title, desc_html, snd, audio_src, img_src, regions, size, extra="", code="", scene=None, live=None
 ) -> str:
     name, (w, h) = file_name(key, title), size
     scene = (
@@ -490,6 +598,11 @@ def sound_article(
         if scene
         else ""
     )
+    if live:
+        scene += (
+            f'\n    <canvas class="live" data-live="{html.escape(live)}" role="img" '
+            f'aria-label="An image that changes with the sound as it plays"></canvas>'
+        )
     chan = "stereo" if snd.n_channels == 2 else "mono"
     code = f'\n  <details class="code" open><summary>Code</summary>{code}</details>' if code else ""
     return f"""
@@ -593,6 +706,7 @@ def build_example_page(site: Site, name: str) -> list[str]:
                         part["size"],
                         code=part["code"],
                         scene=part.get("scene"),
+                        live=part.get("live"),
                     )
                 )
             else:
@@ -627,6 +741,7 @@ TOPICS = [
         [
             ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
             ("cepstrum.html", "separating a voice's pitch from its timbre."),
+            ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
             ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
         ],
