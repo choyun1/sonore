@@ -68,6 +68,13 @@ def methods(x16, x20):
         out[f"tracker, all minima, {th}"] = (t, viterbi(frames, theta=th))
     out["cepstral baseline"] = cepstral_track(x16)
     try:
+        import sonore as so
+    except ImportError:
+        pass
+    else:
+        trk = so.f0_track(so.Sound(x16, FS))
+        out["so.f0_track"] = (trk.t, trk.f0[0])
+    try:
         import pyworld
     except ImportError:
         return out
