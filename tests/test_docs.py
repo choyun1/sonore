@@ -43,6 +43,18 @@ def test_gallery_link_targets_are_whole():
             assert href.count("(") == href.count(")"), f"{page} links to a cut-off URL {href}"
 
 
+def test_gallery_anchor_links_have_targets():
+    """Every #anchor link on a gallery page, to the same page or another one,
+    lands on an element with that id."""
+    ids = {page: set(re.findall(r'id="([^"]+)"', (GALLERY / page).read_text())) for page in PAGES}
+    for page in PAGES:
+        html = (GALLERY / page).read_text()
+        for target, anchor in re.findall(r'href="([\w-]+\.html)?#([^"]+)"', html):
+            target = target or page
+            if target in ids:
+                assert anchor in ids[target], f"{page} links to #{anchor}, which is not on {target}"
+
+
 def test_gallery_playhead_regions_do_not_overlap():
     """Each time axis gets its own playhead; overlapping regions mean the
     positions were computed in the wrong coordinates (e.g. subfigure-relative)."""

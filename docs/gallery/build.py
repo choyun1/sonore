@@ -673,9 +673,10 @@ class Site:
 
 
 def section_html(title_html: str, parts: list[str], intro: str = "") -> str:
-    slug = "h-" + "".join(
-        c if c.isalnum() else "-" for c in html.unescape(re.sub("<[^>]+>", "", title_html)).lower()
-    )
+    # Runs of spaces and punctuation become one hyphen, so "Speech, babble" is
+    # h-speech-babble, the slug a reader writes by hand in a topic link.
+    text = html.unescape(re.sub("<[^>]+>", "", title_html)).lower()
+    slug = "h-" + re.sub(r"[^0-9a-z]+", "-", text).strip("-")
     out = [f'<section aria-labelledby="{slug}">', f'<h2 id="{slug}">{title_html}</h2>']
     if intro:
         out.append(f'<p class="section-intro">{html.escape(intro)}</p>')

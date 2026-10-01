@@ -18,14 +18,14 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # - [Why it matters](#h-motivation): pitch, spectral envelope and glottal pulses are all measured
 #   from a time-frequency picture, and inherit whatever it smears.
-# - [One window, two views](#h-one-window--two-views): the short-time Fourier transform, and the
+# - [One window, two views](#h-one-window-two-views): the short-time Fourier transform, and the
 #   tradeoff between resolution in time and in frequency.
 # - [Wideband and narrowband](#h-wideband-and-narrowband): the two classic spectrograms, one
 #   showing glottal pulses and the other harmonics.
 # - [Letting the window scale with frequency](#h-letting-the-window-scale-with-frequency):
 #   constant-Q analysis, and the cochlea.
 # - [Following the pitch](#h-following-the-pitch): a window that is always three periods long.
-# - [The same plane, tiled four ways](#h-the-same-plane--tiled-four-ways): how each analysis
+# - [The same plane, tiled four ways](#h-the-same-plane-tiled-four-ways): how each analysis
 #   divides time and frequency.
 # - [Reassignment](#h-reassignment): moving energy to where it actually is.
 # - [Nothing is lost](#h-nothing-is-lost): the analyses keep the same information; what differs is
@@ -525,7 +525,3 @@ for name, frame in frames.items():
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence.
-# - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
-#   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
-#   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Harvest, for
-#   the F0 track.
