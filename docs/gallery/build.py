@@ -12,9 +12,12 @@ from __future__ import annotations
 
 import argparse
 import base64
+import contextlib
 import html
 import io
 import json
+import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -71,149 +74,6 @@ def gliding_target(dur=2.0):
     phase = 2 * np.pi * np.cumsum(150 + 50 * t) / FS
     target = so.Sound(sum(np.cos(k * phase) / k for k in range(1, 30)), FS).normalize()
     return (target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))).ramp(20e-3)
-
-
-SPEECH = HERE.parent / "speech"
-
-
-def speech_sentence():
-    """The CMU ARCTIC sentence (bdl, arctic_a0131) at its native 16 kHz, and
-    its F0 track (WORLD Harvest, 0 where unvoiced); see docs/speech/SOURCES.md."""
-    snd = so.load(SPEECH / "bdl_arctic_a0131.flac")
-    track = np.loadtxt(SPEECH / "bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2)
-    return snd, track[:, 0], track[:, 1]
-
-
-# The analyses of the "Seeing speech" section. The fixed windows share a 1 ms hop and a
-# 1024-point FFT so their time axes match; the banks reach past the 5 kHz display.
-SPEECH_FMAX = 5000
-SPEECH_DB = 60
-
-
-def speech_wide():
-    return so.GaborFrame(0.005, 0.001, n_fft=1024)
-
-
-def speech_narrow():
-    return so.GaborFrame(0.0333, 0.001, n_fft=1024)
-
-
-def speech_morlet():
-    return so.MorletFilterbank(54, 70, 7000, cycles=6)
-
-
-def speech_gammatone():
-    return so.GammatoneFilterbank(60, 70, 7000)
-
-
-def speech_adaptive(snd, f0_times, f0):
-    # t_end runs half a longest window past the end, so the last sample is covered evenly.
-    return so.TVGaborFrame.pitch_adaptive(f0_times, f0, t_end=snd.duration + 0.02, periods=3)
-
-
-def speech_errors(snd, f0_times, f0) -> dict[str, float]:
-    """Largest resynthesis error of each frame on the sentence, relative to its peak."""
-    frames = {
-        "wideband": speech_wide(),
-        "narrowband": speech_narrow(),
-        "Morlet": speech_morlet(),
-        "gammatone": speech_gammatone(),
-        "pitch-adaptive": speech_adaptive(snd, f0_times, f0),
-    }
-    return {
-        name: float(np.max(np.abs(fr.synthesize(fr.analyze(snd)).data - snd.data)) / snd.peak)
-        for name, fr in frames.items()
-    }
-
-
-TEXTURES = HERE.parent / "textures"
-TEXTURE_INFO = {  # name: (title, description of the recording)
-    "rain": ("Rain", "Steady rain (nick121087, Freesound, CC0)."),
-    "stream": ("Stream", "Water burbling over rocks in a small creek (cognito perceptu, Freesound, CC0)."),
-    "crickets": ("Crickets", "Crickets around midnight (sengjinn, Freesound, CC0)."),
-    "applause": (
-        "Applause",
-        "About thirty people clapping (Breviceps, Freesound, CC0). Only 3.5 s of original.",
-    ),
-    "fire": ("Fire", "A small backyard fire: sparse pops over a low rumble (Sauron974, Freesound, CC0)."),
-    "mud": (
-        "Bubbling mud",
-        "Gas venting through a Yellowstone mud pot (NPS / Jennifer Jerrett, public domain).",
-    ),
-    "wind_rain": ("Wind and rain", "A winter storm, wind with heavy rain (sonicwars, Freesound, CC0)."),
-}
-ABLATION_TEXT = {
-    "marginals": "Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band's envelope).",
-    "marginals_modpower": "Envelope marginals plus modulation power; no correlations across bands or "
-    "modulation bands.",
-}
-
-
-def _synth_snr(name: str) -> str:
-    info = json.loads((TEXTURES / "synth" / f"{name}.json").read_text())
-    snr = info["snr_all_classes"]
-    return f"Average statistic SNR {np.mean(list(snr.values())):.0f} dB after {info['best_iteration']} iterations."
-
-
-def texture_sections() -> list[tuple[str, str, list[Demo]]]:
-    """Originals and syntheses, precomputed by tools/make_texture_synths.py."""
-    if not (TEXTURES / "synth").exists():
-        return []
-    items = []
-    for i, (name, (title, about)) in enumerate(TEXTURE_INFO.items()):
-        orig = so.load(TEXTURES / f"{name}.flac")
-        synth = so.load(TEXTURES / "synth" / f"{name}.flac")
-        extra = {"original": orig}
-        items.append(Demo(f"t{i:02d}a", f"{title}, original", about, orig, "texture", extra))
-        items.append(
-            Demo(
-                f"t{i:02d}b",
-                f"{title}, synthesized",
-                "Gaussian noise adjusted until its statistics match the original's. " + _synth_snr(name),
-                synth.resample(FS),
-                "texture",
-                {**extra, "synthetic": True},
-            )
-        )
-    ablations = []
-    for i, name in enumerate(["applause", "stream", "fire"]):
-        title = TEXTURE_INFO[name][0]
-        orig = so.load(TEXTURES / f"{name}.flac")
-        for j, (tag, text) in enumerate(ABLATION_TEXT.items()):
-            path = TEXTURES / "synth" / f"{name}__{tag}.flac"
-            if path.exists():
-                label = "marginals only" if tag == "marginals" else "marginals and modulation power"
-                ablations.append(
-                    Demo(
-                        f"u{i}{j}",
-                        f"{title}, {label}",
-                        text,
-                        so.load(path).resample(FS),
-                        "texture",
-                        {"original": orig, "synthetic": True},
-                    )
-                )
-    return [
-        (
-            "Sound textures",
-            "After McDermott & Simoncelli (2011): a texture is summarized by time-averaged statistics of a cochlear "
-            "model, and a new sample is synthesized by imposing those statistics on noise. Each original is followed "
-            "by its synthesis; the synthesis shares no waveform with the original, only statistics. Plots: spectrogram, "
-            "long-term spectrum, and three of the model's own statistics: modulation power at each rate in each band "
-            "(the model's modulation spectrum), envelope sparsity (variance / mean² of each band's envelope), and "
-            "modulation power averaged over bands. For syntheses and ablations, the original is overlaid in dashed black. "
-            "Recordings and excerpt choices: docs/textures/SOURCES.md. Synthesis takes about a minute per texture, "
-            "so these are precomputed by tools/make_texture_synths.py.",
-            items,
-        ),
-        (
-            "What the statistics do",
-            "The same textures synthesized with only some of the statistics imposed. Compare with the full "
-            "syntheses above: the marginals alone give the right sparsity but not the right rhythm or the "
-            "coordination across bands.",
-            ablations,
-        ),
-    ]
 
 
 def demos() -> list[tuple[str, str, list[Demo]]]:
@@ -491,59 +351,6 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
         ir = so.synth_ir(1.0, FS, drr_db=-3, rng=5, **kw)
         rooms.append(Demo(key, title, text, pistol.convolve(ir), "reverb", {"ir": ir, "kw": kw}))
 
-    sentence, f0_times, f0 = speech_sentence()
-    errors = speech_errors(finish(sentence), f0_times, f0)  # on the sound as played
-    latency = 1e3 * speech_gammatone().envelope_peak_delay[1:-1]
-    seeing_speech = [
-        Demo(
-            "27",
-            "Two classic spectrograms",
-            "Hann windows with a 1 ms hop. The 5 ms window, about 300 Hz wide, makes a wideband "
-            "spectrogram: each glottal pulse is a vertical striation and the formants are broad bands. The "
-            "33.3 ms window, about 45 Hz wide, makes a narrowband one: the harmonics are horizontal lines and "
-            "the pulses are smeared out. Neither shows both.",
-            sentence,
-            "speech_classic",
-        ),
-        Demo(
-            "28",
-            "Constant-Q and the cochlea",
-            "Here the bandwidth grows with frequency, so the low bands resolve single harmonics while the "
-            "high bands are short enough to show each pulse. Top: 54 Morlet wavelets of 6 cycles, zero-phase. "
-            "Middle: 60 causal gammatone filters, 2 per ERB. A gammatone is what a cochlear filter does, and "
-            f"its low bands respond later: their envelopes peak up to {latency.max():.0f} ms after the high "
-            "bands', so each pulse is drawn as a sweep. Bottom: the same envelopes, each band drawn earlier by "
-            "its envelope-peak latency. Only the drawing moves; the data are unchanged.",
-            sentence,
-            "speech_cq",
-        ),
-        Demo(
-            "29",
-            "Following the pitch",
-            "Top: the narrowband spectrogram with ten times the F0 track (WORLD Harvest, where voiced), which "
-            "should lie on the tenth harmonic. Middle: a time-varying frame whose Hann windows are 3 pitch "
-            "periods long, so neighboring harmonics are separated equally well at every F0; the F0 is bridged "
-            "through unvoiced stretches. Bottom: a TANDEM-STRAIGHT-style power spectrum, two Blackman windows "
-            "2.5 periods long a quarter period either side of each center, averaged, which cancels the flicker "
-            "at the period rate. It is a power spectrum only, not TANDEM-STRAIGHT: no smoothing, no "
-            "aperiodicity, no synthesis.",
-            sentence,
-            "speech_pitch",
-            {"f0_times": f0_times, "f0": f0},
-        ),
-        Demo(
-            "30",
-            "Reassignment",
-            "Left: the 5 ms and 33.3 ms spectrograms. Right: the same, with each cell's energy moved to its "
-            "center of gravity in time and frequency, then summed into bins of about one pixel, 5 ms by 20 Hz "
-            "(cells more than 60 dB below the maximum are dropped). Reassignment sharpens what the window "
-            "already resolves, pulses with the short window and harmonics with the long one; it does not "
-            "escape the choice of window. It is not a frame and has no synthesis.",
-            sentence,
-            "speech_reassign",
-        ),
-    ]
-
     return [
         (
             "Spectrotemporal ripples",
@@ -570,19 +377,6 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             speech_in_noise,
         ),
         (
-            "Seeing speech",
-            "One sentence, “Providence had delivered him through the maelstrom,” spoken by a man "
-            "(CMU ARCTIC, speaker bdl, 16 kHz), through several analyses. An invertible frame loses nothing: "
-            "resynthesized from its coefficients, every frame here returns the sentence to within "
-            f"{max(errors.values()):.1e} of its peak ("
-            + ", ".join(f"{name} {err:.1e}" for name, err in errors.items())
-            + "). The time-frequency tradeoff appears only once the phase is discarded and the magnitudes "
-            "are drawn, and which magnitude shows speech best depends on what you look for. Every panel is "
-            "in dB re its own maximum over 60 dB, on the same time axis and a linear 0 to 5 kHz axis. The "
-            "TANDEM-style and reassigned panels are not frames.",
-            seeing_speech,
-        ),
-        (
             "Phase vocoder",
             "The first sound is the reference; the others change its duration, pitch, or partials.",
             vocoder,
@@ -596,7 +390,6 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             "so some differences in loudness and length remain. Presented diotically, as in the paper.",
             rooms,
         ),
-        *texture_sections(),
     ]
 
 
@@ -761,128 +554,7 @@ def filterbank_fig(snd, original):
     return fig, list(band_axes) + list(r)
 
 
-def texture_fig(snd, original, synthetic=False):
-    """General-purpose plots (spectrogram, long-term spectrum) plus the texture
-    model's own statistics drawn with plain matplotlib: modulation power by
-    band and rate (the model's modulation spectrum), envelope sparsity, and
-    band-averaged modulation power. Dashed black: the original."""
-    from sonore.texture import TextureStats
-
-    fig = plt.figure(figsize=(10, 6.6), layout="constrained")
-    gs = fig.add_gridspec(2, 3)
-    ax_s = fig.add_subplot(gs[0, :2])
-    ax_l, ax_m, ax_v, ax_p = (fig.add_subplot(gs[r, c]) for r, c in ((0, 2), (1, 0), (1, 1), (1, 2)))
-    so.STFT(snd, 20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
-    ax_s.set_title("Spectrogram")
-    so.long_term_spectrum(snd).plot(ax_l, lw=1.2, label="this sound")
-    if synthetic:
-        so.long_term_spectrum(original).plot(ax_l, color="k", ls="--", lw=1, label="original")
-        ax_l.legend(fontsize=7)
-    ax_l.set(xlim=(20, 10000), ylim=(-70, 3), title="Long-term spectrum")
-    target = TextureStats.measure(original)
-    this = TextureStats.measure(snd, window="uniform" if synthetic else "ramped")  # syntheses are circular
-    cfs = target.model.filterbank.cfs[1:-1]
-    ok = target.channel_mask()
-    # The model's modulation spectrum: power at each modulation rate, in each cochlear band.
-    mcf = target.model.mod_bank.cfs
-    lev = 10 * np.log10(np.maximum(this.mod_power[1:-1], 1e-6))
-    ax_m.pcolormesh(mcf, cfs, lev, cmap="magma", vmin=lev.max() - 25, vmax=lev.max(), shading="nearest")
-    ax_m.set(
-        xscale="log",
-        yscale="log",
-        xlabel="Modulation rate [Hz]",
-        ylabel="Band center [Hz]",
-        title="Modulation spectrum by band",
-    )
-    ax_v.semilogx(cfs, this.env_var[1:-1], lw=1.2)
-    ax_p.loglog(target.model.mod_bank.cfs, this.mod_power[ok].mean(0), lw=1.2)
-    if synthetic:
-        ax_v.semilogx(cfs, target.env_var[1:-1], "k--", lw=1)
-        ax_p.loglog(target.model.mod_bank.cfs, target.mod_power[ok].mean(0), "k--", lw=1)
-    ax_v.set(xlabel="Band center [Hz]", ylabel="var / mean²", title="Envelope sparsity by band")
-    ax_p.set(
-        xlabel="Modulation rate [Hz]", ylabel="Power / variance", title="Modulation power (band average)"
-    )
-    for ax in (ax_v, ax_p):
-        ax.grid(ls=":", which="both", lw=0.5)
-    return fig, [ax_s]
-
-
-def speech_panels(n, height_ratios=None, height=7.4):
-    fig = plt.figure(figsize=(10, height), layout="constrained")
-    return fig, fig.subplots(n, 1, sharex=True, height_ratios=height_ratios)
-
-
-def speech_finish(fig, snd, axes, images):
-    """Shared time axis and one colorbar: every image is in dB re its own maximum (D18)."""
-    for ax in np.ravel(axes):
-        ax.set_xlim(0, snd.duration)
-        ax.set_xlabel("")
-    for ax in np.atleast_1d(axes[-1]):  # the bottom row
-        ax.set_xlabel("Time [s]")
-    sm = matplotlib.cm.ScalarMappable(matplotlib.colors.Normalize(-SPEECH_DB, 0), "magma")
-    fig.colorbar(sm, ax=list(np.ravel(images)), label="dB re panel maximum", shrink=0.9)
-    return fig, list(np.ravel(axes))
-
-
-def speech_image(ax, rep, title, **kwargs):
-    rep.plot(ax, db_range=SPEECH_DB, colorbar=False, fmax=SPEECH_FMAX, **kwargs)
-    ax.set_title(title)
-
-
-def classic_fig(snd):
-    fig, axes = speech_panels(3, [0.55, 1, 1])
-    snd.plot(axes[0], color="k", lw=0.4)
-    axes[0].set_title("Waveform")
-    speech_image(axes[1], speech_wide().analyze(snd), "Wideband: Hann 5 ms (about 300 Hz)")
-    speech_image(axes[2], speech_narrow().analyze(snd), "Narrowband: Hann 33.3 ms (about 45 Hz)")
-    return speech_finish(fig, snd, axes, axes[1:])
-
-
-def constant_q_fig(snd):
-    fig, axes = speech_panels(3)
-    kw = {"db_range": SPEECH_DB, "colorbar": False, "fscale": "linear", "fmax": SPEECH_FMAX}
-    speech_morlet().analyze(snd).envelopes(fs=1000).plot(axes[0], **kw)
-    axes[0].set_title("Morlet wavelets, 6 cycles")
-    env = speech_gammatone().analyze(snd).envelopes(fs=1000)
-    env.plot(axes[1], **kw)
-    axes[1].set_title("Gammatone, causal: low bands respond later")
-    env.plot(axes[2], align="peak", **kw)
-    axes[2].set_title("The same, each band drawn earlier by its envelope-peak latency")
-    return speech_finish(fig, snd, axes, axes)
-
-
-def pitch_fig(snd, f0_times, f0):
-    fig, axes = speech_panels(3)
-    speech_image(axes[0], speech_narrow().analyze(snd), "Narrowband, Hann 33.3 ms, with 10 × F0 (dashed)")
-    voiced = np.where(f0 > 0, 10 * f0 / 1000, np.nan)
-    axes[0].plot(f0_times, voiced, color="w", ls="--", lw=0.9)
-    speech_image(axes[1], speech_adaptive(snd, f0_times, f0).analyze(snd), "Pitch-adaptive: Hann, 3 periods")
-    speech_image(
-        axes[2],
-        so.tandem_power(snd, f0_times, f0),
-        "TANDEM-style: Blackman pair, 2.5 periods, ±¼ period",
-    )
-    return speech_finish(fig, snd, axes, axes)
-
-
-def reassign_fig(snd):
-    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
-    axes = fig.subplots(2, 2, sharex=True, sharey=True)
-    # Bins of about one pixel of these panels (5 ms by 20 Hz): finer bins would be drawn by
-    # skipping cells, coarser ones would blur what reassignment sharpened.
-    t_edges = np.arange(0, snd.duration + 5e-3, 5e-3)
-    f_edges = np.arange(0, SPEECH_FMAX + 20, 20)
-    for row, (frame, name) in enumerate(((speech_wide(), "5 ms"), (speech_narrow(), "33.3 ms"))):
-        speech_image(axes[row, 0], frame.analyze(snd), f"Hann {name}")
-        rs = so.reassigned_spectrogram(snd, frame).binned(t_edges, f_edges)
-        speech_image(axes[row, 1], rs, f"Hann {name}, reassigned")
-        axes[row, 1].set_ylabel("")
-    return speech_finish(fig, snd, axes, axes)
-
-
 FIGURES = {
-    "texture": lambda d: texture_fig(d.sound, d.extra["original"], d.extra.get("synthetic", False)),
     "ibm": lambda d: ibm_fig(d.sound, **d.extra),
     "filterbank": lambda d: filterbank_fig(d.sound, **d.extra),
     "ripple": lambda d: ripple_fig(d.sound, d.extra["pattern"], d.extra.get("dmr", False)),
@@ -891,15 +563,11 @@ FIGURES = {
     "pv": lambda d: pv_fig(d.sound),
     "vocoder": lambda d: vocoder_fig(d.sound, d.extra["source"]),
     "reverb": lambda d: reverb_fig(d.sound, d.extra["ir"], d.extra.get("kw")),
-    "speech_classic": lambda d: classic_fig(d.sound),
-    "speech_cq": lambda d: constant_q_fig(d.sound),
-    "speech_pitch": lambda d: pitch_fig(d.sound, **d.extra),
-    "speech_reassign": lambda d: reassign_fig(d.sound),
 }
 
 
-def render_figure(demo) -> tuple[bytes, list[dict], tuple[int, int]]:
-    fig, time_axes = FIGURES[demo.plot](demo)
+def encode_figure(fig, time_axes) -> tuple[bytes, list[dict], tuple[int, int]]:
+    """The figure as a 256-colour PNG, and where each time axis sits (for the playhead)."""
     fig.canvas.draw()
     regions = []
     for ax in time_axes:
@@ -919,12 +587,156 @@ def render_figure(demo) -> tuple[bytes, list[dict], tuple[int, int]]:
     return out.getvalue(), regions, im.size
 
 
+def render_figure(demo) -> tuple[bytes, list[dict], tuple[int, int]]:
+    return encode_figure(*FIGURES[demo.plot](demo))
+
+
 def flac_bytes(snd: so.Sound) -> bytes:
     import soundfile as sf
 
     buf = io.BytesIO()
     sf.write(buf, snd.data, int(snd.fs), format="FLAC", subtype="PCM_16")
     return buf.getvalue()
+
+
+def file_name(key: str, title: str) -> str:
+    return f"{key}_{title.lower().replace(' ', '_').replace(',', '')}"
+
+
+# ------------------------------------------------------------- example pages
+# The speech and texture pages are runnable scripts in percent format, where "# %%" starts a cell:
+#
+#   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
+#   # %% [about]               the description of the example that follows
+#   # %% [demo KEY] Title      code that leaves `sound`, `fig` and `playhead` (the axes the playhead follows)
+#   # %% [figure KEY] Title    code that leaves `fig`: a figure without sound
+#   # %%                       any other code; what it prints is shown under it
+#
+# Every code cell is shown on the page exactly as it ran. Prose may use $TeX$, $$display TeX$$,
+# `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
+# where the cell stands. The scripts run from the repository root.
+EXAMPLE_PAGES = ["speech", "textures"]
+ROOT = HERE.parent.parent
+CELL = re.compile(r"# %%(?: \[(\w+)(?: (\w+))?\])?(?: (.*))?")
+
+
+@dataclass
+class Cell:
+    kind: str  # markdown, about, demo, figure or code
+    source: str
+    key: str = ""
+    title: str = ""
+
+
+def read_cells(path: Path) -> list[Cell]:
+    cells = []
+    for chunk in re.split(r"(?m)^(?=# %%)", path.read_text())[
+        1:
+    ]:  # what precedes the first cell is not shown
+        head, _, body = chunk.partition("\n")
+        m = CELL.fullmatch(head.rstrip())
+        if not m:
+            raise ValueError(f"{path.name}: bad cell header {head!r}")
+        kind = m.group(1) or "code"
+        body = body.strip("\n")
+        if kind in ("markdown", "about"):
+            body = "\n".join(re.sub(r"^# ?", "", line) for line in body.splitlines())
+        cells.append(Cell(kind, body, m.group(2) or "", (m.group(3) or "").strip()))
+    return cells
+
+
+INLINE = re.compile(r"\$\$(.+?)\$\$|\$(.+?)\$|`([^`]+)`", re.S)
+
+
+def _marks(s: str) -> str:
+    s = re.sub(r"\[([^\]]+)\]\(([^)\s]+)\)", r'<a href="\2">\1</a>', s)
+    s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
+    return re.sub(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])", r"<em>\1</em>", s)
+
+
+def inline(text: str) -> str:
+    out, pos = [], 0
+    for m in INLINE.finditer(text):
+        out.append(_marks(html.escape(text[pos : m.start()], quote=False)))
+        display, tex, code = m.groups()
+        if code is not None:
+            out.append(f"<code>{html.escape(code)}</code>")
+        else:
+            cls = "tex display" if display is not None else "tex"
+            out.append(f'<span class="{cls}">{html.escape((display or tex).strip())}</span>')
+        pos = m.end()
+    out.append(_marks(html.escape(text[pos:], quote=False)))
+    return "".join(out)
+
+
+def markdown(text: str) -> list[tuple[str, str]]:
+    """Blocks of prose as (kind, html), kind one of h1, h2, h3 or p (anything else)."""
+    blocks = []
+    for block in re.split(r"\n\s*\n", text.strip()):
+        lines = block.splitlines()
+        if m := re.match(r"(#{1,3}) (.*)", block):
+            blocks.append((f"h{len(m.group(1))}", inline(m.group(2).strip())))
+        elif block.startswith("$$") and block.endswith("$$"):
+            blocks.append(("p", f'<div class="tex display">{html.escape(block[2:-2].strip())}</div>'))
+        elif lines[0].startswith("- "):
+            items = re.split(r"(?m)^- ", block)[1:]
+            lis = "".join(f"<li>{inline(' '.join(i.split()))}</li>" for i in items)
+            blocks.append(("p", f"<ul>{lis}</ul>"))
+        else:
+            blocks.append(("p", f"<p>{inline(block)}</p>"))
+    return blocks
+
+
+def substitute(text: str, ns: dict) -> str:
+    return re.sub(r"\{\{(.+?)\}\}", lambda m: str(eval(m.group(1), ns)), text)  # noqa: S307
+
+
+def code_block(source: str) -> str:
+    return f'<pre><code class="language-python">{html.escape(source)}</code></pre>'
+
+
+def example_page(path: Path) -> dict:
+    """Run a page script cell by cell. Returns its title, intro and sections, where each
+    part is either HTML or an example (a dict with the media to write)."""
+    ns: dict = {"__name__": "__gallery__", "__file__": str(path)}
+    title, intro, sections, about = "", [], [], ""
+    cwd = Path.cwd()
+    os.chdir(ROOT)
+    try:
+        for cell in read_cells(path):
+            if cell.kind in ("markdown", "about"):
+                blocks = markdown(substitute(cell.source, ns))
+                if cell.kind == "about":
+                    about = "".join(h for _, h in blocks)
+                    continue
+                for kind, h in blocks:
+                    if kind == "h1":
+                        title = html.unescape(re.sub("<[^>]+>", "", h))
+                    elif kind == "h2":
+                        sections.append({"title": h, "parts": []})
+                    else:
+                        (sections[-1]["parts"] if sections else intro).append(h)
+                continue
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                exec(compile(cell.source, f"{path.name}, cell {cell.key or cell.title}", "exec"), ns)  # noqa: S102
+            part = {"key": cell.key, "title": cell.title, "about": about, "code": code_block(cell.source)}
+            if cell.kind == "demo":
+                snd = ns.pop("sound")
+                png, regions, size = encode_figure(ns.pop("fig"), ns.pop("playhead"))
+                part.update(sound=snd, audio=flac_bytes(snd), png=png, regions=regions, size=size)
+            elif cell.kind == "figure":
+                png, _, size = encode_figure(ns.pop("fig"), [])
+                part.update(png=png, size=size)
+            else:
+                printed = out.getvalue().rstrip()
+                part = part["code"] + (f'<pre class="out">{html.escape(printed)}</pre>' if printed else "")
+                part = f'<div class="cell">{part}</div>'
+            (sections[-1]["parts"] if sections else intro).append(part)
+            about = ""
+    finally:
+        os.chdir(cwd)
+    return {"title": title, "intro": intro, "sections": sections}
 
 
 # ---------------------------------------------------------------------- page
@@ -937,30 +749,40 @@ ICON = (
 
 CSS = """
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
-  --rule: #CDD4DA; --head: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
   --serif: "Spectral", Georgia, "Times New Roman", serif;
   --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
-  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; } }
-:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; }
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
 *, *::before, *::after { box-sizing: inherit; }
 html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
 main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
-header { max-width: 40rem; margin-bottom: 3.5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
 h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
 header p { margin: 0 0 0.9rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
 h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
 .section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
-.sound { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 2rem; align-items: start; padding: 1.75rem 0; }
-.sound + .sound { border-top: 1px dotted var(--rule); }
-article.sound { scroll-margin-top: 1.5rem; }
-article.sound:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
 .headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
   font-size: 0.9rem; font-weight: 700; color: var(--accent); }
 audio { width: 100%; max-width: 19rem; display: block; }
@@ -968,12 +790,25 @@ audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); ou
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
 .plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
 .plate img { display: block; width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
 footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
-footer a { color: var(--accent); }
-@media (max-width: 54rem) { .sound { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
 """
 
 JS = """
@@ -1016,7 +851,7 @@ JS = """
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
       const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.x1 - r.x0) * (r.t1 - r.t0)); item.audio.play(); }
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
     });
     item.plate.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
@@ -1025,36 +860,63 @@ JS = """
 })();
 """
 
+# TeX and code highlighting are drawn in the browser; without scripts the TeX source and plain code show.
+KATEX = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/"
+HLJS = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/"
+EXAMPLE_HEAD = f"""<link rel="stylesheet" href="{KATEX}katex.min.css" crossorigin="anonymous">
+<script>function renderTex() {{ document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  {{ displayMode: el.classList.contains("display"), throwOnError: false }})); }}</script>
+<script defer src="{KATEX}katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="{HLJS}highlight.min.js" onload="hljs.highlightAll()"></script>"""
 
-def page(sections_html: str, n_sounds: int) -> str:
+NAV = [
+    ("index.html", "Listening gallery"),
+    ("speech.html", "Seeing speech"),
+    ("textures.html", "Sound textures"),
+]
+
+
+def nav(current: str) -> str:
+    current_attr = ' aria-current="page"'
+    links = [f'<a href="{href}"{current_attr if href == current else ""}>{label}</a>' for href, label in NAV]
+    return f'<nav class="pages" aria-label="Gallery pages">{"".join(links)}</nav>'
+
+
+HOW = """<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>"""
+
+
+def page(title: str, current: str, header: str, sections_html: str, head: str = "", footer: str = "") -> str:
     fonts = (
         '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" '
         'href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?'
         'family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" '
         'rel="stylesheet">'
     )
+    footer = footer or (
+        "Every sound and plot here is generated by <code>docs/gallery/build.py</code> in the "
+        '<a href="https://github.com/choyun1/sonore">sonore repository</a>, using the library\'s own functions.'
+    )
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Listening to sonore</title>
+<title>{html.escape(title)}</title>
 {fonts}
+{head}
 <style>{CSS}</style>
 </head>
 <body>
 <main>
+{nav(current)}
 <header>
-  <h1>Listening to sonore</h1>
-  <p>{n_sounds} sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear.</p>
-  <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
-  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
-  Start with your volume low.</p>
+  <h1>{html.escape(title)}</h1>
+{header}
 </header>
 {sections_html}
-<footer>Every sound and plot here is generated by <code>docs/gallery/build.py</code> in the
-<a href="https://github.com/choyun1/sonore">sonore repository</a>, using the library's own functions.</footer>
+<footer>{footer}</footer>
 </main>
 <script>{JS}</script>
 </body>
@@ -1062,70 +924,180 @@ def page(sections_html: str, n_sounds: int) -> str:
 """
 
 
-def build(out_dir: Path | None, single: Path | None) -> None:
-    sections, n = [], 0
-    if out_dir:
-        (out_dir / "audio").mkdir(parents=True, exist_ok=True)
-        (out_dir / "img").mkdir(parents=True, exist_ok=True)
-    single_sections = []
-    for title, intro, items in demos():
-        slug = "h-" + "".join(c if c.isalnum() else "-" for c in title.lower())
-        head = [f'<section aria-labelledby="{slug}">', f'<h2 id="{slug}">{html.escape(title)}</h2>']
-        if intro:
-            head.append(f'<p class="section-intro">{html.escape(intro)}</p>')
-        body_rel, body_inline = list(head), list(head)
-        for d in items:
-            snd = finish(d.sound)
-            audio, (png, regions, (w, h)) = (
-                flac_bytes(snd),
-                render_figure(Demo(**{**d.__dict__, "sound": snd})),
-            )
-            name = f"{d.key}_{d.title.lower().replace(' ', '_').replace(',', '')}"
-            chan = "stereo" if snd.n_channels == 2 else "mono"
-            hp = f'\n    <p class="headphones">{ICON}<span>Headphones</span></p>' if d.headphones else ""
-
-            def article(
-                audio_src, img_src, d=d, hp=hp, name=name, snd=snd, chan=chan, regions=regions, w=w, h=h
-            ):
-                return f"""
-<article class="sound" id="d-{d.key}" data-regions="{html.escape(json.dumps(regions))}">
+def sound_article(key, title, desc_html, snd, audio_src, img_src, regions, size, extra="", code="") -> str:
+    name, (w, h) = file_name(key, title), size
+    chan = "stereo" if snd.n_channels == 2 else "mono"
+    code = f'\n  <details class="code" open><summary>Code</summary>{code}</details>' if code else ""
+    return f"""
+<article class="sound" id="d-{key}" data-regions="{html.escape(json.dumps(regions))}">
   <div class="about">
-    <h3>{html.escape(d.title)}</h3>{hp}
-    <p class="desc">{html.escape(d.text)}</p>
+    <h3>{html.escape(title)}</h3>{extra}
+    {desc_html}
     <audio controls preload="metadata" src="{audio_src}"></audio>
     <p class="file">{html.escape(name)}.flac, {snd.duration:.1f} s, {chan}</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="{img_src}" width="{w}" height="{h}" alt="Plots of the {html.escape(d.title.lower())} sound" loading="lazy">
+    <img src="{img_src}" width="{w}" height="{h}" alt="Plots of the {html.escape(title.lower())} sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
-  </div></figure>
+  </div></figure>{code}
 </article>"""
 
-            if out_dir:
-                (out_dir / "audio" / f"{name}.flac").write_bytes(audio)
-                (out_dir / "img" / f"{name}.png").write_bytes(png)
-                body_rel.append(article(f"audio/{name}.flac", f"img/{name}.png"))
-            if single:
-                body_inline.append(
-                    article(
-                        "data:audio/flac;base64," + base64.b64encode(audio).decode(),
-                        "data:image/png;base64," + base64.b64encode(png).decode(),
+
+def still_article(key, title, desc_html, img_src, size, code) -> str:
+    w, h = size
+    return f"""
+<article class="still" id="d-{key}">
+  <div class="about">
+    <h3>{html.escape(title)}</h3>
+    <div class="desc">{desc_html}</div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="{img_src}" width="{w}" height="{h}" alt="{html.escape(title)}" loading="lazy">
+  </div></figure>
+  <details class="code" open><summary>Code</summary>{code}</details>
+</article>"""
+
+
+class Site:
+    """Writes media next to the pages (relative links) and/or inlines it (one self-contained file per page)."""
+
+    def __init__(self, out_dir: Path | None, single: Path | None):
+        self.out_dir, self.single = out_dir, single
+        if out_dir:
+            (out_dir / "audio").mkdir(parents=True, exist_ok=True)
+            (out_dir / "img").mkdir(parents=True, exist_ok=True)
+
+    def media(self, name: str, audio: bytes | None, png: bytes) -> tuple[list, list]:
+        """(audio, image) sources for the site and for the single file."""
+        rel, inl = [], []
+        if self.out_dir:
+            if audio is not None:
+                (self.out_dir / "audio" / f"{name}.flac").write_bytes(audio)
+                rel.append(f"audio/{name}.flac")
+            (self.out_dir / "img" / f"{name}.png").write_bytes(png)
+            rel.append(f"img/{name}.png")
+        if self.single:
+            if audio is not None:
+                inl.append("data:audio/flac;base64," + base64.b64encode(audio).decode())
+            inl.append("data:image/png;base64," + base64.b64encode(png).decode())
+        return rel, inl
+
+    def write(self, file: str, make) -> None:
+        """``make(variant)`` renders a page; variant 0 links media, 1 inlines it."""
+        if self.out_dir:
+            (self.out_dir / file).write_text(make(0))
+        if self.single:
+            stem = self.single.stem if file == "index.html" else f"{self.single.stem}-{Path(file).stem}"
+            self.single.with_name(stem + self.single.suffix).write_text(make(1))
+
+
+def section_html(title_html: str, parts: list[str], intro: str = "") -> str:
+    slug = "h-" + "".join(
+        c if c.isalnum() else "-" for c in html.unescape(re.sub("<[^>]+>", "", title_html)).lower()
+    )
+    out = [f'<section aria-labelledby="{slug}">', f'<h2 id="{slug}">{title_html}</h2>']
+    if intro:
+        out.append(f'<p class="section-intro">{html.escape(intro)}</p>')
+    return "\n".join(out + parts + ["</section>"])
+
+
+def build_example_page(site: Site, name: str) -> list[str]:
+    """Build one example page; returns the keys of its examples."""
+    content = example_page(HERE / f"{name}.py")
+    keys, rendered = [], {}  # part id -> (linked, inline) HTML
+    for part in [p for s in content["sections"] for p in s["parts"]] + content["intro"]:
+        if not isinstance(part, dict):
+            continue
+        key, title = part["key"], part["title"]
+        keys.append(key)
+        srcs = site.media(file_name(key, title), part.get("audio"), part["png"])
+        variants = []
+        for src in srcs:
+            if not src:
+                variants.append("")
+            elif "sound" in part:
+                desc = f'<div class="desc">{part["about"]}</div>'
+                variants.append(
+                    sound_article(
+                        key,
+                        title,
+                        desc,
+                        part["sound"],
+                        src[0],
+                        src[1],
+                        part["regions"],
+                        part["size"],
+                        code=part["code"],
                     )
                 )
+            else:
+                variants.append(still_article(key, title, part["about"], src[0], part["size"], part["code"]))
+        rendered[id(part)] = variants
+        print(f"  {name}: {file_name(key, title)}")
+
+    def make(variant):
+        def show(p):
+            return rendered[id(p)][variant] if isinstance(p, dict) else p
+
+        header = "\n".join(show(p) for p in content["intro"]) + "\n" + HOW
+        sections = "\n".join(
+            section_html(s["title"], [show(p) for p in s["parts"]]) for s in content["sections"]
+        )
+        footer = (
+            f"This page is the script <code>docs/gallery/{name}.py</code> in the "
+            '<a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by '
+            "<code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself "
+            f"from the repository root with <code>python docs/gallery/{name}.py</code>, or a cell at a time."
+        )
+        return page(content["title"], f"{name}.html", header, sections, EXAMPLE_HEAD, footer)
+
+    site.write(f"{name}.html", make)
+    return keys
+
+
+def build(out_dir: Path | None, single: Path | None) -> None:
+    site = Site(out_dir, single)
+    moved = {}
+    for name in EXAMPLE_PAGES:
+        moved.update({key: f"{name}.html" for key in build_example_page(site, name)})
+
+    sections, n = ([], []), 0
+    for title, intro, items in demos():
+        bodies = ([], [])
+        for d in items:
+            snd = finish(d.sound)
+            png, regions, size = render_figure(Demo(**{**d.__dict__, "sound": snd}))
+            name = file_name(d.key, d.title)
+            hp = f'\n    <p class="headphones">{ICON}<span>Headphones</span></p>' if d.headphones else ""
+            desc = f'<p class="desc">{html.escape(d.text)}</p>'
+            for body, src in zip(bodies, site.media(name, flac_bytes(snd), png), strict=True):
+                if src:
+                    body.append(sound_article(d.key, d.title, desc, snd, src[0], src[1], regions, size, hp))
             n += 1
             print(f"  {name}")
-        sections.append("\n".join(body_rel + ["</section>"]))
-        single_sections.append("\n".join(body_inline + ["</section>"]))
-    if out_dir:
-        (out_dir / "index.html").write_text(page("\n".join(sections), n))
-    if single:
-        single.write_text(page("\n".join(single_sections), n))
+        for out, body in zip(sections, bodies, strict=True):
+            out.append(section_html(html.escape(title), body, intro))
+
+    # Links to examples that moved to their own pages still land on them.
+    redirect = (
+        f"<script>(() => {{ const moved = {json.dumps(moved)}; const k = location.hash.slice(3);"
+        ' if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>'
+    )
+    header = f"""  <p>{n} sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
+  the same audio you hear. Two topics have pages of their own, with the code for every example beside it:
+  <a href="speech.html">Seeing speech</a>, a short course in time-frequency analysis on one spoken sentence,
+  and <a href="textures.html">Sound textures</a>, recordings and their syntheses from statistics.</p>
+  {HOW}"""
+    site.write(
+        "index.html",
+        lambda v: page("Listening to sonore", "index.html", header, "\n".join(sections[v]), redirect),
+    )
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", type=Path, default=HERE, help="directory for the Pages site")
-    ap.add_argument("--single", type=Path, default=None, help="also write a self-contained HTML file")
+    ap.add_argument("--single", type=Path, default=None, help="also write self-contained HTML files")
     ap.add_argument("--no-site", action="store_true")
     args = ap.parse_args()
     build(None if args.no_site else args.out, args.single)
