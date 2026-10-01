@@ -1,0 +1,1759 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#"><link rel="search" title="Search" href="search.html">
+
+    <!-- Generated with Sphinx 9.0.4 and Furo 2025.12.19 --><title>Index - sonore 0.3.1</title>
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">sonore 0.3.1</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">sonore 0.3.1</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="core.html">core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="signals.html">signals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analysis.html">analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="stimuli.html">stimuli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="texture.html">texture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="plotting.html">plotting</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          
+<section class="genindex-section">
+  <h1 id="index">Index</h1>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#Q"><strong>Q</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#W"><strong>W</strong></a> | <a href="#Z"><strong>Z</strong></a></div>
+</section>
+<section id="A" class="genindex-section">
+  <h2>A</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.A_oct">A_oct (ChannelContext attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.adjoint">adjoint() (Filterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.Frame.adjoint">(Frame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.adjoint">(GaborFrame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.adjoint">(TVGaborFrame method)</a>
+</li>
+        </ul></li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.adjusted">adjusted (ChannelObjective attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.align">align (HRIRSet attribute)</a>
+</li>
+        <li><a href="core.html#sonore.core.utils.amp_to_db">amp_to_db() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.amplitude_modulate">amplitude_modulate() (in module sonore.signals.processing)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.analytic">analytic() (ChannelContext method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.analytic_adjoint">analytic_adjoint() (ChannelContext method)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.analytic_many">analytic_many() (ChannelContext method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.analyze">analyze() (Filterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.Frame.analyze">(Frame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.analyze">(GaborFrame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.analyze">(TVGaborFrame method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram.animate">animate() (ModulationSpectrogram method)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.animate_modulation_spectrogram">animate_modulation_spectrogram() (in module sonore.plotting)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.apply_itd_ild">apply_itd_ild() (in module sonore.stimuli.binaural)</a>
+</li>
+        <li><a href="core.html#sonore.core.utils.as_rng">as_rng() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.at">at() (HRIRSet method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram.at">(ModulationSpectrogram method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram.average">average() (ModulationSpectrogram method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="B" class="genindex-section">
+  <h2>B</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.b">b (GammatoneFilterbank property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.band_cfs">band_cfs (BandpassFilterbank property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.band_response">band_response() (BandpassFilterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.band_response">(GammatoneFilterbank method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.MorletFilterbank.band_response">(MorletFilterbank method)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.reverb.band_rt60s">band_rt60s() (in module sonore.stimuli.reverb)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.bandpass">bandpass() (in module sonore.signals.processing)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank">BandpassFilterbank (class in sonore.analysis.filterbank)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.bandwidth_factor">bandwidth_factor (GammatoneFilterbank attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.bin_weights">bin_weights() (GaborFrame method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.bin_weights">(TVGaborFrame method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.representations.ReassignedSpectrogram.binned">binned() (ReassignedSpectrogram method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.build">build() (ChannelContext class method)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.butter_filter">butter_filter() (in module sonore.signals.processing)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="C" class="genindex-section">
+  <h2>C</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#id2">c1 (TextureStats attribute)</a>, <a href="texture.html#sonore.texture.stats.TextureStats.c1">[1]</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.c1">c1() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.c1_bands">c1_bands (TextureModel attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.c1_core">c1_core() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.c1_offsets">c1_offsets (TextureModel attribute)</a>
+</li>
+        <li><a href="texture.html#id3">c2 (TextureStats attribute)</a>, <a href="texture.html#sonore.texture.stats.TextureStats.c2">[1]</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.c2">c2() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.c2_core">c2_core() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum">Cepstrum (class in sonore.analysis.cepstrum)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.cfs">cfs (BandpassFilterbank property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank.cfs">(ConstantQModulationFilterbank property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.cfs">(CosineFilterbank property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.cfs">(Envelopes property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.Filterbank.cfs">(Filterbank property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.cfs">(HannModulationFilterbank property)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues.cfs">(InterauralCues attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.ModulationFilterbank.cfs">(ModulationFilterbank property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.OctaveModulationFilterbank.cfs">(OctaveModulationFilterbank property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.cfs">(Subbands property)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.sound.Sound.channel">channel() (Sound method)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.channel_mask">channel_mask() (TextureStats method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.channel_order">channel_order() (in module sonore.texture.synth)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext">ChannelContext (class in sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective">ChannelObjective (class in sonore.texture.synth)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.check_fs">check_fs() (HannModulationFilterbank method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.circular_trajectory">circular_trajectory() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.classes">classes (ChannelObjective attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.RippleSum.components">components (RippleSum attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.compression">compression (TextureModel attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.concat">concat() (HRIRSet class method)</a>
+
+        <ul>
+          <li><a href="signals.html#sonore.signals.processing.concat">(in module sonore.signals.processing)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank">ConstantQModulationFilterbank (class in sonore.analysis.modulation)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.convolve">convolve() (Sound method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues.corr0">corr0 (InterauralCues attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.corr_offsets">corr_offsets (TextureModel attribute)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.correlated_noise">correlated_noise() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank">CosineFilterbank (class in sonore.analysis.filterbank)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.count">count() (TextureStats method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.ctx">ctx (ChannelObjective attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.cycles">cycles (HannModulationFilterbank attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.filterbank.MorletFilterbank.cycles">(MorletFilterbank attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="D" class="genindex-section">
+  <h2>D</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelope.data">data (Envelope property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.data">(Envelopes property)</a>
+</li>
+          <li><a href="core.html#sonore.core.sound.Sound.data">(Sound property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.data">(Subbands property)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.hrir_data.data_dir">data_dir() (in module sonore.stimuli.hrir_data)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelope.db">db (Envelope property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.db">(Envelopes property)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.units.dB">dB (in module sonore.core.units)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.STFT.db">db (STFT property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.representations.TFPower.db">(TFPower property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TVSTFT.db">(TVSTFT property)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.utils.db_to_amp">db_to_amp() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="core.html#sonore.core.units.Decibels">Decibels (class in sonore.core.units)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.decimation">decimation (TextureModel property)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core.html#sonore.core.sound.Sound.delay">delay() (Sound method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple.density">density (Ripple attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.density_change">density_change (DynamicRipple attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.density_range">density_range (DynamicRipple attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.depth">depth (DynamicRipple attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram.depth">(ModulationSpectrogram property)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple.depth">(Ripple attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple.direction">direction (Ripple property)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.distance_gain_db">distance_gain_db() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelope.duration">duration (Envelope property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.duration">(Envelopes property)</a>
+</li>
+          <li><a href="core.html#sonore.core.sound.Sound.duration">(Sound property)</a>
+</li>
+          <li><a href="texture.html#sonore.texture.stats.TextureStats.duration">(TextureStats attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.durations">durations() (HannModulationFilterbank method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple">DynamicRipple (class in sonore.stimuli.ripples)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="E" class="genindex-section">
+  <h2>E</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.edge_width">edge_width (BandpassFilterbank attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.edges">edges (BandpassFilterbank attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.energy">energy() (Filterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.Frame.energy">(Frame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.energy">(GaborFrame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.energy">(TVGaborFrame method)</a>
+</li>
+        </ul></li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.env">env (ChannelObjective attribute)</a>
+</li>
+        <li><a href="texture.html#id0">env_corr (TextureStats attribute)</a>, <a href="texture.html#sonore.texture.stats.TextureStats.env_corr">[1]</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.env_corr">env_corr() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.env_fs">env_fs (TextureModel attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.env_kurt">env_kurt (TextureStats attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.env_mean">env_mean (TextureStats attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.env_moments">env_moments() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.env_skew">env_skew (TextureStats attribute)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.env_var">env_var (TextureStats attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelope">Envelope (class in sonore.analysis.envelopes)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.envelope">envelope() (Cepstrum method)</a>
+
+        <ul>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.envelope">(DynamicRipple method)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple.envelope">(Ripple method)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.RippleSum.envelope">(RippleSum method)</a>
+</li>
+          <li><a href="core.html#sonore.core.sound.Sound.envelope">(Sound method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.envelope_peak_delay">envelope_peak_delay (GammatoneFilterbank property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes">Envelopes (class in sonore.analysis.envelopes)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.envelopes">envelopes() (Subbands method)</a>
+
+        <ul>
+          <li><a href="texture.html#sonore.texture.stats.TextureModel.envelopes">(TextureModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.utils.erb_bandwidth">erb_bandwidth() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="core.html#sonore.core.utils.erb_to_freq">erb_to_freq() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.ERBFilterbank">ERBFilterbank (class in sonore.analysis.filterbank)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.exponential_chirp">exponential_chirp() (in module sonore.signals.generators)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="F" class="genindex-section">
+  <h2>F</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.representations.Mask.f">f (Mask attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.representations.Spectrum.f">(Spectrum attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.STFT.f">(STFT property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TFPower.f">(TFPower attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TVSTFT.f">(TVSTFT property)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.f0">f0() (Cepstrum method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ReassignedSpectrogram.f_hat">f_hat (ReassignedSpectrogram attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.f_hi">f_hi (BandpassFilterbank attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank.f_hi">(ConstantQModulationFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.f_hi">(CosineFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.f_hi">(HannModulationFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.OctaveModulationFilterbank.f_hi">(OctaveModulationFilterbank attribute)</a>
+</li>
+          <li><a href="texture.html#sonore.texture.stats.TextureModel.f_hi">(TextureModel attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.f_lo">f_lo (BandpassFilterbank attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank.f_lo">(ConstantQModulationFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.f_lo">(CosineFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.f_lo">(HannModulationFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.MorletFilterbank.f_lo">(MorletFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.OctaveFilterbank.f_lo">(OctaveFilterbank attribute)</a>
+</li>
+          <li><a href="texture.html#sonore.texture.stats.TextureModel.f_lo">(TextureModel attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.fft.fast_padding">fast_padding() (in module sonore.core.fft)</a>
+</li>
+        <li><a href="core.html#sonore.core.fft.fft_workers">fft_workers() (in module sonore.core.fft)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.filter">filter() (HannModulationFilterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.ModulationFilterbank.filter">(ModulationFilterbank method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank">Filterbank (class in sonore.analysis.frames)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.filterbank">filterbank (TextureModel property)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.frames.Frame">Frame (class in sonore.analysis.frames)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.frame_bounds">frame_bounds() (Filterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.Frame.frame_bounds">(Frame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.frame_bounds">(GaborFrame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.frame_bounds">(TVGaborFrame method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.frame_power">frame_power() (Filterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.frame_power">(GaborFrame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.frame_power">(TVGaborFrame method)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.freq">freq (PVAnalysis attribute)</a>
+</li>
+        <li><a href="core.html#sonore.core.utils.freq_to_erb">freq_to_erb() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ModulationSpectrum.from_array">from_array() (ModulationSpectrum class method)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.from_channels">from_channels() (Sound class method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.from_envelopes">from_envelopes() (TextureStats class method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.from_function">from_function() (TVGaborFrame class method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.from_pku_ioa">from_pku_ioa() (HRIRSet class method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.from_scale">from_scale() (BandpassFilterbank static method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.from_scale">(CosineFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.ERBFilterbank.from_scale">(ERBFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.from_scale">(GammatoneFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.MorletFilterbank.from_scale">(MorletFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.OctaveFilterbank.from_scale">(OctaveFilterbank static method)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.from_sofa">from_sofa() (HRIRSet class method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.Spectrum.from_sound">from_sound() (Spectrum class method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.from_subbands">from_subbands() (TextureStats class method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.fs">fs (HRIRSet attribute)</a>
+
+        <ul>
+          <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.fs">(PVAnalysis attribute)</a>
+</li>
+          <li><a href="texture.html#sonore.texture.stats.TextureModel.fs">(TextureModel attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="G" class="genindex-section">
+  <h2>G</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame">GaborFrame (class in sonore.analysis.frames)</a>
+</li>
+        <li><a href="core.html#sonore.core.units.Decibels.gain">gain (Decibels property)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.gain_db">gain_db() (Sound method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank">GammatoneFilterbank (class in sonore.analysis.filterbank)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="signals.html#sonore.signals.generators.gaussian_noise">gaussian_noise() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.get">get() (TextureStats method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.grid_fs">grid_fs (DynamicRipple attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.STFT.griffin_lim">griffin_lim() (STFT method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="H" class="genindex-section">
+  <h2>H</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.H_mod">H_mod (ChannelContext attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank">HannModulationFilterbank (class in sonore.analysis.modulation)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.harmonic_complex">harmonic_complex() (in module sonore.signals.generators)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.hcc_to_rect">hcc_to_rect() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.hop">hop (PVAnalysis attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.hop_dur">hop_dur (GaborFrame attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet">HRIRSet (class in sonore.stimuli.spatialization)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="I" class="genindex-section">
+  <h2>I</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues.iac">iac (InterauralCues attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ideal_binary_mask">ideal_binary_mask() (in module sonore.analysis.representations)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ideal_ratio_mask">ideal_ratio_mask() (in module sonore.analysis.representations)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues.ild">ild (InterauralCues attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.impose_channel">impose_channel() (in module sonore.texture.synth)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.interaural_cues">interaural_cues() (in module sonore.stimuli.binaural)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues">InterauralCues (class in sonore.stimuli.binaural)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.irs">irs (HRIRSet attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues.itd">itd (InterauralCues attribute)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.iterated_ripple_noise">iterated_ripple_noise() (in module sonore.signals.generators)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="K" class="genindex-section">
+  <h2>K</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.k">k (ChannelObjective attribute)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.representations.ReassignedSpectrogram.keep">keep (ReassignedSpectrogram attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.kernels">kernels() (HannModulationFilterbank method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="L" class="genindex-section">
+  <h2>L</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.layout">layout() (TVGaborFrame method)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.left">left (Sound property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.lengths">lengths() (GaborFrame method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.lengths">(HannModulationFilterbank method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.representations.Spectrum.level">level (Spectrum attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.Spectrum.level_at">level_at() (Spectrum method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.lifter">lifter() (Cepstrum method)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.linear_chirp">linear_chirp() (in module sonore.signals.generators)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.linear_trajectory">linear_trajectory() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.load">load() (in module sonore.core.sound)</a>
+
+        <ul>
+          <li><a href="core.html#sonore.core.sound.Sound.load">(Sound class method)</a>
+</li>
+          <li><a href="texture.html#sonore.texture.stats.TextureStats.load">(TextureStats class method)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.hrir_data.load_hrirs">load_hrirs() (in module sonore.stimuli.hrir_data)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.long_term_spectrum">long_term_spectrum() (in module sonore.analysis.representations)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelope.lowpass">lowpass() (Envelope method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.lowpass">(Envelopes method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="M" class="genindex-section">
+  <h2>M</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.magnitude">magnitude (PVAnalysis attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.representations.STFT.magnitude">(STFT property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TVSTFT.magnitude">(TVSTFT property)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.representations.Mask">Mask (class in sonore.analysis.representations)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.match_channels">match_channels() (in module sonore.signals.processing)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.match_fs">match_fs() (in module sonore.signals.processing)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.measure">measure() (TextureStats class method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.reverb.measure_rt60">measure_rt60() (in module sonore.stimuli.reverb)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.measurement_window">measurement_window() (in module sonore.texture.stats)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.mix">mix() (in module sonore.signals.processing)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.mod_adjoint">mod_adjoint() (ChannelContext method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.mod_bank">mod_bank (TextureModel property)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.mod_filter">mod_filter() (ChannelContext method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.mod_hi">mod_hi (TextureModel attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.mod_lo">mod_lo (TextureModel attribute)</a>
+</li>
+        <li><a href="texture.html#id1">mod_power (TextureStats attribute)</a>, <a href="texture.html#sonore.texture.stats.TextureStats.mod_power">[1]</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.mod_power">mod_power() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.mod_power_core">mod_power_core() (in module sonore.texture.grad)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.mod_Q">mod_Q (TextureModel attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.model">model (ChannelContext attribute)</a>
+
+        <ul>
+          <li><a href="texture.html#sonore.texture.stats.TextureStats.model">(TextureStats attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.modulation_spectrum">modulation_spectrum() (Envelopes method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.ModulationFilterbank">ModulationFilterbank (class in sonore.analysis.modulation)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram">ModulationSpectrogram (class in sonore.analysis.modspectrogram)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ModulationSpectrum">ModulationSpectrum (class in sonore.analysis.representations)</a>
+</li>
+        <li>
+    module
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.cepstrum">sonore.analysis.cepstrum</a>
+</li>
+          <li><a href="analysis.html#module-sonore.analysis.envelopes">sonore.analysis.envelopes</a>
+</li>
+          <li><a href="analysis.html#module-sonore.analysis.filterbank">sonore.analysis.filterbank</a>
+</li>
+          <li><a href="analysis.html#module-sonore.analysis.frames">sonore.analysis.frames</a>
+</li>
+          <li><a href="analysis.html#module-sonore.analysis.modspectrogram">sonore.analysis.modspectrogram</a>
+</li>
+          <li><a href="analysis.html#module-sonore.analysis.modulation">sonore.analysis.modulation</a>
+</li>
+          <li><a href="analysis.html#module-sonore.analysis.representations">sonore.analysis.representations</a>
+</li>
+          <li><a href="core.html#module-sonore.core.fft">sonore.core.fft</a>
+</li>
+          <li><a href="core.html#module-sonore.core.sound">sonore.core.sound</a>
+</li>
+          <li><a href="core.html#module-sonore.core.units">sonore.core.units</a>
+</li>
+          <li><a href="core.html#module-sonore.core.utils">sonore.core.utils</a>
+</li>
+          <li><a href="plotting.html#module-sonore.plotting">sonore.plotting</a>
+</li>
+          <li><a href="signals.html#module-sonore.signals.generators">sonore.signals.generators</a>
+</li>
+          <li><a href="signals.html#module-sonore.signals.processing">sonore.signals.processing</a>
+</li>
+          <li><a href="stimuli.html#module-sonore.stimuli.binaural">sonore.stimuli.binaural</a>
+</li>
+          <li><a href="stimuli.html#module-sonore.stimuli.hrir_data">sonore.stimuli.hrir_data</a>
+</li>
+          <li><a href="stimuli.html#module-sonore.stimuli.phasevocoder">sonore.stimuli.phasevocoder</a>
+</li>
+          <li><a href="stimuli.html#module-sonore.stimuli.reverb">sonore.stimuli.reverb</a>
+</li>
+          <li><a href="stimuli.html#module-sonore.stimuli.ripples">sonore.stimuli.ripples</a>
+</li>
+          <li><a href="stimuli.html#module-sonore.stimuli.spatialization">sonore.stimuli.spatialization</a>
+</li>
+          <li><a href="texture.html#module-sonore.texture.grad">sonore.texture.grad</a>
+</li>
+          <li><a href="texture.html#module-sonore.texture.stats">sonore.texture.stats</a>
+</li>
+          <li><a href="texture.html#module-sonore.texture.synth">sonore.texture.synth</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core.html#sonore.core.sound.Sound.mono">mono() (Sound method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.MorletFilterbank">MorletFilterbank (class in sonore.analysis.filterbank)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.move_sound">move_sound() (in module sonore.stimuli.spatialization)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="N" class="genindex-section">
+  <h2>N</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.n">n (ChannelContext property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.n_bands">n_bands (BandpassFilterbank attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank.n_bands">(ConstantQModulationFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.n_bands">(CosineFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.n_bands">(HannModulationFilterbank property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.OctaveModulationFilterbank.n_bands">(OctaveModulationFilterbank attribute)</a>
+</li>
+          <li><a href="texture.html#sonore.texture.stats.TextureModel.n_bands">(TextureModel attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.sound.Sound.n_channels">n_channels (Sound property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.n_fft">n_fft (GaborFrame attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.n_fft">(TVGaborFrame attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.n_filters">n_filters (BandpassFilterbank property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.n_filters">(CosineFilterbank property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.Filterbank.n_filters">(Filterbank property)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.n_mod">n_mod (TextureModel attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.n_oct">n_oct (TextureModel attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.n_samples">n_samples (Envelopes property)</a>
+
+        <ul>
+          <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.n_samples">(PVAnalysis attribute)</a>
+</li>
+          <li><a href="core.html#sonore.core.sound.Sound.n_samples">(Sound property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.n_samples">(Subbands property)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.utils.n_samples">n_samples() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.n_win">n_win (PVAnalysis attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.noise_vocode">noise_vocode() (in module sonore.analysis.filterbank)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.normalize">normalize() (in module sonore.signals.processing)</a>
+
+        <ul>
+          <li><a href="core.html#sonore.core.sound.Sound.normalize">(Sound method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="O" class="genindex-section">
+  <h2>O</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.oct_bank">oct_bank (TextureModel property)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.oct_hi">oct_hi (TextureModel attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ModulationSpectrum.octave">octave() (ModulationSpectrum class method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.OctaveFilterbank">OctaveFilterbank (class in sonore.analysis.filterbank)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.modulation.OctaveModulationFilterbank">OctaveModulationFilterbank (class in sonore.analysis.modulation)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.onset_threshold_db">onset_threshold_db (HRIRSet attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.order">order (GammatoneFilterbank attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.oscor">oscor() (in module sonore.stimuli.binaural)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.overview">overview() (in module sonore.plotting)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="P" class="genindex-section">
+  <h2>P</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="signals.html#sonore.signals.processing.pad">pad() (in module sonore.signals.processing)</a>
+
+        <ul>
+          <li><a href="core.html#sonore.core.sound.Sound.pad">(Sound method)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.sound.Sound.pad_to">pad_to() (Sound method)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.peak">peak (Sound property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ModulationSpectrum.peak">peak() (ModulationSpectrum method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.per_octave">per_octave (HannModulationFilterbank attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.OctaveFilterbank.per_octave">per_octave() (OctaveFilterbank class method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.phase">phase (GammatoneFilterbank attribute)</a>
+
+        <ul>
+          <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.phase">(PVAnalysis attribute)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple.phase">(Ripple attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.phasewarp">phasewarp() (in module sonore.stimuli.binaural)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.pitch_adaptive">pitch_adaptive() (TVGaborFrame class method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.pitch_shift">pitch_shift() (in module sonore.stimuli.phasevocoder)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.play">play() (Sound method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.plot">plot() (Cepstrum method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelope.plot">(Envelope method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.plot">(Envelopes method)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues.plot">(InterauralCues method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.Mask.plot">(Mask method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram.plot">(ModulationSpectrogram method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.ModulationSpectrum.plot">(ModulationSpectrum method)</a>
+</li>
+          <li><a href="core.html#sonore.core.sound.Sound.plot">(Sound method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.Spectrum.plot">(Spectrum method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.STFT.plot">(STFT method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.plot">(Subbands method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TFPower.plot">(TFPower method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TVSTFT.plot">(TVSTFT method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="plotting.html#sonore.plotting.plot_cepstrum">plot_cepstrum() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_envelope">plot_envelope() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_envelopes">plot_envelopes() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_interaural_cues">plot_interaural_cues() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_mask">plot_mask() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_modulation_slices">plot_modulation_slices() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_modulation_spectrogram">plot_modulation_spectrogram() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_modulation_spectrum">plot_modulation_spectrum() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_ripple_pattern">plot_ripple_pattern() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_spectrum">plot_spectrum() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_stft">plot_stft() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_subbands">plot_subbands() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_tf_db">plot_tf_db() (in module sonore.plotting)</a>
+</li>
+        <li><a href="plotting.html#sonore.plotting.plot_waveform">plot_waveform() (in module sonore.plotting)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram.pooled_depth">pooled_depth() (ModulationSpectrogram method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.HRIRSet.positions">positions (HRIRSet attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ReassignedSpectrogram.power">power (ReassignedSpectrogram attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.representations.TFPower.power">(TFPower attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel.prepare">prepare() (TextureModel method)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.pulse_train">pulse_train() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.pure_tone">pure_tone() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.pv_analyze">pv_analyze() (in module sonore.stimuli.phasevocoder)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis">PVAnalysis (class in sonore.stimuli.phasevocoder)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="Q" class="genindex-section">
+  <h2>Q</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.q">q (Cepstrum property)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank.Q">Q (ConstantQModulationFilterbank attribute)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="R" class="genindex-section">
+  <h2>R</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core.html#sonore.core.sound.Sound.ramp">ramp() (Sound method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple.rate">rate (Ripple attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.rate_change">rate_change (DynamicRipple attribute)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.rate_range">rate_range (DynamicRipple attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.reassigned_spectrogram">reassigned_spectrogram() (in module sonore.analysis.representations)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.ReassignedSpectrogram">ReassignedSpectrogram (class in sonore.analysis.representations)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.rect_to_hcc">rect_to_hcc() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.rect_to_sph">rect_to_sph() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.reference">reference() (ChannelObjective method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.Spectrum.relative">relative() (Spectrum method)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.relative_db">relative_db() (in module sonore.signals.processing)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.render">render() (in module sonore.stimuli.ripples)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.replace">replace() (TextureStats method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelope.resample">resample() (Envelope method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.resample">(Envelopes method)</a>
+</li>
+          <li><a href="core.html#sonore.core.sound.Sound.resample">(Sound method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.response">response() (BandpassFilterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank.response">(ConstantQModulationFilterbank method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.response">(CosineFilterbank method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.Filterbank.response">(Filterbank method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.response">(HannModulationFilterbank method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.ModulationFilterbank.response">(ModulationFilterbank method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.modulation.OctaveModulationFilterbank.response">(OctaveModulationFilterbank method)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.resynthesize">resynthesize() (PVAnalysis method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.rfft_response">rfft_response() (Filterbank method)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.right">right (Sound property)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.ringing">ringing() (Filterbank method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple">Ripple (class in sonore.stimuli.ripples)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.ripple_sound">ripple_sound() (in module sonore.stimuli.ripples)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.RippleSum">RippleSum (class in sonore.stimuli.ripples)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.rms">rms (Sound property)</a>
+
+        <ul>
+          <li><a href="texture.html#sonore.texture.stats.TextureModel.rms">(TextureModel attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.utils.rms">rms() (in module sonore.core.utils)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="S" class="genindex-section">
+  <h2>S</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.s_floor">s_floor (BandpassFilterbank property)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.save">save() (Sound method)</a>
+
+        <ul>
+          <li><a href="texture.html#sonore.texture.stats.TextureStats.save">(TextureStats method)</a>
+</li>
+        </ul></li>
+        <li><a href="signals.html#sonore.signals.generators.sawtooth_wave">sawtooth_wave() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modulation.ConstantQModulationFilterbank.scale">scale (ConstantQModulationFilterbank property)</a>
+
+        <ul>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.scale">(DynamicRipple property)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.Ripple.scale">(Ripple attribute)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.ripples.RippleSum.scale">(RippleSum property)</a>
+</li>
+        </ul></li>
+        <li><a href="signals.html#sonore.signals.generators.schroeder_complex">schroeder_complex() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.seed">seed (DynamicRipple attribute)</a>
+</li>
+        <li><a href="core.html#sonore.core.fft.set_fft_workers">set_fft_workers (class in sonore.core.fft)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.sft">sft() (GaborFrame method)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.silence">silence() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.binaural.simple_bir">simple_bir() (in module sonore.stimuli.binaural)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.modspectrogram.ModulationSpectrogram.slices">slices() (ModulationSpectrogram method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.Spectrum.smooth">smooth() (Spectrum method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats.snr">snr() (TextureStats method)</a>
+</li>
+        <li>
+    sonore.analysis.cepstrum
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.cepstrum">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.analysis.envelopes
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.envelopes">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.analysis.filterbank
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.filterbank">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.analysis.frames
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.frames">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.analysis.modspectrogram
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.modspectrogram">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.analysis.modulation
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.modulation">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.analysis.representations
+
+        <ul>
+          <li><a href="analysis.html#module-sonore.analysis.representations">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.core.fft
+
+        <ul>
+          <li><a href="core.html#module-sonore.core.fft">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.core.sound
+
+        <ul>
+          <li><a href="core.html#module-sonore.core.sound">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.core.units
+
+        <ul>
+          <li><a href="core.html#module-sonore.core.units">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.core.utils
+
+        <ul>
+          <li><a href="core.html#module-sonore.core.utils">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.plotting
+
+        <ul>
+          <li><a href="plotting.html#module-sonore.plotting">module</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li>
+    sonore.signals.generators
+
+        <ul>
+          <li><a href="signals.html#module-sonore.signals.generators">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.signals.processing
+
+        <ul>
+          <li><a href="signals.html#module-sonore.signals.processing">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.stimuli.binaural
+
+        <ul>
+          <li><a href="stimuli.html#module-sonore.stimuli.binaural">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.stimuli.hrir_data
+
+        <ul>
+          <li><a href="stimuli.html#module-sonore.stimuli.hrir_data">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.stimuli.phasevocoder
+
+        <ul>
+          <li><a href="stimuli.html#module-sonore.stimuli.phasevocoder">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.stimuli.reverb
+
+        <ul>
+          <li><a href="stimuli.html#module-sonore.stimuli.reverb">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.stimuli.ripples
+
+        <ul>
+          <li><a href="stimuli.html#module-sonore.stimuli.ripples">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.stimuli.spatialization
+
+        <ul>
+          <li><a href="stimuli.html#module-sonore.stimuli.spatialization">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.texture.grad
+
+        <ul>
+          <li><a href="texture.html#module-sonore.texture.grad">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.texture.stats
+
+        <ul>
+          <li><a href="texture.html#module-sonore.texture.stats">module</a>
+</li>
+        </ul></li>
+        <li>
+    sonore.texture.synth
+
+        <ul>
+          <li><a href="texture.html#module-sonore.texture.synth">module</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.sound.Sound">Sound (class in sonore.core.sound)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.spacing">spacing (BandpassFilterbank property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.spacing">(CosineFilterbank property)</a>
+</li>
+        </ul></li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.spatialize">spatialize() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.Spectrum">Spectrum (class in sonore.analysis.representations)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.spatialization.sph_to_rect">sph_to_rect() (in module sonore.stimuli.spatialization)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.generators.square_wave">square_wave() (in module sonore.signals.generators)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.STFT">STFT (class in sonore.analysis.representations)</a>
+</li>
+        <li><a href="texture.html#id4">subband_var (TextureStats attribute)</a>, <a href="texture.html#sonore.texture.stats.TextureStats.subband_var">[1]</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.Subbands">Subbands (class in sonore.analysis.filterbank)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.subbands">subbands() (in module sonore.analysis.filterbank)</a>
+
+        <ul>
+          <li><a href="texture.html#sonore.texture.stats.TextureModel.subbands">(TextureModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.sum">sum() (Subbands method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.reverb.synth_ir">synth_ir() (in module sonore.stimuli.reverb)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.Filterbank.synthesize">synthesize() (Filterbank method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.Frame.synthesize">(Frame method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.synthesize">(GaborFrame method)</a>
+</li>
+          <li><a href="texture.html#sonore.texture.synth.synthesize">(in module sonore.texture.synth)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.synthesize">(Subbands method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.synthesize">(TVGaborFrame method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="T" class="genindex-section">
+  <h2>T</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.t">t (Cepstrum property)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelope.t">(Envelope property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.t">(Envelopes property)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.binaural.InterauralCues.t">(InterauralCues attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.Mask.t">(Mask attribute)</a>
+</li>
+          <li><a href="stimuli.html#sonore.stimuli.phasevocoder.PVAnalysis.t">(PVAnalysis attribute)</a>
+</li>
+          <li><a href="core.html#sonore.core.sound.Sound.t">(Sound property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.STFT.t">(STFT property)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TFPower.t">(TFPower attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TVSTFT.t">(TVSTFT property)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.representations.ReassignedSpectrogram.t_hat">t_hat (ReassignedSpectrogram attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.tandem_power">tandem_power() (in module sonore.analysis.representations)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.target">target (ChannelObjective attribute)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.synth.ChannelObjective.terms">terms() (ChannelObjective method)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureModel">TextureModel (class in sonore.texture.stats)</a>
+</li>
+        <li><a href="texture.html#sonore.texture.stats.TextureStats">TextureStats (class in sonore.texture.stats)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.TFPower">TFPower (class in sonore.analysis.representations)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.Subbands.tfs">tfs() (Subbands method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.tight">tight (CosineFilterbank attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.frames.Filterbank.tight">(Filterbank attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core.html#sonore.core.utils.time_axis">time_axis() (in module sonore.core.utils)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.phasevocoder.time_stretch">time_stretch() (in module sonore.stimuli.phasevocoder)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.times">times (TVGaborFrame attribute)</a>
+</li>
+        <li><a href="core.html#sonore.core.sound.Sound.to_channels">to_channels() (Sound method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.Spectrum.to_noise">to_noise() (Spectrum method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.to_scale">to_scale() (BandpassFilterbank static method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.to_scale">(CosineFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.ERBFilterbank.to_scale">(ERBFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.to_scale">(GammatoneFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.MorletFilterbank.to_scale">(MorletFilterbank static method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.OctaveFilterbank.to_scale">(OctaveFilterbank static method)</a>
+</li>
+        </ul></li>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.to_sound">to_sound() (Cepstrum method)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.representations.STFT.to_sound">(STFT method)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.representations.TVSTFT.to_sound">(TVSTFT method)</a>
+</li>
+        </ul></li>
+        <li><a href="core.html#sonore.core.sound.Sound.to_stereo">to_stereo() (Sound method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.cepstrum.Cepstrum.to_stft">to_stft() (Cepstrum method)</a>
+</li>
+        <li><a href="stimuli.html#sonore.stimuli.ripples.DynamicRipple.trajectories">trajectories() (DynamicRipple method)</a>
+</li>
+        <li><a href="signals.html#sonore.signals.processing.truncate">truncate() (in module sonore.signals.processing)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame">TVGaborFrame (class in sonore.analysis.frames)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.representations.TVSTFT">TVSTFT (class in sonore.analysis.representations)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="U" class="genindex-section">
+  <h2>U</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.filterbank.BandpassFilterbank.unit">unit (BandpassFilterbank attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.filterbank.CosineFilterbank.unit">(CosineFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.ERBFilterbank.unit">(ERBFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.GammatoneFilterbank.unit">(GammatoneFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.MorletFilterbank.unit">(MorletFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.filterbank.OctaveFilterbank.unit">(OctaveFilterbank attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="V" class="genindex-section">
+  <h2>V</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core.html#sonore.core.units.Decibels.value">value (Decibels attribute)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.representations.Mask.values">values (Mask attribute)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="W" class="genindex-section">
+  <h2>W</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="texture.html#sonore.texture.grad.ChannelContext.w">w (ChannelContext attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.win_dur">win_dur (GaborFrame attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.win_durs">win_durs (TVGaborFrame attribute)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.window">window (GaborFrame attribute)</a>
+
+        <ul>
+          <li><a href="analysis.html#sonore.analysis.modulation.HannModulationFilterbank.window">(HannModulationFilterbank attribute)</a>
+</li>
+          <li><a href="analysis.html#sonore.analysis.frames.TVGaborFrame.window">(TVGaborFrame attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="analysis.html#sonore.analysis.frames.GaborFrame.window_samples">window_samples() (GaborFrame method)</a>
+</li>
+        <li><a href="analysis.html#sonore.analysis.envelopes.Envelopes.without_edges">without_edges() (Envelopes method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="Z" class="genindex-section">
+  <h2>Z</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="core.html#sonore.core.sound.Sound.zero_mean">zero_mean() (Sound method)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 
+            </div>
+            Made with 
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=6de935c7"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
