@@ -17,6 +17,12 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # deal. This page explains why, starting from a single window, and ends by showing that the analyses
 # all keep the same information: what differs is what each one makes easy to see.
 
+# %% [markdown]
+# ## The sentence, and code the examples share
+#
+# Every example below is the code shown with it, run after this cell: the sentence and its pitch
+# track, the level the gallery plays sounds at, and the plotting conventions all images share.
+
 # %%
 import matplotlib
 import matplotlib.pyplot as plt
@@ -283,12 +289,8 @@ sound = sentence
 # frames' magnitudes has no synthesis.
 
 # %%
-adaptive = so.TVGaborFrame.pitch_adaptive(
-    f0_times,
-    f0,
-    t_end=sentence.duration + 0.02,
-    periods=3,  # half a longest window past the end
-)
+# t_end runs half a longest window past the end, so the last sample is covered evenly.
+adaptive = so.TVGaborFrame.pitch_adaptive(f0_times, f0, t_end=sentence.duration + 0.02, periods=3)
 lengths = 1e3 * np.asarray(adaptive.win_durs)
 print(f"{len(lengths)} windows, {lengths.min():.1f} to {lengths.max():.1f} ms long")
 
@@ -314,18 +316,19 @@ sound = sentence
 #
 # Each analysis divides the time-frequency plane into cells of about the same area, and differs
 # only in their shape and in how the shape changes across the plane. The figure draws one box per
-# cell, $2\sigma_t$ wide and $2\sigma_f$ tall, over a quarter second of the sentence, with the
-# harmonics $kF_0(t)$ underneath. A harmonic is resolved where the boxes are shorter than the gap
-# between harmonics; a pulse is resolved where they are narrower than the period.
+# cell, $2\sigma_t$ wide and $2\sigma_f$ tall, over a tenth of a second of the sentence, with
+# the harmonics $kF_0(t)$ drawn over them in black. A harmonic is resolved where the boxes are
+# shorter than the gap between harmonics; a pulse is resolved where they are narrower than the
+# period.
 
 # %% [about]
 # Fixed windows tile the plane with identical boxes: flat ones for 5 ms, tall ones for 33.3 ms.
 # Morlet boxes are tall and narrow at high frequencies and wide and flat at low ones, so only the
-# lowest harmonics are resolved. Pitch-adaptive boxes are always half a harmonic spacing tall,
-# and widen and narrow as the pitch falls and rises.
+# lowest harmonics are resolved. Pitch-adaptive boxes are always the same fraction of the
+# harmonic spacing tall, about 0.4, and widen and narrow as the pitch falls and rises.
 
 # %% [figure t1] Four tilings
-t_lo, t_hi, f_hi = 1.0, 1.25, 1500
+t_lo, t_hi, f_hi = 1.05, 1.15, 1000
 sd_t, sd_f = spread(long.window_samples(fs), fs)
 hann_t, hann_f = sd_t / long.win_dur, sd_f * long.win_dur  # σt = 0.141 L and σf = 0.577 / L for any L
 is_voiced = f0 > 0
@@ -335,27 +338,29 @@ def f0_at(t):  # bridged across unvoiced stretches, as the pitch-adaptive frame 
     return np.exp(np.interp(t, f0_times[is_voiced], np.log(f0[is_voiced])))
 
 
+# Each box is (time, frequency, width, height, column, row); column + row picks its shade.
 def grid(L):  # boxes of a fixed Hann window of length L
     dt, df = 2 * hann_t * L, 2 * hann_f / L
-    return [(t, f, dt, df) for t in np.arange(t_lo, t_hi, dt) for f in np.arange(df / 2, f_hi, df)]
+    times, freqs = np.arange(t_lo + dt / 2, t_hi + dt, dt), np.arange(df / 2, f_hi + df, df)
+    return [(t, f, dt, df, i, j) for i, t in enumerate(times) for j, f in enumerate(freqs)]
 
 
 def wavelet_boxes(c=6):  # sd c/(2π fc) of the amplitude envelope; energy sds are 1/√2 of those
-    boxes, a, fc = [], 1 / (c * np.sqrt(2)), 60.0
+    boxes, a, fc, j = [], 1 / (c * np.sqrt(2)), 60.0, 0
     while fc < f_hi + fc * a:
         dt, df = 2 * c / (2 * np.pi * fc * np.sqrt(2)), 2 * a * fc
-        boxes += [(t, fc, dt, df) for t in np.arange(t_lo, t_hi, dt)]
-        fc *= (1 + a) / (1 - a)  # the next box starts where this one ends
+        boxes += [(t, fc, dt, df, i, j) for i, t in enumerate(np.arange(t_lo + dt / 2, t_hi + dt, dt))]
+        fc, j = fc * (1 + a) / (1 - a), j + 1  # the next box starts where this one ends
     return boxes
 
 
 def pitch_boxes(periods=3):
-    boxes, t = [], t_lo
+    boxes, t, i = [], t_lo, 0
     while t < t_hi:
         L = periods / f0_at(t)
         dt, df = 2 * hann_t * L, 2 * hann_f / L
-        boxes += [(t + dt / 2, f, dt, df) for f in np.arange(df / 2, f_hi, df)]
-        t += dt
+        boxes += [(t + dt / 2, f, dt, df, i, j) for j, f in enumerate(np.arange(df / 2, f_hi + df, df))]
+        t, i = t + dt, i + 1
     return boxes
 
 
@@ -369,9 +374,10 @@ tilings = [
 tt = np.linspace(t_lo, t_hi, 200)
 for ax, (boxes, title) in zip(axes.flat, tilings, strict=True):
     for k in range(1, int(f_hi / 90)):
-        ax.plot(tt, k * f0_at(tt), color="0.6", lw=0.7)
-    rects = [Rectangle((t - dt / 2, f - df / 2), dt, df) for t, f, dt, df in boxes]
-    ax.add_collection(PatchCollection(rects, facecolor="none", edgecolor="tab:blue", lw=0.6))
+        ax.plot(tt, k * f0_at(tt), color="k", lw=0.8)
+    rects = [Rectangle((t - dt / 2, f - df / 2), dt, df) for t, f, dt, df, _, _ in boxes]
+    shade = [0.35 if (i + j) % 2 else 0.12 for *_, i, j in boxes]  # a checkerboard
+    ax.add_collection(PatchCollection(rects, facecolor=[(0.12, 0.47, 0.71, a) for a in shade], lw=0))
     ax.set(title=title, xlim=(t_lo, t_hi), ylim=(0, f_hi))
 for ax in axes[1]:
     ax.set_xlabel("Time [s]")

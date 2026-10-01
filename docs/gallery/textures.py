@@ -18,6 +18,12 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # synthesizes a new sample by imposing those statistics on noise. Each original below is followed
 # by its synthesis, which shares no waveform with it, only statistics.
 
+# %% [markdown]
+# ## Code the examples share
+#
+# Every example below is the code shown with it, run after this cell: loading a recording and
+# its synthesis, the level the gallery plays sounds at, and the plots.
+
 # %%
 import json
 
