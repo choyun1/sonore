@@ -67,11 +67,13 @@ from sonore.representations import (
     TVSTFT,
     Mask,
     ModulationSpectrum,
+    ReassignedSpectrogram,
     Spectrum,
     TFPower,
     ideal_binary_mask,
     ideal_ratio_mask,
     long_term_spectrum,
+    reassigned_spectrogram,
     tandem_power,
 )
 from sonore.reverb import band_rt60s, measure_rt60, synth_ir
@@ -109,6 +111,8 @@ __all__ = [
     "TVSTFT",
     "TFPower",
     "tandem_power",
+    "ReassignedSpectrogram",
+    "reassigned_spectrogram",
     "Envelopes",
     "Envelope",
     "ripple_sound",
