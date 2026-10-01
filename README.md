@@ -24,6 +24,22 @@ sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
 
+## Contents
+
+- [What it's for](#what-its-for)
+- [Install](#install)
+- [A short tour](#a-short-tour)
+- [Gallery](#gallery)
+- [Conventions](#conventions)
+- [What's in it](#whats-in-it)
+- [Related projects](#related-projects)
+- [Roadmap](#roadmap)
+- [References](#references)
+- [Migrating from sigtools](#migrating-from-sigtools)
+- [Development](#development)
+- [How sonore was developed](#how-sonore-was-developed)
+- [License and citation](#license-and-citation)
+
 ## What it's for
 
 - **Psychophysical stimuli.** Pure tones, harmonic complexes with any phase

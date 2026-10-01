@@ -91,3 +91,22 @@ def test_gallery_reference_lists_are_in_the_readme():
             key = rf"(?m)^- {re.escape(first)}\b[^(\n]*" + (rf"\({year[1]}\)" if year else "")
             missing = f"{page.name} cites {entry[:40]}..., missing from README References"
             assert re.search(key, listed), missing
+
+
+def _github_anchor(heading):
+    """The id GitHub gives a heading: lowercase, punctuation dropped, spaces to hyphens."""
+    return re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
+
+
+def test_readme_contents_matches_its_sections():
+    """The Contents list links every top-level README section, in order, and
+    every link lands on a real heading."""
+    readme = (ROOT / "README.md").read_text()
+    prose = re.sub(r"^```.*?^```", "", readme, flags=re.S | re.M)
+    sections = re.findall(r"^## (.+)$", prose, flags=re.M)
+    anchors = {_github_anchor(h) for h in re.findall(r"^#{1,6} (.+)$", prose, flags=re.M)}
+    contents = prose.split("## Contents", 1)[1].split("\n## ", 1)[0]
+    links = re.findall(r"^- \[(.+?)\]\(#(.+?)\)$", contents, flags=re.M)
+    for _, anchor in links:
+        assert anchor in anchors, f"Contents links #{anchor}, which is not a README heading"
+    assert [title for title, _ in links] == [s for s in sections if s != "Contents"]
