@@ -13,7 +13,8 @@ The Frame work is split into three steps. This document covers only step 1.
    arbitrary shapes (gammatone, Morlet), Gabor frames with time-varying
    windows, and unions of frames that are diagonal in the same domain.
 3. **"Seeing speech."** A gallery section that runs one sentence through
-   several frames, plus reassignment for comparison.
+   several frames, plus reassignment for comparison. Design in
+   docs/design/frames-step3.md.
 
 Step 1 adds no new filter shapes and no new user-visible transforms. Its job
 is to fix what `analyze`, `synthesize` and `frame_bounds` mean, precisely
