@@ -58,6 +58,19 @@ class GaussianFilterbank(so.Filterbank):
         return np.where(np.abs(u) <= 3, np.exp(-0.5 * u**2), 0.0)
 
 
+@dataclass(frozen=True)
+class DelayedGaussianFilterbank(GaussianFilterbank):
+    """:class:`GaussianFilterbank` with a fractional-sample delay ``delay``
+    [s]: a complex (conjugate-symmetric) response whose value at Nyquist is
+    not real, to exercise the Nyquist rule (step 2, C14/D8)."""
+
+    delay: float = 0.3e-3
+
+    def response(self, freqs):
+        f = np.asarray(freqs, float)
+        return super().response(f) * np.exp(-2j * np.pi * f * self.delay)[:, None]
+
+
 # ------------------------------------------------ dense-matrix frame oracle
 # docs/design/frames.md: small dense matrices, built from the fast path itself
 # by analyzing unit impulses, so the oracle tests what the code actually does.

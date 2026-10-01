@@ -23,6 +23,10 @@ the division, as :class:`~sonore.filterbank.CosineFilterbank` does.
 coefficient norm weights each stored bin by 2 except DC and, for even ``K``,
 Nyquist (claim C3).
 
+Every frame also has :meth:`Frame.adjoint`, the adjoint of ``analyze`` for
+the coefficient inner product that ``energy`` uses (decision D10 of
+docs/design/frames-step2.md): synthesis without the division by ``s``.
+
 The code is written as pure array functions (no in-place mutation) so that a
 JAX port is mechanical.
 """
@@ -79,6 +83,15 @@ class Frame(ABC):
         """Coefficient energy per channel, in the norm the bounds and the least
         squares are defined in (decision D2)."""
 
+    @abstractmethod
+    def adjoint(self, coefs) -> Sound:
+        """The adjoint of :meth:`analyze`: the signal ``y`` with
+        ``<analyze(x), coefs> == <x, y>`` for every ``x``, the coefficient
+        inner product being the one :meth:`energy` uses (step 2, decision
+        D10). It is :meth:`synthesize` without the division by the frame
+        operator, and the gradient of a loss on the coefficients with respect
+        to the signal."""
+
 
 class Filterbank(Frame):
     """Undecimated filters applied by multiplication on the DFT grid.
@@ -110,8 +123,17 @@ class Filterbank(Frame):
         """Responses at ``freqs`` [Hz] (all >= 0), shape ``(len(freqs), n_filters)``."""
 
     def rfft_response(self, n: int, fs: float) -> np.ndarray:
-        """Responses on the ``rfft`` grid of an ``n``-sample signal."""
-        return self.response(np.fft.rfftfreq(n, 1 / fs))
+        """Responses on the ``rfft`` grid of an ``n``-sample signal.
+
+        On an even grid, a complex response is replaced by its real part at
+        Nyquist: ``irfft`` keeps only the real part of that bin, so this is
+        the filter actually applied, and analysis, :meth:`frame_power` and
+        :meth:`synthesize` must all see the same one (step 2, claim C14 and
+        decision D8). Real responses are returned unchanged."""
+        H = self.response(np.fft.rfftfreq(n, 1 / fs))
+        if n % 2 == 0 and np.iscomplexobj(H):
+            H = np.concatenate([H[:-1], H[-1:].real.astype(H.dtype)])
+        return H
 
     def frame_power(self, n: int, fs: float) -> np.ndarray:
         """``s(f) = sum_k |H_k(f)|**2`` on the ``rfft`` grid of ``n`` samples:
@@ -194,6 +216,16 @@ class Filterbank(Frame):
         """Sum of squares of the subbands, padding included, per channel.
         Subbands are real, so every sample has weight 1 (claim C3)."""
         return np.sum(coefs._full**2, axis=(0, 1))
+
+    def adjoint(self, coefs: Subbands) -> Sound:
+        """Filter each band with ``conj(H)`` and sum, with no division by
+        ``s``, then remove the padding (the adjoint of zero-padding is
+        cropping). For a tight bank this equals :meth:`synthesize`."""
+        full, fs, p = coefs._full, coefs.fs, coefs.pad
+        n = full.shape[0]
+        X = np.fft.rfft(full, axis=0) * np.conj(self.rfft_response(n, fs))[:, :, None]
+        out = np.fft.irfft(X.sum(axis=1), n=n, axis=0)
+        return Sound(out[p : n - p], fs)
 
 
 @lru_cache(maxsize=64)
@@ -322,6 +354,15 @@ class GaborFrame(Frame):
         w = self.bin_weights(coefs.fs)
         return np.einsum("f,cft->c", w, np.abs(coefs.data) ** 2)
 
+    def adjoint(self, coefs: STFT) -> Sound:
+        """``n_fft`` times SciPy's ``istft`` with ``dual_win = win``: the
+        adjoint for the C3-weighted inner product (step 2, claim C13)."""
+        sft = _gabor_adjoint_sft(self, float(coefs.fs))
+        if coefs.data.shape[-2] != sft.f_pts:
+            raise ValueError(f"expected {sft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
+        x = sft.mfft * sft.istft(coefs.data, k1=coefs.n_samples)
+        return Sound(np.real(x).T, coefs.fs)
+
 
 @lru_cache(maxsize=64)
 def _gabor_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
@@ -336,3 +377,10 @@ def _gabor_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
         ) from err
     _check_frame(lower, upper, f"{frame} at {fs:g} Hz", note="")
     return sft
+
+
+@lru_cache(maxsize=64)
+def _gabor_adjoint_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
+    win = frame.window_samples(fs)
+    _, hop, n_fft = frame.lengths(fs)
+    return ShortTimeFFT(win, hop=hop, fs=fs, mfft=n_fft, dual_win=win, fft_mode="onesided")

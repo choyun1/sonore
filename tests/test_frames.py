@@ -3,14 +3,23 @@
 The first sections cover the interface, the tight/general equivalence and the
 non-frame behaviour; the last checks every frame against the dense-matrix
 oracle in tests/helpers.py (bounds as eigenvalues, masked coefficients vs.
-canonical least squares, and the documented D1 exception).
+canonical least squares, the documented D1 exception, and the adjoint as the
+weighted transpose). Step 2 (docs/design/frames-step2.md) adds the Nyquist
+rule (C14, D8) and ``Frame.adjoint`` (D10).
 """
 
 from dataclasses import dataclass
 
 import numpy as np
 import pytest
-from helpers import GaussianFilterbank, canonical_lstsq, coef_matrix, dense_operator, weighted_frame_operator
+from helpers import (
+    DelayedGaussianFilterbank,
+    GaussianFilterbank,
+    canonical_lstsq,
+    coef_matrix,
+    dense_operator,
+    weighted_frame_operator,
+)
 from scipy.signal.windows import hann
 
 import sonore as so
@@ -213,6 +222,9 @@ ORACLE = {
     "erb": (so.ERBFilterbank(10, 50, 3000), ["auto", 0]),
     "octave": (so.OctaveFilterbank(6, 125, 3000), ["auto", 0]),
     "gaussian": (GaussianFilterbank(), ["auto", 0]),
+    # A fractional delay rings for thousands of samples near Nyquist, so pad
+    # explicitly: the D1 oracle would otherwise be thousands wide.
+    "delayed gaussian": (DelayedGaussianFilterbank(f_hi=FS / 2), [0, 4e-3]),
     **{f"gabor {k}": (v, [None]) for k, v in GABORS.items()},
 }
 ORACLE_CASES = [(name, pad) for name, (_, pads) in ORACLE.items() for pad in pads]
@@ -315,3 +327,64 @@ def test_gabor_least_squares_needs_the_half_spectrum_weights():
     y = frame.synthesize(masked).data[:, 0]
     assert _rel(y, canonical_lstsq(T, w, c)) < 1e-10
     assert _rel(y, canonical_lstsq(T, np.ones_like(w), c)) > 1e-3  # C3: unweighted is a different problem
+
+
+@pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)
+def test_adjoint_is_the_weighted_transpose(name, pad):
+    frame = ORACLE[name][0]
+    coefs = _masked(_analyze(frame, _noise(2, 9), pad))
+    T, w = dense_operator(frame, N, FS, pad)
+    expected = np.real(T.conj().T @ (w[:, None] * coef_matrix(coefs)))
+    y = frame.adjoint(coefs)
+    assert isinstance(y, so.Sound) and y.data.shape == (N, 2)
+    assert _rel(y.data, expected) < 1e-10
+
+
+@pytest.mark.parametrize("name", GABORS)
+def test_gabor_adjoint_inner_product(name):
+    """<T x, c>_w = <x, T* c> for arbitrary complex c, including DC and
+    Nyquist bins whose imaginary part no real signal produces (C13)."""
+    frame, x = GABORS[name], _noise(1, 10)
+    S = frame.analyze(x)
+    rng = np.random.default_rng(11)
+    c = rng.standard_normal(S.data.shape) + 1j * rng.standard_normal(S.data.shape)
+    lhs = np.real(np.einsum("f,cft->", frame.bin_weights(FS), S.data.conj() * c))
+    rhs = x.data[:, 0] @ frame.adjoint(so.STFT._from(S, c)).data[:, 0]
+    assert abs(lhs - rhs) < 1e-10 * abs(lhs)
+
+
+def test_tight_adjoint_is_synthesis():
+    fb = so.ERBFilterbank(10, 50, 3000)
+    for pad in ("auto", 0):
+        coefs = _masked(fb.analyze(_noise(2, 12), pad=pad))
+        assert np.array_equal(fb.adjoint(coefs).data, fb.synthesize(coefs).data)
+
+
+# ------------------------------------------------------------ Nyquist (D8)
+@dataclass(frozen=True)
+class _NaiveNyquist(DelayedGaussianFilterbank):
+    """Without the Nyquist rule: what C14 says goes wrong."""
+
+    def rfft_response(self, n, fs):
+        return self.response(np.fft.rfftfreq(n, 1 / fs))
+
+
+@pytest.mark.parametrize("n", [N, N + 1])
+@pytest.mark.parametrize("pad", ["auto", 0])
+def test_nyquist_rule_keeps_complex_banks_exact(n, pad):
+    fb, naive = DelayedGaussianFilterbank(f_hi=FS / 2), _NaiveNyquist(f_hi=FS / 2)
+    x = so.Sound(np.random.default_rng(13).standard_normal((n, 2)), FS)
+    H = fb.rfft_response(n, FS)
+    assert np.iscomplexobj(H) and np.all(H[-1].imag == 0) == (n % 2 == 0)
+    assert np.allclose(fb.synthesize(fb.analyze(x, pad=pad)).data, x.data, rtol=0, atol=1e-12)
+    err = np.abs(naive.synthesize(naive.analyze(x, pad=pad)).data - x.data).max()
+    if (n + 2 * fb._pad_samples(pad, FS)) % 2 == 0:
+        assert err > 1e-6  # the analysis applies Re H(fs/2) but the naive dual divides by |H(fs/2)|^2
+    else:
+        assert err < 1e-12  # odd grids have no Nyquist bin
+
+
+def test_nyquist_rule_leaves_real_responses_alone():
+    fb = so.ERBFilterbank(10, 50, FS / 2)
+    H = fb.rfft_response(N, FS)
+    assert H.dtype == float and np.array_equal(H, fb.response(np.fft.rfftfreq(N, 1 / FS)))

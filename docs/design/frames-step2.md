@@ -1,8 +1,8 @@
 # Frames, step 2: new filter shapes, time-varying Gabor, adjoints
 
-Status: draft for review, 2026-09-30. D5, D6, D7 and D11 were agreed with Cho
-in discussion; D7's transition width, D8, D9 and D10 are recommendations
-awaiting review. No code yet.
+Status: accepted, 2026-09-30. D5, D6, D7 and D11 were agreed with Cho in
+discussion; D7's transition width, D8, D9 and D10 were accepted as
+recommended on 2026-09-30. Implemented in patches 2-4 (see the patch plan).
 
 Step 1 (docs/design/frames.md) fixed what `analyze`, `synthesize` and
 `frame_bounds` mean and retrofitted the cosine banks and the STFT. Step 2
@@ -169,8 +169,8 @@ well-conditioned frame on the whole band, as the cosine banks do with their
 two extra filters. `n_filters = n_bands + 2`, and `cfs` gets the edge
 filters' nominal centers at DC and Nyquist, matching the cosine banks.
 
-- *To review:* the edge design. The recommendation is **raised cosine, one
-  filter spacing wide** (C11): A/B ≈ 0.5–0.6, with ringing roughly 2–3 times
+- The edge design (accepted as recommended, 2026-09-30): **raised cosine,
+  one filter spacing wide** (C11): A/B ≈ 0.5–0.6, with ringing roughly 2–3 times
   the bank's own. Exact fill gives better A/B but pads by about half a
   second. Two spacings halves the ringing again but gives A/B of 0.2–0.3.
   The transition width can be a constructor argument with that default.
@@ -180,14 +180,15 @@ filters' nominal centers at DC and Nyquist, matching the cosine banks.
 - `edges=False` gives the bare bank for cochleagram use. By D4, `analyze`
   still works, and `synthesize` raises if the bounds say it is not a frame.
 
-**D8. The Nyquist rule.** (Recommended; a correctness fix.)
+**D8. The Nyquist rule.** (Accepted as recommended, 2026-09-30; a
+correctness fix.)
 `Filterbank.rfft_response` takes the real part of the Nyquist bin on even
 grids, so analysis, `frame_power` and `synthesize` all see the filter that is
 actually applied (C14). This is a base-class change. It is a no-op for real
 responses, so the cosine banks and texture synthesis stay bit-for-bit
 unchanged; this will be checked against a worktree of the previous commit.
 
-**D9. Time-varying Gabor.** (Recommended.)
+**D9. Time-varying Gabor.** (Accepted as recommended, 2026-09-30.)
 
 - **Specification:** an explicit schedule, `TVGaborFrame(times, win_durs,
   n_fft=None, window="hann")`, in seconds like `GaborFrame`, rounded to
@@ -207,7 +208,8 @@ unchanged; this will be checked against a worktree of the previous commit.
   into a schedule), and a TANDEM-STRAIGHT-style pair of schedules offset by
   half a period. Both use this class; neither needs new frame theory.
 
-**D10. `Frame.adjoint(coefs) -> Sound`.** (Recommended.) The adjoint for the
+**D10. `Frame.adjoint(coefs) -> Sound`.** (Accepted as recommended,
+2026-09-30.) The adjoint for the
 coefficient inner product that `energy` uses (D2):
 
 - filterbanks: filter with conj(H), with no division by s;
