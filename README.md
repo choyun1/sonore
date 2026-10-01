@@ -188,6 +188,8 @@ structure doesn't. `so.noise_vocode` is shorthand for the typed pipeline
 `(speech.envelopes(lowpass=50) * noise.tfs()).synthesize()`, where `speech`
 and `noise` are the two sounds' `Subbands` on the same filterbank.
 [▶ vocoded](https://choyun1.github.io/sonore/gallery/#d-15)
+The [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) page uses it to
+simulate cochlear-implant hearing: band count, noise or tone carriers, and envelope pitch.
 
 ![Noise vocoder](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/vocoder.png)
 

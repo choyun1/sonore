@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hearing through a vocoder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
+  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+audio { width: 100%; max-width: 19rem; display: block; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="vocoder.html" aria-current="page">Hearing through a vocoder</a></nav>
+<header>
+  <h1>Hearing through a vocoder</h1>
+<p>A cochlear implant replaces the hair cells with a row of electrodes in the cochlea. Its
+processor splits sound into a few frequency bands, keeps only each band's slowly varying
+envelope, and uses it to set the current on one electrode (Wilson et al., 1991). The fine
+structure inside each band, which carries most of what a normal ear hears as pitch, is thrown
+away. A noise vocoder does the same to a sound and plays the result to a normal ear: each
+band's envelope modulates a band of noise in its place (Shannon et al., 1995). It is the
+standard way to let a listener with normal hearing hear roughly what an implant passes on.</p>
+<p>Everything on this page is one function, <code>so.noise_vocode</code>, applied to the sentence from
+<a href="speech.html">Seeing speech</a> and to a short melody.</p>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-motivation">
+<h2 id="h-motivation">Motivation</h2>
+<p>The vocoder lets you vary one thing at a time that an implant user cannot: how many bands,
+how fast the envelopes may change, and what carries them. That is how its classic results were
+found:</p>
+<ul><li><strong>Few bands are enough for speech in quiet.</strong> Shannon et al. (1995) found that listeners understood most of the words in sentences through four noise bands, with no fine structure at all.</li><li><strong>Implant users get only a handful.</strong> Implants have 12 to 22 electrodes, but current spreads between neighbors. Friesen et al. (2001) found that most implant users did no better with more than about eight channels, while listeners hearing a vocoder kept improving up to about twenty, especially in noise.</li><li><strong>Pitch is what suffers most.</strong> With the fine structure gone, the only pitch cues left are which bands are loud and how fast the envelopes fluctuate. Music, intonation, and telling one voice from another all depend on pitch, and are hard for implant users.</li></ul>
+</section>
+<section aria-labelledby="h-the-sentence--and-code-the-examples-share">
+<h2 id="h-the-sentence--and-code-the-examples-share">The sentence, and code the examples share</h2>
+<p>The vocoder below splits the sound with half-cosine filters equally spaced on the ERB scale
+between 80 Hz and 7.6 kHz (just under the 8 kHz Nyquist frequency of this 16 kHz recording),
+neighbors overlapping by half, takes each band's Hilbert
+envelope, lowpasses it at 50 Hz unless stated, and multiplies it into the same band of fresh
+Gaussian noise. The output has the input's RMS.</p>
+<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+# The sentence at its native 16 kHz. Sources: docs/speech/SOURCES.md.
+sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
+fs = sentence.fs
+F_LO, F_HI = 80, 7600
+
+# Every spectrogram: a wideband STFT (Hann 5 ms), dB re its own maximum over 60 dB, 0 to 8 kHz.
+wide = so.GaborFrame(0.005, 0.001, n_fft=1024)
+FMAX, DB = 8000, 60
+
+
+def bands(snd, n_bands, env_lowpass=50.0):
+    &quot;&quot;&quot;The envelopes the vocoder keeps: ERB bands, Hilbert envelopes, lowpassed.&quot;&quot;&quot;
+    fb = so.ERBFilterbank(n_bands, F_LO, F_HI)
+    return fb.analyze(snd).envelopes(lowpass=env_lowpass, fs=1000)
+
+
+def show(snd, envelopes=None, title=&quot;&quot;):
+    &quot;&quot;&quot;Waveform, spectrogram and (if given) the band envelopes, on one time axis.
+    Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
+    n = 3 if envelopes is not None else 2
+    fig = plt.figure(figsize=(10, 2.0 + 2.2 * (n - 1)), layout=&quot;constrained&quot;)
+    axes = fig.subplots(n, 1, sharex=True, height_ratios=[0.55] + [1] * (n - 1))
+    snd.plot(axes[0], color=&quot;k&quot;, lw=0.4)
+    axes[0].set_title(f&quot;Waveform{&#x27;: &#x27; + title if title else &#x27;&#x27;}&quot;)
+    wide.analyze(snd).plot(axes[1], db_range=DB, colorbar=False, fmax=FMAX)
+    axes[1].set_title(&quot;Spectrogram (Hann 5 ms)&quot;)
+    if envelopes is not None:
+        envelopes.plot(axes[2], db_range=DB, colorbar=False, fscale=&quot;linear&quot;, fmax=FMAX)
+        axes[2].set_title(f&quot;The {envelopes.data.shape[1] - 2} band envelopes the vocoder keeps&quot;)
+    for ax in axes:
+        ax.set_xlim(0, snd.duration)
+        ax.set_xlabel(&quot;&quot;)
+    axes[-1].set_xlabel(&quot;Time [s]&quot;)
+    return fig, list(axes)</code></pre></div>
+</section>
+<section aria-labelledby="h-how-many-bands">
+<h2 id="h-how-many-bands">How many bands</h2>
+<p>Each band gives the listener one envelope: when there is energy in that region of the spectrum,
+but not what it is made of. Fewer bands mean a coarser picture of the spectrum, so formants
+that fall in the same band can no longer be told apart.</p>
+
+<article class="sound" id="d-ci0" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.3254814896820064, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.4029301669306835, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>The original sentence</h3>
+    <div class="desc"><p>The original, for comparison.</p></div>
+    <audio controls preload="metadata" src="audio/ci0_the_original_sentence.flac"></audio>
+    <p class="file">ci0_the_original_sentence.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ci0_the_original_sentence.png" width="1000" height="420" alt="Plots of the the original sentence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence)
+sound = sentence</code></pre></details>
+</article>
+
+<article class="sound" id="d-ci1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188933, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>One band</h3>
+    <div class="desc"><p>One band: the envelope of the whole sentence on a single noise. The rhythm and syllables are
+there; the words are not.</p></div>
+    <audio controls preload="metadata" src="audio/ci1_one_band.flac"></audio>
+    <p class="file">ci1_one_band.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ci1_one_band.png" width="1000" height="640" alt="Plots of the one band sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 1, F_LO, F_HI, rng=1))
+fig, playhead = show(vocoded, bands(sentence, 1), &quot;one band&quot;)
+sound = vocoded</code></pre></details>
+</article>
+
+<article class="sound" id="d-ci4" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188933, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Four bands</h3>
+    <div class="desc"><p>Four bands, about where Shannon et al. (1995) found listeners began to understand most words in
+quiet. The spectrogram shows four broad blocks, switching on and off with the syllables.</p></div>
+    <audio controls preload="metadata" src="audio/ci4_four_bands.flac"></audio>
+    <p class="file">ci4_four_bands.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ci4_four_bands.png" width="1000" height="640" alt="Plots of the four bands sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 4, F_LO, F_HI, rng=4))
+fig, playhead = show(vocoded, bands(sentence, 4), &quot;four bands&quot;)
+sound = vocoded</code></pre></details>
+</article>
+
+<article class="sound" id="d-ci8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188933, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Eight bands</h3>
+    <div class="desc"><p>Eight bands, about as many as most implant users can use. The formant movements are now
+visible as energy moving from band to band.</p></div>
+    <audio controls preload="metadata" src="audio/ci8_eight_bands.flac"></audio>
+    <p class="file">ci8_eight_bands.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ci8_eight_bands.png" width="1000" height="640" alt="Plots of the eight bands sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, rng=8))
+fig, playhead = show(vocoded, bands(sentence, 8), &quot;eight bands&quot;)
+sound = vocoded</code></pre></details>
+</article>
+
+<article class="sound" id="d-ci16" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9951504114837766, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20604102186008444, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9951504114837766, &quot;top&quot;: 0.2587118766547145, &quot;bottom&quot;: 0.5665696057942629, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9951504114837766, &quot;top&quot;: 0.6219114779459554, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Sixteen bands</h3>
+    <div class="desc"><p>Sixteen bands. The words are easy, but the voice is still a whisper: no band of noise has a
+pitch, so the talker's intonation is gone.</p></div>
+    <audio controls preload="metadata" src="audio/ci16_sixteen_bands.flac"></audio>
+    <p class="file">ci16_sixteen_bands.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ci16_sixteen_bands.png" width="1000" height="640" alt="Plots of the sixteen bands sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 16, F_LO, F_HI, rng=16))
+fig, playhead = show(vocoded, bands(sentence, 16), &quot;sixteen bands&quot;)
+sound = vocoded</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-noise-or-tones">
+<h2 id="h-noise-or-tones">Noise or tones</h2>
+<p>The carrier is the vocoder's stand-in for the electrode, and noise is only one choice. A tone
+vocoder puts a sinusoid at each band's center instead. The envelopes are the same, but a tone
+has no envelope fluctuations of its own to blur them, so fast modulations survive better, and
+the result sounds more like a buzzy voice than a whisper. With few bands, the tones are heard
+as separate pitches. Speech through either is about equally intelligible (Dorman et al., 1997).</p>
+
+<article class="sound" id="d-ct8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188933, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Eight tones</h3>
+    <div class="desc"><p>The sentence through eight tones, at the same eight band centers as the noise vocoder above.</p></div>
+    <audio controls preload="metadata" src="audio/ct8_eight_tones.flac"></audio>
+    <p class="file">ct8_eight_tones.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ct8_eight_tones.png" width="1000" height="640" alt="Plots of the eight tones sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, carrier=&quot;tone&quot;))
+fig, playhead = show(vocoded, bands(sentence, 8), &quot;eight tones&quot;)
+sound = vocoded</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-pitch-from-the-envelope">
+<h2 id="h-pitch-from-the-envelope">Pitch from the envelope</h2>
+<p>The vocoder's envelope lowpass decides how fast an envelope may change. At 50 Hz it keeps the
+syllables and the formant movements but not the voice's periodicity. Raise it above the
+fundamental, here about 90 to 190 Hz, and each band's envelope pulses once per glottal
+period: a <em>temporal</em> pitch cue, the kind implant users rely on. It is weak and works only for
+low pitches, a few hundred hertz at most.</p>
+
+<article class="still" id="d-cp0">
+  <div class="about">
+    <h3>One envelope, two cutoffs</h3>
+    <div class="desc"><p>One band's envelope over a stretch of voiced speech, lowpassed at 50 Hz and at 300 Hz. Only
+the 300 Hz envelope follows the glottal pulses.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cp0_one_envelope_two_cutoffs.png" width="1000" height="300" alt="One envelope, two cutoffs" loading="lazy">
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fb = so.ERBFilterbank(8, F_LO, F_HI)
+sub = fb.analyze(sentence)
+band = int(np.argmin(np.abs(fb.cfs - 700)))  # the band nearest 700 Hz
+fig, ax = plt.subplots(figsize=(10, 3.0), layout=&quot;constrained&quot;)
+for cutoff, color in ((50, &quot;tab:blue&quot;), (300, &quot;tab:red&quot;)):
+    env = sub.envelopes(lowpass=cutoff)
+    ax.plot(env.t, env.data[:, band, 0], color=color, lw=1, label=f&quot;lowpass {cutoff} Hz&quot;)
+ax.set(
+    xlim=(0.1, 0.3),
+    xlabel=&quot;Time [s]&quot;,
+    ylabel=&quot;Envelope&quot;,
+    title=f&quot;The band centered at {fb.cfs[band]:.0f} Hz&quot;,
+)
+ax.legend(loc=&quot;upper right&quot;, fontsize=8)
+ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-cp8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9951504114837766, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.2062109808254582, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9951504114837766, &quot;top&quot;: 0.2580938440533558, &quot;bottom&quot;: 0.5662605894935834, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9951504114837766, &quot;top&quot;: 0.621602461645276, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Eight bands, 300 Hz envelopes</h3>
+    <div class="desc"><p>Eight bands with envelopes lowpassed at 300 Hz instead of 50 Hz. Listen for the intonation,
+faint but back. The wideband spectrogram shows the pulses as vertical striations again.</p></div>
+    <audio controls preload="metadata" src="audio/cp8_eight_bands_300_hz_envelopes.flac"></audio>
+    <p class="file">cp8_eight_bands_300_hz_envelopes.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cp8_eight_bands_300_hz_envelopes.png" width="1000" height="640" alt="Plots of the eight bands, 300 hz envelopes sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+fig, playhead = show(vocoded, bands(sentence, 8, env_lowpass=300), &quot;eight bands, 300 Hz envelopes&quot;)
+sound = vocoded</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-a-melody">
+<h2 id="h-a-melody">A melody</h2>
+<p>Speech can be understood without pitch; a melody cannot. The opening of "Twinkle, Twinkle,
+Little Star" in harmonic complex tones, low in the bass clef so that the fundamentals are in
+reach of a temporal cue.</p>
+<div class="cell"><pre><code class="language-python">notes = [131, 131, 196, 196, 220, 220, 196]  # C3 C3 G3 G3 A3 A3 G3 [Hz]
+durs = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.8]
+tones = [
+    so.harmonic_complex(d, fs, f, np.arange(1, 21)).ramp(20e-3) for f, d in zip(notes, durs, strict=True)
+]
+melody = finish(so.concat(tones))</code></pre></div>
+
+<article class="sound" id="d-cm0" data-regions="[{&quot;x0&quot;: 0.06144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.3254814896820064, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.06144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.4029301669306835, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}]">
+  <div class="about">
+    <h3>The melody</h3>
+    <div class="desc"><p>The melody as played.</p></div>
+    <audio controls preload="metadata" src="audio/cm0_the_melody.flac"></audio>
+    <p class="file">cm0_the_melody.flac, 3.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cm0_the_melody.png" width="1000" height="420" alt="Plots of the the melody sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, playhead = show(melody, title=&quot;C3 C3 G3 G3 A3 A3 G3&quot;)
+sound = melody</code></pre></details>
+</article>
+
+<article class="sound" id="d-cm8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188933, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}]">
+  <div class="about">
+    <h3>Eight bands, 50 Hz envelopes</h3>
+    <div class="desc"><p>Through eight noise bands with 50 Hz envelopes. Each note changes which bands are loud only a
+little, and the tune is close to gone.</p></div>
+    <audio controls preload="metadata" src="audio/cm8_eight_bands_50_hz_envelopes.flac"></audio>
+    <p class="file">cm8_eight_bands_50_hz_envelopes.flac, 3.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cm8_eight_bands_50_hz_envelopes.png" width="1000" height="640" alt="Plots of the eight bands, 50 hz envelopes sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, rng=8))
+fig, playhead = show(vocoded, bands(melody, 8), &quot;eight bands, 50 Hz envelopes&quot;)
+sound = vocoded</code></pre></details>
+</article>
+
+<article class="sound" id="d-cm8p" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188933, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}]">
+  <div class="about">
+    <h3>Eight bands, 300 Hz envelopes</h3>
+    <div class="desc"><p>The same with 300 Hz envelopes: every band now pulses at the note's fundamental, and the tune
+comes back as a rough, buzzy pitch.</p></div>
+    <audio controls preload="metadata" src="audio/cm8p_eight_bands_300_hz_envelopes.flac"></audio>
+    <p class="file">cm8p_eight_bands_300_hz_envelopes.flac, 3.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cm8p_eight_bands_300_hz_envelopes.png" width="1000" height="640" alt="Plots of the eight bands, 300 hz envelopes sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+fig, playhead = show(vocoded, bands(melody, 8, env_lowpass=300), &quot;eight bands, 300 Hz envelopes&quot;)
+sound = vocoded</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-what-this-simulation-leaves-out">
+<h2 id="h-what-this-simulation-leaves-out">What this simulation leaves out</h2>
+<p>A vocoder shows what is lost when only band envelopes are kept. It is not a model of any one
+implant user, and several things that matter for real implants are not on this page:</p>
+<ul><li><strong>Current spread.</strong> Neighboring electrodes excite overlapping nerve fibers, so the useful number of channels is smaller than the number of electrodes. Vocoders model it with wider, shallower synthesis filters than analysis filters; here both are the same.</li><li><strong>Insertion depth.</strong> An electrode array does not reach the apex of the cochlea, so each band is delivered to a place tuned higher than the band itself, a frequency shift. Here every carrier band sits where its envelope came from.</li><li><strong>Dynamic range and pulses.</strong> Electric hearing has a much narrower dynamic range, so the processor compresses the envelopes, and it delivers them as pulse trains at a fixed rate.</li></ul>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Dorman, Loizou &amp; Rainey (1997). Speech intelligibility as a function of the number of channels of stimulation for signal processors using sine-wave and noise-band outputs. <em>J. Acoust. Soc. Am.</em> 102(4), 2403–2411.</li><li>Friesen, Shannon, Baskent &amp; Wang (2001). Speech recognition in noise as a function of the number of spectral channels: comparison of acoustic hearing and cochlear implants. <em>J. Acoust. Soc. Am.</em> 110(2), 1150–1163.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. The sentence.</li><li>Shannon, Zeng, Kamath, Wygonski &amp; Ekelid (1995). Speech recognition with primarily temporal cues. <em>Science</em> 270(5234), 303–304.</li><li>Wilson, Finley, Lawson, Wolford, Eddington &amp; Rabinowitz (1991). Better speech recognition with cochlear implants. <em>Nature</em> 352, 236–238.</li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/vocoder.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/vocoder.py</code>, or a cell at a time.</footer>
+</main>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines };
+  });
+  function draw(item) {
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
