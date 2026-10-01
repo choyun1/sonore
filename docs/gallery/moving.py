@@ -15,9 +15,16 @@ the PKU-IOA head-related impulse responses at 1 m (about 13 MB) the first time i
 #
 # Three men talk at once, one straight ahead and one 40° to each side. Which one do you follow?
 # If one of them moves, does that help? Cho & Kidd (2022) asked this with stimuli like the ones
-# on this page: one talker, the target, swings back and forth in azimuth while the other two
-# stay still, and listeners report what the target said. The experiment's code, written with
-# sonore's predecessor sigtools, is archived at [github.com/choyun1/MSM](https://github.com/choyun1/MSM).
+# on this page; the experiment's code, written with sonore's predecessor sigtools, is archived at
+# [github.com/choyun1/MSM](https://github.com/choyun1/MSM).
+#
+# - [The talkers and the trajectories](#h-the-talkers-and-the-trajectories): three sentences, and
+#   the paths the target takes.
+# - [One talker, moving](#h-one-talker--moving): what motion alone sounds like.
+# - [Three talkers](#h-three-talkers): the target swinging back and forth in azimuth while the
+#   other two stay still.
+# - [How the motion is rendered](#h-how-the-motion-is-rendered): filtering with HRIRs that change
+#   over time, without clicks.
 #
 # Every sound here is rendered through measured head-related impulse responses (HRIRs) of a
 # KEMAR manikin at 1 m (Qu et al., 2009), so listen with headphones.

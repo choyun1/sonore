@@ -28,6 +28,8 @@ main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem
 header { max-width: 44rem; margin-bottom: 3.5rem; }
 h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
 header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
 nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
@@ -77,14 +79,14 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html" aria-current="page">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html">Cepstral analysis</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html" aria-current="page">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html">Cepstral analysis</a><a href="reverb.html">Synthetic reverberation</a></nav>
 <header>
   <h1>Moving talkers</h1>
 <p>Three men talk at once, one straight ahead and one 40° to each side. Which one do you follow?
 If one of them moves, does that help? Cho &amp; Kidd (2022) asked this with stimuli like the ones
-on this page: one talker, the target, swings back and forth in azimuth while the other two
-stay still, and listeners report what the target said. The experiment's code, written with
-sonore's predecessor sigtools, is archived at <a href="https://github.com/choyun1/MSM">github.com/choyun1/MSM</a>.</p>
+on this page; the experiment's code, written with sonore's predecessor sigtools, is archived at
+<a href="https://github.com/choyun1/MSM">github.com/choyun1/MSM</a>.</p>
+<ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a>: three sentences, and the paths the target takes.</li><li><a href="#h-one-talker--moving">One talker, moving</a>: what motion alone sounds like.</li><li><a href="#h-three-talkers">Three talkers</a>: the target swinging back and forth in azimuth while the other two stay still.</li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a>: filtering with HRIRs that change over time, without clicks.</li></ul>
 <p>Every sound here is rendered through measured head-related impulse responses (HRIRs) of a
 KEMAR manikin at 1 m (Qu et al., 2009), so listen with headphones.</p>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time

@@ -15,8 +15,14 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # Rain, a creek, crickets, applause, fire: sounds made of many similar events, whose character
 # lies in their statistics rather than in any one waveform. After McDermott & Simoncelli (2011),
 # sonore summarizes a texture by time-averaged statistics of a model of the cochlea, and
-# synthesizes a new sample by imposing those statistics on noise. Each original below is followed
-# by its synthesis, which shares no waveform with it, only statistics.
+# synthesizes a new sample by imposing those statistics on noise.
+#
+# - [The model and its statistics](#h-the-model-and-its-statistics): cochlear bands, their
+#   envelopes, and what is measured from them.
+# - [Originals and syntheses](#h-originals-and-syntheses): each recording followed by its
+#   synthesis, which shares no waveform with it, only statistics.
+# - [What the statistics do](#h-what-the-statistics-do): the same textures synthesized from only
+#   some of the statistics.
 
 # %% [markdown]
 # ## Code the examples share

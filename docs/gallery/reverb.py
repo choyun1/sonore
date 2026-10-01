@@ -1,0 +1,253 @@
+"""Synthetic reverberation: room impulse responses from the statistics of real rooms.
+
+This script is the gallery page https://choyun1.github.io/sonore/gallery/reverb.html:
+docs/gallery/build.py runs it cell by cell from the repository root and shows each
+cell's code beside what it made. Run it yourself from the repository root,
+
+    python docs/gallery/reverb.py
+
+or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
+"""
+
+# %% [markdown]
+# # Synthetic reverberation
+#
+# A room's reverberation is its impulse response (IR): what a microphone records after a single
+# click. Convolve any dry sound with it and the sound is in that room. Traer & McDermott (2016)
+# measured the IRs of 271 real rooms and found them tightly constrained, and `so.synth_ir` builds
+# new ones from their statistics.
+#
+# - [How a room is synthesized](#h-how-a-room-is-synthesized): decaying noise in cochlear bands,
+#   and the parameters that shape it.
+# - [Natural rooms](#h-natural-rooms): a starter pistol and a spoken sentence in a synthetic room
+#   that listeners can't tell from a real one.
+# - [Rooms that break the rules](#h-rooms-that-break-the-rules): the paper's atypical rooms,
+#   which listeners hear as wrong.
+
+# %% [markdown]
+# ## How a room is synthesized
+#
+# In real rooms the reverberant tail is close to Gaussian noise whose level, in each frequency
+# band, falls exponentially: a straight line in dB. How fast it falls is the band's RT60, the
+# time it takes to drop 60 dB. In real rooms mid frequencies ring longest, and both low and high
+# frequencies die away faster. `so.synth_ir` splits Gaussian
+# noise into ERB-spaced bands, multiplies each band by its decay, and sums the bands back. Its
+# parameters:
+#
+# - `rt60`, the broadband reverberation time in seconds, the median over bands. The time each
+#   band takes to decay, and its level at the start, follow the paper's regressions on the 271
+#   rooms, scaled to this value.
+# - `drr_db`, the direct-to-reverberant ratio: the energy of the direct sound, a unit impulse at
+#   time zero, over that of the tail. Without it, only the tail is returned.
+# - `n_channels`, independent tails per channel, for example 2 for a decorrelated binaural tail.
+# - `decay_shape`, `rt60_profile` and `drr_profile`, which leave the regularities of real rooms
+#   behind: they make the paper's atypical rooms, heard below.
+#
+# `so.band_rt60s` gives the RT60s of each band for a broadband RT60, and `so.measure_rt60`
+# measures them from an IR by fitting a line to each band's energy decay curve.
+#
+# Every room below has the same median RT60 (1 s) and direct-to-reverberant ratio (−3 dB), and
+# the same seed, so they share their noise. Unlike the paper, they are not further equated for
+# distortion, so some differences in loudness and length remain. They are presented diotically,
+# as in the paper.
+
+# %%
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import butter, sosfilt
+
+import sonore as so
+
+plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+FS = 44100
+
+
+def finish(snd):
+    """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+def starter_pistol():
+    """A sharp broadband crack: a shock-like pulse (0.15 ms exponential), highpassed.
+    Its spectrum is smooth; a short burst of noise would have random deep notches."""
+    t = np.arange(int(0.03 * FS)) / FS
+    x = sosfilt(butter(2, 300, "highpass", fs=FS, output="sos"), np.exp(-t / 0.15e-3))
+    return so.Sound(x, FS).pad(before=0.05, after=0.05)
+
+
+def room(**kw):
+    """A synthetic room: RT60 1 s, direct-to-reverberant ratio -3 dB, a fixed seed."""
+    return so.synth_ir(1.0, FS, drr_db=-3, rng=5, **kw)
+
+
+def show(snd, ir, kw=None):
+    """Waveform and cochleagram of the sound, then the IR's decay by band and its RT60s.
+    Returns the figure and the panels the playhead follows."""
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout="constrained")
+    snd.plot(axes[0, 0], lw=0.4)
+    axes[0, 0].set_title("Waveform")
+    # no extra lowpass: resampling to 1 kHz is already band-limited, and a
+    # lowpass would ring visibly around the sharp onset of the shot
+    so.subbands(snd, 30, 50, 8000).envelopes(fs=1000).plot(axes[0, 1], colorbar=False, db_range=60)
+    axes[0, 1].set_title("Cochleagram (60 dB range)")
+    time_axes = [axes[0, 0], axes[0, 1]]
+    if ir is None:
+        for ax in axes[1]:
+            ax.axis("off")
+        axes[1, 0].text(0.0, 0.5, "No room: the dry source.", transform=axes[1, 0].transAxes, fontsize=11)
+        return fig, time_axes
+    # band decays of the impulse response itself (dB), a few bands
+    tail = so.Sound(ir.data[1:], ir.fs)
+    env = so.subbands(tail, 30, 50, 8000).envelopes(lowpass=30, fs=1000)
+    for f, color in zip(
+        (125, 500, 2000, 6000), ("tab:blue", "tab:green", "tab:orange", "tab:red"), strict=True
+    ):
+        k = int(np.argmin(np.abs(env.cfs - f)))
+        db = env.db[:, k, 0]
+        axes[1, 0].plot(env.t, db - db.max(), color=color, lw=0.8, label=f"{env.cfs[k]:.0f} Hz")
+    axes[1, 0].set(
+        ylim=(-70, 3), xlabel="Time [s]", ylabel="Band envelope [dB]", title="The IR's decay in four bands"
+    )
+    axes[1, 0].legend(fontsize=8, loc="upper right")
+    axes[1, 0].grid(ls=":")
+    # measured RT60 profile vs the ecological one
+    cfs, rt = so.measure_rt60(tail)
+    eco = so.band_rt60s(1.0, cfs, "ecological")
+    axes[1, 1].semilogx(cfs, eco, color="k", lw=1.2, ls="--", label="natural rooms (RT60 = 1 s)")
+    profile = (kw or {}).get("rt60_profile")
+    if profile:
+        # requested profile, computed over synth_ir's own bands (which run to 16 kHz)
+        synth_cfs = so.ERBFilterbank(32, 20, min(16000, 0.95 * FS / 2)).cfs
+        requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile))
+        axes[1, 1].semilogx(cfs, requested, color="tab:purple", lw=1, ls=":", label=f"requested ({profile})")
+    if not kw or "decay_shape" not in kw:
+        axes[1, 1].semilogx(cfs, rt, color="tab:purple", lw=1.2, marker=".", label="this IR (measured)")
+    else:
+        axes[1, 1].text(
+            0.03,
+            0.06,
+            "decay isn't exponential, so an RT60\nisn't meaningful for this IR",
+            transform=axes[1, 1].transAxes,
+            fontsize=8,
+        )
+    axes[1, 1].set(
+        xlabel="Frequency [Hz]", ylabel="RT60 [s]", title="Decay time by frequency", ylim=(0, None)
+    )
+    axes[1, 1].legend(fontsize=8, loc="upper right")
+    axes[1, 1].grid(ls=":", which="both")
+    return fig, time_axes
+
+
+pistol = starter_pistol()
+
+# %% [markdown]
+# ## Natural rooms
+
+# %% [about]
+# The source for the room examples: a sharp, broadband crack lasting a fraction of a
+# millisecond. Its cochleagram shows the filterbank's own response to a click: the filters are
+# zero-phase, so they ring symmetrically before and after it (visible at this 60 dB range),
+# whereas a real cochlea rings only afterwards.
+
+# %% [demo 16] Starter pistol, dry
+sound = finish(pistol)
+fig, playhead = show(sound, None)
+
+# %% [about]
+# A synthetic room with RT60 = 1 s whose decay follows the statistics of 271 real rooms:
+# exponential, with mid frequencies ringing longest. Listeners can't tell such IRs from real
+# ones.
+
+# %% [demo 17] In a natural room
+ir = room()
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir)
+
+# %% [about]
+# The sentence from [Seeing speech](speech.html), resampled to 44.1 kHz, in the same room. The
+# reverberation fills the gaps between words and smears each syllable into the next.
+
+# %% [demo r1] A sentence in the same room
+sentence = so.load("docs/speech/bdl_arctic_a0131.flac").resample(FS)
+sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir)
+
+# %% [markdown]
+# ## Rooms that break the rules
+#
+# Synthetic rooms that break the regularities of real ones sound wrong (Traer & McDermott,
+# 2016). Each room below changes one thing about the natural room above. Where the decay is no
+# longer exponential, an RT60 no longer describes it, so the last panel shows only what natural
+# rooms would do.
+
+# %% [about]
+# The same decay run backwards: the reverberation swells up to the shot instead of dying away
+# after it.
+
+# %% [demo 18] Time-reversed decay
+kw = {"decay_shape": "time_reversed"}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# Starts at the natural level but falls linearly (in amplitude) rather than exponentially, with
+# the same energy per band; it has to end early to do so.
+
+# %% [demo 19] Linear decay, matched start
+kw = {"decay_shape": "linear_matched_start"}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# Linear decay that reaches zero where the natural decay is 60 dB down, again with the same
+# energy per band. On a dB scale the decay bows outward instead of falling in a straight line.
+
+# %% [demo 20] Linear decay, matched end
+kw = {"decay_shape": "linear_matched_end"}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# Exponential, but low and high frequencies ring longest and the middle dies fastest, the
+# reverse of real rooms. In the paper listeners often heard a separate high-frequency hiss
+# rather than a room.
+
+# %% [demo 21] Inverted frequency dependence
+kw = {"rt60_profile": "inverted"}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# The profile of a room twice as reverberant, scaled down: more sharply peaked than real rooms
+# of this size. The subtlest variant; in the paper it was detected with impulses but not with
+# speech.
+
+# %% [demo 22] Exaggerated frequency dependence
+kw = {"rt60_profile": "exaggerated"}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# The profile of a room half as reverberant, scaled up: flatter than real rooms of this size.
+# Also subtle.
+
+# %% [demo 23] Reduced frequency dependence
+kw = {"rt60_profile": "reduced"}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [markdown]
+# ## References
+#
+# - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
+#   Workshop*, 223–224. The sentence.
+# - Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of
+#   sound and space. *Proc. Natl. Acad. Sci. USA* 113(48), E7856–E7865.
+#   [doi:10.1073/pnas.1612524113](https://doi.org/10.1073/pnas.1612524113)

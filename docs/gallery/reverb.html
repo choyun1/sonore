@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Synthetic reverberation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
+  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+audio { width: 100%; max-width: 19rem; display: block; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html">Cepstral analysis</a><a href="reverb.html" aria-current="page">Synthetic reverberation</a></nav>
+<header>
+  <h1>Synthetic reverberation</h1>
+<p>A room's reverberation is its impulse response (IR): what a microphone records after a single
+click. Convolve any dry sound with it and the sound is in that room. Traer &amp; McDermott (2016)
+measured the IRs of 271 real rooms and found them tightly constrained, and <code>so.synth_ir</code> builds
+new ones from their statistics.</p>
+<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a spoken sentence in a synthetic room that listeners can't tell from a real one.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which listeners hear as wrong.</li></ul>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-how-a-room-is-synthesized">
+<h2 id="h-how-a-room-is-synthesized">How a room is synthesized</h2>
+<p>In real rooms the reverberant tail is close to Gaussian noise whose level, in each frequency
+band, falls exponentially: a straight line in dB. How fast it falls is the band's RT60, the
+time it takes to drop 60 dB. In real rooms mid frequencies ring longest, and both low and high
+frequencies die away faster. <code>so.synth_ir</code> splits Gaussian
+noise into ERB-spaced bands, multiplies each band by its decay, and sums the bands back. Its
+parameters:</p>
+<ul><li><code>rt60</code>, the broadband reverberation time in seconds, the median over bands. The time each band takes to decay, and its level at the start, follow the paper's regressions on the 271 rooms, scaled to this value.</li><li><code>drr_db</code>, the direct-to-reverberant ratio: the energy of the direct sound, a unit impulse at time zero, over that of the tail. Without it, only the tail is returned.</li><li><code>n_channels</code>, independent tails per channel, for example 2 for a decorrelated binaural tail.</li><li><code>decay_shape</code>, <code>rt60_profile</code> and <code>drr_profile</code>, which leave the regularities of real rooms behind: they make the paper's atypical rooms, heard below.</li></ul>
+<p><code>so.band_rt60s</code> gives the RT60s of each band for a broadband RT60, and <code>so.measure_rt60</code>
+measures them from an IR by fitting a line to each band's energy decay curve.</p>
+<p>Every room below has the same median RT60 (1 s) and direct-to-reverberant ratio (−3 dB), and
+the same seed, so they share their noise. Unlike the paper, they are not further equated for
+distortion, so some differences in loudness and length remain. They are presented diotically,
+as in the paper.</p>
+<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import butter, sosfilt
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+FS = 44100
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+def starter_pistol():
+    &quot;&quot;&quot;A sharp broadband crack: a shock-like pulse (0.15 ms exponential), highpassed.
+    Its spectrum is smooth; a short burst of noise would have random deep notches.&quot;&quot;&quot;
+    t = np.arange(int(0.03 * FS)) / FS
+    x = sosfilt(butter(2, 300, &quot;highpass&quot;, fs=FS, output=&quot;sos&quot;), np.exp(-t / 0.15e-3))
+    return so.Sound(x, FS).pad(before=0.05, after=0.05)
+
+
+def room(**kw):
+    &quot;&quot;&quot;A synthetic room: RT60 1 s, direct-to-reverberant ratio -3 dB, a fixed seed.&quot;&quot;&quot;
+    return so.synth_ir(1.0, FS, drr_db=-3, rng=5, **kw)
+
+
+def show(snd, ir, kw=None):
+    &quot;&quot;&quot;Waveform and cochleagram of the sound, then the IR&#x27;s decay by band and its RT60s.
+    Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout=&quot;constrained&quot;)
+    snd.plot(axes[0, 0], lw=0.4)
+    axes[0, 0].set_title(&quot;Waveform&quot;)
+    # no extra lowpass: resampling to 1 kHz is already band-limited, and a
+    # lowpass would ring visibly around the sharp onset of the shot
+    so.subbands(snd, 30, 50, 8000).envelopes(fs=1000).plot(axes[0, 1], colorbar=False, db_range=60)
+    axes[0, 1].set_title(&quot;Cochleagram (60 dB range)&quot;)
+    time_axes = [axes[0, 0], axes[0, 1]]
+    if ir is None:
+        for ax in axes[1]:
+            ax.axis(&quot;off&quot;)
+        axes[1, 0].text(0.0, 0.5, &quot;No room: the dry source.&quot;, transform=axes[1, 0].transAxes, fontsize=11)
+        return fig, time_axes
+    # band decays of the impulse response itself (dB), a few bands
+    tail = so.Sound(ir.data[1:], ir.fs)
+    env = so.subbands(tail, 30, 50, 8000).envelopes(lowpass=30, fs=1000)
+    for f, color in zip(
+        (125, 500, 2000, 6000), (&quot;tab:blue&quot;, &quot;tab:green&quot;, &quot;tab:orange&quot;, &quot;tab:red&quot;), strict=True
+    ):
+        k = int(np.argmin(np.abs(env.cfs - f)))
+        db = env.db[:, k, 0]
+        axes[1, 0].plot(env.t, db - db.max(), color=color, lw=0.8, label=f&quot;{env.cfs[k]:.0f} Hz&quot;)
+    axes[1, 0].set(
+        ylim=(-70, 3), xlabel=&quot;Time [s]&quot;, ylabel=&quot;Band envelope [dB]&quot;, title=&quot;The IR&#x27;s decay in four bands&quot;
+    )
+    axes[1, 0].legend(fontsize=8, loc=&quot;upper right&quot;)
+    axes[1, 0].grid(ls=&quot;:&quot;)
+    # measured RT60 profile vs the ecological one
+    cfs, rt = so.measure_rt60(tail)
+    eco = so.band_rt60s(1.0, cfs, &quot;ecological&quot;)
+    axes[1, 1].semilogx(cfs, eco, color=&quot;k&quot;, lw=1.2, ls=&quot;--&quot;, label=&quot;natural rooms (RT60 = 1 s)&quot;)
+    profile = (kw or {}).get(&quot;rt60_profile&quot;)
+    if profile:
+        # requested profile, computed over synth_ir&#x27;s own bands (which run to 16 kHz)
+        synth_cfs = so.ERBFilterbank(32, 20, min(16000, 0.95 * FS / 2)).cfs
+        requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile))
+        axes[1, 1].semilogx(cfs, requested, color=&quot;tab:purple&quot;, lw=1, ls=&quot;:&quot;, label=f&quot;requested ({profile})&quot;)
+    if not kw or &quot;decay_shape&quot; not in kw:
+        axes[1, 1].semilogx(cfs, rt, color=&quot;tab:purple&quot;, lw=1.2, marker=&quot;.&quot;, label=&quot;this IR (measured)&quot;)
+    else:
+        axes[1, 1].text(
+            0.03,
+            0.06,
+            &quot;decay isn&#x27;t exponential, so an RT60\nisn&#x27;t meaningful for this IR&quot;,
+            transform=axes[1, 1].transAxes,
+            fontsize=8,
+        )
+    axes[1, 1].set(
+        xlabel=&quot;Frequency [Hz]&quot;, ylabel=&quot;RT60 [s]&quot;, title=&quot;Decay time by frequency&quot;, ylim=(0, None)
+    )
+    axes[1, 1].legend(fontsize=8, loc=&quot;upper right&quot;)
+    axes[1, 1].grid(ls=&quot;:&quot;, which=&quot;both&quot;)
+    return fig, time_axes
+
+
+pistol = starter_pistol()</code></pre></div>
+</section>
+<section aria-labelledby="h-natural-rooms">
+<h2 id="h-natural-rooms">Natural rooms</h2>
+
+<article class="sound" id="d-16" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.47558189964157704, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.13}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.47558189964157704, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 0.1295}]">
+  <div class="about">
+    <h3>Starter pistol, dry</h3>
+    <div class="desc"><p>The source for the room examples: a sharp, broadband crack lasting a fraction of a
+millisecond. Its cochleagram shows the filterbank's own response to a click: the filters are
+zero-phase, so they ring symmetrically before and after it (visible at this 60 dB range),
+whereas a real cochlea rings only afterwards.</p></div>
+    <audio controls preload="metadata" src="audio/16_starter_pistol_dry.flac"></audio>
+    <p class="file">16_starter_pistol_dry.flac, 0.1 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/16_starter_pistol_dry.png" width="1000" height="620" alt="Plots of the starter pistol, dry sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(pistol)
+fig, playhead = show(sound, None)</code></pre></details>
+</article>
+
+<article class="sound" id="d-17" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+  <div class="about">
+    <h3>In a natural room</h3>
+    <div class="desc"><p>A synthetic room with RT60 = 1 s whose decay follows the statistics of 271 real rooms:
+exponential, with mid frequencies ringing longest. Listeners can't tell such IRs from real
+ones.</p></div>
+    <audio controls preload="metadata" src="audio/17_in_a_natural_room.flac"></audio>
+    <p class="file">17_in_a_natural_room.flac, 1.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/17_in_a_natural_room.png" width="1000" height="620" alt="Plots of the in a natural room sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">ir = room()
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir)</code></pre></details>
+</article>
+
+<article class="sound" id="d-r1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+  <div class="about">
+    <h3>A sentence in the same room</h3>
+    <div class="desc"><p>The sentence from <a href="speech.html">Seeing speech</a>, resampled to 44.1 kHz, in the same room. The
+reverberation fills the gaps between words and smears each syllable into the next.</p></div>
+    <audio controls preload="metadata" src="audio/r1_a_sentence_in_the_same_room.flac"></audio>
+    <p class="file">r1_a_sentence_in_the_same_room.flac, 3.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r1_a_sentence_in_the_same_room.png" width="1000" height="620" alt="Plots of the a sentence in the same room sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sentence = so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;).resample(FS)
+sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-rooms-that-break-the-rules">
+<h2 id="h-rooms-that-break-the-rules">Rooms that break the rules</h2>
+<p>Synthetic rooms that break the regularities of real ones sound wrong (Traer &amp; McDermott,
+2016). Each room below changes one thing about the natural room above. Where the decay is no
+longer exponential, an RT60 no longer describes it, so the last panel shows only what natural
+rooms would do.</p>
+
+<article class="sound" id="d-18" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+  <div class="about">
+    <h3>Time-reversed decay</h3>
+    <div class="desc"><p>The same decay run backwards: the reverberation swells up to the shot instead of dying away
+after it.</p></div>
+    <audio controls preload="metadata" src="audio/18_time-reversed_decay.flac"></audio>
+    <p class="file">18_time-reversed_decay.flac, 1.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/18_time-reversed_decay.png" width="1000" height="620" alt="Plots of the time-reversed decay sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;time_reversed&quot;}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-19" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 0.3975}]">
+  <div class="about">
+    <h3>Linear decay, matched start</h3>
+    <div class="desc"><p>Starts at the natural level but falls linearly (in amplitude) rather than exponentially, with
+the same energy per band; it has to end early to do so.</p></div>
+    <audio controls preload="metadata" src="audio/19_linear_decay_matched_start.flac"></audio>
+    <p class="file">19_linear_decay_matched_start.flac, 0.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/19_linear_decay_matched_start.png" width="1000" height="620" alt="Plots of the linear decay, matched start sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;linear_matched_start&quot;}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-20" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+  <div class="about">
+    <h3>Linear decay, matched end</h3>
+    <div class="desc"><p>Linear decay that reaches zero where the natural decay is 60 dB down, again with the same
+energy per band. On a dB scale the decay bows outward instead of falling in a straight line.</p></div>
+    <audio controls preload="metadata" src="audio/20_linear_decay_matched_end.flac"></audio>
+    <p class="file">20_linear_decay_matched_end.flac, 1.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/20_linear_decay_matched_end.png" width="1000" height="620" alt="Plots of the linear decay, matched end sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;linear_matched_end&quot;}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-21" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+  <div class="about">
+    <h3>Inverted frequency dependence</h3>
+    <div class="desc"><p>Exponential, but low and high frequencies ring longest and the middle dies fastest, the
+reverse of real rooms. In the paper listeners often heard a separate high-frequency hiss
+rather than a room.</p></div>
+    <audio controls preload="metadata" src="audio/21_inverted_frequency_dependence.flac"></audio>
+    <p class="file">21_inverted_frequency_dependence.flac, 1.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/21_inverted_frequency_dependence.png" width="1000" height="620" alt="Plots of the inverted frequency dependence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;inverted&quot;}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-22" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.494516764463766, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}, {&quot;x0&quot;: 0.5641360133140114, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.4685}]">
+  <div class="about">
+    <h3>Exaggerated frequency dependence</h3>
+    <div class="desc"><p>The profile of a room twice as reverberant, scaled down: more sharply peaked than real rooms
+of this size. The subtlest variant; in the paper it was detected with impulses but not with
+speech.</p></div>
+    <audio controls preload="metadata" src="audio/22_exaggerated_frequency_dependence.flac"></audio>
+    <p class="file">22_exaggerated_frequency_dependence.flac, 1.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/22_exaggerated_frequency_dependence.png" width="1000" height="620" alt="Plots of the exaggerated frequency dependence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;exaggerated&quot;}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-23" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49490035886066647, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}, {&quot;x0&quot;: 0.5637524189171116, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.2794999999999999}]">
+  <div class="about">
+    <h3>Reduced frequency dependence</h3>
+    <div class="desc"><p>The profile of a room half as reverberant, scaled up: flatter than real rooms of this size.
+Also subtle.</p></div>
+    <audio controls preload="metadata" src="audio/23_reduced_frequency_dependence.flac"></audio>
+    <p class="file">23_reduced_frequency_dependence.flac, 1.3 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/23_reduced_frequency_dependence.png" width="1000" height="620" alt="Plots of the reduced frequency dependence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;reduced&quot;}
+ir = room(**kw)
+sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. The sentence.</li><li>Traer &amp; McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. <em>Proc. Natl. Acad. Sci. USA</em> 113(48), E7856–E7865. <a href="https://doi.org/10.1073/pnas.1612524113">doi:10.1073/pnas.1612524113</a></li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/reverb.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/reverb.py</code>, or a cell at a time.</footer>
+</main>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const canvas = el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
+  });
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, time) => {
+      if (!src.t) return src.az[0];
+      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    };
+    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
+        const lo = Math.min(...src.az), hi = Math.max(...src.az);
+        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  function draw(item) {
+    drawScene(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

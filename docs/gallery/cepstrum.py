@@ -26,8 +26,17 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # The two parts of the voice that were tangled in the spectrum come apart, and can be measured
 # or edited separately.
 #
-# This page applies `so.Cepstrum` to the sentence from [Seeing speech](speech.html), and ends by
-# comparing it with reference implementations.
+# This page applies `so.Cepstrum` to the sentence from [Seeing speech](speech.html):
+#
+# - [One frame](#h-one-frame): a log spectrum, its cepstrum, and the envelope a lifter recovers.
+# - [Pitch from the cepstrum](#h-pitch-from-the-cepstrum): the cepstrogram, and the pitch read off
+#   its peaks.
+# - [Splitting the voice in two](#h-splitting-the-voice-in-two): the vocal tract and the source,
+#   heard separately.
+# - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
+#   and Praat.
+# - [What this page leaves out](#h-what-this-page-leaves-out): tracking, better envelopes, and the
+#   complex cepstrum.
 
 # %% [markdown]
 # ## The sentence, and code the examples share

@@ -21,7 +21,15 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # standard way to let a listener with normal hearing hear roughly what an implant passes on.
 #
 # Everything on this page is one function, `so.noise_vocode`, applied to the sentence from
-# [Seeing speech](speech.html) and to a short melody.
+# [Seeing speech](speech.html) and to a short melody:
+#
+# - [How many bands](#h-how-many-bands): from a coarse picture of the spectrum to a fine one.
+# - [Noise or tones](#h-noise-or-tones): what carries the envelopes.
+# - [Pitch from the envelope](#h-pitch-from-the-envelope): the weak temporal pitch cue an implant
+#   leaves.
+# - [A melody](#h-a-melody): music, which cannot do without pitch.
+# - [What this simulation leaves out](#h-what-this-simulation-leaves-out): current spread,
+#   insertion depth, and the rest.
 
 # %% [markdown]
 # ## Motivation
