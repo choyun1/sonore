@@ -1,7 +1,7 @@
 # Design philosophy
 
 The principles behind sonore's design, in plain words. The design documents
-in this folder (`frames.md`, `frames-step2.md`) give the derivations and the
+in this folder (`frames.md`, one section per step) give the derivations and the
 numbered claims and decisions behind them; the code and its docstrings are
 meant to be readable without them.
 

@@ -5,7 +5,7 @@ non-frame behaviour; the last checks every frame against the dense-matrix
 oracle in tests/helpers.py (bounds as eigenvalues, masked coefficients vs.
 canonical least squares, the documented exception for padded non-tight
 filterbanks, and the adjoint as the weighted transpose). Step 2
-(docs/design/frames-step2.md) adds the Nyquist rule, ``Frame.adjoint`` and
+(docs/design/frames.md, step 2) adds the Nyquist rule, ``Frame.adjoint`` and
 ``TVGaborFrame``.
 """
 
@@ -137,7 +137,7 @@ GABORS = {
 
 
 def _scipy_frame_power(frame, n):
-    """s(t) from SciPy's own frame range p_min..p_max (tools/check_frame_claims.py)."""
+    """s(t) from SciPy's own frame range p_min..p_max (tools/check_frames_step1_claims.py)."""
     sft, w = frame.sft(FS), frame.window_samples(FS)
     s = np.zeros(n)
     for q in range(sft.p_min, sft.p_max(n)):

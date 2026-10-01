@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/frames.md.
+"""Numerical checks for the claims in docs/design/frames.md, step 1 (C1-C7).
 
 Deliberately independent of sonore: only NumPy and SciPy, with every operator
 built as an explicit dense matrix on a small signal length, so the checks
@@ -6,7 +6,7 @@ don't share code (or bugs) with the implementation they will later test.
 Each check prints the claim number from the design doc and the number that
 supports it. Runs in a few seconds.
 
-    python tools/check_frame_claims.py
+    python tools/check_frames_step1_claims.py
 """
 
 import numpy as np

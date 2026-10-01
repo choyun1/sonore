@@ -1,6 +1,6 @@
-"""Numerical checks for the claims in docs/design/frames-step2.md (C8-C13).
+"""Numerical checks for the claims in docs/design/frames.md, step 2 (C8-C14).
 
-Like tools/check_frame_claims.py, this is deliberately independent of sonore:
+Like tools/check_frames_step1_claims.py, this is deliberately independent of sonore:
 only NumPy and SciPy, with filter responses written out from their formulas
 and operators built as explicit dense matrices on small signals, so the
 checks share no code with the implementation they will later test. Each line
