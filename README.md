@@ -14,7 +14,7 @@ texture synthesis. Levels are written as levels (`snd + 6*dB`), times as
 seconds (`snd[0.1:0.5]`), and any sound at the end of a notebook cell plays.
 
 It brings the sounds and representations of hearing research together in
-one coherent system, held to a standard most audio code is not: every
+one coherent system, held to the following standard: every
 transform inverts exactly, the mathematics in its design documents is
 checked by independent scripts, and every example in the gallery can be
 heard beside the code that made it. It is built to learn from and to build on.
