@@ -34,6 +34,7 @@ header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted);
 nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
 nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.repo { margin-left: auto; }
 a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
 h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
@@ -79,7 +80,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html" aria-current="page">Cepstral analysis</a><a href="modspectrogram.html">Modulation spectrogram</a><a href="resynthesis.html">Analysis and resynthesis</a><a href="pv.html">Phase vocoder</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="classic.html">Classic stimuli</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="reverb.html">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html" aria-current="page">Cepstral analysis</a><a href="modspectrogram.html">Modulation spectrogram</a><a href="resynthesis.html">Analysis and resynthesis</a><a href="pv.html">Phase vocoder</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="classic.html">Classic stimuli</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="reverb.html">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a><a class="repo" href="https://github.com/choyun1/sonore">sonore on GitHub</a></nav>
 <header>
   <h1>Cepstral analysis</h1>
 <p>A voiced sound is, to a first approximation, a train of glottal pulses filtered by the vocal

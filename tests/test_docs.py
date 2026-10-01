@@ -35,6 +35,14 @@ def test_gallery_pages_link_existing_media():
             assert (GALLERY / src).exists(), f"{page} links to missing {src}"
 
 
+def test_gallery_link_targets_are_whole():
+    """A URL with parentheses in it (many DOIs) must not be cut at its first ")"."""
+    for page in PAGES:
+        html = (GALLERY / page).read_text()
+        for href in re.findall(r'href="([^"]+)"', html):
+            assert href.count("(") == href.count(")"), f"{page} links to a cut-off URL {href}"
+
+
 def test_gallery_playhead_regions_do_not_overlap():
     """Each time axis gets its own playhead; overlapping regions mean the
     positions were computed in the wrong coordinates (e.g. subfigure-relative)."""
