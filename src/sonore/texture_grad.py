@@ -106,9 +106,12 @@ def env_moments(s: np.ndarray, ctx: ChannelContext):
     val = np.array([mu, m2 / mu**2, m3 / m2**1.5, m4 / m2**2])
 
     def vjp(g):
+        # Gradient w.r.t. s of g @ [mean, var/mean**2, skew, kurtosis].
         # Derivatives of the central moments (the w @ d**(p-1) terms use w @ d = 0):
         #   dm2 = 2 w d,  dm3 = 3 w d^2 - 3 m2 w,  dm4 = 4 w d^3 - 4 m3 w.
-        # Collected as coefficients of w, w*d, w*d^2, w*d^3 to avoid n-length temporaries.
+        # Collected as coefficients of w, w*d, w*d^2, w*d^3 to avoid n-length temporaries:
+        # c_var, c_skew, c_kurt are g scaled by each statistic's normalizer, c_dm2 the
+        # coefficient of dm2 (and so of 2 w d), c_w the coefficient of w.
         c_var = g[1] / mu**2
         c_skew = g[2] / m2**1.5
         c_kurt = g[3] / m2**2
@@ -125,8 +128,9 @@ def mod_power(s: np.ndarray, ctx: ChannelContext):
     val, core_vjp = mod_power_core(ctx.mod_filter(s), d, ctx.w)
 
     def vjp(g):
-        G, direct = core_vjp(g)
-        return ctx.mod_adjoint(G) + direct
+        # Gradient w.r.t. s: back through the modulation filters, plus the variance term.
+        g_filtered, direct = core_vjp(g)
+        return ctx.mod_adjoint(g_filtered) + direct
 
     return val, vjp
 
@@ -140,6 +144,7 @@ def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray):
     val = (w @ B**2) / m2
 
     def vjp(g):
+        # Gradients w.r.t. B and (through the variance m2) directly w.r.t. s.
         return 2 * w[:, None] * B * g[None, :] / m2, -(g @ val) / m2 * (2 * w * d)
 
     return val, vjp
@@ -150,14 +155,15 @@ def env_corr(s: np.ndarray, others: np.ndarray, ctx: ChannelContext):
     envelopes of other channels)."""
     w = ctx.w
     _, d = _central(s, w)
-    U = others - (w @ others)[None, :]
-    m2, mu2 = w @ d**2, w @ U**2
-    den = np.sqrt(m2 * mu2)
-    val = (w @ (d[:, None] * U)) / den
+    others_c = others - (w @ others)[None, :]  # centered
+    m2, var_others = w @ d**2, w @ others_c**2
+    norm = np.sqrt(m2 * var_others)  # product of standard deviations
+    val = (w @ (d[:, None] * others_c)) / norm
 
     def vjp(g):
-        # w @ U = 0, so the mean-subtraction term in d's derivative vanishes
-        return w * (U @ (g / den)) - (g @ val) / m2 * (w * d)
+        # Gradient w.r.t. s. w @ others_c = 0, so the mean-subtraction term in
+        # d's derivative vanishes.
+        return w * (others_c @ (g / norm)) - (g @ val) / m2 * (w * d)
 
     return val, vjp
 
@@ -170,8 +176,9 @@ def c1(s: np.ndarray, others: np.ndarray, ctx: ChannelContext, bands=None):
     val, core_vjp = c1_core(ctx.analytic(s, bands).real, ctx.analytic_many(others, bands).real, ctx.w)
 
     def vjp(g):
-        gR = core_vjp(g)
-        return ctx.analytic_adjoint(gR, np.zeros_like(gR), bands)
+        # Gradient w.r.t. s: back through the real part of the analytic bands.
+        g_bands = core_vjp(g)
+        return ctx.analytic_adjoint(g_bands, np.zeros_like(g_bands), bands)
 
     return val, vjp
 
@@ -179,13 +186,14 @@ def c1(s: np.ndarray, others: np.ndarray, ctx: ChannelContext, bands=None):
 def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray):
     """:func:`c1` from the octave bands of ``s`` (``R``, ``(n, K)``) and of the
     neighbors (``Ro``, ``(n, K, k)``). ``vjp(g)`` returns the cotangent of ``R``."""
-    ps = w @ R**2  # (K,)
-    po = np.einsum("t,tkj->kj", w, Ro**2)
-    den = np.sqrt(ps[:, None] * po)
-    val = np.einsum("t,tk,tkj->kj", w, R, Ro) / den
+    pow_s = w @ R**2  # (K,) weighted power of each band of s
+    pow_o = np.einsum("t,tkj->kj", w, Ro**2)  # (K, k) same for the neighbors
+    norm = np.sqrt(pow_s[:, None] * pow_o)
+    val = np.einsum("t,tk,tkj->kj", w, R, Ro) / norm
 
     def vjp(g):
-        return w[:, None] * (np.einsum("tkj,kj->tk", Ro, g / den) - R * ((g * val).sum(1) / ps)[None, :])
+        # Gradient w.r.t. R (the neighbors Ro are fixed).
+        return w[:, None] * (np.einsum("tkj,kj->tk", Ro, g / norm) - R * ((g * val).sum(1) / pow_s)[None, :])
 
     return val, vjp
 
@@ -198,6 +206,7 @@ def c2(s: np.ndarray, ctx: ChannelContext):
     val, core_vjp = c2_core(ctx.analytic(s, range(K)), ctx.w)
 
     def vjp(g):
+        # Gradient w.r.t. s: back through the real and imaginary analytic bands.
         g_re, g_im = core_vjp(g)
         return ctx.analytic_adjoint(g_re, g_im, range(K))
 
@@ -206,31 +215,42 @@ def c2(s: np.ndarray, ctx: ChannelContext):
 
 def c2_core(A: np.ndarray, w: np.ndarray):
     """:func:`c2` from all analytic octave bands ``A`` ``(n, K)``. ``vjp(g)``
-    returns the cotangents ``(g_re, g_im)`` of ``A.real`` and ``A.imag``."""
+    returns the cotangents ``(g_re, g_im)`` of ``A.real`` and ``A.imag``.
+
+    Each band pair is a lower band (bands ``0..K-2``) and the band above it."""
     K = A.shape[1]
-    x, y = A.real, A.imag
-    lo, hx, hy = slice(0, K - 1), x[:, 1:], y[:, 1:]
-    r = np.maximum(np.abs(A[:, lo]), 1e-300)
-    D = (x[:, lo] ** 2 - y[:, lo] ** 2) / r  # Re(a**2 / |a|)
-    sd, sh = np.sqrt(w @ D**2), np.sqrt(w @ hx**2)
-    P, Q = w @ (D * hx), w @ (D * hy)
-    cre, cim = P / (sd * sh), Q / (sd * sh)
+    re, im = A.real, A.imag
+    lower = slice(0, K - 1)
+    up_re, up_im = re[:, 1:], im[:, 1:]  # the upper band of each pair
+    mag = np.maximum(np.abs(A[:, lower]), 1e-300)  # |lower band|, floored
+    # Re(a**2 / |a|): the lower band at twice its frequency, same magnitude
+    doubled = (re[:, lower] ** 2 - im[:, lower] ** 2) / mag
+    rms_doubled, rms_up = np.sqrt(w @ doubled**2), np.sqrt(w @ up_re**2)
+    cross_re, cross_im = w @ (doubled * up_re), w @ (doubled * up_im)
+    corr_re, corr_im = cross_re / (rms_doubled * rms_up), cross_im / (rms_doubled * rms_up)
 
     def vjp(g):
+        # Gradients w.r.t. A.real and A.imag, via doubled, up_re and up_im.
         g = np.asarray(g, complex)
-        gr, gi = g.real, g.imag
-        ww = w[:, None]
-        gD = ww * (hx * gr + hy * gi) / (sd * sh) - ww * D * (gr * cre + gi * cim) / sd**2
-        ghx = ww * D * gr / (sd * sh) - ww * hx * (gr * cre + gi * cim) / sh**2
-        ghy = ww * D * gi / (sd * sh)
-        xl, yl = x[:, lo], y[:, lo]
-        gxl = gD * (2 * xl / r - D * xl / r**2)
-        gyl = gD * (-2 * yl / r - D * yl / r**2)
-        g_re, g_im = np.zeros_like(x), np.zeros_like(y)
-        g_re[:, lo] += gxl
-        g_im[:, lo] += gyl
-        g_re[:, 1:] += ghx
-        g_im[:, 1:] += ghy
+        g_corr_re, g_corr_im = g.real, g.imag
+        w_col = w[:, None]
+        g_doubled = (
+            w_col * (up_re * g_corr_re + up_im * g_corr_im) / (rms_doubled * rms_up)
+            - w_col * doubled * (g_corr_re * corr_re + g_corr_im * corr_im) / rms_doubled**2
+        )
+        g_up_re = (
+            w_col * doubled * g_corr_re / (rms_doubled * rms_up)
+            - w_col * up_re * (g_corr_re * corr_re + g_corr_im * corr_im) / rms_up**2
+        )
+        g_up_im = w_col * doubled * g_corr_im / (rms_doubled * rms_up)
+        lo_re, lo_im = re[:, lower], im[:, lower]
+        g_lo_re = g_doubled * (2 * lo_re / mag - doubled * lo_re / mag**2)
+        g_lo_im = g_doubled * (-2 * lo_im / mag - doubled * lo_im / mag**2)
+        g_re, g_im = np.zeros_like(re), np.zeros_like(im)
+        g_re[:, lower] += g_lo_re
+        g_im[:, lower] += g_lo_im
+        g_re[:, 1:] += g_up_re
+        g_im[:, 1:] += g_up_im
         return g_re, g_im
 
-    return cre + 1j * cim, vjp
+    return corr_re + 1j * corr_im, vjp
