@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Moving talkers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
+  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+audio { width: 100%; max-width: 19rem; display: block; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html" aria-current="page">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a></nav>
+<header>
+  <h1>Moving talkers</h1>
+<p>Three men talk at once, one straight ahead and one 40° to each side. Which one do you follow?
+If one of them moves, does that help? Cho &amp; Kidd (2022) asked this with stimuli like the ones
+on this page: one talker, the target, swings back and forth in azimuth while the other two
+stay still, and listeners report what the target said. The experiment's code, written with
+sonore's predecessor sigtools, is archived at <a href="https://github.com/choyun1/MSM">github.com/choyun1/MSM</a>.</p>
+<p>Every sound here is rendered through measured head-related impulse responses (HRIRs) of a
+KEMAR manikin at 1 m (Qu et al., 2009), so listen with headphones.</p>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-the-talkers-and-the-trajectories">
+<h2 id="h-the-talkers-and-the-trajectories">The talkers and the trajectories</h2>
+<p>The target is the sentence from <a href="speech.html">Seeing speech</a>; the two maskers are sentences by
+another man in the CMU ARCTIC corpus (sources in docs/speech/SOURCES.md). Each is scaled to the
+same RMS before rendering, as in the experiment.</p>
+<p>Azimuth is measured clockwise from straight ahead, so <span class="tex">+40°</span> is to the right. A talker at
+center azimuth <span class="tex">\theta_0</span> that oscillates with amplitude <span class="tex">A</span> at rate <span class="tex">f</span> follows</p>
+<div class="tex display">\theta(t) = \theta_0 + A \sin\!\big(2\pi (f t + \phi)\big),</div>
+<p>so it swings <span class="tex">A</span> to either side of <span class="tex">\theta_0</span>, <span class="tex">2A</span> from one end to the other. Here
+<span class="tex">f = 2</span> Hz, the rate in the experiment, and the start phase <span class="tex">\phi</span> decides whether it first
+moves right (<span class="tex">\phi = 0</span>) or left (<span class="tex">\phi = 1/2</span>).</p>
+<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+hrirs = so.load_hrirs()  # PKU-IOA KEMAR at 1 m; downloaded on first use
+print(hrirs)
+
+# Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
+files = [&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;]
+target, *maskers = so.normalize(so.pad([so.load(f&quot;docs/speech/{f}.flac&quot;) for f in files], align=&quot;center&quot;))
+fs, duration = target.fs, target.duration
+spoken = so.load(f&quot;docs/speech/{files[0]}.flac&quot;).duration
+TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
+CENTERS = (0.0, -40.0, 40.0)  # target ahead, maskers to the left and right [deg]
+RATE = 2.0  # oscillations per second
+
+
+def trajectory(center, amplitude=0.0, phase=0.0, points_per_second=200):
+    &quot;&quot;&quot;Azimuth over the whole sentence [deg], and the Cartesian points at 1 m that
+    so.move_sound passes through at a constant rate.&quot;&quot;&quot;
+    t = np.linspace(0, duration, int(points_per_second * duration))
+    azimuth = center + amplitude * np.sin(2 * np.pi * (RATE * t + phase))
+    return t, azimuth, np.column_stack(so.hcc_to_rect(100.0, 0.0 * azimuth, azimuth))
+
+
+def render(amplitude, phase=0.0, alone=False):
+    &quot;&quot;&quot;The target oscillating with ``amplitude`` [deg] about straight ahead, with
+    the maskers standing still unless ``alone``. Returns the mix and the azimuths.&quot;&quot;&quot;
+    t, az_target, points = trajectory(CENTERS[0], amplitude, phase)
+    parts = [so.move_sound(target, points, hrirs)]
+    azimuths = [az_target]
+    if not alone:
+        for snd, center in zip(maskers, CENTERS[1:], strict=True):
+            _, az, points = trajectory(center)
+            parts.append(so.move_sound(snd, points, hrirs))
+            azimuths.append(az)
+    return so.mix(parts), t, azimuths
+
+
+def show(mix, t, azimuths, title):
+    &quot;&quot;&quot;Azimuth of each talker, and the left and right ear signals, on one time axis.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 4.6), layout=&quot;constrained&quot;)
+    axes = fig.subplots(3, 1, sharex=True, height_ratios=[1, 0.6, 0.6])
+    labels = [&quot;target&quot;, &quot;masker, left&quot;, &quot;masker, right&quot;]
+    for az, label, color in zip(azimuths, labels, (&quot;tab:red&quot;, &quot;0.45&quot;, &quot;0.65&quot;), strict=False):
+        axes[0].plot(t, az, color=color, lw=1.5, label=label)
+    axes[0].axvspan(*TALKING, color=&quot;tab:red&quot;, alpha=0.08, lw=0, label=&quot;target talking&quot;)
+    axes[0].set(ylim=(-75, 75), yticks=[-60, -40, -20, 0, 20, 40, 60], ylabel=&quot;Azimuth [deg]&quot;, title=title)
+    axes[0].legend(loc=&quot;upper right&quot;, fontsize=8, ncols=4)
+    axes[0].grid(ls=&quot;:&quot;)
+    for ax, ch, name in zip(axes[1:], (0, 1), (&quot;Left&quot;, &quot;Right&quot;), strict=True):
+        ax.plot(mix.t, mix.data[:, ch], color=&quot;k&quot;, lw=0.3)
+        ax.set(ylabel=name, yticks=[])
+    for ax in axes:
+        ax.set_xlim(0, duration)
+    axes[-1].set_xlabel(&quot;Time [s]&quot;)
+    return fig, list(axes)</code></pre><pre class="out">HRIRSet(793 positions, 1024 taps, 65536 Hz)</pre></div>
+</section>
+<section aria-labelledby="h-one-talker--moving">
+<h2 id="h-one-talker--moving">One talker, moving</h2>
+<p>Alone, a talker swinging 30° to each side twice a second is easy to hear moving. The motion
+reaches the ears as interaural differences that change over time: the sound arrives earlier
+and louder at the ear it moves toward.</p>
+
+<article class="sound" id="d-m1" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05595317460317473, &quot;bottom&quot;: 0.43574307312334637, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5131917503720237, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+  <div class="about">
+    <h3>One talker, moving</h3>
+    <div class="desc"><p>The target alone, swinging 30° to either side of straight ahead at 2 Hz. Bottom: the interaural
+time difference measured from the rendered sound in 20 ms windows (where the ears are well
+correlated), which follows the azimuth.</p></div>
+    <audio controls preload="metadata" src="audio/m1_one_talker_moving.flac"></audio>
+    <p class="file">m1_one_talker_moving.flac, 4.8 s, stereo</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m1_one_talker_moving.png" width="1000" height="420" alt="Plots of the one talker, moving sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, t, azimuths = render(30.0, alone=True)
+cues = so.interaural_cues(mix, win_dur=20e-3)
+fig = plt.figure(figsize=(10, 4.2), layout=&quot;constrained&quot;)
+axes = fig.subplots(2, 1, sharex=True)
+axes[0].plot(t, azimuths[0], color=&quot;tab:red&quot;, lw=1.5)
+axes[0].set(ylim=(-45, 45), ylabel=&quot;Azimuth [deg]&quot;, title=&quot;Where the target is&quot;)
+clear = cues.iac &gt; 0.8  # frames where the two ears are well correlated
+axes[1].plot(cues.t[clear], 1e6 * cues.itd[clear], &quot;.&quot;, color=&quot;k&quot;, ms=2)
+axes[1].set(
+    ylim=(-500, 500), ylabel=&quot;ITD [µs]&quot;, title=&quot;Interaural time difference, measured (&gt; 0: right ear first)&quot;
+)
+for ax in axes:
+    ax.grid(ls=&quot;:&quot;)
+    ax.set_xlim(0, duration)
+axes[-1].set_xlabel(&quot;Time [s]&quot;)
+playhead = list(axes)
+sound = finish(mix)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-three-talkers">
+<h2 id="h-three-talkers">Three talkers</h2>
+<p>With all three talking, the target is hard to pick out when everyone stands still, since the
+voices are similar and they say similar things. Set the target moving and listen for whether
+it stands out from the others, and how far it has to move before it does.</p>
+
+<article class="sound" id="d-m2" data-regions="[{&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.051087681159420195, &quot;bottom&quot;: 0.4119194370676875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.4406044612222768, &quot;bottom&quot;: 0.6571035147672375, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6857885389218269, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+  <div class="about">
+    <h3>Three talkers, standing still</h3>
+    <div class="desc"><p>All three still: the target straight ahead, the maskers 40° to the left and right.</p></div>
+    <audio controls preload="metadata" src="audio/m2_three_talkers_standing_still.flac"></audio>
+    <p class="file">m2_three_talkers_standing_still.flac, 4.8 s, stereo</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m2_three_talkers_standing_still.png" width="1000" height="460" alt="Plots of the three talkers, standing still sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, t, azimuths = render(0.0)
+fig, playhead = show(mix, t, azimuths, &quot;Nobody moves&quot;)
+sound = finish(mix)</code></pre></details>
+</article>
+
+<article class="sound" id="d-m3" data-regions="[{&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.051087681159420195, &quot;bottom&quot;: 0.4119194370676875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.4406044612222768, &quot;bottom&quot;: 0.6571035147672375, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6857885389218269, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+  <div class="about">
+    <h3>The target swings 10 degrees</h3>
+    <div class="desc"><p>The target swings 10° to either side of straight ahead.</p></div>
+    <audio controls preload="metadata" src="audio/m3_the_target_swings_10_degrees.flac"></audio>
+    <p class="file">m3_the_target_swings_10_degrees.flac, 4.8 s, stereo</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m3_the_target_swings_10_degrees.png" width="1000" height="460" alt="Plots of the the target swings 10 degrees sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, t, azimuths = render(10.0)
+fig, playhead = show(mix, t, azimuths, &quot;The target swings 10° to either side&quot;)
+sound = finish(mix)</code></pre></details>
+</article>
+
+<article class="sound" id="d-m4" data-regions="[{&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.051087681159420195, &quot;bottom&quot;: 0.4119194370676875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.4406044612222768, &quot;bottom&quot;: 0.6571035147672375, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6857885389218269, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+  <div class="about">
+    <h3>The target swings 30 degrees</h3>
+    <div class="desc"><p>The target swings 30° to either side, three quarters of the way to the maskers, starting to
+the left this time.</p></div>
+    <audio controls preload="metadata" src="audio/m4_the_target_swings_30_degrees.flac"></audio>
+    <p class="file">m4_the_target_swings_30_degrees.flac, 4.8 s, stereo</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m4_the_target_swings_30_degrees.png" width="1000" height="460" alt="Plots of the the target swings 30 degrees sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, t, azimuths = render(30.0, phase=0.5)
+fig, playhead = show(mix, t, azimuths, &quot;The target swings 30° to either side&quot;)
+sound = finish(mix)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-how-the-motion-is-rendered">
+<h2 id="h-how-the-motion-is-rendered">How the motion is rendered</h2>
+<p><code>so.move_sound</code> spaces the trajectory's points evenly over the sound, here 200 a second. Each
+point gets a raised-cosine window centered on its moment, overlapping its neighbors so that the
+windows sum to one, and each windowed piece of the sound is convolved with the HRIR for that
+point. HRIRs between the measured directions are interpolated with their onsets aligned, and
+the onset delays interpolated separately, which avoids the comb filtering of averaging two
+responses that arrive at different times.</p>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Cho &amp; Kidd (2022). Auditory motion as a cue for source segregation. <em>J. Acoust. Soc. Am.</em> 152(3), 1684. <a href="https://pubs.aip.org/asa/jasa/article/152/3/1684/2839305">Article</a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. The sentences.</li><li>Qu, Xiao, Gong, Huang, Li &amp; Wu (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. <em>IEEE Trans. Audio, Speech, Lang. Process.</em> 17(6). The HRIRs.</li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/moving.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/moving.py</code>, or a cell at a time.</footer>
+</main>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines };
+  });
+  function draw(item) {
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

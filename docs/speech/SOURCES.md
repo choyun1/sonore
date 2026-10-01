@@ -1,13 +1,16 @@
 # Speech recordings
 
-The spoken sentence used by the "seeing speech" gallery section
-(docs/design/frames.md, step 3: decisions D12 and D13).
+The spoken sentences used by the gallery: the "seeing speech" sentence
+(docs/design/frames.md, step 3: decisions D12 and D13), which is also the
+target on the moving talkers page, and that page's two masker sentences.
 
 ## Sources
 
 | File | Recording | Speaker | Source | Licence | Original |
 |---|---|---|---|---|---|
 | `bdl_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `bdl` (US English, male) | CMU ARCTIC `bdl` database, file `arctic_a0131.wav`, downloaded by Cho from festvox.org/cmu_arctic (2026-10-01) | CMU ARCTIC licence (CMU, permissive; see below) | 2.53 s, 16 kHz, 16-bit, mono |
+| `rms_arctic_a0132.flac` | CMU ARCTIC utterance `arctic_a0132` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0132.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC licence (see below) | 2.81 s, 16 kHz, 16-bit, mono |
+| `rms_arctic_a0133.flac` | CMU ARCTIC utterance `arctic_a0133` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0133.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC licence (see below) | 4.82 s, 16 kHz, 16-bit, mono |
 
 Citation: Kominek, J. & Black, A. W. (2004). The CMU Arctic speech databases.
 *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224.
@@ -27,6 +30,12 @@ From the release's prompt list, `etc/txt.done.data`, line 131.
 
 ## Processing
 
+**The `rms` files.** Their release's notice, as supplied by Cho, is in
+[`COPYING_CMU_ARCTIC_rms`](COPYING_CMU_ARCTIC_rms), with Windows line endings
+converted to Unix ones. It is the same notice as the `bdl` one except for the
+copyright year (2004 rather than 2003). The prompt text of these two
+utterances has not been copied here.
+
 **Modifications** (marked as the licence requires):
 `bdl_arctic_a0131.flac` is the original `arctic_a0131.wav` re-encoded
 losslessly as FLAC. The samples are identical (checked sample for sample);
@@ -34,6 +43,9 @@ there is no trimming, resampling or level change, and the gallery keeps
 it at its native 16 kHz (D12).
 `bdl_arctic_a0131.pm` is the release's pitch-mark file for this utterance,
 unmodified.
+`rms_arctic_a0132.flac` and `rms_arctic_a0133.flac` are the original
+`.wav` files re-encoded losslessly as FLAC, identical sample for sample, with
+no trimming, resampling or level change.
 
 ## F0 track
 

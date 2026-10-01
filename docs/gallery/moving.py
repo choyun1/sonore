@@ -25,8 +25,8 @@ the PKU-IOA head-related impulse responses at 1 m (about 13 MB) the first time i
 # %% [markdown]
 # ## The talkers and the trajectories
 #
-# The target is the sentence from [Seeing speech](speech.html); the two maskers are other
-# sentences from the CMU ARCTIC corpus (sources in docs/speech/SOURCES.md). Each is scaled to the
+# The target is the sentence from [Seeing speech](speech.html); the two maskers are sentences by
+# another man in the CMU ARCTIC corpus (sources in docs/speech/SOURCES.md). Each is scaled to the
 # same RMS before rendering, as in the experiment.
 #
 # Azimuth is measured clockwise from straight ahead, so $+40°$ is to the right. A talker at
@@ -56,10 +56,12 @@ def finish(snd):
 hrirs = so.load_hrirs()  # PKU-IOA KEMAR at 1 m; downloaded on first use
 print(hrirs)
 
-# Three male talkers at 16 kHz, equal in RMS, padded to the longest.
+# Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
 files = ["bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133"]
-target, *maskers = so.normalize(so.pad([so.load(f"docs/speech/{f}.flac") for f in files]))
+target, *maskers = so.normalize(so.pad([so.load(f"docs/speech/{f}.flac") for f in files], align="center"))
 fs, duration = target.fs, target.duration
+spoken = so.load(f"docs/speech/{files[0]}.flac").duration
+TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
 CENTERS = (0.0, -40.0, 40.0)  # target ahead, maskers to the left and right [deg]
 RATE = 2.0  # oscillations per second
 
@@ -93,8 +95,9 @@ def show(mix, t, azimuths, title):
     labels = ["target", "masker, left", "masker, right"]
     for az, label, color in zip(azimuths, labels, ("tab:red", "0.45", "0.65"), strict=False):
         axes[0].plot(t, az, color=color, lw=1.5, label=label)
+    axes[0].axvspan(*TALKING, color="tab:red", alpha=0.08, lw=0, label="target talking")
     axes[0].set(ylim=(-75, 75), yticks=[-60, -40, -20, 0, 20, 40, 60], ylabel="Azimuth [deg]", title=title)
-    axes[0].legend(loc="upper right", fontsize=8, ncols=3)
+    axes[0].legend(loc="upper right", fontsize=8, ncols=4)
     axes[0].grid(ls=":")
     for ax, ch, name in zip(axes[1:], (0, 1), ("Left", "Right"), strict=True):
         ax.plot(mix.t, mix.data[:, ch], color="k", lw=0.3)
