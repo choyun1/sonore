@@ -2,6 +2,8 @@
 
 **Signals and stimuli for auditory research, built for Jupyter.**
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
+
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
 playable next to its plots, with a playhead that follows the sound.
 
@@ -523,3 +525,7 @@ open an issue.
 MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). If sonore is useful in your research, please cite
 it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff); the
 *Cite this repository* button in the GitHub sidebar gives the same citation in APA and BibTeX.
+
+Every release is archived on Zenodo. [10.5281/zenodo.23086165](https://doi.org/10.5281/zenodo.23086165)
+always points to the latest version; each version also has its own DOI, listed on that page
+(0.3.1 is [10.5281/zenodo.23086166](https://doi.org/10.5281/zenodo.23086166)). Cite the version you used.
