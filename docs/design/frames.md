@@ -621,7 +621,7 @@ coefficient inner product that `energy` uses (D2):
 
 It is checked against the transpose of the dense oracle. It is needed for
 any later union synthesis (D11), and it is the analysis operator's gradient,
-which optimization-based synthesis such as `texture_grad` can use.
+which optimization-based synthesis such as `texture.grad` can use.
 
 **D11. Unions deferred.** (Agreed.) Union synthesis, the adjoints summed and
 divided once by the summed s, matters only for editing several

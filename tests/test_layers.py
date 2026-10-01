@@ -19,13 +19,6 @@ PACKAGE = Path(__file__).resolve().parent.parent / "src" / "sonore"
 
 LAYERS = ["core", "signals", "analysis", "stimuli", "texture", "plotting"]
 
-# The flat modules not yet moved into their layer's subpackage.
-FLAT = {
-    "texture": "texture",
-    "texture_grad": "texture",
-    "texture_synth": "texture",
-}
-
 # (importer, imported) pairs allowed to point upward from inside a function.
 UPWARD_INSIDE_FUNCTIONS = {
     ("sound", "envelopes"),  # Sound.envelope()
@@ -45,8 +38,8 @@ def modules() -> dict[str, Path]:
 
 
 def layer(name: str) -> str:
-    head = name.split(".")[0]
-    return head if head in LAYERS else FLAT[head]
+    """``analysis.frames`` is in the analysis layer; ``plotting`` is its own."""
+    return name.split(".")[0]
 
 
 def internal_imports(path: Path, known: dict[str, Path]) -> list[tuple[str, bool]]:

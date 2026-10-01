@@ -20,7 +20,7 @@ import numpy as np
 
 import sonore as so
 from sonore.texture import PAPER_CLASSES, TextureStats
-from sonore.texture_synth import synthesize
+from sonore.texture.synth import synthesize
 
 HERE = Path(__file__).parent.parent / "docs" / "textures"
 OUT = HERE / "synth"

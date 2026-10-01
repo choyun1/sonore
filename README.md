@@ -232,7 +232,7 @@ statistics and synthesize a new sample from noise:
 
 ```python
 from sonore.texture import TextureStats
-from sonore.texture_synth import synthesize
+from sonore.texture.synth import synthesize
 
 stats = TextureStats.measure(so.load("applause.flac"))   # 1515 statistics
 new, report = synthesize(stats, duration=5, max_iter=30, progress=True)
@@ -285,7 +285,7 @@ sound from the gallery's demo list so the two can't drift apart.
 | `reverb` | `synth_ir` (natural rooms, or the paper's atypical `decay_shape` / `rt60_profile` / `drr_profile` variants), `band_rt60s`, `measure_rt60` |
 | `modulation` | `ConstantQModulationFilterbank`, `OctaveModulationFilterbank` (circular, analytic output optional) |
 | `texture` | `TextureModel`, `TextureStats` (`.measure`, `.snr`, `.replace` for hybrids, `.save`/`.load`) |
-| `texture_synth` | `synthesize` (full loop), `impose_channel`; gradients in `texture_grad` |
+| `texture.synth` | `synthesize` (full loop), `impose_channel`; gradients in `texture.grad` |
 | `plotting` | `overview` and the `plot_*` functions behind each object's `.plot()`; `plot_tf_db` draws any time-frequency level on non-uniform frames; cochleagrams take `align="peak"` (draw causal gammatone bands without their latency) and `fscale="linear"` (to match spectrograms) |
 
 ## Related projects
@@ -387,7 +387,7 @@ confirmed, otherwise to the publisher or another stable page.
 - Kowalski, Depireux & Shamma (1996). Analysis of dynamic spectra in ferret primary auditory cortex. I. *J. Neurophysiol.* 76. [doi:10.1152/jn.1996.76.5.3503](https://doi.org/10.1152/jn.1996.76.5.3503). [`ripples.Ripple`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py#L84)
 - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans. Speech Audio Process.* 7(3). [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/). [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L157)
 - McAulay & Quatieri (1986). Speech analysis/synthesis based on a sinusoidal representation. *IEEE TASSP* 34. [Internet Archive](https://archive.org/details/SpeechAnalysisSynthesisBasedOnASinusoidalRepresentation).
-- McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. *Neuron* 71. [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture.py) [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44) [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py)
+- McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. *Neuron* 71. [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44) [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py)
 - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. *Speech Communication* 67. [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003). [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L494)
 - Morise, Yokomori & Ozawa (2016). WORLD: A vocoder-based high-quality speech synthesis system for real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7). [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
 - Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). [doi:10.1016/B978-0-08-041847-6.50054-X](https://doi.org/10.1016/B978-0-08-041847-6.50054-X). [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L260)
@@ -410,9 +410,9 @@ numerically; "consulted" means the code was read for behavior but not copied.
 - [Sound Texture Synthesis Toolbox v1.7](https://mcdermottlab.mit.edu/downloads.html) (MATLAB), McDermott lab: the
   authors' implementation of McDermott & Simoncelli (2011). Consulted; sonore
   is a clean-room implementation from the paper, and every deliberate
-  difference is listed in `so.texture.DIFFERENCES_FROM_TOOLBOX`. [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture.py) [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44) [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py)
+  difference is listed in `so.texture.DIFFERENCES_FROM_TOOLBOX`. [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44) [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py)
 - [wil-j-wil/texture_stats](https://github.com/wil-j-wil/texture_stats) (Python, MIT): a port of the toolbox's
-  statistics. Cross-checked by `tools/crosscheck_texture_stats.py`. [`texture.TextureStats`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture.py#L181)
+  statistics. Cross-checked by `tools/crosscheck_texture_stats.py`. [`texture.TextureStats`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py#L181)
 - [mcdermottLab/pycochleagram](https://github.com/mcdermottLab/pycochleagram) (Python): the lab's port of the
   toolbox's cochleagram code, including the cosine filterbank. Not yet
   cross-checked. [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44)

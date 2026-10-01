@@ -17,7 +17,7 @@ import numpy as np  # noqa: E402
 
 import sonore as so  # noqa: E402
 from sonore.texture import TextureStats  # noqa: E402
-from sonore.texture_synth import synthesize  # noqa: E402
+from sonore.texture.synth import synthesize  # noqa: E402
 
 FS = 20000
 
