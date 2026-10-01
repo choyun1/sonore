@@ -114,7 +114,8 @@ def show(mix, t, azimuths, title):
 
 # %% [about]
 # The target alone, swinging 30° to either side of straight ahead at 2 Hz. Bottom: the interaural
-# time difference measured from the rendered sound in 20 ms windows, which follows the azimuth.
+# time difference measured from the rendered sound in 20 ms windows (where the ears are well
+# correlated), which follows the azimuth.
 
 # %% [demo m1] One talker, moving
 mix, t, azimuths = render(30.0, alone=True)
@@ -123,7 +124,8 @@ fig = plt.figure(figsize=(10, 4.2), layout="constrained")
 axes = fig.subplots(2, 1, sharex=True)
 axes[0].plot(t, azimuths[0], color="tab:red", lw=1.5)
 axes[0].set(ylim=(-45, 45), ylabel="Azimuth [deg]", title="Where the target is")
-axes[1].plot(cues.t, 1e6 * cues.itd, ".", color="k", ms=2)
+clear = cues.iac > 0.8  # frames where the two ears are well correlated
+axes[1].plot(cues.t[clear], 1e6 * cues.itd[clear], ".", color="k", ms=2)
 axes[1].set(
     ylim=(-500, 500), ylabel="ITD [µs]", title="Interaural time difference, measured (> 0: right ear first)"
 )
