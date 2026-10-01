@@ -316,5 +316,5 @@ fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
 #   periphery. *Neuron* 71.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
 #   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
-#   [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44)
+#   [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L45)
 #   [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py)

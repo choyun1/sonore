@@ -500,7 +500,10 @@ At fs = 16 kHz, N = 16000:
   starts at cf_hi. Both are zero-phase. They ring far less, at some cost in
   A/B.
 - "Ringing" is the same −60 dB measure as `Filterbank.ringing`. It sets the
-  `pad="auto"` length, so it costs memory and time, not accuracy.
+  minimum `pad="auto"` length, so it costs memory and time, not accuracy.
+  (`analyze` rounds that padding up so the FFT length has no prime factor
+  above 11: at most a few percent longer, and several times faster than a
+  length with a large prime factor.)
 
 **C12. Time-varying Gabor, painless case.** [proof, check] Windows w_q of
 lengths L_q at positions a_q, each zero-padded to one FFT length M with

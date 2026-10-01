@@ -509,11 +509,11 @@ for name, frame in frames.items():
 #   [`representations.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L356)
 # - Gabor (1946). Theory of communication. Part 1: The analysis of information. *J. IEE* 93(26).
 #   [doi:10.1049/ji-3-2.1946.0074](https://doi.org/10.1049/ji-3-2.1946.0074).
-#   [`frames.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L259)
+#   [`frames.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L269)
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
 #   Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
-#   [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L260)
+#   [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L261)
 # - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
 #   modification and synthesis framework. *Sādhanā* 36(5).
 #   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).

@@ -26,6 +26,7 @@ from scipy.signal import hilbert, resample
 
 from sonore.analysis.filterbank import ERBFilterbank
 from sonore.analysis.modulation import ConstantQModulationFilterbank, OctaveModulationFilterbank
+from sonore.core.fft import threads
 from sonore.core.sound import Sound
 
 __all__ = ["TextureModel", "TextureStats", "measurement_window", "STAT_CLASSES", "DIFFERENCES_FROM_TOOLBOX"]
@@ -138,8 +139,9 @@ class TextureModel:
         """Compressed, downsampled envelopes, shape ``(n // decimation, n_bands + 2)``:
         Hilbert magnitude, raised to :attr:`compression` at the full rate,
         resampled (FFT, circular) to :attr:`env_fs`, clipped at 0."""
-        env = np.abs(hilbert(subbands, axis=0)) ** self.compression
-        return np.maximum(resample(env, subbands.shape[0] // self.decimation, axis=0), 0.0)
+        with threads():
+            env = np.abs(hilbert(subbands, axis=0)) ** self.compression
+            return np.maximum(resample(env, subbands.shape[0] // self.decimation, axis=0), 0.0)
 
 
 def measurement_window(n: int, n_seconds: int) -> np.ndarray:

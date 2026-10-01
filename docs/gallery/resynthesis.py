@@ -149,7 +149,7 @@ fig, playhead = show_mask(sound, target, mask)
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). The
 #   half-cosine filterbank.
-#   [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44)
+#   [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L45)
 # - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In
 #   *Speech Separation by Humans and Machines*, 181–197. Springer.
 #   [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12).

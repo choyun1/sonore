@@ -378,7 +378,7 @@ def test_bounds_are_extreme_eigenvalues(name, pad):
         return
     # The bounds are those of the circular operator on the padded grid;
     # zero-padded signals are a subspace, so their spectrum lies inside.
-    p = frame.ringing(FS) if pad == "auto" else int(round(pad * FS))
+    p = frame._pad_samples(pad, FS, N)
     grid = np.linalg.eigvalsh(weighted_frame_operator(*dense_operator(frame, N + 2 * p, FS, 0)))
     assert np.allclose([grid[0], grid[-1]], [lo, hi], rtol=1e-10, atol=0)
     assert lo * (1 - 1e-10) <= eig[0] and eig[-1] <= hi * (1 + 1e-10)
@@ -482,7 +482,7 @@ def test_nyquist_rule_keeps_complex_banks_exact(n, pad):
     assert np.iscomplexobj(H) and np.all(H[-1].imag == 0) == (n % 2 == 0)
     assert np.allclose(fb.synthesize(fb.analyze(x, pad=pad)).data, x.data, rtol=0, atol=1e-12)
     err = np.abs(naive.synthesize(naive.analyze(x, pad=pad)).data - x.data).max()
-    if (n + 2 * fb._pad_samples(pad, FS)) % 2 == 0:
+    if (n + 2 * fb._pad_samples(pad, FS, n)) % 2 == 0:
         assert err > 1e-6  # the analysis applies Re H(fs/2) but the naive dual divides by |H(fs/2)|^2
     else:
         assert err < 1e-12  # odd grids have no Nyquist bin

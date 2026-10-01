@@ -248,7 +248,7 @@ sound = finish(whole)
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L494)
+#   [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L504)
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Harvest.
