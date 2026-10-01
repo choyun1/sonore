@@ -207,6 +207,26 @@ analysis = so.pv_analyze(snd)
 inharmonic = analysis.resynthesize(freq_map=lambda f: f + 70)
 ```
 
+**Seeing speech.** One sentence from CMU ARCTIC through several analyses on
+shared axes: wideband and narrowband spectrograms, Morlet and gammatone
+cochleagrams (the causal gammatone drawn with and without its latency), a
+pitch-adaptive frame whose windows are 3 periods long, a TANDEM-STRAIGHT-style
+power spectrum (Kawahara et al., 2011), and reassigned spectrograms (Auger &
+Flandrin, 1995). Every frame among them resynthesizes the sentence to about
+1e-15. [▶ classic](https://choyun1.github.io/sonore/gallery/#d-27) [▶ constant-Q](https://choyun1.github.io/sonore/gallery/#d-28) [▶ pitch](https://choyun1.github.io/sonore/gallery/#d-29) [▶ reassignment](https://choyun1.github.io/sonore/gallery/#d-30)
+
+```python
+snd = so.load("docs/speech/bdl_arctic_a0131.flac")
+f0_times, f0 = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
+wide = so.GaborFrame(5e-3, 1e-3, n_fft=1024)  # Hann 5 ms, 1 ms hop
+wide.analyze(snd).plot(fmax=5000, db_range=60)
+adaptive = so.TVGaborFrame.pitch_adaptive(f0_times, f0, t_end=snd.duration + 0.02)  # 3 periods
+adaptive.analyze(snd).plot(fmax=5000)
+so.tandem_power(snd, f0_times, f0).plot(fmax=5000)
+t_edges, f_edges = np.arange(0, snd.duration, 5e-3), np.arange(0, 5020, 20)  # bins of about a pixel
+so.reassigned_spectrogram(snd, wide).binned(t_edges, f_edges).plot(fmax=5000)
+```
+
 **Sound textures** (McDermott & Simoncelli, 2011). Measure a recording's
 statistics and synthesize a new sample from noise:
 
@@ -362,6 +382,7 @@ confirmed, otherwise to the publisher or another stable page.
 - Klatt (1980). Software for a cascade/parallel formant synthesizer. *JASA* 67(3). [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
 - Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among female and male talkers. *JASA* 87. [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894).
 - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values. *IEEE Trans. ASSP* 26(1). [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047). `representations`
+- Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html). The gallery's spoken sentence.
 - Kowalski, Depireux & Shamma (1996). Analysis of dynamic spectra in ferret primary auditory cortex. I. *J. Neurophysiol.* 76. [doi:10.1152/jn.1996.76.5.3503](https://doi.org/10.1152/jn.1996.76.5.3503). `ripples`
 - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans. Speech Audio Process.* 7(3). [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/). `phasevocoder`
 - McAulay & Quatieri (1986). Speech analysis/synthesis based on a sinusoidal representation. *IEEE TASSP* 34. [Internet Archive](https://archive.org/details/SpeechAnalysisSynthesisBasedOnASinusoidalRepresentation).
