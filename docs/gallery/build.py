@@ -609,7 +609,8 @@ def file_name(key: str, title: str) -> str:
 #
 #   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
 #   # %% [about]               the description of the example that follows
-#   # %% [demo KEY] Title      code that leaves `sound`, `fig` and `playhead` (the axes the playhead follows)
+#   # %% [demo KEY] Title      code that leaves `sound`, `fig` and `playhead` (the axes the playhead follows),
+#                              and optionally `scene`, sources to draw from above as the sound plays
 #   # %% [figure KEY] Title    code that leaves `fig`: a figure without sound
 #   # %%                       any other code; what it prints is shown under it
 #
@@ -726,6 +727,8 @@ def example_page(path: Path) -> dict:
                 snd = ns.pop("sound")
                 png, regions, size = encode_figure(ns.pop("fig"), ns.pop("playhead"))
                 part.update(sound=snd, audio=flac_bytes(snd), png=png, regions=regions, size=size)
+                if "scene" in ns:
+                    part["scene"] = scene_json(ns.pop("scene"))
             elif cell.kind == "figure":
                 png, _, size = encode_figure(ns.pop("fig"), [])
                 part.update(png=png, size=size)
@@ -787,6 +790,7 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
   font-size: 0.9rem; font-weight: 700; color: var(--accent); }
 audio { width: 100%; max-width: 19rem; display: block; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
@@ -825,9 +829,51 @@ JS = """
       heads.appendChild(d);
       return d;
     });
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines };
+    const canvas = el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
   });
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, time) => {
+      if (!src.t) return src.az[0];
+      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    };
+    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
+        const lo = Math.min(...src.az), hi = Math.max(...src.az);
+        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
   function draw(item) {
+    drawScene(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -839,6 +885,11 @@ JS = """
   let active = null;
   function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
   items.forEach((item) => {
+    drawScene(item);
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
       active = item; requestAnimationFrame(loop);
@@ -927,8 +978,35 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
 """
 
 
-def sound_article(key, title, desc_html, snd, audio_src, img_src, regions, size, extra="", code="") -> str:
+def scene_json(scene: list[dict], rate: float = 50.0) -> str:
+    """A top-down scene for the page to animate: each source's azimuth [deg, clockwise
+    from straight ahead] over time, resampled to ``rate`` Hz to keep the page small."""
+    out = []
+    for src in scene:
+        t = np.asarray(src["t"], float)
+        grid = np.arange(0, t[-1] + 0.5 / rate, 1 / rate) if len(t) > 1 else t
+        az = np.interp(grid, t, np.asarray(src["azimuth"], float))
+        out.append(
+            {
+                "label": src["label"],
+                "color": src["color"],
+                "t": round(1 / rate, 6) if len(t) > 1 else 0,
+                "az": [round(float(a), 2) for a in az],
+            }
+        )
+    return json.dumps(out, separators=(",", ":"))
+
+
+def sound_article(
+    key, title, desc_html, snd, audio_src, img_src, regions, size, extra="", code="", scene=None
+) -> str:
     name, (w, h) = file_name(key, title), size
+    scene = (
+        f'\n    <canvas class="scene" data-scene="{html.escape(scene)}" role="img" '
+        f'aria-label="The sources seen from above, moving as the sound plays"></canvas>'
+        if scene
+        else ""
+    )
     chan = "stereo" if snd.n_channels == 2 else "mono"
     code = f'\n  <details class="code" open><summary>Code</summary>{code}</details>' if code else ""
     return f"""
@@ -937,7 +1015,7 @@ def sound_article(key, title, desc_html, snd, audio_src, img_src, regions, size,
     <h3>{html.escape(title)}</h3>{extra}
     {desc_html}
     <audio controls preload="metadata" src="{audio_src}"></audio>
-    <p class="file">{html.escape(name)}.flac, {snd.duration:.1f} s, {chan}</p>
+    <p class="file">{html.escape(name)}.flac, {snd.duration:.1f} s, {chan}</p>{scene}
   </div>
   <figure class="plot"><div class="plate">
     <img src="{img_src}" width="{w}" height="{h}" alt="Plots of the {html.escape(title.lower())} sound" loading="lazy">
@@ -1031,6 +1109,7 @@ def build_example_page(site: Site, name: str) -> list[str]:
                         part["regions"],
                         part["size"],
                         code=part["code"],
+                        scene=part.get("scene"),
                     )
                 )
             else:
