@@ -173,17 +173,6 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             headphones=True,
         ),
     ]
-    pitch = [
-        Demo(
-            "09",
-            "Iterated rippled noise",
-            "Noise added to an 8 ms delayed copy of itself, sixteen times over. "
-            "A 125 Hz pitch rises out of the hiss; the spectrum ripples at multiples of 125 Hz and the modulation "
-            "spectrum peaks at 8 cycles/kHz, the delay in milliseconds.",
-            so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=16, rng=0),
-            "overview",
-        ),
-    ]
     vocoder = [
         Demo("11", "Reference", "A 220 Hz harmonic complex with a 5 Hz, ±3% vibrato.", sung, "pv"),
         Demo(
@@ -283,7 +272,6 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             "disappear.",
             binaural,
         ),
-        ("Pitch from delay", "", pitch),
         (
             "Filterbanks",
             "Cosine filterbanks whose squared responses sum to 1, so analysis followed by synthesis is exact.",
@@ -333,11 +321,6 @@ def binaural_fig(snd):
     axes[2].legend(loc="lower right", fontsize=8)
     axes[2].grid(ls=":")
     return fig, list(axes)
-
-
-def overview_fig(snd):
-    fig = so.overview(snd, win_dur=50e-3, figsize=(10, 6.2), fmax=4000)
-    return fig, [ax for ax in fig.axes if ax.get_title() in ("Waveform", "Spectrogram")]
 
 
 def pv_fig(snd):
@@ -412,7 +395,6 @@ FIGURES = {
     "filterbank": lambda d: filterbank_fig(d.sound, **d.extra),
     "ripple": lambda d: ripple_fig(d.sound, d.extra["pattern"], d.extra.get("dmr", False)),
     "binaural": lambda d: binaural_fig(d.sound),
-    "overview": lambda d: overview_fig(d.sound),
     "pv": lambda d: pv_fig(d.sound),
     "vocoder": lambda d: vocoder_fig(d.sound, d.extra["source"]),
 }
@@ -456,7 +438,7 @@ def file_name(key: str, title: str) -> str:
 
 
 # ------------------------------------------------------------- example pages
-# The example pages (speech, textures, moving, vocoder, cepstrum, reverb) are runnable scripts in percent format,
+# The example pages (speech, textures, moving, vocoder, cepstrum, reverb, irn) are runnable scripts in percent format,
 # where "# %%" starts a cell:
 #
 #   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
@@ -469,7 +451,7 @@ def file_name(key: str, title: str) -> str:
 # Every code cell is shown on the page exactly as it ran. Prose may use $TeX$, $$display TeX$$,
 # `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
 # where the cell stands. The scripts run from the repository root.
-EXAMPLE_PAGES = ["speech", "textures", "moving", "vocoder", "cepstrum", "reverb"]
+EXAMPLE_PAGES = ["speech", "textures", "moving", "vocoder", "cepstrum", "reverb", "irn"]
 ROOT = HERE.parent.parent
 CELL = re.compile(r"# %%(?: \[(\w+)(?: (\w+))?\])?(?: (.*))?")
 
@@ -785,6 +767,7 @@ NAV = [
     ("vocoder.html", "Hearing through a vocoder"),
     ("cepstrum.html", "Cepstral analysis"),
     ("reverb.html", "Synthetic reverberation"),
+    ("irn.html", "Iterated rippled noise"),
 ]
 
 
@@ -1024,7 +1007,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
         ' if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>'
     )
     header = f"""  <p>{n} sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear. Six topics have pages of their own, with the code for every example beside it:</p>
+  the same audio you hear. Seven topics have pages of their own, with the code for every example beside it:</p>
   <ul>
     <li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li>
     <li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li>
@@ -1033,6 +1016,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
     <li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice's pitch from its timbre.</li>
     <li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms
       that break them.</li>
+    <li><a href="irn.html">Iterated rippled noise</a>: a pitch made from noise and a delay.</li>
   </ul>
   {HOW}"""
     site.write(
