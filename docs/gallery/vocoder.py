@@ -275,13 +275,19 @@ sound = vocoded
 #
 # - Dorman, Loizou & Rainey (1997). Speech intelligibility as a function of the number of channels
 #   of stimulation for signal processors using sine-wave and noise-band outputs. *J. Acoust. Soc.
-#   Am.* 102(4), 2403–2411.
+#   Am.* 102(4), 2403–2411. [doi:10.1121/1.420354](https://doi.org/10.1121/1.420354).
+#   [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L467)
 # - Friesen, Shannon, Baskent & Wang (2001). Speech recognition in noise as a function of the number
 #   of spectral channels: comparison of acoustic hearing and cochlear implants. *J. Acoust. Soc.
-#   Am.* 110(2), 1150–1163.
+#   Am.* 110(2), 1150–1163. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11519582/).
+#   [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L467)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
-#   Workshop*, 223–224. The sentence.
+#   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
+#   The sentence.
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
+#   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
+#   [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L467)
 # - Wilson, Finley, Lawson, Wolford, Eddington & Rabinowitz (1991). Better speech recognition with
-#   cochlear implants. *Nature* 352, 236–238.
+#   cochlear implants. *Nature* 352, 236–238. [PubMed](https://pubmed.ncbi.nlm.nih.gov/1857418/).
+#   [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L467)

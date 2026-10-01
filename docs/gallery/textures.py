@@ -308,3 +308,13 @@ fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
 # %% [demo u21] Fire, marginals and modulation power
 sound = finish(synthesized("fire", "marginals_modpower"))
 fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
+
+# %% [markdown]
+# ## References
+#
+# - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
+#   periphery. *Neuron* 71.
+#   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
+#   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
+#   [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44)
+#   [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py)

@@ -56,8 +56,8 @@ def test_gallery_playhead_regions_do_not_overlap():
 
 
 def test_readme_source_links_point_at_definitions():
-    """Reference tags link to src/ files and, for named functions or classes,
-    to the line that defines them. Fix drifted lines with
+    """Reference tags in the README and the gallery link to src/ files and, for
+    named functions or classes, to the line that defines them. Fix drifted lines with
     ``python tools/update_readme_source_links.py``."""
     import importlib.util
 
@@ -70,5 +70,24 @@ def test_readme_source_links_point_at_definitions():
     assert readme.count(links.BLOB + "src/") == len(found), (
         "a source link does not match the `module.name` form"
     )
-    drifted = "README source links have drifted; run python tools/update_readme_source_links.py"
-    assert links.fixed(readme) == readme, drifted
+    drifted = "source links have drifted; run python tools/update_readme_source_links.py"
+    for path in links.linked_files():
+        text = path.read_text()
+        assert links.fixed(text) == text, f"{path.name}: {drifted}"
+
+
+def test_gallery_reference_lists_are_in_the_readme():
+    """Every work in a gallery page's References is also in the README's, and
+    every source tag a gallery page links is the same form the README uses."""
+    readme = (ROOT / "README.md").read_text()
+    listed = readme[readme.index("## References") : readme.index("### Reference implementations")]
+    for page in sorted(GALLERY.glob("*.py")):
+        text = page.read_text()
+        if "# ## References" not in text:
+            continue
+        refs = text[text.index("# ## References") :]
+        for entry in re.findall(r"(?m)^# - (.+)", refs):
+            first, year = entry.split()[0].strip(","), re.search(r"\((\d{4})\)", entry)
+            key = rf"(?m)^- {re.escape(first)}\b[^(\n]*" + (rf"\({year[1]}\)" if year else "")
+            missing = f"{page.name} cites {entry[:40]}..., missing from README References"
+            assert re.search(key, listed), missing

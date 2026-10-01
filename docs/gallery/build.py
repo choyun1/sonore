@@ -499,7 +499,7 @@ def read_cells(path: Path) -> list[Cell]:
     return cells
 
 
-INLINE = re.compile(r"\$\$(.+?)\$\$|\$(.+?)\$|`([^`]+)`", re.S)
+INLINE = re.compile(r"\$\$(.+?)\$\$|\$(.+?)\$|\[`([^`]+)`\]\(([^)\s]+)\)|`([^`]+)`", re.S)
 
 
 def _marks(s: str) -> str:
@@ -512,8 +512,10 @@ def inline(text: str) -> str:
     out, pos = [], 0
     for m in INLINE.finditer(text):
         out.append(_marks(html.escape(text[pos : m.start()], quote=False)))
-        display, tex, code = m.groups()
-        if code is not None:
+        display, tex, link_code, href, code = m.groups()
+        if link_code is not None:  # a source tag, [`module.Name`](url)
+            out.append(f'<a href="{html.escape(href)}"><code>{html.escape(link_code)}</code></a>')
+        elif code is not None:
             out.append(f"<code>{html.escape(code)}</code>")
         else:
             cls = "tex display" if display is not None else "tex"
