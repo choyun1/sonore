@@ -327,6 +327,19 @@ agree.
 - **`Envelopes.without_edges`** returns the envelopes unchanged for a bank
   built with `edges=False`, which has no edge bands to zero.
 
+- **Patch 4, `TVGaborFrame`.** `times` are window centers, rounded to
+  samples, and must be strictly increasing. Each windowed segment is placed
+  in the FFT buffer with the window's middle sample at index 0, which is
+  SciPy's phase convention, so a constant schedule over SciPy's frames
+  reproduces `GaborFrame`'s coefficients exactly (equal to 0.0 in the
+  checks). `n_fft` is in samples, like `GaborFrame`'s, while window lengths
+  depend on fs. A window longer than `n_fft` is therefore refused when the
+  frame is first used at a rate, not at construction as the test plan says.
+  The coefficient type is `TVSTFT` (`data`, `f`, `t`, `magnitude`, `db`,
+  masking by multiplication, `to_sound`). `from_function(win_dur_of_t,
+  t_end, overlap=4, t_start=0)` steps from `t_start` while the center is at
+  most `t_end`.
+
 ## Out of scope for step 2
 
 - Union synthesis (D11) and the CG canonical dual (D1(b)).

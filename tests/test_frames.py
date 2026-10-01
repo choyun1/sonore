@@ -5,7 +5,7 @@ non-frame behaviour; the last checks every frame against the dense-matrix
 oracle in tests/helpers.py (bounds as eigenvalues, masked coefficients vs.
 canonical least squares, the documented D1 exception, and the adjoint as the
 weighted transpose). Step 2 (docs/design/frames-step2.md) adds the Nyquist
-rule (C14, D8) and ``Frame.adjoint`` (D10).
+rule (C14, D8), ``Frame.adjoint`` (D10) and ``TVGaborFrame`` (C12, D9).
 """
 
 from dataclasses import dataclass
@@ -212,6 +212,102 @@ def test_gabor_rejects_bad_parameters():
         GABORS["hann^1.5, n_fft 48"].synthesize(S)
 
 
+# ---------------------------------------------------------- time-varying Gabor
+def _growing(t):
+    """Window length growing from 8 to 16 samples over the test signal."""
+    return (8 + 8 * t * FS / N) / FS
+
+
+TVS = {
+    "tv hann": so.TVGaborFrame.from_function(_growing, t_end=N / FS, overlap=3),
+    "tv hann^1.5, n_fft 21": so.TVGaborFrame.from_function(
+        _growing, t_end=N / FS, overlap=3, n_fft=21, window=_hann15
+    ),
+}
+
+
+def _constant_schedule(gabor, n=N):
+    """The TVGaborFrame with ``gabor``'s window at SciPy's frame centers."""
+    sft, (n_win, hop, n_fft) = gabor.sft(FS), gabor.lengths(FS)
+    q = np.arange(sft.p_min, sft.p_max(n))
+    return so.TVGaborFrame(q * hop / FS, [n_win / FS] * len(q), n_fft=n_fft, window=gabor.window)
+
+
+@pytest.mark.parametrize("name", GABORS)
+def test_constant_schedule_is_the_gabor_frame(name):
+    gabor, x = GABORS[name], _noise(2, 14)
+    tv = _constant_schedule(gabor)
+    S, C = gabor.analyze(x), tv.analyze(x)
+    assert isinstance(C, so.TVSTFT) and np.allclose(C.data, S.data, rtol=0, atol=1e-12)
+    assert np.allclose(C.f, S.f) and np.allclose(C.t, S.t)
+    assert np.allclose(tv.frame_power(N, FS), gabor.frame_power(N, FS), rtol=1e-13)
+    masked = _masked(S)
+    for method in ("synthesize", "adjoint"):
+        y = getattr(tv, method)(so.TVSTFT._from(C, masked.data)).data
+        assert np.allclose(y, getattr(gabor, method)(masked).data, rtol=0, atol=1e-10)
+
+
+@pytest.mark.parametrize("name", TVS)
+@pytest.mark.parametrize("n_channels", [1, 2])
+def test_tv_gabor_reconstructs_exactly(name, n_channels):
+    frame, x = TVS[name], _noise(n_channels, 15)
+    C = frame.analyze(x)
+    assert C.data.shape == (n_channels, frame.layout(FS).n_fft // 2 + 1, len(frame.times))
+    assert np.allclose(C.to_sound().data, x.data, rtol=0, atol=1e-12)
+    lo, hi = frame.frame_bounds(N, FS)
+    assert 0 < lo < 0.9 * hi
+
+
+@pytest.mark.parametrize("name", TVS)
+def test_tv_gabor_frame_power_is_c12(name):
+    """s(t) = M sum_q |w_q(t - a_q)|^2, written out window by window."""
+    frame = TVS[name]
+    lay, s = frame.layout(FS), np.zeros(N)
+    for c, L in zip(lay.centers, lay.lengths, strict=True):
+        t = c - L // 2 + np.arange(L)
+        ok = (t >= 0) & (t < N)
+        w = frame.window(L) if callable(frame.window) else hann(L, sym=False)
+        s[t[ok]] += lay.n_fft * w[ok] ** 2
+    assert np.allclose(frame.frame_power(N, FS), s, rtol=1e-13, atol=0)
+
+
+def test_tv_gabor_schedule_checks():
+    with pytest.raises(ValueError, match="n_fft"):  # C12: a window longer than n_fft
+        so.TVGaborFrame([0.0, 0.002], [16 / FS, 20 / FS], n_fft=16).analyze(_noise())
+    with pytest.raises(ValueError, match="increasing"):
+        so.TVGaborFrame([0.0, 0.0], [0.004, 0.004])
+    with pytest.raises(ValueError, match="equal length"):
+        so.TVGaborFrame([0.0, 0.001], [0.004])
+    with pytest.raises(ValueError, match="overlap"):
+        so.TVGaborFrame.from_function(lambda t: 0.004, 0.01, overlap=0.5)
+    tv = so.TVGaborFrame.from_function(lambda t: 0.004 if t < 0.005 else 0.008, 0.012, overlap=4)
+    assert np.allclose(np.diff(tv.times), [0.001] * 5 + [0.002] * 3)
+    assert tv == so.TVGaborFrame(list(tv.times), np.array(tv.win_durs)) and hash(tv) is not None
+
+
+def test_tv_gabor_gap_analyzes_but_refuses_to_synthesize():
+    gap = so.TVGaborFrame(
+        [0.0, 0.004, 0.008], [16 / FS, 16 / FS, 16 / FS]
+    )  # 32-sample steps, 16-sample windows
+    lo, hi = gap.frame_bounds(N, FS)
+    assert lo == 0 and hi > 0
+    C = gap.analyze(_noise())
+    with pytest.raises(ValueError, match="not a frame"):
+        C.to_sound()
+
+
+def test_tvstft_container():
+    frame = TVS["tv hann"]
+    C = frame.analyze(_noise(1, 16))
+    assert np.array_equal(C.t, frame.layout(FS).centers / FS) and np.all(np.diff(C.t) > 0)
+    assert C.f[-1] == FS / 2 and C.magnitude.shape == C.data.shape and C.db.shape == C.data.shape
+    half = 0.5 * C
+    assert isinstance(half, so.TVSTFT) and np.allclose(half.to_sound().data, 0.5 * C.to_sound().data)
+    assert repr(C).startswith("TVSTFT(9 freqs x 26 frames, 1 ch, win 1.0-2.0 ms")
+    with pytest.raises(ValueError, match="n_freqs, n_frames"):
+        TVS["tv hann^1.5, n_fft 21"].synthesize(C)
+
+
 # ------------------------------------------------------------------ oracle
 # Every frame against dense matrices built from its own fast path (helpers):
 # bounds are the extreme eigenvalues of the weighted S, and synthesis of
@@ -230,6 +326,7 @@ ORACLE = {
     "gammatone zero": (so.GammatoneFilterbank(19, 300, 3500, phase="zero"), [0, 4e-3]),
     "morlet": (so.MorletFilterbank(5, 300, 3500, cycles=3), [0, 4e-3]),
     **{f"gabor {k}": (v, [None]) for k, v in GABORS.items()},
+    **{k: (v, [None]) for k, v in TVS.items()},
 }
 ORACLE_CASES = [(name, pad) for name, (_, pads) in ORACLE.items() for pad in pads]
 
@@ -251,7 +348,7 @@ def _masked(coefs, seed=0):
     if isinstance(coefs, so.Subbands):
         m = rng.random(coefs._full.shape[:2])[:, :, None]
         return so.Subbands(coefs._full * m, coefs.fs, coefs.filterbank, coefs.pad)
-    return so.STFT._from(coefs, coefs.data * rng.random(coefs.data.shape[1:]))
+    return type(coefs)._from(coefs, coefs.data * rng.random(coefs.data.shape[1:]))
 
 
 def _is_d1_case(frame, pad):
