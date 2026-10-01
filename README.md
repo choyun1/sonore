@@ -337,21 +337,57 @@ also at the top level as `so.name`; the texture ones are under
 - **Package layout.** One subpackage per layer (`core`, `signals`,
   `analysis`, `stimuli`, `texture`), with imports pointing down a layer,
   enforced by `tests/test_layers.py`; see `docs/design/layout.md`.
+- **CI and releases.** Tests and lint on Python 3.10 and 3.14 for every push
+  and pull request, a check that the PyPI files build and pass their tests,
+  and a trusted-publishing release workflow (`docs/releasing.md`).
+- **HRIRs on demand.** `so.load_hrirs()` downloads the PKU-IOA database
+  (Qu et al., 2009) on first use, checks each file's checksum and caches it,
+  correcting the left-right mirroring of its SOFA copy; see
+  `docs/design/hrir-data.md`.
+- **Gallery pages.** The gallery is split into pages, each a runnable script
+  shown with its code: [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html) (a short course in
+  time-frequency analysis), [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html),
+  [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) (cochlear-implant simulation
+  with `so.noise_vocode`), and [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) (a target
+  talker swinging in azimuth between two still maskers, after Cho & Kidd,
+  2022, with interaural cues and a top-down view that follows playback).
+- **The MSM archive.** The experiment code behind Cho & Kidd (2022), written
+  with sigtools 0.1, stays a separate archive at
+  [choyun1/MSM](https://github.com/choyun1/MSM) rather than being folded in;
+  the Moving talkers page carries its stimuli forward.
+
+**In progress**
+
+- **A cepstrum page.** A short gallery page on cepstral analysis, and a
+  cross-check of `Cepstrum` against reference implementations.
 
 **Next, in order**
 
-1. **First PyPI release.** CI and a trusted-publishing workflow are in place
-   (`docs/releasing.md`). An on-demand loader for the PKU-IOA HRTF SOFA files
-   is in progress.
+1. **First PyPI release.** The workflows are in place; what remains is
+   publishing 0.3 to TestPyPI and then PyPI.
 2. **JAX spike.** Port the texture channel objective to JAX, check it
    against the NumPy reference with the existing tests, and measure it
    against today's ~2 s per iteration. On the evidence, decide on an optional
    `sonore[jax]` backend for the heavy, optimization-shaped parts (texture
    synthesis now; the differentiable forward models that source inference
    needs later). The core stays NumPy.
-3. **Speech synthesis.** Source-filter vowels (glottal source, formant
-   resonators, radiation), then the Klatt synthesizer (Klatt, 1980; KLSYN88,
-   Klatt & Klatt, 1990).
+3. **Texture modulation convergence.** Rebalance the objective so
+   modulation power converges (see Texture synthesis below).
+4. **Speech analysis and synthesis.** A WORLD-style model (Morise et al.,
+   2016; after STRAIGHT, Kawahara et al., 1999) built on the cepstrum and
+   the pitch-adaptive frame: an F0 tracker, a CheapTrick-style spectral
+   envelope (Morise, 2015), aperiodicity, and pulse-plus-noise synthesis.
+   Alongside it, source-filter vowels (glottal source, formant resonators,
+   radiation) and the Klatt synthesizer (Klatt, 1980; KLSYN88, Klatt &
+   Klatt, 1990).
+5. **Moving-sound renderer.** Revisit `move_sound`, since linear
+   trajectories sound unconvincing: sources that change distance (level
+   change, travel-time delay, Doppler shift and room reverberation), a
+   sinusoidal azimuth trajectory like the one in Cho & Kidd (2022), and
+   faster rendering via batched frequency-domain filtering. Changing-filter
+   methods are reviewed by Brandtsegg et al. (2018); sonore's windowed
+   switching with onset-aligned interpolation is described on the
+   [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) page.
 
 **Texture synthesis**
 
@@ -379,32 +415,30 @@ also at the top level as `so.name`; the texture ones are under
 
 - Free-form modulation patterns: specify a modulation spectrum and synthesize it.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
-- A high-quality speech analysis/resynthesis model with robust F0 tracking
-  (STRAIGHT, Kawahara et al., 1999, or its open successor WORLD, Morise et al., 2016).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
-- Faster `move_sound` via batched frequency-domain filtering.
-- Sources that change distance: `move_sound` with level change, travel-time
-  delay and Doppler shift, and room reverberation, so that approaching and
-  receding trajectories sound convincing.
 - On-demand download of other public HRIR databases.
-- Revisit the moving-sound renderer (linear trajectories sound unconvincing): level with distance,
-  travel-time delay, Doppler, room reverberation, or the earlier unwindowed overlapping convolutions.
 
 ## References
 
 Tags name the module(s) in [What's in it](#whats-in-it) that implement or follow each work,
 and link to the source: a tag such as `representations.reassigned_spectrogram` goes to that
-definition, a bare module name to the whole file. Untagged works are cited in the [Roadmap](#roadmap). Links go to the DOI where one is
+definition, a bare module name to the whole file. Untagged works are cited in the [Roadmap](#roadmap) or on a gallery page. Links go to the DOI where one is
 confirmed, otherwise to the publisher or another stable page.
 
 - Auger & Flandrin (1995). Improving the readability of time-frequency and time-scale representations by the reassignment method. *IEEE Trans. Signal Processing* 43(5). [doi:10.1109/78.382394](https://doi.org/10.1109/78.382394). [`representations.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L356)
 - Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011). Theory, implementation and applications of nonstationary Gabor frames. *J. Comput. Appl. Math.* 236(6). [doi:10.1016/j.cam.2011.09.011](https://doi.org/10.1016/j.cam.2011.09.011). [`frames.TVGaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L421)
+- Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying filters. *Applied Sciences* 8(1), 103. [MDPI](https://www.mdpi.com/2076-3417/8/1/103). Reviews the ways of filtering with a changing filter; `move_sound` is one of them. [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L273)
 - Chi, Gao, Guyton, Ru & Shamma (1999). Spectro-temporal modulation transfer functions and speech intelligibility. *JASA* 106. [JASA](https://pubs.aip.org/asa/jasa/article/106/5/2719/550617). [`ripples.Ripple`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py#L84) [`representations.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L457)
+- Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail party" listening environment. *JASA* 152(3), 1684–1694. [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). The [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) page; its experiment code is archived at [choyun1/MSM](https://github.com/choyun1/MSM).
 - Christensen (2003). *An Introduction to Frames and Riesz Bases*. Birkhäuser. [doi:10.1007/978-0-8176-8224-8](https://doi.org/10.1007/978-0-8176-8224-8). [`frames.Frame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L76)
+- Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899. [doi:10.1371/journal.pone.0211899](https://doi.org/10.1371/journal.pone.0211899). Removes the interaural delay before interpolating HRIRs, as sonore's onset alignment does. [`spatialization.HRIRSet`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L93)
 - Daubechies, Grossmann & Meyer (1986). Painless nonorthogonal expansions. *J. Math. Phys.* 27(5). [doi:10.1063/1.527388](https://doi.org/10.1063/1.527388). [`frames.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L259)
 - Dolson (1986). The phase vocoder: A tutorial. *Computer Music Journal* 10(4). [Semantic Scholar](https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e). [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+- Dorman, Loizou & Rainey (1997). Speech intelligibility as a function of the number of channels of stimulation for signal processors using sine-wave and noise-band outputs. *JASA* 102(4), 2403–2411. [doi:10.1121/1.420354](https://doi.org/10.1121/1.420354). The [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) page.
 - Escabí & Schreiner (2002). Nonlinear spectrotemporal sound analysis by neurons in the auditory midbrain. *J. Neurosci.* 22. [doi:10.1523/JNEUROSCI.22-10-04114.2002](https://doi.org/10.1523/JNEUROSCI.22-10-04114.2002). [`ripples.DynamicRipple`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py#L159)
 - Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45. [doi:10.1002/j.1538-7305.1966.tb01706.x](https://doi.org/10.1002/j.1538-7305.1966.tb01706.x). [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+- Friesen, Shannon, Baskent & Wang (2001). Speech recognition in noise as a function of the number of spectral channels: comparison of acoustic hearing and cochlear implants. *JASA* 110(2), 1150–1163. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11519582/). The [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) page.
+- Gamper (2013). Head-related transfer function interpolation in azimuth, elevation, and distance. *JASA* 134(6), EL547. [doi:10.1121/1.4828983](https://doi.org/10.1121/1.4828983). The HRIR interpolation used in Cho & Kidd (2022); sonore interpolates onset-aligned responses instead.
 - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing Research* 47. [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955(90)90170-T). [`filterbank.ERBFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L100)
 - Gordon & Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), *Digital Audio Signal Processing: An Anthology*. Also Stanford CCRMA report STAN-M-55. [CCRMA](https://ccrma.stanford.edu/papers/introduction-phase-vocoder). [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
 - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE TASSP* 32. [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317). [`representations.STFT.griffin_lim`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L176)
@@ -413,15 +447,15 @@ confirmed, otherwise to the publisher or another stable page.
 - Klatt (1980). Software for a cascade/parallel formant synthesizer. *JASA* 67(3). [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
 - Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among female and male talkers. *JASA* 87. [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894).
 - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values. *IEEE Trans. ASSP* 26(1). [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047). [`representations.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L356)
-- Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html). The gallery's spoken sentence.
+- Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html). The gallery's speech (speakers bdl and rms).
 - Kowalski, Depireux & Shamma (1996). Analysis of dynamic spectra in ferret primary auditory cortex. I. *J. Neurophysiol.* 76. [doi:10.1152/jn.1996.76.5.3503](https://doi.org/10.1152/jn.1996.76.5.3503). [`ripples.Ripple`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py#L84)
 - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans. Speech Audio Process.* 7(3). [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/). [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L157)
 - McAulay & Quatieri (1986). Speech analysis/synthesis based on a sinusoidal representation. *IEEE TASSP* 34. [Internet Archive](https://archive.org/details/SpeechAnalysisSynthesisBasedOnASinusoidalRepresentation).
 - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. *Neuron* 71. [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44) [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py)
 - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. *Speech Communication* 67. [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003). [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L494)
 - Morise, Yokomori & Ozawa (2016). WORLD: A vocoder-based high-quality speech synthesis system for real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7). [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
-- Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). [doi:10.1016/B978-0-08-041847-6.50054-X](https://doi.org/10.1016/B978-0-08-041847-6.50054-X). [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L260)
 - Noll (1967). Cepstrum pitch determination. *JASA* 41(2). [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/). [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L142)
+- Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). [doi:10.1016/B978-0-08-041847-6.50054-X](https://doi.org/10.1016/B978-0-08-041847-6.50054-X). [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L260)
 - Perraudin, Balazs & Søndergaard (2013). A fast Griffin-Lim algorithm. *IEEE WASPAA*. [doi:10.1109/WASPAA.2013.6701851](https://doi.org/10.1109/WASPAA.2013.6701851). [`representations.STFT.griffin_lim`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L176)
 - Qu et al. (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. *IEEE TASLP* 17. [PKU Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial). [`spatialization.HRIRSet.from_pku_ioa`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L130) [`hrir_data.load_hrirs`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py#L122)
 - Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16. [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411). [`generators.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L108)
@@ -430,6 +464,7 @@ confirmed, otherwise to the publisher or another stable page.
 - Siveke et al. (2008). Psychophysical and physiological evidence for fast binaural processing. *J. Neurosci.* 28. [J. Neurosci.](https://www.jneurosci.org/content/28/9/2043). [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L170) [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L179)
 - Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. *PNAS* 113. [doi:10.1073/pnas.1612524113](https://doi.org/10.1073/pnas.1612524113). [`reverb.synth_ir`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/reverb.py#L77)
 - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In *Speech Separation by Humans and Machines*. [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12). [`representations.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L443)
+- Wilson, Finley, Lawson, Wolford, Eddington & Rabinowitz (1991). Better speech recognition with cochlear implants. *Nature* 352, 236–238. [PubMed](https://pubmed.ncbi.nlm.nih.gov/1857418/). The [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) page.
 - Yost (1996). Pitch of iterated rippled noise. *JASA* 100. [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf). [`generators.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L258)
 
 ### Reference implementations
