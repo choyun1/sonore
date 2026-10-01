@@ -168,3 +168,12 @@ class TestLoadHRIRs:
             so.load_hrirs("cipic")
         with pytest.raises(ValueError, match="no distance"):
             so.load_hrirs(distances=[60])
+
+    def test_pku_ioa_names_files_of_the_wrong_length(self, tmp_path):
+        for a in range(0, 360, 90):
+            np.zeros(2048).tofile(tmp_path / f"azi{a}_elev0_dist20.dat")
+        np.zeros(1024).tofile(tmp_path / "azi0_elev10_dist20.dat")
+        with pytest.raises(
+            ValueError, match=r"1 of 5 .dat files(.|\n)*azi0_elev10_dist20.dat \(1024 values\)"
+        ):
+            so.HRIRSet.from_pku_ioa(tmp_path)

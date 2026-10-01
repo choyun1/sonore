@@ -132,17 +132,27 @@ class HRIRSet:
         ``directory`` or any folder below it, such as the distributed
         ``dist{D}/elev{E}/`` layout. :func:`load_hrirs` downloads the SOFA copy instead."""
         pattern = re.compile(r"azi(-?\d+)_elev(-?\d+)_dist(\d+)\.dat$")
-        hcc, irs = [], []
+        hcc, irs, paths = [], [], []
         for p in sorted(Path(directory).rglob("*.dat")):
             m = pattern.search(p.name)
             if m:
                 a, e, d = map(float, m.groups())
                 hcc.append((d, e, a))
-                irs.append(np.fromfile(p).reshape(2, -1))
+                irs.append(np.fromfile(p))
+                paths.append(p)
         if not irs:
             raise FileNotFoundError(f"no PKU-IOA .dat files in {directory}")
+        sizes = [x.size for x in irs]
+        n = max(set(sizes), key=sizes.count)  # the usual length, 2048
+        odd = [(p, k) for p, k in zip(paths, sizes, strict=True) if k != n]
+        if odd:
+            listed = "\n".join(f"  {p} ({k} values)" for p, k in odd[:10])
+            raise ValueError(
+                f"{len(odd)} of {len(irs)} .dat files are not {n} float64 values (left then right):"
+                f"\n{listed}" + ("\n  ..." if len(odd) > 10 else "")
+            )
         pos = np.column_stack(hcc_to_rect(*np.array(hcc).T))
-        return cls(np.array(irs), pos, fs, **kwargs)
+        return cls(np.array(irs).reshape(len(irs), 2, -1), pos, fs, **kwargs)
 
     @classmethod
     def from_sofa(cls, path: str | PathLike, **kwargs) -> HRIRSet:

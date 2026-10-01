@@ -38,14 +38,14 @@ HRIR_DATABASES: dict[str, _Database] = {
     "pku-ioa": _Database(
         base_url="https://sofacoustics.org/data/database/pku-ioa/",
         files={
-            20: ("dist_0.2m.sofa", None),
-            30: ("dist_0.3m.sofa", None),
-            40: ("dist_0.4m.sofa", None),
-            50: ("dist_0.5m.sofa", None),
-            75: ("dist_0.75m.sofa", None),
-            100: ("dist_1.0m.sofa", None),
-            130: ("dist_1.3m.sofa", None),
-            160: ("dist_1.6m.sofa", None),
+            20: ("dist_0.2m.sofa", "a05019362ead5ff30499a5dbe3b4a7a11af56469a13346efe7d9af4b8ea748d7"),
+            30: ("dist_0.3m.sofa", "4b8aa087ec8c8b08291bbe89dc9f03ffca66ad68ffe4a800871075f0e85eec1d"),
+            40: ("dist_0.4m.sofa", "4c8643895e0ef9e408eb2ae083d1e55cd60e57bd7469e3d1a6193eecbe8b4247"),
+            50: ("dist_0.5m.sofa", "6bebe6c61f88fb123ab6e792a95e4faf4f36f7bb4ea4afe1ec968f43e0f553a5"),
+            75: ("dist_0.75m.sofa", "1fbd2f60dc622f7a4e9a6ae986d4292e884dae305e348c057e08f8343c2b6f55"),
+            100: ("dist_1.0m.sofa", "5c8948a719034153f48bd8886f3654e1d373dd9e8f9911d67070c40c4066b914"),
+            130: ("dist_1.3m.sofa", "7ed5d5d48da6e61d85b08d4873459b22a2b4b2cd5715980cb3e27af6acd1677f"),
+            160: ("dist_1.6m.sofa", "b07c5a1fa120dace81916f94594af050f19126447595da75987ae3c488ae591f"),
         },
         default=(100,),
         citation="Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer "

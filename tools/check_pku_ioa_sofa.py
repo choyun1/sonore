@@ -36,13 +36,17 @@ def main():
     paths = {}
     print(f"Downloading {len(db.files)} SOFA files (about 13 MB each) into {cache}", file=sys.stderr)
     print("Checksums to paste into HRIR_DATABASES['pku-ioa'] (nothing to type here):")
-    for d, (fname, _) in db.files.items():
+    for d, (fname, pinned) in db.files.items():
         path = cache / fname
         if not path.exists():
             print(f"  downloading {fname} ...", file=sys.stderr, flush=True)
             hrir_data._download(db.base_url + fname, path)
         paths[d] = path
-        print(f'            {d}: ("{fname}", "{hrir_data._sha256(path)}"),')
+        digest = hrir_data._sha256(path)
+        note = (
+            "" if pinned is None else ("  # matches the pinned value" if digest == pinned else "  # DIFFERS")
+        )
+        print(f'            {d}: ("{fname}", "{digest}"),{note}')
 
     if args.dat is None:
         return
