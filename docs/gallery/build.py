@@ -27,7 +27,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from PIL import Image  # noqa: E402
-from scipy.signal import butter, sosfilt  # noqa: E402
 
 import sonore as so  # noqa: E402
 from sonore import dB  # noqa: E402
@@ -58,14 +57,6 @@ def vibrato_complex(dur=2.0):
     t = np.arange(int(dur * FS)) / FS
     phase = 2 * np.pi * np.cumsum(220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * t))) / FS
     return so.Sound(sum(np.cos(k * phase) / k for k in range(1, 20)), FS).normalize().ramp(30e-3)
-
-
-def starter_pistol():
-    """A sharp broadband crack: a shock-like pulse (0.15 ms exponential), highpassed.
-    Its spectrum is smooth; a short burst of noise would have random deep notches."""
-    t = np.arange(int(0.03 * FS)) / FS
-    x = sosfilt(butter(2, 300, "highpass", fs=FS, output="sos"), np.exp(-t / 0.15e-3))
-    return so.Sound(x, FS).pad(before=0.05, after=0.05)
 
 
 def gliding_target(dur=2.0):
@@ -278,79 +269,6 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
         ),
     ]
 
-    pistol = starter_pistol()
-    rooms = [
-        Demo(
-            "16",
-            "Starter pistol, dry",
-            "The source for the room demos: a sharp, broadband crack lasting a "
-            "fraction of a millisecond. Its cochleagram shows the filterbank's own response to a click: the "
-            "filters are zero-phase, so they ring symmetrically before and after it (visible at this 60 dB "
-            "range), whereas a real cochlea rings only afterwards.",
-            pistol,
-            "reverb",
-            {"ir": None},
-        )
-    ]
-    variants = [
-        (
-            "17",
-            "In a natural room",
-            "A synthetic room with RT60 = 1 s whose decay follows the statistics of 271 "
-            "real rooms: exponential, with mid frequencies ringing longest. Listeners can't tell such IRs from real "
-            "ones.",
-            {},
-        ),
-        (
-            "18",
-            "Time-reversed decay",
-            "The same decay run backwards: the reverberation swells up to the shot "
-            "instead of dying away after it.",
-            {"decay_shape": "time_reversed"},
-        ),
-        (
-            "19",
-            "Linear decay, matched start",
-            "Starts at the natural level but falls linearly (in amplitude) "
-            "rather than exponentially, with the same energy per band; it has to end early to do so.",
-            {"decay_shape": "linear_matched_start"},
-        ),
-        (
-            "20",
-            "Linear decay, matched end",
-            "Linear decay that reaches zero where the natural decay is 60 dB "
-            "down, again with the same energy per band. On a dB scale the decay bows outward instead of falling "
-            "in a straight line.",
-            {"decay_shape": "linear_matched_end"},
-        ),
-        (
-            "21",
-            "Inverted frequency dependence",
-            "Exponential, but low and high frequencies ring longest and the "
-            "middle dies fastest, the reverse of real rooms. In the paper listeners often heard a separate "
-            "high-frequency hiss rather than a room.",
-            {"rt60_profile": "inverted"},
-        ),
-        (
-            "22",
-            "Exaggerated frequency dependence",
-            "The profile of a room twice as reverberant, scaled down: "
-            "more sharply peaked than real rooms of this size. The subtlest variant; in the paper it was detected "
-            "with impulses but not with speech.",
-            {"rt60_profile": "exaggerated"},
-        ),
-        (
-            "23",
-            "Reduced frequency dependence",
-            "The profile of a room half as reverberant, scaled up: flatter "
-            "than real rooms of this size. Also subtle.",
-            {"rt60_profile": "reduced"},
-        ),
-    ]
-    for key, title, text, kw in variants:
-        ir = so.synth_ir(1.0, FS, drr_db=-3, rng=5, **kw)
-        rooms.append(Demo(key, title, text, pistol.convolve(ir), "reverb", {"ir": ir, "kw": kw}))
-
     return [
         (
             "Spectrotemporal ripples",
@@ -380,15 +298,6 @@ def demos() -> list[tuple[str, str, list[Demo]]]:
             "Phase vocoder",
             "The first sound is the reference; the others change its duration, pitch, or partials.",
             vocoder,
-        ),
-        (
-            "Rooms, natural and not",
-            "After Traer & McDermott (2016), who measured 271 real rooms and found their "
-            "reverberation tightly constrained: an exponential decay, fastest at low and high frequencies. Synthetic "
-            "rooms that break these regularities sound wrong. All rooms here have the same median RT60 (1 s) and "
-            "direct-to-reverberant ratio (−3 dB); unlike the paper, they are not further equated for distortion, "
-            "so some differences in loudness and length remain. Presented diotically, as in the paper.",
-            rooms,
         ),
     ]
 
@@ -463,62 +372,6 @@ def vocoder_fig(snd, source):
     return fig, [axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]]
 
 
-def reverb_fig(snd, ir, kw=None):
-    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout="constrained")
-    snd.plot(axes[0, 0], lw=0.4)
-    axes[0, 0].set_title("Waveform")
-    # no extra lowpass: resampling to 1 kHz is already band-limited, and a
-    # lowpass would ring visibly around the sharp onset of the shot
-    so.subbands(snd, 30, 50, 8000).envelopes(fs=1000).plot(axes[0, 1], colorbar=False, db_range=60)
-    axes[0, 1].set_title("Cochleagram (60 dB range)")
-    time_axes = [axes[0, 0], axes[0, 1]]
-    if ir is None:
-        for ax in axes[1]:
-            ax.axis("off")
-        axes[1, 0].text(0.0, 0.5, "No room: the dry source.", transform=axes[1, 0].transAxes, fontsize=11)
-        return fig, time_axes
-    # band decays of the impulse response itself (dB), a few bands
-    tail = so.Sound(ir.data[1:], ir.fs)
-    env = so.subbands(tail, 30, 50, 8000).envelopes(lowpass=30, fs=1000)
-    for f, color in zip(
-        (125, 500, 2000, 6000), ("tab:blue", "tab:green", "tab:orange", "tab:red"), strict=True
-    ):
-        k = int(np.argmin(np.abs(env.cfs - f)))
-        db = env.db[:, k, 0]
-        axes[1, 0].plot(env.t, db - db.max(), color=color, lw=0.8, label=f"{env.cfs[k]:.0f} Hz")
-    axes[1, 0].set(
-        ylim=(-70, 3), xlabel="Time [s]", ylabel="Band envelope [dB]", title="The IR's decay in four bands"
-    )
-    axes[1, 0].legend(fontsize=8, loc="upper right")
-    axes[1, 0].grid(ls=":")
-    # measured RT60 profile vs the ecological one
-    cfs, rt = so.measure_rt60(tail)
-    eco = so.band_rt60s(1.0, cfs, "ecological")
-    axes[1, 1].semilogx(cfs, eco, color="k", lw=1.2, ls="--", label="natural rooms (RT60 = 1 s)")
-    profile = (kw or {}).get("rt60_profile")
-    if profile:
-        # requested profile, computed over synth_ir's own bands (which run to 16 kHz)
-        synth_cfs = so.ERBFilterbank(32, 20, min(16000, 0.95 * FS / 2)).cfs
-        requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile))
-        axes[1, 1].semilogx(cfs, requested, color="tab:purple", lw=1, ls=":", label=f"requested ({profile})")
-    if not kw or "decay_shape" not in kw:
-        axes[1, 1].semilogx(cfs, rt, color="tab:purple", lw=1.2, marker=".", label="this IR (measured)")
-    else:
-        axes[1, 1].text(
-            0.03,
-            0.06,
-            "decay isn't exponential, so an RT60\nisn't meaningful for this IR",
-            transform=axes[1, 1].transAxes,
-            fontsize=8,
-        )
-    axes[1, 1].set(
-        xlabel="Frequency [Hz]", ylabel="RT60 [s]", title="Decay time by frequency", ylim=(0, None)
-    )
-    axes[1, 1].legend(fontsize=8, loc="upper right")
-    axes[1, 1].grid(ls=":", which="both")
-    return fig, time_axes
-
-
 def ibm_fig(snd, target, masker, mask):
     fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), sharex=True, layout="constrained")
     snd.plot(axes[0, 0], lw=0.4)
@@ -562,7 +415,6 @@ FIGURES = {
     "overview": lambda d: overview_fig(d.sound),
     "pv": lambda d: pv_fig(d.sound),
     "vocoder": lambda d: vocoder_fig(d.sound, d.extra["source"]),
-    "reverb": lambda d: reverb_fig(d.sound, d.extra["ir"], d.extra.get("kw")),
 }
 
 
@@ -604,7 +456,7 @@ def file_name(key: str, title: str) -> str:
 
 
 # ------------------------------------------------------------- example pages
-# The example pages (speech, textures, moving, vocoder, cepstrum) are runnable scripts in percent format,
+# The example pages (speech, textures, moving, vocoder, cepstrum, reverb) are runnable scripts in percent format,
 # where "# %%" starts a cell:
 #
 #   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
@@ -617,7 +469,7 @@ def file_name(key: str, title: str) -> str:
 # Every code cell is shown on the page exactly as it ran. Prose may use $TeX$, $$display TeX$$,
 # `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
 # where the cell stands. The scripts run from the repository root.
-EXAMPLE_PAGES = ["speech", "textures", "moving", "vocoder", "cepstrum"]
+EXAMPLE_PAGES = ["speech", "textures", "moving", "vocoder", "cepstrum", "reverb"]
 ROOT = HERE.parent.parent
 CELL = re.compile(r"# %%(?: \[(\w+)(?: (\w+))?\])?(?: (.*))?")
 
@@ -771,6 +623,8 @@ main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem
 header { max-width: 44rem; margin-bottom: 3.5rem; }
 h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
 header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
 nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
@@ -930,6 +784,7 @@ NAV = [
     ("moving.html", "Moving talkers"),
     ("vocoder.html", "Hearing through a vocoder"),
     ("cepstrum.html", "Cepstral analysis"),
+    ("reverb.html", "Synthetic reverberation"),
 ]
 
 
@@ -1169,12 +1024,16 @@ def build(out_dir: Path | None, single: Path | None) -> None:
         ' if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>'
     )
     header = f"""  <p>{n} sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear. Five topics have pages of their own, with the code for every example beside it:
-  <a href="speech.html">Seeing speech</a>, a short course in time-frequency analysis on one spoken sentence;
-  <a href="textures.html">Sound textures</a>, recordings and their syntheses from statistics;
-  <a href="moving.html">Moving talkers</a>, three talkers rendered through measured HRIRs, one of them moving;
-  <a href="vocoder.html">Hearing through a vocoder</a>, a simulation of cochlear-implant hearing; and
-  <a href="cepstrum.html">Cepstral analysis</a>, separating a voice's pitch from its timbre.</p>
+  the same audio you hear. Six topics have pages of their own, with the code for every example beside it:</p>
+  <ul>
+    <li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li>
+    <li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li>
+    <li><a href="moving.html">Moving talkers</a>: three talkers rendered through measured HRIRs, one of them moving.</li>
+    <li><a href="vocoder.html">Hearing through a vocoder</a>: a simulation of cochlear-implant hearing.</li>
+    <li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice's pitch from its timbre.</li>
+    <li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms
+      that break them.</li>
+  </ul>
   {HOW}"""
     site.write(
         "index.html",

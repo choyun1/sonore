@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Listening to sonore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
-<script>(() => { const moved = {"w1": "speech.html", "w2": "speech.html", "27": "speech.html", "28": "speech.html", "29": "speech.html", "t1": "speech.html", "30": "speech.html", "t00a": "textures.html", "t00b": "textures.html", "t01a": "textures.html", "t01b": "textures.html", "t02a": "textures.html", "t02b": "textures.html", "t03a": "textures.html", "t03b": "textures.html", "t04a": "textures.html", "t04b": "textures.html", "t05a": "textures.html", "t05b": "textures.html", "t06a": "textures.html", "t06b": "textures.html", "u00": "textures.html", "u01": "textures.html", "u10": "textures.html", "u11": "textures.html", "u20": "textures.html", "u21": "textures.html"}; const k = location.hash.slice(3); if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>
+<script>(() => { const moved = {"w1": "speech.html", "w2": "speech.html", "27": "speech.html", "28": "speech.html", "29": "speech.html", "t1": "speech.html", "30": "speech.html", "t00a": "textures.html", "t00b": "textures.html", "t01a": "textures.html", "t01b": "textures.html", "t02a": "textures.html", "t02b": "textures.html", "t03a": "textures.html", "t03b": "textures.html", "t04a": "textures.html", "t04b": "textures.html", "t05a": "textures.html", "t05b": "textures.html", "t06a": "textures.html", "t06b": "textures.html", "u00": "textures.html", "u01": "textures.html", "u10": "textures.html", "u11": "textures.html", "u20": "textures.html", "u21": "textures.html", "ci0": "vocoder.html", "ci1": "vocoder.html", "ci4": "vocoder.html", "ci8": "vocoder.html", "ci16": "vocoder.html", "ct8": "vocoder.html", "cp0": "vocoder.html", "cp8": "vocoder.html", "cm0": "vocoder.html", "cm8": "vocoder.html", "cm8p": "vocoder.html", "c1": "cepstrum.html", "c2": "cepstrum.html", "c3": "cepstrum.html", "c4": "cepstrum.html", "c5": "cepstrum.html", "16": "reverb.html", "17": "reverb.html", "r1": "reverb.html", "18": "reverb.html", "19": "reverb.html", "20": "reverb.html", "21": "reverb.html", "22": "reverb.html", "23": "reverb.html"}; const k = location.hash.slice(3); if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
   --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
@@ -24,6 +24,8 @@ main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem
 header { max-width: 44rem; margin-bottom: 3.5rem; }
 h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
 header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
 nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
@@ -45,6 +47,7 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
   font-size: 0.9rem; font-weight: 700; color: var(--accent); }
 audio { width: 100%; max-width: 19rem; display: block; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
@@ -72,16 +75,20 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html">Cepstral analysis</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html">Cepstral analysis</a><a href="reverb.html">Synthetic reverberation</a></nav>
 <header>
   <h1>Listening to sonore</h1>
-  <p>27 sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear. Five topics have pages of their own, with the code for every example beside it:
-  <a href="speech.html">Seeing speech</a>, a short course in time-frequency analysis on one spoken sentence;
-  <a href="textures.html">Sound textures</a>, recordings and their syntheses from statistics;
-  <a href="moving.html">Moving talkers</a>, three talkers rendered through measured HRIRs, one of them moving;
-  <a href="vocoder.html">Hearing through a vocoder</a>, a simulation of cochlear-implant hearing; and
-  <a href="cepstrum.html">Cepstral analysis</a>, separating a voice's pitch from its timbre.</p>
+  <p>19 sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
+  the same audio you hear. Six topics have pages of their own, with the code for every example beside it:</p>
+  <ul>
+    <li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li>
+    <li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li>
+    <li><a href="moving.html">Moving talkers</a>: three talkers rendered through measured HRIRs, one of them moving.</li>
+    <li><a href="vocoder.html">Hearing through a vocoder</a>: a simulation of cochlear-implant hearing.</li>
+    <li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice's pitch from its timbre.</li>
+    <li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms
+      that break them.</li>
+  </ul>
   <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -359,114 +366,6 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   </div></figure>
 </article>
 </section>
-<section aria-labelledby="h-rooms--natural-and-not">
-<h2 id="h-rooms--natural-and-not">Rooms, natural and not</h2>
-<p class="section-intro">After Traer &amp; McDermott (2016), who measured 271 real rooms and found their reverberation tightly constrained: an exponential decay, fastest at low and high frequencies. Synthetic rooms that break these regularities sound wrong. All rooms here have the same median RT60 (1 s) and direct-to-reverberant ratio (−3 dB); unlike the paper, they are not further equated for distortion, so some differences in loudness and length remain. Presented diotically, as in the paper.</p>
-
-<article class="sound" id="d-16" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.47558189964157704, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.13}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.47558189964157704, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 0.1295}]">
-  <div class="about">
-    <h3>Starter pistol, dry</h3>
-    <p class="desc">The source for the room demos: a sharp, broadband crack lasting a fraction of a millisecond. Its cochleagram shows the filterbank&#x27;s own response to a click: the filters are zero-phase, so they ring symmetrically before and after it (visible at this 60 dB range), whereas a real cochlea rings only afterwards.</p>
-    <audio controls preload="metadata" src="audio/16_starter_pistol_dry.flac"></audio>
-    <p class="file">16_starter_pistol_dry.flac, 0.1 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/16_starter_pistol_dry.png" width="1000" height="620" alt="Plots of the starter pistol, dry sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-17" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
-  <div class="about">
-    <h3>In a natural room</h3>
-    <p class="desc">A synthetic room with RT60 = 1 s whose decay follows the statistics of 271 real rooms: exponential, with mid frequencies ringing longest. Listeners can&#x27;t tell such IRs from real ones.</p>
-    <audio controls preload="metadata" src="audio/17_in_a_natural_room.flac"></audio>
-    <p class="file">17_in_a_natural_room.flac, 1.4 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/17_in_a_natural_room.png" width="1000" height="620" alt="Plots of the in a natural room sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-18" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
-  <div class="about">
-    <h3>Time-reversed decay</h3>
-    <p class="desc">The same decay run backwards: the reverberation swells up to the shot instead of dying away after it.</p>
-    <audio controls preload="metadata" src="audio/18_time-reversed_decay.flac"></audio>
-    <p class="file">18_time-reversed_decay.flac, 1.4 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/18_time-reversed_decay.png" width="1000" height="620" alt="Plots of the time-reversed decay sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-19" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 0.3975}]">
-  <div class="about">
-    <h3>Linear decay, matched start</h3>
-    <p class="desc">Starts at the natural level but falls linearly (in amplitude) rather than exponentially, with the same energy per band; it has to end early to do so.</p>
-    <audio controls preload="metadata" src="audio/19_linear_decay_matched_start.flac"></audio>
-    <p class="file">19_linear_decay_matched_start.flac, 0.4 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/19_linear_decay_matched_start.png" width="1000" height="620" alt="Plots of the linear decay, matched start sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-20" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
-  <div class="about">
-    <h3>Linear decay, matched end</h3>
-    <p class="desc">Linear decay that reaches zero where the natural decay is 60 dB down, again with the same energy per band. On a dB scale the decay bows outward instead of falling in a straight line.</p>
-    <audio controls preload="metadata" src="audio/20_linear_decay_matched_end.flac"></audio>
-    <p class="file">20_linear_decay_matched_end.flac, 1.4 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/20_linear_decay_matched_end.png" width="1000" height="620" alt="Plots of the linear decay, matched end sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-21" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
-  <div class="about">
-    <h3>Inverted frequency dependence</h3>
-    <p class="desc">Exponential, but low and high frequencies ring longest and the middle dies fastest, the reverse of real rooms. In the paper listeners often heard a separate high-frequency hiss rather than a room.</p>
-    <audio controls preload="metadata" src="audio/21_inverted_frequency_dependence.flac"></audio>
-    <p class="file">21_inverted_frequency_dependence.flac, 1.4 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/21_inverted_frequency_dependence.png" width="1000" height="620" alt="Plots of the inverted frequency dependence sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-22" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.494516764463766, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}, {&quot;x0&quot;: 0.5641360133140114, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.4685}]">
-  <div class="about">
-    <h3>Exaggerated frequency dependence</h3>
-    <p class="desc">The profile of a room twice as reverberant, scaled down: more sharply peaked than real rooms of this size. The subtlest variant; in the paper it was detected with impulses but not with speech.</p>
-    <audio controls preload="metadata" src="audio/22_exaggerated_frequency_dependence.flac"></audio>
-    <p class="file">22_exaggerated_frequency_dependence.flac, 1.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/22_exaggerated_frequency_dependence.png" width="1000" height="620" alt="Plots of the exaggerated frequency dependence sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-23" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49490035886066647, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}, {&quot;x0&quot;: 0.5637524189171116, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.2794999999999999}]">
-  <div class="about">
-    <h3>Reduced frequency dependence</h3>
-    <p class="desc">The profile of a room half as reverberant, scaled up: flatter than real rooms of this size. Also subtle.</p>
-    <audio controls preload="metadata" src="audio/23_reduced_frequency_dependence.flac"></audio>
-    <p class="file">23_reduced_frequency_dependence.flac, 1.3 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/23_reduced_frequency_dependence.png" width="1000" height="620" alt="Plots of the reduced frequency dependence sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-</section>
 <footer>Every sound and plot here is generated by <code>docs/gallery/build.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, using the library's own functions.</footer>
 </main>
 <script>
@@ -482,9 +381,51 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       heads.appendChild(d);
       return d;
     });
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines };
+    const canvas = el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
   });
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, time) => {
+      if (!src.t) return src.az[0];
+      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    };
+    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
+        const lo = Math.min(...src.az), hi = Math.max(...src.az);
+        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
   function draw(item) {
+    drawScene(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -496,6 +437,11 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   let active = null;
   function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
   items.forEach((item) => {
+    drawScene(item);
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
       active = item; requestAnimationFrame(loop);

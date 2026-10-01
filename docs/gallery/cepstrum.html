@@ -28,6 +28,8 @@ main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem
 header { max-width: 44rem; margin-bottom: 3.5rem; }
 h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
 header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
 nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
@@ -77,7 +79,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html" aria-current="page">Cepstral analysis</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html" aria-current="page">Cepstral analysis</a><a href="reverb.html">Synthetic reverberation</a></nav>
 <header>
   <h1>Cepstral analysis</h1>
 <p>A voiced sound is, to a first approximation, a train of glottal pulses filtered by the vocal
@@ -91,8 +93,8 @@ they land at low quefrencies, the first millisecond or two. The harmonics ripple
 spectrum once every <span class="tex">F_0</span> hertz, so they land at one period, <span class="tex">q = 1/F_0</span>, as a single peak.
 The two parts of the voice that were tangled in the spectrum come apart, and can be measured
 or edited separately.</p>
-<p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>, and ends by
-comparing it with reference implementations.</p>
+<p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>:</p>
+<ul><li><a href="#h-one-frame">One frame</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking, better envelopes, and the complex cepstrum.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
