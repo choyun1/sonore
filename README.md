@@ -254,17 +254,15 @@ sound from the gallery's demo list so the two can't drift apart.
 
 ## Conventions
 
-| | |
-|---|---|
-| Sounds | `Sound` = immutable `(n_samples, n_channels)` float array + `fs`. Operations return new Sounds. |
-| Arithmetic | `a + b` mixes, `a * b` multiplies sample-wise, `2 * a` scales, mono broadcasts to stereo. |
-| Bands and envelopes | A filterbank's output (`Subbands`) is a collection of Sounds, and so is its fine structure (`.tfs()`). Envelopes are *not* sounds: `Envelope` and `Envelopes` are their own types, non-negative, often at a low sampling rate, and applied to sounds by multiplication. `Envelopes` (one envelope per band) is what the field calls a **cochleagram**. The Hilbert decomposition is literal: `sb == sb.envelopes() * sb.tfs()`. |
-| Levels | `a + 6*dB`, `a - 3*dB`. Adding a bare number is an error, so it can't be mistaken for a DC offset. dB is always `20*log10(amplitude)`. |
-| Time | `snd[0.1:0.5]` slices by seconds; `snd.data` for samples. |
-| Randomness | Every stochastic function takes `rng=` (a seed or `np.random.Generator`). |
-| Binaural | Positive ITD = right ear leads; positive ILD = right ear louder. |
-| Space | Meters, head-centered, x = right, y = front, z = up. `hcc` = (distance cm, elevation °, azimuth ° clockwise from front). |
-| Plots | Every plotting function takes an optional `ax` and returns it; global matplotlib settings are never touched. |
+- **Sounds.** `Sound` = immutable `(n_samples, n_channels)` float array + `fs`. Operations return new Sounds.
+- **Arithmetic.** `a + b` mixes, `a * b` multiplies sample-wise, `2 * a` scales, mono broadcasts to stereo.
+- **Bands and envelopes.** A filterbank's output (`Subbands`) is a collection of Sounds, and so is its fine structure (`.tfs()`). Envelopes are *not* sounds: `Envelope` and `Envelopes` are their own types, non-negative, often at a low sampling rate, and applied to sounds by multiplication. `Envelopes` (one envelope per band) is what the field calls a **cochleagram**. The Hilbert decomposition is literal: `sb == sb.envelopes() * sb.tfs()`.
+- **Levels.** `a + 6*dB`, `a - 3*dB`. Adding a bare number is an error, so it can't be mistaken for a DC offset. dB is always `20*log10(amplitude)`.
+- **Time.** `snd[0.1:0.5]` slices by seconds; `snd.data` for samples.
+- **Randomness.** Every stochastic function takes `rng=` (a seed or `np.random.Generator`).
+- **Binaural.** Positive ITD = right ear leads; positive ILD = right ear louder.
+- **Space.** Meters, head-centered, x = right, y = front, z = up. `hcc` = (distance cm, elevation °, azimuth ° clockwise from front).
+- **Plots.** Every plotting function takes an optional `ax` and returns it; global matplotlib settings are never touched.
 
 ## What's in it
 
@@ -276,23 +274,23 @@ also at the top level as `so.name`; the texture ones are under
 
 | Module | Contents |
 |---|---|
-| `core.sound` | `Sound`, `load` |
-| `core.units` | `dB`, `Decibels` |
-| `signals.generators` | `silence`, `pure_tone`, `harmonic_complex`, `schroeder_complex`, `square_wave`, `sawtooth_wave`, `pulse_train`, `linear_chirp`, `exponential_chirp`, `gaussian_noise`, `correlated_noise`, `iterated_ripple_noise` |
-| `signals.processing` | `pad`, `truncate`, `concat`, `mix`, `normalize`, `match_fs`, `match_channels`, `relative_db`, `bandpass`, `butter_filter`, `amplitude_modulate` |
-| `analysis.frames` | `Frame` (invertible analyses: `analyze`, `synthesize` as least squares, `frame_bounds`, `energy`, `adjoint`), `Filterbank` (frequency-domain filters, any shape; canonical dual), `GaborFrame` (the STFT as a frame; any window, zero-padded FFTs), `TVGaborFrame` (a Gabor frame whose window changes over time, from an explicit schedule, `from_function`, or `pitch_adaptive` from an F0 track; exact inverse; coefficients are a `TVSTFT`) |
-| `analysis.filterbank` | `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `GammatoneFilterbank` (exact 4th-order gammatone responses, causal or zero-phase; `envelope_peak_delay` gives each filter's latency), `MorletFilterbank` (log-spaced Morlet wavelets); both add edge filters by default so synthesis is exact on the whole band, and `edges=False` gives the bare bank for cochleagrams. `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`), `noise_vocode` |
-| `analysis.representations` | `Spectrum`, `long_term_spectrum`, `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis), `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`), `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
-| `analysis.envelopes` | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`) |
-| `analysis.modulation` | `ConstantQModulationFilterbank`, `OctaveModulationFilterbank` (circular, analytic output optional) |
-| `stimuli.ripples` | `Ripple`, `RippleSum`, `DynamicRipple`, `ripple_sound`; patterns can also be any function `f(t, x)` of time and octaves, and `pattern.render(filterbank, dur, fs)` gives their `Envelopes` |
-| `stimuli.phasevocoder` | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `resynthesize` with `time_scale` and `freq_map`) |
-| `stimuli.binaural` | `apply_itd_ild`, `simple_bir`, `interaural_cues`, `oscor`, `phasewarp` |
-| `stimuli.spatialization` | `HRIRSet` (PKU-IOA, SOFA; onset-aligned interpolation), `spatialize`, `move_sound`, trajectories, coordinate conversions, `distance_gain_db` |
-| `stimuli.reverb` | `synth_ir` (natural rooms, or the paper's atypical `decay_shape` / `rt60_profile` / `drr_profile` variants), `band_rt60s`, `measure_rt60` |
-| `texture` | `TextureModel`, `TextureStats` (`.measure`, `.snr`, `.replace` for hybrids, `.save`/`.load`) |
-| `texture.synth` | `synthesize` (full loop), `impose_channel`; gradients in `texture.grad` |
-| `plotting` | `overview` and the `plot_*` functions behind each object's `.plot()`; `plot_tf_db` draws any time-frequency level on non-uniform frames; cochleagrams take `align="peak"` (draw causal gammatone bands without their latency) and `fscale="linear"` (to match spectrograms) |
+| [`core.sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/sound.py) | `Sound`, `load` |
+| [`core.units`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/units.py) | `dB`, `Decibels` |
+| [`signals.generators`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py) | `silence`, `pure_tone`, `harmonic_complex`, `schroeder_complex`, `square_wave`, `sawtooth_wave`, `pulse_train`, `linear_chirp`, `exponential_chirp`, `gaussian_noise`, `correlated_noise`, `iterated_ripple_noise` |
+| [`signals.processing`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/processing.py) | `pad`, `truncate`, `concat`, `mix`, `normalize`, `match_fs`, `match_channels`, `relative_db`, `bandpass`, `butter_filter`, `amplitude_modulate` |
+| [`analysis.frames`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py) | `Frame` (invertible analyses: `analyze`, `synthesize` as least squares, `frame_bounds`, `energy`, `adjoint`), `Filterbank` (frequency-domain filters, any shape; canonical dual), `GaborFrame` (the STFT as a frame; any window, zero-padded FFTs), `TVGaborFrame` (a Gabor frame whose window changes over time, from an explicit schedule, `from_function`, or `pitch_adaptive` from an F0 track; exact inverse; coefficients are a `TVSTFT`) |
+| [`analysis.filterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py) | `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `GammatoneFilterbank` (exact 4th-order gammatone responses, causal or zero-phase; `envelope_peak_delay` gives each filter's latency), `MorletFilterbank` (log-spaced Morlet wavelets); both add edge filters by default so synthesis is exact on the whole band, and `edges=False` gives the bare bank for cochleagrams. `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`), `noise_vocode` |
+| [`analysis.representations`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py) | `Spectrum`, `long_term_spectrum`, `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis), `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`), `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
+| [`analysis.envelopes`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/envelopes.py) | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`) |
+| [`analysis.modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py) | `ConstantQModulationFilterbank`, `OctaveModulationFilterbank` (circular, analytic output optional) |
+| [`stimuli.ripples`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py) | `Ripple`, `RippleSum`, `DynamicRipple`, `ripple_sound`; patterns can also be any function `f(t, x)` of time and octaves, and `pattern.render(filterbank, dur, fs)` gives their `Envelopes` |
+| [`stimuli.phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py) | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `resynthesize` with `time_scale` and `freq_map`) |
+| [`stimuli.binaural`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py) | `apply_itd_ild`, `simple_bir`, `interaural_cues`, `oscor`, `phasewarp` |
+| [`stimuli.spatialization`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py) | `HRIRSet` (PKU-IOA, SOFA; onset-aligned interpolation), `spatialize`, `move_sound`, trajectories, coordinate conversions, `distance_gain_db` |
+| [`stimuli.reverb`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/reverb.py) | `synth_ir` (natural rooms, or the paper's atypical `decay_shape` / `rt60_profile` / `drr_profile` variants), `band_rt60s`, `measure_rt60` |
+| [`texture.stats`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) | `TextureModel`, `TextureStats` (`.measure`, `.snr`, `.replace` for hybrids, `.save`/`.load`) |
+| [`texture.synth`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/synth.py) | `synthesize` (full loop), `impose_channel`; gradients in [`texture.grad`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/grad.py) |
+| [`plotting`](https://github.com/choyun1/sonore/blob/main/src/sonore/plotting.py) | `overview` and the `plot_*` functions behind each object's `.plot()`; `plot_tf_db` draws any time-frequency level on non-uniform frames; cochleagrams take `align="peak"` (draw causal gammatone bands without their latency) and `fscale="linear"` (to match spectrograms) |
 
 ## Related projects
 
@@ -323,8 +321,9 @@ also at the top level as `so.name`; the texture ones are under
 
 **Next, in order**
 
-1. **Release.** A CI workflow that runs the tests, then publishing to PyPI.
-   An on-demand loader for the PKU-IOA HRTF SOFA files is in progress.
+1. **First PyPI release.** CI and a trusted-publishing workflow are in place
+   (`docs/releasing.md`). An on-demand loader for the PKU-IOA HRTF SOFA files
+   is in progress.
 2. **JAX spike.** Port the texture channel objective to JAX, check it
    against the NumPy reference with the existing tests, and measure it
    against today's ~2 s per iteration. On the evidence, decide on an optional
@@ -506,7 +505,7 @@ architecture. I chose and documented the texture recordings and set the
 working rules: implement from the papers, verify every claim numerically,
 document every deviation and data choice, and write a design document before
 large features. I reviewed and applied each patch. The design principles that came out of
-this are summarized in [docs/design/philosophy.md](docs/design/philosophy.md).
+this are summarized in [docs/design/philosophy.md](https://github.com/choyun1/sonore/blob/main/docs/design/philosophy.md).
 
 **How it is verified.** I have not read every line by hand. What I rely on
 instead is the following:

@@ -15,7 +15,14 @@ keywords = ["psychoacoustics", "auditory", "hearing", "binaural", "HRTF", "stimu
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Multimedia :: Sound/Audio :: Analysis",
     "Topic :: Scientific/Engineering",
 ]
@@ -28,7 +35,10 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://github.com/choyun1/sonore"
+Gallery = "https://choyun1.github.io/sonore/gallery/"
+Source = "https://github.com/choyun1/sonore"
 Issues = "https://github.com/choyun1/sonore/issues"
+Changelog = "https://github.com/choyun1/sonore/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 play = ["sounddevice>=0.4"]
@@ -40,7 +50,9 @@ dev = ["pytest>=8", "ruff>=0.5", "h5py>=3.8"]
 path = "src/sonore/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-exclude = ["docs/gallery/audio", "docs/gallery/img", "docs/gallery/*.html", "docs/images"]
+# Code, tests and the tools the tests load. The docs (images, gallery, audio
+# samples) stay in the repository; the README and gallery tests skip without them.
+only-include = ["src", "tests", "tools", "CHANGELOG.md", "CITATION.cff"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sonore"]
