@@ -213,7 +213,7 @@ cochleagrams (the causal gammatone drawn with and without its latency), a
 pitch-adaptive frame whose windows are 3 periods long, a TANDEM-STRAIGHT-style
 power spectrum (Kawahara et al., 2011), and reassigned spectrograms (Auger &
 Flandrin, 1995). Every frame among them resynthesizes the sentence to about
-1e-15. [▶ classic](https://choyun1.github.io/sonore/gallery/#d-27) [▶ constant-Q](https://choyun1.github.io/sonore/gallery/#d-28) [▶ pitch](https://choyun1.github.io/sonore/gallery/#d-29) [▶ reassignment](https://choyun1.github.io/sonore/gallery/#d-30)
+1e-15. [▶ classic](https://choyun1.github.io/sonore/gallery/speech.html#d-27) [▶ constant-Q](https://choyun1.github.io/sonore/gallery/speech.html#d-28) [▶ pitch](https://choyun1.github.io/sonore/gallery/speech.html#d-29) [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30)
 
 ```python
 snd = so.load("docs/speech/bdl_arctic_a0131.flac")
@@ -241,11 +241,11 @@ new, report = synthesize(stats, duration=5, max_iter=30, progress=True)
 Synthesis is slow: about 2 s per iteration for 5 s of sound on one core, so
 30 iterations take about a minute. The gallery's syntheses are precomputed by
 `tools/make_texture_synths.py`.
-[▶ applause](https://choyun1.github.io/sonore/gallery/#d-t03a) [▶ synthesized](https://choyun1.github.io/sonore/gallery/#d-t03b)
-[▶ marginals only](https://choyun1.github.io/sonore/gallery/#d-u00) [▶ all textures](https://choyun1.github.io/sonore/gallery/#d-t00a)
+[▶ applause](https://choyun1.github.io/sonore/gallery/textures.html#d-t03a) [▶ synthesized](https://choyun1.github.io/sonore/gallery/textures.html#d-t03b)
+[▶ marginals only](https://choyun1.github.io/sonore/gallery/textures.html#d-u00) [▶ all textures](https://choyun1.github.io/sonore/gallery/textures.html#d-t00a)
 
 A creek recording and its synthesis: a new waveform with the same statistics
-(dashed black: the original's). [▶ stream](https://choyun1.github.io/sonore/gallery/#d-t01a) [▶ synthesized](https://choyun1.github.io/sonore/gallery/#d-t01b)
+(dashed black: the original's). [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01a) [▶ synthesized](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b)
 
 ![Stream texture, original and synthesized](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/texture_stream.png)
 
