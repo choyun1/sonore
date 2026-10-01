@@ -33,6 +33,7 @@ def main():
 
     db = hrir_data.HRIR_DATABASES["pku-ioa"]
     cache = args.cache or Path(tempfile.mkdtemp(prefix="pku-ioa-"))
+    cache.mkdir(parents=True, exist_ok=True)
     paths = {}
     print(f"Downloading {len(db.files)} SOFA files (about 13 MB each) into {cache}", file=sys.stderr)
     print("Checksums to paste into HRIR_DATABASES['pku-ioa'] (nothing to type here):")
