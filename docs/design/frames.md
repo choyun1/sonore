@@ -1225,6 +1225,17 @@ The sentence and its F0 track live under `docs/`, not in the package.
   falling at the end) and it is the shortest. The files supplied are the
   single-channel versions, without EGG, so the F0 track uses D13's Harvest
   fallback. Details and the licence status are in docs/speech/SOURCES.md.
+- **Patch 3, schedules.** `TVGaborFrame.pitch_adaptive(f0_times, f0,
+  t_end, periods=3, overlap=4)` and `tandem_power(sound, f0_times, f0,
+  periods=2.5, overlap=4, window="blackman")`, which returns a new
+  magnitude-only type, `TFPower` (`power`, `t`, `f`, `db`). The schedule
+  stops at the last center not after `t_end`, so covering a sound to its
+  last sample needs `t_end` = duration plus half the longest window;
+  `tandem_power` does that itself. On the sentence (Harvest track,
+  3 periods) the frame has 412 windows of 15.6–34.2 ms, A/B 0.78 over the
+  whole signal (0.84 in the interior, lowest at 1.69 s where the track
+  jumps briefly), and synthesis is exact to 3e-16. That is lower than
+  C20's 0.97 because the real track moves faster than C20's glides.
 
 ### Out of scope for step 3
 
