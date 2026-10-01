@@ -6,6 +6,11 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-01
+
+The first release archived on Zenodo, which gives it a DOI. No change to the
+library's code.
+
 ### Added
 - A starter notebook, `docs/notebooks/start.ipynb`, with an "Open in Colab"
   badge in the README: a first tour that installs sonore from PyPI and runs
@@ -48,6 +53,7 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.3.0...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.3.1...main
+[0.3.1]: https://github.com/choyun1/sonore/releases/tag/v0.3.1
 [0.3.0]: https://github.com/choyun1/sonore/releases/tag/v0.3.0
 [0.2.0]: https://github.com/choyun1/sonore/commit/213e21a
