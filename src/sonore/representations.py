@@ -249,6 +249,13 @@ class TVSTFT:
         :meth:`~sonore.frames.TVGaborFrame.synthesize`."""
         return self.frame.synthesize(self)
 
+    def plot(self, ax=None, channel: int = 0, **kwargs):
+        """Spectrogram in dB on the frame centers (see :func:`~sonore.plotting.plot_tf_db`)."""
+        from sonore.plotting import plot_tf_db
+
+        kwargs.setdefault("title", "Time-varying spectrogram")
+        return plot_tf_db(self.db[channel], self.t, self.f, ax=ax, **kwargs)
+
 
 # ------------------------------------------------- magnitude-only analyses
 @dataclass(frozen=True)
@@ -269,6 +276,12 @@ class TFPower:
         """``10*log10(power)``, floored like the other representations."""
         with np.errstate(divide="ignore"):
             return np.maximum(10 * np.log10(self.power), _FLOOR_DB)
+
+    def plot(self, ax=None, channel: int = 0, **kwargs):
+        """Power in dB (see :func:`~sonore.plotting.plot_tf_db`)."""
+        from sonore.plotting import plot_tf_db
+
+        return plot_tf_db(self.db[channel], self.t, self.f, ax=ax, **kwargs)
 
 
 def tandem_power(

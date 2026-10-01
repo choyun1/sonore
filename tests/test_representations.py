@@ -124,3 +124,17 @@ def test_reassignment_binning_and_limits():
     assert g.power.shape == (2, 2, 3)
     with pytest.raises(ValueError, match="hann"):
         so.reassigned_spectrogram(s, so.GaborFrame(0.016, window="hamming"))
+
+
+def test_tv_and_power_plots():
+    import matplotlib
+
+    matplotlib.use("Agg")
+    t = np.arange(0, 0.3, 0.005)
+    snd = _pulses(125.0, 0.3, _RFS)
+    tv = so.TVGaborFrame.pitch_adaptive(t, np.full_like(t, 125.0), t_end=0.3)
+    ax = tv.analyze(snd).plot(fmax=4000)
+    assert ax.get_title() == "Time-varying spectrogram" and ax.get_ylim() == (0, 4.0)
+    ax = so.tandem_power(snd, t, np.full_like(t, 125.0)).plot(db_range=40, title="TANDEM")
+    lo, hi = ax.collections[0].get_clim()
+    assert hi - lo == 40 and ax.get_title() == "TANDEM"

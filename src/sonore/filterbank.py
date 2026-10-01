@@ -296,6 +296,19 @@ class GammatoneFilterbank(BandpassFilterbank):
         """Bandwidth parameter ``b`` [Hz] of each bandpass filter."""
         return self.bandwidth_factor * erb_bandwidth(self.band_cfs)
 
+    @property
+    def envelope_peak_delay(self) -> np.ndarray:
+        """Time [s] from an impulse to the peak of each filter's envelope, one
+        per filter (as :attr:`cfs`): ``(order - 1) / (2 pi b)`` for causal
+        bandpass filters, 0 for zero-phase ones and for the (zero-phase) edge
+        filters. Drawing each band this much earlier shows a click as a
+        vertical line (see ``plot_envelopes(align="peak")``). This is the
+        envelope's peak, not the group delay ``order / (2 pi b)``, which is
+        the envelope's centroid and leaves a visible sweep.
+        """
+        d = (self.order - 1) / (2 * np.pi * self.b) if self.phase == "causal" else np.zeros(self.n_bands)
+        return np.concatenate([[0.0], d, [0.0]]) if self.edges else d
+
     def band_response(self, freqs):
         f = np.asarray(freqs, float)[:, None]
         fc, b, n = self.band_cfs[None, :], self.b[None, :], self.order
