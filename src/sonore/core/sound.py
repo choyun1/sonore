@@ -339,7 +339,7 @@ class Sound:
         return Sound(fftconvolve(self._data, h, axes=0), self.fs)
 
     def envelope(self, pad: float | str = "auto"):
-        """Hilbert envelope of each channel, as an :class:`~sonore.envelopes.Envelope`
+        """Hilbert envelope of each channel, as an :class:`~sonore.analysis.envelopes.Envelope`
         (not a Sound: you apply an envelope to a sound rather than listen to it).
         ``snd / snd.envelope()`` is the fine structure.
 
@@ -348,7 +348,7 @@ class Sound:
         the end of the envelope (or vice versa). ``pad=0`` is circular;
         a number pads by that many seconds.
         """
-        from sonore.envelopes import Envelope
+        from sonore.analysis.envelopes import Envelope
 
         p = self.n_samples if pad == "auto" else int(round(float(pad) * self.fs))
         x = np.pad(self._data, ((p, p), (0, 0))) if p else self._data

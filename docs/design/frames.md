@@ -1,6 +1,6 @@
 # Frames
 
-The design of `sonore.frames`: what `analyze`, `synthesize` and
+The design of `sonore.analysis.frames`: what `analyze`, `synthesize` and
 `frame_bounds` mean, the frames sonore ships, and the "seeing speech" gallery
 section that uses them. The work is split into steps, each agreed here before
 it is implemented and delivered as a stack of patches.
@@ -297,7 +297,7 @@ sum of sin^(2m) over M equal shifts is constant when M > m, so it is tight at
 hop = win/4. The checks use hops that don't divide the window evenly.
 
 The `Frame` base, `Filterbank` and `GaborFrame` go in a new module,
-`sonore.frames`. `CosineFilterbank` stays in `sonore.filterbank` and
+`sonore.analysis.frames`. `CosineFilterbank` stays in `sonore.analysis.filterbank` and
 subclasses `Filterbank`.
 
 The code is written as pure array functions over the responses and windows,

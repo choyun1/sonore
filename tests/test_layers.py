@@ -21,16 +21,6 @@ LAYERS = ["core", "signals", "analysis", "stimuli", "texture", "plotting"]
 
 # The flat modules not yet moved into their layer's subpackage.
 FLAT = {
-    "frames": "analysis",
-    "filterbank": "analysis",
-    "representations": "analysis",
-    "envelopes": "analysis",
-    "modulation": "analysis",
-    "ripples": "stimuli",
-    "reverb": "stimuli",
-    "binaural": "stimuli",
-    "spatialization": "stimuli",
-    "phasevocoder": "stimuli",
     "texture": "texture",
     "texture_grad": "texture",
     "texture_synth": "texture",

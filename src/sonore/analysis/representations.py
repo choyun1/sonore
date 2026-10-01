@@ -9,9 +9,9 @@ from dataclasses import dataclass
 import numpy as np
 from scipy.signal import ShortTimeFFT, welch
 
+from sonore.analysis.frames import GaborFrame, TVGaborFrame
 from sonore.core.sound import Sound
 from sonore.core.utils import amp_to_db, as_rng
-from sonore.frames import GaborFrame, TVGaborFrame
 
 __all__ = [
     "Spectrum",
@@ -113,7 +113,7 @@ class STFT:
     hop_dur
         Hop [s]; defaults to a quarter window (75% overlap).
     frame
-        A :class:`~sonore.frames.GaborFrame` to use instead (other windows,
+        A :class:`~sonore.analysis.frames.GaborFrame` to use instead (other windows,
         zero-padded FFTs); ``win_dur`` and ``hop_dur`` are then ignored.
     """
 
@@ -170,7 +170,7 @@ class STFT:
 
     def to_sound(self) -> Sound:
         """Inverse STFT (least-squares overlap-add); see
-        :meth:`~sonore.frames.GaborFrame.synthesize`."""
+        :meth:`~sonore.analysis.frames.GaborFrame.synthesize`."""
         return self.frame.synthesize(self)
 
     def griffin_lim(self, n_iter: int = 100, momentum: float = 0.99, rng=None) -> Sound:
@@ -195,7 +195,7 @@ class STFT:
 
 
 class TVSTFT:
-    """Coefficients of a :class:`~sonore.frames.TVGaborFrame`: a short-time
+    """Coefficients of a :class:`~sonore.analysis.frames.TVGaborFrame`: a short-time
     Fourier transform whose window changes over time.
 
     ``data`` has shape ``(n_channels, n_freqs, n_frames)`` like
@@ -246,7 +246,7 @@ class TVSTFT:
 
     def to_sound(self) -> Sound:
         """Least-squares resynthesis; see
-        :meth:`~sonore.frames.TVGaborFrame.synthesize`."""
+        :meth:`~sonore.analysis.frames.TVGaborFrame.synthesize`."""
         return self.frame.synthesize(self)
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
@@ -305,7 +305,7 @@ def tandem_power(
     Kawahara et al. (2011). Only this averaging is implemented, not
     TANDEM-STRAIGHT's smoothing or aperiodicity analysis.
 
-    The schedule is :meth:`~sonore.frames.TVGaborFrame.pitch_adaptive` over
+    The schedule is :meth:`~sonore.analysis.frames.TVGaborFrame.pitch_adaptive` over
     the sound, with F0 bridged across unvoiced stretches. The result is
     magnitude only: synthesizing from the pair would need a union of two
     frames, which sonore does not provide.
@@ -461,8 +461,8 @@ class ModulationSpectrum:
     ``ModulationSpectrum(stft)`` uses a dB spectrogram, so spectral modulation
     is w.r.t. *linear* frequency (cycles/kHz). :meth:`octave` uses subband
     envelopes on a log-frequency axis (cycles/octave), the axis on which
-    ripples (:mod:`sonore.ripples`) are defined; more generally, any
-    :class:`~sonore.envelopes.Envelopes` has ``.modulation_spectrum()``.
+    ripples (:mod:`sonore.stimuli.ripples`) are defined; more generally, any
+    :class:`~sonore.analysis.envelopes.Envelopes` has ``.modulation_spectrum()``.
 
     Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at
     ``(+rate, +density)``. Only non-negative spectral modulations are kept
@@ -516,7 +516,7 @@ class ModulationSpectrum:
             fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
             fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
         """
-        from sonore.filterbank import OctaveFilterbank
+        from sonore.analysis.filterbank import OctaveFilterbank
 
         fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, min(f_hi, 0.95 * sound.fs / 2))
         return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)

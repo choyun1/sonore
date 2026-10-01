@@ -12,19 +12,8 @@ Typical use in a notebook::
 """
 
 from sonore import texture
-from sonore.binaural import (
-    InterauralCues,
-    apply_itd_ild,
-    interaural_cues,
-    oscor,
-    phasewarp,
-    simple_bir,
-)
-from sonore.core.sound import Sound, load
-from sonore.core.units import Decibels, dB
-from sonore.core.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
-from sonore.envelopes import Envelope, Envelopes
-from sonore.filterbank import (
+from sonore.analysis.envelopes import Envelope, Envelopes
+from sonore.analysis.filterbank import (
     CosineFilterbank,
     ERBFilterbank,
     GammatoneFilterbank,
@@ -34,11 +23,13 @@ from sonore.filterbank import (
     noise_vocode,
     subbands,
 )
-from sonore.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
-from sonore.modulation import ConstantQModulationFilterbank, ModulationFilterbank, OctaveModulationFilterbank
-from sonore.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
-from sonore.plotting import overview
-from sonore.representations import (
+from sonore.analysis.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
+from sonore.analysis.modulation import (
+    ConstantQModulationFilterbank,
+    ModulationFilterbank,
+    OctaveModulationFilterbank,
+)
+from sonore.analysis.representations import (
     STFT,
     TVSTFT,
     Mask,
@@ -52,8 +43,10 @@ from sonore.representations import (
     reassigned_spectrogram,
     tandem_power,
 )
-from sonore.reverb import band_rt60s, measure_rt60, synth_ir
-from sonore.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
+from sonore.core.sound import Sound, load
+from sonore.core.units import Decibels, dB
+from sonore.core.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
+from sonore.plotting import overview
 from sonore.signals.generators import (
     correlated_noise,
     exponential_chirp,
@@ -81,7 +74,18 @@ from sonore.signals.processing import (
     relative_db,
     truncate,
 )
-from sonore.spatialization import (
+from sonore.stimuli.binaural import (
+    InterauralCues,
+    apply_itd_ild,
+    interaural_cues,
+    oscor,
+    phasewarp,
+    simple_bir,
+)
+from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
+from sonore.stimuli.reverb import band_rt60s, measure_rt60, synth_ir
+from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
+from sonore.stimuli.spatialization import (
     HRIRSet,
     circular_trajectory,
     distance_gain_db,
