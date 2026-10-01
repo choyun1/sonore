@@ -13,6 +13,12 @@ spatialization of moving sources, synthetic room reverberation, and sound
 texture synthesis. Levels are written as levels (`snd + 6*dB`), times as
 seconds (`snd[0.1:0.5]`), and any sound at the end of a notebook cell plays.
 
+It brings the sounds and representations of hearing research together in
+one coherent system, held to the following standard: every
+transform inverts exactly, the mathematics in its design documents is
+checked by independent scripts, and every example in the gallery can be
+heard beside the code that made it. It is built to learn from and to build on.
+
 The name comes from Pierre Schaeffer's *objet sonore*, the "sound object": a
 sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
@@ -55,8 +61,8 @@ meant in the same spirit.
 - **Teaching and demos.** One-call overview plots (waveform, spectrum,
   spectrogram, modulation spectrum) next to an audio player.
 
-sonore is not an experiment runner and does not calibrate to dB SPL; see
-"Related projects" below for those.
+sonore is not an experiment runner, does not calibrate to dB SPL, and has no
+models of the ear or of perception; see "Related projects" below for those.
 
 ## Install
 
@@ -191,11 +197,31 @@ also at the top level as `so.name`; the texture ones are under
 
 ## Related projects
 
-- [slab](https://github.com/DrMarc/slab): sound manipulation and psychoacoustic
-  experiments, with calibration and experiment tools. The closest overlap; use
-  it if you need calibrated levels or trial sequencing.
+Where to go for what sonore leaves out:
+
+- [slab](https://github.com/DrMarc/slab): calibrated levels in dB SPL,
+  playback, trial sequences and adaptive staircases. Its sound making
+  overlaps with sonore's, and the two share the same sample layout
+  (samples × channels), so a sound passes between them in one line:
+
+  ```python
+  s = slab.Sound(snd.data, samplerate=snd.fs)  # sonore to slab; then set s.level in dB SPL
+  snd = so.Sound(s.data, s.samplerate)          # slab to sonore
+  ```
+
+  slab reads samples as pascals, so a sonore sound at RMS 1 shows as 94 dB SPL
+  until you set its level.
 - [PsychoPy](https://www.psychopy.org/): running experiments.
-- [brian2hears](https://brian2hears.readthedocs.io/): auditory periphery models.
+- [Auditory Modeling Toolbox](https://amtoolbox.org/) (MATLAB/Octave) and
+  [torch_amt](https://github.com/StefanoGiacomelli/torch_amt) (PyTorch):
+  models of the auditory system that predict what a listener hears.
+- [brian2hears](https://brian2hears.readthedocs.io/): auditory periphery and
+  spiking models.
+- [MoSQITo](https://github.com/Eomys/MoSQITo): loudness, sharpness, roughness
+  and other sound quality metrics.
+- [Parselmouth](https://github.com/YannickJadoul/Parselmouth) (Praat in
+  Python) and [pyworld](https://github.com/JeremyCCHsu/Python-Wrapper-for-World-Vocoder)
+  (WORLD): speech analysis and synthesis.
 - [librosa](https://librosa.org/): music and audio analysis.
 - [pyroomacoustics](https://github.com/LCAV/pyroomacoustics): geometric room simulation.
 - [pyfar](https://pyfar.org/) / [sofar](https://github.com/pyfar/sofar): acoustics and SOFA files.
