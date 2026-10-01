@@ -79,7 +79,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html" aria-current="page">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html">Cepstral analysis</a><a href="reverb.html">Synthetic reverberation</a><a href="irn.html">Iterated rippled noise</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html">Cepstral analysis</a><a href="resynthesis.html">Analysis and resynthesis</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="textures.html">Sound textures</a><a href="moving.html" aria-current="page">Moving talkers</a><a href="reverb.html">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a></nav>
 <header>
   <h1>Moving talkers</h1>
 <p>Three men talk at once, one straight ahead and one 40° to each side. Which one do you follow?
@@ -87,6 +87,8 @@ If one of them moves, does that help? Cho &amp; Kidd (2022) asked this with stim
 on this page; the experiment's code, written with sonore's predecessor sigtools, is archived at
 <a href="https://github.com/choyun1/MSM">github.com/choyun1/MSM</a>.</p>
 <ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a>: three sentences, and the paths the target takes.</li><li><a href="#h-one-talker--moving">One talker, moving</a>: what motion alone sounds like.</li><li><a href="#h-three-talkers">Three talkers</a>: the target swinging back and forth in azimuth while the other two stay still.</li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a>: filtering with HRIRs that change over time, without clicks.</li></ul>
+<p>For the interaural cues one at a time, timing alone and correlation that changes, see <a href="binaural.html">Binaural
+cues</a>.</p>
 <p>Every sound here is rendered through measured head-related impulse responses (HRIRs) of a
 KEMAR manikin at 1 m (Qu et al., 2009), so listen with headphones.</p>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time

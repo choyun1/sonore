@@ -14,7 +14,7 @@ pytestmark = pytest.mark.skipif(
 
 
 GALLERY = ROOT / "docs" / "gallery"
-PAGES = ["index.html", "speech.html", "textures.html", "reverb.html", "irn.html"]
+PAGES = sorted(p.name for p in GALLERY.glob("*.html"))
 
 
 def test_readme_links_point_to_gallery_entries():

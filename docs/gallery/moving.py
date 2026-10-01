@@ -26,6 +26,9 @@ the PKU-IOA head-related impulse responses at 1 m (about 13 MB) the first time i
 # - [How the motion is rendered](#h-how-the-motion-is-rendered): filtering with HRIRs that change
 #   over time, without clicks.
 #
+# For the interaural cues one at a time, timing alone and correlation that changes, see [Binaural
+# cues](binaural.html).
+#
 # Every sound here is rendered through measured head-related impulse responses (HRIRs) of a
 # KEMAR manikin at 1 m (Qu et al., 2009), so listen with headphones.
 

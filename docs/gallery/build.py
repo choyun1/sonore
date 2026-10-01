@@ -1,11 +1,11 @@
-"""Build the listening gallery: every demo sound, its plots, and the page.
+"""Build the listening gallery: the topic pages, each a runnable script, and an index of them.
 
     python docs/gallery/build.py                 # -> docs/gallery/ (for GitHub Pages)
     python docs/gallery/build.py --single out.html   # also a self-contained page
 
 Everything is generated from sonore itself with fixed seeds, so the gallery is
 reproducible. Audio is FLAC (lossless: lossy codecs would alter the interaural
-phase and correlation that the binaural demos are about).
+phase and correlation that the binaural examples are about).
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import io
 import json
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib
@@ -29,377 +29,12 @@ import numpy as np  # noqa: E402
 from PIL import Image  # noqa: E402
 
 import sonore as so  # noqa: E402
-from sonore import dB  # noqa: E402
 
 HERE = Path(__file__).parent
-FS = 44100
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 
 
-# --------------------------------------------------------------------- demos
-@dataclass
-class Demo:
-    key: str
-    title: str
-    text: str
-    sound: so.Sound
-    plot: str  # which figure recipe
-    extra: dict = field(default_factory=dict)
-    headphones: bool = False
-
-
-def finish(snd: so.Sound) -> so.Sound:
-    snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
-
-
-def vibrato_complex(dur=2.0):
-    t = np.arange(int(dur * FS)) / FS
-    phase = 2 * np.pi * np.cumsum(220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * t))) / FS
-    return so.Sound(sum(np.cos(k * phase) / k for k in range(1, 20)), FS).normalize().ramp(30e-3)
-
-
-def gliding_target(dur=2.0):
-    """A harmonic complex gliding 150 -> 250 Hz with a 3 Hz level fluctuation: a stand-in for speech."""
-    t = np.arange(int(dur * FS)) / FS
-    phase = 2 * np.pi * np.cumsum(150 + 50 * t) / FS
-    target = so.Sound(sum(np.cos(k * phase) / k for k in range(1, 30)), FS).normalize()
-    return (target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))).ramp(20e-3)
-
-
-def demos() -> list[tuple[str, str, list[Demo]]]:
-    rip = {
-        "01": so.Ripple(4, 1),
-        "02": so.Ripple(-4, 1),
-        "03": so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45),
-        "06": so.DynamicRipple(rate_range=(-40, 40), seed=3),
-    }
-    sung = vibrato_complex()
-    pv = so.pv_analyze(sung)
-    syllables = sung * np.sin(2 * np.pi * 3 * sung.t).clip(0) ** 2
-    noise = so.gaussian_noise(0.8, FS, rng=0).ramp(20e-3)
-    noise2 = so.gaussian_noise(0.8, FS, rng=1).ramp(20e-3)
-
-    ripples = [
-        Demo(
-            "01",
-            "Downward ripple",
-            "Rate 4 Hz, density 1 cycle/octave, on log-spaced tones. Listen for a "
-            "continuous downward sweep, four times a second. The diagonal bands in the cochleagram are what you "
-            "are hearing; the waveform alone shows almost none of it.",
-            so.ripple_sound(rip["01"], 3, FS, rng=0),
-            "ripple",
-            {"pattern": rip["01"]},
-        ),
-        Demo(
-            "02",
-            "Upward ripple",
-            "The same ripple at −4 Hz, so the sweep rises. Its modulation-spectrum peak "
-            "moves to negative rate.",
-            so.ripple_sound(rip["02"], 3, FS, rng=0),
-            "ripple",
-            {"pattern": rip["02"]},
-        ),
-        Demo(
-            "03",
-            "Two ripples at once",
-            "4 Hz at 1 cycle/octave plus −12 Hz at 2.5 cycles/octave: two motions "
-            "in opposite directions, superimposed. The modulation spectrum separates them into two clean peaks.",
-            so.ripple_sound(rip["03"], 3, FS, rng=0),
-            "ripple",
-            {"pattern": rip["03"]},
-        ),
-        Demo(
-            "04",
-            "Same ripple, harmonic carrier",
-            "The first ripple on harmonics of 60 Hz. The motion is the "
-            "same, now over a low pitch; resolved low harmonics show as horizontal lines in the cochleagram.",
-            so.ripple_sound(rip["01"], 3, FS, carrier="harmonic", f0=60, rng=0),
-            "ripple",
-            {"pattern": rip["01"]},
-        ),
-        Demo(
-            "05",
-            "Same ripple, noise carrier",
-            "The same pattern on narrowband noise, which brings its own random "
-            "fluctuations, so the sweep sounds rougher.",
-            so.ripple_sound(rip["01"], 3, FS, carrier="noise", rng=0),
-            "ripple",
-            {"pattern": rip["01"]},
-        ),
-        Demo(
-            "06",
-            "Dynamic moving ripple",
-            "Rate and density wander randomly (rates within ±40 Hz at the lowest "
-            "frequency). Where the density passes through zero, every band pulses together, and only there does "
-            "the waveform show the modulation.",
-            so.ripple_sound(rip["06"], 4, FS, rng=0),
-            "ripple",
-            {"pattern": rip["06"], "dmr": True},
-        ),
-    ]
-    binaural = [
-        Demo(
-            "07",
-            "Oscor",
-            "Interaural correlation swings between +1 and −1 three times a second. The image in "
-            "your head alternates between focused and diffuse; only the correlation panel shows what changes.",
-            so.oscor(4, FS, f_mod=3, rng=0),
-            "binaural",
-            headphones=True,
-        ),
-        Demo(
-            "08",
-            "Phasewarp",
-            "The interaural phase of every component rotates through 360° twice a second, "
-            "so the zero-lag correlation follows a 2 Hz cosine.",
-            so.phasewarp(4, FS, f_mod=2, rng=0),
-            "binaural",
-            headphones=True,
-        ),
-        Demo(
-            "10",
-            "Timing alone",
-            "Noise with a 500 µs interaural time difference, leading in the left ear and "
-            "then in the right. The level difference is zero throughout; the sideways shift comes from timing.",
-            so.concat(
-                [
-                    so.apply_itd_ild(noise, itd=-500e-6),
-                    so.silence(0.3, FS),
-                    so.apply_itd_ild(noise2, itd=500e-6),
-                ]
-            ),
-            "binaural",
-            headphones=True,
-        ),
-    ]
-    vocoder = [
-        Demo("11", "Reference", "A 220 Hz harmonic complex with a 5 Hz, ±3% vibrato.", sung, "pv"),
-        Demo(
-            "12",
-            "Twice as long",
-            "Same pitch, double duration. The vibrato slows to 2.5 Hz as well: time "
-            "stretching stretches every temporal feature.",
-            so.time_stretch(sung, 2),
-            "pv",
-        ),
-        Demo(
-            "13",
-            "Up a fifth",
-            "Seven semitones higher, same duration, same 5 Hz vibrato.",
-            so.pitch_shift(sung, 7),
-            "pv",
-        ),
-        Demo(
-            "14",
-            "Partials shifted up 70 Hz",
-            "Oscillator-bank resynthesis with every partial moved up 70 Hz, "
-            "to 290, 510, 730 Hz and on: still 220 Hz apart, but no longer harmonics of anything nearby, so the "
-            "tone turns metallic and its pitch less certain.",
-            pv.resynthesize(freq_map=lambda f: f + 70),
-            "pv",
-        ),
-        Demo(
-            "14b",
-            "Partials shifted up 110 Hz",
-            "The same with half the spacing: 330, 550, 770 Hz are exactly "
-            "the odd harmonics of 110 Hz. The result is harmonic again, a hollow, clarinet-like tone an octave "
-            "below the reference.",
-            pv.resynthesize(freq_map=lambda f: f + 110),
-            "pv",
-        ),
-        Demo(
-            "15",
-            "Noise-vocoded",
-            "A syllabic 3 Hz harmonic sound through an 8-band noise vocoder: the rhythm "
-            "remains and the pitch is gone. The original isn't played; it is shown for comparison.",
-            so.noise_vocode(syllables, 8, rng=0),
-            "vocoder",
-            {"source": syllables},
-        ),
-    ]
-
-    target = gliding_target()
-    masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
-    mixture = target + (masker + 5 * dB)
-    S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
-    ibm = {"target": target, "masker": masker, "mask": so.ideal_binary_mask(S_t, S_m, lc_db=0)}
-    speech_in_noise = [
-        Demo(
-            "24",
-            "Target in noise",
-            "A gliding harmonic target (a stand-in for a voice) in pink noise at −5 dB SNR.",
-            mixture,
-            "ibm",
-            ibm,
-        ),
-        Demo(
-            "25",
-            "Ideal binary mask",
-            "The same mixture with every time-frequency cell where the noise dominates switched off. "
-            "The mask is computed from the separate target and noise, which is what makes it ideal "
-            "(Wang, 2005); the resynthesis is exact.",
-            (S_x * ibm["mask"]).to_sound(),
-            "ibm",
-            ibm,
-        ),
-    ]
-    sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
-    filterbanks = [
-        Demo(
-            "26",
-            "Perfect reconstruction",
-            "An exponential sweep split into 6 ERB-spaced bands plus the lowpass and highpass edge filters, "
-            "then summed back. What you hear is the reconstruction; it differs from the original only at the "
-            "level of floating-point rounding.",
-            so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize(),
-            "filterbank",
-            {"original": sweep},
-        ),
-    ]
-
-    return [
-        (
-            "Spectrotemporal ripples",
-            "Each ripple is a sinusoidal pattern in time and log-frequency: a rate in Hz "
-            "and a density in cycles per octave. The top-left panel is the pattern as specified; the others are "
-            "measured from the sound itself.",
-            ripples,
-        ),
-        (
-            "Binaural",
-            "These need headphones. Over speakers the two ears' signals mix in the room and the effects "
-            "disappear.",
-            binaural,
-        ),
-        (
-            "Filterbanks",
-            "Cosine filterbanks whose squared responses sum to 1, so analysis followed by synthesis is exact.",
-            filterbanks,
-        ),
-        (
-            "Speech in noise",
-            "Time-frequency masking: the STFT is invertible, so a masked spectrogram is a sound.",
-            speech_in_noise,
-        ),
-        (
-            "Phase vocoder",
-            "The first sound is the reference; the others change its duration, pitch, or partials.",
-            vocoder,
-        ),
-    ]
-
-
 # ------------------------------------------------------------------- figures
-def ripple_fig(snd, pattern, dmr=False):
-    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout="constrained")
-    pattern.plot(duration=snd.duration, f_lo=250, f_hi=8000, ax=axes[0, 0], colorbar=False)
-    axes[0, 0].set_title("Pattern as specified (envelope, dB)")
-    so.OctaveFilterbank.per_octave(24, 250, 8000).analyze(snd).envelopes(lowpass=200, fs=1000).plot(
-        axes[0, 1], db_range=30, colorbar=False
-    )
-    axes[0, 1].set_title("Measured envelopes of the sound (cochleagram)")
-    snd.plot(axes[1, 0], lw=0.4)
-    axes[1, 0].set_title("Waveform (the pattern barely shows here)")
-    ms = so.ModulationSpectrum.octave(snd, f_lo=250, f_hi=8000, scale="db" if dmr else "linear")
-    ms.plot(axes[1, 1], db_range=30, wt_max=50 if dmr else 20, wf_max=4, colorbar=False)
-    axes[1, 1].set_title("Measured modulation spectrum")
-    return fig, [axes[0, 0], axes[0, 1], axes[1, 0]]
-
-
-def binaural_fig(snd):
-    fig, axes = plt.subplots(3, 1, figsize=(10, 6.6), sharex=True, layout="constrained")
-    snd.plot(axes[0], lw=0.4)
-    axes[0].set_title("Waveform, left and right")
-    cues = so.interaural_cues(snd, win_dur=10e-3)
-    cues.plot(axes[1])
-    axes[1].set_xlabel("")
-    axes[2].plot(cues.t, cues.corr0, color="tab:orange", lw=1, label="correlation at zero lag")
-    axes[2].plot(cues.t, cues.iac, color="k", alpha=0.6, lw=1, label="coherence (peak over lags)")
-    axes[2].axhline(0, color="k", alpha=0.25, lw=0.8)
-    axes[2].set(ylim=(-1.05, 1.05), ylabel="Interaural corr.", xlabel="Time [s]", xlim=(0, snd.duration))
-    axes[2].legend(loc="lower right", fontsize=8)
-    axes[2].grid(ls=":")
-    return fig, list(axes)
-
-
-def pv_fig(snd):
-    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
-    gs = fig.add_gridspec(2, 2, height_ratios=[1, 1.6], width_ratios=[1.6, 1])
-    ax_w, ax_s, ax_f = fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])
-    snd.plot(ax_w, lw=0.5)
-    so.STFT(snd, 46e-3).plot(ax_s, fmax=3000, colorbar=False, db_range=70)
-    spec = so.long_term_spectrum(snd, nperseg=16384)
-    ax_f.plot(spec.f, spec.level - spec.level.max(), lw=0.8)
-    ax_f.set(
-        xlim=(0, 3000),
-        ylim=(-70, 3),
-        xlabel="Frequency [Hz]",
-        ylabel="Level [dB]",
-        title="Long-term spectrum",
-    )
-    ax_f.grid(ls=":")
-    return fig, [ax_w, ax_s]
-
-
-def vocoder_fig(snd, source):
-    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout="constrained")
-    snd.plot(axes[0, 0], lw=0.4)
-    axes[0, 0].set_title("Waveform of the vocoded sound")
-    so.subbands(snd, 8, 80, 8000).envelopes(lowpass=50, fs=1000).plot(axes[0, 1], colorbar=False, db_range=40)
-    axes[0, 1].set_title("Its 8 band envelopes")
-    so.STFT(source, 25e-3).plot(axes[1, 0], fmax=8000, colorbar=False)
-    axes[1, 0].set_title("Original (not played): harmonic, syllabic")
-    so.STFT(snd, 25e-3).plot(axes[1, 1], fmax=8000, colorbar=False)
-    axes[1, 1].set_title("Vocoded: envelopes kept, harmonics gone")
-    return fig, [axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]]
-
-
-def ibm_fig(snd, target, masker, mask):
-    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), sharex=True, layout="constrained")
-    snd.plot(axes[0, 0], lw=0.4)
-    axes[0, 0].set_title("Waveform")
-    mask.plot(axes[0, 1])
-    axes[0, 1].set(title="Ideal binary mask (target > noise)", ylim=(0, 5))
-    so.STFT(snd, 25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
-    axes[1, 0].set_title("Spectrogram of this sound")
-    so.STFT(target, 25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
-    axes[1, 1].set_title("The target alone (not played)")
-    return fig, [axes[0, 0], axes[1, 0]]
-
-
-def filterbank_fig(snd, original):
-    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
-    left, right = fig.subfigures(1, 2, width_ratios=[1.35, 1])
-    sb = so.subbands(original, n_bands=6, f_lo=100, f_hi=6000)
-    band_axes = left.subplots(len(sb), 1, sharex=True)
-    sb.plot(band_axes)
-    band_axes[0].set_title(
-        "so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)", family="monospace", fontsize=8
-    )
-    r = right.subplots(3, 1, sharex=True)
-    original.plot(r[0], color="k", lw=0.4)
-    r[0].set(title="Original sweep, 100 Hz to 6 kHz", xlabel="")
-    recon = sb.synthesize()  # recomputed: the played sound has been level-normalized
-    recon.plot(r[1], color="tab:blue", lw=0.4)
-    r[1].set(title="Reconstruction: sb.synthesize()", xlabel="")
-    err = recon - original
-    r[2].plot(err.t, 1e15 * err.data[:, 0], color="tab:red", lw=0.5)
-    r[2].set(title=f"Difference (max |error| = {err.peak:.1e})", ylabel="× 1e-15", xlabel="Time [s]")
-    r[2].grid(ls=":")
-    return fig, list(band_axes) + list(r)
-
-
-FIGURES = {
-    "ibm": lambda d: ibm_fig(d.sound, **d.extra),
-    "filterbank": lambda d: filterbank_fig(d.sound, **d.extra),
-    "ripple": lambda d: ripple_fig(d.sound, d.extra["pattern"], d.extra.get("dmr", False)),
-    "binaural": lambda d: binaural_fig(d.sound),
-    "pv": lambda d: pv_fig(d.sound),
-    "vocoder": lambda d: vocoder_fig(d.sound, d.extra["source"]),
-}
-
-
 def encode_figure(fig, time_axes) -> tuple[bytes, list[dict], tuple[int, int]]:
     """The figure as a 256-colour PNG, and where each time axis sits (for the playhead)."""
     fig.canvas.draw()
@@ -421,10 +56,6 @@ def encode_figure(fig, time_axes) -> tuple[bytes, list[dict], tuple[int, int]]:
     return out.getvalue(), regions, im.size
 
 
-def render_figure(demo) -> tuple[bytes, list[dict], tuple[int, int]]:
-    return encode_figure(*FIGURES[demo.plot](demo))
-
-
 def flac_bytes(snd: so.Sound) -> bytes:
     import soundfile as sf
 
@@ -438,7 +69,7 @@ def file_name(key: str, title: str) -> str:
 
 
 # ------------------------------------------------------------- example pages
-# The example pages (speech, textures, moving, vocoder, cepstrum, reverb, irn) are runnable scripts in percent format,
+# The example pages (speech, textures, moving, vocoder, cepstrum, ...) are runnable scripts in percent format,
 # where "# %%" starts a cell:
 #
 #   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
@@ -451,7 +82,18 @@ def file_name(key: str, title: str) -> str:
 # Every code cell is shown on the page exactly as it ran. Prose may use $TeX$, $$display TeX$$,
 # `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
 # where the cell stands. The scripts run from the repository root.
-EXAMPLE_PAGES = ["speech", "textures", "moving", "vocoder", "cepstrum", "reverb", "irn"]
+EXAMPLE_PAGES = [
+    "speech",
+    "cepstrum",
+    "resynthesis",
+    "ripples",
+    "irn",
+    "binaural",
+    "textures",
+    "moving",
+    "reverb",
+    "vocoder",
+]
 ROOT = HERE.parent.parent
 CELL = re.compile(r"# %%(?: \[(\w+)(?: (\w+))?\])?(?: (.*))?")
 
@@ -580,13 +222,6 @@ def example_page(path: Path) -> dict:
 
 
 # ---------------------------------------------------------------------- page
-ICON = (
-    '<svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" '
-    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/>'
-    '<path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3'
-    'a2 2 0 0 0-2-2H3z"/></svg>'
-)
-
 CSS = """
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
   --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
@@ -762,12 +397,15 @@ EXAMPLE_HEAD = f"""<link rel="stylesheet" href="{KATEX}katex.min.css" crossorigi
 NAV = [
     ("index.html", "Listening gallery"),
     ("speech.html", "Seeing speech"),
+    ("cepstrum.html", "Cepstral analysis"),
+    ("resynthesis.html", "Analysis and resynthesis"),
+    ("ripples.html", "Spectrotemporal ripples"),
+    ("irn.html", "Iterated rippled noise"),
+    ("binaural.html", "Binaural cues"),
     ("textures.html", "Sound textures"),
     ("moving.html", "Moving talkers"),
-    ("vocoder.html", "Hearing through a vocoder"),
-    ("cepstrum.html", "Cepstral analysis"),
     ("reverb.html", "Synthetic reverberation"),
-    ("irn.html", "Iterated rippled noise"),
+    ("vocoder.html", "Hearing through a vocoder"),
 ]
 
 
@@ -790,8 +428,8 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
         'rel="stylesheet">'
     )
     footer = footer or (
-        "Every sound and plot here is generated by <code>docs/gallery/build.py</code> in the "
-        '<a href="https://github.com/choyun1/sonore">sonore repository</a>, using the library\'s own functions.'
+        "Each page is a script in <code>docs/gallery</code> of the "
+        '<a href="https://github.com/choyun1/sonore">sonore repository</a>, run by <code>docs/gallery/build.py</code>.'
     )
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -978,51 +616,71 @@ def build_example_page(site: Site, name: str) -> list[str]:
     return keys
 
 
+# The index: no examples of its own, a list of the topic pages in three groups.
+TOPICS = [
+    (
+        "Seeing and changing sounds",
+        [
+            ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
+            ("cepstrum.html", "separating a voice's pitch from its timbre."),
+            (
+                "resynthesis.html",
+                "filterbanks that reconstruct exactly, spectrogram masking, and the phase vocoder.",
+            ),
+        ],
+    ),
+    (
+        "Stimuli",
+        [
+            ("ripples.html", "sounds defined by a moving pattern of modulation."),
+            ("irn.html", "a pitch made from noise and a delay."),
+            ("binaural.html", "differences between the ears: timing, and correlation that changes."),
+            ("textures.html", "recordings and their syntheses from statistics."),
+        ],
+    ),
+    (
+        "Listeners in the world",
+        [
+            ("moving.html", "three talkers rendered through measured HRIRs, one of them moving."),
+            ("reverb.html", "rooms built from the statistics of real ones, and rooms that break them."),
+            ("vocoder.html", "a simulation of cochlear-implant hearing."),
+        ],
+    ),
+]
+# Examples that were on the index before it became a list of pages. 15 (a noise-vocoded
+# syllabic tone) was dropped: the vocoder page covers noise vocoding, on speech.
+RETIRED = {"15": "vocoder.html"}
+
+
 def build(out_dir: Path | None, single: Path | None) -> None:
     site = Site(out_dir, single)
-    moved = {}
+    moved = dict(RETIRED)
     for name in EXAMPLE_PAGES:
         moved.update({key: f"{name}.html" for key in build_example_page(site, name)})
-
-    sections, n = ([], []), 0
-    for title, intro, items in demos():
-        bodies = ([], [])
-        for d in items:
-            snd = finish(d.sound)
-            png, regions, size = render_figure(Demo(**{**d.__dict__, "sound": snd}))
-            name = file_name(d.key, d.title)
-            hp = f'\n    <p class="headphones">{ICON}<span>Headphones</span></p>' if d.headphones else ""
-            desc = f'<p class="desc">{html.escape(d.text)}</p>'
-            for body, src in zip(bodies, site.media(name, flac_bytes(snd), png), strict=True):
-                if src:
-                    body.append(sound_article(d.key, d.title, desc, snd, src[0], src[1], regions, size, hp))
-            n += 1
-            print(f"  {name}")
-        for out, body in zip(sections, bodies, strict=True):
-            out.append(section_html(html.escape(title), body, intro))
 
     # Links to examples that moved to their own pages still land on them.
     redirect = (
         f"<script>(() => {{ const moved = {json.dumps(moved)}; const k = location.hash.slice(3);"
         ' if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>'
     )
-    header = f"""  <p>{n} sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear. Seven topics have pages of their own, with the code for every example beside it:</p>
-  <ul>
-    <li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li>
-    <li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li>
-    <li><a href="moving.html">Moving talkers</a>: three talkers rendered through measured HRIRs, one of them moving.</li>
-    <li><a href="vocoder.html">Hearing through a vocoder</a>: a simulation of cochlear-implant hearing.</li>
-    <li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice's pitch from its timbre.</li>
-    <li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms
-      that break them.</li>
-    <li><a href="irn.html">Iterated rippled noise</a>: a pitch made from noise and a delay.</li>
-  </ul>
-  {HOW}"""
-    site.write(
-        "index.html",
-        lambda v: page("Listening to sonore", "index.html", header, "\n".join(sections[v]), redirect),
+    labels = dict(NAV)
+    header = """  <p>Sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of the
+  same audio you hear and the code that made it. Every topic has a page of its own.</p>"""
+    sections = "\n".join(
+        section_html(
+            html.escape(group),
+            [
+                "<ul>"
+                + "".join(
+                    f'<li><a href="{href}">{labels[href]}</a>: {html.escape(text)}</li>'
+                    for href, text in pages
+                )
+                + "</ul>"
+            ],
+        )
+        for group, pages in TOPICS
     )
+    site.write("index.html", lambda v: page("Listening to sonore", "index.html", header, sections, redirect))
 
 
 if __name__ == "__main__":
