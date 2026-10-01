@@ -64,7 +64,7 @@ def main():
         "mirrored azimuth, ears swapped": (True, True),
     }
     fits = {c: [] for c in cases}
-    raw, unmatched = [], 0
+    raw, unmatched, sofa_1m = [], 0, None
     for d, path in paths.items():
         sofa = so.HRIRSet.from_sofa(path)
         if sofa.fs != dat.fs:
@@ -81,8 +81,22 @@ def main():
                 ref = dat.irs[j if flip else i, :: -1 if swap else 1, :n]
                 fits[c].append(fit(ir[:, :n], ref))
         print(f"{d:>4} cm: {len(sofa.positions)} positions, {sofa.irs.shape[-1]} taps")
+        if d == 100:
+            sofa_1m = sofa
     print(f"SOFA positions with no matching .dat position: {unmatched}")
     print(f"largest IR difference as stored, relative to the IR's peak: {max(raw):.3g}")
+    # Physics decides which copy is right: a source on the right reaches the
+    # right ear first and louder. Both sets are asked for the point 1 m to the right.
+    right = np.array([so.hcc_to_rect(100, 0, 90)])
+    print("as loaded, for a source 1 m to the right (should be: right ear louder and earlier):")
+    for label, hs in ((".dat files", dat), ("SOFA copy", sofa_1m)):
+        h = hs.irs[np.argmin(np.linalg.norm(hs.positions - right, axis=1))]
+        ild = 10 * np.log10(np.sum(h[1] ** 2) / np.sum(h[0] ** 2))
+        onset = [int(np.argmax(np.abs(x) >= 0.1 * np.abs(x).max())) for x in h]
+        print(
+            f"  {label:<11s} right ear {ild:+.1f} dB re left; "
+            f"onsets left {onset[0]}, right {onset[1]} samples"
+        )
     print("best delay and gain per explanation (medians over positions; residual 0 = exact):")
     for c, f in fits.items():
         f = np.array(f)
