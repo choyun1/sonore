@@ -1,3 +1,6 @@
+import gc
+import shutil
+
 import numpy as np
 import pytest
 
@@ -131,3 +134,54 @@ def test_stereo_and_silence():
     assert msg.power.shape[0] == 2
     assert np.isnan(msg.depth[1]).all()  # a silent channel has no depth
     assert np.isfinite(msg.depth[0][:, :, (msg.t > 0.2) & (msg.t < 0.3)]).all()
+
+
+def test_pooled_depth(tone_msg):
+    msg = tone_msg
+    pooled = msg.pooled_depth()
+    assert pooled.shape == (1, len(msg.fm), len(msg.t))
+    assert np.isnan(pooled[0, :, 0]).all()  # every window runs off the start
+    rate = int(np.flatnonzero(np.isclose(msg.fm, 4.0))[0])
+    steady = (msg.t > 1.4) & (msg.t < 1.6)
+    # one tone: pooling over the bands that pass it gives its depth back
+    assert np.allclose(pooled[0, rate, steady], 0.5, atol=0.01)
+
+
+@pytest.mark.filterwarnings("ignore:Animation was deleted")
+def test_plots(tone_msg):
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation
+
+    msg = tone_msg
+    for kwargs in ({}, {"band": 1000}, {"rate": 4}):
+        ax = msg.plot(**kwargs)
+        assert ax.get_yscale() == "log"
+        plt.close(ax.figure)
+    with pytest.raises(ValueError, match="not both"):
+        msg.plot(band=1000, rate=4)
+    fig = msg.slices(1.5)
+    assert len(fig.axes) == 4  # three cuts and the colour bar
+    anim = msg.animate(fps=10)
+    assert isinstance(anim, FuncAnimation)
+    del anim  # unrendered: let it go while the warning filter applies
+    gc.collect()
+    plt.close("all")
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="needs ffmpeg")
+def test_animation_with_audio(tmp_path):
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    snd = am_tone(dur=0.3, on=(0, 0.3))
+    env = so.ERBFilterbank(n_bands=4, f_lo=500, f_hi=2000).analyze(snd).envelopes(fs=FE)
+    msg = so.ModulationSpectrogram(env, f_lo=16.0, f_hi=32.0)
+    path = tmp_path / "msg.mp4"
+    msg.animate(path, sound=snd, fps=10, figsize=(2, 2), dpi=50)
+    assert path.stat().st_size > 0
+    plt.close("all")

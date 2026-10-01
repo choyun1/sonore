@@ -14,6 +14,9 @@ __all__ = [
     "plot_stft",
     "plot_mask",
     "plot_modulation_spectrum",
+    "plot_modulation_spectrogram",
+    "plot_modulation_slices",
+    "animate_modulation_spectrogram",
     "plot_subbands",
     "plot_envelope",
     "plot_envelopes",
@@ -126,6 +129,146 @@ def plot_modulation_spectrum(
     if colorbar:
         ax.figure.colorbar(im, ax=ax, label="dB")
     return ax
+
+
+def _depth_db(depth, valid=None):
+    """Depth in dB with invalid or undefined cells as NaN (drawn grey)."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        db = 20 * np.log10(depth)
+    if valid is not None:
+        db = np.where(valid, db, np.nan)
+    return np.where(np.isfinite(db), db, np.nan)
+
+
+def _depth_cmap(cmap):
+    import matplotlib
+
+    return matplotlib.colormaps[cmap].with_extremes(bad="0.75")
+
+
+def _depth_limits(db, db_range):
+    vmax = np.nanmax(db) if np.isfinite(db).any() else 0.0
+    return vmax - db_range, vmax
+
+
+def _modulation_view(msg, channel, band, rate):
+    """(values in dB, x, y, ylabel, title, log y) for one 2-D view."""
+    if band is not None and rate is not None:
+        raise ValueError("give band or rate, not both")
+    if rate is not None:
+        k = int(np.argmin(np.abs(np.log(msg.fm / rate))))
+        db = _depth_db(msg.depth[channel, :, k], msg.valid[:, k])
+        return db, msg.t, msg.f, "Frequency [Hz]", f"Modulation depth at {msg.fm[k]:.3g} Hz", True
+    if band is not None:
+        b = int(np.argmin(np.abs(msg.f - band)))
+        db = _depth_db(msg.depth[channel, b], msg.valid[b])
+        return db, msg.t, msg.fm, "Modulation rate [Hz]", f"Modulation depth, band at {msg.f[b]:.0f} Hz", True
+    db = _depth_db(msg.pooled_depth()[channel])
+    return db, msg.t, msg.fm, "Modulation rate [Hz]", "Modulation spectrogram", True
+
+
+def plot_modulation_spectrogram(
+    msg, ax=None, channel=0, band=None, rate=None, db_range=30.0, cmap="magma", colorbar=True
+):
+    """Modulation depth in dB as an image; cells the analysis marks invalid
+    (rate above the band's width, window past either end) are grey. The
+    default view is modulation rate against time, pooled over bands;
+    ``band=`` [Hz] picks one acoustic band, ``rate=`` [Hz] shows acoustic
+    band against time at one modulation rate. 0 dB is 100% modulation."""
+    ax = _ax(ax)
+    db, x, y, ylabel, title, logy = _modulation_view(msg, channel, band, rate)
+    vmin, vmax = _depth_limits(db, db_range)
+    im = ax.pcolormesh(
+        x, y, db, cmap=_depth_cmap(cmap), vmin=vmin, vmax=vmax, shading="auto", rasterized=True
+    )
+    if logy:
+        ax.set_yscale("log")
+    ax.set(xlabel="Time [s]", ylabel=ylabel, title=title)
+    if colorbar:
+        ax.figure.colorbar(im, ax=ax, label="Depth [dB]")
+    return ax
+
+
+def _plot_band_rate(msg, ax, i, channel, vmin, vmax, cmap):
+    db = _depth_db(msg.depth[channel, :, :, i], msg.valid[:, :, i])
+    im = ax.pcolormesh(msg.fm, msg.f, db, cmap=cmap, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
+    ax.set(xscale="log", yscale="log", xlabel="Modulation rate [Hz]", ylabel="Frequency [Hz]")
+    ax.set_title(f"Band x rate at {msg.t[i]:.2f} s")
+    return im
+
+
+def plot_modulation_slices(msg, t, rate=4.0, channel=0, db_range=30.0, cmap="magma", figsize=(13, 3.8)):
+    """Three linked cuts through a modulation spectrogram's time x band x
+    rate cube, with a cursor at ``t`` [s]: rate against time (pooled over
+    bands), band against time at ``rate`` [Hz], and band against rate at
+    ``t`` (Atlas and Shamma's joint display). One colour scale for all
+    three. Returns the figure."""
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(1, 3, figsize=figsize, layout="constrained")
+    cm = _depth_cmap(cmap)
+    views = [_modulation_view(msg, channel, None, None), _modulation_view(msg, channel, None, rate)]
+    i = int(np.argmin(np.abs(msg.t - t)))
+    snap = _depth_db(msg.depth[channel, :, :, i], msg.valid[:, :, i])
+    vmin, vmax = _depth_limits(np.concatenate([v[0].ravel() for v in views] + [snap.ravel()]), db_range)
+    for ax, (db, x, y, ylabel, title, _) in zip(axes[:2], views, strict=True):
+        ax.pcolormesh(x, y, db, cmap=cm, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
+        ax.set(yscale="log", xlabel="Time [s]", ylabel=ylabel, title=title)
+        ax.axvline(msg.t[i], color="w", lw=1.2)
+    im = _plot_band_rate(msg, axes[2], i, channel, vmin, vmax, cm)
+    fig.colorbar(im, ax=axes, label="Depth [dB]", shrink=0.9)
+    return fig
+
+
+def animate_modulation_spectrogram(
+    msg, path=None, sound=None, fps=25.0, channel=0, db_range=30.0, cmap="magma", figsize=(5, 4), dpi=100
+):
+    """The band x rate image moving with time, one video frame every
+    ``1/fps`` seconds. Returns a ``matplotlib.animation.FuncAnimation``
+    (``anim.to_jshtml()`` shows it in a notebook). With ``path`` it is saved
+    with ffmpeg; with ``sound`` too, the sound is added as the audio track."""
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation
+
+    times = np.arange(0.0, msg.t[-1] + 1e-9, 1.0 / fps)
+    idx = np.clip(np.round(times / msg.hop).astype(int), 0, len(msg.t) - 1)
+    db = _depth_db(msg.depth[channel], msg.valid)
+    vmin, vmax = _depth_limits(db, db_range)
+    cm = _depth_cmap(cmap)
+    fig, ax = plt.subplots(figsize=figsize, layout="constrained")
+    im = _plot_band_rate(msg, ax, idx[0], channel, vmin, vmax, cm)
+    fig.colorbar(im, ax=ax, label="Depth [dB]")
+
+    def update(j):
+        im.set_array(db[:, :, idx[j]].ravel())
+        ax.set_title(f"Band x rate at {times[j]:.2f} s")
+        return (im,)
+
+    anim = FuncAnimation(fig, update, frames=len(times), interval=1000.0 / fps, blit=False)
+    if path is not None:
+        _save_with_audio(anim, str(path), fps, dpi, sound)
+    return anim
+
+
+def _save_with_audio(anim, path, fps, dpi, sound):
+    import shutil
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError("saving an animation needs ffmpeg on the PATH")
+    if sound is None:
+        anim.save(path, writer="ffmpeg", fps=fps, dpi=dpi)
+        return
+    import soundfile as sf
+
+    with tempfile.TemporaryDirectory() as tmp:
+        video, audio = Path(tmp) / "video.mp4", Path(tmp) / "audio.wav"
+        anim.save(video, writer="ffmpeg", fps=fps, dpi=dpi)
+        sf.write(audio, sound.data, int(sound.fs))
+        cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video), "-i", str(audio)]
+        subprocess.run(cmd + ["-c:v", "copy", "-c:a", "aac", "-shortest", path], check=True)
 
 
 def _band_labels(cfs, edges=True):

@@ -166,6 +166,45 @@ class ModulationSpectrogram:
         of quantity as the texture statistics' ``mod_power``."""
         return np.nanmean(self._kind(kind), axis=-1)
 
+    def pooled_depth(self) -> np.ndarray:
+        """Depth pooled over acoustic bands, shape ``(n_channels, n_mod,
+        n_frames)``: ``sqrt(sum_b power) / sqrt(sum_b mean**2)`` over the
+        bands whose cell is :attr:`valid`, which weights bands by their level.
+        NaN where no band is valid."""
+        v = self.valid[None]
+        p = np.sum(np.where(v, self.power, 0.0), axis=1)
+        m2 = np.sum(np.where(v, self.mean**2, 0.0), axis=1)
+        tiny = 1e-24 * m2.max(axis=(1, 2), keepdims=True)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return np.where(m2 > tiny, np.sqrt(p / m2), np.nan)
+
+    def plot(self, ax=None, band: float | None = None, rate: float | None = None, **kwargs):
+        """Depth in dB as an image, invalid cells in grey. By default,
+        modulation rate against time, pooled over bands
+        (:meth:`pooled_depth`); ``band=`` [Hz] shows the acoustic band
+        nearest that frequency instead; ``rate=`` [Hz] shows acoustic band
+        against time at the modulation band nearest that rate."""
+        from sonore.plotting import plot_modulation_spectrogram
+
+        return plot_modulation_spectrogram(self, ax=ax, band=band, rate=rate, **kwargs)
+
+    def slices(self, t: float, rate: float = 4.0, **kwargs):
+        """Three linked cuts through the time x band x rate cube with a cursor
+        at ``t`` [s]: rate against time (pooled), band against time at
+        ``rate``, and band against rate at ``t``. Returns the figure."""
+        from sonore.plotting import plot_modulation_slices
+
+        return plot_modulation_slices(self, t, rate=rate, **kwargs)
+
+    def animate(self, path=None, sound=None, fps: float = 25.0, **kwargs):
+        """The band x rate image (depth, dB) frame by frame, as a matplotlib
+        animation. With ``path``, it is written to a video file (needs
+        ffmpeg), and with ``sound`` as well, the sound becomes its audio
+        track. Returns the animation."""
+        from sonore.plotting import animate_modulation_spectrogram
+
+        return animate_modulation_spectrogram(self, path=path, sound=sound, fps=fps, **kwargs)
+
     def _kind(self, kind: str) -> np.ndarray:
         if kind == "depth":
             return self.depth
