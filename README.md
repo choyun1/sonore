@@ -310,11 +310,12 @@ Where to go for what sonore leaves out:
 
 **Next, in order**
 
-1. **Texture modulation convergence.** Rebalance the objective so
-   modulation power converges (see Texture synthesis below).
-2. **Speech analysis and synthesis.** A WORLD-style model (Morise et al.,
-   2016; after STRAIGHT, Kawahara et al., 1999) built on the cepstrum and
-   the pitch-adaptive frame: an F0 tracker, a CheapTrick-style spectral
+1. **F0 tracking.** A robust F0 tracker in the manner of WORLD (Morise et
+   al., 2016) and its Harvest estimator, with a voiced/unvoiced decision,
+   compared frame by frame with the cepstral F0 that `Cepstrum` gives.
+2. **Speech analysis and synthesis.** The rest of a WORLD-style model
+   (after STRAIGHT, Kawahara et al., 1999), built on the F0 tracker, the
+   cepstrum and the pitch-adaptive frame: a CheapTrick-style spectral
    envelope (Morise, 2015), aperiodicity, and pulse-plus-noise synthesis.
    Alongside it, source-filter vowels (glottal source, formant resonators,
    radiation) and the Klatt synthesizer (Klatt, 1980; KLSYN88, Klatt &
@@ -327,6 +328,8 @@ Where to go for what sonore leaves out:
    methods are reviewed by Brandtsegg et al. (2018); sonore's windowed
    switching with onset-aligned interpolation is described on the
    [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) page.
+4. **Texture modulation convergence.** Rebalance the objective so
+   modulation power converges (see Texture synthesis below).
 
 **Texture synthesis**
 
