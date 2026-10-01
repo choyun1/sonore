@@ -221,7 +221,14 @@ the acoustic axis) and stores `power` and `mean` of shape
 (`env.modulation_spectrogram()`), to keep `envelopes.py` (371 lines) about
 envelopes; a thin method can be added later if notebooks want the chain.
 
-**D2. Kernels: constant-Q by default, fixed window as an option.** Hann
+**D2. The analysis window is a parameter, set in one of two ways.** As in
+an STFT, the window length decides the trade between time and modulation
+resolution (C1, C5), so it is the main knob. `cycles=3` (the default) gives
+each modulation band a window of `cycles / f_k` seconds: long for slow rates,
+short for fast ones; it must be a whole number of at least 2 so the
+window ignores the envelope's mean (C2). `window=T` gives every band the same T seconds. The
+frame step `hop` (10 ms) is separate from the window, as in an STFT. By
+default, Hann
 kernels with 3 cycles (Q ≈ 2.1, C1), whole cycles so the mean is ignored
 (C2), half-octave centres from 0.5 to 64 Hz (15 bands). `window=T` [s]
 switches to fixed-length kernels on a linear grid from 2/T (the first rate
@@ -274,6 +281,19 @@ modulation rate image at one time, Atlas and Shamma's joint display, and
 `msg.mean()` the time average (C7). All via `sonore.plotting`, like the
 other representations.
 
+The data is a cube per channel (time × acoustic band × modulation rate), and
+two more views show it as one. `msg.animate(path)` writes a video of the
+band × rate image moving with the sound, with the audio track (through
+matplotlib's animation writer, which needs ffmpeg), so the joint
+display plays like a moving 2-D modulation spectrum. `msg.slices(t)` draws
+three linked cuts through the cube with a shared cursor at time t: rate
+against time and band against time (each with the cursor as a line), and
+band against rate at the cursor. A filled 3-D volume plot is not
+recommended: the inner cells hide behind the outer ones. Note that the
+band × rate image is not the existing `ModulationSpectrum` (rate × spectral
+density, a 2-D Fourier transform); a moving version of that one is the
+cortical view left out of scope.
+
 **D8. No inversion.** No `to_sound` or `to_envelopes` (C9). The docstring
 says so and points to the circular modulation banks for modulation
 filtering. If a later step wants modulation-domain editing, keeping the
@@ -282,7 +302,11 @@ complex y is the route, and C9 says it would work for the envelope.
 **D9. Docs.** A README module-table row and a reference entry for each
 source. A gallery page (the chirped AM of C4, the 4 Hz AM of C3, the gallery
 sentence with its syllables showing at 2–8 Hz) comes in a follow-up PR once
-the class exists.
+the class exists. Its centrepiece is the three linked slices of D7 with the
+cursor following the page's audio player, so the band × rate image changes
+as the sound plays. The gallery pages are static HTML, so this needs a small
+piece of JavaScript that swaps precomputed band × rate frames as the player
+moves, the first interactive figure in the gallery.
 
 ## API sketch
 
@@ -296,8 +320,11 @@ msg.power.shape                              # (1, 24, 15, n_frames)
 msg.plot()                                   # rate vs time, pooled over bands
 msg.plot(rate=4)                             # acoustic band vs time at 4 Hz
 img = msg.at(1.2)                            # bands x rates at t = 1.2 s
+msg.slices(1.2)                              # three linked cuts, cursor at 1.2 s
+msg.animate("sentence.mp4")                  # band x rate image playing with the audio
 
-fixed = so.ModulationSpectrogram(env, window=2.0)  # STFT of each envelope
+slow = so.ModulationSpectrogram(env, cycles=6)     # longer windows, finer rate resolution
+fixed = so.ModulationSpectrogram(env, window=2.0)  # one 2 s window for all rates: STFT of each envelope
 live = so.ModulationSpectrogram(env, align="causal")
 ```
 
@@ -316,8 +343,8 @@ live = so.ModulationSpectrogram(env, align="causal")
 1. This document and `tools/check_modulation_spectrogram_claims.py`.
 2. `ModulationSpectrogram` with `power`, `mean`, `depth`, `valid`, `at`,
    `mean()` and both alignments; tests (D1–D5).
-3. `plot` and the views, README row and references (D7, D9).
-4. Gallery page, separately.
+3. `plot`, `slices` and `animate`, README row and references (D7, D9).
+4. Gallery page with the linked slices following the audio, separately.
 
 ## Out of scope
 
