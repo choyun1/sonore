@@ -17,8 +17,10 @@ mobile idea in the README (the modulation spectrum of everyday sounds, live)
 needs a version that runs block by block.
 
 Status: accepted 2026-10-01, with decisions D1–D9 as recommended below
-(D1 with the kernels as their own modulation filterbank). Not yet
-implemented.
+(D1 with the kernels as their own modulation filterbank). Patch 2 is
+implemented: `HannModulationFilterbank` in `src/sonore/analysis/modulation.py`
+and `ModulationSpectrogram` in `src/sonore/analysis/modspectrogram.py`,
+tested in `tests/test_modspectrogram.py`. Display (patch 3) is next.
 
 ## How the claims are verified
 
@@ -325,7 +327,8 @@ which weights bands by their level. `plot(band=...)` shows one acoustic band.
 `plot(rate=4)` shows acoustic band against time at one modulation rate,
 Greenberg and Kingsbury's display. `msg.at(t)` returns the acoustic band ×
 modulation rate image at one time, Atlas and Shamma's joint display, and
-`msg.mean()` the time average (C7). All via `sonore.plotting`, like the
+`msg.average()` the time average (C7; named `average` because `mean`
+is the stored local mean). All via `sonore.plotting`, like the
 other representations.
 
 The data is a cube per channel (time × acoustic band × modulation rate), and
@@ -381,7 +384,9 @@ live = so.ModulationSpectrogram(env, align="causal")
 - C3: a 4 Hz, depth 0.5 AM tone reads −6.0 ± 0.1 dB in the right cell
   between onset and offset, and `valid` is False at the ends.
 - C4: on a short glide, the tracked rate is within 0.1 octave.
-- C7: the time-averaged power matches the envelope's band power (circular).
+- C7 holds for circular filtering and is left to the checker; the class
+  filters with zero padding, so the tests check `filter` against `response`
+  instead.
 - C8: `align="causal"` equals `align="center"` delayed by half a kernel.
 - D2: an envelope rate below 3 × `f_hi` raises.
 
@@ -390,7 +395,7 @@ live = so.ModulationSpectrogram(env, align="causal")
 1. This document and `tools/check_modulation_spectrogram_claims.py`.
 2. `HannModulationFilterbank` in `modulation.py`, then
    `ModulationSpectrogram` with `power`, `mean`, `depth`, `valid`, `at`,
-   `mean()` and both alignments; tests (D1–D5).
+   `average()` and both alignments; tests (D1–D5).
 3. `plot`, `slices` and `animate`, README row and references (D7, D9).
 4. Gallery page with the linked slices following the audio, separately.
 
