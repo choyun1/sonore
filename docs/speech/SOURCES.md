@@ -7,29 +7,33 @@ The spoken sentence used by the "seeing speech" gallery section
 
 | File | Recording | Speaker | Source | Licence | Original |
 |---|---|---|---|---|---|
-| `bdl_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `bdl` (US English, male) | CMU ARCTIC `bdl` database, file `arctic_a0131.wav`, downloaded by Cho from festvox.org/cmu_arctic (2026-10-01) | CMU ARCTIC licence: **to be confirmed** (see below) | 2.53 s, 16 kHz, 16-bit, mono |
+| `bdl_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `bdl` (US English, male) | CMU ARCTIC `bdl` database, file `arctic_a0131.wav`, downloaded by Cho from festvox.org/cmu_arctic (2026-10-01) | CMU ARCTIC licence (CMU, permissive; see below) | 2.53 s, 16 kHz, 16-bit, mono |
 
 Citation: Kominek, J. & Black, A. W. (2004). The CMU Arctic speech databases.
 *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224.
 https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html
 
-**Status of the licence.** The CMU ARCTIC databases are distributed under a
-permissive CMU notice (use, copy and modify for any purpose, keeping the
-copyright notice, conditions and disclaimer, marking modifications, and
-keeping the authors' names). That summary comes from a copy redistributed by
-another project, not from the corpus itself. The release's own `COPYING`
-file has not yet been read, so this file does not yet reproduce it. That must
-be done before the recording is merged.
+**Licence.** The CMU ARCTIC notice is reproduced verbatim in
+[`COPYING_CMU_ARCTIC`](COPYING_CMU_ARCTIC), copied from the `COPYING` file
+of the `bdl` release Cho downloaded (supplied 2026-10-01). It grants use,
+copying and modification for any purpose, without fee, on three conditions:
+keep the copyright notice, conditions and disclaimer; mark modifications
+clearly; keep the original authors' names. This folder meets them by
+shipping that file next to the recordings, by the "Modifications" note
+below, and by the citation above.
 
 **The sentence text** has not been checked against the corpus prompt list
-(`etc/txt.done.data` in the release); it will be added with the licence.
+(`etc/txt.done.data` in the release).
 
 ## Processing
 
-`bdl_arctic_a0131.flac` holds exactly the samples of the original WAV file,
-re-encoded losslessly as FLAC (checked sample-for-sample). There is no
-trimming, resampling or level change. The gallery keeps it at its native
-16 kHz (D12).
+**Modifications** (marked as the licence requires):
+`bdl_arctic_a0131.flac` is the original `arctic_a0131.wav` re-encoded
+losslessly as FLAC. The samples are identical (checked sample for sample);
+there is no trimming, resampling or level change, and the gallery keeps
+it at its native 16 kHz (D12).
+`bdl_arctic_a0131.pm` is the release's pitch-mark file for this utterance,
+unmodified.
 
 ## F0 track
 
@@ -51,6 +55,16 @@ python tools/make_speech_f0.py docs/speech/bdl_arctic_a0131.flac
   clear period, 96% agree with Harvest to within 5%. On 9 frames the
   autocorrelation gives twice Harvest's F0; none gives half. The frames
   above 160 Hz are two brief runs (at 0.82 s and 1.71 s, 15–20 ms each).
+- Cross-check against the corpus's own pitch marks
+  (`bdl_arctic_a0131.pm`: 285 marks, about one per glottal cycle in voiced
+  speech, and marks through unvoiced stretches too, such as a uniform
+  93 Hz run at 1.46–1.60 s where Harvest finds no voicing). Where Harvest says voiced, the F0
+  implied by consecutive marks agrees with Harvest to within 5% at 79% of
+  the 251 intervals (median deviation 1.4%). The disagreements sit where the
+  marks themselves alternate between short and long cycles (around 1.6–1.76
+  s, cycle-to-cycle jumps such as 154, 89, 154 Hz), which Harvest's smooth
+  track averages over. How the release made its pitch marks (from the
+  speech or from an EGG channel) has not been checked.
 - Licences: WORLD is modified BSD; `pyworld` is MIT (from its repository's
   LICENSE file). Neither is redistributed here, and only the track they
   produced is.
