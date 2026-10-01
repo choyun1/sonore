@@ -1217,6 +1217,15 @@ The sentence and its F0 track live under `docs/`, not in the package.
 5. Display: `TVSTFT.plot`, the shared axis options, `align` (D18, D19).
 6. The gallery section (D20), with README entries.
 
+### Implementation notes
+
+- **Patch 2, the sentence.** `bdl` utterance `arctic_a0131` (2.5 s), chosen
+  from three `bdl` files Cho supplied because its Harvest track is the
+  cleanest (no octave jumps in the 100 ms overview; F0 about 95–150 Hz,
+  falling at the end) and it is the shortest. The files supplied are the
+  single-channel versions, without EGG, so the F0 track uses D13's Harvest
+  fallback. Details and the licence status are in docs/speech/SOURCES.md.
+
 ### Out of scope for step 3
 
 - An F0 estimator in sonore (D13).
