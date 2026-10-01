@@ -114,157 +114,36 @@ and the classic binaural stimuli.
 
 ## Gallery
 
-These are a selection from the [listening gallery](https://choyun1.github.io/sonore/gallery/); the ▶ links play
-each sound there. The `so.overview` of iterated rippled noise at the top is
-[▶ iterated rippled noise](https://choyun1.github.io/sonore/gallery/#d-09).
+The [listening gallery](https://choyun1.github.io/sonore/gallery/) has every
+sound beside plots of the same audio, with a playhead that follows it, and the
+code for each example. Three of the kinds of plot sonore draws:
 
-**Ideal binary mask.** A gliding harmonic target at −5 dB SNR, the IBM computed
-from the separate STFTs, and the masked mixture resynthesized.
-[▶ mixture](https://choyun1.github.io/sonore/gallery/#d-24) [▶ masked](https://choyun1.github.io/sonore/gallery/#d-25)
+**Spectrograms.** One sentence through a wideband (5 ms) and a narrowband
+(33 ms) Gabor frame: the first resolves the glottal pulses, the second the
+harmonics. [▶ listen](https://choyun1.github.io/sonore/gallery/speech.html#d-27)
 
-![Ideal binary mask](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ibm.png)
+![Wideband and narrowband spectrograms of a sentence](https://raw.githubusercontent.com/choyun1/sonore/main/docs/gallery/img/27_two_classic_spectrograms.png)
 
-```python
-S_t, S_m, S_x = (so.STFT(s, 25e-3) for s in (target, masker, target + masker))
-separated = (S_x * so.ideal_binary_mask(S_t, S_m, lc_db=0)).to_sound()
-```
+**Cepstrum.** The cepstrogram of the same sentence, with `so.Cepstrum`'s F0
+beside WORLD's Harvest. [▶ listen](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c2)
 
-**Oscor and Phasewarp** (Siveke et al., 2008). The zero-lag interaural
-correlation swings between +1 and −1 at the modulation rate (3 and 2 Hz here).
-Headphones needed. [▶ Oscor](https://choyun1.github.io/sonore/gallery/#d-07) [▶ Phasewarp](https://choyun1.github.io/sonore/gallery/#d-08)
+![Cepstrogram and cepstral pitch of a sentence](https://raw.githubusercontent.com/choyun1/sonore/main/docs/gallery/img/c2_the_cepstrogram_and_its_pitch.png)
 
-![Binaural cues of Oscor and Phasewarp](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/binaural_cues.png)
-
-**ERB filterbank with perfect reconstruction.** An exponential sweep split
-into 6 ERB-spaced bands, plus the lowpass and highpass edge filters that make
-the bank power-complementary, then summed back together. The reconstruction
-error is at the level of floating-point rounding. [▶ reconstruction](https://choyun1.github.io/sonore/gallery/#d-26)
-
-![Filterbank decomposition and reconstruction](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/filterbank.png)
-
-```python
-sb = so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)  # 8 filters: 6 bands + 2 edges
-sb.plot()  # stacked waveforms, shared scale
-reconstructed = sb.synthesize()  # == sweep to ~1e-15
-```
-
-**Spectrotemporal ripples.** A pattern is an object you can add, plot, and
-inspect before any sound exists. Top: the patterns as specified. Middle: the
-synthesized sounds' subband envelopes. Bottom: their measured modulation
-spectra. The single and summed ripples land exactly at their specified
-(rate, density); the dynamic ripple fills its range.
+**Modulation spectra.** Three ripple patterns as specified (top), the
+synthesized sounds' subband envelopes (middle), and their measured
+`so.ModulationSpectrum` (bottom), which peaks at each specified rate and density.
 [▶ single](https://choyun1.github.io/sonore/gallery/#d-01) [▶ sum of two](https://choyun1.github.io/sonore/gallery/#d-03) [▶ dynamic](https://choyun1.github.io/sonore/gallery/#d-06)
 
-![Ripples](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ripples.png)
+![Ripple patterns, envelopes, and modulation spectra](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ripples.png)
 
-```python
-pattern = so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45)  # Hz, cycles/octave
-pattern.plot()  # look before you listen
-snd = so.ripple_sound(pattern, 1.0, fs, carrier="tones")  # or "harmonic", "noise", "low-noise", a Sound
-so.ModulationSpectrum.octave(snd).plot()  # peaks at (4, 1) and (-12, 2.5)
-```
+More in the gallery:
 
-The first second of the same three sounds as waveforms. The broadband waveform (top) hardly shows
-the pattern, because a ripple spanning a cycle or more across frequency averages
-out when all bands are summed. It lives across bands: in narrow bands (bottom,
-every fifth quarter-octave band), the single ripple's 4 Hz modulation arrives
-later in each lower band, which is the downward drift. The dynamic ripple shows
-up in the broadband waveform only where its density passes near zero and every
-band is modulated in phase.
-
-![Ripple waveforms](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/ripple_waveforms.png)
-
-```python
-sb = so.OctaveFilterbank.per_octave(8, 250, 8000).analyze(snd)  # quarter-octave bands
-sb.plot(bands=range(3, len(sb) - 1, 5))  # every fifth band
-```
-
-Positive rates drift downward in frequency (Chi et al., 1999 convention).
-Carriers are scaled to equal energy per octave, so changing the carrier
-changes the fine structure but not the long-term spectrum.
-
-**Noise vocoding.** Eight ERB-spaced bands; envelopes survive, harmonic fine
-structure doesn't. `so.noise_vocode` is shorthand for the typed pipeline
-`(speech.envelopes(lowpass=50) * noise.tfs()).synthesize()`, where `speech`
-and `noise` are the two sounds' `Subbands` on the same filterbank.
-[▶ vocoded](https://choyun1.github.io/sonore/gallery/#d-15)
-The [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) page uses it to
-simulate cochlear-implant hearing: band count, noise or tone carriers, and envelope pitch.
-
-![Noise vocoder](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/vocoder.png)
-
-**Phase vocoder.** A 220 Hz complex with 5 Hz vibrato, stretched to twice the
-duration (the vibrato slows too, since every temporal feature is stretched),
-shifted up a fifth (vibrato rate unchanged), and resynthesized through an
-oscillator bank with every partial moved up 70 Hz, which makes it inharmonic
-(290, 510, 730 Hz, ...: still 220 Hz apart, but no longer harmonics of anything
-nearby). A shift of exactly half the spacing would not: +110 Hz gives odd
-harmonics of 110 Hz, a clarinet-like tone an octave down.
-[▶ original](https://choyun1.github.io/sonore/gallery/#d-11) [▶ stretched](https://choyun1.github.io/sonore/gallery/#d-12) [▶ up a fifth](https://choyun1.github.io/sonore/gallery/#d-13) [▶ +70 Hz](https://choyun1.github.io/sonore/gallery/#d-14) [▶ +110 Hz](https://choyun1.github.io/sonore/gallery/#d-14b)
-
-![Phase vocoder](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/phase_vocoder.png)
-
-```python
-analysis = so.pv_analyze(snd)
-inharmonic = analysis.resynthesize(freq_map=lambda f: f + 70)
-```
-
-**Seeing speech.** One sentence from CMU ARCTIC through several analyses on
-shared axes: wideband and narrowband spectrograms, Morlet and gammatone
-cochleagrams (the causal gammatone drawn with and without its latency), a
-pitch-adaptive frame whose windows are 3 periods long, a TANDEM-STRAIGHT-style
-power spectrum (Kawahara et al., 2011), and reassigned spectrograms (Auger &
-Flandrin, 1995). Every frame among them resynthesizes the sentence to about
-1e-15. [▶ classic](https://choyun1.github.io/sonore/gallery/speech.html#d-27) [▶ constant-Q](https://choyun1.github.io/sonore/gallery/speech.html#d-28) [▶ pitch](https://choyun1.github.io/sonore/gallery/speech.html#d-29) [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30)
-
-```python
-snd = so.load("docs/speech/bdl_arctic_a0131.flac")
-f0_times, f0 = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
-wide = so.GaborFrame(5e-3, 1e-3, n_fft=1024)  # Hann 5 ms, 1 ms hop
-wide.analyze(snd).plot(fmax=5000, db_range=60)
-adaptive = so.TVGaborFrame.pitch_adaptive(f0_times, f0, t_end=snd.duration + 0.02)  # 3 periods
-adaptive.analyze(snd).plot(fmax=5000)
-so.tandem_power(snd, f0_times, f0).plot(fmax=5000)
-t_edges, f_edges = np.arange(0, snd.duration, 5e-3), np.arange(0, 5020, 20)  # bins of about a pixel
-so.reassigned_spectrogram(snd, wide).binned(t_edges, f_edges).plot(fmax=5000)
-```
-
-**Cepstrum.** The real cepstrum of each STFT frame separates the smooth
-spectral envelope (low quefrencies) from the harmonics (a peak at one period).
-Cepstral F0 on the sentence above agrees with WORLD's Harvest within 5% on
-95% of the frames both call voiced; it is a baseline, not an F0 tracker.
-
-```python
-cep = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005))
-t, f0, peak = cep.f0(f_lo=75, f_hi=400)          # windows must hold 3 periods of f_lo
-envelope = cep.lifter(0.5 / 120).envelope()      # quefrencies below half a period
-residual = cep.lifter(0.5 / 120, keep="high").to_sound()
-```
-
-**Sound textures** (McDermott & Simoncelli, 2011). Measure a recording's
-statistics and synthesize a new sample from noise:
-
-```python
-from sonore.texture import TextureStats
-from sonore.texture.synth import synthesize
-
-stats = TextureStats.measure(so.load("applause.flac"))   # 1515 statistics
-new, report = synthesize(stats, duration=5, max_iter=30, progress=True)
-```
-
-Synthesis is slow: about 2 s per iteration for 5 s of sound on one core, so
-30 iterations take about a minute. The gallery's syntheses are precomputed by
-`tools/make_texture_synths.py`.
-[▶ applause](https://choyun1.github.io/sonore/gallery/textures.html#d-t03a) [▶ synthesized](https://choyun1.github.io/sonore/gallery/textures.html#d-t03b)
-[▶ marginals only](https://choyun1.github.io/sonore/gallery/textures.html#d-u00) [▶ all textures](https://choyun1.github.io/sonore/gallery/textures.html#d-t00a)
-
-A creek recording and its synthesis: a new waveform with the same statistics
-(dashed black: the original's). [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01a) [▶ synthesized](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b)
-
-![Stream texture, original and synthesized](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/texture_stream.png)
-
-Figures are regenerated by `python docs/make_figures.py`, which takes every
-sound from the gallery's demo list so the two can't drift apart.
+- [Listening gallery](https://choyun1.github.io/sonore/gallery/): ripples, binaural stimuli such as [▶ Oscor](https://choyun1.github.io/sonore/gallery/#d-07), [▶ iterated rippled noise](https://choyun1.github.io/sonore/gallery/#d-09), a filterbank's [▶ perfect reconstruction](https://choyun1.github.io/sonore/gallery/#d-26), the [▶ ideal binary mask](https://choyun1.github.io/sonore/gallery/#d-25), the [▶ phase vocoder](https://choyun1.github.io/sonore/gallery/#d-13), and [▶ rooms, natural and not](https://choyun1.github.io/sonore/gallery/#d-17).
+- [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html): a short course in time-frequency analysis on one sentence, from [▶ window length](https://choyun1.github.io/sonore/gallery/speech.html#d-w1) to [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30).
+- [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): recordings and their syntheses from statistics (McDermott & Simoncelli, 2011), such as a [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b).
+- [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html): three talkers rendered through measured HRIRs, [▶ one of them moving](https://choyun1.github.io/sonore/gallery/moving.html#d-m1).
+- [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html): cochlear-implant simulation, from [▶ one band](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci1) to [▶ sixteen](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci16).
+- [Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html): separating a voice's pitch from its timbre, [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3) and [▶ harmonics only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c4).
 
 ## Conventions
 
