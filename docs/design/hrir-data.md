@@ -16,6 +16,13 @@ the SOFA conventions project serves, one SOFA file of about 13 MB per distance,
 from <https://sofacoustics.org/data/database/pku-ioa/>. Users cite Qu et al.
 (2009).
 
+That copy is the left-right mirror image of the original `.dat` files: it
+keeps PKU-IOA's clockwise azimuth in SOFA's counter-clockwise field. Checked
+on 2026-10-01 against a full set of `.dat` files: after flipping the azimuth,
+every IR matches exactly, and only then does a source on the right reach the
+right ear first and louder (+15 dB, 39 samples earlier at 1 m). The registry
+marks the copy, and the loader flips it back.
+
 ## Behaviour
 
 - `load_hrirs("pku-ioa", distances=(100,))` returns one `HRIRSet`. Distances

@@ -30,11 +30,24 @@ class _Database:
     files: dict[float, tuple[str, str | None]]  # distance [cm] -> (file name, sha256)
     default: tuple[float, ...]
     citation: str
+    # The file stores azimuth clockwise in SOFA's counter-clockwise field, so
+    # read as SOFA it is the left-right mirror image of the measurement.
+    azimuth_clockwise: bool = False
+
+    def read(self, path: Path, **kwargs) -> HRIRSet:
+        hs = HRIRSet.from_sofa(path, **kwargs)
+        if self.azimuth_clockwise:
+            hs = HRIRSet(hs.irs, hs.positions * [-1.0, 1.0, 1.0], hs.fs, **kwargs)
+        return hs
 
 
 HRIR_DATABASES: dict[str, _Database] = {
     # KEMAR, 793 directions per distance, 65536 Hz. Its terms of use are not
     # published, so sonore only downloads the copy the SOFA project serves.
+    # That copy keeps PKU-IOA's clockwise azimuth: compared with the original
+    # .dat files, it is mirrored left to right, and a source on the right is
+    # louder in the right ear only after the correction
+    # (tools/check_pku_ioa_sofa.py).
     "pku-ioa": _Database(
         base_url="https://sofacoustics.org/data/database/pku-ioa/",
         files={
@@ -48,6 +61,7 @@ HRIR_DATABASES: dict[str, _Database] = {
             160: ("dist_1.6m.sofa", "b07c5a1fa120dace81916f94594af050f19126447595da75987ae3c488ae591f"),
         },
         default=(100,),
+        azimuth_clockwise=True,
         citation="Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer "
         "functions measured with high spatial resolution using a spark gap. IEEE TASLP 17(6).",
     ),
@@ -146,5 +160,5 @@ def load_hrirs(
     for d in distances:
         fname, sha256 = db.files[d]
         path = _fetch(db.base_url + fname, root / name / fname, sha256)
-        sets.append(HRIRSet.from_sofa(path, **kwargs))
+        sets.append(db.read(path, **kwargs))
     return HRIRSet.concat(sets, **kwargs)

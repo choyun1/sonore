@@ -9,7 +9,9 @@ version (0.x.y) only fixes bugs.
 ### Added
 - `so.load_hrirs()` downloads the PKU-IOA HRIR database on first use (1 m by
   default, any of its 8 distances on request), checks each file's SHA-256 and
-  caches it in `$SONORE_DATA_DIR` or the user cache directory.
+  caches it in `$SONORE_DATA_DIR` or the user cache directory. The SOFA copy it
+  downloads is mirrored left to right relative to the original `.dat` files;
+  the loader corrects it.
 - `HRIRSet.concat` merges HRIR sets, e.g. one per distance.
 - Continuous integration: tests and lint on Python 3.10 and 3.14 for every push
   and pull request, plus a check that the PyPI files build and pass their tests.

@@ -185,3 +185,21 @@ class TestLoadHRIRs:
         with pytest.warns(UserWarning, match="skipped 1 empty"):
             hs = so.HRIRSet.from_pku_ioa(tmp_path)
         assert len(hs.positions) == 4
+
+    def test_clockwise_sofa_copy_is_mirrored_back(self, server, monkeypatch):
+        """The PKU-IOA SOFA copy stores clockwise azimuth; the loader undoes the mirror image."""
+        import dataclasses
+
+        hrir_data, _, _, hs = server
+        assert hrir_data.HRIR_DATABASES["pku-ioa"].azimuth_clockwise is False  # the fixture's fake
+        db = dataclasses.replace(hrir_data.HRIR_DATABASES["pku-ioa"], azimuth_clockwise=True)
+        monkeypatch.setitem(hrir_data.HRIR_DATABASES, "pku-ioa", db)
+        s = so.load_hrirs()
+        np.testing.assert_allclose(s.positions[:, 0], -hs.positions[:, 0], atol=1e-12)
+        np.testing.assert_allclose(s.positions[:, 1:], hs.positions[:, 1:], atol=1e-12)
+
+
+def test_pku_ioa_registry_corrects_the_mirrored_copy():
+    from sonore.stimuli import hrir_data
+
+    assert hrir_data.HRIR_DATABASES["pku-ioa"].azimuth_clockwise

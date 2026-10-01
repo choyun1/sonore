@@ -66,7 +66,7 @@ def main():
     fits = {c: [] for c in cases}
     raw, unmatched, sofa_1m = [], 0, None
     for d, path in paths.items():
-        sofa = so.HRIRSet.from_sofa(path)
+        sofa = db.read(path)  # as so.load_hrirs reads it
         if sofa.fs != dat.fs:
             print(f"{d:>4} cm: sampling rate {sofa.fs:g} Hz, .dat files are {dat.fs:g} Hz")
         n = min(sofa.irs.shape[-1], dat.irs.shape[-1])
