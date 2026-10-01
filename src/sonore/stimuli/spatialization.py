@@ -12,6 +12,7 @@ as in the PKU-IOA database. (SOFA files use counter-clockwise azimuth;
 from __future__ import annotations
 
 import re
+import warnings
 from dataclasses import dataclass, field
 from fractions import Fraction
 from functools import cached_property
@@ -130,16 +131,25 @@ class HRIRSet:
         """Load the PKU-IOA database from its original ``.dat`` files
         (``azi{A}_elev{E}_dist{D}.dat``, float64, left then right), found in
         ``directory`` or any folder below it, such as the distributed
-        ``dist{D}/elev{E}/`` layout. :func:`load_hrirs` downloads the SOFA copy instead."""
+        ``dist{D}/elev{E}/`` layout. Empty files are skipped with a warning.
+        :func:`load_hrirs` downloads the SOFA copy instead."""
         pattern = re.compile(r"azi(-?\d+)_elev(-?\d+)_dist(\d+)\.dat$")
-        hcc, irs, paths = [], [], []
+        hcc, irs, paths, empty = [], [], [], []
         for p in sorted(Path(directory).rglob("*.dat")):
             m = pattern.search(p.name)
             if m:
+                if p.stat().st_size == 0:
+                    empty.append(p)
+                    continue
                 a, e, d = map(float, m.groups())
                 hcc.append((d, e, a))
                 irs.append(np.fromfile(p))
                 paths.append(p)
+        if empty:
+            warnings.warn(
+                f"skipped {len(empty)} empty .dat file(s), e.g. {empty[0]}; those directions are missing",
+                stacklevel=2,
+            )
         if not irs:
             raise FileNotFoundError(f"no PKU-IOA .dat files in {directory}")
         sizes = [x.size for x in irs]

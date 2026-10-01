@@ -177,3 +177,11 @@ class TestLoadHRIRs:
             ValueError, match=r"1 of 5 .dat files(.|\n)*azi0_elev10_dist20.dat \(1024 values\)"
         ):
             so.HRIRSet.from_pku_ioa(tmp_path)
+
+    def test_pku_ioa_skips_empty_files(self, tmp_path):
+        for a in range(0, 360, 90):
+            np.ones(2048).tofile(tmp_path / f"azi{a}_elev0_dist20.dat")
+        (tmp_path / "azi210_elev-30_dist20.dat").touch()
+        with pytest.warns(UserWarning, match="skipped 1 empty"):
+            hs = so.HRIRSet.from_pku_ioa(tmp_path)
+        assert len(hs.positions) == 4
