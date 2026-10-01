@@ -208,6 +208,28 @@ z = cep.lifter(2e-3).to_sound(phase="minimum")
   pulse-plus-noise synthesis.
 - Mel-cepstra and MFCCs.
 
+## Reference implementations
+
+`tools/crosscheck_cepstrum.py` compares `so.Cepstrum` with independent
+implementations (SciPy 1.17.1; Praat 6.1.38 through `parselmouth` 0.4.7, a
+development-time dependency only):
+
+- **MATLAB `rceps`**: its documented definition,
+  `real(ifft(log(abs(fft(x)))))`, written out in NumPy for one 40 ms frame,
+  matches to 4e-16.
+- **SciPy `scipy.signal.minimum_phase(method="homomorphic", half=False)`**,
+  the same fold: on a 17-tap mixed-phase FIR at n_fft 4096, it matches to
+  4e-8 of the peak. SciPy adds 1e-7 of the smallest magnitude before the
+  log, which accounts for the difference.
+- **Praat's PowerCepstrogram** (Gaussian window, power spectrum in dB, sound
+  resampled to 10 kHz), peak searched in 75–400 Hz on the gallery sentence.
+  On the 432 frames Harvest calls voiced, sonore's and Praat's peaks agree
+  within 5% on 81%; on the 318 of those whose sonore peak exceeds 0.1, on
+  98%. Against Harvest, Praat's peak agrees on 75% and sonore's on 78%.
+
+The gallery page `docs/gallery/cepstrum.py` (cepstrum.html) demonstrates the
+class on the sentence and lists the same comparisons.
+
 ## References
 
 Noll (1967) was verified by lookup (PubMed 6040805: *JASA* 41(2), 293–309).

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cepstral analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
+  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+audio { width: 100%; max-width: 19rem; display: block; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html" aria-current="page">Cepstral analysis</a></nav>
+<header>
+  <h1>Cepstral analysis</h1>
+<p>A voiced sound is, to a first approximation, a train of glottal pulses filtered by the vocal
+tract. In the spectrum the two multiply: the pulses give a comb of harmonics at multiples of
+<span class="tex">F_0</span>, and the tract shapes their heights into formants. Take the logarithm and the product
+becomes a sum. The <em>cepstrum</em> is the Fourier transform of that log spectrum (Bogert et al.,
+1963):</p>
+<div class="tex display">c(q) = \mathcal{F}^{-1}\{\ln |X(f)|\}(q)</div>
+<p>Its variable <span class="tex">q</span>, the <em>quefrency</em>, is a time. The formants vary slowly along frequency, so
+they land at low quefrencies, the first millisecond or two. The harmonics ripple the log
+spectrum once every <span class="tex">F_0</span> hertz, so they land at one period, <span class="tex">q = 1/F_0</span>, as a single peak.
+The two parts of the voice that were tangled in the spectrum come apart, and can be measured
+or edited separately.</p>
+<p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>, and ends by
+comparing it with reference implementations.</p>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-the-sentence--and-code-the-examples-share">
+<h2 id="h-the-sentence--and-code-the-examples-share">The sentence, and code the examples share</h2>
+<p>Every cepstrum below is taken from an STFT with Hann windows 40 ms long, every 5 ms. A window
+must hold about three periods for the harmonics to show as a ripple, and 40 ms is three periods
+at 75 Hz, below this speaker's lowest pitch.</p>
+<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+# The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
+# Sources: docs/speech/SOURCES.md.
+sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
+f0_times, f0_harvest = np.loadtxt(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;, delimiter=&quot;,&quot;, skiprows=2).T
+fs = sentence.fs
+
+stft = so.STFT(sentence, win_dur=0.040, hop_dur=0.005)
+cep = so.Cepstrum(stft)
+FMAX = 5000</code></pre></div>
+</section>
+<section aria-labelledby="h-one-frame">
+<h2 id="h-one-frame">One frame</h2>
+<p>Take one frame in the middle of a vowel. Its log spectrum is a comb of harmonics riding on the
+formant envelope. Its cepstrum has most of its weight in the first couple of milliseconds, and
+one clear peak at the pitch period. Keeping only the quefrencies below half a period (a
+<em>lifter</em>, the cepstral counterpart of a filter) and transforming back gives the smooth
+envelope.</p>
+
+<article class="still" id="d-c1">
+  <div class="about">
+    <h3>One frame</h3>
+    <div class="desc"><p>Top: the frame's log spectrum and the liftered envelope. Bottom: its cepstrum, with the peak
+at one period. The envelope runs a few dB under the harmonic peaks because the lifter averages
+the peaks with the dips between them; spectral-envelope estimators such as WORLD's CheapTrick
+correct for this (Morise, 2015).</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/c1_one_frame.png" width="1000" height="560" alt="One frame" loading="lazy">
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">i = int(np.argmin(np.abs(cep.t - 0.50)))
+_, f0_all, peak_all = cep.f0()
+t_frame, f0_frame, peak_frame = cep.t[i], f0_all[0, i], peak_all[0, i]
+cutoff = 0.5 / f0_frame  # half a period
+envelope = cep.lifter(cutoff).envelope()[0, :, i]
+
+fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), layout=&quot;constrained&quot;)
+ax0.plot(stft.f, 20 * np.log10(np.abs(stft.data[0, :, i])), color=&quot;0.4&quot;, lw=0.8, label=&quot;spectrum&quot;)
+ax0.plot(stft.f, 20 * np.log10(envelope), color=&quot;tab:red&quot;, lw=1.6, label=&quot;liftered below half a period&quot;)
+ax0.set(
+    xlim=(0, FMAX),
+    xlabel=&quot;Frequency [Hz]&quot;,
+    ylabel=&quot;Level [dB]&quot;,
+    title=f&quot;Frame at {t_frame:.3f} s: log spectrum and envelope&quot;,
+)
+ax0.legend(loc=&quot;upper right&quot;, fontsize=8)
+q_ms = cep.q * 1e3
+ax1.plot(q_ms, cep.data[0, :, i], color=&quot;k&quot;, lw=0.8)
+ax1.axvline(cutoff * 1e3, color=&quot;tab:red&quot;, ls=&quot;--&quot;, lw=1, label=f&quot;lifter cutoff, {cutoff * 1e3:.1f} ms&quot;)
+peak_label = f&quot;peak at {1e3 / f0_frame:.2f} ms: F0 = {f0_frame:.0f} Hz&quot;
+ax1.plot(1e3 / f0_frame, peak_frame, &quot;o&quot;, color=&quot;tab:blue&quot;, label=peak_label)
+ax1.set(xlim=(0, 15), ylim=(-0.2, 0.6), xlabel=&quot;Quefrency [ms]&quot;, ylabel=&quot;Cepstrum&quot;, title=&quot;Its cepstrum&quot;)
+ax1.legend(loc=&quot;upper right&quot;, fontsize=8)
+for ax in (ax0, ax1):
+    ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-pitch-from-the-cepstrum">
+<h2 id="h-pitch-from-the-cepstrum">Pitch from the cepstrum</h2>
+<p>Doing this for every frame gives a <em>cepstrogram</em>: time across, quefrency up. Wherever the
+voice is voiced, a bright line runs at one period, falling as the pitch rises. Picking the
+largest peak between 2.5 and 13.3 ms (400 and 75 Hz) in each frame is classic cepstral pitch
+estimation (Noll, 1967). A frame counts as voiced when its peak is taller than 0.1.</p>
+
+<article class="sound" id="d-c2" data-regions="[{&quot;x0&quot;: 0.056447707465277774, &quot;x1&quot;: 0.9950613025728856, &quot;top&quot;: 0.041165417286705974, &quot;bottom&quot;: 0.4514075730096725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.056447707465277774, &quot;x1&quot;: 0.9950613025728856, &quot;top&quot;: 0.5094940809461801, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>The cepstrogram and its pitch</h3>
+    <div class="desc"><p>Top: the cepstrogram, with Harvest's pitch period drawn over it. Bottom: the cepstral F0 next
+to Harvest's. Each frame is judged on its own, with no continuity from one frame to the next,
+so the occasional frame jumps an octave.</p></div>
+    <audio controls preload="metadata" src="audio/c2_the_cepstrogram_and_its_pitch.flac"></audio>
+    <p class="file">c2_the_cepstrogram_and_its_pitch.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/c2_the_cepstrogram_and_its_pitch.png" width="1000" height="560" alt="Plots of the the cepstrogram and its pitch sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">t, f0_cep, peak = cep.f0(f_lo=75, f_hi=400)
+voiced = f0_harvest &gt; 0
+fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout=&quot;constrained&quot;)
+cep.plot(ax0, colorbar=False)
+ax0.set_xlabel(&quot;&quot;)
+ax0.plot(f0_times[voiced], 1e3 / f0_harvest[voiced], &quot;.&quot;, ms=1.5, color=&quot;c&quot;, label=&quot;Harvest period&quot;)
+ax0.legend(loc=&quot;upper right&quot;, fontsize=8, markerscale=4)
+ax1.plot(f0_times[voiced], f0_harvest[voiced], &quot;.&quot;, ms=3, color=&quot;0.6&quot;, label=&quot;Harvest&quot;)
+ax1.plot(t[f0_cep[0] &gt; 0], f0_cep[0][f0_cep[0] &gt; 0], &quot;.&quot;, ms=3, color=&quot;tab:blue&quot;, label=&quot;cepstral peak &gt; 0.1&quot;)
+ax1.set(ylim=(60, 260), xlabel=&quot;Time [s]&quot;, ylabel=&quot;F0 [Hz]&quot;, title=&quot;Pitch&quot;)
+ax1.legend(loc=&quot;upper right&quot;, fontsize=8, markerscale=2)
+ax1.grid(ls=&quot;:&quot;)
+for ax in (ax0, ax1):
+    ax.set_xlim(0, sentence.duration)
+playhead = [ax0, ax1]
+sound = sentence</code></pre></details>
+</article>
+<div class="cell"><pre><code class="language-python">harvest_at = np.interp(t, f0_times, f0_harvest)
+both = (harvest_at &gt; 0) &amp; (f0_cep[0] &gt; 0)
+agree = np.mean(np.abs(f0_cep[0][both] / harvest_at[both] - 1) &lt; 0.05)
+print(f&quot;frames both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}&quot;)</code></pre><pre class="out">frames both call voiced: 318; cepstral F0 within 5% of Harvest on 96%</pre></div>
+</section>
+<section aria-labelledby="h-splitting-the-voice-in-two">
+<h2 id="h-splitting-the-voice-in-two">Splitting the voice in two</h2>
+<p>Lifter the other way and the two parts can be heard separately. Each frame keeps its own
+lifter cutoff, half of its pitch period, following Harvest's track (bridged across unvoiced
+stretches). Low quefrencies keep the vocal tract; high quefrencies keep the source.</p>
+<div class="cell"><pre><code class="language-python">voiced_t, voiced_f0 = f0_times[voiced], f0_harvest[voiced]
+cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per frame
+tract = cep.lifter(cutoffs)  # low quefrencies: the envelope
+source = cep.lifter(cutoffs, keep=&quot;high&quot;)  # high quefrencies: the harmonics
+source.data[:, 0] = cep.data[:, 0]  # but keep each frame&#x27;s mean log level, so pauses stay quiet
+
+
+def show(snd, title, win_dur=0.005):
+    fig, ax = plt.subplots(figsize=(10, 3.0), layout=&quot;constrained&quot;)
+    so.STFT(snd, win_dur=win_dur, hop_dur=0.001).plot(ax, db_range=60, colorbar=False, fmax=FMAX)
+    ax.set(xlim=(0, sentence.duration), title=f&quot;{title} (Hann {win_dur * 1e3:g} ms spectrogram)&quot;)
+    return fig, [ax]</code></pre></div>
+
+<article class="sound" id="d-c3" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Envelope only, on a 200 Hz pulse train</h3>
+    <div class="desc"><p>The vocal tract alone: every frame's envelope given its minimum phase, so that each frame
+becomes one short pulse at the frame's center. The frames are 5 ms apart, so the pulses make
+a steady 200 Hz buzz. The words survive; the intonation does not.</p></div>
+    <audio controls preload="metadata" src="audio/c3_envelope_only_on_a_200_hz_pulse_train.flac"></audio>
+    <p class="file">c3_envelope_only_on_a_200_hz_pulse_train.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/c3_envelope_only_on_a_200_hz_pulse_train.png" width="1000" height="300" alt="Plots of the envelope only, on a 200 hz pulse train sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">robot = finish(tract.to_sound(phase=&quot;minimum&quot;))
+fig, playhead = show(robot, &quot;Envelope only, minimum phase&quot;)
+sound = robot</code></pre></details>
+</article>
+
+<article class="sound" id="d-c4" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Harmonics only, the envelope flattened</h3>
+    <div class="desc"><p>The source alone: the high quefrencies, plus each frame's overall level, with the original
+phase. The formants are flattened away, leaving the harmonics at roughly equal level, a buzzy
+voice that still carries the talker's intonation. The narrowband spectrogram shows the
+harmonics running flat across frequency.</p></div>
+    <audio controls preload="metadata" src="audio/c4_harmonics_only_the_envelope_flattened.flac"></audio>
+    <p class="file">c4_harmonics_only_the_envelope_flattened.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/c4_harmonics_only_the_envelope_flattened.png" width="1000" height="300" alt="Plots of the harmonics only, the envelope flattened sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">flat = finish(source.to_sound(phase=&quot;original&quot;))
+fig, playhead = show(flat, &quot;Harmonics only, original phase&quot;, win_dur=0.0333)
+sound = flat</code></pre></details>
+</article>
+
+<article class="sound" id="d-c5" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Both parts together</h3>
+    <div class="desc"><p>For comparison, both parts put back together: an unliftered cepstrum resynthesizes the
+sentence to rounding error.</p></div>
+    <audio controls preload="metadata" src="audio/c5_both_parts_together.flac"></audio>
+    <p class="file">c5_both_parts_together.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/c5_both_parts_together.png" width="1000" height="300" alt="Plots of the both parts together sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">whole = cep.to_sound()
+print(f&quot;largest difference from the sentence: {np.abs(whole.data - sentence.data).max():.1e}&quot;)
+fig, playhead = show(whole, &quot;Unliftered, original phase&quot;)
+sound = finish(whole)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-reference-implementations">
+<h2 id="h-reference-implementations">Reference implementations</h2>
+<p><code>so.Cepstrum</code> is written from the definitions. <code>tools/crosscheck_cepstrum.py</code> compares it with
+three independent implementations; the numbers below are from SciPy 1.17.1 and Praat 6.1.38.</p>
+<ul><li>**MATLAB <code>rceps</code>.** Its documented definition, <code>real(ifft(log(abs(fft(x)))))</code>, written out in NumPy for one 40 ms frame, matches sonore's real cepstrum to 4e-16.</li><li>**SciPy <code>scipy.signal.minimum_phase</code>** (<code>method=&quot;homomorphic&quot;, half=False</code>) builds a minimum-phase filter by the same folding of the real cepstrum. On a 17-tap mixed-phase filter it matches sonore's minimum phase to 4e-8 of the peak; SciPy adds a tiny constant to the magnitude before the log, which is the whole difference.</li><li><strong>Praat's PowerCepstrogram</strong> (Boersma &amp; Weenink), through <code>parselmouth</code>, measures the same peak by a different route: a Gaussian window, the power spectrum in dB, and the sound resampled to 10 kHz. On the frames of this sentence that sonore calls voiced, the two peaks agree within 5% on 98% of frames; on every frame Harvest calls voiced, on 81%.</li></ul>
+<p>See also the design and its numerical checks, <code>docs/design/cepstrum.md</code>.</p>
+</section>
+<section aria-labelledby="h-what-this-page-leaves-out">
+<h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
+<ul><li><strong>Tracking.</strong> Cepstral F0 judges each frame alone. Real pitch trackers, such as WORLD's Harvest used above, generate several candidates per frame and choose a smooth path through them, which removes the octave jumps.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter. Mel-cepstra, the basis of MFCCs, warp the frequency axis first.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Boersma &amp; Weenink. Praat: doing phonetics by computer. https://www.praat.org.</li><li>Bogert, Healy &amp; Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum, pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), <em>Time Series Analysis</em>. Wiley.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. The sentence.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. Harvest.</li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309.</li><li>Oppenheim &amp; Schafer (2010). <em>Discrete-Time Signal Processing</em>, 3rd ed., ch. 13. Pearson.</li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/cepstrum.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/cepstrum.py</code>, or a cell at a time.</footer>
+</main>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const canvas = el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
+  });
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, time) => {
+      if (!src.t) return src.az[0];
+      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    };
+    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
+        const lo = Math.min(...src.az), hi = Math.max(...src.az);
+        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  function draw(item) {
+    drawScene(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
