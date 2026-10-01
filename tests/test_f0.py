@@ -107,6 +107,7 @@ def test_frames_and_arguments():
             so.f0_track(so.Sound(np.zeros(100), FS), **kw)
 
 
+@pytest.mark.skipif(not SPEECH.exists(), reason="docs are not in the sdist")
 def test_sentence_agrees_with_harvest_where_both_voice():
     snd = so.load(SPEECH / "bdl_arctic_a0131.flac")
     trk = so.f0_track(snd)
