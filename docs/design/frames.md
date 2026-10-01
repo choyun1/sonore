@@ -1062,7 +1062,8 @@ an F0 track; sonore has no F0 estimator.
   the sentence as a small text file (time, F0, voiced) with its provenance in
   `SOURCES.md`. The gallery then needs no new dependency, and an F0
   estimator in sonore stays a separate, later decision (README roadmap:
-  "robust F0 tracking"). The script that made it goes in `tools/`.
+  "Speech analysis and synthesis", which starts with an F0 tracker). The
+  script that made it goes in `tools/`.
 - Source of the track, in order of preference: (a) the **EGG channel** of
   the ARCTIC `bdl` recording, if the download confirms it, by picking the
   glottal closures in the differentiated EGG; this measures the vocal folds
