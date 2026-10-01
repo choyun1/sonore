@@ -18,6 +18,37 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # all keep the same information: what differs is what each one makes easy to see.
 
 # %% [markdown]
+# ## Motivation
+#
+# A spectrogram is not only something to look at. Most of what speech analysis and synthesis
+# measure is measured from a time-frequency representation, and whatever the representation
+# smears, the measurement inherits. A few examples, all in this sentence:
+#
+# - **Pitch.** An F0 estimator finds the spacing of the harmonics or the interval between glottal
+#   pulses, so it needs one or the other resolved. Its errors grow with harmonic number: if $F_0$
+#   is off by $\delta$, the $k$-th harmonic is off by $k\delta$. At this speaker's typical
+#   $F_0$ of about 120 Hz, a 2% error moves the 20th harmonic, near 2.4 kHz, by 48 Hz, 0.4 of the
+#   gap to its neighbor. A vocoder that splits the voice into harmonics and noise on that grid
+#   counts the misplaced harmonic energy as noise, and resynthesizes it as such. An octave error,
+#   the most common failure, gets the pitch itself wrong by a factor of two.
+# - **Spectral envelope.** The formants are the envelope of the harmonics, and a vocoder needs
+#   that envelope without the excitation in it. A long window leaves a ripple at the harmonics; a
+#   short one flickers as pulses enter and leave it. Both come from the vocal folds, not the vocal
+#   tract, yet a synthesizer would reproduce them as if they were part of the voice's timbre. This
+#   is why vocoders such as STRAIGHT and WORLD tie the window to the pitch period.
+# - **Glottal pulses.** Pitch-synchronous processing, such as changing pitch or duration by
+#   moving whole periods, and voice-quality measures such as jitter, the cycle-to-cycle change in
+#   period, need the instant each pulse arrives. Only short windows, or reassignment, show it
+#   sharply.
+# - **Change.** The pitch of this sentence spans more than an octave, from below 90 Hz to above
+#   190 Hz, and the formants sweep at every boundary between consonant and vowel. A fixed window
+#   long enough to resolve the harmonics at the bottom of that range smears them wherever the
+#   pitch moves.
+#
+# No single fixed window serves all of these at once. The rest of the page shows why, and what
+# each analysis in sonore does about it.
+
+# %% [markdown]
 # ## The sentence, and code the examples share
 #
 # Every example below is the code shown with it, run after this cell: the sentence and its pitch
