@@ -12,6 +12,7 @@ as in the PKU-IOA database. (SOFA files use counter-clockwise azimuth;
 from __future__ import annotations
 
 import re
+import warnings
 from dataclasses import dataclass, field
 from fractions import Fraction
 from functools import cached_property
@@ -127,20 +128,41 @@ class HRIRSet:
     # ---- loaders
     @classmethod
     def from_pku_ioa(cls, directory: str | PathLike, fs: float = 65536, **kwargs) -> HRIRSet:
-        """Load the PKU-IOA database (``azi{A}_elev{E}_dist{D}.dat`` files,
-        float64, left then right)."""
+        """Load the PKU-IOA database from its original ``.dat`` files
+        (``azi{A}_elev{E}_dist{D}.dat``, float64, left then right), found in
+        ``directory`` or any folder below it, such as the distributed
+        ``dist{D}/elev{E}/`` layout. Empty files are skipped with a warning.
+        :func:`load_hrirs` downloads the SOFA copy instead."""
         pattern = re.compile(r"azi(-?\d+)_elev(-?\d+)_dist(\d+)\.dat$")
-        hcc, irs = [], []
-        for p in sorted(Path(directory).glob("*.dat")):
+        hcc, irs, paths, empty = [], [], [], []
+        for p in sorted(Path(directory).rglob("*.dat")):
             m = pattern.search(p.name)
             if m:
+                if p.stat().st_size == 0:
+                    empty.append(p)
+                    continue
                 a, e, d = map(float, m.groups())
                 hcc.append((d, e, a))
-                irs.append(np.fromfile(p).reshape(2, -1))
+                irs.append(np.fromfile(p))
+                paths.append(p)
+        if empty:
+            warnings.warn(
+                f"skipped {len(empty)} empty .dat file(s), e.g. {empty[0]}; those directions are missing",
+                stacklevel=2,
+            )
         if not irs:
             raise FileNotFoundError(f"no PKU-IOA .dat files in {directory}")
+        sizes = [x.size for x in irs]
+        n = max(set(sizes), key=sizes.count)  # the usual length, 2048
+        odd = [(p, k) for p, k in zip(paths, sizes, strict=True) if k != n]
+        if odd:
+            listed = "\n".join(f"  {p} ({k} values)" for p, k in odd[:10])
+            raise ValueError(
+                f"{len(odd)} of {len(irs)} .dat files are not {n} float64 values (left then right):"
+                f"\n{listed}" + ("\n  ..." if len(odd) > 10 else "")
+            )
         pos = np.column_stack(hcc_to_rect(*np.array(hcc).T))
-        return cls(np.array(irs), pos, fs, **kwargs)
+        return cls(np.array(irs).reshape(len(irs), 2, -1), pos, fs, **kwargs)
 
     @classmethod
     def from_sofa(cls, path: str | PathLike, **kwargs) -> HRIRSet:
@@ -160,6 +182,21 @@ class HRIRSet:
             az, el, r = pos.T  # SOFA azimuth is counter-clockwise from front
             xyz = np.column_stack(hcc_to_rect(100 * r, el, np.mod(-az, 360)))
         return cls(irs[:, :2, :], xyz, fs, **kwargs)
+
+    @classmethod
+    def concat(cls, sets, **kwargs) -> HRIRSet:
+        """Merge sets measured at the same sampling rate and length, e.g. one
+        per distance, into a single set. ``kwargs`` go to :class:`HRIRSet`."""
+        sets = list(sets)
+        if not sets:
+            raise ValueError("no HRIR sets to merge")
+        fs, taps = sets[0].fs, sets[0].irs.shape[1:]
+        for s in sets[1:]:
+            if s.fs != fs or s.irs.shape[1:] != taps:
+                raise ValueError("HRIR sets differ in sampling rate or IR shape; resample before merging")
+        irs = np.concatenate([s.irs for s in sets])
+        positions = np.concatenate([s.positions for s in sets])
+        return cls(irs, positions, fs, **kwargs)
 
     # ---- interpolation
     @cached_property
