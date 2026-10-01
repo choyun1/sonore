@@ -8,8 +8,8 @@ harmonic half of the "pulse-plus-noise synthesis" in roadmap item 2
 (speech analysis and synthesis), and the piece that lets an F0 track and a
 set of band envelopes be put back together and listened to.
 
-Status: proposed 2026-10-01. Decisions D1–D8 await Cho's answers; no
-library code yet.
+Status: proposed 2026-10-01. D8 decided (after the F0 tracker); D1–D7
+await Cho's answers; no library code yet.
 
 ## Why
 
@@ -204,8 +204,9 @@ presets (`"cosine"` by default; `"random"`, `"schroeder+"`, ... and an
 array also work, as starting values). A 2-D `f0` (one row per channel,
 as `F0Track.f0` is) gives a multichannel Sound.
 
-**D8. Where it goes on the roadmap (Cho's call).** Recommended: land it
-now, as the first piece of roadmap item 2 and ahead of the F0 tracker's
+**D8. Where it goes on the roadmap.** Cho, 2026-10-01: wait for the F0
+tracker's library code, then land this after it. The recommendation had
+been to land it now, as the first piece of roadmap item 2 and ahead of the F0 tracker's
 library code, since it depends on nothing new. The tracker's gallery page
 can then play its tracks, and the Vocoder page can gain a short section
 on putting the pitch back (examples 4, 6 and 7 above, on the stored
