@@ -485,3 +485,33 @@ for name, frame in frames.items():
 # tradeoff is not a loss of information: it appears only once the phase is discarded and the
 # magnitudes are drawn. Which magnitude shows speech best depends on what you look for: pulses,
 # harmonics, formants, or the pitch itself.
+
+# %% [markdown]
+# ## References
+#
+# - Auger & Flandrin (1995). Improving the readability of time-frequency and time-scale
+#   representations by the reassignment method. *IEEE Trans. Signal Processing* 43(5).
+#   [doi:10.1109/78.382394](https://doi.org/10.1109/78.382394).
+#   [`representations.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L356)
+# - Gabor (1946). Theory of communication. Part 1: The analysis of information. *J. IEE* 93(26).
+#   [doi:10.1049/ji-3-2.1946.0074](https://doi.org/10.1049/ji-3-2.1946.0074).
+#   [`frames.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L259)
+# - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
+#   Research* 47.
+#   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
+#   [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L260)
+# - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
+#   modification and synthesis framework. *Sādhanā* 36(5).
+#   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).
+#   [`representations.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L287)
+# - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values.
+#   *IEEE Trans. ASSP* 26(1).
+#   [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047).
+#   [`representations.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L356)
+# - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
+#   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
+#   The sentence.
+# - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
+#   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
+#   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Harvest, for
+#   the F0 track.

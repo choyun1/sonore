@@ -211,14 +211,24 @@ sound = finish(mix)
 # ## References
 #
 # - Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying filters. *Applied
-#   Sciences* 8(1), 103.
-# - Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a
-#   "cocktail party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
-#   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990)
+#   Sciences* 8(1), 103. [MDPI](https://www.mdpi.com/2076-3417/8/1/103).
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L273)
+# - Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail
+#   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
+#   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Experiment code:
+#   [choyun1/MSM](https://github.com/choyun1/MSM).
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L273)
+#   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L95)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
 #   library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899.
+#   [doi:10.1371/journal.pone.0211899](https://doi.org/10.1371/journal.pone.0211899).
+#   [`spatialization.HRIRSet`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L93)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
-#   Workshop*, 223–224. The sentences.
+#   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
+#   The sentences.
 # - Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer functions
 #   measured with high spatial resolution using a spark gap. *IEEE Trans. Audio, Speech, Lang.
-#   Process.* 17(6), 1124–1132. The HRIRs.
+#   Process.* 17(6), 1124–1132. [PKU
+#   Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial).
+#   The HRIRs.
+#   [`hrir_data.load_hrirs`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py#L122)

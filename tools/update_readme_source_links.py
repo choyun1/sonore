@@ -1,4 +1,4 @@
-"""Keep the README's source links pointing at the right lines.
+"""Keep the source links in the README and the gallery pointing at the right lines.
 
 Each module tag in the README's References section links to its file on
 GitHub, and a tag that names a function or class, like
@@ -6,8 +6,11 @@ GitHub, and a tag that names a function or class, like
 definition. A tag names the file's module, or the package that re-exports
 it: `texture.TextureStats` links into texture/stats.py. The module table in
 What's in it uses the full dotted path, like `analysis.frames`, which links
-to the file without a line. Line anchors move whenever code above them changes, so
-tests/test_docs.py checks them and this script rewrites them:
+to the file without a line. The References lists on the gallery pages use the
+same tags, in the page scripts (docs/gallery/*.py) and in the built pages
+(docs/gallery/*.html), so the script fixes those too without rebuilding them.
+Line anchors move whenever code above them changes, so tests/test_docs.py
+checks them and this script rewrites them:
 
     python tools/update_readme_source_links.py
 """
@@ -21,6 +24,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BLOB = "https://github.com/choyun1/sonore/blob/main/"
 LINK = re.compile(r"\[`([\w.]+)`\]\(" + re.escape(BLOB) + r"([\w/]+\.py)(?:#L(\d+))?\)")
+HTML_LINK = re.compile(
+    r'<a href="' + re.escape(BLOB) + r'([\w/]+\.py)(?:#L(\d+))?"><code>([\w.]+)</code></a>'
+)
+GALLERY = ROOT / "docs" / "gallery"
 
 
 def definition_line(path: Path, dotted: list[str]) -> int:
@@ -52,16 +59,29 @@ def expected_link(text: str, rel_path: str) -> str:
     return f"[`{text}`]({BLOB}{rel_path}{anchor})"
 
 
-def fixed(readme: str) -> str:
-    return LINK.sub(lambda m: expected_link(m[1], m[2]), readme)
+def expected_html_link(text: str, rel_path: str) -> str:
+    """The built-page form of :func:`expected_link`."""
+    m = LINK.fullmatch(expected_link(text, rel_path))
+    anchor = f"#L{m[3]}" if m[3] else ""
+    return f'<a href="{BLOB}{m[2]}{anchor}"><code>{text}</code></a>'
+
+
+def fixed(text: str) -> str:
+    text = LINK.sub(lambda m: expected_link(m[1], m[2]), text)
+    return HTML_LINK.sub(lambda m: expected_html_link(m[3], m[1]), text)
+
+
+def linked_files() -> list[Path]:
+    """The README and every gallery page script and built page."""
+    return [ROOT / "README.md", *sorted(GALLERY.glob("*.py")), *sorted(GALLERY.glob("*.html"))]
 
 
 if __name__ == "__main__":
-    readme_path = ROOT / "README.md"
-    old = readme_path.read_text()
-    new = fixed(old)
-    if new == old:
-        print("README source links are up to date.")
-    else:
-        readme_path.write_text(new)
-        print("Updated README source links.")
+    changed = []
+    for path in linked_files():
+        old = path.read_text()
+        new = fixed(old)
+        if new != old:
+            path.write_text(new)
+            changed.append(str(path.relative_to(ROOT)))
+    print("Updated source links in " + ", ".join(changed) if changed else "Source links are up to date.")
