@@ -6,6 +6,10 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-01
+
+First release on PyPI.
+
 ### Added
 - `so.Cepstrum`: the real cepstrum of an `STFT` or `TVSTFT`, with liftering
   (fixed or per-frame cutoff), the cepstral envelope, resynthesis with the
@@ -37,5 +41,6 @@ version (0.x.y) only fixes bugs.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/commits/main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.3.0...main
+[0.3.0]: https://github.com/choyun1/sonore/releases/tag/v0.3.0
 [0.2.0]: https://github.com/choyun1/sonore/commit/213e21a
