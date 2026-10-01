@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seeing speech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
+  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+audio { width: 100%; max-width: 19rem; display: block; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html" aria-current="page">Seeing speech</a><a href="textures.html">Sound textures</a></nav>
+<header>
+  <h1>Seeing speech</h1>
+<p>One sentence, "Providence had delivered him through the maelstrom," spoken by a man (CMU ARCTIC,
+speaker bdl, 16 kHz), drawn by each time-frequency analysis in sonore. The pictures differ a great
+deal. This page explains why, starting from a single window, and ends by showing that the analyses
+all keep the same information: what differs is what each one makes easy to see.</p>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-the-sentence--and-code-the-examples-share">
+<h2 id="h-the-sentence--and-code-the-examples-share">The sentence, and code the examples share</h2>
+<p>Every example below is the code shown with it, run after this cell: the sentence and its pitch
+track, the level the gallery plays sounds at, and the plotting conventions all images share.</p>
+<div class="cell"><pre><code class="language-python">import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Rectangle
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+# The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
+# Sources: docs/speech/SOURCES.md.
+sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
+f0_times, f0 = np.loadtxt(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;, delimiter=&quot;,&quot;, skiprows=2).T
+fs = sentence.fs
+
+# Every image on the page: dB re its own maximum over 60 dB, on a linear 0 to 5 kHz axis.
+FMAX, DB = 5000, 60
+
+
+def panels(n, height_ratios=None, height=7.4):
+    fig = plt.figure(figsize=(10, height), layout=&quot;constrained&quot;)
+    return fig, fig.subplots(n, 1, sharex=True, height_ratios=height_ratios)
+
+
+def image(ax, rep, title, **kwargs):
+    rep.plot(ax, db_range=DB, colorbar=False, fmax=FMAX, **kwargs)
+    ax.set_title(title)
+
+
+def shared_time(fig, axes, images):
+    &quot;&quot;&quot;The sentence&#x27;s time axis on every panel, one colorbar for the images.
+    Returns the panels, for the playhead to follow.&quot;&quot;&quot;
+    for ax in np.ravel(axes):
+        ax.set_xlim(0, sentence.duration)
+        ax.set_xlabel(&quot;&quot;)
+    for ax in np.atleast_1d(axes[-1]):  # the bottom row
+        ax.set_xlabel(&quot;Time [s]&quot;)
+    sm = matplotlib.cm.ScalarMappable(matplotlib.colors.Normalize(-DB, 0), &quot;magma&quot;)
+    fig.colorbar(sm, ax=list(np.ravel(images)), label=&quot;dB re panel maximum&quot;, shrink=0.9)
+    return list(np.ravel(axes))</code></pre></div>
+</section>
+<section aria-labelledby="h-one-window--two-views">
+<h2 id="h-one-window--two-views">One window, two views</h2>
+<p>The short-time Fourier transform (STFT) looks at the signal <span class="tex">x</span> through a window <span class="tex">w</span> slid to
+time <span class="tex">t</span>, and measures how much of each frequency <span class="tex">f</span> is in what it sees:</p>
+<div class="tex display">X(t, f) = \int x(\tau)\, w(\tau - t)\, e^{-i 2\pi f \tau}\, d\tau</div>
+<p>Each coefficient is the inner product of <span class="tex">x</span> with one <em>atom</em>, the window shifted to <span class="tex">t</span> and
+modulated to <span class="tex">f</span>. The atom has a duration, the window's, and a bandwidth, that of the window's
+spectrum <span class="tex">W</span>. Two sounds can be told apart in time only if they are further apart than the
+window is long, and in frequency only if they are further apart than <span class="tex">W</span> is wide.</p>
+<p>Duration and bandwidth trade against each other. Measure each as a standard deviation,
+<span class="tex">\sigma_t</span> of the energy <span class="tex">|w(\tau)|^2</span> over time and <span class="tex">\sigma_f</span> of <span class="tex">|W(f)|^2</span> over frequency.
+Then for every window</p>
+<div class="tex display">\sigma_t\, \sigma_f \;\ge\; \frac{1}{4\pi},</div>
+<p>with equality only for a Gaussian (Gabor, 1946). Stretching a window by a factor <span class="tex">k</span> multiplies
+<span class="tex">\sigma_t</span> by <span class="tex">k</span> and divides <span class="tex">\sigma_f</span> by <span class="tex">k</span>: the product, and the area of the atom's
+footprint in the time-frequency plane, stay the same.</p>
+<p>The windows here are Hann windows, <span class="tex">w(\tau) = \sin^2(\pi \tau / L)</span> for <span class="tex">0 \le \tau \le L</span>. A
+Hann window passes as much noise as an ideal bandpass filter of width <span class="tex">1.5/L</span>, its equivalent
+noise bandwidth: 300 Hz for <span class="tex">L = 5</span> ms, 45 Hz for <span class="tex">L = 33.3</span> ms. Its product
+<span class="tex">\sigma_t \sigma_f</span> is within 3% of the bound, as the cell below measures on the windows sonore
+uses.</p>
+<div class="cell"><pre><code class="language-python">short = so.GaborFrame(0.002, 0.0005, n_fft=2048)  # Hann 2 ms, 0.5 ms hop
+long = so.GaborFrame(0.1, 0.0005, n_fft=2048)  # Hann 100 ms
+wide = so.GaborFrame(0.005, 0.001, n_fft=1024)  # Hann 5 ms, 1 ms hop
+narrow = so.GaborFrame(0.0333, 0.001, n_fft=1024)  # Hann 33.3 ms
+
+
+def spread(w, fs):
+    &quot;&quot;&quot;Standard deviations [s, Hz] of a window&#x27;s energy in time, |w|², and in frequency, |W|².&quot;&quot;&quot;
+    t = np.arange(len(w)) / fs
+    p = w**2 / np.sum(w**2)
+    sd_t = np.sqrt(np.sum(p * t**2) - np.sum(p * t) ** 2)
+    W2 = np.abs(np.fft.fft(w, 256 * len(w))) ** 2  # finely interpolated spectrum
+    f = np.fft.fftfreq(len(W2), 1 / fs)
+    return sd_t, np.sqrt(np.sum(W2 * f**2) / np.sum(W2))
+
+
+for frame in (short, wide, narrow, long):
+    w = frame.window_samples(fs)
+    sd_t, sd_f = spread(w, fs)
+    enbw = fs * np.sum(w**2) / np.sum(w) ** 2
+    print(
+        f&quot;Hann {1e3 * frame.win_dur:5.1f} ms: σt = {1e3 * sd_t:6.3f} ms, σf = {sd_f:6.1f} Hz, &quot;
+        f&quot;σt·σf = {sd_t * sd_f:.4f}, noise bandwidth {enbw:5.0f} Hz&quot;
+    )
+print(f&quot;The bound 1/(4π) = {1 / (4 * np.pi):.4f}&quot;)</code></pre><pre class="out">Hann   2.0 ms: σt =  0.283 ms, σf =  288.7 Hz, σt·σf = 0.0817, noise bandwidth   750 Hz
+Hann   5.0 ms: σt =  0.707 ms, σf =  115.5 Hz, σt·σf = 0.0817, noise bandwidth   300 Hz
+Hann  33.3 ms: σt =  4.712 ms, σf =   17.3 Hz, σt·σf = 0.0817, noise bandwidth    45 Hz
+Hann 100.0 ms: σt = 14.145 ms, σf =    5.8 Hz, σt·σf = 0.0817, noise bandwidth    15 Hz
+The bound 1/(4π) = 0.0796</pre></div>
+
+<article class="still" id="d-w1">
+  <div class="about">
+    <h3>Short and long windows</h3>
+    <div class="desc"><p>Two Hann windows fifty times apart in length, drawn to exaggerate the tradeoff: 2 ms and 100 ms.
+Left, the windows in time; right, their power spectra. The short window is over in a flash and
+smears every frequency across about 750 Hz; the long one lasts a tenth of a second and is only
+15 Hz wide. The shaded bands are <span class="tex">\pm\sigma_t</span> and <span class="tex">\pm\sigma_f</span>.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/w1_short_and_long_windows.png" width="1000" height="340" alt="Short and long windows" loading="lazy">
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, (ax_t, ax_f) = plt.subplots(1, 2, figsize=(10, 3.4), layout=&quot;constrained&quot;)
+for frame, color in ((short, &quot;tab:red&quot;), (long, &quot;tab:blue&quot;)):
+    w = frame.window_samples(fs)
+    sd_t, sd_f = spread(w, fs)
+    t = (np.arange(len(w)) - len(w) / 2) / fs
+    label = f&quot;Hann {1e3 * frame.win_dur:.0f} ms&quot;
+    ax_t.plot(1e3 * t, w, color=color, lw=1.2, label=label)
+    ax_t.axvspan(-1e3 * sd_t, 1e3 * sd_t, color=color, alpha=0.15)
+    W2 = np.abs(np.fft.fftshift(np.fft.fft(w, 2**17))) ** 2
+    f = np.fft.fftshift(np.fft.fftfreq(2**17, 1 / fs))
+    ax_f.plot(f, 10 * np.log10(np.maximum(W2 / W2.max(), 1e-12)), color=color, lw=1.2, label=label)
+    ax_f.axvspan(-sd_f, sd_f, color=color, alpha=0.15)
+ax_t.set(
+    xlim=(-60, 60), xlabel=&quot;Time [ms]&quot;, ylabel=&quot;w&quot;, title=&quot;In time: the long window lasts 50 times longer&quot;
+)
+ax_f.set(
+    xlim=(-1500, 1500),
+    ylim=(-60, 3),
+    xlabel=&quot;Frequency [Hz]&quot;,
+    ylabel=&quot;|W|² [dB]&quot;,
+    title=&quot;In frequency: the short window is 50 times wider&quot;,
+)
+for ax in (ax_t, ax_f):
+    ax.legend(loc=&quot;upper right&quot;, fontsize=8)
+    ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-w2" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.031757207207207205, &quot;bottom&quot;: 0.20768862963377, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.2516459869911276, &quot;bottom&quot;: 0.5715213004939685, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.6193845412738107, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Too short and too long</h3>
+    <div class="desc"><p>The same two windows on the sentence. Through 2 ms, shorter than one glottal period, each pulse
+of the voice is its own vertical line, sharp in time, but the harmonics are gone and even the
+formants blur into broad smudges. Through 100 ms, longer than a syllable's steady stretch, the
+harmonics are thin lines wherever the pitch holds still, but they smear wherever it moves, and
+onsets and stops spread over a tenth of a second.</p></div>
+    <audio controls preload="metadata" src="audio/w2_too_short_and_too_long.flac"></audio>
+    <p class="file">w2_too_short_and_too_long.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/w2_too_short_and_too_long.png" width="1000" height="740" alt="Plots of the too short and too long sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, axes = panels(3, [0.55, 1, 1])
+sentence.plot(axes[0], color=&quot;k&quot;, lw=0.4)
+axes[0].set_title(&quot;Waveform&quot;)
+image(axes[1], short.analyze(sentence), &quot;Hann 2 ms (about 750 Hz): every pulse, no harmonics&quot;)
+image(axes[2], long.analyze(sentence), &quot;Hann 100 ms (about 15 Hz): sharp harmonics, smeared in time&quot;)
+playhead = shared_time(fig, axes, images=axes[1:])
+sound = sentence</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-wideband-and-narrowband">
+<h2 id="h-wideband-and-narrowband">Wideband and narrowband</h2>
+<p>Speech is made of two things at two time scales. The vocal folds snap shut once per period,
+<span class="tex">T_0 = 1/F_0</span>, about 8 ms for this speaker (median
+<span class="tex">F_0</span> 121 Hz), and each pulse excites the vocal tract, whose
+resonances, the formants, shape the spectrum. The periodic pulses put energy at the harmonics
+<span class="tex">kF_0</span>; the formants decide which harmonics are loud.</p>
+<p>A window much shorter than <span class="tex">T_0</span> sees the pulses one at a time; a window longer than a few
+periods has a bandwidth narrower than <span class="tex">F_0</span> and resolves the harmonics. Phoneticians settled
+on one of each, between the extremes above.</p>
+
+<article class="sound" id="d-27" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.031757207207207205, &quot;bottom&quot;: 0.20768862963377, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.2516459869911276, &quot;bottom&quot;: 0.5715213004939685, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.6193845412738107, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Two classic spectrograms</h3>
+    <div class="desc"><p>Hann windows with a 1 ms hop. The 5 ms window, about 300 Hz wide, makes a wideband spectrogram:
+each glottal pulse is a vertical striation and the formants are broad bands. The 33.3 ms window,
+about 45 Hz wide, makes a narrowband one: the harmonics are horizontal lines and the pulses are
+smeared out. Neither shows both.</p></div>
+    <audio controls preload="metadata" src="audio/27_two_classic_spectrograms.flac"></audio>
+    <p class="file">27_two_classic_spectrograms.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/27_two_classic_spectrograms.png" width="1000" height="740" alt="Plots of the two classic spectrograms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, axes = panels(3, [0.55, 1, 1])
+sentence.plot(axes[0], color=&quot;k&quot;, lw=0.4)
+axes[0].set_title(&quot;Waveform&quot;)
+image(axes[1], wide.analyze(sentence), &quot;Wideband: Hann 5 ms (about 300 Hz)&quot;)
+image(axes[2], narrow.analyze(sentence), &quot;Narrowband: Hann 33.3 ms (about 45 Hz)&quot;)
+playhead = shared_time(fig, axes, images=axes[1:])
+sound = sentence</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-letting-the-window-scale-with-frequency">
+<h2 id="h-letting-the-window-scale-with-frequency">Letting the window scale with frequency</h2>
+<p>Harmonics are evenly spaced, <span class="tex">F_0</span> apart, but what matters to a listener is their spacing
+relative to their frequency: the 2nd and 3rd harmonics are far apart in this sense, the 30th
+and 31st nearly the same. A <em>constant-Q</em> analysis makes each filter's bandwidth proportional to
+its center frequency <span class="tex">f_c</span>, so its duration is inversely proportional: long windows for low
+frequencies, which resolve the first few harmonics, and short ones for high frequencies, which
+catch each pulse.</p>
+<p>A Morlet wavelet with <span class="tex">c</span> cycles is a Gaussian in frequency whose width grows with <span class="tex">f_c</span>:</p>
+<div class="tex display">\Psi(f) \propto \exp\!\left(-\frac{(f - f_c)^2}{2\,(f_c / c)^2}\right),</div>
+<p>minus a small correction that makes it zero at 0 Hz. In time it is a tone at <span class="tex">f_c</span> under a
+Gaussian envelope of standard deviation <span class="tex">c / (2\pi f_c)</span>: always about <span class="tex">c</span> cycles long, 6 here.</p>
+<p>The cochlea is roughly constant-Q too, but its filters are causal: they cannot respond before
+the sound arrives. A gammatone filter, a standard model of one place on the basilar membrane, has
+the impulse response</p>
+<div class="tex display">g(t) = t^{3}\, e^{-2\pi b t} \cos(2\pi f_c t), \qquad t \ge 0,</div>
+<p>with <span class="tex">b = 1.019\,\mathrm{ERB}(f_c)</span> and <span class="tex">\mathrm{ERB}(f) = 24.7\,(4.37 f / 1000 + 1)</span> Hz, the
+equivalent rectangular bandwidth of the human auditory filter (Glasberg &amp; Moore, 1990). Its
+envelope peaks at <span class="tex">t = 3 / (2\pi b)</span> after a click, later for lower, narrower filters.</p>
+<div class="cell"><pre><code class="language-python">morlet = so.MorletFilterbank(54, 70, 7000, cycles=6)  # 54 wavelets, 70 Hz to 7 kHz, zero-phase
+gammatone = so.GammatoneFilterbank(60, 70, 7000)  # 60 filters, 2 per ERB, causal
+latency = gammatone.envelope_peak_delay[1:-1]  # without the two edge filters
+print(
+    f&quot;envelope-peak latency: {1e3 * latency[0]:.1f} ms at {gammatone.cfs[1]:.0f} Hz, &quot;
+    f&quot;{1e3 * latency[-1]:.2f} ms at {gammatone.cfs[-2]:.0f} Hz&quot;
+)</code></pre><pre class="out">envelope-peak latency: 14.5 ms at 70 Hz, 0.60 ms at 7000 Hz</pre></div>
+
+<article class="sound" id="d-28" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.03175720720720743, &quot;bottom&quot;: 0.3023492625437937, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.35021250332363596, &quot;bottom&quot;: 0.6208045586602227, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.6686677994400649, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Constant-Q and the cochlea</h3>
+    <div class="desc"><p>Here the bandwidth grows with frequency, so the low bands resolve single harmonics while the high
+bands are short enough to show each pulse. Top: 54 Morlet wavelets of 6 cycles, zero-phase.
+Middle: 60 causal gammatone filters, 2 per ERB. Its low bands respond later: their envelopes peak
+up to 15 ms after the high bands', so each pulse is drawn as a
+sweep. Bottom: the same envelopes, each band drawn earlier by its envelope-peak latency. Only the
+drawing moves; the data are unchanged.</p></div>
+    <audio controls preload="metadata" src="audio/28_constant-q_and_the_cochlea.flac"></audio>
+    <p class="file">28_constant-q_and_the_cochlea.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/28_constant-q_and_the_cochlea.png" width="1000" height="740" alt="Plots of the constant-q and the cochlea sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, axes = panels(3)
+kw = {&quot;db_range&quot;: DB, &quot;colorbar&quot;: False, &quot;fscale&quot;: &quot;linear&quot;, &quot;fmax&quot;: FMAX}
+morlet.analyze(sentence).envelopes(fs=1000).plot(axes[0], **kw)
+axes[0].set_title(&quot;Morlet wavelets, 6 cycles&quot;)
+env = gammatone.analyze(sentence).envelopes(fs=1000)
+env.plot(axes[1], **kw)
+axes[1].set_title(&quot;Gammatone, causal: low bands respond later&quot;)
+env.plot(axes[2], align=&quot;peak&quot;, **kw)
+axes[2].set_title(&quot;The same, each band drawn earlier by its envelope-peak latency&quot;)
+playhead = shared_time(fig, axes, images=axes)
+sound = sentence</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-following-the-pitch">
+<h2 id="h-following-the-pitch">Following the pitch</h2>
+<p>The voice's own time scale is its period, and that changes as the pitch moves. A window that
+is always 3 periods long,</p>
+<div class="tex display">L(t) = \frac{3}{F_0(t)},</div>
+<p>has a noise bandwidth of <span class="tex">1.5 / L = F_0 / 2</span>, so neighboring harmonics, <span class="tex">F_0</span> apart, are always
+two bandwidths apart: they separate equally well at every pitch, with the shortest window that
+does so. sonore's time-varying Gabor frame steps these windows along with a hop of <span class="tex">L/4</span>.
+Through unvoiced stretches <span class="tex">F_0</span> is bridged log-linearly between its voiced neighbors, so the
+window length never jumps.</p>
+<p>Any window a few periods long still flickers: the power it collects rises and falls as pulses
+enter and leave it, with period <span class="tex">T_0</span>. TANDEM-STRAIGHT (Kawahara et al., 2011) cancels the
+flicker by averaging two spectrograms half a period apart, where its fundamental is in
+opposite phase:</p>
+<div class="tex display">P(t, f) = \tfrac12\left(\,\bigl|X(t - T_0/4,\, f)\bigr|^2 + \bigl|X(t + T_0/4,\, f)\bigr|^2\right),</div>
+<p>with Blackman windows 2.5 periods long. The result is a power spectrum only: an average of two
+frames' magnitudes has no synthesis.</p>
+<div class="cell"><pre><code class="language-python"># t_end runs half a longest window past the end, so the last sample is covered evenly.
+adaptive = so.TVGaborFrame.pitch_adaptive(f0_times, f0, t_end=sentence.duration + 0.02, periods=3)
+lengths = 1e3 * np.asarray(adaptive.win_durs)
+print(f&quot;{len(lengths)} windows, {lengths.min():.1f} to {lengths.max():.1f} ms long&quot;)</code></pre><pre class="out">417 windows, 15.6 to 34.2 ms long</pre></div>
+
+<article class="sound" id="d-29" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.03175720720720743, &quot;bottom&quot;: 0.3023492625437937, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.35021250332363596, &quot;bottom&quot;: 0.6208045586602227, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.6686677994400649, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Following the pitch</h3>
+    <div class="desc"><p>Top: the narrowband spectrogram with ten times the F0 track (WORLD Harvest, where voiced), which
+should lie on the tenth harmonic. Middle: the time-varying frame whose Hann windows are 3 pitch
+periods long, so neighboring harmonics are separated equally well at every F0. Bottom: the
+TANDEM-STRAIGHT-style power spectrum. It is a power spectrum only, not TANDEM-STRAIGHT: no
+smoothing, no aperiodicity, no synthesis.</p></div>
+    <audio controls preload="metadata" src="audio/29_following_the_pitch.flac"></audio>
+    <p class="file">29_following_the_pitch.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/29_following_the_pitch.png" width="1000" height="740" alt="Plots of the following the pitch sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, axes = panels(3)
+image(axes[0], narrow.analyze(sentence), &quot;Narrowband, Hann 33.3 ms, with 10 × F0 (dashed)&quot;)
+voiced = np.where(f0 &gt; 0, 10 * f0 / 1000, np.nan)
+axes[0].plot(f0_times, voiced, color=&quot;w&quot;, ls=&quot;--&quot;, lw=0.9)
+image(axes[1], adaptive.analyze(sentence), &quot;Pitch-adaptive: Hann, 3 periods&quot;)
+image(axes[2], so.tandem_power(sentence, f0_times, f0), &quot;TANDEM-style: Blackman pair, 2.5 periods, ±¼ period&quot;)
+playhead = shared_time(fig, axes, images=axes)
+sound = sentence</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-the-same-plane--tiled-four-ways">
+<h2 id="h-the-same-plane--tiled-four-ways">The same plane, tiled four ways</h2>
+<p>Each analysis divides the time-frequency plane into cells of about the same area, and differs
+only in their shape and in how the shape changes across the plane. The figure draws one box per
+cell, <span class="tex">2\sigma_t</span> wide and <span class="tex">2\sigma_f</span> tall, over a tenth of a second of the sentence, with
+the harmonics <span class="tex">kF_0(t)</span> drawn over them in black. A harmonic is resolved where the boxes are
+shorter than the gap between harmonics; a pulse is resolved where they are narrower than the
+period.</p>
+
+<article class="still" id="d-t1">
+  <div class="about">
+    <h3>Four tilings</h3>
+    <div class="desc"><p>Fixed windows tile the plane with identical boxes: flat ones for 5 ms, tall ones for 33.3 ms.
+Morlet boxes are tall and narrow at high frequencies and wide and flat at low ones, so only the
+lowest harmonics are resolved. Pitch-adaptive boxes are always the same fraction of the
+harmonic spacing tall, about 0.4, and widen and narrow as the pitch falls and rises.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/t1_four_tilings.png" width="1000" height="620" alt="Four tilings" loading="lazy">
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">t_lo, t_hi, f_hi = 1.05, 1.15, 1000
+sd_t, sd_f = spread(long.window_samples(fs), fs)
+hann_t, hann_f = sd_t / long.win_dur, sd_f * long.win_dur  # σt = 0.141 L and σf = 0.577 / L for any L
+is_voiced = f0 &gt; 0
+
+
+def f0_at(t):  # bridged across unvoiced stretches, as the pitch-adaptive frame does
+    return np.exp(np.interp(t, f0_times[is_voiced], np.log(f0[is_voiced])))
+
+
+# Each box is (time, frequency, width, height, column, row); column + row picks its shade.
+def grid(L):  # boxes of a fixed Hann window of length L
+    dt, df = 2 * hann_t * L, 2 * hann_f / L
+    times, freqs = np.arange(t_lo + dt / 2, t_hi + dt, dt), np.arange(df / 2, f_hi + df, df)
+    return [(t, f, dt, df, i, j) for i, t in enumerate(times) for j, f in enumerate(freqs)]
+
+
+def wavelet_boxes(c=6):  # sd c/(2π fc) of the amplitude envelope; energy sds are 1/√2 of those
+    boxes, a, fc, j = [], 1 / (c * np.sqrt(2)), 60.0, 0
+    while fc &lt; f_hi + fc * a:
+        dt, df = 2 * c / (2 * np.pi * fc * np.sqrt(2)), 2 * a * fc
+        boxes += [(t, fc, dt, df, i, j) for i, t in enumerate(np.arange(t_lo + dt / 2, t_hi + dt, dt))]
+        fc, j = fc * (1 + a) / (1 - a), j + 1  # the next box starts where this one ends
+    return boxes
+
+
+def pitch_boxes(periods=3):
+    boxes, t, i = [], t_lo, 0
+    while t &lt; t_hi:
+        L = periods / f0_at(t)
+        dt, df = 2 * hann_t * L, 2 * hann_f / L
+        boxes += [(t + dt / 2, f, dt, df, i, j) for j, f in enumerate(np.arange(df / 2, f_hi + df, df))]
+        t, i = t + dt, i + 1
+    return boxes
+
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), sharex=True, sharey=True, layout=&quot;constrained&quot;)
+tilings = [
+    (grid(0.005), &quot;Hann 5 ms&quot;),
+    (grid(0.0333), &quot;Hann 33.3 ms&quot;),
+    (wavelet_boxes(), &quot;Morlet, 6 cycles&quot;),
+    (pitch_boxes(), &quot;Pitch-adaptive, 3 periods&quot;),
+]
+tt = np.linspace(t_lo, t_hi, 200)
+for ax, (boxes, title) in zip(axes.flat, tilings, strict=True):
+    for k in range(1, int(f_hi / 90)):
+        ax.plot(tt, k * f0_at(tt), color=&quot;k&quot;, lw=0.8)
+    rects = [Rectangle((t - dt / 2, f - df / 2), dt, df) for t, f, dt, df, _, _ in boxes]
+    shade = [0.35 if (i + j) % 2 else 0.12 for *_, i, j in boxes]  # a checkerboard
+    ax.add_collection(PatchCollection(rects, facecolor=[(0.12, 0.47, 0.71, a) for a in shade], lw=0))
+    ax.set(title=title, xlim=(t_lo, t_hi), ylim=(0, f_hi))
+for ax in axes[1]:
+    ax.set_xlabel(&quot;Time [s]&quot;)
+for ax in axes[:, 0]:
+    ax.set_ylabel(&quot;Frequency [Hz]&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-reassignment">
+<h2 id="h-reassignment">Reassignment</h2>
+<p>A spectrogram cell reports energy at its own center <span class="tex">(t, f)</span>, even when that energy comes from
+a pulse near the edge of the window or a harmonic between two bins. Reassignment moves each cell
+to the center of gravity of its energy (Kodera et al., 1978; Auger &amp; Flandrin, 1995):</p>
+<div class="tex display">\hat t = t + \mathrm{Re}\,\frac{X_{\tau w}\, X_w^*}{|X_w|^2}, \qquad
+  \hat f = f - \frac{1}{2\pi}\,\mathrm{Im}\,\frac{X_{w&#x27;}\, X_w^*}{|X_w|^2},</div>
+<p>where <span class="tex">X_w</span> is the STFT with the window <span class="tex">w</span>, <span class="tex">X_{\tau w}</span> with the time-weighted window
+<span class="tex">\tau w(\tau)</span>, and <span class="tex">X_{w&#x27;}</span> with its derivative. A pure tone lands on its frequency, an impulse
+on its time, and a linear chirp on its instantaneous frequency, whatever the window. The moved
+energy is then summed into display bins.</p>
+
+<article class="sound" id="d-30" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.440524101855759, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4541401836217517, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.4663547843155351, &quot;x1&quot;: 0.8654311787060163, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4541401836217517, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.440524101855759, &quot;top&quot;: 0.511267277455757, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.4663547843155351, &quot;x1&quot;: 0.8654311787060163, &quot;top&quot;: 0.511267277455757, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Reassignment</h3>
+    <div class="desc"><p>Left: the 5 ms and 33.3 ms spectrograms. Right: the same, with each cell's energy moved to its
+center of gravity in time and frequency, then summed into bins of about one pixel, 5 ms by 20 Hz
+(cells more than 60 dB below the maximum are dropped). Reassignment sharpens what the window
+already resolves, pulses with the short window and harmonics with the long one; it does not
+escape the choice of window. It is not a frame and has no synthesis.</p></div>
+    <audio controls preload="metadata" src="audio/30_reassignment.flac"></audio>
+    <p class="file">30_reassignment.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/30_reassignment.png" width="1000" height="620" alt="Plots of the reassignment sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig = plt.figure(figsize=(10, 6.2), layout=&quot;constrained&quot;)
+axes = fig.subplots(2, 2, sharex=True, sharey=True)
+# Bins of about one pixel of these panels (5 ms by 20 Hz): finer bins would be drawn by
+# skipping cells, coarser ones would blur what reassignment sharpened.
+t_edges = np.arange(0, sentence.duration + 5e-3, 5e-3)
+f_edges = np.arange(0, FMAX + 20, 20)
+for row, (frame, name) in enumerate(((wide, &quot;5 ms&quot;), (narrow, &quot;33.3 ms&quot;))):
+    image(axes[row, 0], frame.analyze(sentence), f&quot;Hann {name}&quot;)
+    rs = so.reassigned_spectrogram(sentence, frame).binned(t_edges, f_edges)
+    image(axes[row, 1], rs, f&quot;Hann {name}, reassigned&quot;)
+    axes[row, 1].set_ylabel(&quot;&quot;)
+playhead = shared_time(fig, axes, images=axes)
+sound = sentence</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-nothing-is-lost">
+<h2 id="h-nothing-is-lost">Nothing is lost</h2>
+<p>Every analysis above except the last two is a <em>frame</em>: its coefficients determine the signal,
+and sonore's <code>synthesize</code> recovers it. For the STFT with window <span class="tex">w</span> and hop <span class="tex">H</span>, overlap-adding
+the windowed inverse transforms gives back the signal multiplied by</p>
+<div class="tex display">s(t) = K \sum_q \bigl|w(t - qH)\bigr|^2,</div>
+<p>with <span class="tex">K</span> the FFT length, so synthesis divides by <span class="tex">s(t)</span>, which works wherever the windows leave
+no gap. A filterbank's analogue is <span class="tex">s(f) = \sum_k |H_k(f)|^2</span>, divided out in frequency. The
+cell below resynthesizes the sentence from each frame's coefficients.</p>
+<div class="cell"><pre><code class="language-python">frames = {
+    &quot;Hann 2 ms&quot;: short,
+    &quot;Hann 5 ms&quot;: wide,
+    &quot;Hann 33.3 ms&quot;: narrow,
+    &quot;Hann 100 ms&quot;: long,
+    &quot;Morlet&quot;: morlet,
+    &quot;gammatone&quot;: gammatone,
+    &quot;pitch-adaptive&quot;: adaptive,
+}
+for name, frame in frames.items():
+    back = frame.synthesize(frame.analyze(sentence))
+    error = np.max(np.abs(back.data - sentence.data)) / sentence.peak
+    print(f&quot;{name:&gt;15}: largest error {error:.1e} of the peak&quot;)</code></pre><pre class="out">      Hann 2 ms: largest error 2.7e-16 of the peak
+      Hann 5 ms: largest error 2.7e-16 of the peak
+   Hann 33.3 ms: largest error 4.0e-16 of the peak
+    Hann 100 ms: largest error 1.2e-15 of the peak
+         Morlet: largest error 4.7e-16 of the peak
+      gammatone: largest error 1.5e-15 of the peak
+ pitch-adaptive: largest error 5.4e-16 of the peak</pre></div>
+<p>Every frame returns the sentence to within floating-point rounding. So the time-frequency
+tradeoff is not a loss of information: it appears only once the phase is discarded and the
+magnitudes are drawn. Which magnitude shows speech best depends on what you look for: pulses,
+harmonics, formants, or the pitch itself.</p>
+</section>
+<footer>This page is the script <code>docs/gallery/speech.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/speech.py</code>, or a cell at a time.</footer>
+</main>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines };
+  });
+  function draw(item) {
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

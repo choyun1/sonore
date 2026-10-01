@@ -5,32 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Listening to sonore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<script>(() => { const moved = {"w1": "speech.html", "w2": "speech.html", "27": "speech.html", "28": "speech.html", "29": "speech.html", "t1": "speech.html", "30": "speech.html", "t00a": "textures.html", "t00b": "textures.html", "t01a": "textures.html", "t01b": "textures.html", "t02a": "textures.html", "t02b": "textures.html", "t03a": "textures.html", "t03b": "textures.html", "t04a": "textures.html", "t04b": "textures.html", "t05a": "textures.html", "t05b": "textures.html", "t06a": "textures.html", "t06b": "textures.html", "u00": "textures.html", "u01": "textures.html", "u10": "textures.html", "u11": "textures.html", "u20": "textures.html", "u21": "textures.html"}; const k = location.hash.slice(3); if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
-  --rule: #CDD4DA; --head: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
   --serif: "Spectral", Georgia, "Times New Roman", serif;
   --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
-  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; } }
-:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; }
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
 *, *::before, *::after { box-sizing: inherit; }
 html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
 main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
-header { max-width: 40rem; margin-bottom: 3.5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
 h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
 header p { margin: 0 0 0.9rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
 h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
 .section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
-.sound { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 2rem; align-items: start; padding: 1.75rem 0; }
-.sound + .sound { border-top: 1px dotted var(--rule); }
-article.sound { scroll-margin-top: 1.5rem; }
-article.sound:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
 .headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
   font-size: 0.9rem; font-weight: 700; color: var(--accent); }
 audio { width: 100%; max-width: 19rem; display: block; }
@@ -38,20 +49,36 @@ audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); ou
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
 .plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
 .plate img { display: block; width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
 footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
-footer a { color: var(--accent); }
-@media (max-width: 54rem) { .sound { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
 </style>
 </head>
 <body>
 <main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a></nav>
 <header>
   <h1>Listening to sonore</h1>
-  <p>51 sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear.</p>
+  <p>27 sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
+  the same audio you hear. Two topics have pages of their own, with the code for every example beside it:
+  <a href="speech.html">Seeing speech</a>, a short course in time-frequency analysis on one spoken sentence,
+  and <a href="textures.html">Sound textures</a>, recordings and their syntheses from statistics.</p>
   <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -247,62 +274,6 @@ footer a { color: var(--accent); }
   </div></figure>
 </article>
 </section>
-<section aria-labelledby="h-seeing-speech">
-<h2 id="h-seeing-speech">Seeing speech</h2>
-<p class="section-intro">One sentence, “Providence had delivered him through the maelstrom,” spoken by a man (CMU ARCTIC, speaker bdl, 16 kHz), through several analyses. An invertible frame loses nothing: resynthesized from its coefficients, every frame here returns the sentence to within 1.5e-15 of its peak (wideband 2.7e-16, narrowband 4.0e-16, Morlet 4.7e-16, gammatone 1.5e-15, pitch-adaptive 5.4e-16). The time-frequency tradeoff appears only once the phase is discarded and the magnitudes are drawn, and which magnitude shows speech best depends on what you look for. Every panel is in dB re its own maximum over 60 dB, on the same time axis and a linear 0 to 5 kHz axis. The TANDEM-style and reassigned panels are not frames.</p>
-
-<article class="sound" id="d-27" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.031757207207207205, &quot;bottom&quot;: 0.20768862963377, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.2516459869911276, &quot;bottom&quot;: 0.5715213004939685, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.8724907845399725, &quot;top&quot;: 0.6193845412738107, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
-  <div class="about">
-    <h3>Two classic spectrograms</h3>
-    <p class="desc">Hann windows with a 1 ms hop. The 5 ms window, about 300 Hz wide, makes a wideband spectrogram: each glottal pulse is a vertical striation and the formants are broad bands. The 33.3 ms window, about 45 Hz wide, makes a narrowband one: the harmonics are horizontal lines and the pulses are smeared out. Neither shows both.</p>
-    <audio controls preload="metadata" src="audio/27_two_classic_spectrograms.flac"></audio>
-    <p class="file">27_two_classic_spectrograms.flac, 2.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/27_two_classic_spectrograms.png" width="1000" height="740" alt="Plots of the two classic spectrograms sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-28" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.03175720720720743, &quot;bottom&quot;: 0.3023492625437937, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.35021250332363596, &quot;bottom&quot;: 0.6208045586602227, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.6686677994400649, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
-  <div class="about">
-    <h3>Constant-Q and the cochlea</h3>
-    <p class="desc">Here the bandwidth grows with frequency, so the low bands resolve single harmonics while the high bands are short enough to show each pulse. Top: 54 Morlet wavelets of 6 cycles, zero-phase. Middle: 60 causal gammatone filters, 2 per ERB. A gammatone is what a cochlear filter does, and its low bands respond later: their envelopes peak up to 15 ms after the high bands&#x27;, so each pulse is drawn as a sweep. Bottom: the same envelopes, each band drawn earlier by its envelope-peak latency. Only the drawing moves; the data are unchanged.</p>
-    <audio controls preload="metadata" src="audio/28_constant-q_and_the_cochlea.flac"></audio>
-    <p class="file">28_constant-q_and_the_cochlea.flac, 2.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/28_constant-q_and_the_cochlea.png" width="1000" height="740" alt="Plots of the constant-q and the cochlea sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-29" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.03175720720720743, &quot;bottom&quot;: 0.3023492625437937, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.35021250332363596, &quot;bottom&quot;: 0.6208045586602227, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.8645023661957106, &quot;top&quot;: 0.6686677994400649, &quot;bottom&quot;: 0.9392598547766516, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
-  <div class="about">
-    <h3>Following the pitch</h3>
-    <p class="desc">Top: the narrowband spectrogram with ten times the F0 track (WORLD Harvest, where voiced), which should lie on the tenth harmonic. Middle: a time-varying frame whose Hann windows are 3 pitch periods long, so neighboring harmonics are separated equally well at every F0; the F0 is bridged through unvoiced stretches. Bottom: a TANDEM-STRAIGHT-style power spectrum, two Blackman windows 2.5 periods long a quarter period either side of each center, averaged, which cancels the flicker at the period rate. It is a power spectrum only, not TANDEM-STRAIGHT: no smoothing, no aperiodicity, no synthesis.</p>
-    <audio controls preload="metadata" src="audio/29_following_the_pitch.flac"></audio>
-    <p class="file">29_following_the_pitch.flac, 2.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/29_following_the_pitch.png" width="1000" height="740" alt="Plots of the following the pitch sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-30" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.440524101855759, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4541401836217517, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.4663547843155351, &quot;x1&quot;: 0.8654311787060163, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4541401836217517, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.440524101855759, &quot;top&quot;: 0.511267277455757, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.4663547843155351, &quot;x1&quot;: 0.8654311787060163, &quot;top&quot;: 0.511267277455757, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
-  <div class="about">
-    <h3>Reassignment</h3>
-    <p class="desc">Left: the 5 ms and 33.3 ms spectrograms. Right: the same, with each cell&#x27;s energy moved to its center of gravity in time and frequency, then summed into bins of about one pixel, 5 ms by 20 Hz (cells more than 60 dB below the maximum are dropped). Reassignment sharpens what the window already resolves, pulses with the short window and harmonics with the long one; it does not escape the choice of window. It is not a frame and has no synthesis.</p>
-    <audio controls preload="metadata" src="audio/30_reassignment.flac"></audio>
-    <p class="file">30_reassignment.flac, 2.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/30_reassignment.png" width="1000" height="620" alt="Plots of the reassignment sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-</section>
 <section aria-labelledby="h-phase-vocoder">
 <h2 id="h-phase-vocoder">Phase vocoder</h2>
 <p class="section-intro">The first sound is the reference; the others change its duration, pitch, or partials.</p>
@@ -493,276 +464,7 @@ footer a { color: var(--accent); }
   </div></figure>
 </article>
 </section>
-<section aria-labelledby="h-sound-textures">
-<h2 id="h-sound-textures">Sound textures</h2>
-<p class="section-intro">After McDermott &amp; Simoncelli (2011): a texture is summarized by time-averaged statistics of a cochlear model, and a new sample is synthesized by imposing those statistics on noise. Each original is followed by its synthesis; the synthesis shares no waveform with the original, only statistics. Plots: spectrogram, long-term spectrum, and three of the model&#x27;s own statistics: modulation power at each rate in each band (the model&#x27;s modulation spectrum), envelope sparsity (variance / mean² of each band&#x27;s envelope), and modulation power averaged over bands. For syntheses and ablations, the original is overlaid in dashed black. Recordings and excerpt choices: docs/textures/SOURCES.md. Synthesis takes about a minute per texture, so these are precomputed by tools/make_texture_synths.py.</p>
-
-<article class="sound" id="d-t00a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.656181795364038, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
-  <div class="about">
-    <h3>Rain, original</h3>
-    <p class="desc">Steady rain (nick121087, Freesound, CC0).</p>
-    <audio controls preload="metadata" src="audio/t00a_rain_original.flac"></audio>
-    <p class="file">t00a_rain_original.flac, 7.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t00a_rain_original.png" width="1000" height="660" alt="Plots of the rain, original sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t00b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.656181795364038, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Rain, synthesized</h3>
-    <p class="desc">Gaussian noise adjusted until its statistics match the original&#x27;s. Average statistic SNR 36 dB after 28 iterations.</p>
-    <audio controls preload="metadata" src="audio/t00b_rain_synthesized.flac"></audio>
-    <p class="file">t00b_rain_synthesized.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t00b_rain_synthesized.png" width="1000" height="660" alt="Plots of the rain, synthesized sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t01a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6509738990622799, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
-  <div class="about">
-    <h3>Stream, original</h3>
-    <p class="desc">Water burbling over rocks in a small creek (cognito perceptu, Freesound, CC0).</p>
-    <audio controls preload="metadata" src="audio/t01a_stream_original.flac"></audio>
-    <p class="file">t01a_stream_original.flac, 7.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t01a_stream_original.png" width="1000" height="660" alt="Plots of the stream, original sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t01b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Stream, synthesized</h3>
-    <p class="desc">Gaussian noise adjusted until its statistics match the original&#x27;s. Average statistic SNR 37 dB after 30 iterations.</p>
-    <audio controls preload="metadata" src="audio/t01b_stream_synthesized.flac"></audio>
-    <p class="file">t01b_stream_synthesized.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t01b_stream_synthesized.png" width="1000" height="660" alt="Plots of the stream, synthesized sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t02a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
-  <div class="about">
-    <h3>Crickets, original</h3>
-    <p class="desc">Crickets around midnight (sengjinn, Freesound, CC0).</p>
-    <audio controls preload="metadata" src="audio/t02a_crickets_original.flac"></audio>
-    <p class="file">t02a_crickets_original.flac, 7.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t02a_crickets_original.png" width="1000" height="660" alt="Plots of the crickets, original sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t02b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Crickets, synthesized</h3>
-    <p class="desc">Gaussian noise adjusted until its statistics match the original&#x27;s. Average statistic SNR 36 dB after 30 iterations.</p>
-    <audio controls preload="metadata" src="audio/t02b_crickets_synthesized.flac"></audio>
-    <p class="file">t02b_crickets_synthesized.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t02b_crickets_synthesized.png" width="1000" height="660" alt="Plots of the crickets, synthesized sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t03a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6478867552083335, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.5}]">
-  <div class="about">
-    <h3>Applause, original</h3>
-    <p class="desc">About thirty people clapping (Breviceps, Freesound, CC0). Only 3.5 s of original.</p>
-    <audio controls preload="metadata" src="audio/t03a_applause_original.flac"></audio>
-    <p class="file">t03a_applause_original.flac, 3.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t03a_applause_original.png" width="1000" height="660" alt="Plots of the applause, original sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t03b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Applause, synthesized</h3>
-    <p class="desc">Gaussian noise adjusted until its statistics match the original&#x27;s. Average statistic SNR 43 dB after 30 iterations.</p>
-    <audio controls preload="metadata" src="audio/t03b_applause_synthesized.flac"></audio>
-    <p class="file">t03b_applause_synthesized.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t03b_applause_synthesized.png" width="1000" height="660" alt="Plots of the applause, synthesized sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t04a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.631253490596065, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
-  <div class="about">
-    <h3>Fire, original</h3>
-    <p class="desc">A small backyard fire: sparse pops over a low rumble (Sauron974, Freesound, CC0).</p>
-    <audio controls preload="metadata" src="audio/t04a_fire_original.flac"></audio>
-    <p class="file">t04a_fire_original.flac, 20.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t04a_fire_original.png" width="1000" height="660" alt="Plots of the fire, original sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t04b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Fire, synthesized</h3>
-    <p class="desc">Gaussian noise adjusted until its statistics match the original&#x27;s. Average statistic SNR 21 dB after 29 iterations.</p>
-    <audio controls preload="metadata" src="audio/t04b_fire_synthesized.flac"></audio>
-    <p class="file">t04b_fire_synthesized.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t04b_fire_synthesized.png" width="1000" height="660" alt="Plots of the fire, synthesized sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t05a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.631253490596065, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
-  <div class="about">
-    <h3>Bubbling mud, original</h3>
-    <p class="desc">Gas venting through a Yellowstone mud pot (NPS / Jennifer Jerrett, public domain).</p>
-    <audio controls preload="metadata" src="audio/t05a_bubbling_mud_original.flac"></audio>
-    <p class="file">t05a_bubbling_mud_original.flac, 20.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t05a_bubbling_mud_original.png" width="1000" height="660" alt="Plots of the bubbling mud, original sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t05b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6510578920047857, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Bubbling mud, synthesized</h3>
-    <p class="desc">Gaussian noise adjusted until its statistics match the original&#x27;s. Average statistic SNR 38 dB after 29 iterations.</p>
-    <audio controls preload="metadata" src="audio/t05b_bubbling_mud_synthesized.flac"></audio>
-    <p class="file">t05b_bubbling_mud_synthesized.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t05b_bubbling_mud_synthesized.png" width="1000" height="660" alt="Plots of the bubbling mud, synthesized sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t06a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
-  <div class="about">
-    <h3>Wind and rain, original</h3>
-    <p class="desc">A winter storm, wind with heavy rain (sonicwars, Freesound, CC0).</p>
-    <audio controls preload="metadata" src="audio/t06a_wind_and_rain_original.flac"></audio>
-    <p class="file">t06a_wind_and_rain_original.flac, 7.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t06a_wind_and_rain_original.png" width="1000" height="660" alt="Plots of the wind and rain, original sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-t06b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Wind and rain, synthesized</h3>
-    <p class="desc">Gaussian noise adjusted until its statistics match the original&#x27;s. Average statistic SNR 39 dB after 30 iterations.</p>
-    <audio controls preload="metadata" src="audio/t06b_wind_and_rain_synthesized.flac"></audio>
-    <p class="file">t06b_wind_and_rain_synthesized.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/t06b_wind_and_rain_synthesized.png" width="1000" height="660" alt="Plots of the wind and rain, synthesized sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-</section>
-<section aria-labelledby="h-what-the-statistics-do">
-<h2 id="h-what-the-statistics-do">What the statistics do</h2>
-<p class="section-intro">The same textures synthesized with only some of the statistics imposed. Compare with the full syntheses above: the marginals alone give the right sparsity but not the right rhythm or the coordination across bands.</p>
-
-<article class="sound" id="d-u00" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Applause, marginals only</h3>
-    <p class="desc">Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band&#x27;s envelope).</p>
-    <audio controls preload="metadata" src="audio/u00_applause_marginals_only.flac"></audio>
-    <p class="file">u00_applause_marginals_only.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/u00_applause_marginals_only.png" width="1000" height="660" alt="Plots of the applause, marginals only sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-u01" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Applause, marginals and modulation power</h3>
-    <p class="desc">Envelope marginals plus modulation power; no correlations across bands or modulation bands.</p>
-    <audio controls preload="metadata" src="audio/u01_applause_marginals_and_modulation_power.flac"></audio>
-    <p class="file">u01_applause_marginals_and_modulation_power.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/u01_applause_marginals_and_modulation_power.png" width="1000" height="660" alt="Plots of the applause, marginals and modulation power sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-u10" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Stream, marginals only</h3>
-    <p class="desc">Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band&#x27;s envelope).</p>
-    <audio controls preload="metadata" src="audio/u10_stream_marginals_only.flac"></audio>
-    <p class="file">u10_stream_marginals_only.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/u10_stream_marginals_only.png" width="1000" height="660" alt="Plots of the stream, marginals only sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-u11" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Stream, marginals and modulation power</h3>
-    <p class="desc">Envelope marginals plus modulation power; no correlations across bands or modulation bands.</p>
-    <audio controls preload="metadata" src="audio/u11_stream_marginals_and_modulation_power.flac"></audio>
-    <p class="file">u11_stream_marginals_and_modulation_power.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/u11_stream_marginals_and_modulation_power.png" width="1000" height="660" alt="Plots of the stream, marginals and modulation power sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-u20" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Fire, marginals only</h3>
-    <p class="desc">Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band&#x27;s envelope).</p>
-    <audio controls preload="metadata" src="audio/u20_fire_marginals_only.flac"></audio>
-    <p class="file">u20_fire_marginals_only.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/u20_fire_marginals_only.png" width="1000" height="660" alt="Plots of the fire, marginals only sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-u21" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
-  <div class="about">
-    <h3>Fire, marginals and modulation power</h3>
-    <p class="desc">Envelope marginals plus modulation power; no correlations across bands or modulation bands.</p>
-    <audio controls preload="metadata" src="audio/u21_fire_marginals_and_modulation_power.flac"></audio>
-    <p class="file">u21_fire_marginals_and_modulation_power.flac, 5.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/u21_fire_marginals_and_modulation_power.png" width="1000" height="660" alt="Plots of the fire, marginals and modulation power sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-</section>
-<footer>Every sound and plot here is generated by <code>docs/gallery/build.py</code> in the
-<a href="https://github.com/choyun1/sonore">sonore repository</a>, using the library's own functions.</footer>
+<footer>Every sound and plot here is generated by <code>docs/gallery/build.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, using the library's own functions.</footer>
 </main>
 <script>
 (() => {
@@ -804,7 +506,7 @@ footer a { color: var(--accent); }
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
       const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.x1 - r.x0) * (r.t1 - r.t0)); item.audio.play(); }
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
     });
     item.plate.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }

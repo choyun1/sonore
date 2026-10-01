@@ -167,8 +167,10 @@ for sub, (label, d) in zip(columns, patterns, strict=True):
 save(fig, "ripple_waveforms.png")
 
 # 9. sound texture: a stream recording and a synthesis from its statistics (gallery t01a / t01b)
-original, synth = demo("t01a").sound, demo("t01b").sound
-info = json.loads((gallery.TEXTURES / "synth" / "stream.json").read_text())
+# The texture page (docs/gallery/textures.py) runs as a script, so its files are loaded here as it loads them.
+TEXTURES = gallery.ROOT / "docs" / "textures"
+original, synth = so.load(TEXTURES / "stream.flac"), so.load(TEXTURES / "synth" / "stream.flac").resample(FS)
+info = json.loads((TEXTURES / "synth" / "stream.json").read_text())
 snr = np.mean(list(info["snr_all_classes"].values()))
 target = TextureStats.measure(original)
 this = TextureStats.measure(synth, window="uniform")  # syntheses are circular
