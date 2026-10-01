@@ -12,6 +12,7 @@ Typical use in a notebook::
 """
 
 from sonore import texture
+from sonore.analysis.cepstrum import Cepstrum
 from sonore.analysis.envelopes import Envelope, Envelopes
 from sonore.analysis.filterbank import (
     CosineFilterbank,
@@ -114,6 +115,7 @@ __all__ = [
     "MorletFilterbank",
     "TVGaborFrame",
     "TVSTFT",
+    "Cepstrum",
     "TFPower",
     "tandem_power",
     "ReassignedSpectrogram",
