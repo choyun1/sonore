@@ -10,6 +10,8 @@ version (0.x.y) only fixes bugs.
 - A starter notebook, `docs/notebooks/start.ipynb`, with an "Open in Colab"
   badge in the README: a first tour that installs sonore from PyPI and runs
   in the browser. `tests/test_notebook.py` runs its code cells.
+- `CITATION.cff` gives the version, release date, abstract and PyPI link, which
+  Zenodo reads when it archives a GitHub release.
 
 ## [0.3.0] - 2026-10-01
 
