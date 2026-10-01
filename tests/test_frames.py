@@ -225,6 +225,10 @@ ORACLE = {
     # A fractional delay rings for thousands of samples near Nyquist, so pad
     # explicitly: the D1 oracle would otherwise be thousands wide.
     "delayed gaussian": (DelayedGaussianFilterbank(f_hi=FS / 2), [0, 4e-3]),
+    # Step 2 banks; explicit pads keep the D1 oracle small (they ring 25-40 ms).
+    "gammatone": (so.GammatoneFilterbank(19, 300, 3500), [0, 4e-3]),
+    "gammatone zero": (so.GammatoneFilterbank(19, 300, 3500, phase="zero"), [0, 4e-3]),
+    "morlet": (so.MorletFilterbank(5, 300, 3500, cycles=3), [0, 4e-3]),
     **{f"gabor {k}": (v, [None]) for k, v in GABORS.items()},
 }
 ORACLE_CASES = [(name, pad) for name, (_, pads) in ORACLE.items() for pad in pads]

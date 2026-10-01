@@ -290,6 +290,43 @@ gammatone has `spacing` in ERB-number with `unit = "ERB"`, and Morlet has
 
 Each patch carries its own tests. README entries come with patches 3 and 4.
 
+## Implementation notes
+
+Details settled while implementing, recorded so the code and this document
+agree.
+
+- **Patch 2.** `Filterbank.rfft_response` applies the Nyquist rule only to
+  complex responses, returning real ones untouched, so the cosine banks are
+  bit-for-bit unchanged. The tests exercise the rule with a test-only
+  Gaussian bank with a fractional delay, which needs no step 2 bank.
+- **Patch 3, the shared mechanism.** `BandpassFilterbank` holds the edge
+  filters; subclasses give the scale and `band_response`. The `n_bands`
+  centers run from `f_lo` to `f_hi` inclusive. `s_floor` is the minimum on a
+  grid of 64 points per spacing between the outer centers. The raised-cosine
+  transition is linear in Hz between its endpoints, which are set on the
+  bank's scale, exactly as in the checker. `edge_width` (default 1) is the
+  width in spacings.
+- **Edge centers.** D7 said the edge filters' nominal centers would be at
+  DC and Nyquist, but a bank does not know fs. `cfs` instead puts them where
+  the transitions start, `edge_width` spacings outside the band (clamped at
+  0 Hz). That is one spacing beyond the outer bandpass, the same place the
+  cosine banks put theirs.
+- **C11 reproduced.** The tests rebuild the two C11 banks and find A/B 0.530
+  and 0.585, with edges ringing 107 and 234 ms. The gammatone figure differs
+  from the table's 0.532 because sonore's ERB-number scale,
+  9.265 ln(1 + f/228.8), differs from the checker's 21.4 log10(1 + 0.00437 f)
+  by 0.3%. Two further differences from the table are expected, not errors.
+  First, `Filterbank.ringing` gives 73 ms for the causal gammatone bank,
+  against the table's 44 ms for its zero-phase magnitude. Second, the bare
+  causal bank's A/B on an even grid is lower than the table's, because
+  under the Nyquist rule the bank applies Re H(fs/2), which is smaller than
+  |H(fs/2)|.
+- **Edge test.** The test plan's "A ≥ s_floor" holds only for exact fill.
+  With raised-cosine edges, A falls below s_floor in the transitions, by the
+  amount C11 reports. The tests check C11's A/B and ringing instead.
+- **`Envelopes.without_edges`** returns the envelopes unchanged for a bank
+  built with `edges=False`, which has no edge bands to zero.
+
 ## Out of scope for step 2
 
 - Union synthesis (D11) and the CG canonical dual (D1(b)).

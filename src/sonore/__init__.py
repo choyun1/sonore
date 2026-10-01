@@ -24,6 +24,8 @@ from sonore.envelopes import Envelope, Envelopes
 from sonore.filterbank import (
     CosineFilterbank,
     ERBFilterbank,
+    GammatoneFilterbank,
+    MorletFilterbank,
     OctaveFilterbank,
     Subbands,
     noise_vocode,
@@ -98,6 +100,8 @@ __all__ = [
     "Filterbank",
     "Frame",
     "GaborFrame",
+    "GammatoneFilterbank",
+    "MorletFilterbank",
     "Envelopes",
     "Envelope",
     "ripple_sound",
