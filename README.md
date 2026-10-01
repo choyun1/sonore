@@ -521,4 +521,5 @@ open an issue.
 ## License and citation
 
 MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). If sonore is useful in your research, please cite
-it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff).
+it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff); the
+*Cite this repository* button in the GitHub sidebar gives the same citation in APA and BibTeX.
