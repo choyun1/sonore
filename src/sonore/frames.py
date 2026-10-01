@@ -14,23 +14,27 @@ The contract (docs/design/frames.md) is:
 :class:`Filterbank` is the frequency-domain, undecimated family: filters given
 by their responses on the DFT grid. Its frame operator is diagonal in frequency,
 ``s(f) = sum_k |H_k(f)|**2``, and the canonical dual filters are ``H_k / s``
-(claim C4). Banks whose ``s`` is identically 1 set ``tight = True`` and skip
+(Balazs et al., 2011). Banks whose ``s`` is identically 1 set ``tight = True`` and skip
 the division, as :class:`~sonore.filterbank.CosineFilterbank` does.
 
 :class:`GaborFrame` is the one-sided STFT (wrapping
 :class:`scipy.signal.ShortTimeFFT`). Its frame operator is diagonal in time,
-``s(t) = K sum_q |w(t - q hop)|**2`` with ``K = n_fft`` (claim C5), and its
-coefficient norm weights each stored bin by 2 except DC and, for even ``K``,
-Nyquist (claim C3).
+``s(t) = K sum_q |w(t - q hop)|**2`` with ``K = n_fft`` (this holds because
+SciPy requires the window to fit in ``n_fft``). Only the non-negative
+frequencies are stored, so the coefficient norm weights each stored bin by 2,
+except DC and, for even ``K``, Nyquist, which have no mirror image: this
+recovers the energy of the full two-sided STFT, and it is the norm in which
+SciPy's ``istft`` is the least-squares inverse.
 
 Every frame also has :meth:`Frame.adjoint`, the adjoint of ``analyze`` for
-the coefficient inner product that ``energy`` uses (decision D10 of
-docs/design/frames-step2.md): synthesis without the division by ``s``.
+the coefficient inner product that ``energy`` uses: synthesis without the
+division by ``s``. It is the gradient of a coefficient-domain loss with
+respect to the signal.
 
 :class:`TVGaborFrame` is the Gabor frame with one window per position
 (nonstationary Gabor, painless case): every window fits in one FFT length
 ``M``, so the frame operator is again diagonal in time,
-``s(t) = M sum_q |w_q(t - a_q)|**2`` (step 2, claim C12).
+``s(t) = M sum_q |w_q(t - a_q)|**2``.
 
 The code is written as pure array functions (no in-place mutation) so that a
 JAX port is mechanical.
@@ -55,7 +59,9 @@ if TYPE_CHECKING:
 
 __all__ = ["Frame", "Filterbank", "GaborFrame", "TVGaborFrame"]
 
-# synthesize() refuses when A <= NOT_A_FRAME * B (decision D4).
+# analyze() always works, even on a non-frame (a bank with coverage gaps still
+# gives a usable cochleagram), but synthesize() refuses when A <= NOT_A_FRAME * B,
+# because no stable inverse exists.
 NOT_A_FRAME = 1e-12
 
 
@@ -86,16 +92,16 @@ class Frame(ABC):
     @abstractmethod
     def energy(self, coefs) -> np.ndarray:
         """Coefficient energy per channel, in the norm the bounds and the least
-        squares are defined in (decision D2)."""
+        squares are defined in, so that bounds, SNRs and tests all agree."""
 
     @abstractmethod
     def adjoint(self, coefs) -> Sound:
         """The adjoint of :meth:`analyze`: the signal ``y`` with
         ``<analyze(x), coefs> == <x, y>`` for every ``x``, the coefficient
-        inner product being the one :meth:`energy` uses (step 2, decision
-        D10). It is :meth:`synthesize` without the division by the frame
-        operator, and the gradient of a loss on the coefficients with respect
-        to the signal."""
+        inner product being the one :meth:`energy` uses. It is
+        :meth:`synthesize` without the division by the frame operator, and
+        the gradient of a loss on the coefficients with respect to the
+        signal."""
 
 
 class Filterbank(Frame):
@@ -133,8 +139,10 @@ class Filterbank(Frame):
         On an even grid, a complex response is replaced by its real part at
         Nyquist: ``irfft`` keeps only the real part of that bin, so this is
         the filter actually applied, and analysis, :meth:`frame_power` and
-        :meth:`synthesize` must all see the same one (step 2, claim C14 and
-        decision D8). Real responses are returned unchanged."""
+        :meth:`synthesize` must all see the same one. Without this, the dual
+        divides by ``|H(fs/2)|**2`` while analysis applied ``Re H(fs/2)``, and
+        reconstruction is off by up to ~1e-5. Real responses are returned
+        unchanged."""
         H = self.response(np.fft.rfftfreq(n, 1 / fs))
         if n % 2 == 0 and np.iscomplexobj(H):
             H = np.concatenate([H[:-1], H[-1:].real.astype(H.dtype)])
@@ -189,10 +197,14 @@ class Filterbank(Frame):
         ``H``), then remove the padding.
 
         The frame is the circular operator on the (padded) grid the
-        coefficients live on (decision D1). Unmodified coefficients
-        reconstruct exactly. For modified ones the result is the least-squares
-        fit on that grid, cropped; with ``pad=0`` this is the canonical least
-        squares on the signal itself. Raises if the bank leaves a frequency
+        coefficients live on. Unmodified coefficients reconstruct exactly.
+        For modified ones the result is the least-squares fit on that grid,
+        cropped; with ``pad=0`` this is the canonical least squares on the
+        signal itself. With padding on a non-tight bank it differs slightly
+        (about 1% on masked coefficients) from the canonical least squares on
+        the unpadded signal, because masked energy that lands in the padding is
+        discarded rather than refit; this is a deliberate choice, exact and
+        non-iterative. Raises if the bank leaves a frequency
         uncovered (A = 0).
         """
         full, fs, p = coefs._full, coefs.fs, coefs.pad
@@ -210,8 +222,9 @@ class Filterbank(Frame):
 
     def frame_bounds(self, n_samples: int, fs: float, pad: float | str = "auto") -> tuple[float, float]:
         """``(min s, max s)`` on the DFT grid that :meth:`analyze` would use
-        for a signal of ``n_samples`` at ``fs``, including its padding
-        (decisions D1, D3). Tight banks return ``(1.0, 1.0)``."""
+        for a signal of ``n_samples`` at ``fs``, including its padding: the
+        bounds of the grid the coefficients actually live on, which depends on
+        the signal length and rate (hence a method, not a property). Tight banks return ``(1.0, 1.0)``."""
         if self.tight:
             return (1.0, 1.0)
         s = self.frame_power(int(n_samples) + 2 * self._pad_samples(pad, fs), fs)
@@ -219,7 +232,7 @@ class Filterbank(Frame):
 
     def energy(self, coefs: Subbands) -> np.ndarray:
         """Sum of squares of the subbands, padding included, per channel.
-        Subbands are real, so every sample has weight 1 (claim C3)."""
+        Subbands are real, so every sample has weight 1."""
         return np.sum(coefs._full**2, axis=(0, 1))
 
     def adjoint(self, coefs: Subbands) -> Sound:
@@ -264,7 +277,7 @@ class GaborFrame(Frame):
 
     A window/hop pair that leaves gaps (A = 0) is refused when the frame is
     first used at a sampling rate, because SciPy builds the dual window
-    eagerly; the error gives the frame bounds (decision D4). A hop longer than
+    eagerly; the error gives the frame bounds. A hop longer than
     the window is refused at construction.
     """
 
@@ -309,7 +322,7 @@ class GaborFrame(Frame):
 
     def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
         """``s(t) = K sum_q |w(t - q hop)|**2`` for ``t`` in ``0..n_samples-1``:
-        the diagonal of the frame operator (claim C5). Sums over every frame
+        the diagonal of the frame operator. Sums over every frame
         that overlaps the signal; frames SciPy leaves out overlap it only
         where the window is zero, so they add nothing."""
         n = int(n_samples)
@@ -324,13 +337,14 @@ class GaborFrame(Frame):
 
     def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]:
         """``(min s, max s)`` over a signal of ``n_samples`` at ``fs``, in the
-        weighted coefficient norm of :meth:`energy` (claims C3, C5)."""
+        weighted coefficient norm of :meth:`energy`."""
         s = self.frame_power(n_samples, fs)
         return (float(s.min()), float(s.max()))
 
     def bin_weights(self, fs: float) -> np.ndarray:
-        """Weight of each stored frequency bin (claim C3): 1 for DC and, for
-        even ``n_fft``, Nyquist; 2 for the rest."""
+        """Weight of each stored frequency bin: 1 for DC and, for even
+        ``n_fft``, Nyquist; 2 for the rest, which stand for their negative-
+        frequency mirror images too."""
         n_fft = self.lengths(fs)[2]
         w = np.full(n_fft // 2 + 1, 2.0)
         w[0] = 1.0
@@ -346,7 +360,8 @@ class GaborFrame(Frame):
 
     def synthesize(self, coefs: STFT) -> Sound:
         """SciPy's ``istft``: the weighted real least-squares signal for
-        ``coefs`` (claims C3, C6), exact for unmodified coefficients."""
+        ``coefs``, exact for unmodified coefficients. Padding does not change
+        this, since the frame operator is diagonal in time."""
         sft = self.sft(coefs.fs)
         if coefs.data.shape[-2] != sft.f_pts:
             raise ValueError(f"expected {sft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
@@ -354,14 +369,15 @@ class GaborFrame(Frame):
         return Sound(np.real(x).T, coefs.fs)
 
     def energy(self, coefs: STFT) -> np.ndarray:
-        """Weighted coefficient energy per channel (claim C3): the energy of
-        the full two-sided STFT."""
+        """Weighted coefficient energy per channel: the energy of the full
+        two-sided STFT."""
         w = self.bin_weights(coefs.fs)
         return np.einsum("f,cft->c", w, np.abs(coefs.data) ** 2)
 
     def adjoint(self, coefs: STFT) -> Sound:
         """``n_fft`` times SciPy's ``istft`` with ``dual_win = win``: the
-        adjoint for the C3-weighted inner product (step 2, claim C13)."""
+        adjoint for the bin-weighted inner product of :meth:`energy` (verified
+        against a dense matrix, including odd and zero-padded FFTs)."""
         sft = _gabor_adjoint_sft(self, float(coefs.fs))
         if coefs.data.shape[-2] != sft.f_pts:
             raise ValueError(f"expected {sft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
@@ -403,14 +419,14 @@ def _window(spec, n: int) -> np.ndarray:
 
 @dataclass(frozen=True)
 class TVGaborFrame(Frame):
-    """A Gabor frame with a time-varying window (step 2, decision D9).
+    """A Gabor frame with a time-varying window.
 
     Window ``q`` is ``win_durs[q]`` long and centered at ``times[q]`` [s];
     each windowed segment is zero-padded to one FFT length ``n_fft`` and
     transformed, with the phase referenced to the window's center, as
     :class:`GaborFrame` (SciPy) does. Every window must fit in ``n_fft``
     samples, the painless condition that keeps the frame operator diagonal
-    (claim C12); ``n_fft`` defaults to the longest window. Durations and
+    (Balazs et al., 2011); ``n_fft`` defaults to the longest window. Durations and
     times are rounded to samples at each sampling rate, and a window longer
     than ``n_fft`` is refused when the frame is first used at a rate.
 
@@ -480,7 +496,7 @@ class TVGaborFrame(Frame):
 
     def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
         """``s(t) = M sum_q |w_q(t - a_q)|**2`` for ``t`` in ``0..n_samples-1``:
-        the diagonal of the frame operator (claim C12)."""
+        the diagonal of the frame operator."""
         lay, n = self.layout(fs), int(n_samples)
         t, valid = lay.positions(n)
         return lay.n_fft * np.bincount(t[valid], weights=np.abs(lay.windows[valid]) ** 2, minlength=n)
@@ -492,7 +508,7 @@ class TVGaborFrame(Frame):
         return (float(s.min()), float(s.max()))
 
     def bin_weights(self, fs: float) -> np.ndarray:
-        """Weight of each stored frequency bin (claim C3), as for :class:`GaborFrame`."""
+        """Weight of each stored frequency bin, as for :class:`GaborFrame`."""
         n_fft = self.layout(fs).n_fft
         w = np.full(n_fft // 2 + 1, 2.0)
         w[0] = 1.0
@@ -527,21 +543,20 @@ class TVGaborFrame(Frame):
 
     def adjoint(self, coefs: TVSTFT) -> Sound:
         """Conjugate-window overlap-add of ``n_fft * irfft`` of each frame,
-        without dividing by ``s`` (decision D10)."""
+        without dividing by ``s``."""
         return Sound(self._overlap_add(coefs, self._check(coefs)), coefs.fs)
 
     def synthesize(self, coefs: TVSTFT) -> Sound:
-        """The adjoint divided by ``s(t)``: the canonical dual (claim C12,
-        generalizing C5), so the weighted least-squares signal for ``coefs``,
-        exact for unmodified ones. Raises if the windows leave part of the
-        signal uncovered (D4)."""
+        """The adjoint divided by ``s(t)``: the canonical dual, so the
+        weighted least-squares signal for ``coefs``, exact for unmodified ones.
+        Raises if the windows leave part of the signal uncovered."""
         lay = self._check(coefs)
         s = self.frame_power(coefs.n_samples, coefs.fs)
         _check_frame(float(s.min()), float(s.max()), f"{type(self).__name__} at {coefs.fs:g} Hz")
         return Sound(self._overlap_add(coefs, lay) / s[:, None], coefs.fs)
 
     def energy(self, coefs: TVSTFT) -> np.ndarray:
-        """Weighted coefficient energy per channel (claim C3)."""
+        """Weighted coefficient energy per channel, as for :class:`GaborFrame`."""
         w = self.bin_weights(coefs.fs)
         return np.einsum("f,cft->c", w, np.abs(coefs.data) ** 2)
 
@@ -574,7 +589,7 @@ def _tv_layout(frame: TVGaborFrame, fs: float) -> _TVLayout:
     if n_fft < lengths.max():
         raise ValueError(
             f"n_fft ({n_fft}) must be at least the longest window ({lengths.max()} samples at {fs:g} Hz): "
-            "longer windows break the painless condition (claim C12)"
+            "a longer window would make the frame operator non-diagonal"
         )
     centers = np.round(np.asarray(frame.times) * fs).astype(int)
     j = np.arange(n_fft)

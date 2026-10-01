@@ -49,12 +49,12 @@ def test_subband_plot_labels_and_scale():
 
 
 # ------------------------------------------- gammatone and Morlet (frames step 2)
-# docs/design/frames-step2.md: claims C10 (gammatone formulas), C11 (edge
-# coverage), C14 (Nyquist rule); decisions D6 (phase) and D7 (edge filters).
+# Checks the gammatone formulas, the edge filters' coverage, the Nyquist rule
+# and the gammatone phase options (derivations in docs/design/frames-step2.md).
 
 
-def _gammatone_c10(f, fc):
-    """C10 written out: FT of t^3 exp(-2 pi b t) cos(2 pi fc t), t >= 0, unit gain at fc."""
+def _gammatone_formula(f, fc):
+    """Closed-form FT of t^3 exp(-2 pi b t) cos(2 pi fc t), t >= 0, unit gain at fc."""
     b = 1.019 * 24.7 * (4.37e-3 * fc + 1)
     k = 6 / (2 * np.pi) ** 4 / 2
 
@@ -71,12 +71,12 @@ class TestGammatone:
         f = np.linspace(0, 8000, 801)
         H = self.fb.response(f)
         for k, fc in enumerate(self.fb.cfs):
-            np.testing.assert_allclose(H[:, k], _gammatone_c10(f, fc), rtol=1e-12, atol=1e-15)
+            np.testing.assert_allclose(H[:, k], _gammatone_formula(f, fc), rtol=1e-12, atol=1e-15)
         zero = so.GammatoneFilterbank(2, 100, 4000, edges=False, phase="zero")
         assert np.array_equal(zero.response(f), np.abs(H))
 
     def test_group_delay_and_envelope_peak(self):
-        """C10(b, c): group delay 4/(2 pi b) at cf, envelope peak 3/(2 pi b), within 1%."""
+        """Group delay 4/(2 pi b) at cf, envelope peak 3/(2 pi b), within 1%."""
         b, cfs, df = self.fb.b, self.fb.cfs, 1e-3
         H = self.fb.response(np.concatenate([cfs - df, cfs + df]))
         gd = -np.angle(H[[2, 3], [0, 1]] / H[[0, 1], [0, 1]]) / (2 * np.pi * 2 * df)
@@ -89,7 +89,7 @@ class TestGammatone:
     @pytest.mark.parametrize("phase", ["causal", "zero"])
     @pytest.mark.parametrize("n", [4000, 4001])
     def test_exact_up_to_nyquist(self, phase, n):
-        """Bands up to 7.5 kHz at 16 kHz: C14's case, exact on even and odd lengths."""
+        """Bands up to 7.5 kHz at 16 kHz, where Im H(fs/2) is large: exact on even and odd lengths."""
         fb = so.GammatoneFilterbank(30, 50, 7500, phase=phase)
         x = so.Sound(np.random.default_rng(0).standard_normal((n, 2)), 16000)
         for pad in ("auto", 0):
@@ -120,7 +120,7 @@ class TestMorlet:
         assert fb.unit == "oct" and fb.spacing == pytest.approx(1.0)
 
     def test_bare_bank_is_not_a_frame(self):
-        """C11/D4: without edges A = 0 (DC); analysis works, synthesis refuses."""
+        """Without edges A = 0 (DC); analysis works, synthesis refuses."""
         fb = so.MorletFilterbank(28, 50, 7000, edges=False)
         assert fb.frame_bounds(1000, 16000)[0] == 0
         sb = fb.analyze(so.gaussian_noise(0.05, 16000, rng=0))
@@ -134,8 +134,9 @@ class TestMorlet:
         np.testing.assert_allclose(fb.analyze(x).synthesize().data, x.data, rtol=0, atol=1e-12)
 
 
-def _c11_banks(width):
-    """The two banks of claim C11's table (gammatone 1/ERB, Morlet 4/oct, 50-7000 Hz)."""
+def _edge_banks(width):
+    """The two banks of the edge-coverage table in docs/design/frames-step2.md
+    (gammatone 1/ERB, Morlet 4/oct, 50-7000 Hz)."""
     e = so.freq_to_erb(50.0)
     n = len(np.arange(e, so.freq_to_erb(7000.0), 1.0))
     return (
@@ -147,10 +148,10 @@ def _c11_banks(width):
 @pytest.mark.parametrize(
     ("width", "ratios", "ring_ms"), [(1, (0.53, 0.58), (107, 234)), (2, (0.18, 0.30), (None, 149))]
 )
-def test_edge_filters_match_c11(width, ratios, ring_ms):
-    """A/B and the edge filters' ringing at fs = N = 16000, as in C11 (within 2%).
+def test_edge_filters_match_design_table(width, ratios, ring_ms):
+    """A/B and the edge filters' ringing at fs = N = 16000, as in that table (within 2%).
     At width 2 the causal gammatone bank itself rings longest (73 ms)."""
-    for fb, ratio, ring in zip(_c11_banks(width), ratios, ring_ms, strict=True):
+    for fb, ratio, ring in zip(_edge_banks(width), ratios, ring_ms, strict=True):
         lo, hi = fb.frame_bounds(16000, 16000, pad=0)
         assert lo / hi == pytest.approx(ratio, rel=2e-2)
         if ring is not None:
