@@ -113,3 +113,20 @@ def canonical_lstsq(T, w, c) -> np.ndarray:
     A = np.vstack([r.real, r.imag]) if np.iscomplexobj(r) else r
     y = np.concatenate([b.real, b.imag]) if np.iscomplexobj(b) else b
     return np.linalg.lstsq(A, y, rcond=None)[0]
+
+
+def toy_hrirs(fs=48000, taps=256):
+    """Spherical-head-ish toy set: ITD from Woodworth, ILD from azimuth."""
+    az = np.arange(0, 360, 10)
+    el = np.arange(-40, 91, 20)
+    hcc = np.array([(100, e, a) for e in el for a in az])
+    pos = np.column_stack(so.hcc_to_rect(*hcc.T))
+    theta = np.radians(hcc[:, 2])
+    lat = np.arcsin(np.sin(theta) * np.cos(np.radians(hcc[:, 1])))
+    itd = 0.0875 / 343 * (lat + np.sin(lat))
+    irs = np.zeros((len(hcc), 2, taps))
+    for i, d in enumerate(itd):
+        base = 20
+        irs[i, 0, base + int(round(max(d, 0) * fs))] = 10 ** (-np.sin(lat[i]) * 5 / 20)
+        irs[i, 1, base + int(round(max(-d, 0) * fs))] = 10 ** (np.sin(lat[i]) * 5 / 20)
+    return so.HRIRSet(irs, pos, fs), itd

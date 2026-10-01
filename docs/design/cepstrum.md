@@ -10,7 +10,7 @@ tracker must beat.
 
 Status: accepted 2026-10-01, with decisions D1–D7 as recommended below.
 Implemented in `src/sonore/analysis/cepstrum.py`, tested in
-`tests/test_cepstrum.py`.
+`tests/analysis/test_cepstrum.py`.
 
 ## How the claims are verified
 

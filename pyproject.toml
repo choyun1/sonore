@@ -59,6 +59,7 @@ packages = ["src/sonore"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]  # so tests in subfolders can import tests/helpers.py
 filterwarnings = ["error::RuntimeWarning"]
 
 [tool.ruff]

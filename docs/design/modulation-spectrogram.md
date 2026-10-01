@@ -20,7 +20,7 @@ Status: accepted 2026-10-01, with decisions D1–D9 as recommended below
 (D1 with the kernels as their own modulation filterbank). Patch 2 is
 implemented: `HannModulationFilterbank` in `src/sonore/analysis/modulation.py`
 and `ModulationSpectrogram` in `src/sonore/analysis/modspectrogram.py`,
-tested in `tests/test_modspectrogram.py`. Patch 3 (display) is
+tested in `tests/analysis/test_modspectrogram.py`. Patch 3 (display) is
 implemented too: `plot`, `pooled_depth`, `slices` and `animate`, with the
 plot functions in `src/sonore/plotting.py`. Patch 4, the gallery page, is
 `docs/gallery/modspectrogram.py`. All four patches are merged.
