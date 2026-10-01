@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Analysis and resynthesis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
+  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+audio { width: 100%; max-width: 19rem; display: block; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+</style>
+</head>
+<body>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html">Cepstral analysis</a><a href="resynthesis.html" aria-current="page">Analysis and resynthesis</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="reverb.html">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a></nav>
+<header>
+  <h1>Analysis and resynthesis</h1>
+<p>Many of sonore's analyses can be run backwards: split a sound into bands or time-frequency
+cells, change what you find there, and synthesize a sound from the result. This page goes from
+doing nothing to doing a lot.</p>
+<ul><li><a href="#h-perfect-reconstruction">Perfect reconstruction</a>: a filterbank whose bands sum back to the original exactly.</li><li><a href="#h-masking-the-spectrogram">Masking the spectrogram</a>: switching off the cells where noise dominates, the ideal binary mask.</li><li><a href="#h-phase-vocoder">Phase vocoder</a>: changing a sound's duration, pitch or partials.</li></ul>
+<p>Two other pages do the same with particular parts of a sound: <a href="vocoder.html">Hearing through a
+vocoder</a> keeps only band envelopes, and <a href="cepstrum.html">Cepstral analysis</a> splits a
+voice into its vocal tract and its source.</p>
+<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+from sonore import dB
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+FS = 44100
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></div>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-perfect-reconstruction">
+<h2 id="h-perfect-reconstruction">Perfect reconstruction</h2>
+<p><code>so.subbands</code> splits a sound with half-cosine filters equally spaced on the ERB scale, plus a
+lowpass and a highpass filter at the edges. Their squared responses sum to 1 at every
+frequency, so analysis followed by synthesis (each band filtered again, then summed) gives back
+the original, up to floating-point rounding.</p>
+<div class="cell"><pre><code class="language-python">def show_bands(snd, original):
+    &quot;&quot;&quot;The six bands of the sweep beside the original, the reconstruction and their difference.
+    Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 6.2), layout=&quot;constrained&quot;)
+    left, right = fig.subfigures(1, 2, width_ratios=[1.35, 1])
+    sb = so.subbands(original, n_bands=6, f_lo=100, f_hi=6000)
+    band_axes = left.subplots(len(sb), 1, sharex=True)
+    sb.plot(band_axes)
+    band_axes[0].set_title(
+        &quot;so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)&quot;, family=&quot;monospace&quot;, fontsize=8
+    )
+    r = right.subplots(3, 1, sharex=True)
+    original.plot(r[0], color=&quot;k&quot;, lw=0.4)
+    r[0].set(title=&quot;Original sweep, 100 Hz to 6 kHz&quot;, xlabel=&quot;&quot;)
+    recon = sb.synthesize()  # recomputed: the played sound has been level-normalized
+    recon.plot(r[1], color=&quot;tab:blue&quot;, lw=0.4)
+    r[1].set(title=&quot;Reconstruction: sb.synthesize()&quot;, xlabel=&quot;&quot;)
+    err = recon - original
+    r[2].plot(err.t, 1e15 * err.data[:, 0], color=&quot;tab:red&quot;, lw=0.5)
+    r[2].set(title=f&quot;Difference (max |error| = {err.peak:.1e})&quot;, ylabel=&quot;× 1e-15&quot;, xlabel=&quot;Time [s]&quot;)
+    r[2].grid(ls=&quot;:&quot;)
+    return fig, list(band_axes) + list(r)</code></pre></div>
+
+<article class="sound" id="d-26" data-regions="[{&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.03306505376344093, &quot;bottom&quot;: 0.1261475358422951, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.147429973118281, &quot;bottom&quot;: 0.2405124551971326, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.26179489247311827, &quot;bottom&quot;: 0.35487737455197166, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.37615981182795744, &quot;bottom&quot;: 0.4692422939068104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.49052473118279605, &quot;bottom&quot;: 0.5836072132616492, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.6048896505376349, &quot;bottom&quot;: 0.6979721326164873, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.7192545698924729, &quot;bottom&quot;: 0.8123370519713262, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.8336194892473119, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.2991930107526879, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.35165824372759824, &quot;bottom&quot;: 0.6129474910394264, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.6654127240143368, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+  <div class="about">
+    <h3>Perfect reconstruction</h3>
+    <div class="desc"><p>An exponential sweep split into 6 ERB-spaced bands plus the lowpass and highpass edge filters,
+then summed back. What you hear is the reconstruction; it differs from the original only at
+the level of floating-point rounding.</p></div>
+    <audio controls preload="metadata" src="audio/26_perfect_reconstruction.flac"></audio>
+    <p class="file">26_perfect_reconstruction.flac, 2.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/26_perfect_reconstruction.png" width="1000" height="620" alt="Plots of the perfect reconstruction sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
+sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize())
+fig, playhead = show_bands(sound, sweep)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-masking-the-spectrogram">
+<h2 id="h-masking-the-spectrogram">Masking the spectrogram</h2>
+<p>The STFT is invertible too, so a spectrogram with some of its cells switched off is still a
+sound. Wang (2005) proposed the <em>ideal binary mask</em> as the goal of separating speech from
+noise: keep every cell where the target is louder than the noise, discard the rest. It is
+ideal because computing it needs the target and the noise separately, which a listener never
+has; what a listener hears through it shows how much a perfect separation would leave.</p>
+<div class="cell"><pre><code class="language-python">def gliding_target(dur=2.0):
+    &quot;&quot;&quot;A harmonic complex gliding 150 -&gt; 250 Hz with a 3 Hz level fluctuation: a stand-in for speech.&quot;&quot;&quot;
+    t = np.arange(int(dur * FS)) / FS
+    phase = 2 * np.pi * np.cumsum(150 + 50 * t) / FS
+    target = so.Sound(sum(np.cos(k * phase) / k for k in range(1, 30)), FS).normalize()
+    return (target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))).ramp(20e-3)
+
+
+def show_mask(snd, target, mask):
+    &quot;&quot;&quot;Waveform, the mask, and spectrograms of this sound and of the target alone.
+    Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), sharex=True, layout=&quot;constrained&quot;)
+    snd.plot(axes[0, 0], lw=0.4)
+    axes[0, 0].set_title(&quot;Waveform&quot;)
+    mask.plot(axes[0, 1])
+    axes[0, 1].set(title=&quot;Ideal binary mask (target &gt; noise)&quot;, ylim=(0, 5))
+    so.STFT(snd, 25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
+    axes[1, 0].set_title(&quot;Spectrogram of this sound&quot;)
+    so.STFT(target, 25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
+    axes[1, 1].set_title(&quot;The target alone (not played)&quot;)
+    return fig, [axes[0, 0], axes[1, 0]]
+
+
+target = gliding_target()
+masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
+mixture = target + (masker + 5 * dB)
+S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
+mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)</code></pre></div>
+
+<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.44110609318996397, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.5234996415770609, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+  <div class="about">
+    <h3>Target in noise</h3>
+    <div class="desc"><p>A gliding harmonic target (a stand-in for a voice) in pink noise at −5 dB SNR.</p></div>
+    <audio controls preload="metadata" src="audio/24_target_in_noise.flac"></audio>
+    <p class="file">24_target_in_noise.flac, 2.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/24_target_in_noise.png" width="1000" height="620" alt="Plots of the target in noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(mixture)
+fig, playhead = show_mask(sound, target, mask)</code></pre></details>
+</article>
+
+<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.44110609318996397, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.5234996415770609, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+  <div class="about">
+    <h3>Ideal binary mask</h3>
+    <div class="desc"><p>The same mixture with every time-frequency cell where the noise dominates switched off. The
+mask is computed from the separate target and noise, which is what makes it ideal; the
+resynthesis is exact.</p></div>
+    <audio controls preload="metadata" src="audio/25_ideal_binary_mask.flac"></audio>
+    <p class="file">25_ideal_binary_mask.flac, 2.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/25_ideal_binary_mask.png" width="1000" height="620" alt="Plots of the ideal binary mask sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish((S_x * mask).to_sound())
+fig, playhead = show_mask(sound, target, mask)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-phase-vocoder">
+<h2 id="h-phase-vocoder">Phase vocoder</h2>
+<p>The phase vocoder (Flanagan &amp; Golden, 1966; Dolson, 1986) measures, in each STFT bin, how fast
+the phase advances from one frame to the next, and so the frequency of the partial in that bin
+far more precisely than the bin spacing. With frequency and amplitude in hand, a sound can be
+resynthesized with its frames spaced further apart (longer, same pitch), then resampled (same
+length, new pitch), or with every partial moved by a rule of your choosing. sonore locks the
+phases of the bins around each spectral peak when stretching, which keeps partials from
+smearing (Laroche &amp; Dolson, 1999).</p>
+<p>The first sound is the reference; the others change its duration, pitch, or partials.</p>
+<div class="cell"><pre><code class="language-python">def vibrato_complex(dur=2.0):
+    t = np.arange(int(dur * FS)) / FS
+    phase = 2 * np.pi * np.cumsum(220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * t))) / FS
+    return so.Sound(sum(np.cos(k * phase) / k for k in range(1, 20)), FS).normalize().ramp(30e-3)
+
+
+def show_pv(snd):
+    &quot;&quot;&quot;Waveform, spectrogram (Hann 46 ms) and long-term spectrum.
+    Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 6.2), layout=&quot;constrained&quot;)
+    gs = fig.add_gridspec(2, 2, height_ratios=[1, 1.6], width_ratios=[1.6, 1])
+    ax_w, ax_s, ax_f = fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])
+    snd.plot(ax_w, lw=0.5)
+    so.STFT(snd, 46e-3).plot(ax_s, fmax=3000, colorbar=False, db_range=70)
+    spec = so.long_term_spectrum(snd, nperseg=16384)
+    ax_f.plot(spec.f, spec.level - spec.level.max(), lw=0.8)
+    ax_f.set(
+        xlim=(0, 3000),
+        ylim=(-70, 3),
+        xlabel=&quot;Frequency [Hz]&quot;,
+        ylabel=&quot;Level [dB]&quot;,
+        title=&quot;Long-term spectrum&quot;,
+    )
+    ax_f.grid(ls=&quot;:&quot;)
+    return fig, [ax_w, ax_s]
+
+
+sung = vibrato_complex()
+pv = so.pv_analyze(sung)</code></pre></div>
+
+<article class="sound" id="d-11" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+  <div class="about">
+    <h3>Reference</h3>
+    <div class="desc"><p>A 220 Hz harmonic complex with a 5 Hz, ±3% vibrato.</p></div>
+    <audio controls preload="metadata" src="audio/11_reference.flac"></audio>
+    <p class="file">11_reference.flac, 2.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/11_reference.png" width="1000" height="620" alt="Plots of the reference sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(sung)
+fig, playhead = show_pv(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-12" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.57504158974359, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
+  <div class="about">
+    <h3>Twice as long</h3>
+    <div class="desc"><p>Same pitch, double duration. The vibrato slows to 2.5 Hz as well: time stretching stretches
+every temporal feature.</p></div>
+    <audio controls preload="metadata" src="audio/12_twice_as_long.flac"></audio>
+    <p class="file">12_twice_as_long.flac, 4.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/12_twice_as_long.png" width="1000" height="620" alt="Plots of the twice as long sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sung, 2))
+fig, playhead = show_pv(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-13" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+  <div class="about">
+    <h3>Up a fifth</h3>
+    <div class="desc"><p>Seven semitones higher, same duration, same 5 Hz vibrato.</p></div>
+    <audio controls preload="metadata" src="audio/13_up_a_fifth.flac"></audio>
+    <p class="file">13_up_a_fifth.flac, 2.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/13_up_a_fifth.png" width="1000" height="620" alt="Plots of the up a fifth sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.pitch_shift(sung, 7))
+fig, playhead = show_pv(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-14" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+  <div class="about">
+    <h3>Partials shifted up 70 Hz</h3>
+    <div class="desc"><p>Oscillator-bank resynthesis with every partial moved up 70 Hz, to 290, 510, 730 Hz and on:
+still 220 Hz apart, but no longer harmonics of anything nearby, so the tone turns metallic and
+its pitch less certain.</p></div>
+    <audio controls preload="metadata" src="audio/14_partials_shifted_up_70_hz.flac"></audio>
+    <p class="file">14_partials_shifted_up_70_hz.flac, 2.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/14_partials_shifted_up_70_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 70 hz sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 70))
+fig, playhead = show_pv(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-14b" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+  <div class="about">
+    <h3>Partials shifted up 110 Hz</h3>
+    <div class="desc"><p>The same with half the spacing: 330, 550, 770 Hz are exactly the odd harmonics of 110 Hz. The
+result is harmonic again, a hollow, clarinet-like tone an octave below the reference.</p></div>
+    <audio controls preload="metadata" src="audio/14b_partials_shifted_up_110_hz.flac"></audio>
+    <p class="file">14b_partials_shifted_up_110_hz.flac, 2.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/14b_partials_shifted_up_110_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 110 hz sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 110))
+fig, playhead = show_pv(sound)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Dolson (1986). The phase vocoder: a tutorial. <em>Computer Music Journal</em> 10(4), 14–27. <a href="https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Flanagan &amp; Golden (1966). Phase vocoder. <em>Bell System Technical Journal</em> 45(9), 1493–1509. <a href="https://doi.org/10.1002/j.1538-7305.1966.tb01706.x">doi:10.1002/j.1538-7305.1966.tb01706.x</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Laroche &amp; Dolson (1999). Improved phase vocoder time-scale modification of audio. <em>IEEE Trans. Speech Audio Process.</em> 7(3), 323–332. <a href="https://ieeexplore.ieee.org/document/759041/">IEEE Xplore</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L157"><code>phasevocoder.time_stretch</code></a></li><li>McDermott &amp; Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. <em>Neuron</em> 71(5), 926–940. <a href="https://doi.org/10.1016/j.neuron.2011.06.032">doi:10.1016/j.neuron.2011.06.032</a>. The half-cosine filterbank. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44"><code>filterbank.CosineFilterbank</code></a></li><li>Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In <em>Speech Separation by Humans and Machines</em>, 181–197. Springer. <a href="https://doi.org/10.1007/0-387-22794-6_12">doi:10.1007/0-387-22794-6_12</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L443"><code>representations.ideal_binary_mask</code></a></li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/resynthesis.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/resynthesis.py</code>, or a cell at a time.</footer>
+</main>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const canvas = el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
+  });
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, time) => {
+      if (!src.t) return src.az[0];
+      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    };
+    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
+        const lo = Math.min(...src.az), hi = Math.max(...src.az);
+        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  function draw(item) {
+    drawScene(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

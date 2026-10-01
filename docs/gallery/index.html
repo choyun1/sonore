@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Listening to sonore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
-<script>(() => { const moved = {"w1": "speech.html", "w2": "speech.html", "27": "speech.html", "28": "speech.html", "29": "speech.html", "t1": "speech.html", "30": "speech.html", "t00a": "textures.html", "t00b": "textures.html", "t01a": "textures.html", "t01b": "textures.html", "t02a": "textures.html", "t02b": "textures.html", "t03a": "textures.html", "t03b": "textures.html", "t04a": "textures.html", "t04b": "textures.html", "t05a": "textures.html", "t05b": "textures.html", "t06a": "textures.html", "t06b": "textures.html", "u00": "textures.html", "u01": "textures.html", "u10": "textures.html", "u11": "textures.html", "u20": "textures.html", "u21": "textures.html", "ci0": "vocoder.html", "ci1": "vocoder.html", "ci4": "vocoder.html", "ci8": "vocoder.html", "ci16": "vocoder.html", "ct8": "vocoder.html", "cp0": "vocoder.html", "cp8": "vocoder.html", "cm0": "vocoder.html", "cm8": "vocoder.html", "cm8p": "vocoder.html", "c1": "cepstrum.html", "c2": "cepstrum.html", "c3": "cepstrum.html", "c4": "cepstrum.html", "c5": "cepstrum.html", "16": "reverb.html", "17": "reverb.html", "r1": "reverb.html", "18": "reverb.html", "19": "reverb.html", "20": "reverb.html", "21": "reverb.html", "22": "reverb.html", "23": "reverb.html", "09": "irn.html", "i1": "irn.html", "i4": "irn.html", "i0": "irn.html", "in": "irn.html"}; const k = location.hash.slice(3); if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>
+<script>(() => { const moved = {"15": "vocoder.html", "w1": "speech.html", "w2": "speech.html", "27": "speech.html", "28": "speech.html", "29": "speech.html", "t1": "speech.html", "30": "speech.html", "c1": "cepstrum.html", "c2": "cepstrum.html", "c3": "cepstrum.html", "c4": "cepstrum.html", "c5": "cepstrum.html", "26": "resynthesis.html", "24": "resynthesis.html", "25": "resynthesis.html", "11": "resynthesis.html", "12": "resynthesis.html", "13": "resynthesis.html", "14": "resynthesis.html", "14b": "resynthesis.html", "01": "ripples.html", "02": "ripples.html", "03": "ripples.html", "04": "ripples.html", "05": "ripples.html", "06": "ripples.html", "09": "irn.html", "i1": "irn.html", "i4": "irn.html", "i0": "irn.html", "in": "irn.html", "10": "binaural.html", "07": "binaural.html", "08": "binaural.html", "t00a": "textures.html", "t00b": "textures.html", "t01a": "textures.html", "t01b": "textures.html", "t02a": "textures.html", "t02b": "textures.html", "t03a": "textures.html", "t03b": "textures.html", "t04a": "textures.html", "t04b": "textures.html", "t05a": "textures.html", "t05b": "textures.html", "t06a": "textures.html", "t06b": "textures.html", "u00": "textures.html", "u01": "textures.html", "u10": "textures.html", "u11": "textures.html", "u20": "textures.html", "u21": "textures.html", "16": "reverb.html", "17": "reverb.html", "r1": "reverb.html", "18": "reverb.html", "19": "reverb.html", "20": "reverb.html", "21": "reverb.html", "22": "reverb.html", "23": "reverb.html", "ci0": "vocoder.html", "ci1": "vocoder.html", "ci4": "vocoder.html", "ci8": "vocoder.html", "ci16": "vocoder.html", "ct8": "vocoder.html", "cp0": "vocoder.html", "cp8": "vocoder.html", "cm0": "vocoder.html", "cm8": "vocoder.html", "cm8p": "vocoder.html", "m1": "moving.html", "m2": "moving.html", "m3": "moving.html", "m4": "moving.html"}; const k = location.hash.slice(3); if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
   --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
@@ -75,283 +75,25 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="vocoder.html">Hearing through a vocoder</a><a href="cepstrum.html">Cepstral analysis</a><a href="reverb.html">Synthetic reverberation</a><a href="irn.html">Iterated rippled noise</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html">Cepstral analysis</a><a href="resynthesis.html">Analysis and resynthesis</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="reverb.html">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a></nav>
 <header>
   <h1>Listening to sonore</h1>
-  <p>18 sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of
-  the same audio you hear. Seven topics have pages of their own, with the code for every example beside it:</p>
-  <ul>
-    <li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li>
-    <li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li>
-    <li><a href="moving.html">Moving talkers</a>: three talkers rendered through measured HRIRs, one of them moving.</li>
-    <li><a href="vocoder.html">Hearing through a vocoder</a>: a simulation of cochlear-implant hearing.</li>
-    <li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice's pitch from its timbre.</li>
-    <li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms
-      that break them.</li>
-    <li><a href="irn.html">Iterated rippled noise</a>: a pitch made from noise and a delay.</li>
-  </ul>
-  <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
-  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
-  Start with your volume low.</p>
+  <p>Sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of the
+  same audio you hear and the code that made it. Every topic has a page of its own.</p>
 </header>
-<section aria-labelledby="h-spectrotemporal-ripples">
-<h2 id="h-spectrotemporal-ripples">Spectrotemporal ripples</h2>
-<p class="section-intro">Each ripple is a sinusoidal pattern in time and log-frequency: a rate in Hz and a density in cycles per octave. The top-left panel is the pattern as specified; the others are measured from the sound itself.</p>
-
-<article class="sound" id="d-01" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0037593984962406013, &quot;t1&quot;: 3.003759398496241}, {&quot;x0&quot;: 0.5609169086371524, &quot;x1&quot;: 0.9878954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
-  <div class="about">
-    <h3>Downward ripple</h3>
-    <p class="desc">Rate 4 Hz, density 1 cycle/octave, on log-spaced tones. Listen for a continuous downward sweep, four times a second. The diagonal bands in the cochleagram are what you are hearing; the waveform alone shows almost none of it.</p>
-    <audio controls preload="metadata" src="audio/01_downward_ripple.flac"></audio>
-    <p class="file">01_downward_ripple.flac, 3.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/01_downward_ripple.png" width="1000" height="620" alt="Plots of the downward ripple sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-02" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0037593984962406013, &quot;t1&quot;: 3.003759398496241}, {&quot;x0&quot;: 0.5609169086371524, &quot;x1&quot;: 0.9878954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
-  <div class="about">
-    <h3>Upward ripple</h3>
-    <p class="desc">The same ripple at −4 Hz, so the sweep rises. Its modulation-spectrum peak moves to negative rate.</p>
-    <audio controls preload="metadata" src="audio/02_upward_ripple.flac"></audio>
-    <p class="file">02_upward_ripple.flac, 3.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/02_upward_ripple.png" width="1000" height="620" alt="Plots of the upward ripple sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-03" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0037593984962406013, &quot;t1&quot;: 3.003759398496241}, {&quot;x0&quot;: 0.5609169086371524, &quot;x1&quot;: 0.9878954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
-  <div class="about">
-    <h3>Two ripples at once</h3>
-    <p class="desc">4 Hz at 1 cycle/octave plus −12 Hz at 2.5 cycles/octave: two motions in opposite directions, superimposed. The modulation spectrum separates them into two clean peaks.</p>
-    <audio controls preload="metadata" src="audio/03_two_ripples_at_once.flac"></audio>
-    <p class="file">03_two_ripples_at_once.flac, 3.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/03_two_ripples_at_once.png" width="1000" height="620" alt="Plots of the two ripples at once sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-04" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0037593984962406013, &quot;t1&quot;: 3.003759398496241}, {&quot;x0&quot;: 0.5609169086371524, &quot;x1&quot;: 0.9878954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
-  <div class="about">
-    <h3>Same ripple, harmonic carrier</h3>
-    <p class="desc">The first ripple on harmonics of 60 Hz. The motion is the same, now over a low pitch; resolved low harmonics show as horizontal lines in the cochleagram.</p>
-    <audio controls preload="metadata" src="audio/04_same_ripple_harmonic_carrier.flac"></audio>
-    <p class="file">04_same_ripple_harmonic_carrier.flac, 3.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/04_same_ripple_harmonic_carrier.png" width="1000" height="620" alt="Plots of the same ripple, harmonic carrier sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-05" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0037593984962406013, &quot;t1&quot;: 3.003759398496241}, {&quot;x0&quot;: 0.5609169086371524, &quot;x1&quot;: 0.9878954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4897983691406248, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
-  <div class="about">
-    <h3>Same ripple, noise carrier</h3>
-    <p class="desc">The same pattern on narrowband noise, which brings its own random fluctuations, so the sweep sounds rougher.</p>
-    <audio controls preload="metadata" src="audio/05_same_ripple_noise_carrier.flac"></audio>
-    <p class="file">05_same_ripple_noise_carrier.flac, 3.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/05_same_ripple_noise_carrier.png" width="1000" height="620" alt="Plots of the same ripple, noise carrier sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-06" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4937671191406251, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.001563721657544957, &quot;t1&quot;: 4.001563721657545}, {&quot;x0&quot;: 0.5648856586371528, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.9995000000000003}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4937671191406251, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
-  <div class="about">
-    <h3>Dynamic moving ripple</h3>
-    <p class="desc">Rate and density wander randomly (rates within ±40 Hz at the lowest frequency). Where the density passes through zero, every band pulses together, and only there does the waveform show the modulation.</p>
-    <audio controls preload="metadata" src="audio/06_dynamic_moving_ripple.flac"></audio>
-    <p class="file">06_dynamic_moving_ripple.flac, 4.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/06_dynamic_moving_ripple.png" width="1000" height="620" alt="Plots of the dynamic moving ripple sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
+<section aria-labelledby="h-seeing-and-changing-sounds">
+<h2 id="h-seeing-and-changing-sounds">Seeing and changing sounds</h2>
+<ul><li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li><li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice&#x27;s pitch from its timbre.</li><li><a href="resynthesis.html">Analysis and resynthesis</a>: filterbanks that reconstruct exactly, spectrogram masking, and the phase vocoder.</li></ul>
 </section>
-<section aria-labelledby="h-binaural">
-<h2 id="h-binaural">Binaural</h2>
-<p class="section-intro">These need headphones. Over speakers the two ears&#x27; signals mix in the room and the effects disappear.</p>
-
-<article class="sound" id="d-07" data-regions="[{&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.3010202031333067, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.3784202031333066, &quot;bottom&quot;: 0.6438338406100472, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.6657306386175352, &quot;bottom&quot;: 0.9311442760942761, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
-  <div class="about">
-    <h3>Oscor</h3>
-    <p class="headphones"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg><span>Headphones</span></p>
-    <p class="desc">Interaural correlation swings between +1 and −1 three times a second. The image in your head alternates between focused and diffuse; only the correlation panel shows what changes.</p>
-    <audio controls preload="metadata" src="audio/07_oscor.flac"></audio>
-    <p class="file">07_oscor.flac, 4.0 s, stereo</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/07_oscor.png" width="1000" height="660" alt="Plots of the oscor sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-08" data-regions="[{&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9371802222222222, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.301235404045644, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9371802222222222, &quot;top&quot;: 0.3786354040456439, &quot;bottom&quot;: 0.6442642424347218, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9371802222222222, &quot;top&quot;: 0.665515437705198, &quot;bottom&quot;: 0.9311442760942761, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
-  <div class="about">
-    <h3>Phasewarp</h3>
-    <p class="headphones"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg><span>Headphones</span></p>
-    <p class="desc">The interaural phase of every component rotates through 360° twice a second, so the zero-lag correlation follows a 2 Hz cosine.</p>
-    <audio controls preload="metadata" src="audio/08_phasewarp.flac"></audio>
-    <p class="file">08_phasewarp.flac, 4.0 s, stereo</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/08_phasewarp.png" width="1000" height="660" alt="Plots of the phasewarp sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-10" data-regions="[{&quot;x0&quot;: 0.06681977777777778, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.301235404045644, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.06681977777777778, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.3786354040456439, &quot;bottom&quot;: 0.6442642424347218, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.06681977777777778, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.665515437705198, &quot;bottom&quot;: 0.9311442760942761, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}]">
-  <div class="about">
-    <h3>Timing alone</h3>
-    <p class="headphones"><svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg><span>Headphones</span></p>
-    <p class="desc">Noise with a 500 µs interaural time difference, leading in the left ear and then in the right. The level difference is zero throughout; the sideways shift comes from timing.</p>
-    <audio controls preload="metadata" src="audio/10_timing_alone.flac"></audio>
-    <p class="file">10_timing_alone.flac, 1.9 s, stereo</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/10_timing_alone.png" width="1000" height="660" alt="Plots of the timing alone sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
+<section aria-labelledby="h-stimuli">
+<h2 id="h-stimuli">Stimuli</h2>
+<ul><li><a href="ripples.html">Spectrotemporal ripples</a>: sounds defined by a moving pattern of modulation.</li><li><a href="irn.html">Iterated rippled noise</a>: a pitch made from noise and a delay.</li><li><a href="binaural.html">Binaural cues</a>: differences between the ears: timing, and correlation that changes.</li><li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li></ul>
 </section>
-<section aria-labelledby="h-filterbanks">
-<h2 id="h-filterbanks">Filterbanks</h2>
-<p class="section-intro">Cosine filterbanks whose squared responses sum to 1, so analysis followed by synthesis is exact.</p>
-
-<article class="sound" id="d-26" data-regions="[{&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.03306505376344093, &quot;bottom&quot;: 0.1261475358422951, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.147429973118281, &quot;bottom&quot;: 0.2405124551971326, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.26179489247311827, &quot;bottom&quot;: 0.35487737455197166, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.37615981182795744, &quot;bottom&quot;: 0.4692422939068104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.49052473118279605, &quot;bottom&quot;: 0.5836072132616492, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.6048896505376349, &quot;bottom&quot;: 0.6979721326164873, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.7192545698924729, &quot;bottom&quot;: 0.8123370519713262, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.8336194892473119, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.2991930107526879, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.35165824372759824, &quot;bottom&quot;: 0.6129474910394264, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.6654127240143368, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Perfect reconstruction</h3>
-    <p class="desc">An exponential sweep split into 6 ERB-spaced bands plus the lowpass and highpass edge filters, then summed back. What you hear is the reconstruction; it differs from the original only at the level of floating-point rounding.</p>
-    <audio controls preload="metadata" src="audio/26_perfect_reconstruction.flac"></audio>
-    <p class="file">26_perfect_reconstruction.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/26_perfect_reconstruction.png" width="1000" height="620" alt="Plots of the perfect reconstruction sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
+<section aria-labelledby="h-listeners-in-the-world">
+<h2 id="h-listeners-in-the-world">Listeners in the world</h2>
+<ul><li><a href="moving.html">Moving talkers</a>: three talkers rendered through measured HRIRs, one of them moving.</li><li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms that break them.</li><li><a href="vocoder.html">Hearing through a vocoder</a>: a simulation of cochlear-implant hearing.</li></ul>
 </section>
-<section aria-labelledby="h-speech-in-noise">
-<h2 id="h-speech-in-noise">Speech in noise</h2>
-<p class="section-intro">Time-frequency masking: the STFT is invertible, so a masked spectrogram is a sound.</p>
-
-<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.44110609318996397, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.5234996415770609, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Target in noise</h3>
-    <p class="desc">A gliding harmonic target (a stand-in for a voice) in pink noise at −5 dB SNR.</p>
-    <audio controls preload="metadata" src="audio/24_target_in_noise.flac"></audio>
-    <p class="file">24_target_in_noise.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/24_target_in_noise.png" width="1000" height="620" alt="Plots of the target in noise sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.44110609318996397, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.5234996415770609, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Ideal binary mask</h3>
-    <p class="desc">The same mixture with every time-frequency cell where the noise dominates switched off. The mask is computed from the separate target and noise, which is what makes it ideal (Wang, 2005); the resynthesis is exact.</p>
-    <audio controls preload="metadata" src="audio/25_ideal_binary_mask.flac"></audio>
-    <p class="file">25_ideal_binary_mask.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/25_ideal_binary_mask.png" width="1000" height="620" alt="Plots of the ideal binary mask sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-</section>
-<section aria-labelledby="h-phase-vocoder">
-<h2 id="h-phase-vocoder">Phase vocoder</h2>
-<p class="section-intro">The first sound is the reference; the others change its duration, pitch, or partials.</p>
-
-<article class="sound" id="d-11" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Reference</h3>
-    <p class="desc">A 220 Hz harmonic complex with a 5 Hz, ±3% vibrato.</p>
-    <audio controls preload="metadata" src="audio/11_reference.flac"></audio>
-    <p class="file">11_reference.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/11_reference.png" width="1000" height="620" alt="Plots of the reference sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-12" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.57504158974359, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
-  <div class="about">
-    <h3>Twice as long</h3>
-    <p class="desc">Same pitch, double duration. The vibrato slows to 2.5 Hz as well: time stretching stretches every temporal feature.</p>
-    <audio controls preload="metadata" src="audio/12_twice_as_long.flac"></audio>
-    <p class="file">12_twice_as_long.flac, 4.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/12_twice_as_long.png" width="1000" height="620" alt="Plots of the twice as long sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-13" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Up a fifth</h3>
-    <p class="desc">Seven semitones higher, same duration, same 5 Hz vibrato.</p>
-    <audio controls preload="metadata" src="audio/13_up_a_fifth.flac"></audio>
-    <p class="file">13_up_a_fifth.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/13_up_a_fifth.png" width="1000" height="620" alt="Plots of the up a fifth sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-14" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Partials shifted up 70 Hz</h3>
-    <p class="desc">Oscillator-bank resynthesis with every partial moved up 70 Hz, to 290, 510, 730 Hz and on: still 220 Hz apart, but no longer harmonics of anything nearby, so the tone turns metallic and its pitch less certain.</p>
-    <audio controls preload="metadata" src="audio/14_partials_shifted_up_70_hz.flac"></audio>
-    <p class="file">14_partials_shifted_up_70_hz.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/14_partials_shifted_up_70_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 70 hz sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-14b" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.9798955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33697930796801745, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.5725800512820511, &quot;top&quot;: 0.44818110008271284, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Partials shifted up 110 Hz</h3>
-    <p class="desc">The same with half the spacing: 330, 550, 770 Hz are exactly the odd harmonics of 110 Hz. The result is harmonic again, a hollow, clarinet-like tone an octave below the reference.</p>
-    <audio controls preload="metadata" src="audio/14b_partials_shifted_up_110_hz.flac"></audio>
-    <p class="file">14b_partials_shifted_up_110_hz.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/14b_partials_shifted_up_110_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 110 hz sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-
-<article class="sound" id="d-15" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.48479836914062496, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.9818955, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42670197132616483, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.9995000000000003}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.48479836914062496, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.9818955, &quot;top&quot;: 0.5379037634408601, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
-  <div class="about">
-    <h3>Noise-vocoded</h3>
-    <p class="desc">A syllabic 3 Hz harmonic sound through an 8-band noise vocoder: the rhythm remains and the pitch is gone. The original isn&#x27;t played; it is shown for comparison.</p>
-    <audio controls preload="metadata" src="audio/15_noise-vocoded.flac"></audio>
-    <p class="file">15_noise-vocoded.flac, 2.0 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/15_noise-vocoded.png" width="1000" height="620" alt="Plots of the noise-vocoded sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-</article>
-</section>
-<footer>Every sound and plot here is generated by <code>docs/gallery/build.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, using the library's own functions.</footer>
+<footer>Each page is a script in <code>docs/gallery</code> of the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run by <code>docs/gallery/build.py</code>.</footer>
 </main>
 <script>
 (() => {

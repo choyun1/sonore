@@ -1,0 +1,250 @@
+"""Analysis and resynthesis: taking a sound apart, changing the parts, and putting it back.
+
+This script is the gallery page https://choyun1.github.io/sonore/gallery/resynthesis.html:
+docs/gallery/build.py runs it cell by cell from the repository root and shows each
+cell's code beside what it made. Run it yourself from the repository root,
+
+    python docs/gallery/resynthesis.py
+
+or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
+"""
+
+# %% [markdown]
+# # Analysis and resynthesis
+#
+# Many of sonore's analyses can be run backwards: split a sound into bands or time-frequency
+# cells, change what you find there, and synthesize a sound from the result. This page goes from
+# doing nothing to doing a lot.
+#
+# - [Perfect reconstruction](#h-perfect-reconstruction): a filterbank whose bands sum back to the
+#   original exactly.
+# - [Masking the spectrogram](#h-masking-the-spectrogram): switching off the cells where noise
+#   dominates, the ideal binary mask.
+# - [Phase vocoder](#h-phase-vocoder): changing a sound's duration, pitch or partials.
+#
+# Two other pages do the same with particular parts of a sound: [Hearing through a
+# vocoder](vocoder.html) keeps only band envelopes, and [Cepstral analysis](cepstrum.html) splits a
+# voice into its vocal tract and its source.
+
+# %%
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+from sonore import dB
+
+plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+FS = 44100
+
+
+def finish(snd):
+    """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %% [markdown]
+# ## Perfect reconstruction
+#
+# `so.subbands` splits a sound with half-cosine filters equally spaced on the ERB scale, plus a
+# lowpass and a highpass filter at the edges. Their squared responses sum to 1 at every
+# frequency, so analysis followed by synthesis (each band filtered again, then summed) gives back
+# the original, up to floating-point rounding.
+
+
+# %%
+def show_bands(snd, original):
+    """The six bands of the sweep beside the original, the reconstruction and their difference.
+    Returns the figure and the panels the playhead follows."""
+    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
+    left, right = fig.subfigures(1, 2, width_ratios=[1.35, 1])
+    sb = so.subbands(original, n_bands=6, f_lo=100, f_hi=6000)
+    band_axes = left.subplots(len(sb), 1, sharex=True)
+    sb.plot(band_axes)
+    band_axes[0].set_title(
+        "so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)", family="monospace", fontsize=8
+    )
+    r = right.subplots(3, 1, sharex=True)
+    original.plot(r[0], color="k", lw=0.4)
+    r[0].set(title="Original sweep, 100 Hz to 6 kHz", xlabel="")
+    recon = sb.synthesize()  # recomputed: the played sound has been level-normalized
+    recon.plot(r[1], color="tab:blue", lw=0.4)
+    r[1].set(title="Reconstruction: sb.synthesize()", xlabel="")
+    err = recon - original
+    r[2].plot(err.t, 1e15 * err.data[:, 0], color="tab:red", lw=0.5)
+    r[2].set(title=f"Difference (max |error| = {err.peak:.1e})", ylabel="× 1e-15", xlabel="Time [s]")
+    r[2].grid(ls=":")
+    return fig, list(band_axes) + list(r)
+
+
+# %% [about]
+# An exponential sweep split into 6 ERB-spaced bands plus the lowpass and highpass edge filters,
+# then summed back. What you hear is the reconstruction; it differs from the original only at
+# the level of floating-point rounding.
+
+# %% [demo 26] Perfect reconstruction
+sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
+sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize())
+fig, playhead = show_bands(sound, sweep)
+
+# %% [markdown]
+# ## Masking the spectrogram
+#
+# The STFT is invertible too, so a spectrogram with some of its cells switched off is still a
+# sound. Wang (2005) proposed the *ideal binary mask* as the goal of separating speech from
+# noise: keep every cell where the target is louder than the noise, discard the rest. It is
+# ideal because computing it needs the target and the noise separately, which a listener never
+# has; what a listener hears through it shows how much a perfect separation would leave.
+
+
+# %%
+def gliding_target(dur=2.0):
+    """A harmonic complex gliding 150 -> 250 Hz with a 3 Hz level fluctuation: a stand-in for speech."""
+    t = np.arange(int(dur * FS)) / FS
+    phase = 2 * np.pi * np.cumsum(150 + 50 * t) / FS
+    target = so.Sound(sum(np.cos(k * phase) / k for k in range(1, 30)), FS).normalize()
+    return (target * (0.6 + 0.4 * np.sin(2 * np.pi * 3 * t))).ramp(20e-3)
+
+
+def show_mask(snd, target, mask):
+    """Waveform, the mask, and spectrograms of this sound and of the target alone.
+    Returns the figure and the panels the playhead follows."""
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), sharex=True, layout="constrained")
+    snd.plot(axes[0, 0], lw=0.4)
+    axes[0, 0].set_title("Waveform")
+    mask.plot(axes[0, 1])
+    axes[0, 1].set(title="Ideal binary mask (target > noise)", ylim=(0, 5))
+    so.STFT(snd, 25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
+    axes[1, 0].set_title("Spectrogram of this sound")
+    so.STFT(target, 25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
+    axes[1, 1].set_title("The target alone (not played)")
+    return fig, [axes[0, 0], axes[1, 0]]
+
+
+target = gliding_target()
+masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
+mixture = target + (masker + 5 * dB)
+S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
+mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)
+
+# %% [about]
+# A gliding harmonic target (a stand-in for a voice) in pink noise at −5 dB SNR.
+
+# %% [demo 24] Target in noise
+sound = finish(mixture)
+fig, playhead = show_mask(sound, target, mask)
+
+# %% [about]
+# The same mixture with every time-frequency cell where the noise dominates switched off. The
+# mask is computed from the separate target and noise, which is what makes it ideal; the
+# resynthesis is exact.
+
+# %% [demo 25] Ideal binary mask
+sound = finish((S_x * mask).to_sound())
+fig, playhead = show_mask(sound, target, mask)
+
+# %% [markdown]
+# ## Phase vocoder
+#
+# The phase vocoder (Flanagan & Golden, 1966; Dolson, 1986) measures, in each STFT bin, how fast
+# the phase advances from one frame to the next, and so the frequency of the partial in that bin
+# far more precisely than the bin spacing. With frequency and amplitude in hand, a sound can be
+# resynthesized with its frames spaced further apart (longer, same pitch), then resampled (same
+# length, new pitch), or with every partial moved by a rule of your choosing. sonore locks the
+# phases of the bins around each spectral peak when stretching, which keeps partials from
+# smearing (Laroche & Dolson, 1999).
+#
+# The first sound is the reference; the others change its duration, pitch, or partials.
+
+
+# %%
+def vibrato_complex(dur=2.0):
+    t = np.arange(int(dur * FS)) / FS
+    phase = 2 * np.pi * np.cumsum(220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * t))) / FS
+    return so.Sound(sum(np.cos(k * phase) / k for k in range(1, 20)), FS).normalize().ramp(30e-3)
+
+
+def show_pv(snd):
+    """Waveform, spectrogram (Hann 46 ms) and long-term spectrum.
+    Returns the figure and the panels the playhead follows."""
+    fig = plt.figure(figsize=(10, 6.2), layout="constrained")
+    gs = fig.add_gridspec(2, 2, height_ratios=[1, 1.6], width_ratios=[1.6, 1])
+    ax_w, ax_s, ax_f = fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])
+    snd.plot(ax_w, lw=0.5)
+    so.STFT(snd, 46e-3).plot(ax_s, fmax=3000, colorbar=False, db_range=70)
+    spec = so.long_term_spectrum(snd, nperseg=16384)
+    ax_f.plot(spec.f, spec.level - spec.level.max(), lw=0.8)
+    ax_f.set(
+        xlim=(0, 3000),
+        ylim=(-70, 3),
+        xlabel="Frequency [Hz]",
+        ylabel="Level [dB]",
+        title="Long-term spectrum",
+    )
+    ax_f.grid(ls=":")
+    return fig, [ax_w, ax_s]
+
+
+sung = vibrato_complex()
+pv = so.pv_analyze(sung)
+
+# %% [about]
+# A 220 Hz harmonic complex with a 5 Hz, ±3% vibrato.
+
+# %% [demo 11] Reference
+sound = finish(sung)
+fig, playhead = show_pv(sound)
+
+# %% [about]
+# Same pitch, double duration. The vibrato slows to 2.5 Hz as well: time stretching stretches
+# every temporal feature.
+
+# %% [demo 12] Twice as long
+sound = finish(so.time_stretch(sung, 2))
+fig, playhead = show_pv(sound)
+
+# %% [about]
+# Seven semitones higher, same duration, same 5 Hz vibrato.
+
+# %% [demo 13] Up a fifth
+sound = finish(so.pitch_shift(sung, 7))
+fig, playhead = show_pv(sound)
+
+# %% [about]
+# Oscillator-bank resynthesis with every partial moved up 70 Hz, to 290, 510, 730 Hz and on:
+# still 220 Hz apart, but no longer harmonics of anything nearby, so the tone turns metallic and
+# its pitch less certain.
+
+# %% [demo 14] Partials shifted up 70 Hz
+sound = finish(pv.resynthesize(freq_map=lambda f: f + 70))
+fig, playhead = show_pv(sound)
+
+# %% [about]
+# The same with half the spacing: 330, 550, 770 Hz are exactly the odd harmonics of 110 Hz. The
+# result is harmonic again, a hollow, clarinet-like tone an octave below the reference.
+
+# %% [demo 14b] Partials shifted up 110 Hz
+sound = finish(pv.resynthesize(freq_map=lambda f: f + 110))
+fig, playhead = show_pv(sound)
+
+# %% [markdown]
+# ## References
+#
+# - Dolson (1986). The phase vocoder: a tutorial. *Computer Music Journal* 10(4), 14–27.
+#   [Semantic Scholar](https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e).
+#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+# - Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45(9), 1493–1509.
+#   [doi:10.1002/j.1538-7305.1966.tb01706.x](https://doi.org/10.1002/j.1538-7305.1966.tb01706.x).
+#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+# - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans.
+#   Speech Audio Process.* 7(3), 323–332. [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/).
+#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L157)
+# - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
+#   periphery. *Neuron* 71(5), 926–940.
+#   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). The
+#   half-cosine filterbank.
+#   [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L44)
+# - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In
+#   *Speech Separation by Humans and Machines*, 181–197. Springer.
+#   [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12).
+#   [`representations.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L443)
