@@ -138,13 +138,14 @@ synthesized sounds' subband envelopes (middle), and their measured
 
 More in the gallery:
 
-- [Listening gallery](https://choyun1.github.io/sonore/gallery/): ripples, binaural stimuli such as [▶ Oscor](https://choyun1.github.io/sonore/gallery/#d-07), [▶ iterated rippled noise](https://choyun1.github.io/sonore/gallery/#d-09), a filterbank's [▶ perfect reconstruction](https://choyun1.github.io/sonore/gallery/#d-26), the [▶ ideal binary mask](https://choyun1.github.io/sonore/gallery/#d-25), and the [▶ phase vocoder](https://choyun1.github.io/sonore/gallery/#d-13).
+- [Listening gallery](https://choyun1.github.io/sonore/gallery/): ripples, binaural stimuli such as [▶ Oscor](https://choyun1.github.io/sonore/gallery/#d-07), a filterbank's [▶ perfect reconstruction](https://choyun1.github.io/sonore/gallery/#d-26), the [▶ ideal binary mask](https://choyun1.github.io/sonore/gallery/#d-25), and the [▶ phase vocoder](https://choyun1.github.io/sonore/gallery/#d-13).
 - [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html): a short course in time-frequency analysis on one sentence, from [▶ window length](https://choyun1.github.io/sonore/gallery/speech.html#d-w1) to [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30).
 - [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): recordings and their syntheses from statistics (McDermott & Simoncelli, 2011), such as a [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b).
 - [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html): three talkers rendered through measured HRIRs, [▶ one of them moving](https://choyun1.github.io/sonore/gallery/moving.html#d-m1).
 - [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html): cochlear-implant simulation, from [▶ one band](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci1) to [▶ sixteen](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci16).
 - [Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html): separating a voice's pitch from its timbre, [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3) and [▶ harmonics only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c4).
 - [Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html): rooms built from the statistics of real ones (Traer & McDermott, 2016), from a [▶ natural room](https://choyun1.github.io/sonore/gallery/reverb.html#d-17) to ones that break the rules, such as a [▶ time-reversed decay](https://choyun1.github.io/sonore/gallery/reverb.html#d-18).
+- [Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html): a pitch made from noise and a delay (Yost, 1996), from [▶ one iteration](https://choyun1.github.io/sonore/gallery/irn.html#d-i1) to [▶ sixteen](https://choyun1.github.io/sonore/gallery/irn.html#d-09).
 
 ## Conventions
 
@@ -348,7 +349,7 @@ Works with no tag are not implemented yet.
 - Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. *PNAS* 113. [doi:10.1073/pnas.1612524113](https://doi.org/10.1073/pnas.1612524113). [`reverb.synth_ir`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/reverb.py#L77) · [▶ Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html)
 - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In *Speech Separation by Humans and Machines*. [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12). [`representations.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L443) · [▶ Listening gallery](https://choyun1.github.io/sonore/gallery/)
 - Wilson, Finley, Lawson, Wolford, Eddington & Rabinowitz (1991). Better speech recognition with cochlear implants. *Nature* 352, 236–238. [PubMed](https://pubmed.ncbi.nlm.nih.gov/1857418/). [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L467) · [▶ Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html)
-- Yost (1996). Pitch of iterated rippled noise. *JASA* 100. [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf). [`generators.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L258)
+- Yost (1996). Pitch of iterated rippled noise. *JASA* 100. [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf). [`generators.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L258) · [▶ Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html)
 
 ### Reference implementations
 
