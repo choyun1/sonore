@@ -3,9 +3,10 @@
 The first sections cover the interface, the tight/general equivalence and the
 non-frame behaviour; the last checks every frame against the dense-matrix
 oracle in tests/helpers.py (bounds as eigenvalues, masked coefficients vs.
-canonical least squares, the documented D1 exception, and the adjoint as the
-weighted transpose). Step 2 (docs/design/frames-step2.md) adds the Nyquist
-rule (C14, D8), ``Frame.adjoint`` (D10) and ``TVGaborFrame`` (C12, D9).
+canonical least squares, the documented exception for padded non-tight
+filterbanks, and the adjoint as the weighted transpose). Step 2
+(docs/design/frames-step2.md) adds the Nyquist rule, ``Frame.adjoint`` and
+``TVGaborFrame``.
 """
 
 from dataclasses import dataclass
@@ -96,7 +97,7 @@ def test_coverage_gap_analyzes_but_refuses_to_synthesize():
     fb = GaussianFilterbank(width=0.1)  # supports reach 0.3 spacings each side: gaps between filters
     lo, hi = fb.frame_bounds(N, FS)
     assert lo == 0.0 and hi > 0
-    sb = fb.analyze(_noise())  # D4: analysis always works
+    sb = fb.analyze(_noise())  # analysis works even on a non-frame
     env = sb.envelopes()
     assert env.data.shape == (N, fb.n_filters, 1)
     with pytest.raises(ValueError, match="not a frame"):
@@ -259,7 +260,7 @@ def test_tv_gabor_reconstructs_exactly(name, n_channels):
 
 
 @pytest.mark.parametrize("name", TVS)
-def test_tv_gabor_frame_power_is_c12(name):
+def test_tv_gabor_frame_power_formula(name):
     """s(t) = M sum_q |w_q(t - a_q)|^2, written out window by window."""
     frame = TVS[name]
     lay, s = frame.layout(FS), np.zeros(N)
@@ -272,7 +273,7 @@ def test_tv_gabor_frame_power_is_c12(name):
 
 
 def test_tv_gabor_schedule_checks():
-    with pytest.raises(ValueError, match="n_fft"):  # C12: a window longer than n_fft
+    with pytest.raises(ValueError, match="n_fft"):  # a window longer than n_fft
         so.TVGaborFrame([0.0, 0.002], [16 / FS, 20 / FS], n_fft=16).analyze(_noise())
     with pytest.raises(ValueError, match="increasing"):
         so.TVGaborFrame([0.0, 0.0], [0.004, 0.004])
@@ -312,16 +313,17 @@ def test_tvstft_container():
 # Every frame against dense matrices built from its own fast path (helpers):
 # bounds are the extreme eigenvalues of the weighted S, and synthesis of
 # masked coefficients is the canonical weighted least squares, except for the
-# documented D1 behaviour of padded non-tight filterbanks.
+# documented behaviour of padded non-tight filterbanks (least squares on the
+# padded circular grid).
 
 ORACLE = {
     "erb": (so.ERBFilterbank(10, 50, 3000), ["auto", 0]),
     "octave": (so.OctaveFilterbank(6, 125, 3000), ["auto", 0]),
     "gaussian": (GaussianFilterbank(), ["auto", 0]),
     # A fractional delay rings for thousands of samples near Nyquist, so pad
-    # explicitly: the D1 oracle would otherwise be thousands wide.
+    # explicitly: the padded-grid oracle would otherwise be thousands wide.
     "delayed gaussian": (DelayedGaussianFilterbank(f_hi=FS / 2), [0, 4e-3]),
-    # Step 2 banks; explicit pads keep the D1 oracle small (they ring 25-40 ms).
+    # Step 2 banks; explicit pads keep the padded-grid oracle small (they ring 25-40 ms).
     "gammatone": (so.GammatoneFilterbank(19, 300, 3500), [0, 4e-3]),
     "gammatone zero": (so.GammatoneFilterbank(19, 300, 3500, phase="zero"), [0, 4e-3]),
     "morlet": (so.MorletFilterbank(5, 300, 3500, cycles=3), [0, 4e-3]),
@@ -351,8 +353,8 @@ def _masked(coefs, seed=0):
     return type(coefs)._from(coefs, coefs.data * rng.random(coefs.data.shape[1:]))
 
 
-def _is_d1_case(frame, pad):
-    """Padded non-tight filterbank: least squares on the padded grid (D1)."""
+def _is_padded_grid_case(frame, pad):
+    """Padded non-tight filterbank: least squares on the padded grid."""
     return isinstance(frame, so.Filterbank) and not frame.tight and pad != 0
 
 
@@ -371,10 +373,10 @@ def test_bounds_are_extreme_eigenvalues(name, pad):
     frame = ORACLE[name][0]
     eig = np.linalg.eigvalsh(weighted_frame_operator(*dense_operator(frame, N, FS, pad)))
     lo, hi = _bounds(frame, pad)
-    if not _is_d1_case(frame, pad):
+    if not _is_padded_grid_case(frame, pad):
         assert np.allclose([eig[0], eig[-1]], [lo, hi], rtol=1e-10, atol=0)
         return
-    # D1: the bounds are those of the circular operator on the padded grid;
+    # The bounds are those of the circular operator on the padded grid;
     # zero-padded signals are a subspace, so their spectrum lies inside.
     p = frame.ringing(FS) if pad == "auto" else int(round(pad * FS))
     grid = np.linalg.eigvalsh(weighted_frame_operator(*dense_operator(frame, N + 2 * p, FS, 0)))
@@ -391,10 +393,10 @@ def test_masked_synthesis_is_the_documented_least_squares(name, pad):
     C = coef_matrix(masked)
     T, w = dense_operator(frame, N, FS, pad)
     canonical = np.stack([canonical_lstsq(T, w, C[:, ch]) for ch in range(2)], axis=1)
-    if not _is_d1_case(frame, pad):
+    if not _is_padded_grid_case(frame, pad):
         assert _rel(y, canonical) < 1e-10
         return
-    # D1: least squares on the padded circular grid, then crop. This is NOT
+    # Least squares on the padded circular grid, then crop. This is NOT
     # the canonical dual on R^N (masked energy that lands in the padding is
     # treated differently), and the test says so.
     p = masked.pad
@@ -427,7 +429,7 @@ def test_gabor_least_squares_needs_the_half_spectrum_weights():
     c = coef_matrix(masked)[:, 0]
     y = frame.synthesize(masked).data[:, 0]
     assert _rel(y, canonical_lstsq(T, w, c)) < 1e-10
-    assert _rel(y, canonical_lstsq(T, np.ones_like(w), c)) > 1e-3  # C3: unweighted is a different problem
+    assert _rel(y, canonical_lstsq(T, np.ones_like(w), c)) > 1e-3  # unweighted is a different problem
 
 
 @pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)
@@ -444,7 +446,7 @@ def test_adjoint_is_the_weighted_transpose(name, pad):
 @pytest.mark.parametrize("name", GABORS)
 def test_gabor_adjoint_inner_product(name):
     """<T x, c>_w = <x, T* c> for arbitrary complex c, including DC and
-    Nyquist bins whose imaginary part no real signal produces (C13)."""
+    Nyquist bins whose imaginary part no real signal produces."""
     frame, x = GABORS[name], _noise(1, 10)
     S = frame.analyze(x)
     rng = np.random.default_rng(11)
@@ -461,10 +463,11 @@ def test_tight_adjoint_is_synthesis():
         assert np.array_equal(fb.adjoint(coefs).data, fb.synthesize(coefs).data)
 
 
-# ------------------------------------------------------------ Nyquist (D8)
+# ----------------------------------------------------------- Nyquist rule
 @dataclass(frozen=True)
 class _NaiveNyquist(DelayedGaussianFilterbank):
-    """Without the Nyquist rule: what C14 says goes wrong."""
+    """Without the Nyquist rule: the dual divides by |H(fs/2)|^2 while analysis
+    applied Re H(fs/2), so reconstruction is not exact."""
 
     def rfft_response(self, n, fs):
         return self.response(np.fft.rfftfreq(n, 1 / fs))

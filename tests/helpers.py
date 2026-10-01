@@ -62,7 +62,7 @@ class GaussianFilterbank(so.Filterbank):
 class DelayedGaussianFilterbank(GaussianFilterbank):
     """:class:`GaussianFilterbank` with a fractional-sample delay ``delay``
     [s]: a complex (conjugate-symmetric) response whose value at Nyquist is
-    not real, to exercise the Nyquist rule (step 2, C14/D8)."""
+    not real, to exercise the Nyquist rule (see ``Filterbank.rfft_response``)."""
 
     delay: float = 0.3e-3
 
@@ -86,14 +86,14 @@ def coef_matrix(coefs) -> np.ndarray:
 
 
 def coef_weights(frame, coefs) -> np.ndarray:
-    """The C3 weight of each row of :func:`coef_matrix`."""
+    """The coefficient-norm weight (``bin_weights``) of each row of :func:`coef_matrix`."""
     if isinstance(frame, (so.GaborFrame, so.TVGaborFrame)):
         return np.repeat(frame.bin_weights(coefs.fs), coefs.data.shape[2])
     return np.ones(coef_matrix(coefs).shape[0])
 
 
 def dense_operator(frame, n, fs, pad=None):
-    """Analysis matrix ``T`` (coefficients x ``n``) and C3 weights, from
+    """Analysis matrix ``T`` (coefficients x ``n``) and coefficient-norm weights, from
     ``frame.analyze`` of the ``n`` unit impulses (``pad`` for filterbanks)."""
     kw = {} if pad is None else {"pad": pad}
     eye, batch = np.eye(n), 64  # Sound caps the channel count (it suspects channels-first data)

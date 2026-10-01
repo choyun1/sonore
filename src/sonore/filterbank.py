@@ -139,20 +139,24 @@ class BandpassFilterbank(Filterbank):
     """``n_bands`` bandpass filters with centers equally spaced on a scale from
     ``f_lo`` to ``f_hi`` [Hz] (both included), plus, with ``edges=True``, a
     zero-phase lowpass and highpass that make the bank a well-conditioned
-    frame on the whole band (decision D7 of docs/design/frames-step2.md).
+    frame on the whole band, as the cosine banks' two extra filters do.
     Subclasses define the scale and :meth:`band_response`.
 
     The edge filters have magnitude ``sqrt(s_floor)``, where ``s_floor`` is
     the smallest ``s = sum_k |H_k|**2`` of the bandpass filters between the
     lowest and highest center, and a raised-cosine transition
     ``edge_width`` filter spacings wide (on the bank's scale): the lowpass
-    falls to 0 at the lowest center, the highpass rises from 0 at the highest
-    (claim C11). They depend only on the bank, not on ``fs`` or the signal
+    falls to 0 at the lowest center, the highpass rises from 0 at the highest.
+    One spacing trades frame bounds (A/B about 0.5-0.6 for typical banks)
+    against ringing (2-3 times the bank's own, which sets the padding);
+    filling the gap exactly gives better bounds but rings for about half a
+    second. They depend only on the bank, not on ``fs`` or the signal
     length. Their nominal centers in :attr:`cfs` are where the transitions
     start, ``edge_width`` spacings outside the band (0 Hz at the lowest).
 
     ``edges=False`` gives the bare bank (for cochleagrams). It is badly
-    conditioned or not a frame at all, so ``synthesize`` may refuse (D4).
+    conditioned or not a frame at all: ``analyze`` still works, but
+    ``synthesize`` may refuse.
     """
 
     n_bands: int = 30
@@ -260,11 +264,12 @@ class GammatoneFilterbank(BandpassFilterbank):
     :class:`BandpassFilterbank`).
 
     The responses are the exact Fourier transform of the impulse response
-    ``t**3 exp(-2 pi b t) cos(2 pi cf t)``, ``t >= 0`` (claim C10), not an IIR
+    ``t**3 exp(-2 pi b t) cos(2 pi cf t)``, ``t >= 0``, not an IIR
     approximation, normalized to unit gain at ``cf``. ``phase="causal"`` (the
     default) is that filter, with its CF-dependent delay (group delay
     ``4 / (2 pi b)`` at ``cf``); ``phase="zero"`` keeps the magnitude and
-    aligns onsets across bands (decision D6). Synthesis is exact either way.
+    aligns onsets across bands. Synthesis is exact either way: the dual
+    filters with ``conj(H)``, which undoes the delay.
     """
 
     _: KW_ONLY
@@ -310,8 +315,8 @@ class MorletFilterbank(BandpassFilterbank):
     Each filter is a Gaussian in frequency with standard deviation
     ``cf / cycles``, minus the standard DC correction so that the response
     is exactly 0 at 0 Hz, normalized to unit gain at ``cf``; zero-phase.
-    Because of the correction, the bare bank (``edges=False``) is not a frame
-    (claim C11).
+    Because of the correction, the bare bank (``edges=False``) is not a frame:
+    every response is 0 at DC, so A = 0.
     """
 
     f_lo: float = 50.0

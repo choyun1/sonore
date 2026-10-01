@@ -392,8 +392,8 @@ numerically; "consulted" means the code was read for behavior but not copied.
   inverse are cross-checked against dense matrices in the tests and in
   `tools/check_frame_claims.py` (docs/design/frames.md). `frames` `representations`
 - Gammatone filterbanks in Slaney's Auditory Toolbox and MATLAB's `gammatoneFilterBank` are time-domain IIR
-  approximations; `GammatoneFilterbank` uses the exact frequency response instead (docs/design/frames-step2.md,
-  C10). Consulted for conventions only. `filterbank`
+  approximations; `GammatoneFilterbank` uses the exact frequency response instead (derivation in
+  docs/design/frames-step2.md). Consulted for conventions only. `filterbank`
 - [LTFAT](https://ltfat.github.io/) (GPLv3) and [nsgt](https://github.com/grrrr/nsgt) (Artistic License 2.0):
   frame theory in code, for dev-time cross-checks only because of their licenses. Not yet cross-checked. `frames`
 
@@ -460,7 +460,8 @@ its API conventions, the texture work and its milestones, and the roadmap and
 architecture. I chose and documented the texture recordings and set the
 working rules: implement from the papers, verify every claim numerically,
 document every deviation and data choice, and write a design document before
-large features. I reviewed and applied each patch.
+large features. I reviewed and applied each patch. The design principles that came out of
+this are summarized in [docs/design/philosophy.md](docs/design/philosophy.md).
 
 **How it is verified.** I have not read every line by hand. What I rely on
 instead is the following:
