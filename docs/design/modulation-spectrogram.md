@@ -16,8 +16,9 @@ its syllabic modulation near 4 Hz comes and goes with the syllables, and the
 mobile idea in the README (the modulation spectrum of everyday sounds, live)
 needs a version that runs block by block.
 
-Status: D2–D9 accepted 2026-10-01 as recommended below; D1 open (whether
-the kernels become their own modulation filterbank). No library code yet.
+Status: accepted 2026-10-01, with decisions D1–D9 as recommended below
+(D1 with the kernels as their own modulation filterbank). Not yet
+implemented.
 
 ## How the claims are verified
 
@@ -239,7 +240,7 @@ to be stated with any number read off the picture.
 
 ## Decisions
 
-**D1. A new module and type.** `sonore/analysis/modspectrogram.py` with a
+**D1. A new module and type, and a modulation filterbank. (accepted 2026-10-01)** `sonore/analysis/modspectrogram.py` with a
 `ModulationSpectrogram` class, exported as `so.ModulationSpectrogram`, built
 from `Envelopes`: `so.ModulationSpectrogram(env, f_lo=0.5, f_hi=64,
 per_octave=2, cycles=3, hop=0.010)`. It keeps the envelopes' filterbank (for
@@ -254,13 +255,12 @@ Relation to existing types: it is to `Envelopes` what an `STFT` is to a
 `Sound`. Its closest relative is `TFPower` (power on a time grid, no
 inverse). `ModulationSpectrum` (rate × spectral density, whole sound) is a
 sibling with different axes, and the texture statistics' `mod_power` is the
-same quantity as its time average (C7). Recommended (open): the windowed
+same quantity as its time average (C7). The windowed
 kernels live in `modulation.py` as a third bank, `HannModulationFilterbank`,
 with a time-domain `filter` that supports both alignments, so the
 spectrogram is "envelopes through a modulation filterbank, sampled every
 hop", as `Subbands` is a sound through a filterbank, and the kernels can be
-used on their own (for example for modulation filtering). The alternative
-keeps them private to the new class.
+used on their own (for example for modulation filtering).
 
 **D2. The analysis window is a parameter, set in one of two ways. (accepted 2026-10-01)** As in
 an STFT, the window length decides the trade between time and modulation
@@ -388,7 +388,8 @@ live = so.ModulationSpectrogram(env, align="causal")
 ## Patch plan
 
 1. This document and `tools/check_modulation_spectrogram_claims.py`.
-2. `ModulationSpectrogram` with `power`, `mean`, `depth`, `valid`, `at`,
+2. `HannModulationFilterbank` in `modulation.py`, then
+   `ModulationSpectrogram` with `power`, `mean`, `depth`, `valid`, `at`,
    `mean()` and both alignments; tests (D1–D5).
 3. `plot`, `slices` and `animate`, README row and references (D7, D9).
 4. Gallery page with the linked slices following the audio, separately.
