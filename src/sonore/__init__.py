@@ -82,6 +82,7 @@ from sonore.stimuli.binaural import (
     phasewarp,
     simple_bir,
 )
+from sonore.stimuli.hrir_data import load_hrirs
 from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
 from sonore.stimuli.reverb import band_rt60s, measure_rt60, synth_ir
 from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
@@ -156,6 +157,7 @@ __all__ = [
     "linear_chirp",
     "linear_trajectory",
     "load",
+    "load_hrirs",
     "long_term_spectrum",
     "Mask",
     "match_channels",

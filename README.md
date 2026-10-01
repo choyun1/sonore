@@ -29,7 +29,7 @@ meant in the same spirit.
 - **Binaural and spatial hearing.** Exact fractional ITDs, ILDs, interaurally
   correlated noise, Oscor and Phasewarp, windowed ITD/ILD/coherence analysis
   (broadband or per band), and rendering of static or moving sources through
-  measured HRIRs (PKU-IOA or any SOFA file).
+  measured HRIRs (PKU-IOA, downloaded on first use, or any SOFA file).
 - **Speech in noise.** Speech-shaped noise from a long-term average spectrum,
   mixing at a target SNR, ideal binary and ratio masks with exact resynthesis.
 - **Cochlear-implant and envelope/TFS studies.** A perfect-reconstruction ERB
@@ -287,6 +287,7 @@ also at the top level as `so.name`; the texture ones are under
 | [`stimuli.phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py) | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `resynthesize` with `time_scale` and `freq_map`) |
 | [`stimuli.binaural`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py) | `apply_itd_ild`, `simple_bir`, `interaural_cues`, `oscor`, `phasewarp` |
 | [`stimuli.spatialization`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py) | `HRIRSet` (PKU-IOA, SOFA; onset-aligned interpolation), `spatialize`, `move_sound`, trajectories, coordinate conversions, `distance_gain_db` |
+| [`stimuli.hrir_data`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py) | `load_hrirs`: public HRIR databases (PKU-IOA) downloaded on first use, checksum-verified and cached |
 | [`stimuli.reverb`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/reverb.py) | `synth_ir` (natural rooms, or the paper's atypical `decay_shape` / `rt60_profile` / `drr_profile` variants), `band_rt60s`, `measure_rt60` |
 | [`texture.stats`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) | `TextureModel`, `TextureStats` (`.measure`, `.snr`, `.replace` for hybrids, `.save`/`.load`) |
 | [`texture.synth`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/synth.py) | `synthesize` (full loop), `impose_channel`; gradients in [`texture.grad`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/grad.py) |
@@ -362,7 +363,9 @@ also at the top level as `so.name`; the texture ones are under
   (STRAIGHT, Kawahara et al., 1999, or its open successor WORLD, Morise et al., 2016).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - Faster `move_sound` via batched frequency-domain filtering.
-- On-demand download of public HRIR databases.
+- Sources that change distance: `move_sound` with level change, travel-time
+  delay and Doppler shift, and room reverberation, so that approaching and
+  receding trajectories sound convincing.
 
 ## References
 
@@ -396,7 +399,7 @@ confirmed, otherwise to the publisher or another stable page.
 - Morise, Yokomori & Ozawa (2016). WORLD: A vocoder-based high-quality speech synthesis system for real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7). [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
 - Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). [doi:10.1016/B978-0-08-041847-6.50054-X](https://doi.org/10.1016/B978-0-08-041847-6.50054-X). [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L260)
 - Perraudin, Balazs & Søndergaard (2013). A fast Griffin-Lim algorithm. *IEEE WASPAA*. [doi:10.1109/WASPAA.2013.6701851](https://doi.org/10.1109/WASPAA.2013.6701851). [`representations.STFT.griffin_lim`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L176)
-- Qu et al. (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. *IEEE TASLP* 17. [PKU Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial). [`spatialization.HRIRSet.from_pku_ioa`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L129)
+- Qu et al. (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. *IEEE TASLP* 17. [PKU Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial). [`spatialization.HRIRSet.from_pku_ioa`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L129) [`hrir_data.load_hrirs`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py#L108)
 - Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16. [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411). [`generators.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L108)
 - Shannon et al. (1995). Speech recognition with primarily temporal cues. *Science* 270. [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303). [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L467)
 - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of auditory processing. *JASA* 114(6). [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067). [`representations.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L457) [`envelopes.Envelopes.modulation_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/envelopes.py#L342)
@@ -460,7 +463,7 @@ PyPI package of that name. Version 0.2 also redesigned the API:
 | `InterauralCues(snd, win)` | `so.interaural_cues(snd, win)` |
 | `SimpleBIR(fs, itd, ild)` | `so.simple_bir(fs, itd, ild)` or `so.apply_itd_ild(snd, itd, ild)` |
 | `SynthIR(drr, rt60, dB_thresh, fs)` | `so.synth_ir(rt60, fs, drr_db=..., decay_db=-dB_thresh)` |
-| `move_sound(traj, snd)` | `so.move_sound(snd, traj, hrirs)` with `so.HRIRSet.from_pku_ioa(dir)` or `.from_sofa(path)` |
+| `move_sound(traj, snd)` | `so.move_sound(snd, traj, hrirs)` with `so.load_hrirs()` (downloads PKU-IOA), `so.HRIRSet.from_pku_ioa(dir)` or `.from_sofa(path)` |
 | `display_STFT(x, S)`, `AudioControl(snd).display()` | `so.overview(x)`; put `snd` at the end of a cell |
 
 Results computed with 0.1 can differ, because these 0.1 bugs were fixed:
