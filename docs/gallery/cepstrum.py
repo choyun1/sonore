@@ -231,7 +231,7 @@ sound = finish(whole)
 # - Boersma & Weenink. Praat: doing phonetics by computer. [praat.org](https://www.praat.org).
 # - Bogert, Healy & Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum,
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
-#   Analysis*. Wiley.
+#   Analysis*. Wiley. [Semantic Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
 #   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
