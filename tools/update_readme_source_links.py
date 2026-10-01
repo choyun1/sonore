@@ -4,7 +4,9 @@ Each module tag in the README's References section links to its file on
 GitHub, and a tag that names a function or class, like
 `representations.reassigned_spectrogram`, links to the line of its
 definition. A tag names the file's module, or the package that re-exports
-it: `texture.TextureStats` links into texture/stats.py. Line anchors move whenever code above them changes, so
+it: `texture.TextureStats` links into texture/stats.py. The module table in
+What's in it uses the full dotted path, like `analysis.frames`, which links
+to the file without a line. Line anchors move whenever code above them changes, so
 tests/test_docs.py checks them and this script rewrites them:
 
     python tools/update_readme_source_links.py
@@ -38,10 +40,12 @@ def definition_line(path: Path, dotted: list[str]) -> int:
 
 def expected_link(text: str, rel_path: str) -> str:
     """The correct link for tag ``text`` pointing into ``rel_path``."""
-    module, *symbol = text.split(".")
     path = ROOT / rel_path
     if not path.exists():
         raise LookupError(f"{rel_path} does not exist")
+    if text == rel_path.removeprefix("src/sonore/").removesuffix(".py").replace("/", "."):
+        return f"[`{text}`]({BLOB}{rel_path})"
+    module, *symbol = text.split(".")
     if module not in (path.stem, path.parent.name):
         raise LookupError(f"tag `{text}` links to {rel_path}, a different module")
     anchor = f"#L{definition_line(path, symbol)}" if symbol else ""
