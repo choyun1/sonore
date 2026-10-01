@@ -20,12 +20,16 @@ named GitHub environment.
 
 1. Set the version in `src/sonore/__init__.py` and move the `Unreleased` notes in
    `CHANGELOG.md` under a heading for that version. Merge to `main`.
-2. Trial run on TestPyPI: Actions, *release*, *Run workflow*. TestPyPI, like PyPI,
-   never accepts the same version twice, so trial a release candidate such as
-   `0.3.0rc1` first. Check it installs in a fresh environment:
+2. Trial run on TestPyPI: Actions, *release*, *Run workflow* on `main`. It uploads
+   whatever version `main` holds. TestPyPI and PyPI are separate, so a version
+   uploaded to TestPyPI can still go to PyPI, but neither accepts the same version
+   twice. If a trial needs a second attempt, run the workflow from a branch whose
+   version is a release candidate such as `0.3.0rc1`. Check it installs in a fresh
+   environment (the extra index lets pip fetch numpy and the other dependencies
+   from PyPI):
 
    ```
-   pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "sonore[notebook]==0.3.0rc1"
+   pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ "sonore==0.3.0"
    ```
 
 3. Real release: on GitHub, *Releases*, *Draft a new release*, tag `v0.3.0` (it must
