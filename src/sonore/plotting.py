@@ -177,7 +177,7 @@ def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None)
 
 
 def plot_envelope(env, ax=None, db=False, **kwargs):
-    """A single :class:`~sonore.envelopes.Envelope` over time."""
+    """A single :class:`~sonore.analysis.envelopes.Envelope` over time."""
     ax = _ax(ax)
     ax.plot(env.t, env.db if db else env.data, **kwargs)
     ax.set(
@@ -319,7 +319,7 @@ def plot_ripple_pattern(
 ):
     """Envelope of a ripple pattern (dB re its mean level) over time and
     log-frequency, before any sound is made."""
-    from sonore.ripples import _evaluate, _max_rate
+    from sonore.stimuli.ripples import _evaluate, _max_rate
 
     ax = _ax(ax)
     if n_t is None:  # resolve the fastest modulation with ~8 points per cycle
@@ -342,7 +342,7 @@ def overview(sound, win_dur=20e-3, figsize=(12, 8), fmax=None):
     (replaces the old ``display_STFT``). Returns the Figure."""
     import matplotlib.pyplot as plt
 
-    from sonore.representations import STFT, ModulationSpectrum, long_term_spectrum
+    from sonore.analysis.representations import STFT, ModulationSpectrum, long_term_spectrum
 
     S = STFT(sound.mono(), win_dur)
     fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")

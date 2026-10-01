@@ -8,8 +8,8 @@ to a sound. The types reflect that:
 - :class:`Envelopes` is one envelope per frequency band of a filterbank, i.e. a
   spectrotemporal envelope. This is conceptually the same thing as a
   **cochleagram** (the envelope of each cochlear-filter output over time);
-  here the "cochlea" is whichever :class:`~sonore.frames.Filterbank` (by
-  default a :class:`~sonore.filterbank.CosineFilterbank`) produced it.
+  here the "cochlea" is whichever :class:`~sonore.analysis.frames.Filterbank` (by
+  default a :class:`~sonore.analysis.filterbank.CosineFilterbank`) produced it.
   ``Envelopes * Subbands`` modulates each band.
 
 The Hilbert decomposition of a band is then literal::
@@ -30,12 +30,12 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.signal import butter, resample_poly, sosfiltfilt
 
-from sonore.utils import amp_to_db
+from sonore.core.utils import amp_to_db
 
 if TYPE_CHECKING:
-    from sonore.frames import Filterbank
-    from sonore.representations import ModulationSpectrum
-    from sonore.sound import Sound
+    from sonore.analysis.frames import Filterbank
+    from sonore.analysis.representations import ModulationSpectrum
+    from sonore.core.sound import Sound
 
 __all__ = ["Envelope", "Envelopes"]
 
@@ -153,7 +153,7 @@ class Envelope:
         return NotImplemented
 
     def __mul__(self, other):
-        from sonore.sound import Sound
+        from sonore.core.sound import Sound
 
         if isinstance(other, Sound):
             return Sound(other.data * self._values_for(other), other.fs)
@@ -167,7 +167,7 @@ class Envelope:
         return NotImplemented if o is NotImplemented else Envelope(self._data / o, self.fs)
 
     def __rtruediv__(self, other):
-        from sonore.sound import Sound
+        from sonore.core.sound import Sound
 
         if isinstance(other, Sound):
             env = self._values_for(other)
@@ -193,7 +193,7 @@ class Envelopes:
     Conceptually this is a **cochleagram**: the envelope of each filter's
     output over time. Shape ``(n_samples, n_bands, n_channels)``; the bands
     include the filterbank's lowpass and highpass edge filters, as in
-    :class:`~sonore.filterbank.Subbands`.
+    :class:`~sonore.analysis.filterbank.Subbands`.
 
     ``env[i]`` is an :class:`Envelope`; ``env * subbands`` modulates each band;
     ``env.modulation_spectrum()`` gives its 2-D modulation spectrum on the
@@ -309,7 +309,7 @@ class Envelopes:
         return out
 
     def __mul__(self, other):
-        from sonore.filterbank import Subbands
+        from sonore.analysis.filterbank import Subbands
 
         if isinstance(other, Subbands):
             if len(other) != len(self):
@@ -345,7 +345,7 @@ class Envelopes:
         ``scale="db"`` transforms log envelopes. The edge bands are dropped by
         default, since they aren't evenly spaced with the others.
         """
-        from sonore.representations import ModulationSpectrum
+        from sonore.analysis.representations import ModulationSpectrum
 
         fb = self.filterbank
         if getattr(fb, "spacing", None) is None or getattr(fb, "unit", None) is None:

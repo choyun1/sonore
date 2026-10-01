@@ -12,16 +12,8 @@ Typical use in a notebook::
 """
 
 from sonore import texture
-from sonore.binaural import (
-    InterauralCues,
-    apply_itd_ild,
-    interaural_cues,
-    oscor,
-    phasewarp,
-    simple_bir,
-)
-from sonore.envelopes import Envelope, Envelopes
-from sonore.filterbank import (
+from sonore.analysis.envelopes import Envelope, Envelopes
+from sonore.analysis.filterbank import (
     CosineFilterbank,
     ERBFilterbank,
     GammatoneFilterbank,
@@ -31,38 +23,13 @@ from sonore.filterbank import (
     noise_vocode,
     subbands,
 )
-from sonore.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
-from sonore.generators import (
-    correlated_noise,
-    exponential_chirp,
-    gaussian_noise,
-    harmonic_complex,
-    iterated_ripple_noise,
-    linear_chirp,
-    pulse_train,
-    pure_tone,
-    sawtooth_wave,
-    schroeder_complex,
-    silence,
-    square_wave,
+from sonore.analysis.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
+from sonore.analysis.modulation import (
+    ConstantQModulationFilterbank,
+    ModulationFilterbank,
+    OctaveModulationFilterbank,
 )
-from sonore.modulation import ConstantQModulationFilterbank, ModulationFilterbank, OctaveModulationFilterbank
-from sonore.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
-from sonore.plotting import overview
-from sonore.processing import (
-    amplitude_modulate,
-    bandpass,
-    butter_filter,
-    concat,
-    match_channels,
-    match_fs,
-    mix,
-    normalize,
-    pad,
-    relative_db,
-    truncate,
-)
-from sonore.representations import (
+from sonore.analysis.representations import (
     STFT,
     TVSTFT,
     Mask,
@@ -76,10 +43,49 @@ from sonore.representations import (
     reassigned_spectrogram,
     tandem_power,
 )
-from sonore.reverb import band_rt60s, measure_rt60, synth_ir
-from sonore.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
-from sonore.sound import Sound, load
-from sonore.spatialization import (
+from sonore.core.sound import Sound, load
+from sonore.core.units import Decibels, dB
+from sonore.core.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
+from sonore.plotting import overview
+from sonore.signals.generators import (
+    correlated_noise,
+    exponential_chirp,
+    gaussian_noise,
+    harmonic_complex,
+    iterated_ripple_noise,
+    linear_chirp,
+    pulse_train,
+    pure_tone,
+    sawtooth_wave,
+    schroeder_complex,
+    silence,
+    square_wave,
+)
+from sonore.signals.processing import (
+    amplitude_modulate,
+    bandpass,
+    butter_filter,
+    concat,
+    match_channels,
+    match_fs,
+    mix,
+    normalize,
+    pad,
+    relative_db,
+    truncate,
+)
+from sonore.stimuli.binaural import (
+    InterauralCues,
+    apply_itd_ild,
+    interaural_cues,
+    oscor,
+    phasewarp,
+    simple_bir,
+)
+from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
+from sonore.stimuli.reverb import band_rt60s, measure_rt60, synth_ir
+from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
+from sonore.stimuli.spatialization import (
     HRIRSet,
     circular_trajectory,
     distance_gain_db,
@@ -89,10 +95,8 @@ from sonore.spatialization import (
     rect_to_hcc,
     spatialize,
 )
-from sonore.units import Decibels, dB
-from sonore.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "texture",

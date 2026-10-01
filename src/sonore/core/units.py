@@ -38,7 +38,7 @@ class Decibels:
     def __mul__(self, other):
         if isinstance(other, numbers.Real) and not isinstance(other, bool):
             return Decibels(self.value * float(other))
-        from sonore.sound import Sound
+        from sonore.core.sound import Sound
 
         if isinstance(other, Sound):
             raise TypeError(

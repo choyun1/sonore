@@ -14,8 +14,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import chirp
 
-from sonore.sound import Sound
-from sonore.utils import as_rng, n_samples, time_axis
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng, n_samples, time_axis
 
 __all__ = [
     "silence",

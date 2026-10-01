@@ -15,7 +15,7 @@ The contract (docs/design/frames.md) is:
 by their responses on the DFT grid. Its frame operator is diagonal in frequency,
 ``s(f) = sum_k |H_k(f)|**2``, and the canonical dual filters are ``H_k / s``
 (Balazs et al., 2011). Banks whose ``s`` is identically 1 set ``tight = True`` and skip
-the division, as :class:`~sonore.filterbank.CosineFilterbank` does.
+the division, as :class:`~sonore.analysis.filterbank.CosineFilterbank` does.
 
 :class:`GaborFrame` is the one-sided STFT (wrapping
 :class:`scipy.signal.ShortTimeFFT`). Its frame operator is diagonal in time,
@@ -51,11 +51,11 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.signal import ShortTimeFFT, get_window
 
-from sonore.sound import Sound
+from sonore.core.sound import Sound
 
 if TYPE_CHECKING:
-    from sonore.filterbank import Subbands
-    from sonore.representations import STFT, TVSTFT
+    from sonore.analysis.filterbank import Subbands
+    from sonore.analysis.representations import STFT, TVSTFT
 
 __all__ = ["Frame", "Filterbank", "GaborFrame", "TVGaborFrame"]
 
@@ -122,7 +122,7 @@ class Filterbank(Frame):
     @property
     @abstractmethod
     def n_filters(self) -> int:
-        """Number of filters (the band axis of :class:`~sonore.filterbank.Subbands`)."""
+        """Number of filters (the band axis of :class:`~sonore.analysis.filterbank.Subbands`)."""
 
     @property
     @abstractmethod
@@ -181,7 +181,7 @@ class Filterbank(Frame):
         periodic signals and for texture synthesis (seamless loops). A number
         pads by that many seconds.
         """
-        from sonore.filterbank import Subbands
+        from sonore.analysis.filterbank import Subbands
 
         p = self._pad_samples(pad, sound.fs)
         x = np.pad(sound.data, ((p, p), (0, 0))) if p else sound.data
@@ -354,7 +354,7 @@ class GaborFrame(Frame):
 
     def analyze(self, sound: Sound) -> STFT:
         """The STFT of ``sound``, data shape ``(n_channels, n_freqs, n_frames)``."""
-        from sonore.representations import STFT
+        from sonore.analysis.representations import STFT
 
         return STFT(sound, frame=self)
 
@@ -442,7 +442,7 @@ class TVGaborFrame(Frame):
         A :func:`scipy.signal.get_window` spec, sampled periodically at each
         window's length, or a callable ``n -> array``.
 
-    ``analyze`` returns a :class:`~sonore.representations.TVSTFT`, data shape
+    ``analyze`` returns a :class:`~sonore.analysis.representations.TVSTFT`, data shape
     ``(n_channels, n_fft // 2 + 1, len(times))``. The signal is zero outside
     its own extent, as in :class:`GaborFrame`. A constant schedule over the
     frames SciPy uses reproduces :class:`GaborFrame` exactly.
@@ -551,7 +551,7 @@ class TVGaborFrame(Frame):
 
     def analyze(self, sound: Sound) -> TVSTFT:
         """The time-varying STFT of ``sound``, data shape ``(n_channels, n_freqs, n_frames)``."""
-        from sonore.representations import TVSTFT
+        from sonore.analysis.representations import TVSTFT
 
         lay, n = self.layout(sound.fs), len(sound)
         t, valid = lay.positions(n)

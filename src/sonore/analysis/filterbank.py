@@ -23,9 +23,9 @@ from functools import lru_cache
 import numpy as np
 from scipy.signal import hilbert
 
-from sonore.frames import Filterbank
-from sonore.sound import Sound
-from sonore.utils import as_rng, erb_bandwidth, erb_to_freq, freq_to_erb
+from sonore.analysis.frames import Filterbank
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng, erb_bandwidth, erb_to_freq, freq_to_erb
 
 __all__ = [
     "CosineFilterbank",
@@ -47,7 +47,7 @@ class CosineFilterbank(Filterbank):
     highpass above ``f_hi`` (``n_bands + 2`` filters in total). Subclasses
     define the scale.
 
-    A tight :class:`~sonore.frames.Filterbank`: the squared responses sum to
+    A tight :class:`~sonore.analysis.frames.Filterbank`: the squared responses sum to
     exactly 1, so the frame bounds are ``(1, 1)`` and synthesis re-filters
     with the analysis filters."""
 
@@ -366,7 +366,8 @@ def subbands(sound: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float | 
 
 
 class Subbands:
-    """The output of a :class:`~sonore.frames.Filterbank`: one band-limited :class:`~sonore.Sound` per filter.
+    """The output of a :class:`~sonore.analysis.frames.Filterbank`: one band-limited
+    :class:`~sonore.Sound` per filter.
 
     ``sb[i]`` is a Sound, iterating yields Sounds, and ``sb.cfs`` labels them.
     The first and last bands are the filterbank's lowpass and highpass edges.
@@ -424,9 +425,9 @@ class Subbands:
         return hilbert(self._full, axis=0)
 
     def envelopes(self, lowpass: float | None = None, fs: float | None = None):
-        """Hilbert envelope of every band, as :class:`~sonore.envelopes.Envelopes`.
+        """Hilbert envelope of every band, as :class:`~sonore.analysis.envelopes.Envelopes`.
         Optionally lowpass-filtered [Hz] and then resampled to ``fs``."""
-        from sonore.envelopes import Envelopes
+        from sonore.analysis.envelopes import Envelopes
 
         env = Envelopes(np.abs(self._analytic()), self.fs, self.filterbank, pad=self.pad)
         if lowpass is not None:
@@ -442,8 +443,8 @@ class Subbands:
 
     def synthesize(self) -> Sound:
         """Back to a Sound with the filterbank's canonical dual
-        (:meth:`~sonore.frames.Filterbank.synthesize`): the exact inverse of
-        :meth:`~sonore.frames.Filterbank.analyze`, and the least-squares
+        (:meth:`~sonore.analysis.frames.Filterbank.synthesize`): the exact inverse of
+        :meth:`~sonore.analysis.frames.Filterbank.analyze`, and the least-squares
         signal after the bands are modified. For the cosine banks this is
         re-filtering each band and summing; with the default padding,
         re-filtering can't wrap around either."""
@@ -486,7 +487,7 @@ def noise_vocode(
             raise ValueError("carrier is shorter than the sound")
         fine = fb.analyze(Sound(carrier.data[: len(sound)], carrier.fs)).tfs()
     elif carrier == "noise":
-        from sonore.generators import gaussian_noise
+        from sonore.signals.generators import gaussian_noise
 
         noise = gaussian_noise(sound.duration, sound.fs, n_channels=sound.n_channels, rng=as_rng(rng))
         fine = fb.analyze(noise, pad=0).tfs()  # generated noise is periodic: circular is exact

@@ -33,11 +33,11 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.signal import hilbert, resample
 
-from sonore import texture_grad as tg
-from sonore.filterbank import Subbands
-from sonore.sound import Sound
-from sonore.texture import PAPER_CLASSES, TextureStats
-from sonore.utils import as_rng
+from sonore.analysis.filterbank import Subbands
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng
+from sonore.texture import grad as tg
+from sonore.texture.stats import PAPER_CLASSES, TextureStats
 
 __all__ = ["ChannelObjective", "impose_channel", "synthesize", "channel_order"]
 

@@ -2,10 +2,9 @@ import numpy as np
 import pytest
 
 import sonore as so
-from sonore import texture_grad as tg
-from sonore import texture_synth as synth
-from sonore.texture import TextureModel, TextureStats
-from sonore.texture_synth import ChannelObjective, impose_channel
+from sonore.texture import TextureModel, TextureStats, synth
+from sonore.texture import grad as tg
+from sonore.texture.synth import ChannelObjective, impose_channel
 
 M = TextureModel()
 FS = 20000

@@ -41,11 +41,11 @@ import numpy as np
 from scipy.signal import butter, sosfiltfilt
 from scipy.special import ndtr
 
-from sonore.envelopes import Envelopes
-from sonore.filterbank import OctaveFilterbank, Subbands
-from sonore.generators import gaussian_noise
-from sonore.sound import Sound
-from sonore.utils import as_rng, n_samples, time_axis
+from sonore.analysis.envelopes import Envelopes
+from sonore.analysis.filterbank import OctaveFilterbank, Subbands
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng, n_samples, time_axis
+from sonore.signals.generators import gaussian_noise
 
 __all__ = ["Ripple", "RippleSum", "DynamicRipple", "ripple_sound", "render"]
 
@@ -266,7 +266,7 @@ def _check_resolution(pattern: Pattern, per_octave: float, what: str) -> None:
 
 def render(pattern: Pattern, filterbank: OctaveFilterbank, duration: float, fs: float) -> Envelopes:
     """Evaluate any pattern (including a plain ``f(t, x)``) on the band centers
-    of an octave filterbank, giving :class:`~sonore.envelopes.Envelopes`.
+    of an octave filterbank, giving :class:`~sonore.analysis.envelopes.Envelopes`.
     Compare it with a sound's measured envelopes on the same filterbank."""
     if not isinstance(filterbank, OctaveFilterbank):
         raise TypeError("patterns are defined in octaves; use an OctaveFilterbank")

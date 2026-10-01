@@ -24,7 +24,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sonore.texture import TextureModel
+from sonore.texture.stats import TextureModel
 
 __all__ = [
     "ChannelContext",

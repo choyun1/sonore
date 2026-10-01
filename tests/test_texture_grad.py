@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 import sonore as so
-from sonore import texture_grad as tg
 from sonore.texture import TextureModel, TextureStats, measurement_window
+from sonore.texture import grad as tg
 
 M = TextureModel()
 FS = 20000
