@@ -227,6 +227,18 @@ t_edges, f_edges = np.arange(0, snd.duration, 5e-3), np.arange(0, 5020, 20)  # b
 so.reassigned_spectrogram(snd, wide).binned(t_edges, f_edges).plot(fmax=5000)
 ```
 
+**Cepstrum.** The real cepstrum of each STFT frame separates the smooth
+spectral envelope (low quefrencies) from the harmonics (a peak at one period).
+Cepstral F0 on the sentence above agrees with WORLD's Harvest within 5% on
+95% of the frames both call voiced; it is a baseline, not an F0 tracker.
+
+```python
+cep = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005))
+t, f0, peak = cep.f0(f_lo=75, f_hi=400)          # windows must hold 3 periods of f_lo
+envelope = cep.lifter(0.5 / 120).envelope()      # quefrencies below half a period
+residual = cep.lifter(0.5 / 120, keep="high").to_sound()
+```
+
 **Sound textures** (McDermott & Simoncelli, 2011). Measure a recording's
 statistics and synthesize a new sample from noise:
 
@@ -281,6 +293,7 @@ also at the top level as `so.name`; the texture ones are under
 | [`analysis.frames`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py) | `Frame` (invertible analyses: `analyze`, `synthesize` as least squares, `frame_bounds`, `energy`, `adjoint`), `Filterbank` (frequency-domain filters, any shape; canonical dual), `GaborFrame` (the STFT as a frame; any window, zero-padded FFTs), `TVGaborFrame` (a Gabor frame whose window changes over time, from an explicit schedule, `from_function`, or `pitch_adaptive` from an F0 track; exact inverse; coefficients are a `TVSTFT`) |
 | [`analysis.filterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py) | `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `GammatoneFilterbank` (exact 4th-order gammatone responses, causal or zero-phase; `envelope_peak_delay` gives each filter's latency), `MorletFilterbank` (log-spaced Morlet wavelets); both add edge filters by default so synthesis is exact on the whole band, and `edges=False` gives the bare bank for cochleagrams. `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`), `noise_vocode` |
 | [`analysis.representations`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py) | `Spectrum`, `long_term_spectrum`, `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis), `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`), `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
+| [`analysis.cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py) | `Cepstrum` (the real cepstrum of an `STFT` or `TVSTFT`: rectangular liftering with a fixed or per-frame cutoff, the cepstral envelope, resynthesis with the original phase, exact when unliftered, or the minimum phase, and classic cepstral F0 after Noll, 1967) |
 | [`analysis.envelopes`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/envelopes.py) | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`) |
 | [`analysis.modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py) | `ConstantQModulationFilterbank`, `OctaveModulationFilterbank` (circular, analytic output optional) |
 | [`stimuli.ripples`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py) | `Ripple`, `RippleSum`, `DynamicRipple`, `ripple_sound`; patterns can also be any function `f(t, x)` of time and octaves, and `pattern.render(filterbank, dur, fs)` gives their `Envelopes` |
@@ -316,6 +329,9 @@ also at the top level as `so.name`; the texture ones are under
   enforce `synthesize(analyze(x)) == x` and the reported bounds. Reassigned
   spectrograms and a TANDEM-STRAIGHT-style power spectrum are drawn beside
   them in the [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html) page.
+- **Cepstrum.** `Cepstrum` on any STFT: liftering, resynthesis with the
+  original or minimum phase, and classic cepstral F0; see
+  `docs/design/cepstrum.md`.
 - **Package layout.** One subpackage per layer (`core`, `signals`,
   `analysis`, `stimuli`, `texture`), with imports pointing down a layer,
   enforced by `tests/test_layers.py`; see `docs/design/layout.md`.
@@ -331,10 +347,7 @@ also at the top level as `so.name`; the texture ones are under
    `sonore[jax]` backend for the heavy, optimization-shaped parts (texture
    synthesis now; the differentiable forward models that source inference
    needs later). The core stays NumPy.
-3. **Cepstrum.** A `Cepstrum` representation built on the STFT: liftering,
-   resynthesis with the original phase (exact when unliftered) or minimum
-   phase, and classic cepstral F0.
-4. **Speech synthesis.** Source-filter vowels (glottal source, formant
+3. **Speech synthesis.** Source-filter vowels (glottal source, formant
    resonators, radiation), then the Klatt synthesizer (Klatt, 1980; KLSYN88,
    Klatt & Klatt, 1990).
 
@@ -406,6 +419,7 @@ confirmed, otherwise to the publisher or another stable page.
 - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. *Speech Communication* 67. [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003). [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L494)
 - Morise, Yokomori & Ozawa (2016). WORLD: A vocoder-based high-quality speech synthesis system for real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7). [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
 - Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). [doi:10.1016/B978-0-08-041847-6.50054-X](https://doi.org/10.1016/B978-0-08-041847-6.50054-X). [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L260)
+- Noll (1967). Cepstrum pitch determination. *JASA* 41(2). [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/). [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L142)
 - Perraudin, Balazs & Søndergaard (2013). A fast Griffin-Lim algorithm. *IEEE WASPAA*. [doi:10.1109/WASPAA.2013.6701851](https://doi.org/10.1109/WASPAA.2013.6701851). [`representations.STFT.griffin_lim`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L176)
 - Qu et al. (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. *IEEE TASLP* 17. [PKU Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial). [`spatialization.HRIRSet.from_pku_ioa`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L130) [`hrir_data.load_hrirs`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py#L122)
 - Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16. [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411). [`generators.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L108)

@@ -7,6 +7,11 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.Cepstrum`: the real cepstrum of an `STFT` or `TVSTFT`, with liftering
+  (fixed or per-frame cutoff), the cepstral envelope, resynthesis with the
+  original or minimum phase, classic cepstral F0, and `plot`. Design and
+  numerical checks in `docs/design/cepstrum.md` and
+  `tools/check_cepstrum_claims.py`.
 - `so.load_hrirs()` downloads the PKU-IOA HRIR database on first use (1 m by
   default, any of its 8 distances on request), checks each file's SHA-256 and
   caches it in `$SONORE_DATA_DIR` or the user cache directory. The SOFA copy it

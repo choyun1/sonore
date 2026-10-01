@@ -8,7 +8,9 @@ liftering and minimum phase are what a CheapTrick-style envelope and a
 pulse-based vocoder need, and cepstral F0 is a baseline that a real F0
 tracker must beat.
 
-Status: proposed 2026-10-01. Decisions D1–D7 wait on Cho.
+Status: accepted 2026-10-01, with decisions D1–D7 as recommended below.
+Implemented in `src/sonore/analysis/cepstrum.py`, tested in
+`tests/test_cepstrum.py`.
 
 ## How the claims are verified
 
@@ -112,7 +114,7 @@ maximum changes no bin of real speech.
 
 ## Decisions
 
-**D1. A new module and type.** `sonore/analysis/cepstrum.py` with a
+**D1. A new module and type. (accepted 2026-10-01)** `sonore/analysis/cepstrum.py` with a
 `Cepstrum` class, exported as `so.Cepstrum`, built from an existing
 `STFT` or `TVSTFT`: `so.Cepstrum(coefs)`. It keeps the coefficients it was
 built from (for their phase, frame and times) and stores `data` of shape
@@ -122,26 +124,26 @@ seconds and `t` the frame times. Recommended over methods on `STFT`
 not grow. The module sits in the analysis layer and imports
 `representations`, not the other way round.
 
-**D2. Real cepstrum only.** The complex cepstrum needs phase unwrapping,
+**D2. Real cepstrum only. (accepted 2026-10-01)** The complex cepstrum needs phase unwrapping,
 which is fragile on real sounds, and nothing on the roadmap needs it: the
 minimum phase comes from the real cepstrum (C3), and the original phase is
 taken from the STFT. Natural log of the magnitude, as in the Setting.
 
-**D3. The floor.** Magnitudes are floored at 200 dB below the channel's
+**D3. The floor. (accepted 2026-10-01)** Magnitudes are floored at 200 dB below the channel's
 maximum over all frames before the log (C7). Relative, so scaling a sound
 only moves c[0] (C2); per channel rather than per frame, so a silent frame
 gets a flat log spectrum at the floor instead of amplified noise; −200 dB to
 match the floor sonore already uses for STFT displays. An all-zero channel
 gets a cepstrum of zeros apart from c[0].
 
-**D4. Liftering.** `cep.lifter(cutoff, keep="low")` returns a new
+**D4. Liftering. (accepted 2026-10-01)** `cep.lifter(cutoff, keep="low")` returns a new
 `Cepstrum` with a rectangular lifter: `"low"` keeps quefrencies below
 `cutoff` (and their mirror images), `"high"` keeps the rest. `cutoff` [s]
 is a scalar or one value per frame, so a pitch-adaptive cutoff (half a
 period, as in C5) is one line from an F0 track. Smooth lifters, and
 CheapTrick's corrected one, are left for the envelope step.
 
-**D5. Back to spectra and sound.** `cep.to_stft(phase="original")` returns
+**D5. Back to spectra and sound. (accepted 2026-10-01)** `cep.to_stft(phase="original")` returns
 coefficients of the same type and frame as the source. `"original"` puts the
 source's phase back, exact when nothing was liftered (C2). `"minimum"` uses
 the fold (C3). `cep.to_sound(phase=...)` is that, synthesized by the
@@ -153,7 +155,7 @@ reference, the window's middle sample. That is the right convention for
 pulse-based synthesis later, but resynthesizing speech this way is not a
 goal of this step.
 
-**D6. Cepstral F0.** `cep.f0(f_lo=75, f_hi=400, threshold=0.1)` returns
+**D6. Cepstral F0. (accepted 2026-10-01)** `cep.f0(f_lo=75, f_hi=400, threshold=0.1)` returns
 `(t, f0, peak)`, with f0 = 0 where the peak is below `threshold`: the
 largest peak in 1/f_hi to 1/f_lo, refined by a parabola, as in the
 checker. It raises if any frame's window is shorter than three periods of
@@ -162,7 +164,7 @@ documented as the classic method (Noll, 1967), with C6's numbers, and not
 as a tracker. A `so.cepstral_f0(sound, ...)` shortcut that makes its own
 40 ms STFT is not recommended: it would hide C4's window rule.
 
-**D7. Display and docs.** `cep.plot()` draws quefrency in ms against time,
+**D7. Display and docs. (accepted 2026-10-01)** `cep.plot()` draws quefrency in ms against time,
 like `STFT.plot`, via `sonore.plotting`. The README gets a module-table row,
 a short recipe (envelope by liftering, F0 of the gallery sentence), and the
 roadmap item moves to Done. No gallery section in this step.
@@ -208,7 +210,9 @@ z = cep.lifter(2e-3).to_sound(phase="minimum")
 
 ## References
 
-Not yet verified by lookup; to be checked before patch 2.
+Noll (1967) was verified by lookup (PubMed 6040805: *JASA* 41(2), 293–309).
+The others are cited from memory and not yet verified; Morise (2015) was
+verified for `frames.md`.
 
 - Bogert, B. P., Healy, M. J. R. & Tukey, J. W. (1963). The quefrency
   alanysis of time series for echoes: cepstrum, pseudo-autocovariance,
