@@ -342,31 +342,38 @@ sound from the gallery's demo list so the two can't drift apart.
 
 ## References
 
-Tags name the module(s) in [What's in it](#whats-in-it) that implement or follow each work.
+Tags name the module(s) in [What's in it](#whats-in-it) that implement or follow each work;
+untagged works are cited in the [Roadmap](#roadmap). Links go to the DOI where one is
+confirmed, otherwise to the publisher or another stable page.
 
-- Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011). Theory, implementation and applications of nonstationary Gabor frames. *J. Comput. Appl. Math.* 236(6). `frames`
-- Chi, Gao, Guyton, Ru & Shamma (1999). Spectro-temporal modulation transfer functions and speech intelligibility. *JASA* 106. `ripples` `representations`
-- Christensen (2003). *An Introduction to Frames and Riesz Bases*. Birkhäuser. `frames`
-- Daubechies, Grossmann & Meyer (1986). Painless nonorthogonal expansions. *J. Math. Phys.* 27(5). `frames`
-- Dolson (1986). The phase vocoder: A tutorial. *Computer Music Journal* 10(4). `phasevocoder`
-- Escabí & Schreiner (2002). Nonlinear spectrotemporal sound analysis by neurons in the auditory midbrain. *J. Neurosci.* 22. `ripples`
-- Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45. `phasevocoder`
-- Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing Research* 47. `filterbank`
-- Gordon & Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), *Digital Audio Signal Processing: An Anthology*. Also Stanford CCRMA report STAN-M-55. `phasevocoder`
-- Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE TASSP* 32. `representations`
-- Kowalski, Depireux & Shamma (1996). Analysis of dynamic spectra in ferret primary auditory cortex. I. *J. Neurophysiol.* 76. `ripples`
-- Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans. Speech Audio Process.* 7(3). `phasevocoder`
-- McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. *Neuron* 71. `texture` `filterbank` `modulation`
-- Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). `filterbank`
-- Perraudin, Balazs & Søndergaard (2013). A fast Griffin-Lim algorithm. *IEEE WASPAA*. `representations`
-- Qu et al. (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. *IEEE TASLP* 17. `spatialization`
-- Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16. `generators`
-- Shannon et al. (1995). Speech recognition with primarily temporal cues. *Science* 270. `filterbank`
-- Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of auditory processing. *JASA* 114(6). `representations` `envelopes`
-- Siveke et al. (2008). Psychophysical and physiological evidence for fast binaural processing. *J. Neurosci.* 28. `binaural`
-- Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. *PNAS* 113. `reverb`
-- Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In *Speech Separation by Humans and Machines*. `representations`
-- Yost (1996). Pitch of iterated rippled noise. *JASA* 100. `generators`
+- Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011). Theory, implementation and applications of nonstationary Gabor frames. *J. Comput. Appl. Math.* 236(6). [doi:10.1016/j.cam.2011.09.011](https://doi.org/10.1016/j.cam.2011.09.011). `frames`
+- Chi, Gao, Guyton, Ru & Shamma (1999). Spectro-temporal modulation transfer functions and speech intelligibility. *JASA* 106. [JASA](https://pubs.aip.org/asa/jasa/article/106/5/2719/550617). `ripples` `representations`
+- Christensen (2003). *An Introduction to Frames and Riesz Bases*. Birkhäuser. [doi:10.1007/978-0-8176-8224-8](https://doi.org/10.1007/978-0-8176-8224-8). `frames`
+- Daubechies, Grossmann & Meyer (1986). Painless nonorthogonal expansions. *J. Math. Phys.* 27(5). [doi:10.1063/1.527388](https://doi.org/10.1063/1.527388). `frames`
+- Dolson (1986). The phase vocoder: A tutorial. *Computer Music Journal* 10(4). [Semantic Scholar](https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e). `phasevocoder`
+- Escabí & Schreiner (2002). Nonlinear spectrotemporal sound analysis by neurons in the auditory midbrain. *J. Neurosci.* 22. [doi:10.1523/JNEUROSCI.22-10-04114.2002](https://doi.org/10.1523/JNEUROSCI.22-10-04114.2002). `ripples`
+- Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45. [doi:10.1002/j.1538-7305.1966.tb01706.x](https://doi.org/10.1002/j.1538-7305.1966.tb01706.x). `phasevocoder`
+- Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing Research* 47. [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955(90)90170-T). `filterbank`
+- Gordon & Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), *Digital Audio Signal Processing: An Anthology*. Also Stanford CCRMA report STAN-M-55. [CCRMA](https://ccrma.stanford.edu/papers/introduction-phase-vocoder). `phasevocoder`
+- Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE TASSP* 32. [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317). `representations`
+- Kawahara, Masuda-Katsuse & de Cheveigné (1999). Restructuring speech representations using a pitch-adaptive time-frequency smoothing and an instantaneous-frequency-based F0 extraction. *Speech Communication* 27. [doi:10.1016/S0167-6393(98)00085-5](https://doi.org/10.1016/S0167-6393(98)00085-5).
+- Klatt (1980). Software for a cascade/parallel formant synthesizer. *JASA* 67(3). [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
+- Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among female and male talkers. *JASA* 87. [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894).
+- Kowalski, Depireux & Shamma (1996). Analysis of dynamic spectra in ferret primary auditory cortex. I. *J. Neurophysiol.* 76. [doi:10.1152/jn.1996.76.5.3503](https://doi.org/10.1152/jn.1996.76.5.3503). `ripples`
+- Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans. Speech Audio Process.* 7(3). [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/). `phasevocoder`
+- McAulay & Quatieri (1986). Speech analysis/synthesis based on a sinusoidal representation. *IEEE TASSP* 34. [Internet Archive](https://archive.org/details/SpeechAnalysisSynthesisBasedOnASinusoidalRepresentation).
+- McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. *Neuron* 71. [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). `texture` `filterbank` `modulation`
+- Morise, Yokomori & Ozawa (2016). WORLD: A vocoder-based high-quality speech synthesis system for real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7). [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
+- Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). [doi:10.1016/B978-0-08-041847-6.50054-X](https://doi.org/10.1016/B978-0-08-041847-6.50054-X). `filterbank`
+- Perraudin, Balazs & Søndergaard (2013). A fast Griffin-Lim algorithm. *IEEE WASPAA*. [doi:10.1109/WASPAA.2013.6701851](https://doi.org/10.1109/WASPAA.2013.6701851). `representations`
+- Qu et al. (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. *IEEE TASLP* 17. [PKU Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial). `spatialization`
+- Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16. [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411). `generators`
+- Shannon et al. (1995). Speech recognition with primarily temporal cues. *Science* 270. [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303). `filterbank`
+- Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of auditory processing. *JASA* 114(6). [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067). `representations` `envelopes`
+- Siveke et al. (2008). Psychophysical and physiological evidence for fast binaural processing. *J. Neurosci.* 28. [J. Neurosci.](https://www.jneurosci.org/content/28/9/2043). `binaural`
+- Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. *PNAS* 113. [doi:10.1073/pnas.1612524113](https://doi.org/10.1073/pnas.1612524113). `reverb`
+- Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In *Speech Separation by Humans and Machines*. [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12). `representations`
+- Yost (1996). Pitch of iterated rippled noise. *JASA* 100. [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf). `generators`
 
 ### Reference implementations
 
