@@ -24,8 +24,6 @@ sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
 
-![Overview of an iterated rippled noise](https://raw.githubusercontent.com/choyun1/sonore/main/docs/images/overview_irn.png)
-
 ## What it's for
 
 - **Psychophysical stimuli.** Pure tones, harmonic complexes with any phase
