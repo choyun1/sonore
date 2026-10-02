@@ -12,8 +12,9 @@ claim number and the number that supports it.
     python tools/check_moving_sound_claims.py
     python tools/check_moving_sound_claims.py --pku DIR   # also C7
 
-C7 needs the PKU-IOA SOFA files (dist_0.2m.sofa ... dist_1.6m.sofa) in DIR
-and h5py; without --pku it is skipped. The rest runs in about ten seconds.
+C7 needs the PKU-IOA files in DIR: the original .dat files (any layout), or
+the SOFA copy (dist_0.2m.sofa ... dist_1.6m.sofa, with h5py); without --pku it
+is skipped. The rest runs in about ten seconds.
 
 Coordinates are sonore's head-centered Cartesian ones, in meters: x right,
 y front, z up. The source's position is a function of the time at which it
@@ -21,6 +22,7 @@ emits; the sound reaches the head center r/c later.
 """
 
 import argparse
+import re
 import time
 from pathlib import Path
 
@@ -350,39 +352,61 @@ def claim_batched():
     report("C6", "batched time, s", batched_time)
 
 
-def claim_pku_shells(directory):
-    """C7 (needs the PKU-IOA SOFA files): does each distance shell carry the
-    1/r level and the r/c delay, or were they removed? Mean over directions
-    of the two ears' energy and of the onset (first sample within 20 dB of
-    the peak, as HRIRSet does)."""
+def pku_shells(directory):
+    """The PKU-IOA responses per distance [m] -> (irs (M, 2, n), fs), from the
+    original .dat files (azi{A}_elev{E}_dist{D}.dat, float64, left then
+    right, 65536 Hz) anywhere below `directory`, else from the SOFA copy
+    (dist_*m.sofa, needs h5py). Empty files are skipped."""
+    shells = {}
+    pattern = re.compile(r"azi(-?\d+)_elev(-?\d+)_dist(\d+)\.dat$")
+    for path in sorted(Path(directory).rglob("*.dat")):
+        match = pattern.search(path.name)
+        if not match or path.stat().st_size == 0:
+            continue
+        shells.setdefault(int(match.group(3)) / 100, []).append(np.fromfile(path, "<f8").reshape(2, -1))
+    if shells:
+        return {distance: (np.array(irs), 65536.0) for distance, irs in sorted(shells.items())}
     import h5py
 
-    rows = []
-    for path in sorted(Path(directory).glob("dist_*m.sofa")):
+    for path in sorted(Path(directory).rglob("dist_*m.sofa")):
         with h5py.File(path, "r") as sofa:
-            irs = sofa["Data.IR"][()]
             fs = float(np.ravel(sofa["Data.SamplingRate"][()])[0])
             distance = float(np.median(sofa["SourcePosition"][()][:, 2]))
+            shells[distance] = (sofa["Data.IR"][()], fs)
+    return dict(sorted(shells.items()))
+
+
+def claim_pku_shells(directory):
+    """C7 (needs the PKU-IOA files): does each distance shell carry the 1/r
+    level and the r/c delay, or were they removed? Mean over directions of
+    the two ears' energy and of the onset (first sample within 20 dB of the
+    peak, as HRIRSet does)."""
+    rows = []
+    for distance, (irs, fs) in pku_shells(directory).items():
         energy = np.mean(np.sum(irs**2, axis=-1))
         envelope = np.abs(irs)
         onsets = np.argmax(envelope >= envelope.max(axis=-1, keepdims=True) * 10 ** (-20 / 20), axis=-1)
-        rows.append((distance, db(energy), np.mean(onsets) / fs))
+        rows.append((distance, db(energy), np.mean(onsets) / fs, len(irs)))
     if not rows:
-        print("C7   no dist_*m.sofa files found")
+        print("C7   no PKU-IOA .dat or SOFA files found")
         return
-    ref_distance, ref_level, ref_onset = min(rows, key=lambda row: abs(row[0] - 1.0))
-    for distance, level, onset in rows:
+    ref_distance, ref_level, ref_onset, _ = min(rows, key=lambda row: abs(row[0] - 1.0))
+    for distance, level, onset, n_positions in rows:
         level_predicted = -20 * np.log10(distance / ref_distance)
         onset_predicted = 1e3 * (distance - ref_distance) / C_SOUND
         label = f"{distance:g} m re {ref_distance:g} m"
-        report("C7", f"{label}: mean level, dB (1/r predicts {level_predicted:+.1f})", level - ref_level)
+        report(
+            "C7",
+            f"{label} ({n_positions} positions): mean level, dB (1/r predicts {level_predicted:+.1f})",
+            level - ref_level,
+        )
         onset_ms = 1e3 * (onset - ref_onset)
         report("C7", f"{label}: mean onset, ms (r/c predicts {onset_predicted:+.2f})", onset_ms)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--pku", help="folder with the PKU-IOA SOFA files, for C7")
+    parser.add_argument("--pku", help="folder with the PKU-IOA .dat or SOFA files, for C7")
     args = parser.parse_args()
     claim_doppler_sizes()
     claim_swing_doppler()
