@@ -150,7 +150,7 @@ def f0_track(
         in_range = (refined > 0.9 * f_lo) & (refined < 1.1 * f_hi)
         refined_scores = np.zeros_like(refined)
         refined_scores[in_range] = _periodicity(
-            samples, np.repeat(t, MAX_CANDIDATES)[found.ravel()][in_range], refined[in_range], fs, f_lo
+            samples, np.repeat(t, MAX_CANDIDATES)[found.ravel()][in_range], refined[in_range], fs
         )
         window_candidates[found] = np.where(in_range, refined, np.nan)
         window_scores = np.full(window_candidates.shape, np.nan)
@@ -274,7 +274,7 @@ def _refine(x, tc, f, fs, iters=2):
     return out
 
 
-def _periodicity(x, tc, f, fs, f_lo):
+def _periodicity(x, tc, f, fs):
     """Normalized correlation between a stretch PERIODS periods long, centred
     half a period before tc, and the same stretch one period later. The
     fractional part of the period is done with a Kaiser-windowed sinc."""

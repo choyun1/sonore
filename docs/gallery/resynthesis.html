@@ -187,7 +187,7 @@ def finish(snd):
 lowpass and a highpass filter at the edges. Their squared responses sum to 1 at every
 frequency, so analysis followed by synthesis (each band filtered again, then summed) gives back
 the original, up to floating-point rounding.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def show_bands(snd, original):
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def show_bands(original):
     &quot;&quot;&quot;The six bands of the sweep beside the original, the reconstruction and their difference.
     Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
     fig = plt.figure(figsize=(10, 6.2), layout=&quot;constrained&quot;)
@@ -225,7 +225,7 @@ the level of floating-point rounding.</p></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
 sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize())
-fig, playhead = show_bands(sound, sweep)</code></pre></details>
+fig, playhead = show_bands(sweep)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-masking-the-spectrogram">

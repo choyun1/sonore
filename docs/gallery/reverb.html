@@ -160,7 +160,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 click. Convolve any dry sound with it and the sound is in that room. Traer &amp; McDermott (2016)
 measured the IRs of 271 real rooms and found them tightly constrained, and <code>so.synth_ir</code> builds
 new ones from their statistics.</p>
-<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a spoken sentence in a synthetic room that listeners can't tell from a real one.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which listeners hear as wrong.</li></ul>
+<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a spoken sentence in a synthetic room built like those Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which their listeners heard as wrong.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -294,8 +294,8 @@ fig, playhead = show(sound, None)</code></pre></details>
   <div class="about">
     <h3>In a natural room</h3>
     <div class="desc"><p>A synthetic room with RT60 = 1 s whose decay follows the statistics of 271 real rooms:
-exponential, with mid frequencies ringing longest. Listeners can't tell such IRs from real
-ones.</p></div>
+exponential, with mid frequencies ringing longest. In Traer &amp; McDermott's experiments, listeners
+could not tell IRs synthesized this way from real ones.</p></div>
     <audio controls preload="metadata" src="audio/17_in_a_natural_room.flac"></audio>
     <p class="file">17_in_a_natural_room.flac, 1.4 s, mono</p>
   </div>

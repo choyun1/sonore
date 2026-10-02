@@ -69,6 +69,14 @@ def test_exaggerated_and_reduced_profiles():
     assert peak["reduced"] < peak["ecological"] < peak["exaggerated"]
 
 
+def test_exaggerated_and_reduced_are_twice_and_half_as_reverberant_rooms():
+    """The docstring's definitions: a room twice (half) as reverberant, scaled to this length."""
+    cfs = IR_FB.cfs
+    eco = {f: so.band_rt60s(f, cfs) for f in (0.5, 1.0, 2.0)}
+    np.testing.assert_allclose(so.band_rt60s(1.0, cfs, "exaggerated"), eco[2.0] / 2, rtol=1e-12)
+    np.testing.assert_allclose(so.band_rt60s(1.0, cfs, "reduced"), eco[0.5] * 2, rtol=1e-12)
+
+
 @pytest.mark.parametrize("shape", ["time_reversed", "linear_matched_start", "linear_matched_end"])
 def test_atypical_decay_shapes(shape):
     ir = so.synth_ir(1.0, IR_FS, decay_shape=shape, rng=0)

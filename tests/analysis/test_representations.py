@@ -37,6 +37,16 @@ class TestRepresentations:
         snr = 10 * np.log10(np.sum(target.data**2) / np.sum((out - target).data ** 2))
         assert snr > 20
 
+    def test_ideal_ratio_mask_known_cases(self):
+        """(|T|^2 / (|T|^2 + |M|^2))**beta: equal powers give 0.5**beta, a silent masker 1, silence 0."""
+        noise = so.STFT(so.gaussian_noise(0.2, FS, rng=0))
+        silent = so.STFT(so.silence(0.2, FS))
+        for beta in (0.5, 1.0, 2.0):
+            np.testing.assert_allclose(so.ideal_ratio_mask(noise, noise, beta).values, 0.5**beta, rtol=1e-12)
+        np.testing.assert_allclose(so.ideal_ratio_mask(noise, silent).values, 1.0, rtol=1e-12)
+        np.testing.assert_array_equal(so.ideal_ratio_mask(silent, noise).values, 0.0)
+        np.testing.assert_array_equal(so.ideal_ratio_mask(silent, silent).values, 0.0)
+
     def test_griffin_lim_converges(self):
         x = so.harmonic_complex(0.5, 16000, 200, np.arange(1, 10))
         S = so.STFT(x, 32e-3)

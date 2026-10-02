@@ -262,9 +262,10 @@ def _s_floor(filterbank: BandpassFilterbank) -> float:
 @dataclass(frozen=True)
 class GammatoneFilterbank(BandpassFilterbank):
     """4th-order gammatone filters (Patterson et al., 1992) equally spaced on
-    the ERB-number scale, with bandwidth parameter ``b = 1.019 ERB(cf)``
-    (Glasberg & Moore, 1990), plus edge filters (see
-    :class:`BandpassFilterbank`).
+    the ERB-number scale, with bandwidth parameter ``b = 1.019 ERB(cf)``, plus
+    edge filters (see :class:`BandpassFilterbank`). ERB is Glasberg & Moore's
+    (1990); the factor 1.019 is the usual gammatone convention, commonly
+    credited to Patterson et al. and Slaney (1993), a source not checked here.
 
     The responses are the exact Fourier transform of the impulse response
     ``t**3 exp(-2 pi b t) cos(2 pi cf t)``, ``t >= 0``, not an IIR

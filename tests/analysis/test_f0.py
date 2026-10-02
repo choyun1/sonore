@@ -77,7 +77,7 @@ def test_score_in_noise_follows_the_power_ratio():
     tc = np.arange(0.05, 0.25, 0.005)
     for snr_db in (10, 0):
         s = 10 ** (snr_db / 10)
-        r = _periodicity(x + noise / np.sqrt(s), tc, np.full(len(tc), 120.0), FS, 60.0)
+        r = _periodicity(x + noise / np.sqrt(s), tc, np.full(len(tc), 120.0), FS)
         assert abs(np.median(r) - s / (1 + s)) < 0.03
 
 
