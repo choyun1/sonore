@@ -93,6 +93,7 @@ EXAMPLE_PAGES = [
     "harmonics",
     "formants",
     "aperiodicity",
+    "voice",
     "modspectrogram",
     "resynthesis",
     "pv",
@@ -535,6 +536,7 @@ TITLES = {
     "harmonics.html": "Voices from harmonics",
     "formants.html": "Formant synthesis",
     "aperiodicity.html": "Source, filter and aperiodicity",
+    "voice.html": "Changing a voice",
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Synthetic reverberation",
     "moving.html": "Moving talkers",
@@ -576,6 +578,7 @@ TOPICS = [
                 "aperiodicity.html",
                 "how much of a voice is noise, frequency by frequency, and WORLD's resynthesis.",
             ),
+            ("voice.html", "pitch and formants moved separately, with any pitch track and any envelope."),
         ],
     ),
     (

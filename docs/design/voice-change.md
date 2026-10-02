@@ -540,7 +540,8 @@ measure, and nothing about how it sounds until Cho has listened.
    synthesizers' dispatch, tests (identity is exact; the
    measured F0 ratio and fitted warp of C2–C4 on a short synthetic vowel),
    README row, CHANGELOG.
-3. The gallery page (D11), as its own PR.
+3. The gallery page (D11), as its own PR: "Changing a voice",
+   `docs/gallery/seeing/voice.py`.
 
 ## References
 
