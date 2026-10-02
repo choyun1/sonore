@@ -104,6 +104,7 @@ from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, tim
 from sonore.stimuli.reverb import band_rt60s, measure_rt60, synth_ir
 from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
 from sonore.stimuli.spatialization import (
+    SPEED_OF_SOUND,
     HRIRSet,
     circular_trajectory,
     distance_gain_db,
@@ -119,6 +120,7 @@ from sonore.stimuli.vocoder import world_synthesize
 __version__ = "0.3.1"
 
 __all__ = [
+    "SPEED_OF_SOUND",
     "texture",
     "ConstantQModulationFilterbank",
     "HannModulationFilterbank",

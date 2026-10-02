@@ -133,7 +133,7 @@ class TestSpatialization:
         reverberant = {d: np.sum(p[1] ** 2) + np.sum(p[2] ** 2) for d, p in parts.items()}
         assert direct_change == pytest.approx(-6.02, abs=0.1)
         assert 10 * np.log10(reverberant[200] / reverberant[100]) == pytest.approx(0, abs=0.2)
-        expected = np.sum(x.data**2) * hs._direct_energy_at_1m(48000) * 10 ** (-5.0 / 10) * 2
+        expected = np.sum(x.data**2) * hs._diffuse_field(48000)[0] * 10 ** (-5.0 / 10) * 2
         assert 10 * np.log10(reverberant[100] / expected) == pytest.approx(0, abs=0.5)
 
 

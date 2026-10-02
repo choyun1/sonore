@@ -390,30 +390,38 @@ JS = """
     const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size, size);
-    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
     g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
-    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
     g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
-    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
     g.strokeStyle = ink; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
     g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
-    const at = (src, time) => {
-      if (!src.t) return src.az[0];
-      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
-      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
     };
-    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
     item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
       if (src.t) {  // the path it travels, faintly
-        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
-        const lo = Math.min(...src.az), hi = Math.max(...src.az);
-        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
         g.globalAlpha = 1;
       }
-      const [x, y] = xy(at(src, t));
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
       g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
@@ -732,20 +740,23 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
 
 def scene_json(scene: list[dict], rate: float = 50.0) -> str:
     """A top-down scene for the page to animate: each source's azimuth [deg, clockwise
-    from straight ahead] over time, resampled to ``rate`` Hz to keep the page small."""
+    from straight ahead] and, optionally, ``distance`` [m, 1 if not given] over time,
+    resampled to ``rate`` Hz to keep the page small."""
     out = []
     for src in scene:
         t = np.asarray(src["t"], float)
         grid = np.arange(0, t[-1] + 0.5 / rate, 1 / rate) if len(t) > 1 else t
         az = np.interp(grid, t, np.asarray(src["azimuth"], float))
-        out.append(
-            {
-                "label": src["label"],
-                "color": src["color"],
-                "t": round(1 / rate, 6) if len(t) > 1 else 0,
-                "az": [round(float(a), 2) for a in az],
-            }
-        )
+        entry = {
+            "label": src["label"],
+            "color": src["color"],
+            "t": round(1 / rate, 6) if len(t) > 1 else 0,
+            "az": [round(float(a), 2) for a in az],
+        }
+        if "distance" in src:
+            distance = np.interp(grid, t, np.broadcast_to(np.asarray(src["distance"], float), t.shape))
+            entry["r"] = [round(float(d), 3) for d in distance]
+        out.append(entry)
     return json.dumps(out, separators=(",", ":"))
 
 
