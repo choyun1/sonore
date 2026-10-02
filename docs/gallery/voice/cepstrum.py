@@ -649,7 +649,7 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L99)
 # - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
 #   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
-#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L77)
+#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L79)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
@@ -665,4 +665,4 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   The formants of the synthetic vowels.
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
-#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L164)
+#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L168)

@@ -31,7 +31,8 @@ CHUNK = 512  # candidates processed at once
 
 @dataclass(frozen=True)
 class F0Track(View):
-    """An F0 track: one estimate per channel every ``hop`` seconds.
+    """An F0 track: one estimate per channel every ``hop`` seconds. A view:
+    it keeps only the pitch and the voicing.
 
     ``f0`` and ``score`` have shape ``(n_channels, n_windows)``; ``f0`` is 0
     where the time window is unvoiced, and ``score`` is the periodicity score of
@@ -45,7 +46,8 @@ class F0Track(View):
 
     discards = "F0Track keeps only the pitch and the voicing of each time window."
     back_to_sound = (
-        "so.world_synthesize rebuilds a voice from it together with a spectral envelope and an aperiodicity."
+        "so.world_synthesize rebuilds an approximation of the voice from it together with a spectral "
+        "envelope and an aperiodicity."
     )
 
     t: np.ndarray
