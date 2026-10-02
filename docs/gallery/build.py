@@ -87,6 +87,7 @@ EXAMPLE_PAGES = [
     "speech",
     "cepstrum",
     "harmonics",
+    "formants",
     "modspectrogram",
     "resynthesis",
     "pv",
@@ -481,6 +482,7 @@ TITLES = {
     "modspectrogram.html": "Modulation spectrogram",
     "pv.html": "Phase vocoder",
     "harmonics.html": "Voices from harmonics",
+    "formants.html": "Formant synthesis",
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Synthetic reverberation",
     "moving.html": "Moving talkers",
@@ -511,6 +513,7 @@ TOPICS = [
             ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
             ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
+            ("formants.html", "vowels and consonants written as a source, formants and a few numbers."),
         ],
     ),
     (
