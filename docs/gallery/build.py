@@ -86,6 +86,7 @@ def file_name(key: str, title: str) -> str:
 EXAMPLE_PAGES = [
     "speech",
     "cepstrum",
+    "harmonics",
     "modspectrogram",
     "resynthesis",
     "pv",
@@ -460,6 +461,7 @@ NAV = [
     ("index.html", "Listening gallery"),
     ("speech.html", "Seeing speech"),
     ("cepstrum.html", "Cepstral analysis"),
+    ("harmonics.html", "Voices from harmonics"),
     ("modspectrogram.html", "Modulation spectrogram"),
     ("resynthesis.html", "Analysis and resynthesis"),
     ("pv.html", "Phase vocoder"),
@@ -754,6 +756,7 @@ TOPICS = [
         [
             ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
             ("cepstrum.html", "separating a voice's pitch from its timbre."),
+            ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
             ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
             ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
