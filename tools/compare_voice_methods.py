@@ -27,10 +27,9 @@ Sources compared:
   F0:       the truth (synthetic only), so.f0_track, Harvest (pyworld, a
             development-only tool, skipped if missing), Cepstrum.f0 (40 ms Hann)
   envelope: the truth (synthetic only), so.cheaptrick, the cepstral lifter
-            (40 ms Hann STFT, lifter at half the median period), and an MFCC
-            envelope prototyped from PR #73's description (26 HTK bands,
-            25 ms Hamming, 10 ms hop, 13 coefficients, inverse DCT, linear
-            in mel between band centres)
+            (40 ms Hann STFT, lifter at half the median period), and
+            so.MFCC's envelope (13 coefficients, its speech defaults), with
+            height-1 triangles (the default) and with area-normalized ones
   synthesis: so.world_synthesize (with so.d4c measured on the same F0) and
             so.harmonic_complex (envelope read point by point, no noise)
 
@@ -42,7 +41,6 @@ Takes a few minutes. Nothing here is a listening test.
 import time
 
 import numpy as np
-from scipy.fft import dct, idct
 from scipy.interpolate import RegularGridInterpolator
 from scipy.signal import freqz
 
@@ -200,33 +198,14 @@ def htk_mel_to_hz(mel):
     return 700 * (10 ** (np.asarray(mel) / 2595) - 1)
 
 
-def mfcc_envelope(sound, n_mels=26, n_mfcc=13, n_fft=512, win_dur=0.025, hop_dur=0.010):
-    """A smoothed envelope from 13 MFCCs, after PR #73's description (not its
-    code): HTK triangles from 0 to fs/2 on a Hamming STFT power spectrum, log,
-    DCT-II, keep 13, inverse DCT, and linear in mel between band centres
-    (held beyond the outer centres)."""
-    samples = sound.data[:, 0]
-    win = int(round(win_dur * FS))
-    hop = int(round(hop_dur * FS))
-    starts = np.arange(0, len(samples) - win + 1, hop)
-    segments = np.stack([samples[s : s + win] for s in starts]) * np.hamming(win)
-    power = np.abs(np.fft.rfft(segments, n_fft, axis=1)) ** 2
-    bin_freqs = np.fft.rfftfreq(n_fft, 1 / FS)
-    edges = htk_mel_to_hz(np.linspace(0, htk_mel(FS / 2), n_mels + 2))
-    weights = np.zeros((n_mels, len(bin_freqs)))
-    for band in range(n_mels):
-        lower, centre, upper = edges[band : band + 3]
-        rising = (bin_freqs - lower) / (centre - lower)
-        falling = (upper - bin_freqs) / (upper - centre)
-        weights[band] = np.maximum(0, np.minimum(rising, falling))
-    log_mel = np.log(np.maximum(power @ weights.T, 1e-30))
-    coefficients = dct(log_mel, type=2, norm="ortho", axis=1)[:, :n_mfcc]
-    smoothed = idct(coefficients, type=2, norm="ortho", axis=1, n=n_mels)
-    centres_mel = htk_mel(edges[1:-1])
-    out_freqs = np.fft.rfftfreq(1024, 1 / FS)
-    log_power = np.array([np.interp(htk_mel(out_freqs), centres_mel, row) for row in smoothed]).T
-    times = (starts + win / 2) / FS
-    return GridEnvelope(np.exp(log_power)[None], times, out_freqs)
+def mfcc_envelope(sound, triangles="height"):
+    """so.MFCC's smoothed envelope (13 coefficients, 26 HTK bands, 25 ms
+    symmetric Hamming, 10 ms hop) as an env(t, f) view. MFCC.envelope gives
+    band powers, sums over triangles that widen with frequency, unless the
+    triangles are area-normalized."""
+    mfcc = so.MFCC(sound, triangles=triangles)
+    freqs = np.fft.rfftfreq(1024, 1 / FS)
+    return GridEnvelope(mfcc.envelope(freqs), mfcc.t, freqs)
 
 
 def envelope_sources(sound, track, formants=None):
@@ -241,6 +220,7 @@ def envelope_sources(sound, track, formants=None):
     stft_freqs = np.fft.rfftfreq(2 * (magnitude.shape[1] - 1), 1 / FS)
     sources["cepstral"] = GridEnvelope(magnitude**2, cepstrum.t, stft_freqs)
     sources["MFCC (13)"] = mfcc_envelope(sound)
+    sources["MFCC, area"] = mfcc_envelope(sound, triangles="area")
     return sources
 
 
@@ -341,7 +321,7 @@ def part2():
     print("  score: level-free RMS dB between log mel spectra (40 bands), median over voiced time windows")
     print(
         f"  {'speaker':7s} {'F0 from':12s} | "
-        + " ".join(f"{name:>10s}" for name in ("CheapTrick", "cepstral", "MFCC (13)"))
+        + " ".join(f"{name:>10s}" for name in ("CheapTrick", "cepstral", "MFCC (13)", "MFCC, area"))
     )
     for speaker in ("bdl", "slt"):
         sound = so.load(f"docs/speech/{speaker}_arctic_a0131.flac")
