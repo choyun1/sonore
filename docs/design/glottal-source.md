@@ -37,18 +37,27 @@ As in the other design documents, each claim is numbered and tagged:
 The sources were harder to reach than usual, so this is said up front:
 
 - **Fant, Liljencrants & Lin (1985)** could not be read: the KTH archive
-  returned a server error every time. Its bibliographic details are taken
-  from the reference list of VOICEBOX's `v_glotlf` (Brookes), and the
-  model's equations from that function's code, which implements them and
-  notes that the return-phase equation printed in the paper's Fig. 2 has an
-  error. The checker verifies the equations' own properties (zero net flow,
-  continuity, the closed-form spectrum), not that they match the paper.
+  returned a server error every time. Two sources cite it differently:
+  VOICEBOX's `v_glotlf` (Brookes) as *STL-QPSR* 26(4), 1–13, and Fant (1986)
+  as a paper presented at the French–Swedish Symposium, Grenoble, April
+  1985. Both are listed below.
+- **Fant (1986)**, *Glottal flow: models and interaction*, was read in full
+  (PDF from Cho). It states the model: the open-phase equation, the
+  return-phase equation, ta as the projection on the time axis of the slope
+  just after te, the four wave-shape parameters tp, te, ta and Ee, and the
+  return phase as a first-order low-pass with cut-off Fa = 1/(2π ta)
+  (C4). Its printed return-phase equation has E0 where continuity at te
+  needs Ee, the same slip VOICEBOX's code notes in the 1985 paper's Fig. 2.
+  The equations used here are VOICEBOX's, which agree with Fant (1986)
+  apart from that slip. The checker verifies their own properties (zero
+  net flow, continuity, the closed-form spectrum).
 - **Fant (1995)** was read through a web text extractor whose output was
   garbled where equations are. From it: the definition of Rd, its main
   range, and an H1–H2 line. The formulas that predict Ra, Rk and Rg from Rd
   (its Eqs. 2–4) were not legible. The ones used here are the forms widely
   quoted in voice-source code, written from memory; they need checking
   against the paper (D6).
+- **Fant (1986)** does not define Rd, which came later.
 - **Klatt & Klatt (1990)** was not read. What is said about KLGLOTT88 comes
   from Praat's manual and source code (KlattGrid, `PointProcess: To Sound
   (phonation)`), read in the praat-parselmouth 0.4.7 source distribution.
@@ -57,16 +66,20 @@ The sources were harder to reach than usual, so this is said up front:
 
 The LF model describes one period of the glottal flow derivative E(t) (the
 flow's rate of change, which is what excites the vocal tract once radiation
-is folded in) with four timing parameters and one amplitude, as VOICEBOX
-implements it:
+is folded in). Fant (1986) names its four wave-shape parameters as tp, te,
+ta and Ee, with the period ending at tc = T0 = 1/F0:
 
 - **Open phase**, 0 ≤ t ≤ te: E(t) = E0 exp(α t) sin(π t / tp), an
   exponentially growing sinusoid. The flow peaks at tp, where E crosses
   zero, and E reaches its negative peak −Ee at te, the main excitation.
 - **Return phase**, te < t ≤ T0: an exponential recovery from −Ee to zero,
   E(t) = −(Ee / (ε ta)) [exp(−ε (t − te)) − exp(−ε (T0 − te))], with
-  ε ta = 1 − exp(−ε (T0 − te)). The time constant ta says how abrupt the
-  closure is: ta = 0 is an instantaneous closure.
+  ε ta = 1 − exp(−ε (T0 − te)). The time constant ta is the projection on
+  the time axis of the slope just after te, and says how abrupt the
+  closure is: ta = 0 is an instantaneous closure. Fant (1986): in the
+  spectrum it is a first-order low-pass with cut-off Fa = 1/(2π ta), above
+  which the spectrum falls an extra 6 dB per octave, ΔL = −10 log10(1 +
+  (2π ta f)²); ta = 0.15 ms gives Fa = 1060 Hz.
 - **Zero net flow**: α is set so that E integrates to zero over the period,
   so the flow starts and ends each cycle at zero.
 
@@ -126,7 +139,12 @@ Klatt's impulses, `klatt.md` C4).
 nearly instantaneous closure (Ra 0.0005) the flow derivative falls
 6.1 dB/octave; with Ra 0.01 or 0.05 it falls 12.0 dB/octave above
 Fa = F0 / (2π Ra), so Ra is a spectral tilt control built into the pulse.
-The polynomial pulse (OQ 0.6) falls 6.0 dB/octave: it has no return phase,
+Fant's (1986) first-order low-pass predicts the change from an abrupt
+closure (T0 10 ms, tp 4 ms, te 5 ms, 0.5–4 kHz): with ta = 0.15 ms the
+spectrum's change follows it to within 0.22 dB of spread, with ta = 0.6 ms
+within 1.1 dB, apart from an overall level shift (1.7 and 4.8 dB, because
+at fixed Ee a longer return phase carries more flow). The polynomial pulse
+(OQ 0.6) falls 6.0 dB/octave: it has no return phase,
 which is why KLSYN88 needs a separate tilt filter (Praat's version is down
 exactly TL at 3 kHz: 20.0 dB for TL = 20). At the lips at 100 Hz, from
 400 to 3200 Hz, the current RGP source falls 5.8 dB/octave; LF falls 9.6
@@ -304,7 +322,12 @@ prototype for the pulse spectra and the library's `harmonic_complex` and
 
 - Fant, G., Liljencrants, J., & Lin, Q. (1985). A four-parameter model of
   glottal flow. *STL-QPSR* 26(4), 1–13. KTH Speech, Music and Hearing.
-  Not read (server error); details and equations via VOICEBOX `v_glotlf`.
+  Not read (server error); as cited by VOICEBOX `v_glotlf`.
+- Fant, G., Liljencrants, J., & Lin, Q. (1985). A four-parameter model of
+  glottal flow. Paper presented at the French–Swedish Symposium, Grenoble,
+  April 1985 (as cited by Fant, 1986).
+- Fant, G. (1986). Glottal flow: models and interaction. *Journal of
+  Phonetics* 14, 393–399. Read in full.
 - Fant, G. (1995). The LF-model revisited. Transformations and frequency
   domain analysis. *STL-QPSR* 36(2–3), 119–156. Read in part, through a
   text extractor (see above).

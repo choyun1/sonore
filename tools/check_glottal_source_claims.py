@@ -316,6 +316,23 @@ def claim_slopes():
             f"LF Ra {ra} (Fa at harmonic {corner:.1f}): slope, harmonics 64-399, dB/octave",
             octave_slope(levels, numbers, 64, 399),
         )
+    # Fant (1986): the return phase acts as a first-order low-pass,
+    # delta L = -10 log10(1 + (2 pi ta f)^2). T0 = 10 ms, tp 4 ms, te 5 ms.
+    period_ms = 10.0
+    reference = LFShape(0.4, 0.5, 1e-5)
+    low_numbers = np.arange(5, 41, dtype=float)  # 500 Hz to 4 kHz at 100 Hz
+    for ta_ms in (0.15, 0.6):
+        shape = LFShape(0.4, 0.5, ta_ms / period_ms)
+        change = db(shape.harmonics(low_numbers)) - db(reference.harmonics(low_numbers))
+        frequencies = low_numbers * 1000 / period_ms
+        predicted = -10 * np.log10(1 + (2 * np.pi * ta_ms / 1000 * frequencies) ** 2)
+        mismatch = change - predicted
+        report(
+            "C4",
+            f"ta {ta_ms} ms vs abrupt, 0.5-4 kHz: spread of (change - Fant's low-pass), dB",
+            np.ptp(mismatch),
+        )
+        report("C4", f"ta {ta_ms} ms: mean offset of that difference (overall level), dB", np.mean(mismatch))
     levels = db(polynomial_pulse_harmonics(0.6, numbers))
     report(
         "C4",
