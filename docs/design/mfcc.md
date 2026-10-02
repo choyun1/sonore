@@ -9,10 +9,11 @@ mention is `cepstrum.md`, which put "Mel-cepstra and MFCCs" out of scope,
 and a sentence on the cepstrum gallery page).
 
 Status: accepted 2026-10-02. Cho accepted D1–D9 as recommended and chose
-HTK as the primary reference (D10). Implemented in
-`src/sonore/analysis/mfcc.py`, tested in `tests/analysis/test_mfcc.py`
-against librosa's stored output; the HTK comparison waits for HCopy's
-output (D10). The claims are checked by
+HTK as the primary reference (D10). HTK's site returned 502 errors that
+day, so Cho chose Kaldi in its place (D11) until HCopy can be run.
+Implemented in `src/sonore/analysis/mfcc.py`, tested in
+`tests/analysis/test_mfcc.py` against Kaldi's and librosa's stored output
+(C10, C9). The claims are checked by
 `tools/check_mfcc_claims.py`; `tools/crosscheck_mfcc.py` compares the
 recipes with librosa and python_speech_features and with sonore's
 CheapTrick envelope. Cho asked on 2026-10-02 that the tests match
@@ -84,7 +85,7 @@ cross]:
 | Pre-emphasis | 0.97 | 0.97 | none |
 | Spectrum | magnitude by default (`USEPOWER=F`) | power / n_fft | power |
 | Mel scale | 2595 log10(1 + f/700) | same | Slaney: linear below 1 kHz, log above |
-| Triangles | height 1 | height 1, **feet rounded to FFT bins** | area 1 (`norm="slaney"`), exact frequencies |
+| Triangles | height 1, straight in mel | height 1, **feet rounded to FFT bins** | area 1 (`norm="slaney"`), exact frequencies |
 | Bands | 26 (typical config) | 26 | 128 |
 | Log | natural | natural | 10 log10, then clipped **80 dB below the loudest cell of the whole sound** |
 | Coefficients | 12 + c0 or energy | 13, c0 replaced by log energy | 20, c0 kept |
@@ -215,6 +216,27 @@ slope of a line fitted to the first or last five, and HTK repeats the
 edge values. Its order 2 is the second derivative of a local quadratic,
 not the delta of the delta.
 
+**C10. With triangles straight in mel, `so.MFCC` reproduces Kaldi's
+MFCCs to float32 precision; straight-in-Hz triangles change them by
+0.3%.** [cross] Kaldi's MFCCs (`compute-mfcc-feats`, through
+kaldi-native-fbank 1.22.3, a C++ re-implementation of Kaldi's feature
+code) on the fixture's excerpt at 16-bit integer scale, dither off.
+Kaldi's time windows start at multiples of the hop (`snip-edges`) where
+sonore's are centred on them, so the sound is trimmed by 40 samples (half
+the 400-sample window, modulo the 160-sample hop) and Kaldi's first time
+window, which needs the trimmed samples, is left out. With no DC removal,
+no pre-emphasis, a Hamming window, 26 bins from 0 Hz, no lifter and c0
+kept, the MFCCs agree to 1.4e-7 of the largest coefficient and the log mel
+energies to 3.1e-5 (in natural-log units of values near 25). With
+Kaldi's "povey" window (a symmetric Hann window to the power 0.85), 23
+bins from 20 Hz and lifter 22, they agree to 2.4e-6. Kaldi, like HTK,
+draws each triangle as straight lines in mel, not in Hz; with straight-in-Hz
+triangles (librosa's) the coefficients c1–c12 differ by 0.28% rms, at
+most 0.04. Kaldi's own defaults add DC removal, pre-emphasis inside each
+time window and the raw log energy in place of c0; against those,
+sonore's c1–c12 differ by 43% rms. That is the cost of D3 (pre-emphasis
+belongs to the sound), and it is measured here, not tested.
+
 ## Views, and what this one drops
 
 By `philosophy.md` ("Views may discard information"), MFCCs are a view
@@ -309,7 +331,8 @@ coefficients. `.db` gives the dB version (C7). `floor_db=-80` reproduces
 librosa's clipping when that is wanted. Alternative: librosa's 80 dB clip
 as the default; not recommended because of C7.
 
-**D5. Triangles on exact frequencies, not rounded to FFT bins. (accepted 2026-10-02)** That is
+**D5. Triangles on exact frequencies, not rounded to FFT bins; straight
+in mel by default. (accepted 2026-10-02; the default axis amended by D11)** That is
 the definition and librosa's construction. python_speech_features' bin
 rounding changes c1..c12 by 13% rms (C8); it is listed as a difference in
 the docstring and reproducible in the crosscheck, not offered as an
@@ -410,6 +433,31 @@ for WORLD) or a documented difference:
 The tests then compare `so.MFCC`, set up as HTK, with the stored vectors;
 the tolerance follows from HTK's float32 output.
 
+**D11. Kaldi stands in for HTK; the defaults follow it. (Cho's decision,
+2026-10-02)** HTK's site returned 502 errors, so Cho chose Kaldi, the
+other speech-recognition standard, which follows HTK closely. Kaldi itself
+is a large C++ build; kaldi-native-fbank (k2-fsa) re-implements its
+feature code, installs with pip, and is what `tools/make_kaldi_fixtures.py`
+runs, storing `tests/data/kaldi_mfcc_reference.npz` (21 KiB). It is a
+re-implementation, not Kaldi, which the README says. Following the primary
+reference changed two defaults, both small (C10):
+
+- triangles are straight in mel (`triangle_axis="mel"`, as HTK and
+  Kaldi), with `triangle_axis="hz"` for librosa. Alternative: keep
+  straight-in-Hz triangles as the default and add the mel option. That
+  would make the default reproduce librosa and not the reference Cho
+  chose.
+- a `Sound` is analysed with the symmetric Hamming window HTK and Kaldi
+  use (`sonore.analysis.mfcc.symmetric_hamming`), not SciPy's periodic one.
+
+The tests compare with Kaldi in two settings (plain, and Kaldi's window,
+bins, low frequency and lifter), to 1e-6 and 1e-5 of the largest value,
+which leaves about seven and four times C10's float32 differences. Kaldi's
+DC removal, in-window pre-emphasis and energy in place of c0 are not
+reproduced (D3, D6). If Cho wants Kaldi's defaults reproduced too, a
+`kaldi_front_end` option would add the three; it is not built.
+`tools/make_htk_fixtures.py` stays, for when HTK's site is back.
+
 ## API sketch
 
 ```python
@@ -431,7 +479,8 @@ mfcc.envelope(env.f)  # for plotting against env
 
 - Against librosa's stored output (D9): mel power, MFCCs and deltas for
   three settings.
-- Against HTK's stored output (D10), once HCopy has been run.
+- Against Kaldi's stored output (D11, C10): MFCCs and log mel energies.
+- Against HTK's stored output (D10), once HCopy can be run.
 - The mel weights, log and DCT against the checker's formulas for both
   scales and both triangle normalisations (C3, C8).
 - `MFCC(snd)` equals the formula pipeline on the same power spectra.
@@ -445,9 +494,12 @@ mfcc.envelope(env.f)  # for plotting against env
    `tools/make_mfcc_fixtures.py` and the librosa fixture. Done.
 2. `MFCC`, `deltas`, `envelope`, `plot`, tests against librosa, README row,
    CHANGELOG. Done.
-3. HTK: `tools/make_htk_fixtures.py` (done); HCopy's output, the options
-   or documented differences it calls for, and tests against it (D10).
-4. Separately, if wanted: the gallery section (D8).
+3. Kaldi through kaldi-native-fbank: fixture, tests, triangle axis and
+   window defaults (D11). Done.
+4. HTK: `tools/make_htk_fixtures.py` (done); HCopy's output, the options
+   or documented differences it calls for, and tests against it (D10),
+   when HTK's site is reachable.
+5. Separately, if wanted: the gallery section (D8).
 
 ## Out of scope
 

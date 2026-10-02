@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 import sonore as so
-from sonore.analysis.mfcc import delta_features, freq_to_mel, mel_to_freq
+from sonore.analysis.mfcc import delta_features, freq_to_mel, mel_to_freq, symmetric_hamming
 
 ROOT = Path(__file__).resolve().parents[2]
 REFERENCE = np.load(ROOT / "tests" / "data" / "librosa_mfcc_reference.npz")
@@ -33,6 +33,7 @@ def librosa_like(name):
         n_mfcc=n_mfcc,
         mel_scale=scale,
         triangles=triangles,
+        triangle_axis="hz",
         floor_db=-80,
     )
     n_windows = REFERENCE[f"{name}_mfcc"].shape[1]
@@ -75,7 +76,7 @@ def test_first_deltas_are_the_regression_slope():
 
 def test_sound_input_uses_the_speech_settings():
     from_sound = so.MFCC(SENTENCE)
-    frame = so.GaborFrame(0.025, 0.010, window="hamming", n_fft=512)
+    frame = so.GaborFrame(0.025, 0.010, window=symmetric_hamming, n_fft=512)
     from_stft = so.MFCC(so.STFT(SENTENCE, frame=frame))
     assert from_sound.n_fft == 512
     assert np.array_equal(from_sound.data, from_stft.data)
@@ -151,3 +152,42 @@ def test_plot(kind):
     matplotlib.use("Agg")
     ax = so.MFCC(SENTENCE).plot(kind=kind)
     assert ax.get_xlabel() == "Time [s]"
+
+
+KALDI = np.load(ROOT / "tests" / "data" / "kaldi_mfcc_reference.npz")
+KALDI_SAMPLES = REFERENCE["samples_int16"].astype(float)  # Kaldi reads WAV files at integer scale
+
+
+def kaldi_like(window, **settings):
+    """so.MFCC on Kaldi's time windows and the matching slices of both.
+
+    Kaldi's time windows start at multiples of the hop (160 samples); sonore's
+    are centred on them. Trimming 40 samples (half the 400-sample window,
+    modulo the hop) makes sonore's window 3 cover Kaldi's window 1; Kaldi's
+    window 0 would need the trimmed samples, so it is left out."""
+    sound = so.Sound(KALDI_SAMPLES[40:], SENTENCE.fs)
+    frame = so.GaborFrame(400 / SENTENCE.fs, 160 / SENTENCE.fs, window=window, n_fft=512)
+    mfcc = so.MFCC(so.STFT(sound, frame=frame), **settings)
+    n_windows = len(KALDI["plain"])
+    return mfcc, slice(3, n_windows + 2), slice(1, None)
+
+
+def povey(n_samples):
+    """Kaldi's default window: a symmetric Hann window to the power 0.85."""
+    return (0.5 - 0.5 * np.cos(2 * np.pi * np.arange(n_samples) / (n_samples - 1))) ** 0.85
+
+
+def test_matches_kaldi_plain():
+    mfcc, ours, theirs = kaldi_like(symmetric_hamming)
+    stored = KALDI["plain"][theirs]
+    # kaldi-native-fbank computes in float32.
+    assert np.abs(mfcc.data[0].T[ours] - stored).max() < 1e-6 * np.abs(stored).max()
+    log_mel = np.log(mfcc.mel_power[0]).T[ours]
+    stored_log_mel = KALDI["fbank_plain"][theirs]
+    assert np.abs(log_mel - stored_log_mel).max() < 1e-5 * np.abs(stored_log_mel).max()
+
+
+def test_matches_kaldi_window_bins_and_lifter():
+    mfcc, ours, theirs = kaldi_like(povey, n_mels=23, f_lo=20, lifter=22)
+    stored = KALDI["kaldi_window"][theirs]
+    assert np.abs(mfcc.data[0].T[ours] - stored).max() < 1e-5 * np.abs(stored).max()

@@ -7,6 +7,8 @@ implementations, and compare MFCCs with sonore's CheapTrick envelope.
 - python_speech_features 0.6 (HTK mel, triangles on rounded FFT bins,
   rectangular window, pre-emphasis 0.97, lifter 22, c0 replaced by the log
   energy): ``python_speech_features.mfcc`` with its defaults.
+- Kaldi's ``compute-mfcc-feats`` through kaldi-native-fbank 1.22.3 (a C++
+  re-implementation of Kaldi's feature code), from the stored fixture.
 - CheapTrick: MFCCs of a synthetic vowel taken from ``so.cheaptrick``'s
   envelope instead of its power spectrum, at several F0s (claim C5).
 
@@ -31,6 +33,7 @@ from scipy.fft import dct
 from scipy.signal import savgol_filter
 
 import sonore as so
+from sonore.analysis.mfcc import symmetric_hamming
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_mfcc_claims import (  # noqa: E402
@@ -235,4 +238,48 @@ report(
 report(
     "  first and last two time windows: max abs diff",
     np.abs(regression - stored)[:, np.r_[:half_width, -half_width:0]].max(),
+)
+
+# ------------------------------------------------------------ Kaldi (kaldi-native-fbank)
+# tests/data/kaldi_mfcc_reference.npz (tools/make_kaldi_fixtures.py). The
+# tests check the "plain" and "kaldi_window" settings; this measures what
+# Kaldi's defaults and librosa-style triangles change.
+kaldi = np.load(Path(__file__).resolve().parents[1] / "tests" / "data" / "kaldi_mfcc_reference.npz")
+integer_scale = so.Sound(reference["samples_int16"][40:].astype(float), fs)
+n_kaldi = len(kaldi["plain"])
+ours_slice, theirs_slice = slice(3, n_kaldi + 2), slice(1, None)
+
+
+def kaldi_grid_mfcc(window, **settings):
+    frame = so.GaborFrame(400 / fs, 160 / fs, window=window, n_fft=512)
+    return so.MFCC(so.STFT(integer_scale, frame=frame), **settings).data[0].T[ours_slice]
+
+
+def povey(n_samples):
+    return (0.5 - 0.5 * np.cos(2 * np.pi * np.arange(n_samples) / (n_samples - 1))) ** 0.85
+
+
+def rms_ratio(ours, theirs):
+    return np.sqrt(np.mean((ours - theirs)[:, 1:] ** 2)) / np.sqrt(np.mean(theirs[:, 1:] ** 2))
+
+
+plain = kaldi["plain"][theirs_slice]
+mel_straight = kaldi_grid_mfcc(symmetric_hamming)
+report(
+    "Kaldi plain vs so.MFCC: max abs diff / max abs value",
+    np.abs(mel_straight - plain).max() / np.abs(plain).max(),
+)
+hz_straight = kaldi_grid_mfcc(symmetric_hamming, triangle_axis="hz")
+report("  with triangles straight in Hz instead: rms diff / rms of c1..c12", rms_ratio(hz_straight, plain))
+report("  max abs diff", np.abs(hz_straight - plain).max())
+kaldi_window = kaldi["kaldi_window"][theirs_slice]
+ours_window = kaldi_grid_mfcc(povey, n_mels=23, f_lo=20, lifter=22)
+report(
+    "Kaldi povey window, 23 bins from 20 Hz, lifter 22: max abs diff / max",
+    np.abs(ours_window - kaldi_window).max() / np.abs(kaldi_window).max(),
+)
+defaults = kaldi["defaults"][theirs_slice]
+report(
+    "Kaldi defaults (DC removal, pre-emphasis, energy) vs that: rms diff / rms c1..c12",
+    rms_ratio(ours_window, defaults),
 )

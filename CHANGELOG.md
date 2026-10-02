@@ -11,10 +11,12 @@ version (0.x.y) only fixes bugs.
   1980) of a sound, with the usual speech settings (25 ms Hamming window,
   10 ms hop, 26 HTK mel bands, 13 coefficients), or of any `STFT` or
   `TVSTFT`. Options for the Slaney mel scale, area-normalised triangles, a
-  floor and HTK's lifter; `.mel_power` (the mel spectrogram), `.db`,
+  floor and HTK's lifter; triangles straight in mel (HTK, Kaldi; the
+  default) or in Hz (librosa); `.mel_power` (the mel spectrogram), `.db`,
   `.deltas()` (computed as librosa's), `.envelope(f)` and `.plot()`. Tests
-  compare it with librosa 0.11's stored output (mel power, MFCCs and
-  deltas). See `docs/design/mfcc.md`.
+  compare it with Kaldi's MFCCs (through kaldi-native-fbank) and with
+  librosa 0.11's mel power, MFCCs and deltas, all stored. See
+  `docs/design/mfcc.md`.
 - `so.glottal_source`: a voiced source of Liljencrants-Fant (LF) glottal
   pulses (Fant, Liljencrants & Lin, 1985) on a fixed F0 or an F0 contour,
   built from the pulse's exact harmonics so it does not alias. Its shape is

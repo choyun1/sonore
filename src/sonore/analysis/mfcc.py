@@ -11,7 +11,7 @@ from sonore.analysis.frames import GaborFrame
 from sonore.analysis.representations import STFT, TVSTFT
 from sonore.core.sound import Sound
 
-__all__ = ["MFCC", "mel_filterbank", "freq_to_mel", "mel_to_freq", "delta_features"]
+__all__ = ["MFCC", "mel_filterbank", "freq_to_mel", "mel_to_freq", "delta_features", "symmetric_hamming"]
 
 DB_PER_NEPER = 10 / np.log(10)  # 10 log10(x) = DB_PER_NEPER * ln(x)
 
@@ -53,13 +53,17 @@ def mel_filterbank(
     f_hi: float,
     scale: str = "htk",
     triangles: str = "height",
+    triangle_axis: str = "mel",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Triangular mel weights on the frequencies ``freqs`` [Hz].
 
     The ``n_mels + 2`` band edges are equally spaced in mel from ``f_lo`` to
-    ``f_hi``; band ``m`` rises linearly in Hz from edge ``m`` to edge
-    ``m + 1`` and falls to edge ``m + 2``. With ``triangles="height"`` each
-    peak is 1, and between the first and last centres the weights sum to 1.
+    ``f_hi``; band ``m`` rises linearly from edge ``m`` to edge ``m + 1``
+    and falls to edge ``m + 2``. "Linearly" is in mel with
+    ``triangle_axis="mel"``, as HTK and Kaldi build them, and in Hz with
+    ``"hz"``, as librosa does; the two differ inside each band, most in the
+    wide high bands. With ``triangles="height"`` each peak is 1, and between
+    the first and last centres the weights sum to 1.
     With ``"area"`` band ``m`` is scaled by ``2 / (edge[m+2] - edge[m])``
     (Slaney's normalisation), which after the log only adds a constant to
     each band. The triangles are evaluated at the exact frequencies, not
@@ -69,16 +73,32 @@ def mel_filterbank(
     """
     if triangles not in ("height", "area"):
         raise ValueError(f"triangles must be 'height' or 'area', not {triangles!r}")
-    edges = mel_to_freq(np.linspace(freq_to_mel(f_lo, scale), freq_to_mel(f_hi, scale), n_mels + 2), scale)
+    if triangle_axis not in ("mel", "hz"):
+        raise ValueError(f"triangle_axis must be 'mel' or 'hz', not {triangle_axis!r}")
+    edge_mels = np.linspace(freq_to_mel(f_lo, scale), freq_to_mel(f_hi, scale), n_mels + 2)
+    edges = mel_to_freq(edge_mels, scale)
     freqs = np.asarray(freqs, dtype=float)
+    if triangle_axis == "mel":
+        positions, edge_positions = freq_to_mel(freqs, scale), edge_mels
+    else:
+        positions, edge_positions = freqs, edges
     weights = np.zeros((n_mels, len(freqs)))
     for band in range(n_mels):
-        rising = (freqs - edges[band]) / (edges[band + 1] - edges[band])
-        falling = (edges[band + 2] - freqs) / (edges[band + 2] - edges[band + 1])
+        left, centre, right = edge_positions[band : band + 3]
+        rising = (positions - left) / (centre - left)
+        falling = (right - positions) / (right - centre)
         weights[band] = np.maximum(0, np.minimum(rising, falling))
         if triangles == "area":
             weights[band] *= 2 / (edges[band + 2] - edges[band])
     return weights, edges
+
+
+def symmetric_hamming(n_samples: int) -> np.ndarray:
+    """The Hamming window as HTK and Kaldi define it,
+    ``0.54 - 0.46 cos(2 pi i / (n - 1))``: symmetric, with both ends at 0.08
+    (SciPy's ``"hamming"`` spec, as a ``GaborFrame`` samples it, is the
+    periodic one)."""
+    return 0.54 - 0.46 * np.cos(2 * np.pi * np.arange(n_samples) / (n_samples - 1))
 
 
 def delta_features(values: np.ndarray, order: int = 1, width: int = 5, axis: int = -1) -> np.ndarray:
@@ -117,9 +137,9 @@ class MFCC:
     ``source`` is a :class:`~sonore.core.sound.Sound` or the coefficients of
     an analysis:
 
-    - a ``Sound`` is analysed with the usual speech settings: a Hamming
-      window ``win_dur`` long (25 ms), a hop of ``hop_dur`` (10 ms), and an
-      FFT length of the next power of two;
+    - a ``Sound`` is analysed with the usual speech settings: a symmetric
+      Hamming window ``win_dur`` long (25 ms), as HTK and Kaldi use, a hop of
+      ``hop_dur`` (10 ms), and an FFT length of the next power of two;
     - an :class:`~sonore.analysis.representations.STFT` or
       :class:`~sonore.analysis.representations.TVSTFT` is used as it is, so
       any window, hop or pitch-adaptive analysis can be summarised.
@@ -136,10 +156,22 @@ class MFCC:
     Because the floor is set by the loudest moment, a deep floor (the
     default) keeps each time window independent of the rest of the sound.
 
+    The defaults follow Kaldi and HTK: HTK's mel scale, height-1 triangles
+    straight in mel, and, for a sound, a symmetric Hamming window. With no
+    pre-emphasis, no DC removal and ``use_energy=false``, Kaldi's MFCCs
+    (``compute-mfcc-feats``, here through kaldi-native-fbank) are reproduced
+    to float32 precision; Kaldi's own lifter, ``low-freq`` of 20 Hz, 23 bins
+    and "povey" window (a Hann window to the power 0.85, as a callable
+    ``window`` of the ``GaborFrame``) are all available. Kaldi's time windows
+    start at the first sample (``snip-edges``) where sonore's are centred
+    on multiples of the hop, so the grids line up only after trimming the
+    sound by half a window modulo the hop.
+
     To reproduce librosa's ``feature.mfcc`` (Slaney mel, area-normalised
-    triangles, power in dB floored 80 dB below the loudest cell), analyse
-    with ``so.GaborFrame(n_fft / fs, hop / fs, window="hann", n_fft=n_fft)``
-    and use ``mel_scale="slaney"``, ``triangles="area"``, ``n_mels=128``,
+    triangles straight in Hz, power in dB floored 80 dB below the loudest
+    cell), analyse with ``so.GaborFrame(n_fft / fs, hop / fs, window="hann",
+    n_fft=n_fft)`` and use ``mel_scale="slaney"``, ``triangles="area"``,
+    ``triangle_axis="hz"``, ``n_mels=128``,
     ``n_mfcc=20``, ``floor_db=-80`` and :attr:`db`. sonore's grid has one
     more time window, centred one hop before the first sample, and one or two
     more at the end; the others are librosa's. librosa also floors the
@@ -168,8 +200,11 @@ class MFCC:
     mel_scale
         ``"htk"`` or ``"slaney"`` (see :func:`freq_to_mel`).
     triangles
-        ``"height"`` (peaks of 1, as HTK) or ``"area"`` (Slaney's and librosa's
-        area normalisation).
+        ``"height"`` (peaks of 1, as HTK and Kaldi) or ``"area"`` (Slaney's and
+        librosa's area normalisation).
+    triangle_axis
+        ``"mel"``: the triangles are straight lines in mel (HTK, Kaldi);
+        ``"hz"``: straight in Hz (librosa).
     floor_db
         Floor of the band powers, in dB below each channel's largest.
     lifter
@@ -203,6 +238,7 @@ class MFCC:
         f_hi: float | None = None,
         mel_scale: str = "htk",
         triangles: str = "height",
+        triangle_axis: str = "mel",
         floor_db: float = -200.0,
         lifter: float = 0.0,
         win_dur: float | None = None,
@@ -214,7 +250,8 @@ class MFCC:
                 hop_dur = 0.010 if hop_dur is None else hop_dur
                 window_length = round(win_dur * source.fs)
                 n_fft = 1 << (window_length - 1).bit_length()
-                coefs = STFT(source, frame=GaborFrame(win_dur, hop_dur, window="hamming", n_fft=n_fft))
+                frame = GaborFrame(win_dur, hop_dur, window=symmetric_hamming, n_fft=n_fft)
+                coefs = STFT(source, frame=frame)
             case STFT() | TVSTFT():
                 if win_dur is not None or hop_dur is not None:
                     raise TypeError("win_dur and hop_dur apply only when analysing a Sound")
@@ -235,7 +272,9 @@ class MFCC:
         self.floor_db = floor_db
         self.lifter = lifter
         bin_freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
-        self.weights, self.edges = mel_filterbank(n_mels, bin_freqs, f_lo, f_hi, mel_scale, triangles)
+        self.weights, self.edges = mel_filterbank(
+            n_mels, bin_freqs, f_lo, f_hi, mel_scale, triangles, triangle_axis
+        )
         power = np.abs(coefs.data) ** 2
         self.mel_power = np.einsum("mk,ckw->cmw", self.weights, power)
         log_power = np.log(self._floored(self.mel_power))
