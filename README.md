@@ -291,9 +291,8 @@ listed at the end.
 
 **Next, in order**
 
-The first four carry out the accepted reorganization in
-`docs/design/reorganization.md` ([#79](https://github.com/choyun1/sonore/pull/79)),
-in the order it sets.
+The first four carry out the accepted
+[reorganization](docs/design/reorganization.md), in the order it sets.
 
 1. **Gallery in four groups.** Stimuli; Seeing and changing sound; Voices;
    Spatial hearing. The scripts move into one folder per group, page URLs
