@@ -508,7 +508,8 @@ TITLES = {
     "moving.html": "Moving talkers",
 }
 
-# The topic pages in three groups, for the index and the menus at the top of every page.
+# The topic pages in three groups, for the index and the menus at the top of every page. Each
+# group's scripts live in their own folder of docs/gallery.
 # Groups and the pages within them run from simple to elaborate, roughly up sonore's layers:
 # stimuli from plain generators (signals) to binaural cues (stimuli) and textures (texture);
 # analysis from one frame (the STFT) to views built on it, a phase vocoder that changes the
@@ -516,8 +517,12 @@ TITLES = {
 TOPICS = [
     (
         "Stimuli",
+        "stimuli",
         [
-            ("classic.html", "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms."),
+            (
+                "classic.html",
+                "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms.",
+            ),
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
             ("binaural.html", "differences between the ears: timing, and correlation that changes."),
@@ -526,6 +531,7 @@ TOPICS = [
     ),
     (
         "Seeing and changing sounds",
+        "seeing",
         [
             ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
             ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
@@ -538,6 +544,7 @@ TOPICS = [
     ),
     (
         "Listeners in the world",
+        "listeners",
         [
             ("vocoder.html", "a simulation of cochlear-implant hearing."),
             ("reverb.html", "rooms built from the statistics of real ones, and rooms that break them."),
@@ -576,7 +583,7 @@ def nav(current: str) -> str:
         return f'<a href="{href}"{here}>{TITLES[href]}</a>'
 
     parts = [link("index.html")]
-    for group, pages in TOPICS:
+    for group, _, pages in TOPICS:
         hrefs = [href for href, _ in pages]
         here = ' class="here"' if current in hrefs else ""
         items = "".join(f"<li>{link(href)}</li>" for href in hrefs)
@@ -599,13 +606,19 @@ def sidebar(current: str, sections_html: str) -> str:
         if href == current:
             sections = re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', sections_html)
             if sections:
-                item += "<ul>" + "".join(f'<li><a href="#{slug}">{title}</a></li>' for slug, title in sections) + "</ul>"
+                item += (
+                    "<ul>"
+                    + "".join(f'<li><a href="#{slug}">{title}</a></li>' for slug, title in sections)
+                    + "</ul>"
+                )
         return f"<li>{item}</li>"
 
     here = ' aria-current="page"' if current == "index.html" else ""
     parts = [f'<a class="home" href="index.html"{here}>{TITLES["index.html"]}</a>']
-    for group, pages in TOPICS:
-        parts.append(f'<p class="group">{html.escape(group)}</p><ul>{"".join(link(href) for href, _ in pages)}</ul>')
+    for group, _, pages in TOPICS:
+        parts.append(
+            f'<p class="group">{html.escape(group)}</p><ul>{"".join(link(href) for href, _ in pages)}</ul>'
+        )
     return f'<aside class="side" aria-label="All gallery pages">{"".join(parts)}</aside>'
 
 
@@ -822,9 +835,16 @@ def section_html(title_html: str, parts: list[str], intro: str = "") -> str:
     return "\n".join(out + parts + ["</section>"])
 
 
+def script_path(name: str) -> str:
+    """Where a page's script lives, relative to the repository root."""
+    folder = next(folder for _, folder, pages in TOPICS if f"{name}.html" in dict(pages))
+    return f"docs/gallery/{folder}/{name}.py"
+
+
 def build_example_page(site: Site, name: str) -> list[str]:
     """Build one example page; returns the keys of its examples."""
-    content = example_page(HERE / f"{name}.py")
+    script = script_path(name)
+    content = example_page(ROOT / script)
     keys, rendered = [], {}  # part id -> (linked, inline) HTML
     for part in [p for s in content["sections"] for p in s["parts"]] + content["intro"]:
         if not isinstance(part, dict):
@@ -867,10 +887,10 @@ def build_example_page(site: Site, name: str) -> list[str]:
             section_html(s["title"], [show(p) for p in s["parts"]]) for s in content["sections"]
         )
         footer = (
-            f"This page is the script <code>docs/gallery/{name}.py</code> in the "
+            f"This page is the script <code>{script}</code> in the "
             '<a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by '
             "<code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself "
-            f"from the repository root with <code>python docs/gallery/{name}.py</code>, or a cell at a time."
+            f"from the repository root with <code>python {script}</code>, or a cell at a time."
         )
         return page(content["title"], f"{name}.html", header, sections, EXAMPLE_HEAD, footer)
 
@@ -908,7 +928,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
                 + "</ul>"
             ],
         )
-        for group, pages in TOPICS
+        for group, _, pages in TOPICS
     )
     site.write("index.html", lambda v: page("Listening to sonore", "index.html", header, sections, redirect))
 

@@ -8,7 +8,7 @@ synthesis in roadmap item 2, and an order for doing it.
 
 Status: D1–D6 accepted by Cho 2026-10-02, all as recommended. Built as
 `so.resonator`, `so.antiresonator` and `so.klatt_synthesize` (see "As
-built" below), with the gallery page `docs/gallery/formants.py` (Formant synthesis).
+built" below), with the gallery page `docs/gallery/seeing/formants.py` (Formant synthesis).
 
 ## Why
 

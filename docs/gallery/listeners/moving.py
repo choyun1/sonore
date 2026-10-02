@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/moving.
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/moving.py
+    python docs/gallery/listeners/moving.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext). It downloads
 the PKU-IOA head-related impulse responses at 1 m (about 13 MB) the first time it runs.

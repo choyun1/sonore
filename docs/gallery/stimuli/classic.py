@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/classic
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/classic.py
+    python docs/gallery/stimuli/classic.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
@@ -239,7 +239,7 @@ def glide_plot(snd, title):
 # %% [about]
 # Band-limited: `so.sawtooth_wave` on the F0 contour, given as (times, values).
 
-# %% [demo w1] A band-limited glide
+# %% [demo bw1] A band-limited glide
 sound = finish(so.sawtooth_wave(glide_dur, glide_fs, (glide_times, glide_f0)))
 fig, playhead = glide_plot(sound, "so.sawtooth_wave, 110 to 1760 Hz")
 
@@ -247,7 +247,7 @@ fig, playhead = glide_plot(sound, "so.sawtooth_wave, 110 to 1760 Hz")
 # Naive: `scipy.signal.sawtooth` of the running phase. The aliases are the lines that slope
 # down, heard as a whistle falling against the rising buzz.
 
-# %% [demo w2] A naive glide, aliased
+# %% [demo bw2] A naive glide, aliased
 n_samples = int(round(glide_dur * glide_fs))
 f0_per_sample = np.interp(np.arange(n_samples) / glide_fs, glide_times, glide_f0)
 running_phase = 2 * np.pi * np.cumsum(f0_per_sample) / glide_fs
