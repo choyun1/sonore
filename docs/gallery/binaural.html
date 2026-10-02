@@ -124,7 +124,7 @@ finds the ITD as the lag of the peak of the interaural cross-correlation, the IL
 ratio, and the correlation both at zero lag and at its peak over lags (the coherence). It can also
 do this per frequency band, given a filterbank; here it uses the whole signal. Each figure shows
 the waveforms, the ITD and ILD, and the two correlations, all measured from the sound you hear.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 
 import sonore as so
 
@@ -153,7 +153,7 @@ def show(snd):
     axes[2].set(ylim=(-1.05, 1.05), ylabel=&quot;Interaural corr.&quot;, xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
     axes[2].legend(loc=&quot;lower right&quot;, fontsize=8)
     axes[2].grid(ls=&quot;:&quot;)
-    return fig, list(axes)</code></pre></div>
+    return fig, list(axes)</code></pre></details></div>
 </section>
 <section aria-labelledby="h-timing-alone">
 <h2 id="h-timing-alone">Timing alone</h2>
@@ -170,7 +170,7 @@ The level difference is zero throughout; the sideways shift comes from timing.</
     <img src="img/10_timing_alone.png" width="1000" height="660" alt="Plots of the timing alone sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">noise = so.gaussian_noise(0.8, FS, rng=0).ramp(20e-3)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">noise = so.gaussian_noise(0.8, FS, rng=0).ramp(20e-3)
 noise2 = so.gaussian_noise(0.8, FS, rng=1).ramp(20e-3)
 sound = finish(
     so.concat(
@@ -204,7 +204,7 @@ alternates between focused and diffuse; only the correlation panel shows what ch
     <img src="img/07_oscor.png" width="1000" height="660" alt="Plots of the oscor sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.oscor(4, FS, f_mod=3, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.oscor(4, FS, f_mod=3, rng=0))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -220,7 +220,7 @@ correlation follows a 2 Hz cosine.</p></div>
     <img src="img/08_phasewarp.png" width="1000" height="660" alt="Plots of the phasewarp sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.phasewarp(4, FS, f_mod=2, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.phasewarp(4, FS, f_mod=2, rng=0))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 </section>

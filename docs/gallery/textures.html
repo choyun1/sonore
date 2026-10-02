@@ -117,7 +117,7 @@ synthesizes a new sample by imposing those statistics on noise.</p>
 <h2 id="h-code-the-examples-share">Code the examples share</h2>
 <p>Every example below is the code shown with it, run after this cell: loading a recording and
 its synthesis, the level the gallery plays sounds at, and the plots.</p>
-<div class="cell"><pre><code class="language-python">import json
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import json
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -195,7 +195,7 @@ def texture_fig(snd, original, synthetic=False):
     )
     for ax in (ax_v, ax_p):
         ax.grid(ls=&quot;:&quot;, which=&quot;both&quot;, lw=0.5)
-    return fig, [ax_s]  # the playhead follows the spectrogram</code></pre></div>
+    return fig, [ax_s]  # the playhead follows the spectrogram</code></pre></details></div>
 </section>
 <section aria-labelledby="h-the-model-and-its-statistics">
 <h2 id="h-the-model-and-its-statistics">The model and its statistics</h2>
@@ -210,7 +210,7 @@ weighted by a window that tapers the recording's ends. The statistics are those 
 band's subband signal by conjugate gradient until its statistics match, band by band, over
 several passes. The cell below is the call <code>tools/make_texture_synths.py</code> makes. It takes about
 2 s per iteration for 5 s of sound, so the gallery's syntheses are computed once and stored.</p>
-<div class="cell"><pre><code class="language-python">from sonore.texture import PAPER_CLASSES  # noqa: E402
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from sonore.texture import PAPER_CLASSES  # noqa: E402
 from sonore.texture.synth import synthesize  # noqa: E402
 
 
@@ -218,7 +218,7 @@ def synthesize_like(name, classes=PAPER_CLASSES, seconds=5.0, iterations=30):
     &quot;&quot;&quot;What tools/make_texture_synths.py does for each recording (not run here).&quot;&quot;&quot;
     target = TextureStats.measure(original(name))
     new, rep = synthesize(target, duration=seconds, classes=classes, rng=1, max_iter=iterations)
-    return new * (0.05 / new.rms)</code></pre></div>
+    return new * (0.05 / new.rms)</code></pre></details></div>
 </section>
 <section aria-labelledby="h-originals-and-syntheses">
 <h2 id="h-originals-and-syntheses">Originals and syntheses</h2>
@@ -238,7 +238,7 @@ overlaid in dashed black.</p>
     <img src="img/t00a_rain_original.png" width="1000" height="660" alt="Plots of the rain, original sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;rain&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;rain&quot;))
 fig, playhead = texture_fig(sound, original(&quot;rain&quot;))</code></pre></details>
 </article>
 
@@ -253,7 +253,7 @@ fig, playhead = texture_fig(sound, original(&quot;rain&quot;))</code></pre></det
     <img src="img/t00b_rain_synthesized.png" width="1000" height="660" alt="Plots of the rain, synthesized sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;rain&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;rain&quot;))
 fig, playhead = texture_fig(sound, original(&quot;rain&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -268,7 +268,7 @@ fig, playhead = texture_fig(sound, original(&quot;rain&quot;), synthetic=True)</
     <img src="img/t01a_stream_original.png" width="1000" height="660" alt="Plots of the stream, original sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;stream&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;stream&quot;))
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;))</code></pre></details>
 </article>
 
@@ -283,7 +283,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;))</code></pre></d
     <img src="img/t01b_stream_synthesized.png" width="1000" height="660" alt="Plots of the stream, synthesized sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;stream&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;stream&quot;))
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -298,7 +298,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)
     <img src="img/t02a_crickets_original.png" width="1000" height="660" alt="Plots of the crickets, original sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;crickets&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;crickets&quot;))
 fig, playhead = texture_fig(sound, original(&quot;crickets&quot;))</code></pre></details>
 </article>
 
@@ -313,7 +313,7 @@ fig, playhead = texture_fig(sound, original(&quot;crickets&quot;))</code></pre><
     <img src="img/t02b_crickets_synthesized.png" width="1000" height="660" alt="Plots of the crickets, synthesized sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;crickets&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;crickets&quot;))
 fig, playhead = texture_fig(sound, original(&quot;crickets&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -328,7 +328,7 @@ fig, playhead = texture_fig(sound, original(&quot;crickets&quot;), synthetic=Tru
     <img src="img/t03a_applause_original.png" width="1000" height="660" alt="Plots of the applause, original sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;applause&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;applause&quot;))
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;))</code></pre></details>
 </article>
 
@@ -343,7 +343,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;))</code></pre><
     <img src="img/t03b_applause_synthesized.png" width="1000" height="660" alt="Plots of the applause, synthesized sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;applause&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;applause&quot;))
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -358,7 +358,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=Tru
     <img src="img/t04a_fire_original.png" width="1000" height="660" alt="Plots of the fire, original sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;fire&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;fire&quot;))
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;))</code></pre></details>
 </article>
 
@@ -373,7 +373,7 @@ fig, playhead = texture_fig(sound, original(&quot;fire&quot;))</code></pre></det
     <img src="img/t04b_fire_synthesized.png" width="1000" height="660" alt="Plots of the fire, synthesized sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;))
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -388,7 +388,7 @@ fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</
     <img src="img/t05a_bubbling_mud_original.png" width="1000" height="660" alt="Plots of the bubbling mud, original sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;mud&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;mud&quot;))
 fig, playhead = texture_fig(sound, original(&quot;mud&quot;))</code></pre></details>
 </article>
 
@@ -403,7 +403,7 @@ fig, playhead = texture_fig(sound, original(&quot;mud&quot;))</code></pre></deta
     <img src="img/t05b_bubbling_mud_synthesized.png" width="1000" height="660" alt="Plots of the bubbling mud, synthesized sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;mud&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;mud&quot;))
 fig, playhead = texture_fig(sound, original(&quot;mud&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -418,7 +418,7 @@ fig, playhead = texture_fig(sound, original(&quot;mud&quot;), synthetic=True)</c
     <img src="img/t06a_wind_and_rain_original.png" width="1000" height="660" alt="Plots of the wind and rain, original sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;wind_rain&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(original(&quot;wind_rain&quot;))
 fig, playhead = texture_fig(sound, original(&quot;wind_rain&quot;))</code></pre></details>
 </article>
 
@@ -433,7 +433,7 @@ fig, playhead = texture_fig(sound, original(&quot;wind_rain&quot;))</code></pre>
     <img src="img/t06b_wind_and_rain_synthesized.png" width="1000" height="660" alt="Plots of the wind and rain, synthesized sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;wind_rain&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;wind_rain&quot;))
 fig, playhead = texture_fig(sound, original(&quot;wind_rain&quot;), synthetic=True)</code></pre></details>
 </article>
 </section>
@@ -456,7 +456,7 @@ right rhythm or the coordination across bands.</p>
     <img src="img/u00_applause_marginals_only.png" width="1000" height="660" alt="Plots of the applause, marginals only sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;applause&quot;, &quot;marginals&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;applause&quot;, &quot;marginals&quot;))
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -471,7 +471,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=Tru
     <img src="img/u01_applause_marginals_and_modulation_power.png" width="1000" height="660" alt="Plots of the applause, marginals and modulation power sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;applause&quot;, &quot;marginals_modpower&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;applause&quot;, &quot;marginals_modpower&quot;))
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -486,7 +486,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=Tru
     <img src="img/u10_stream_marginals_only.png" width="1000" height="660" alt="Plots of the stream, marginals only sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;stream&quot;, &quot;marginals&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;stream&quot;, &quot;marginals&quot;))
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -501,7 +501,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)
     <img src="img/u11_stream_marginals_and_modulation_power.png" width="1000" height="660" alt="Plots of the stream, marginals and modulation power sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;stream&quot;, &quot;marginals_modpower&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;stream&quot;, &quot;marginals_modpower&quot;))
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -516,7 +516,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)
     <img src="img/u20_fire_marginals_only.png" width="1000" height="660" alt="Plots of the fire, marginals only sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;, &quot;marginals&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;, &quot;marginals&quot;))
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</code></pre></details>
 </article>
 
@@ -531,7 +531,7 @@ fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</
     <img src="img/u21_fire_marginals_and_modulation_power.png" width="1000" height="660" alt="Plots of the fire, marginals and modulation power sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;, &quot;marginals_modpower&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;, &quot;marginals_modpower&quot;))
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</code></pre></details>
 </article>
 </section>

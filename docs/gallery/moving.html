@@ -128,7 +128,7 @@ center azimuth <span class="tex">\theta_0</span> that oscillates with amplitude 
 <p>so it swings <span class="tex">A</span> to either side of <span class="tex">\theta_0</span>, <span class="tex">2A</span> from one end to the other. Here
 <span class="tex">f = 2</span> Hz, the rate in the experiment, and the start phase <span class="tex">\phi</span> decides whether it first
 moves right (<span class="tex">\phi = 0</span>) or left (<span class="tex">\phi = 1/2</span>).</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -218,7 +218,7 @@ def show(mix, target_alone, t, azimuths, title):
     for ax in axes[1:]:
         ax.legend(loc=&quot;upper right&quot;, fontsize=8, ncols=2, markerscale=3)
     axes[-1].set_xlabel(&quot;Time [s]&quot;)
-    return fig, list(axes)</code></pre><pre class="out">HRIRSet(793 positions, 1024 taps, 65536 Hz)</pre></div>
+    return fig, list(axes)</code></pre></details><pre class="out">HRIRSet(793 positions, 1024 taps, 65536 Hz)</pre></div>
 </section>
 <section aria-labelledby="h-one-talker-moving">
 <h2 id="h-one-talker-moving">One talker, moving</h2>
@@ -241,7 +241,7 @@ Time differences are drawn only where the two ears are well correlated.</p></div
     <img src="img/m1_one_talker_moving.png" width="1000" height="600" alt="Plots of the one talker, moving sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, alone=True)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, alone=True)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target alone, swinging 30° to either side&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>
@@ -267,7 +267,7 @@ motion shows only in the stretches it dominates.</p>
     <img src="img/m2_three_talkers_standing_still.png" width="1000" height="600" alt="Plots of the three talkers, standing still sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(0.0)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(0.0)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;Nobody moves&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>
@@ -285,7 +285,7 @@ sound = finish(mix)</code></pre></details>
     <img src="img/m3_the_target_swings_10_degrees.png" width="1000" height="600" alt="Plots of the the target swings 10 degrees sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(10.0)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(10.0)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target swings 10° to either side&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>
@@ -304,7 +304,7 @@ the left this time.</p></div>
     <img src="img/m4_the_target_swings_30_degrees.png" width="1000" height="600" alt="Plots of the the target swings 30 degrees sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, phase=0.5)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, phase=0.5)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target swings 30° to either side&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>

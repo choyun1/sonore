@@ -132,7 +132,7 @@ between 80 Hz and 7.6 kHz (just under the 8 kHz Nyquist frequency of this 16 kHz
 neighbors overlapping by half, takes each band's Hilbert
 envelope, lowpasses it at 50 Hz unless stated, and multiplies it into the same band of fresh
 Gaussian noise. The output has the input's RMS.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -179,7 +179,7 @@ def show(snd, envelopes=None, title=&quot;&quot;):
         ax.set_xlim(0, snd.duration)
         ax.set_xlabel(&quot;&quot;)
     axes[-1].set_xlabel(&quot;Time [s]&quot;)
-    return fig, list(axes)</code></pre></div>
+    return fig, list(axes)</code></pre></details></div>
 </section>
 <section aria-labelledby="h-how-many-bands">
 <h2 id="h-how-many-bands">How many bands</h2>
@@ -198,7 +198,7 @@ that fall in the same band can no longer be told apart.</p>
     <img src="img/ci0_the_original_sentence.png" width="1000" height="420" alt="Plots of the the original sentence sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence)
 sound = sentence</code></pre></details>
 </article>
 
@@ -214,7 +214,7 @@ there; the words are not.</p></div>
     <img src="img/ci1_one_band.png" width="1000" height="640" alt="Plots of the one band sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 1, F_LO, F_HI, rng=1))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 1, F_LO, F_HI, rng=1))
 fig, playhead = show(vocoded, bands(sentence, 1), &quot;one band&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -231,7 +231,7 @@ quiet. The spectrogram shows four broad blocks, switching on and off with the sy
     <img src="img/ci4_four_bands.png" width="1000" height="640" alt="Plots of the four bands sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 4, F_LO, F_HI, rng=4))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 4, F_LO, F_HI, rng=4))
 fig, playhead = show(vocoded, bands(sentence, 4), &quot;four bands&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -248,7 +248,7 @@ visible as energy moving from band to band.</p></div>
     <img src="img/ci8_eight_bands.png" width="1000" height="640" alt="Plots of the eight bands sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, rng=8))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, rng=8))
 fig, playhead = show(vocoded, bands(sentence, 8), &quot;eight bands&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -265,7 +265,7 @@ pitch, so the talker's intonation is gone.</p></div>
     <img src="img/ci16_sixteen_bands.png" width="1000" height="640" alt="Plots of the sixteen bands sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 16, F_LO, F_HI, rng=16))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 16, F_LO, F_HI, rng=16))
 fig, playhead = show(vocoded, bands(sentence, 16), &quot;sixteen bands&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -289,7 +289,7 @@ as separate pitches. Speech through either is about equally intelligible (Dorman
     <img src="img/ct8_eight_tones.png" width="1000" height="640" alt="Plots of the eight tones sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, carrier=&quot;tone&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, carrier=&quot;tone&quot;))
 fig, playhead = show(vocoded, bands(sentence, 8), &quot;eight tones&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -311,7 +311,7 @@ the 300 Hz envelope follows the glottal pulses.</p></div>
   <figure class="plot"><div class="plate">
     <img src="img/cp0_one_envelope_two_cutoffs.png" width="1000" height="300" alt="One envelope, two cutoffs" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">fb = so.ERBFilterbank(8, F_LO, F_HI)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fb = so.ERBFilterbank(8, F_LO, F_HI)
 sub = fb.analyze(sentence)
 band = int(np.argmin(np.abs(fb.cfs - 700)))  # the band nearest 700 Hz
 fig, ax = plt.subplots(figsize=(10, 3.0), layout=&quot;constrained&quot;)
@@ -340,7 +340,7 @@ faint but back. The wideband spectrogram shows the pulses as vertical striations
     <img src="img/cp8_eight_bands_300_hz_envelopes.png" width="1000" height="640" alt="Plots of the eight bands, 300 hz envelopes sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, env_lowpass=300, rng=8))
 fig, playhead = show(vocoded, bands(sentence, 8, env_lowpass=300), &quot;eight bands, 300 Hz envelopes&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -350,12 +350,12 @@ sound = vocoded</code></pre></details>
 <p>Speech can be understood without pitch; a melody cannot. The opening of "Twinkle, Twinkle,
 Little Star" in harmonic complex tones, low in the bass clef so that the fundamentals are in
 reach of a temporal cue.</p>
-<div class="cell"><pre><code class="language-python">notes = [131, 131, 196, 196, 220, 220, 196]  # C3 C3 G3 G3 A3 A3 G3 [Hz]
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">notes = [131, 131, 196, 196, 220, 220, 196]  # C3 C3 G3 G3 A3 A3 G3 [Hz]
 durs = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.8]
 tones = [
     so.harmonic_complex(d, fs, f, np.arange(1, 21)).ramp(20e-3) for f, d in zip(notes, durs, strict=True)
 ]
-melody = finish(so.concat(tones))</code></pre></div>
+melody = finish(so.concat(tones))</code></pre></details></div>
 
 <article class="sound" id="d-cm0" data-regions="[{&quot;x0&quot;: 0.06144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.3254814896820064, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.06144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.4029301669306835, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}]">
   <div class="about">
@@ -368,7 +368,7 @@ melody = finish(so.concat(tones))</code></pre></div>
     <img src="img/cm0_the_melody.png" width="1000" height="420" alt="Plots of the the melody sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, playhead = show(melody, title=&quot;C3 C3 G3 G3 A3 A3 G3&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead = show(melody, title=&quot;C3 C3 G3 G3 A3 A3 G3&quot;)
 sound = melody</code></pre></details>
 </article>
 
@@ -384,7 +384,7 @@ little, and the tune is close to gone.</p></div>
     <img src="img/cm8_eight_bands_50_hz_envelopes.png" width="1000" height="640" alt="Plots of the eight bands, 50 hz envelopes sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, rng=8))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, rng=8))
 fig, playhead = show(vocoded, bands(melody, 8), &quot;eight bands, 50 Hz envelopes&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -401,7 +401,7 @@ comes back as a rough, buzzy pitch.</p></div>
     <img src="img/cm8p_eight_bands_300_hz_envelopes.png" width="1000" height="640" alt="Plots of the eight bands, 300 hz envelopes sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, env_lowpass=300, rng=8))
 fig, playhead = show(vocoded, bands(melody, 8, env_lowpass=300), &quot;eight bands, 300 Hz envelopes&quot;)
 sound = vocoded</code></pre></details>
 </article>

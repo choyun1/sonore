@@ -124,7 +124,7 @@ cue can be changed while the others stay put.</p>
 <p>All the sounds are at 16 kHz, a little longer than a syllable. Each one is drawn as a waveform
 and a wideband spectrogram (Hann 6 ms), which shows formants as dark bands, with the formant
 frequencies the synthesizer was given drawn over it.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -158,14 +158,14 @@ def show(snd, title, formants=()):
         ax1.plot([*t, snd.duration], np.array([*v, v[-1]]) / 1000, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)  # in kHz
     for ax in (ax0, ax1):
         ax.set_xlim(0, snd.duration)
-    return fig, [ax0, ax1]</code></pre></div>
+    return fig, [ax0, ax1]</code></pre></details></div>
 </section>
 <section aria-labelledby="h-a-vowel-piece-by-piece">
 <h2 id="h-a-vowel-piece-by-piece">A vowel, piece by piece</h2>
 <p>The vowel of "hod", with Peterson and Barney's (1952) average formants for men: 730, 1090 and
 2440 Hz. The pitch falls from 130 to 100 Hz, as at the end of a statement. Here the pieces are
 put together by hand with <code>so.resonator</code>, the same resonator <code>so.klatt_synthesize</code> uses.</p>
-<div class="cell"><pre><code class="language-python">DUR = 0.6
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">DUR = 0.6
 F0 = ([0, DUR], [130, 100])
 HOD = [(730, 60), (1090, 90), (2440, 150), (3500, 200), (4500, 250)]
 
@@ -176,7 +176,7 @@ rgp = np.abs(np.fft.rfft(so.resonator(glottal, 0, 100).data[:, 0]))
 freqs = np.fft.rfftfreq(2**14, 1 / FS)
 source = so.harmonic_complex(DUR, FS, F0, amplitudes=lambda t, f: np.interp(f, freqs, rgp))
 # Radiation from the lips: a first difference, +6 dB per octave.
-source = so.Sound(np.diff(source.data[:, 0], prepend=0.0), FS)</code></pre></div>
+source = so.Sound(np.diff(source.data[:, 0], prepend=0.0), FS)</code></pre></details></div>
 
 <article class="sound" id="d-fv1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9858329999999998, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9858329999999998, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]">
   <div class="about">
@@ -190,7 +190,7 @@ Its harmonics fall smoothly with frequency, with no peaks.</p></div>
     <img src="img/fv1_the_source_alone.png" width="1000" height="420" alt="Plots of the the source alone sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(source)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(source)
 fig, playhead = show(sound, &quot;the glottal source after radiation&quot;)</code></pre></details>
 </article>
 
@@ -206,7 +206,7 @@ left is energy around F1.</p></div>
     <img src="img/fv2_the_first_formant.png" width="1000" height="420" alt="Plots of the the first formant sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">one = so.resonator(source, *HOD[0])
+  <details class="code"><summary>Code</summary><pre><code class="language-python">one = so.resonator(source, *HOD[0])
 sound = finish(one)
 fig, playhead = show(sound, &quot;the source through F1&quot;, [730])</code></pre></details>
 </article>
@@ -223,7 +223,7 @@ sound is recognisably the vowel of "hod", if thin.</p></div>
     <img src="img/fv3_two_formants.png" width="1000" height="420" alt="Plots of the two formants sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">two = so.resonator(one, *HOD[1])
+  <details class="code"><summary>Code</summary><pre><code class="language-python">two = so.resonator(one, *HOD[1])
 sound = finish(two)
 fig, playhead = show(sound, &quot;the source through F1 and F2&quot;, [730, 1090])</code></pre></details>
 </article>
@@ -240,7 +240,7 @@ voice; their levels follow from their frequencies, as they do in a vocal tract.<
     <img src="img/fv4_five_formants.png" width="1000" height="420" alt="Plots of the five formants sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vowel = source
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vowel = source
 for f, bw in HOD:
     vowel = so.resonator(vowel, f, bw)
 sound = finish(vowel)
@@ -259,7 +259,7 @@ fig, playhead = show(sound, &quot;the source through F1 to F5&quot;, [f for f, _
     <img src="img/fv5_the_same_vowel_from_so.klatt_synthesize.png" width="1000" height="420" alt="Plots of the the same vowel from so.klatt_synthesize sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">hod = dict(F1=730, F2=1090, F3=2440)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">hod = dict(F1=730, F2=1090, F3=2440)
 sound = finish(so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), **hod))
 fig, playhead = show(sound, &quot;so.klatt_synthesize&quot;, [730, 1090, 2440, 3500, 4500])</code></pre></details>
 </article>
@@ -279,7 +279,7 @@ formants' gain there.</p>
   <figure class="plot"><div class="plate">
     <img src="img/fs1_the_vowel_spectrum_as_source_plus_filter.png" width="1000" height="340" alt="The vowel spectrum as source plus filter" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vowel = so.klatt_synthesize(1.0, FS, F0=100, **hod)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vowel = so.klatt_synthesize(1.0, FS, F0=100, **hod)
 spec = np.abs(np.fft.rfft(vowel.data[-FS // 2 :, 0]))  # the last 0.5 s, 2 Hz per bin
 k = np.arange(1, 50)
 measured = 20 * np.log10(spec[k * 50])  # harmonic k at 100 k Hz is bin 50 k
@@ -314,7 +314,7 @@ ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
 words of the form h-vowel-d by men, women and children. Their averages for men, for six of
 the vowels, synthesized with everything else the same: the pitch, the higher formants and the
 bandwidths.</p>
-<div class="cell"><pre><code class="language-python">VOWELS = {
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {
     &quot;heed&quot;: (270, 2290, 3010),
     &quot;head&quot;: (530, 1840, 2480),
     &quot;had&quot;: (660, 1720, 2410),
@@ -329,7 +329,7 @@ for f1, f2, f3 in VOWELS.values():
     v = so.klatt_synthesize(0.35, FS, F0=([0, 0.35], [125, 105]), AV=onoff(0.35), F1=f1, F2=f2, F3=f3)
     parts += [v, gap]
     starts.append(t)
-    t += 0.5</code></pre></div>
+    t += 0.5</code></pre></details></div>
 
 <article class="sound" id="d-fw1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9858330000000001, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9858330000000001, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
@@ -342,7 +342,7 @@ for f1, f2, f3 in VOWELS.values():
     <img src="img/fw1_six_vowels.png" width="1000" height="420" alt="Plots of the six vowels sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.concat(parts))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.concat(parts))
 tracks = [
     (np.repeat(starts, 2) + np.tile([0, 0.35], 6), np.repeat([v[i] for v in VOWELS.values()], 2))
     for i in range(3)
@@ -361,7 +361,7 @@ for tt, ff in tracks:
   <figure class="plot"><div class="plate">
     <img src="img/fw2_the_vowels_by_their_first_two_formants.png" width="500" height="400" alt="The vowels by their first two formants" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(5, 4), layout=&quot;constrained&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(5, 4), layout=&quot;constrained&quot;)
 for word, (f1, f2, _) in VOWELS.items():
     ax.plot(f2, f1, &quot;o&quot;, color=&quot;C0&quot;)
     ax.annotate(word, (f2, f1), textcoords=&quot;offset points&quot;, xytext=(6, 4))
@@ -382,7 +382,7 @@ other; experiments on vowel categories use continua like this one.</p></div>
     <img src="img/fw3_from_heed_to_hod_in_seven_steps.png" width="1000" height="420" alt="Plots of the from heed to hod in seven steps sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">steps = so.klatt_continuum(dict(F1=270, F2=2290, F3=3010), dict(F1=730, F2=1090, F3=2440), 7)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">steps = so.klatt_continuum(dict(F1=270, F2=2290, F3=3010), dict(F1=730, F2=1090, F3=2440), 7)
 parts = []
 for p in steps:
     parts += [so.klatt_synthesize(0.3, FS, p, F0=110, AV=onoff(0.3)), so.silence(0.15, FS)]
@@ -399,7 +399,7 @@ for i, p in enumerate(steps):
 vowel: the formants move from where the closure left them to the vowel's values. Here F1 rises
 from 250 Hz in each, and only the starting points of F2 and F3 differ. A short burst of
 frication marks the release: flat for /b/, high for /d/, near F2 for /g/.</p>
-<div class="cell"><pre><code class="language-python">DUR_CV = 0.4
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">DUR_CV = 0.4
 ONSETS = {&quot;ba&quot;: (900, 2100), &quot;da&quot;: (1700, 2700), &quot;ga&quot;: (1500, 2000)}
 BURSTS = {&quot;ba&quot;: dict(AB=55), &quot;da&quot;: dict(A4=55, A5=52), &quot;ga&quot;: dict(A2=58)}
 
@@ -417,7 +417,7 @@ def syllable(name):
         **tracks,
         **BURSTS[name],
     )
-    return finish(snd), [tracks[&quot;F1&quot;], tracks[&quot;F2&quot;], tracks[&quot;F3&quot;]]</code></pre></div>
+    return finish(snd), [tracks[&quot;F1&quot;], tracks[&quot;F2&quot;], tracks[&quot;F3&quot;]]</code></pre></details></div>
 
 <article class="sound" id="d-fc1" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}]">
   <div class="about">
@@ -431,7 +431,7 @@ tract).</p></div>
     <img src="img/fc1_the_syllable_ba.png" width="1000" height="420" alt="Plots of the the syllable ba sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound, tracks = syllable(&quot;ba&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, tracks = syllable(&quot;ba&quot;)
 fig, playhead = show(sound, &quot;/ba/&quot;, tracks)</code></pre></details>
 </article>
 
@@ -446,7 +446,7 @@ fig, playhead = show(sound, &quot;/ba/&quot;, tracks)</code></pre></details>
     <img src="img/fc2_the_syllable_da.png" width="1000" height="420" alt="Plots of the the syllable da sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound, tracks = syllable(&quot;da&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, tracks = syllable(&quot;da&quot;)
 fig, playhead = show(sound, &quot;/da/&quot;, tracks)</code></pre></details>
 </article>
 
@@ -461,7 +461,7 @@ fig, playhead = show(sound, &quot;/da/&quot;, tracks)</code></pre></details>
     <img src="img/fc3_the_syllable_ga.png" width="1000" height="420" alt="Plots of the the syllable ga sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound, tracks = syllable(&quot;ga&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, tracks = syllable(&quot;ga&quot;)
 fig, playhead = show(sound, &quot;/ga/&quot;, tracks)</code></pre></details>
 </article>
 </section>
@@ -486,7 +486,7 @@ vowel.</p></div>
     <img src="img/fn1_the_syllable_sa.png" width="1000" height="420" alt="Plots of the the syllable sa sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">dur = 0.6
+  <details class="code"><summary>Code</summary><pre><code class="language-python">dur = 0.6
 tracks = dict(F1=([0.19, 0.25], [300, 730]), F2=([0.19, 0.25], [1500, 1090]))
 sound = finish(
     so.klatt_synthesize(
@@ -519,7 +519,7 @@ are already there in the breath.</p></div>
     <img src="img/fn2_the_syllable_ha.png" width="1000" height="420" alt="Plots of the the syllable ha sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(
     so.klatt_synthesize(
         dur,
         FS,
@@ -546,7 +546,7 @@ weak.</p></div>
     <img src="img/fn3_a_breathy_vowel.png" width="1000" height="420" alt="Plots of the a breathy vowel sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(
     so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), AH=onoff(DUR, level=54), B1=120, rng=0, **hod)
 )
 fig, playhead = show(sound, &quot;breathy: aspiration 6 dB below voicing&quot;, [730, 1090, 2440])</code></pre></details>
@@ -568,7 +568,7 @@ alternating signs, and then the sum follows the cascade closely, given the right
   <figure class="plot"><div class="plate">
     <img src="img/fp1_five_formants_in_cascade_and_in_parallel_with_each_sign_rule.png" width="1000" height="340" alt="Five formants in cascade, and in parallel with each sign rule" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">f = np.linspace(50, 5000, 4000)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">f = np.linspace(50, 5000, 4000)
 z = np.exp(-2j * np.pi * f / FS)
 
 
@@ -593,10 +593,10 @@ ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Gain (dB)&quot;, xlim=(0,
 ax.set_title(&quot;The vowel of &#x27;hod&#x27;: parallel formants, each set to the cascade&#x27;s level at its peak&quot;)
 ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
 </article>
-<div class="cell"><pre><code class="language-python">inside = (f &gt; 100) &amp; (f &lt; 4000)
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">inside = (f &gt; 100) &amp; (f &lt; 4000)
 print(&quot;Largest difference from the cascade, 100-4000 Hz:&quot;)
 print(f&quot;  same signs        {np.abs(db(same) - db(cascade))[inside].max():5.1f} dB&quot;)
-print(f&quot;  alternating signs {np.abs(db(alternating) - db(cascade))[inside].max():5.1f} dB&quot;)</code></pre><pre class="out">Largest difference from the cascade, 100-4000 Hz:
+print(f&quot;  alternating signs {np.abs(db(alternating) - db(cascade))[inside].max():5.1f} dB&quot;)</code></pre></details><pre class="out">Largest difference from the cascade, 100-4000 Hz:
   same signs         13.7 dB
   alternating signs   0.1 dB</pre></div>
 </section>

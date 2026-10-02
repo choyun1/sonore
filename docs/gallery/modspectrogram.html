@@ -144,7 +144,7 @@ so even steady noise has some depth at every rate, more at fast rates (about <sp
 moment; pooled over the 24 bands it scatters by less than 1 dB. Press play,
 or click a time axis, and it follows the sound; before that it shows a moment chosen for each
 example.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -194,7 +194,7 @@ def show(snd, marks=(), start=None):
         &quot;title&quot;: &quot;Depth&quot;,
         &quot;start&quot;: snd.duration / 2 if start is None else start,
     }
-    return fig, list(axes), live</code></pre></div>
+    return fig, list(axes), live</code></pre></details></div>
 </section>
 <section aria-labelledby="h-a-modulation-rate-that-glides">
 <h2 id="h-a-modulation-rate-that-glides">A modulation rate that glides</h2>
@@ -218,7 +218,7 @@ common to all frequencies.</p></div>
     <img src="img/g1_a_gliding_modulation_rate.png" width="900" height="840" alt="Plots of the a gliding modulation rate sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">dur, r0, r1 = 8.0, 2.0, 32.0
+  <details class="code"><summary>Code</summary><pre><code class="language-python">dur, r0, r1 = 8.0, 2.0, 32.0
 t = np.arange(int(dur * fs)) / fs
 phase = 2 * np.pi * r0 * dur / np.log(r1 / r0) * ((r1 / r0) ** (t / dur) - 1)
 glide = (1 + 0.5 * np.sin(phase)) * rng.standard_normal(len(t))
@@ -233,7 +233,7 @@ overlapping at random, then 4 s of noise with the sentences' long-term spectrum.
 modulated most strongly between about 2 and 8 Hz, the rate of its syllables (Greenberg &amp; Kingsbury,
 1997). That rhythm is what babble partly hides and
 speech-shaped noise lacks entirely.</p>
-<div class="cell"><pre><code class="language-python">names = (&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;)
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">names = (&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;)
 sentences = [so.load(f&quot;docs/speech/{n}.flac&quot;).normalize(rms=0.1) for n in names]
 talk = so.concat(sentences)
 n = int(4 * fs)
@@ -245,7 +245,7 @@ for s in sentences * 2:
 ssn = so.long_term_spectrum(sentences).to_noise(4, fs, rng=0)
 mixed = so.concat([talk, so.Sound(babble, fs).normalize(rms=0.1), ssn.normalize(rms=0.1)])
 marks = [talk.duration, talk.duration + 4]
-print(f&quot;sentences {talk.duration:.2f} s, then babble and noise, {mixed.duration:.2f} s in all&quot;)</code></pre><pre class="out">sentences 10.14 s, then babble and noise, 18.14 s in all</pre></div>
+print(f&quot;sentences {talk.duration:.2f} s, then babble and noise, {mixed.duration:.2f} s in all&quot;)</code></pre></details><pre class="out">sentences 10.14 s, then babble and noise, 18.14 s in all</pre></div>
 
 <article class="sound" id="d-s1" data-regions="[{&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.027976587301587474, &quot;bottom&quot;: 0.3083317739335316, &quot;t0&quot;: -0.005, &quot;t1&quot;: 18.145000000000003}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.3470561125578703, &quot;bottom&quot;: 0.6274112991898149, &quot;t0&quot;: -0.005, &quot;t1&quot;: 18.145000000000003}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.6661356378141534, &quot;bottom&quot;: 0.9464908244460979, &quot;t0&quot;: -0.005, &quot;t1&quot;: 18.145000000000003}]">
   <div class="about">
@@ -263,7 +263,7 @@ more at rates near the band's width. Watch the image beside the player change at
     <img src="img/s1_speech_babble_and_noise.png" width="900" height="840" alt="Plots of the speech, babble and noise sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(mixed)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(mixed)
 fig, playhead, live = show(sound, marks=marks, start=1.5)</code></pre></details>
 </article>
 </section>
@@ -272,8 +272,8 @@ fig, playhead, live = show(sound, marks=marks, start=1.5)</code></pre></details>
 <p>Crickets, applause and rain, 3.5 s of each, from the recordings on the
 <a href="textures.html">Sound textures</a> page. A texture is a sound whose statistics stay put, so its
 modulation spectrogram should hold still while each texture lasts and change at the joins.</p>
-<div class="cell"><pre><code class="language-python">textures = [so.load(f&quot;docs/textures/{n}.flac&quot;).resample(fs) for n in (&quot;crickets&quot;, &quot;applause&quot;, &quot;rain&quot;)]
-three = so.concat([s[:3.5].normalize(rms=0.1) for s in textures])</code></pre></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">textures = [so.load(f&quot;docs/textures/{n}.flac&quot;).resample(fs) for n in (&quot;crickets&quot;, &quot;applause&quot;, &quot;rain&quot;)]
+three = so.concat([s[:3.5].normalize(rms=0.1) for s in textures])</code></pre></details></div>
 
 <article class="sound" id="d-x1" data-regions="[{&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.027976587301587474, &quot;bottom&quot;: 0.3083317739335316, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.3470561125578703, &quot;bottom&quot;: 0.6274112991898149, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.6661356378141534, &quot;bottom&quot;: 0.9464908244460979, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}]">
   <div class="about">
@@ -291,7 +291,7 @@ changes quickly.</p></div>
     <img src="img/x1_crickets_applause_and_rain.png" width="900" height="840" alt="Plots of the crickets, applause and rain sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(three)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(three)
 fig, playhead, live = show(sound, marks=[3.5, 7.0], start=1.75)</code></pre></details>
 </article>
 </section>
@@ -314,7 +314,7 @@ is wide.</p></div>
   <figure class="plot"><div class="plate">
     <img src="img/s2_three_cuts_through_the_sentences.png" width="1300" height="380" alt="Three cuts through the sentences" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">env, msg, fine = analyze(finish(talk))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">env, msg, fine = analyze(finish(talk))
 fig = msg.slices(2.0, rate=4.0)</code></pre></details>
 </article>
 </section>

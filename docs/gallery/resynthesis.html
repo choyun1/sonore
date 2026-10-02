@@ -111,7 +111,7 @@ doing nothing to removing the noise from a mixture.</p>
 <p>Three other pages go further: the <a href="pv.html">Phase vocoder</a> changes a sound's duration, pitch or
 partials, <a href="vocoder.html">Hearing through a vocoder</a> keeps only band envelopes, and <a href="cepstrum.html">Cepstral
 analysis</a> splits a voice into its vocal tract and its source.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -124,7 +124,7 @@ FS = 44100
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></div>
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -135,7 +135,7 @@ def finish(snd):
 lowpass and a highpass filter at the edges. Their squared responses sum to 1 at every
 frequency, so analysis followed by synthesis (each band filtered again, then summed) gives back
 the original, up to floating-point rounding.</p>
-<div class="cell"><pre><code class="language-python">def show_bands(snd, original):
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def show_bands(snd, original):
     &quot;&quot;&quot;The six bands of the sweep beside the original, the reconstruction and their difference.
     Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
     fig = plt.figure(figsize=(10, 6.2), layout=&quot;constrained&quot;)
@@ -156,7 +156,7 @@ the original, up to floating-point rounding.</p>
     r[2].plot(err.t, 1e15 * err.data[:, 0], color=&quot;tab:red&quot;, lw=0.5)
     r[2].set(title=f&quot;Difference (max |error| = {err.peak:.1e})&quot;, ylabel=&quot;× 1e-15&quot;, xlabel=&quot;Time [s]&quot;)
     r[2].grid(ls=&quot;:&quot;)
-    return fig, list(band_axes) + list(r)</code></pre></div>
+    return fig, list(band_axes) + list(r)</code></pre></details></div>
 
 <article class="sound" id="d-26" data-regions="[{&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.03306505376344093, &quot;bottom&quot;: 0.1261475358422951, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.147429973118281, &quot;bottom&quot;: 0.2405124551971326, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.26179489247311827, &quot;bottom&quot;: 0.35487737455197166, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.37615981182795744, &quot;bottom&quot;: 0.4692422939068104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.49052473118279605, &quot;bottom&quot;: 0.5836072132616492, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.6048896505376349, &quot;bottom&quot;: 0.6979721326164873, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.7192545698924729, &quot;bottom&quot;: 0.8123370519713262, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.8336194892473119, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.2991930107526879, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.35165824372759824, &quot;bottom&quot;: 0.6129474910394264, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.6654127240143368, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
@@ -171,7 +171,7 @@ the level of floating-point rounding.</p></div>
     <img src="img/26_perfect_reconstruction.png" width="1000" height="620" alt="Plots of the perfect reconstruction sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
 sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize())
 fig, playhead = show_bands(sound, sweep)</code></pre></details>
 </article>
@@ -183,7 +183,7 @@ sound. Wang (2005) proposed the <em>ideal binary mask</em> as the goal of separa
 noise: keep every cell where the target is louder than the noise, discard the rest. It is
 ideal because computing it needs the target and the noise separately, which a listener never
 has; what a listener hears through it shows how much a perfect separation would leave.</p>
-<div class="cell"><pre><code class="language-python">def gliding_target(dur=2.0):
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def gliding_target(dur=2.0):
     &quot;&quot;&quot;A harmonic complex gliding 150 -&gt; 250 Hz with a 3 Hz level fluctuation: a stand-in for speech.&quot;&quot;&quot;
     t = np.arange(int(dur * FS)) / FS
     phase = 2 * np.pi * np.cumsum(150 + 50 * t) / FS
@@ -210,7 +210,7 @@ target = gliding_target()
 masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
 mixture = target + (masker + 5 * dB)
 S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
-mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)</code></pre></div>
+mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)</code></pre></details></div>
 
 <article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.44110609318996397, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.5234996415770609, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
@@ -223,7 +223,7 @@ mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)</code></pre></div>
     <img src="img/24_target_in_noise.png" width="1000" height="620" alt="Plots of the target in noise sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(mixture)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(mixture)
 fig, playhead = show_mask(sound, target, mask)</code></pre></details>
 </article>
 
@@ -240,7 +240,7 @@ resynthesis is exact.</p></div>
     <img src="img/25_ideal_binary_mask.png" width="1000" height="620" alt="Plots of the ideal binary mask sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish((S_x * mask).to_sound())
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish((S_x * mask).to_sound())
 fig, playhead = show_mask(sound, target, mask)</code></pre></details>
 </article>
 </section>

@@ -124,7 +124,7 @@ time, the noise becomes partly correlated with itself <span class="tex">d</span>
 at lag <span class="tex">d</span>, and its height, which grows with <span class="tex">n</span>, goes with how strong the pitch is. sonore
 computes the network exactly in the frequency domain, so the delay need not be a whole number
 of samples, and drops a warm-up stretch so that the noise is stationary from the start.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -143,7 +143,7 @@ def show(snd):
     &quot;&quot;&quot;so.overview: waveform, spectrum, spectrogram (50 ms windows) and modulation spectrum.
     Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
     fig = so.overview(snd, win_dur=50e-3, figsize=(10, 6.2), fmax=4000)
-    return fig, [ax for ax in fig.axes if ax.get_title() in (&quot;Waveform&quot;, &quot;Spectrogram&quot;)]</code></pre></div>
+    return fig, [ax for ax in fig.axes if ax.get_title() in (&quot;Waveform&quot;, &quot;Spectrogram&quot;)]</code></pre></details></div>
 </section>
 <section aria-labelledby="h-pitch-from-delay">
 <h2 id="h-pitch-from-delay">Pitch from delay</h2>
@@ -161,7 +161,7 @@ of the hiss; the spectrum ripples at multiples of 125 Hz and the modulation spec
     <img src="img/09_iterated_rippled_noise.png" width="1000" height="620" alt="Plots of the iterated rippled noise sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=16, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=16, rng=0))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 </section>
@@ -182,7 +182,7 @@ the pitch is faint, a coloring of the hiss rather than a note.</p></div>
     <img src="img/i1_one_iteration.png" width="1000" height="620" alt="Plots of the one iteration sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=1, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=1, rng=0))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -197,7 +197,7 @@ fig, playhead = show(sound)</code></pre></details>
     <img src="img/i4_four_iterations.png" width="1000" height="620" alt="Plots of the four iterations sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=4, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=4, rng=0))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -210,7 +210,7 @@ with the number of iterations (0.47, 0.75 and 0.88), and so do the peaks at its 
   <figure class="plot"><div class="plate">
     <img src="img/i0_autocorrelation_and_iterations.png" width="1000" height="480" alt="Autocorrelation and iterations" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, axes = plt.subplots(3, 1, figsize=(10, 4.8), sharex=True, layout=&quot;constrained&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, axes = plt.subplots(3, 1, figsize=(10, 4.8), sharex=True, layout=&quot;constrained&quot;)
 for ax, n, color in zip(axes, (1, 4, 16), (&quot;tab:blue&quot;, &quot;tab:orange&quot;, &quot;tab:green&quot;), strict=True):
     x = so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=n, rng=0).data[:, 0]
     X = np.fft.rfft(x, 2 * len(x))
@@ -238,7 +238,7 @@ simply 125 Hz nor an octave below (Yost, 1996).</p></div>
     <img src="img/in_negative_gain.png" width="1000" height="620" alt="Plots of the negative gain sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, gain=-1, iterations=16, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, gain=-1, iterations=16, rng=0))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 </section>

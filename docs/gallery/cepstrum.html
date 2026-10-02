@@ -126,7 +126,7 @@ or edited separately.</p>
 <p>Every cepstrum below is taken from an STFT with Hann windows 40 ms long, every 5 ms. A window
 must hold about three periods for the harmonics to show as a ripple, and 40 ms is three periods
 at 75 Hz, below this speaker's lowest pitch.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -148,7 +148,7 @@ fs = sentence.fs
 
 stft = so.STFT(sentence, win_dur=0.040, hop_dur=0.005)
 cep = so.Cepstrum(stft)
-FMAX = 5000</code></pre></div>
+FMAX = 5000</code></pre></details></div>
 </section>
 <section aria-labelledby="h-one-frame">
 <h2 id="h-one-frame">One frame</h2>
@@ -169,7 +169,7 @@ correct for this (Morise, 2015).</p></div>
   <figure class="plot"><div class="plate">
     <img src="img/c1_one_frame.png" width="1000" height="560" alt="One frame" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">i = int(np.argmin(np.abs(cep.t - 0.50)))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">i = int(np.argmin(np.abs(cep.t - 0.50)))
 _, f0_all, peak_all = cep.f0()
 t_frame, f0_frame, peak_frame = cep.t[i], f0_all[0, i], peak_all[0, i]
 cutoff = 0.5 / f0_frame  # half a period
@@ -216,7 +216,7 @@ so the occasional frame jumps an octave.</p></div>
     <img src="img/c2_the_cepstrogram_and_its_pitch.png" width="1000" height="560" alt="Plots of the the cepstrogram and its pitch sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">t, f0_cep, peak = cep.f0(f_lo=75, f_hi=400)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">t, f0_cep, peak = cep.f0(f_lo=75, f_hi=400)
 voiced = f0_harvest &gt; 0
 fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout=&quot;constrained&quot;)
 cep.plot(ax0, colorbar=False)
@@ -233,10 +233,10 @@ for ax in (ax0, ax1):
 playhead = [ax0, ax1]
 sound = sentence</code></pre></details>
 </article>
-<div class="cell"><pre><code class="language-python">harvest_at = np.interp(t, f0_times, f0_harvest)
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">harvest_at = np.interp(t, f0_times, f0_harvest)
 both = (harvest_at &gt; 0) &amp; (f0_cep[0] &gt; 0)
 agree = np.mean(np.abs(f0_cep[0][both] / harvest_at[both] - 1) &lt; 0.05)
-print(f&quot;frames both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}&quot;)</code></pre><pre class="out">frames both call voiced: 318; cepstral F0 within 5% of Harvest on 96%</pre></div>
+print(f&quot;frames both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}&quot;)</code></pre></details><pre class="out">frames both call voiced: 318; cepstral F0 within 5% of Harvest on 96%</pre></div>
 </section>
 <section aria-labelledby="h-a-tracker-beside-the-cepstrum">
 <h2 id="h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</h2>
@@ -265,7 +265,7 @@ is why the tracker is stricter by default (see <code>docs/design/f0.md</code>).<
     <img src="img/f1_cepstral_f0_a_tracker_and_harvest.png" width="1000" height="560" alt="Plots of the cepstral f0, a tracker, and harvest sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">track = so.f0_track(sentence)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">track = so.f0_track(sentence)
 fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout=&quot;constrained&quot;)
 track.plot(ax0, candidates=True, color=&quot;tab:orange&quot;)
 ax0.set(ylim=(50, 500), yscale=&quot;log&quot;, xlabel=&quot;&quot;, title=&quot;so.f0_track: candidates and chosen path&quot;)
@@ -283,7 +283,7 @@ for ax in (ax0, ax1):
 playhead = [ax0, ax1]
 sound = sentence</code></pre></details>
 </article>
-<div class="cell"><pre><code class="language-python"># Compare frame by frame on the tracker&#x27;s frames, which the cepstrogram&#x27;s frames include.
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># Compare frame by frame on the tracker&#x27;s frames, which the cepstrogram&#x27;s frames include.
 at = np.searchsorted(np.round(t, 6), np.round(track.t, 6))
 pitch = {
     &quot;Harvest&quot;: np.interp(track.t, f0_times, f0_harvest),
@@ -295,7 +295,7 @@ for name, f in pitch.items():
 for a, b in [(&quot;cepstral&quot;, &quot;Harvest&quot;), (&quot;so.f0_track&quot;, &quot;Harvest&quot;), (&quot;cepstral&quot;, &quot;so.f0_track&quot;)]:
     both = (pitch[a] &gt; 0) &amp; (pitch[b] &gt; 0)
     agree = np.mean(np.abs(pitch[a][both] / pitch[b][both] - 1) &lt; 0.05)
-    print(f&quot;{a} and {b}: both voiced on {both.sum()} frames, within 5% on {agree:.0%}&quot;)</code></pre><pre class="out">Harvest      voiced on 86% of frames
+    print(f&quot;{a} and {b}: both voiced on {both.sum()} frames, within 5% on {agree:.0%}&quot;)</code></pre></details><pre class="out">Harvest      voiced on 86% of frames
 cepstral     voiced on 65% of frames
 so.f0_track  voiced on 68% of frames
 cepstral and Harvest: both voiced on 318 frames, within 5% on 96%
@@ -307,7 +307,7 @@ cepstral and so.f0_track: both voiced on 300 frames, within 5% on 98%</pre></div
 <p>Lifter the other way and the two parts can be heard separately. Each frame keeps its own
 lifter cutoff, half of its pitch period, following Harvest's track (bridged across unvoiced
 stretches). Low quefrencies keep the vocal tract; high quefrencies keep the source.</p>
-<div class="cell"><pre><code class="language-python">voiced_t, voiced_f0 = f0_times[voiced], f0_harvest[voiced]
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">voiced_t, voiced_f0 = f0_times[voiced], f0_harvest[voiced]
 cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per frame
 tract = cep.lifter(cutoffs)  # low quefrencies: the envelope
 source = cep.lifter(cutoffs, keep=&quot;high&quot;)  # high quefrencies: the harmonics
@@ -318,7 +318,7 @@ def show(snd, title, win_dur=0.005):
     fig, ax = plt.subplots(figsize=(10, 3.0), layout=&quot;constrained&quot;)
     so.STFT(snd, win_dur=win_dur, hop_dur=0.001).plot(ax, db_range=60, colorbar=False, fmax=FMAX)
     ax.set(xlim=(0, sentence.duration), title=f&quot;{title} (Hann {win_dur * 1e3:g} ms spectrogram)&quot;)
-    return fig, [ax]</code></pre></div>
+    return fig, [ax]</code></pre></details></div>
 
 <article class="sound" id="d-c3" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
@@ -333,7 +333,7 @@ a steady 200 Hz buzz. The words survive; the intonation does not.</p></div>
     <img src="img/c3_envelope_only_on_a_200_hz_pulse_train.png" width="1000" height="300" alt="Plots of the envelope only, on a 200 hz pulse train sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">robot = finish(tract.to_sound(phase=&quot;minimum&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">robot = finish(tract.to_sound(phase=&quot;minimum&quot;))
 fig, playhead = show(robot, &quot;Envelope only, minimum phase&quot;)
 sound = robot</code></pre></details>
 </article>
@@ -352,7 +352,7 @@ harmonics running flat across frequency.</p></div>
     <img src="img/c4_harmonics_only_the_envelope_flattened.png" width="1000" height="300" alt="Plots of the harmonics only, the envelope flattened sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">flat = finish(source.to_sound(phase=&quot;original&quot;))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">flat = finish(source.to_sound(phase=&quot;original&quot;))
 fig, playhead = show(flat, &quot;Harmonics only, original phase&quot;, win_dur=0.0333)
 sound = flat</code></pre></details>
 </article>
@@ -369,7 +369,7 @@ sentence to rounding error.</p></div>
     <img src="img/c5_both_parts_together.png" width="1000" height="300" alt="Plots of the both parts together sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">whole = cep.to_sound()
+  <details class="code"><summary>Code</summary><pre><code class="language-python">whole = cep.to_sound()
 print(f&quot;largest difference from the sentence: {np.abs(whole.data - sentence.data).max():.1e}&quot;)
 fig, playhead = show(whole, &quot;Unliftered, original phase&quot;)
 sound = finish(whole)</code></pre></details>

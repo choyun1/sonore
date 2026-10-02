@@ -127,7 +127,7 @@ octave with random phases.</p>
 bands per octave (a cochleagram), the waveform, and the modulation spectrum measured from the
 sound: the two-dimensional Fourier transform of the cochleagram, with rate across and density
 up (Singh &amp; Theunissen, 2003). A single ripple puts a single peak in it.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 
 import sonore as so
 
@@ -156,7 +156,7 @@ def show(snd, pattern, dmr=False):
     ms = so.ModulationSpectrum.octave(snd, f_lo=250, f_hi=8000, scale=&quot;db&quot; if dmr else &quot;linear&quot;)
     ms.plot(axes[1, 1], db_range=30, wt_max=50 if dmr else 20, wf_max=4, colorbar=False)
     axes[1, 1].set_title(&quot;Measured modulation spectrum&quot;)
-    return fig, [axes[0, 0], axes[0, 1], axes[1, 0]]</code></pre></div>
+    return fig, [axes[0, 0], axes[0, 1], axes[1, 0]]</code></pre></details></div>
 </section>
 <section aria-labelledby="h-moving-ripples">
 <h2 id="h-moving-ripples">Moving ripples</h2>
@@ -174,7 +174,7 @@ the waveform alone shows almost none of it.</p></div>
     <img src="img/01_downward_ripple.png" width="1000" height="620" alt="Plots of the downward ripple sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">down = so.Ripple(4, 1)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">down = so.Ripple(4, 1)
 sound = finish(so.ripple_sound(down, 3, FS, rng=0))
 fig, playhead = show(sound, down)</code></pre></details>
 </article>
@@ -191,7 +191,7 @@ rate.</p></div>
     <img src="img/02_upward_ripple.png" width="1000" height="620" alt="Plots of the upward ripple sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">up = so.Ripple(-4, 1)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">up = so.Ripple(-4, 1)
 sound = finish(so.ripple_sound(up, 3, FS, rng=0))
 fig, playhead = show(sound, up)</code></pre></details>
 </article>
@@ -208,7 +208,7 @@ superimposed. The modulation spectrum separates them into two clean peaks.</p></
     <img src="img/03_two_ripples_at_once.png" width="1000" height="620" alt="Plots of the two ripples at once sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">both = so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">both = so.Ripple(4, 1, depth=0.45) + so.Ripple(-12, 2.5, depth=0.45)
 sound = finish(so.ripple_sound(both, 3, FS, rng=0))
 fig, playhead = show(sound, both)</code></pre></details>
 </article>
@@ -230,7 +230,7 @@ low harmonics show as horizontal lines in the cochleagram.</p></div>
     <img src="img/04_same_ripple_harmonic_carrier.png" width="1000" height="620" alt="Plots of the same ripple, harmonic carrier sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.ripple_sound(down, 3, FS, carrier=&quot;harmonic&quot;, f0=60, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.ripple_sound(down, 3, FS, carrier=&quot;harmonic&quot;, f0=60, rng=0))
 fig, playhead = show(sound, down)</code></pre></details>
 </article>
 
@@ -246,7 +246,7 @@ sounds rougher.</p></div>
     <img src="img/05_same_ripple_noise_carrier.png" width="1000" height="620" alt="Plots of the same ripple, noise carrier sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.ripple_sound(down, 3, FS, carrier=&quot;noise&quot;, rng=0))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.ripple_sound(down, 3, FS, carrier=&quot;noise&quot;, rng=0))
 fig, playhead = show(sound, down)</code></pre></details>
 </article>
 </section>
@@ -269,7 +269,7 @@ the modulation.</p></div>
     <img src="img/06_dynamic_moving_ripple.png" width="1000" height="620" alt="Plots of the dynamic moving ripple sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">dmr = so.DynamicRipple(rate_range=(-40, 40), seed=3)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">dmr = so.DynamicRipple(rate_range=(-40, 40), seed=3)
 sound = finish(so.ripple_sound(dmr, 4, FS, rng=0))
 fig, playhead = show(sound, dmr, dmr=True)</code></pre></details>
 </article>

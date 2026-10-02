@@ -222,7 +222,8 @@ def example_page(path: Path) -> dict:
                 part.update(png=png, size=size)
             else:
                 printed = out.getvalue().rstrip()
-                part = part["code"] + (f'<pre class="out">{html.escape(printed)}</pre>' if printed else "")
+                code = f'<details class="code"><summary>Code</summary>{part["code"]}</details>'
+                part = code + (f'<pre class="out">{html.escape(printed)}</pre>' if printed else "")
                 part = f'<div class="cell">{part}</div>'
             (sections[-1]["parts"] if sections else intro).append(part)
             about = ""
@@ -706,7 +707,7 @@ def sound_article(
         if chan == "stereo"
         else ""
     )
-    code = f'\n  <details class="code" open><summary>Code</summary>{code}</details>' if code else ""
+    code = f'\n  <details class="code"><summary>Code</summary>{code}</details>' if code else ""
     return f"""
 <article class="sound" id="d-{key}" data-regions="{html.escape(json.dumps(regions))}">
   <div class="about">
@@ -733,7 +734,7 @@ def still_article(key, title, desc_html, img_src, size, code) -> str:
   <figure class="plot"><div class="plate">
     <img src="{img_src}" width="{w}" height="{h}" alt="{html.escape(title)}" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary>{code}</details>
+  <details class="code"><summary>Code</summary>{code}</details>
 </article>"""
 
 

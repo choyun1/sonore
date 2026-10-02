@@ -128,7 +128,7 @@ measures them from an IR by fitting a line to each band's energy decay curve.</p
 the same seed, so they share their noise. Unlike the paper, they are not further equated for
 distortion, so some differences in loudness and length remain. They are presented diotically,
 as in the paper.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import butter, sosfilt
 
@@ -215,7 +215,7 @@ def show(snd, ir, kw=None):
     return fig, time_axes
 
 
-pistol = starter_pistol()</code></pre></div>
+pistol = starter_pistol()</code></pre></details></div>
 </section>
 <section aria-labelledby="h-natural-rooms">
 <h2 id="h-natural-rooms">Natural rooms</h2>
@@ -234,7 +234,7 @@ whereas a real cochlea rings only afterwards.</p></div>
     <img src="img/16_starter_pistol_dry.png" width="1000" height="620" alt="Plots of the starter pistol, dry sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(pistol)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pistol)
 fig, playhead = show(sound, None)</code></pre></details>
 </article>
 
@@ -251,7 +251,7 @@ ones.</p></div>
     <img src="img/17_in_a_natural_room.png" width="1000" height="620" alt="Plots of the in a natural room sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">ir = room()
+  <details class="code"><summary>Code</summary><pre><code class="language-python">ir = room()
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir)</code></pre></details>
 </article>
@@ -268,7 +268,7 @@ reverberation fills the gaps between words and smears each syllable into the nex
     <img src="img/r1_a_sentence_in_the_same_room.png" width="1000" height="620" alt="Plots of the a sentence in the same room sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sentence = so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;).resample(FS)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;).resample(FS)
 sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)</code></pre></details>
 </article>
@@ -280,7 +280,7 @@ square law; <code>so.distance_gain_db</code>). The reverberant tail, built up fr
 wall, stays at about the same level anywhere in the room. So moving a talker away lowers the
 direct-to-reverberant ratio by as much as it lowers the direct sound, and that ratio is one of
 the cues to how far away a source is. Here the talker is four times farther than above.</p>
-<div class="cell"><pre><code class="language-python">print(so.distance_gain_db([1, 2, 4]))</code></pre><pre class="out">[ -0.          -6.02059991 -12.04119983]</pre></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">print(so.distance_gain_db([1, 2, 4]))</code></pre></details><pre class="out">[ -0.          -6.02059991 -12.04119983]</pre></div>
 
 <article class="sound" id="d-r2" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
   <div class="about">
@@ -295,7 +295,7 @@ same RMS, so what changes is not the loudness but how much of the sentence is ro
     <img src="img/r2_the_same_sentence_four_times_farther.png" width="1000" height="620" alt="Plots of the the same sentence, four times farther sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">ir_far = so.synth_ir(1.0, FS, drr_db=-3 + so.distance_gain_db(4), rng=5)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">ir_far = so.synth_ir(1.0, FS, drr_db=-3 + so.distance_gain_db(4), rng=5)
 sound = finish(sentence.convolve(ir_far))
 fig, playhead = show(sound, ir_far)</code></pre></details>
 </article>
@@ -319,7 +319,7 @@ after it.</p></div>
     <img src="img/18_time-reversed_decay.png" width="1000" height="620" alt="Plots of the time-reversed decay sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;time_reversed&quot;}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;time_reversed&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
@@ -337,7 +337,7 @@ the same energy per band; it has to end early to do so.</p></div>
     <img src="img/19_linear_decay_matched_start.png" width="1000" height="620" alt="Plots of the linear decay, matched start sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;linear_matched_start&quot;}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;linear_matched_start&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
@@ -355,7 +355,7 @@ energy per band. On a dB scale the decay bows outward instead of falling in a st
     <img src="img/20_linear_decay_matched_end.png" width="1000" height="620" alt="Plots of the linear decay, matched end sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;linear_matched_end&quot;}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;linear_matched_end&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
@@ -374,7 +374,7 @@ rather than a room.</p></div>
     <img src="img/21_inverted_frequency_dependence.png" width="1000" height="620" alt="Plots of the inverted frequency dependence sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;inverted&quot;}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;inverted&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
@@ -393,7 +393,7 @@ speech.</p></div>
     <img src="img/22_exaggerated_frequency_dependence.png" width="1000" height="620" alt="Plots of the exaggerated frequency dependence sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;exaggerated&quot;}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;exaggerated&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
@@ -411,7 +411,7 @@ Also subtle.</p></div>
     <img src="img/23_reduced_frequency_dependence.png" width="1000" height="620" alt="Plots of the reduced frequency dependence sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;reduced&quot;}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;reduced&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>

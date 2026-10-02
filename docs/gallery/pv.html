@@ -130,7 +130,7 @@ a quarter window: the bins a Hann window's main lobe reaches are then all close 
 bin near a partial reports that partial's frequency, the <em>instantaneous frequency</em>, and with
 magnitudes and instantaneous frequencies in hand the sound can be rebuilt differently.
 <code>so.pv_analyze</code> returns all three.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -177,7 +177,7 @@ sung = vibrato_complex()
 pv = so.pv_analyze(sung)
 
 # The sentence from Seeing speech, at its native 16 kHz. Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))</code></pre></div>
+sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))</code></pre></details></div>
 
 <article class="still" id="d-p0">
   <div class="about">
@@ -190,7 +190,7 @@ which the vibrato has pushed away from the bin centers (dotted).</p></div>
   <figure class="plot"><div class="plate">
     <img src="img/p0_each_bin_reports_its_partial.png" width="1000" height="500" alt="Each bin reports its partial" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">m = int(np.argmin(np.abs(pv.t - 0.55)))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">m = int(np.argmin(np.abs(pv.t - 0.55)))
 centers = np.arange(pv.magnitude.shape[1]) * FS / pv.n_win
 level = 20 * np.log10(pv.magnitude[0, :, m] / pv.magnitude[0, :, m].max() + 1e-12)
 loud = level &gt; -30
@@ -233,7 +233,7 @@ from it.</p>
     <img src="img/11_reference.png" width="1000" height="620" alt="Plots of the reference sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(sung)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sung)
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -249,7 +249,7 @@ every temporal feature.</p></div>
     <img src="img/12_twice_as_long.png" width="1000" height="620" alt="Plots of the twice as long sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sung, 2))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sung, 2))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -264,7 +264,7 @@ fig, playhead = show(sound)</code></pre></details>
     <img src="img/p1_the_sentence_twice_as_long.png" width="1000" height="620" alt="Plots of the the sentence, twice as long sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sentence, 2))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sentence, 2))
 fig, playhead = show(sound, fmax=5000)</code></pre></details>
 </article>
 
@@ -280,7 +280,7 @@ distant, as if heard in a room.</p></div>
     <img src="img/p2_twice_as_long_phases_not_locked.png" width="1000" height="620" alt="Plots of the twice as long, phases not locked sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sentence, 2, phase_lock=False))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sentence, 2, phase_lock=False))
 fig, playhead = show(sound, fmax=5000)</code></pre></details>
 </article>
 </section>
@@ -302,7 +302,7 @@ formants of a voice included.</p>
     <img src="img/13_up_a_fifth.png" width="1000" height="620" alt="Plots of the up a fifth sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.pitch_shift(sung, 7))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.pitch_shift(sung, 7))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -319,7 +319,7 @@ envelope separated from the harmonics first, as on the <a href="cepstrum.html">C
     <img src="img/p3_the_sentence_up_a_fifth.png" width="1000" height="620" alt="Plots of the the sentence up a fifth sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(so.pitch_shift(sentence, 7))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.pitch_shift(sentence, 7))
 fig, playhead = show(sound, fmax=5000)</code></pre></details>
 </article>
 </section>
@@ -344,7 +344,7 @@ its pitch less certain.</p></div>
     <img src="img/14_partials_shifted_up_70_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 70 hz sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 70))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 70))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -360,7 +360,7 @@ result is harmonic again, a hollow, clarinet-like tone an octave below the refer
     <img src="img/14b_partials_shifted_up_110_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 110 hz sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 110))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 110))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 </section>

@@ -124,7 +124,7 @@ on the <a href="cepstrum.html">Cepstral analysis</a> page: the cepstral peak in 
 5 ms (Noll, 1967); <code>so.f0_track</code>, which chooses a path through YIN-style candidates
 (de Cheveigné &amp; Kawahara, 2002); and WORLD's Harvest (Morise, 2017), stored with the sentence.
 Unless stated, the syntheses below follow <code>so.f0_track</code>.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 from scipy.signal import sawtooth
@@ -173,7 +173,7 @@ def show(snd, title, contour=None):
         ax1.plot(t, np.where(f &gt; 0, f, np.nan), color=&quot;c&quot;, lw=1.2)
     for ax in (ax0, ax1):
         ax.set_xlim(0, duration)
-    return fig, [ax0, ax1]</code></pre></div>
+    return fig, [ax0, ax1]</code></pre></details></div>
 </section>
 <section aria-labelledby="h-three-pitch-tracks-heard">
 <h2 id="h-three-pitch-tracks-heard">Three pitch tracks, heard</h2>
@@ -193,7 +193,7 @@ called voiced or unvoiced is a click or a hole.</p>
     <img src="img/hp0_the_sentence.png" width="1000" height="420" alt="Plots of the the sentence sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence, &quot;the sentence&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence, &quot;the sentence&quot;)
 sound = sentence</code></pre></details>
 </article>
 
@@ -210,7 +210,7 @@ peak.</p></div>
     <img src="img/hp1_a_sawtooth_on_the_cepstral_f0.png" width="1000" height="420" alt="Plots of the a sawtooth on the cepstral f0 sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">buzz = finish(so.sawtooth_wave(duration, fs, contours[&quot;cepstral&quot;]))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">buzz = finish(so.sawtooth_wave(duration, fs, contours[&quot;cepstral&quot;]))
 fig, playhead = show(buzz, &quot;sawtooth on the cepstral F0&quot;, contours[&quot;cepstral&quot;])
 sound = buzz</code></pre></details>
 </article>
@@ -227,7 +227,7 @@ waveform stops repeating well, so the buzz comes in syllables.</p></div>
     <img src="img/hp2_a_sawtooth_on_so.f0_track.png" width="1000" height="420" alt="Plots of the a sawtooth on so.f0_track sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">buzz = finish(so.sawtooth_wave(duration, fs, track))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">buzz = finish(so.sawtooth_wave(duration, fs, track))
 fig, playhead = show(buzz, &quot;sawtooth on so.f0_track&quot;, contours[&quot;so.f0_track&quot;])
 sound = buzz</code></pre></details>
 </article>
@@ -244,12 +244,12 @@ through some of the consonants that <code>so.f0_track</code> leaves silent.</p><
     <img src="img/hp3_a_sawtooth_on_harvest.png" width="1000" height="420" alt="Plots of the a sawtooth on harvest sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">buzz = finish(so.sawtooth_wave(duration, fs, contours[&quot;Harvest&quot;]))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">buzz = finish(so.sawtooth_wave(duration, fs, contours[&quot;Harvest&quot;]))
 fig, playhead = show(buzz, &quot;sawtooth on Harvest&quot;, contours[&quot;Harvest&quot;])
 sound = buzz</code></pre></details>
 </article>
-<div class="cell"><pre><code class="language-python">for name, (_, f) in contours.items():
-    print(f&quot;{name:12s} voiced on {np.mean(f &gt; 0):.0%} of its frames&quot;)</code></pre><pre class="out">cepstral     voiced on 64% of its frames
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">for name, (_, f) in contours.items():
+    print(f&quot;{name:12s} voiced on {np.mean(f &gt; 0):.0%} of its frames&quot;)</code></pre></details><pre class="out">cepstral     voiced on 64% of its frames
 so.f0_track  voiced on 68% of its frames
 Harvest      voiced on 85% of its frames</pre></div>
 </section>
@@ -260,7 +260,7 @@ the spectral envelope, and the cepstrum separates it from the harmonics. Lifter 
 half its pitch period, as on the <a href="cepstrum.html">Cepstral analysis</a> page, and evaluate that
 envelope at every harmonic's frequency at every instant. Passed to <code>so.harmonic_complex</code> as the
 amplitudes, it gives harmonics that follow the track, with heights that follow the formants.</p>
-<div class="cell"><pre><code class="language-python">voiced_t, voiced_f0 = track.t[track.voiced[0]], track.f0[0][track.voiced[0]]
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">voiced_t, voiced_f0 = track.t[track.voiced[0]], track.f0[0][track.voiced[0]]
 cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per frame
 envelope = cep.lifter(cutoffs).envelope()[0]  # (frequencies, frames)
 log_envelope = RegularGridInterpolator(
@@ -270,7 +270,7 @@ log_envelope = RegularGridInterpolator(
 
 def formants(t, f):
     &quot;&quot;&quot;The envelope&#x27;s gain at times t and frequencies f, interpolated in dB between frames and bins.&quot;&quot;&quot;
-    return np.exp(log_envelope(np.stack([t, f], axis=-1)))</code></pre></div>
+    return np.exp(log_envelope(np.stack([t, f], axis=-1)))</code></pre></details></div>
 
 <article class="sound" id="d-he1" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
@@ -285,7 +285,7 @@ there; the consonants that are noise are missing until the next section.</p></di
     <img src="img/he1_harmonics_shaped_by_the_envelope.png" width="1000" height="420" alt="Plots of the harmonics shaped by the envelope sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">shaped = finish(so.harmonic_complex(duration, fs, track, amplitudes=formants))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">shaped = finish(so.harmonic_complex(duration, fs, track, amplitudes=formants))
 fig, playhead = show(shaped, &quot;harmonics on so.f0_track, cepstral envelope&quot;, contours[&quot;so.f0_track&quot;])
 sound = shaped</code></pre></details>
 </article>
@@ -307,7 +307,7 @@ the pitch is not, and it sounds whispered.</p></div>
     <img src="img/he2_sixteen_noise_bands.png" width="1000" height="420" alt="Plots of the sixteen noise bands sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 16, 80, 7600, rng=1))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence, 16, 80, 7600, rng=1))
 fig, playhead = show(vocoded, &quot;16-band noise vocoder&quot;)
 sound = vocoded</code></pre></details>
 </article>
@@ -326,7 +326,7 @@ envelope above.</p></div>
     <img src="img/he3_sixteen_bands_on_harmonics.png" width="1000" height="420" alt="Plots of the sixteen bands on harmonics sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">carrier = so.harmonic_complex(duration, fs, track, unvoiced=&quot;noise&quot;, rng=1)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">carrier = so.harmonic_complex(duration, fs, track, unvoiced=&quot;noise&quot;, rng=1)
 vocoded = finish(so.noise_vocode(sentence, 16, 80, 7600, carrier=carrier))
 fig, playhead = show(vocoded, &quot;16-band vocoder, harmonic carrier on so.f0_track&quot;, contours[&quot;so.f0_track&quot;])
 sound = vocoded</code></pre></details>
@@ -339,7 +339,7 @@ by the same envelope fills the gaps: white noise whose STFT magnitude is replace
 frame, by the envelope. It is faded in where the track's voicing turns off, and set as loud,
 relative to the harmonics, as the unvoiced parts of the sentence are relative to its voiced
 parts.</p>
-<div class="cell"><pre><code class="language-python">noise = so.gaussian_noise(duration, fs, rng=2)
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">noise = so.gaussian_noise(duration, fs, rng=2)
 coloured = so.STFT(noise, win_dur=0.040, hop_dur=0.005)
 coloured.data = envelope[None] * np.exp(1j * np.angle(coloured.data))
 breath = coloured.to_sound().data[: len(sentence), 0]
@@ -362,7 +362,7 @@ print(f&quot;unvoiced stretches: {20 * np.log10(balance):.1f} dB relative to the
 def with_breath(voice, noise=breath):
     &quot;&quot;&quot;The voiced sound, plus envelope-shaped noise where unvoiced, at the sentence&#x27;s own balance.&quot;&quot;&quot;
     gap = (1 - voicing) * noise
-    return so.Sound(voice.data[:, 0] + gap * balance * rms(voice.data[:, 0]) / rms(gap), fs)</code></pre><pre class="out">unvoiced stretches: -14.1 dB relative to the voiced ones</pre></div>
+    return so.Sound(voice.data[:, 0] + gap * balance * rms(voice.data[:, 0]) / rms(gap), fs)</code></pre></details><pre class="out">unvoiced stretches: -14.1 dB relative to the voiced ones</pre></div>
 
 <article class="sound" id="d-hu1" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
@@ -375,7 +375,7 @@ def with_breath(voice, noise=breath):
     <img src="img/hu1_silence_in_the_gaps.png" width="1000" height="420" alt="Plots of the silence in the gaps sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">voice = so.harmonic_complex(duration, fs, track, amplitudes=formants)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">voice = so.harmonic_complex(duration, fs, track, amplitudes=formants)
 fig, playhead = show(finish(voice), &quot;harmonics only, silence where unvoiced&quot;, contours[&quot;so.f0_track&quot;])
 sound = finish(voice)</code></pre></details>
 </article>
@@ -393,7 +393,7 @@ a spectral envelope every 5 ms.</p></div>
     <img src="img/hu2_shaped_noise_in_the_gaps.png" width="1000" height="420" alt="Plots of the shaped noise in the gaps sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">resynthesis = finish(with_breath(voice))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">resynthesis = finish(with_breath(voice))
 fig, playhead = show(resynthesis, &quot;harmonics, and shaped noise where unvoiced&quot;, contours[&quot;so.f0_track&quot;])
 sound = resynthesis</code></pre></details>
 </article>
@@ -403,7 +403,7 @@ sound = resynthesis</code></pre></details>
 <p>Since the envelope is evaluated at whatever frequency each harmonic has, the pitch can change
 while the formants stay where they were. Each sound below keeps the envelope and the noise of
 the last one, and changes only the contour.</p>
-<div class="cell"><pre><code class="language-python">voiced = track.voiced[0]
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">voiced = track.voiced[0]
 median = np.median(track.f0[0][voiced])
 print(f&quot;median voiced F0: {median:.0f} Hz&quot;)
 
@@ -411,7 +411,7 @@ print(f&quot;median voiced F0: {median:.0f} Hz&quot;)
 def on(values):
     &quot;&quot;&quot;The resynthesis on another contour, at so.f0_track&#x27;s frame times.&quot;&quot;&quot;
     contour = (track.t, np.where(voiced, values, 0.0))
-    return finish(with_breath(so.harmonic_complex(duration, fs, contour, amplitudes=formants))), contour</code></pre><pre class="out">median voiced F0: 120 Hz</pre></div>
+    return finish(with_breath(so.harmonic_complex(duration, fs, contour, amplitudes=formants))), contour</code></pre></details><pre class="out">median voiced F0: 120 Hz</pre></div>
 
 <article class="sound" id="d-hm1" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
@@ -425,7 +425,7 @@ intonation that marks the question and the stress.</p></div>
     <img src="img/hm1_monotone.png" width="1000" height="420" alt="Plots of the monotone sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">snd, contour = on(np.full_like(track.f0[0], median))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">snd, contour = on(np.full_like(track.f0[0], median))
 fig, playhead = show(snd, &quot;monotone, at the median F0&quot;, contour)
 sound = snd</code></pre></details>
 </article>
@@ -443,7 +443,7 @@ like the same person at a higher pitch rather than like a smaller one.</p></div>
     <img src="img/hm2_up_a_fifth.png" width="1000" height="420" alt="Plots of the up a fifth sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">snd, contour = on(1.5 * track.f0[0])
+  <details class="code"><summary>Code</summary><pre><code class="language-python">snd, contour = on(1.5 * track.f0[0])
 fig, playhead = show(snd, &quot;every F0 times 1.5&quot;, contour)
 sound = snd</code></pre></details>
 </article>
@@ -460,7 +460,7 @@ falls by the same musical interval.</p></div>
     <img src="img/hm3_the_contour_flipped.png" width="1000" height="420" alt="Plots of the the contour flipped sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">snd, contour = on(median**2 / np.where(voiced, track.f0[0], median))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">snd, contour = on(median**2 / np.where(voiced, track.f0[0], median))
 fig, playhead = show(snd, &quot;contour flipped around the median&quot;, contour)
 sound = snd</code></pre></details>
 </article>
@@ -477,7 +477,7 @@ above, with the cepstral envelope in place of 16 band envelopes.</p></div>
     <img src="img/hm4_whispered.png" width="1000" height="420" alt="Plots of the whispered sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">whisper = finish(so.Sound(breath, fs))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">whisper = finish(so.Sound(breath, fs))
 fig, playhead = show(whisper, &quot;shaped noise only&quot;)
 sound = whisper</code></pre></details>
 </article>
@@ -500,7 +500,7 @@ vowel. The three have the same spectrum; only the waveform differs.</p></div>
   <figure class="plot"><div class="plate">
     <img src="img/hf0_three_phase_choices_one_spectrum.png" width="1000" height="480" alt="Three phase choices, one spectrum" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">phase_sets = {&quot;cosine&quot;: &quot;cosine&quot;, &quot;Schroeder&quot;: &quot;schroeder+&quot;, &quot;random&quot;: &quot;random&quot;}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">phase_sets = {&quot;cosine&quot;: &quot;cosine&quot;, &quot;Schroeder&quot;: &quot;schroeder+&quot;, &quot;random&quot;: &quot;random&quot;}
 buzzes = {name: so.harmonic_complex(duration, fs, track, phases=p, rng=3) for name, p in phase_sets.items()}
 fig, axes = plt.subplots(3, 1, figsize=(10, 4.8), sharex=True, layout=&quot;constrained&quot;)
 for ax, (name, snd) in zip(axes, buzzes.items(), strict=True):
@@ -522,7 +522,7 @@ axes[-1].set_xlabel(&quot;Time [ms]&quot;)</code></pre></details>
     <img src="img/hf1_cosine_phase.png" width="1000" height="420" alt="Plots of the cosine phase sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">snd = finish(buzzes[&quot;cosine&quot;])
+  <details class="code"><summary>Code</summary><pre><code class="language-python">snd = finish(buzzes[&quot;cosine&quot;])
 fig, playhead = show(snd, &quot;equal harmonics, cosine phase&quot;, contours[&quot;so.f0_track&quot;])
 sound = snd</code></pre></details>
 </article>
@@ -539,7 +539,7 @@ carries all the energy.</p></div>
     <img src="img/hf2_schroeder_phase.png" width="1000" height="420" alt="Plots of the schroeder phase sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">snd = finish(buzzes[&quot;Schroeder&quot;])
+  <details class="code"><summary>Code</summary><pre><code class="language-python">snd = finish(buzzes[&quot;Schroeder&quot;])
 fig, playhead = show(snd, &quot;equal harmonics, Schroeder phase&quot;, contours[&quot;so.f0_track&quot;])
 sound = snd</code></pre></details>
 </article>
@@ -555,7 +555,7 @@ sound = snd</code></pre></details>
     <img src="img/hf3_random_phase.png" width="1000" height="420" alt="Plots of the random phase sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">snd = finish(buzzes[&quot;random&quot;])
+  <details class="code"><summary>Code</summary><pre><code class="language-python">snd = finish(buzzes[&quot;random&quot;])
 fig, playhead = show(snd, &quot;equal harmonics, random phase&quot;, contours[&quot;so.f0_track&quot;])
 sound = snd</code></pre></details>
 </article>
@@ -568,7 +568,7 @@ harmonic in <code>so.harmonic_complex</code> fades out as it nears <code>f_max</
 rate), so harmonics leave one by one as they rise, and none is folded back. A sawtooth computed
 sample by sample from the running phase has every harmonic up to infinity, and those above
 Nyquist fold back as tones that fall while the pitch rises.</p>
-<div class="cell"><pre><code class="language-python">fs_glide, glide_dur = 16000, 4.0
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">fs_glide, glide_dur = 16000, 4.0
 t_glide = np.linspace(0, glide_dur, 401)
 f_glide = 110 * 2 ** (4 * t_glide / glide_dur)  # four octaves, equal steps per second
 
@@ -577,7 +577,7 @@ def glide_plot(snd, title):
     fig, ax = plt.subplots(figsize=(10, 3.2), layout=&quot;constrained&quot;)
     so.STFT(snd, win_dur=0.025, hop_dur=0.005).plot(ax, db_range=60, colorbar=False)
     ax.set(xlim=(0, glide_dur), title=f&quot;{title} (Hann 25 ms spectrogram)&quot;)
-    return fig, [ax]</code></pre></div>
+    return fig, [ax]</code></pre></details></div>
 
 <article class="sound" id="d-hs1" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.07343854166666663, &quot;bottom&quot;: 0.859538414171007, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
   <div class="about">
@@ -590,7 +590,7 @@ def glide_plot(snd, title):
     <img src="img/hs1_a_band-limited_glide.png" width="1000" height="320" alt="Plots of the a band-limited glide sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">glide = finish(so.sawtooth_wave(glide_dur, fs_glide, (t_glide, f_glide)))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">glide = finish(so.sawtooth_wave(glide_dur, fs_glide, (t_glide, f_glide)))
 fig, playhead = glide_plot(glide, &quot;so.sawtooth_wave, 110 to 1760 Hz&quot;)
 sound = glide</code></pre></details>
 </article>
@@ -607,7 +607,7 @@ down, heard as a whistle falling against the rising buzz.</p></div>
     <img src="img/hs2_a_naive_glide_aliased.png" width="1000" height="320" alt="Plots of the a naive glide, aliased sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">n = int(round(glide_dur * fs_glide))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">n = int(round(glide_dur * fs_glide))
 f_samples = np.interp(np.arange(n) / fs_glide, t_glide, f_glide)
 naive = finish(so.Sound(sawtooth(2 * np.pi * np.cumsum(f_samples) / fs_glide), fs_glide))
 fig, playhead = glide_plot(naive, &quot;scipy.signal.sawtooth of the phase, 110 to 1760 Hz&quot;)
