@@ -43,8 +43,10 @@ class Spectrum:
     def from_sound(cls, sound: Sound) -> Spectrum:
         """Exact FFT magnitude of the (mono mixdown of the) sound. Noisy for
         noise-like signals; see :func:`long_term_spectrum` for a smooth estimate."""
-        x = sound.mono().data[:, 0]
-        return cls(np.fft.rfftfreq(len(x), 1 / sound.fs), amp_to_db(np.fft.rfft(x), floor_db=_FLOOR_DB))
+        samples = sound.mono().data[:, 0]
+        return cls(
+            np.fft.rfftfreq(len(samples), 1 / sound.fs), amp_to_db(np.fft.rfft(samples), floor_db=_FLOOR_DB)
+        )
 
     def level_at(self, freqs: np.ndarray) -> np.ndarray:
         """Levels [dB] linearly interpolated at ``freqs``."""
@@ -56,14 +58,14 @@ class Spectrum:
 
     def smooth(self, fraction: float = 1 / 3) -> Spectrum:
         """Fractional-octave smoothing (power average over ``fraction`` octave)."""
-        p = 10 ** (self.level / 10)
-        c = np.concatenate([[0], np.cumsum(p)])
+        power = 10 ** (self.level / 10)
+        cumulative = np.concatenate([[0], np.cumsum(power)])
         half = 2 ** (fraction / 2)
-        lo = np.searchsorted(self.f, self.f / half, side="left")
-        hi = np.searchsorted(self.f, self.f * half, side="right")
-        hi = np.maximum(hi, lo + 1)
-        avg = (c[hi] - c[lo]) / (hi - lo)
-        return Spectrum(self.f, 10 * np.log10(np.maximum(avg, 10 ** (_FLOOR_DB / 10))))
+        start = np.searchsorted(self.f, self.f / half, side="left")
+        stop = np.searchsorted(self.f, self.f * half, side="right")
+        stop = np.maximum(stop, start + 1)
+        mean_power = (cumulative[stop] - cumulative[start]) / (stop - start)
+        return Spectrum(self.f, 10 * np.log10(np.maximum(mean_power, 10 ** (_FLOOR_DB / 10))))
 
     def to_noise(self, duration: float, fs: float, rng=None, **kwargs) -> Sound:
         """Gaussian noise with this spectral shape."""
@@ -84,14 +86,14 @@ def long_term_spectrum(sounds: Sound | Sequence[Sound], nperseg: int = 4096) -> 
         sounds = [sounds]
     fs = sounds[0].fs
     total, weight = 0.0, 0
-    for s in sounds:
-        if s.fs != fs:
-            s = s.resample(fs)
-        f, p = welch(s.mono().data[:, 0], fs, nperseg=min(nperseg, len(s)))
-        total = total + p * len(s)
-        weight += len(s)
+    for sound in sounds:
+        if sound.fs != fs:
+            sound = sound.resample(fs)
+        freqs, sound_psd = welch(sound.mono().data[:, 0], fs, nperseg=min(nperseg, len(sound)))
+        total = total + sound_psd * len(sound)
+        weight += len(sound)
     psd = total / weight
-    return Spectrum(f, 10 * np.log10(np.maximum(psd, 10 ** (_FLOOR_DB / 10))))
+    return Spectrum(freqs, 10 * np.log10(np.maximum(psd, 10 ** (_FLOOR_DB / 10))))
 
 
 # -------------------------------------------------------------------- STFT
@@ -141,9 +143,12 @@ class STFT:
         return new
 
     def __repr__(self) -> str:
-        c, f, t = self.data.shape
-        win, hop = self.sft.m_num / self.fs * 1e3, self.sft.hop / self.fs * 1e3
-        return f"STFT({f} freqs x {t} frames, {c} ch, win {win:.1f} ms, hop {hop:.1f} ms)"
+        n_channels, n_freqs, n_frames = self.data.shape
+        win_ms, hop_ms = self.sft.m_num / self.fs * 1e3, self.sft.hop / self.fs * 1e3
+        return (
+            f"STFT({n_freqs} freqs x {n_frames} frames, {n_channels} ch, "
+            f"win {win_ms:.1f} ms, hop {hop_ms:.1f} ms)"
+        )
 
     @property
     def f(self) -> np.ndarray:
@@ -163,8 +168,8 @@ class STFT:
         return amp_to_db(self.data, floor_db=_FLOOR_DB)
 
     def __mul__(self, other):
-        m = other.values if isinstance(other, Mask) else other
-        return STFT._from(self, self.data * m)
+        gains = other.values if isinstance(other, Mask) else other
+        return STFT._from(self, self.data * gains)
 
     __rmul__ = __mul__
 
@@ -176,17 +181,17 @@ class STFT:
     def griffin_lim(self, n_iter: int = 100, momentum: float = 0.99, rng=None) -> Sound:
         """Reconstruct a signal from the magnitude only (fast Griffin-Lim,
         Perraudin et al., 2013). ``momentum=0`` gives classic Griffin-Lim."""
-        mag = self.magnitude
+        target_mag = self.magnitude
         rng = as_rng(rng)
-        c = mag * np.exp(2j * np.pi * rng.random(mag.shape))
-        t_prev = c
+        coefs = target_mag * np.exp(2j * np.pi * rng.random(target_mag.shape))
+        prev_projected = coefs
         for _ in range(n_iter):
-            x = self.sft.istft(c, k1=self.n_samples)
-            t = self.sft.stft(np.real(x), axis=-1)
-            c = t + momentum * (t - t_prev)
-            t_prev = t
-            c = mag * np.exp(1j * np.angle(c))
-        return STFT._from(self, c).to_sound()
+            signal = self.sft.istft(coefs, k1=self.n_samples)
+            projected = self.sft.stft(np.real(signal), axis=-1)
+            coefs = projected + momentum * (projected - prev_projected)
+            prev_projected = projected
+            coefs = target_mag * np.exp(1j * np.angle(coefs))
+        return STFT._from(self, coefs).to_sound()
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
         from sonore.plotting import plot_stft
@@ -215,11 +220,11 @@ class TVSTFT:
         return cls(data, template.fs, template.n_samples, template.frame)
 
     def __repr__(self) -> str:
-        c, f, t = self.data.shape
-        lengths = self.frame.layout(self.fs).lengths / self.fs * 1e3
+        n_channels, n_freqs, n_frames = self.data.shape
+        win_ms = self.frame.layout(self.fs).lengths / self.fs * 1e3
         return (
-            f"TVSTFT({f} freqs x {t} frames, {c} ch, "
-            f"win {lengths.min():.1f}-{lengths.max():.1f} ms, n_fft {self.frame.layout(self.fs).n_fft})"
+            f"TVSTFT({n_freqs} freqs x {n_frames} frames, {n_channels} ch, "
+            f"win {win_ms.min():.1f}-{win_ms.max():.1f} ms, n_fft {self.frame.layout(self.fs).n_fft})"
         )
 
     @property
@@ -310,18 +315,18 @@ def tandem_power(
     magnitude only: synthesizing from the pair would need a union of two
     frames, which sonore does not provide.
     """
-    f = np.asarray(f0, dtype=float)
-    longest = periods / np.min(f[np.isfinite(f) & (f > 0)], initial=np.inf)
+    f0_values = np.asarray(f0, dtype=float)
+    longest_dur = periods / np.min(f0_values[np.isfinite(f0_values) & (f0_values > 0)], initial=np.inf)
     base = TVGaborFrame.pitch_adaptive(
-        f0_times, f0, t_end=sound.duration + longest / 2, periods=periods, overlap=overlap, window=window
+        f0_times, f0, t_end=sound.duration + longest_dur / 2, periods=periods, overlap=overlap, window=window
     )
     t, durs = np.asarray(base.times), np.asarray(base.win_durs)
     quarter = durs / periods / 4
     n_fft = int(base.layout(sound.fs).n_fft)
-    a = TVGaborFrame(t - quarter, durs, n_fft=n_fft, window=window).analyze(sound)
-    b = TVGaborFrame(t + quarter, durs, n_fft=n_fft, window=window).analyze(sound)
-    power = (np.abs(a.data) ** 2 + np.abs(b.data) ** 2) / 2
-    return TFPower(power, t, a.f)
+    early = TVGaborFrame(t - quarter, durs, n_fft=n_fft, window=window).analyze(sound)
+    late = TVGaborFrame(t + quarter, durs, n_fft=n_fft, window=window).analyze(sound)
+    power = (np.abs(early.data) ** 2 + np.abs(late.data) ** 2) / 2
+    return TFPower(power, t, early.f)
 
 
 # ---------------------------------------------------------------- reassignment
@@ -344,13 +349,15 @@ class ReassignedSpectrogram:
         """Kept power summed into the cells of ``t_edges`` x ``f_edges``
         [s, Hz]; points outside the edges are dropped."""
         t_edges, f_edges = np.asarray(t_edges, float), np.asarray(f_edges, float)
-        out = np.stack(
+        binned_power = np.stack(
             [
-                np.histogram2d(f[k], t[k], bins=(f_edges, t_edges), weights=p[k])[0]
-                for t, f, p, k in zip(self.t_hat, self.f_hat, self.power, self.keep, strict=True)
+                np.histogram2d(freqs[kept], times[kept], bins=(f_edges, t_edges), weights=powers[kept])[0]
+                for times, freqs, powers, kept in zip(
+                    self.t_hat, self.f_hat, self.power, self.keep, strict=True
+                )
             ]
         )
-        return TFPower(out, (t_edges[:-1] + t_edges[1:]) / 2, (f_edges[:-1] + f_edges[1:]) / 2)
+        return TFPower(binned_power, (t_edges[:-1] + t_edges[1:]) / 2, (f_edges[:-1] + f_edges[1:]) / 2)
 
 
 def reassigned_spectrogram(
@@ -377,25 +384,27 @@ def reassigned_spectrogram(
     their positions are mostly noise.
     """
     n_win, hop, n_fft = frame.lengths(sound.fs)
-    w = frame.window_samples(sound.fs)
-    tau, dw = _window_tau_and_derivative(frame.window, n_win, sound.fs)
-    if not np.allclose(w, _window_from_formula(frame.window, n_win)):
+    window = frame.window_samples(sound.fs)
+    tau, window_deriv = _window_tau_and_derivative(frame.window, n_win, sound.fs)
+    if not np.allclose(window, _window_from_formula(frame.window, n_win)):
         raise ValueError(f"window {frame.window!r} does not match its formula")
 
-    def stft(win):
-        sft = ShortTimeFFT(win, hop=hop, fs=sound.fs, mfft=n_fft, fft_mode="onesided", dual_win=w)
-        return sft, sft.stft(sound.data.T)
+    def stft(window_values):
+        short_time_fft = ShortTimeFFT(
+            window_values, hop=hop, fs=sound.fs, mfft=n_fft, fft_mode="onesided", dual_win=window
+        )
+        return short_time_fft, short_time_fft.stft(sound.data.T)
 
-    sft, X = stft(w)
-    Xt = stft(tau * w)[1]
-    Xd = stft(dw)[1]
-    p = np.abs(X) ** 2
+    short_time_fft, X = stft(window)
+    X_tw = stft(tau * window)[1]
+    X_dw = stft(window_deriv)[1]
+    power = np.abs(X) ** 2
     with np.errstate(divide="ignore", invalid="ignore"):
-        t_hat = sft.t(len(sound))[None, None, :] + np.real(Xt * X.conj()) / p
-        f_hat = sft.f[None, :, None] - np.imag(Xd * X.conj()) / p / (2 * np.pi)
-    peak = p.max(axis=(1, 2), keepdims=True)
-    keep = (p > peak * 10 ** (threshold_db / 10)) & np.isfinite(t_hat) & np.isfinite(f_hat)
-    return ReassignedSpectrogram(t_hat, f_hat, p, keep)
+        t_hat = short_time_fft.t(len(sound))[None, None, :] + np.real(X_tw * X.conj()) / power
+        f_hat = short_time_fft.f[None, :, None] - np.imag(X_dw * X.conj()) / power / (2 * np.pi)
+    peak = power.max(axis=(1, 2), keepdims=True)
+    keep = (power > peak * 10 ** (threshold_db / 10)) & np.isfinite(t_hat) & np.isfinite(f_hat)
+    return ReassignedSpectrogram(t_hat, f_hat, power, keep)
 
 
 def _window_from_formula(spec, n: int) -> np.ndarray:
@@ -412,12 +421,12 @@ def _window_tau_and_derivative(spec, n: int, fs: float) -> tuple[np.ndarray, np.
     both at the periodic window's samples."""
     k = np.arange(n)
     tau = (k - n // 2) / fs
-    w = _window_from_formula(spec, n)
+    window = _window_from_formula(spec, n)
     if spec == "hann":
-        dw = 0.5 * (2 * np.pi / n) * np.sin(2 * np.pi * k / n) * fs
+        derivative = 0.5 * (2 * np.pi / n) * np.sin(2 * np.pi * k / n) * fs
     else:
-        dw = -(k - n / 2) / spec[1] ** 2 * w * fs
-    return tau, dw
+        derivative = -(k - n / 2) / spec[1] ** 2 * window * fs
+    return tau, derivative
 
 
 # ------------------------------------------------------------------- masks
@@ -447,9 +456,9 @@ def ideal_binary_mask(target: STFT, masker: STFT, lc_db: float = 0.0) -> Mask:
 
 def ideal_ratio_mask(target: STFT, masker: STFT, beta: float = 0.5) -> Mask:
     """``(|T|^2 / (|T|^2 + |M|^2))**beta``."""
-    pt, pm = target.magnitude**2, masker.magnitude**2
+    target_power, masker_power = target.magnitude**2, masker.magnitude**2
     with np.errstate(invalid="ignore", divide="ignore"):
-        irm = np.nan_to_num((pt / (pt + pm)) ** beta)
+        irm = np.nan_to_num((target_power / (target_power + masker_power)) ** beta)
     return Mask(irm, target.t, target.f)
 
 
@@ -470,10 +479,10 @@ class ModulationSpectrum:
     """
 
     def __init__(self, stft: STFT, channel: int = 0):
-        d = stft.db[channel]
-        df = stft.f[1] - stft.f[0]
+        spectrogram_db = stft.db[channel]
+        bin_spacing = stft.f[1] - stft.f[0]
         dt = stft.sft.hop / stft.fs
-        self._compute(d, dt=dt, dx=df / 1000, spectral_unit="cyc/kHz")
+        self._compute(spectrogram_db, dt=dt, dx=bin_spacing / 1000, spectral_unit="cyc/kHz")
 
     @classmethod
     def from_array(cls, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> ModulationSpectrum:
@@ -490,13 +499,13 @@ class ModulationSpectrum:
         # cycles long). Removing each band's own mean instead would also work but
         # would erase static spectral structure (rate-0 ripples).
         env = (env - env.mean()) * np.hanning(env.shape[1])[None, :]
-        F = np.fft.fft2(env)
+        spectrum = np.fft.fft2(env)
         w_f = np.fft.fftfreq(env.shape[0], d=dx)
         w_t = np.fft.fftfreq(env.shape[1], d=dt)
         keep = w_f >= 0
         self.w_f = w_f[keep]
         self.w_t = np.fft.fftshift(w_t)
-        self.level = amp_to_db(np.fft.fftshift(F[keep], axes=1), floor_db=_FLOOR_DB)
+        self.level = amp_to_db(np.fft.fftshift(spectrum[keep], axes=1), floor_db=_FLOOR_DB)
         self.spectral_unit = spectral_unit
 
     @classmethod

@@ -164,11 +164,11 @@ fig, playhead = show(sound, dmr, dmr=True)
 #   speech intelligibility. *J. Acoust. Soc. Am.* 106(5), 2719–2732.
 #   [JASA](https://pubs.aip.org/asa/jasa/article/106/5/2719/550617).
 #   [`ripples.Ripple`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py#L84)
-#   [`representations.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L457)
+#   [`representations.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L466)
 # - Escabí & Schreiner (2002). Nonlinear spectrotemporal sound analysis by neurons in the auditory
 #   midbrain. *J. Neurosci.* 22(10), 4114–4131.
 #   [doi:10.1523/JNEUROSCI.22-10-04114.2002](https://doi.org/10.1523/JNEUROSCI.22-10-04114.2002).
-#   [`ripples.DynamicRipple`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py#L159)
+#   [`ripples.DynamicRipple`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py#L161)
 # - Kowalski, Depireux & Shamma (1996). Analysis of dynamic spectra in ferret primary auditory
 #   cortex. I. Characteristics of single-unit responses to moving ripple spectra. *J.
 #   Neurophysiol.* 76(5), 3503–3523.
@@ -177,4 +177,4 @@ fig, playhead = show(sound, dmr, dmr=True)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.
 #   [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067).
-#   [`representations.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L457)
+#   [`representations.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L466)

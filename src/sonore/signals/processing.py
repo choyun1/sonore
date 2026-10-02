@@ -175,13 +175,13 @@ def _filter(sound: Sound, f: Track, bw: Track, inverse: bool) -> Sound:
     a, b, c = _resonator_coefs(f, bw, fs)
     data = sound.data
     if np.ndim(a) == 0:
-        num, den = ([1 / a, -b / a, -c / a], [1.0]) if inverse else ([a], [1.0, -b, -c])
-        return Sound(lfilter(num, den, data, axis=0), fs)
-    a, b, c = (np.broadcast_to(v, t.shape) for v in (a, b, c))
+        numerator, denominator = ([1 / a, -b / a, -c / a], [1.0]) if inverse else ([a], [1.0, -b, -c])
+        return Sound(lfilter(numerator, denominator, data, axis=0), fs)
+    a, b, c = (np.broadcast_to(coef, t.shape) for coef in (a, b, c))
     out = np.empty_like(data)
-    for ch in range(data.shape[1]):
-        x = data[:, ch]
-        out[:, ch] = _two_zero(x, 1 / a, -b / a, -c / a) if inverse else _two_pole(x, a, b, c)
+    for channel in range(data.shape[1]):
+        x = data[:, channel]
+        out[:, channel] = _two_zero(x, 1 / a, -b / a, -c / a) if inverse else _two_pole(x, a, b, c)
     return Sound(out, fs)
 
 

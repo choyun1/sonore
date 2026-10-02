@@ -43,8 +43,8 @@ __all__ = [
 # ------------------------------------------------------------- coordinates
 def rect_to_sph(x, y, z):
     """Cartesian -> (rho, theta=elevation, phi=angle from +x), radians."""
-    hxy = np.hypot(x, y)
-    return np.hypot(hxy, z), np.arctan2(z, hxy), np.arctan2(y, x)
+    horizontal_dist = np.hypot(x, y)
+    return np.hypot(horizontal_dist, z), np.arctan2(z, horizontal_dist), np.arctan2(y, x)
 
 
 def sph_to_rect(rho, theta, phi):
@@ -82,11 +82,11 @@ def distance_gain_db(distance: ArrayLike, ref: float = 1.0) -> np.ndarray:
 # ------------------------------------------------------------------ HRIRs
 def _frac_shift(h: np.ndarray, shift: np.ndarray, n_out: int) -> np.ndarray:
     """Delay each IR in ``h`` (..., n) by ``shift`` (...,) samples (fractional ok)."""
-    n = max(h.shape[-1], n_out) + int(np.ceil(np.max(np.abs(shift)))) + 64
-    H = np.fft.rfft(h, n=n, axis=-1)
-    f = np.fft.rfftfreq(n)
-    H *= np.exp(-2j * np.pi * f * shift[..., None])
-    return np.fft.irfft(H, n=n, axis=-1)[..., :n_out]
+    n_fft = max(h.shape[-1], n_out) + int(np.ceil(np.max(np.abs(shift)))) + 64
+    spectrum = np.fft.rfft(h, n=n_fft, axis=-1)
+    freqs = np.fft.rfftfreq(n_fft)
+    spectrum *= np.exp(-2j * np.pi * freqs * shift[..., None])
+    return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
 
 
 @dataclass
@@ -135,16 +135,16 @@ class HRIRSet:
         :func:`load_hrirs` downloads the SOFA copy instead."""
         pattern = re.compile(r"azi(-?\d+)_elev(-?\d+)_dist(\d+)\.dat$")
         hcc, irs, paths, empty = [], [], [], []
-        for p in sorted(Path(directory).rglob("*.dat")):
-            m = pattern.search(p.name)
-            if m:
-                if p.stat().st_size == 0:
-                    empty.append(p)
+        for path in sorted(Path(directory).rglob("*.dat")):
+            match = pattern.search(path.name)
+            if match:
+                if path.stat().st_size == 0:
+                    empty.append(path)
                     continue
-                a, e, d = map(float, m.groups())
-                hcc.append((d, e, a))
-                irs.append(np.fromfile(p))
-                paths.append(p)
+                azim, elev, dist = map(float, match.groups())
+                hcc.append((dist, elev, azim))
+                irs.append(np.fromfile(path))
+                paths.append(path)
         if empty:
             warnings.warn(
                 f"skipped {len(empty)} empty .dat file(s), e.g. {empty[0]}; those directions are missing",
@@ -153,34 +153,35 @@ class HRIRSet:
         if not irs:
             raise FileNotFoundError(f"no PKU-IOA .dat files in {directory}")
         sizes = [x.size for x in irs]
-        n = max(set(sizes), key=sizes.count)  # the usual length, 2048
-        odd = [(p, k) for p, k in zip(paths, sizes, strict=True) if k != n]
-        if odd:
-            listed = "\n".join(f"  {p} ({k} values)" for p, k in odd[:10])
+        usual_size = max(set(sizes), key=sizes.count)  # the usual length, 2048
+        wrong_sized = [(path, size) for path, size in zip(paths, sizes, strict=True) if size != usual_size]
+        if wrong_sized:
+            listed = "\n".join(f"  {path} ({size} values)" for path, size in wrong_sized[:10])
             raise ValueError(
-                f"{len(odd)} of {len(irs)} .dat files are not {n} float64 values (left then right):"
-                f"\n{listed}" + ("\n  ..." if len(odd) > 10 else "")
+                f"{len(wrong_sized)} of {len(irs)} .dat files are not {usual_size} float64 values "
+                "(left then right):"
+                f"\n{listed}" + ("\n  ..." if len(wrong_sized) > 10 else "")
             )
-        pos = np.column_stack(hcc_to_rect(*np.array(hcc).T))
-        return cls(np.array(irs).reshape(len(irs), 2, -1), pos, fs, **kwargs)
+        positions = np.column_stack(hcc_to_rect(*np.array(hcc).T))
+        return cls(np.array(irs).reshape(len(irs), 2, -1), positions, fs, **kwargs)
 
     @classmethod
     def from_sofa(cls, path: str | PathLike, **kwargs) -> HRIRSet:
         """Load a SOFA ``SimpleFreeFieldHRIR`` file (needs ``h5py``)."""
         import h5py
 
-        with h5py.File(path, "r") as f:
-            irs = f["Data.IR"][()]  # (M, R, N)
-            fs = float(np.ravel(f["Data.SamplingRate"][()])[0])
-            pos = f["SourcePosition"][()]  # (M, 3)
-            ptype = f["SourcePosition"].attrs.get("Type", b"spherical")
-        ptype = ptype.decode() if isinstance(ptype, bytes) else str(ptype)
-        if ptype.lower().startswith("cartesian"):
+        with h5py.File(path, "r") as sofa:
+            irs = sofa["Data.IR"][()]  # (M, R, N)
+            fs = float(np.ravel(sofa["Data.SamplingRate"][()])[0])
+            source_pos = sofa["SourcePosition"][()]  # (M, 3)
+            pos_type = sofa["SourcePosition"].attrs.get("Type", b"spherical")
+        pos_type = pos_type.decode() if isinstance(pos_type, bytes) else str(pos_type)
+        if pos_type.lower().startswith("cartesian"):
             # SOFA: x = front, y = left, z = up
-            xyz = np.column_stack([-pos[:, 1], pos[:, 0], pos[:, 2]])
+            xyz = np.column_stack([-source_pos[:, 1], source_pos[:, 0], source_pos[:, 2]])
         else:
-            az, el, r = pos.T  # SOFA azimuth is counter-clockwise from front
-            xyz = np.column_stack(hcc_to_rect(100 * r, el, np.mod(-az, 360)))
+            azimuth, elevation, radius = source_pos.T  # SOFA azimuth is counter-clockwise from front
+            xyz = np.column_stack(hcc_to_rect(100 * radius, elevation, np.mod(-azimuth, 360)))
         return cls(irs[:, :2, :], xyz, fs, **kwargs)
 
     @classmethod
@@ -190,20 +191,20 @@ class HRIRSet:
         sets = list(sets)
         if not sets:
             raise ValueError("no HRIR sets to merge")
-        fs, taps = sets[0].fs, sets[0].irs.shape[1:]
-        for s in sets[1:]:
-            if s.fs != fs or s.irs.shape[1:] != taps:
+        fs, ir_shape = sets[0].fs, sets[0].irs.shape[1:]
+        for hrir_set in sets[1:]:
+            if hrir_set.fs != fs or hrir_set.irs.shape[1:] != ir_shape:
                 raise ValueError("HRIR sets differ in sampling rate or IR shape; resample before merging")
-        irs = np.concatenate([s.irs for s in sets])
-        positions = np.concatenate([s.positions for s in sets])
+        irs = np.concatenate([hrir_set.irs for hrir_set in sets])
+        positions = np.concatenate([hrir_set.positions for hrir_set in sets])
         return cls(irs, positions, fs, **kwargs)
 
     # ---- interpolation
     @cached_property
     def _onsets(self) -> np.ndarray:
-        env = np.abs(self.irs)
-        thresh = env.max(axis=-1, keepdims=True) * 10 ** (self.onset_threshold_db / 20)
-        return np.argmax(env >= thresh, axis=-1).astype(float)  # (M, 2)
+        envelope = np.abs(self.irs)
+        threshold = envelope.max(axis=-1, keepdims=True) * 10 ** (self.onset_threshold_db / 20)
+        return np.argmax(envelope >= threshold, axis=-1).astype(float)  # (M, 2)
 
     @cached_property
     def _aligned(self) -> np.ndarray:
@@ -212,62 +213,62 @@ class HRIRSet:
 
     @cached_property
     def _single_distance(self) -> bool:
-        r = np.linalg.norm(self.positions, axis=1)
-        return np.ptp(r) < 1e-3 * r.mean()
+        radii = np.linalg.norm(self.positions, axis=1)
+        return np.ptp(radii) < 1e-3 * radii.mean()
 
     @cached_property
     def _triangulation(self):
         if self._single_distance:
-            u = self.positions / np.linalg.norm(self.positions, axis=1, keepdims=True)
-            hull = ConvexHull(u)
+            directions = self.positions / np.linalg.norm(self.positions, axis=1, keepdims=True)
+            hull = ConvexHull(directions)
             simplices = hull.simplices
-            inv = np.linalg.inv(u[simplices].transpose(0, 2, 1))  # (T, 3, 3)
-            return simplices, inv
+            inverse = np.linalg.inv(directions[simplices].transpose(0, 2, 1))  # (T, 3, 3)
+            return simplices, inverse
         return Delaunay(self.positions)
 
     def _weights(self, points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Barycentric weights: (indices (N, k), weights (N, k))."""
         if self._single_distance:
-            simplices, inv = self._triangulation
-            u = points / np.linalg.norm(points, axis=1, keepdims=True)
-            w = np.einsum("tij,nj->nti", inv, u)  # (N, T, 3)
-            ok = np.all(w >= -1e-9, axis=-1)
-            if not ok.any(axis=1).all():
+            simplices, inverse = self._triangulation
+            directions = points / np.linalg.norm(points, axis=1, keepdims=True)
+            weights = np.einsum("tij,nj->nti", inverse, directions)  # (N, T, 3)
+            inside = np.all(weights >= -1e-9, axis=-1)
+            if not inside.any(axis=1).all():
                 raise ValueError("some directions are outside the measured sphere")
-            tri = np.argmax(ok, axis=1)
-            w = w[np.arange(len(points)), tri]
-            return simplices[tri], w / w.sum(axis=1, keepdims=True)
-        tess = self._triangulation
-        simp = tess.find_simplex(points)
-        if np.any(simp < 0):
+            simplex_index = np.argmax(inside, axis=1)
+            weights = weights[np.arange(len(points)), simplex_index]
+            return simplices[simplex_index], weights / weights.sum(axis=1, keepdims=True)
+        tessellation = self._triangulation
+        simplex = tessellation.find_simplex(points)
+        if np.any(simplex < 0):
             raise ValueError("some positions are outside the measured region; cannot interpolate")
-        T = tess.transform[simp]
-        b = np.einsum("nij,nj->ni", T[:, :3, :], points - T[:, 3, :])
-        w = np.column_stack([b, 1 - b.sum(axis=1)])
-        return tess.simplices[simp], w
+        transform = tessellation.transform[simplex]
+        bary = np.einsum("nij,nj->ni", transform[:, :3, :], points - transform[:, 3, :])
+        weights = np.column_stack([bary, 1 - bary.sum(axis=1)])
+        return tessellation.simplices[simplex], weights
 
     def at(self, positions: ArrayLike, fs: float | None = None) -> np.ndarray:
         """Interpolated HRIRs at Cartesian ``positions`` (N, 3), resampled to
         ``fs``. Returns shape ``(N, 2, n_taps)``."""
         points = np.atleast_2d(np.asarray(positions, float))
-        idx, w = self._weights(points)
+        indices, weights = self._weights(points)
         if self.align:
-            shapes = np.einsum("nk,nkcs->ncs", w, self._aligned[idx])
-            onsets = np.einsum("nk,nkc->nc", w, self._onsets[idx])
+            shapes = np.einsum("nk,nkcs->ncs", weights, self._aligned[indices])
+            onsets = np.einsum("nk,nkc->nc", weights, self._onsets[indices])
             n_out = self.irs.shape[-1] + int(np.ceil(self._onsets.max()))
-            h = _frac_shift(shapes, onsets - self._pre, n_out)
+            hrir = _frac_shift(shapes, onsets - self._pre, n_out)
         else:
-            h = np.einsum("nk,nkcs->ncs", w, self.irs[idx])
+            hrir = np.einsum("nk,nkcs->ncs", weights, self.irs[indices])
         if fs is not None and fs != self.fs:
-            r = Fraction(fs / self.fs).limit_denominator(10000)
-            h = resample_poly(h, r.numerator, r.denominator, axis=-1)
-        return h
+            ratio = Fraction(fs / self.fs).limit_denominator(10000)
+            hrir = resample_poly(hrir, ratio.numerator, ratio.denominator, axis=-1)
+        return hrir
 
 
 def spatialize(sound: Sound, position: ArrayLike, hrirs: HRIRSet) -> Sound:
     """Render a mono sound at a fixed Cartesian position."""
-    h = hrirs.at(position, fs=sound.fs)[0]
-    return sound.mono().convolve(Sound(h.T, sound.fs))
+    hrir = hrirs.at(position, fs=sound.fs)[0]
+    return sound.mono().convolve(Sound(hrir.T, sound.fs))
 
 
 def move_sound(sound: Sound, trajectory: np.ndarray, hrirs: HRIRSet) -> Sound:
@@ -281,21 +282,23 @@ def move_sound(sound: Sound, trajectory: np.ndarray, hrirs: HRIRSet) -> Sound:
     trajectory = np.atleast_2d(trajectory)
     if len(trajectory) == 1:
         return spatialize(sound, trajectory[0], hrirs)
-    x = sound.mono().data[:, 0]
-    n, N = len(x), len(trajectory)
-    H = hrirs.at(trajectory, fs=sound.fs)  # (N, 2, taps)
-    out = np.zeros((n + H.shape[-1] - 1, 2))
-    knots = np.linspace(0, n - 1, N)
-    for i in range(N):
-        lo = int(np.floor(knots[i - 1])) if i > 0 else 0
-        hi = int(np.ceil(knots[i + 1])) + 1 if i < N - 1 else n
-        s = np.arange(lo, hi)
-        u = np.interp(s, knots, np.arange(N)) - i  # position in "knot units", in [-1, 1]
-        w = np.where(np.abs(u) < 1, (1 + np.cos(np.pi * u)) / 2, 0.0)
+    signal = sound.mono().data[:, 0]
+    length, n_positions = len(signal), len(trajectory)
+    hrir_track = hrirs.at(trajectory, fs=sound.fs)  # (N, 2, taps)
+    out = np.zeros((length + hrir_track.shape[-1] - 1, 2))
+    knots = np.linspace(0, length - 1, n_positions)
+    for i in range(n_positions):
+        start = int(np.floor(knots[i - 1])) if i > 0 else 0
+        stop = int(np.ceil(knots[i + 1])) + 1 if i < n_positions - 1 else length
+        samples = np.arange(start, stop)
+        knot_offset = (
+            np.interp(samples, knots, np.arange(n_positions)) - i
+        )  # position in "knot units", in [-1, 1]
+        window = np.where(np.abs(knot_offset) < 1, (1 + np.cos(np.pi * knot_offset)) / 2, 0.0)
         if i == 0:
-            w[s <= knots[0]] = 1
-        if i == N - 1:
-            w[s >= knots[-1]] = 1
-        seg = fftconvolve((x[lo:hi] * w)[:, None], H[i].T, axes=0)
-        out[lo : lo + len(seg)] += seg
+            window[samples <= knots[0]] = 1
+        if i == n_positions - 1:
+            window[samples >= knots[-1]] = 1
+        segment = fftconvolve((signal[start:stop] * window)[:, None], hrir_track[i].T, axes=0)
+        out[start : start + len(segment)] += segment
     return Sound(out, sound.fs)

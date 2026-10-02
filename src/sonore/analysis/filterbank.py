@@ -77,8 +77,8 @@ class CosineFilterbank(Filterbank):
     @property
     def spacing(self) -> float:
         """Distance between adjacent filter centers, in scale units."""
-        k = self._knots
-        return float(k[1] - k[0])
+        knots = self._knots
+        return float(knots[1] - knots[0])
 
     @property
     def cfs(self) -> np.ndarray:
@@ -88,13 +88,13 @@ class CosineFilterbank(Filterbank):
     def response(self, freqs: np.ndarray) -> np.ndarray:
         """Magnitude responses, shape ``(len(freqs), n_bands + 2)``."""
         with np.errstate(divide="ignore"):
-            e = self.to_scale(np.asarray(freqs, float))[:, None]
-        k = self._knots
-        u = (e - k[None, :]) / self.spacing  # distance from each center in band spacings
-        H = np.where(np.abs(u) < 1, np.cos(np.pi / 2 * np.clip(u, -1, 1)), 0.0)
-        H[:, 0] = np.where(e[:, 0] <= k[0], 1.0, H[:, 0])
-        H[:, -1] = np.where(e[:, 0] >= k[-1], 1.0, H[:, -1])
-        return H
+            scale_pos = self.to_scale(np.asarray(freqs, float))[:, None]
+        knots = self._knots
+        distance = (scale_pos - knots[None, :]) / self.spacing  # distance from each center in band spacings
+        transfer = np.where(np.abs(distance) < 1, np.cos(np.pi / 2 * np.clip(distance, -1, 1)), 0.0)
+        transfer[:, 0] = np.where(scale_pos[:, 0] <= knots[0], 1.0, transfer[:, 0])
+        transfer[:, -1] = np.where(scale_pos[:, 0] >= knots[-1], 1.0, transfer[:, -1])
+        return transfer
 
 
 @dataclass(frozen=True)
@@ -131,8 +131,8 @@ class OctaveFilterbank(CosineFilterbank):
     def per_octave(cls, bands_per_octave: float, f_lo: float, f_hi: float) -> OctaveFilterbank:
         """Choose ``n_bands`` so filter centers are about ``1/bands_per_octave``
         octaves apart between ``f_lo`` and ``f_hi``."""
-        n = max(1, int(round(bands_per_octave * np.log2(f_hi / f_lo))) - 1)
-        return cls(n, f_lo, f_hi)
+        n_bands = max(1, int(round(bands_per_octave * np.log2(f_hi / f_lo))) - 1)
+        return cls(n_bands, f_lo, f_hi)
 
 
 @dataclass(frozen=True)
@@ -196,8 +196,8 @@ class BandpassFilterbank(Filterbank):
     @property
     def spacing(self) -> float:
         """Distance between adjacent bandpass centers, in scale units."""
-        k = self._knots
-        return float(k[1] - k[0])
+        knots = self._knots
+        return float(knots[1] - knots[0])
 
     @property
     def band_cfs(self) -> np.ndarray:
@@ -211,8 +211,10 @@ class BandpassFilterbank(Filterbank):
     @property
     def _edge_corners(self) -> tuple[float, float]:
         """Where the lowpass starts to fall and the highpass stops rising [Hz]."""
-        k, d = self._knots, self.edge_width * self.spacing
-        return max(float(self.from_scale(k[0] - d)), 0.0), float(self.from_scale(k[-1] + d))
+        knots, edge_offset = self._knots, self.edge_width * self.spacing
+        return max(float(self.from_scale(knots[0] - edge_offset)), 0.0), float(
+            self.from_scale(knots[-1] + edge_offset)
+        )
 
     @property
     def cfs(self) -> np.ndarray:
@@ -233,16 +235,16 @@ class BandpassFilterbank(Filterbank):
     def response(self, freqs: np.ndarray) -> np.ndarray:
         """Responses at ``freqs`` [Hz], shape ``(len(freqs), n_filters)``,
         edges first and last."""
-        f = np.asarray(freqs, float)
-        H = self.band_response(f)
+        freq_array = np.asarray(freqs, float)
+        transfer = self.band_response(freq_array)
         if not self.edges:
-            return H
+            return transfer
         lo, hi = self._edge_corners
         cf_lo, cf_hi = self.band_cfs[[0, -1]]
-        g = np.sqrt(self.s_floor)
-        low = g * _taper((f - lo) / (cf_lo - lo))
-        high = g * (1 - _taper((f - cf_hi) / (hi - cf_hi)))
-        return np.concatenate([low[:, None], H, high[:, None]], axis=1)
+        edge_gain = np.sqrt(self.s_floor)
+        low = edge_gain * _taper((freq_array - lo) / (cf_lo - lo))
+        high = edge_gain * (1 - _taper((freq_array - cf_hi) / (hi - cf_hi)))
+        return np.concatenate([low[:, None], transfer, high[:, None]], axis=1)
 
 
 def _taper(u: np.ndarray) -> np.ndarray:
@@ -251,10 +253,10 @@ def _taper(u: np.ndarray) -> np.ndarray:
 
 
 @lru_cache(maxsize=64)
-def _s_floor(fb: BandpassFilterbank) -> float:
-    k = fb._knots
-    grid = fb.from_scale(np.linspace(k[0], k[-1], 64 * (fb.n_bands - 1) + 1))
-    return float(np.min(np.sum(np.abs(fb.band_response(grid)) ** 2, axis=1)))
+def _s_floor(filterbank: BandpassFilterbank) -> float:
+    knots = filterbank._knots
+    grid = filterbank.from_scale(np.linspace(knots[0], knots[-1], 64 * (filterbank.n_bands - 1) + 1))
+    return float(np.min(np.sum(np.abs(filterbank.band_response(grid)) ** 2, axis=1)))
 
 
 @dataclass(frozen=True)
@@ -307,18 +309,18 @@ class GammatoneFilterbank(BandpassFilterbank):
         envelope's peak, not the group delay ``order / (2 pi b)``, which is
         the envelope's centroid and leaves a visible sweep.
         """
-        d = (self.order - 1) / (2 * np.pi * self.b) if self.phase == "causal" else np.zeros(self.n_bands)
-        return np.concatenate([[0.0], d, [0.0]]) if self.edges else d
+        delays = (self.order - 1) / (2 * np.pi * self.b) if self.phase == "causal" else np.zeros(self.n_bands)
+        return np.concatenate([[0.0], delays, [0.0]]) if self.edges else delays
 
     def band_response(self, freqs):
-        f = np.asarray(freqs, float)[:, None]
+        freq_col = np.asarray(freqs, float)[:, None]
         fc, b, n = self.band_cfs[None, :], self.b[None, :], self.order
 
-        def H(f):
-            return (b + 1j * (f - fc)) ** -n + (b + 1j * (f + fc)) ** -n
+        def gammatone(freq):
+            return (b + 1j * (freq - fc)) ** -n + (b + 1j * (freq + fc)) ** -n
 
-        out = H(f) / np.abs(H(fc))  # the constant (n-1)!/(2 pi)^n/2 cancels
-        return out if self.phase == "causal" else np.abs(out)
+        normalized = gammatone(freq_col) / np.abs(gammatone(fc))  # the constant (n-1)!/(2 pi)^n/2 cancels
+        return normalized if self.phase == "causal" else np.abs(normalized)
 
 
 @dataclass(frozen=True)
@@ -352,11 +354,13 @@ class MorletFilterbank(BandpassFilterbank):
         return np.exp2(value)
 
     def band_response(self, freqs):
-        f = np.abs(np.asarray(freqs, float))[:, None]
+        freq_col = np.abs(np.asarray(freqs, float))[:, None]
         fc = self.band_cfs[None, :]
-        sd = fc / self.cycles
-        g = np.exp(-((f - fc) ** 2) / (2 * sd**2)) - np.exp(-(f**2 + fc**2) / (2 * sd**2))
-        return g / (1 - np.exp(-(fc**2) / sd**2))
+        sigma = fc / self.cycles
+        gaussian = np.exp(-((freq_col - fc) ** 2) / (2 * sigma**2)) - np.exp(
+            -(freq_col**2 + fc**2) / (2 * sigma**2)
+        )
+        return gaussian / (1 - np.exp(-(fc**2) / sigma**2))
 
 
 def subbands(sound: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float | None = None) -> Subbands:
@@ -385,13 +389,13 @@ class Subbands:
     """
 
     def __init__(self, data: np.ndarray, fs: float, filterbank: Filterbank, pad: int = 0):
-        arr = np.asarray(data, dtype=float)
-        if arr.ndim != 3 or arr.shape[1] != filterbank.n_filters:
+        bands = np.asarray(data, dtype=float)
+        if bands.ndim != 3 or bands.shape[1] != filterbank.n_filters:
             raise ValueError(f"expected shape (n_samples, {filterbank.n_filters}, n_channels)")
-        if 2 * pad >= arr.shape[0]:
+        if 2 * pad >= bands.shape[0]:
             raise ValueError("padding is longer than the data")
-        arr.flags.writeable = False
-        self._full, self.fs, self.filterbank, self.pad = arr, fs, filterbank, int(pad)
+        bands.flags.writeable = False
+        self._full, self.fs, self.filterbank, self.pad = bands, fs, filterbank, int(pad)
 
     @property
     def data(self) -> np.ndarray:
@@ -416,8 +420,8 @@ class Subbands:
         return (self[i] for i in range(len(self)))
 
     def __repr__(self) -> str:
-        n, b, c = self.data.shape
-        return f"Subbands({b} bands, {n / self.fs:.3f} s, {self.fs:g} Hz, {c} ch)"
+        n_samples, n_bands, n_channels = self.data.shape
+        return f"Subbands({n_bands} bands, {n_samples / self.fs:.3f} s, {self.fs:g} Hz, {n_channels} ch)"
 
     def _new(self, full: np.ndarray, pad: int | None = None) -> Subbands:
         return Subbands(full, self.fs, self.filterbank, self.pad if pad is None else pad)
@@ -482,21 +486,23 @@ def noise_vocode(
     band centers), or any Sound at least as long. The edge bands (outside
     ``f_lo..f_hi``) are silenced. The output matches the input's RMS.
     """
-    fb = ERBFilterbank(n_bands, f_lo, min(f_hi, 0.95 * sound.fs / 2))
-    envelopes = fb.analyze(sound).envelopes(lowpass=env_lowpass).without_edges()
+    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, 0.95 * sound.fs / 2))
+    envelopes = filterbank.analyze(sound).envelopes(lowpass=env_lowpass).without_edges()
     if isinstance(carrier, Sound):
         if len(carrier) < len(sound):
             raise ValueError("carrier is shorter than the sound")
-        fine = fb.analyze(Sound(carrier.data[: len(sound)], carrier.fs)).tfs()
+        fine = filterbank.analyze(Sound(carrier.data[: len(sound)], carrier.fs)).tfs()
     elif carrier == "noise":
         from sonore.signals.generators import gaussian_noise
 
         noise = gaussian_noise(sound.duration, sound.fs, n_channels=sound.n_channels, rng=as_rng(rng))
-        fine = fb.analyze(noise, pad=0).tfs()  # generated noise is periodic: circular is exact
+        fine = filterbank.analyze(noise, pad=0).tfs()  # generated noise is periodic: circular is exact
     elif carrier == "tone":
-        tones = np.cos(2 * np.pi * fb.cfs[None, :, None] * sound.t[:, None, None])
+        tones = np.cos(2 * np.pi * filterbank.cfs[None, :, None] * sound.t[:, None, None])
         fine = Subbands(
-            np.broadcast_to(tones, (len(sound), len(fb.cfs), sound.n_channels)).copy(), sound.fs, fb
+            np.broadcast_to(tones, (len(sound), len(filterbank.cfs), sound.n_channels)).copy(),
+            sound.fs,
+            filterbank,
         )
     else:
         raise ValueError("carrier must be 'noise', 'tone', or a Sound")
