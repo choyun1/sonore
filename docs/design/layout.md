@@ -9,7 +9,7 @@ has the reasons). The trunk, bottom to top:
 | `core` | `sound`, `units`, `utils`, `fft` | `Sound`, decibels, numeric helpers and frequency scales, FFT sizes and threads | nothing in sonore |
 | `signals` | `generators`, `processing`, `klatt`, `world` | sounds from parameters: waveforms (the LF source among them), filters, and two synthesizers | core |
 | `frames` | `frame`, `filterbank`, `gabor`, `mask` | invertible analyses, their coefficients, and changes to coefficients with exact least-squares resynthesis | core, signals |
-| `views` | `spectrum`, `reassigned`, `envelopes`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `f0`, `spectral_envelope`, `aperiodicity` | one-way analyses, each saying what it drops | core, signals, frames |
+| `views` | `view`, `spectrum`, `reassigned`, `envelopes`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `f0`, `spectral_envelope`, `aperiodicity` | one-way analyses, each saying what it drops | core, signals, frames |
 
 The branches, which import from the trunk and never from each other:
 

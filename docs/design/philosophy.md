@@ -41,7 +41,10 @@ meant to be readable without them.
   features, and each says what it drops and whether a sound can be
   recovered from it: exactly, approximately (Griffin-Lim, texture synthesis,
   which search for a sound whose view matches through the exact frame
-  underneath), or not at all.
+  underneath), or not at all. In code, every view is a `View`: its
+  `discards` sentence says what it drops, and its `synthesize` raises
+  `NotInvertibleError` with that sentence and the route back to sound, if
+  sonore has one.
 - **Keep the simplest representation that loses nothing.** Subbands stay
   real; the complex analytic signal is computed from them exactly when
   envelopes or phase are needed.

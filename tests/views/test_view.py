@@ -1,0 +1,57 @@
+"""Every view refuses to synthesize, and says what it drops."""
+
+import pytest
+
+import sonore as so
+from sonore.views.view import NotInvertibleError, View
+
+VIEW_NAMES = [
+    "Spectrum",
+    "TFPower",
+    "ReassignedSpectrogram",
+    "Envelope",
+    "Envelopes",
+    "ModulationSpectrum",
+    "ModulationSpectrogram",
+    "Cepstrum",
+    "MFCC",
+    "GridEnvelope",
+    "SpectralEnvelope",
+    "Aperiodicity",
+    "F0Track",
+]
+
+
+def _public_subclasses(cls):
+    for subclass in cls.__subclasses__():
+        if not subclass.__name__.startswith("_"):
+            yield subclass
+        yield from _public_subclasses(subclass)
+
+
+def test_every_analysis_that_is_not_a_frame_is_a_view():
+    assert {view.__name__ for view in _public_subclasses(View)} == set(VIEW_NAMES)
+
+
+@pytest.mark.parametrize("view", list(_public_subclasses(View)), ids=lambda view: view.__name__)
+def test_view_says_what_it_drops_and_refuses(view):
+    assert view.discards.strip(), f"{view.__name__} has no discards sentence"
+    assert view.discards.startswith(view.__name__)
+    assert view.discards.endswith(".")
+    assert view.back_to_sound == "" or view.back_to_sound.endswith(".")
+    # synthesize needs no state to refuse, so an instance made without __init__ will do
+    instance = object.__new__(view)
+    with pytest.raises(NotInvertibleError) as refusal:
+        instance.synthesize()
+    assert view.discards in str(refusal.value)
+    assert (view.back_to_sound or "no route") in str(refusal.value)
+
+
+def test_refusal_is_a_not_implemented_error():
+    assert issubclass(NotInvertibleError, NotImplementedError)
+    assert so.NotInvertibleError is NotInvertibleError and so.View is View
+
+
+def test_frames_and_tools_are_not_views():
+    for name in ["Frame", "GaborFrame", "Filterbank", "STFT", "Subbands", "Mask", "ModulationFilterbank"]:
+        assert not issubclass(getattr(so, name), View), name

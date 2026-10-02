@@ -40,6 +40,7 @@ from sonore.signals.world import (
     _time_windows,
     world_fft_size,
 )
+from sonore.views.view import View
 
 __all__ = ["SpectralEnvelope", "cheaptrick", "GridEnvelope", "warp_frequency"]
 
@@ -124,7 +125,7 @@ def _pointwise(log_values: np.ndarray, grid_t: np.ndarray, grid_f: np.ndarray, t
 
 
 # ------------------------------------------------------------ the views
-class _FrequencyView:
+class _FrequencyView(View):
     """Shared by the envelope and the aperiodicity: data of shape
     ``(n_channels, n_freqs, n_windows)`` on WORLD's grid."""
 
@@ -170,6 +171,14 @@ class SpectralEnvelope(_FrequencyView):
     ``env(t, f)``, reads the power at any times and frequencies, linearly
     in time and in dB over frequency.
     """
+
+    discards = (
+        "SpectralEnvelope discards the harmonics, the phase, and everything finer than the envelope's "
+        "smoothing."
+    )
+    back_to_sound = (
+        "so.world_synthesize rebuilds a voice from it together with an F0 track and an aperiodicity."
+    )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, q1: float):
         self.data = data
@@ -271,7 +280,7 @@ def _smooth_with_recovery(power, f0, q1, quefrencies, n_fft):
     return np.exp(np.fft.irfft(cepstrum * smoothing * recovery, n_fft)[: n_fft // 2 + 1])
 
 
-class GridEnvelope:
+class GridEnvelope(View):
     """A spectral envelope held as power on any grid of times and
     frequencies: ``data`` has shape ``(n_channels, len(f), len(t))``.
 
@@ -288,6 +297,13 @@ class GridEnvelope:
     linear in time and in dB over frequency, as ``SpectralEnvelope`` does;
     beyond the ends of the grid the end values are held.
     """
+
+    discards = (
+        "GridEnvelope discards the harmonics, the phase, and everything finer than the envelope's smoothing."
+    )
+    back_to_sound = (
+        "so.world_synthesize rebuilds a voice from it together with an F0 track and an aperiodicity."
+    )
 
     def __init__(self, data: np.ndarray, t, f):
         self.data = np.asarray(data, dtype=float)

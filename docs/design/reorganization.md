@@ -18,8 +18,9 @@ tools/count_reorganization_references.py`, run on 2026-10-02 at main
 `b08063c` (before the move; the script runs only on that tree); numbers
 that are not are labelled estimates.
 
-Migration: step 3, the gallery (PR #82), is merged; step 4, the source
-move, follows in its own PR.
+Migration: step 3, the gallery (PR #82), and step 4, the source move
+(PR #83), are merged. D13's `View` base class and `NotInvertibleError`
+follow in their own PR (`src/sonore/views/view.py`), then release 0.4.0.
 
 ## What is wrong today
 
@@ -425,7 +426,8 @@ module under names that say what they assume. What would confuse is a
 `synthesize` that quietly approximates. This is a newcomer's session on the
 Seeing speech sentence. Lines marked "today" are printed by
 `python tools/check_reorganization_walkthrough.py`; the error messages
-marked "proposed" are D13's and do not exist yet.
+marked "proposed" are D13's as proposed, and the same script now prints them
+as built.
 
 ```python
 import sonore as so

@@ -9,6 +9,7 @@ from dataclasses import dataclass, replace
 import numpy as np
 
 from sonore.core.sound import Sound
+from sonore.views.view import View
 
 __all__ = ["F0Track", "f0_track", "scale_f0"]
 
@@ -29,7 +30,7 @@ CHUNK = 512  # candidates processed at once
 
 
 @dataclass(frozen=True)
-class F0Track:
+class F0Track(View):
     """An F0 track: one estimate per channel every ``hop`` seconds.
 
     ``f0`` and ``score`` have shape ``(n_channels, n_windows)``; ``f0`` is 0
@@ -41,6 +42,11 @@ class F0Track:
     :meth:`~sonore.frames.gabor.TVGaborFrame.pitch_adaptive` and
     :meth:`~sonore.views.cepstrum.Cepstrum.lifter`.
     """
+
+    discards = "F0Track keeps only the pitch and the voicing of each time window."
+    back_to_sound = (
+        "so.world_synthesize rebuilds a voice from it together with a spectral envelope and an aperiodicity."
+    )
 
     t: np.ndarray
     f0: np.ndarray

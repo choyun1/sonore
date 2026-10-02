@@ -7,6 +7,14 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.View` and `so.NotInvertibleError`: every view (the spectra,
+  envelopes, modulation spectra, the cepstrum, MFCCs, F0 tracks, spectral
+  envelopes and aperiodicity) is now a `View`, with a `discards` sentence
+  saying what it drops. Its `synthesize` raises `NotInvertibleError` (a
+  `NotImplementedError`) with that sentence and the route back to sound
+  where one exists, such as `Cepstrum.to_sound` or `so.world_synthesize`.
+  Before, `synthesize` on a view failed with a plain `AttributeError`. See
+  "Only frames synthesize" in `docs/design/reorganization.md`.
 - `so.scale_f0` and `so.warp_frequency`: a pitch change (voiced F0 times a
   ratio, optionally spread around the median) and a formant shift (an
   envelope read at `f / ratio`; a number, a ratio over time, or any
