@@ -547,8 +547,8 @@ numerically; "consulted" means the code was read for behavior but not copied.
 - Kaldi's `compute-mfcc-feats`, through [kaldi-native-fbank](https://github.com/csukuangfj/kaldi-native-fbank)
   (Apache-2.0), a C++ re-implementation of Kaldi's feature code: its MFCCs and log mel energies are stored by
   `tools/make_kaldi_fixtures.py`, and the tests compare `MFCC` with them to float32 precision (no DC removal,
-  pre-emphasis or energy, which sonore leaves to the sound). The primary reference; HTK's HCopy is prepared for
-  (`tools/make_htk_fixtures.py`) but not yet run. [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L126)
+  pre-emphasis or energy, which sonore leaves to the sound). The primary reference, standing in for HTK,
+  whose download site was unreachable. [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L126)
 - [librosa](https://librosa.org/) (ISC) `feature.mfcc`, `feature.melspectrogram` and `feature.delta`: their
   output for three settings is stored by `tools/make_mfcc_fixtures.py`, and the tests compare `MFCC` with it
   (mel power to 3e-7, coefficients to 1e-8, both relative to the largest value). `tools/crosscheck_mfcc.py` also

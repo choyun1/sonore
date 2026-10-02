@@ -10,7 +10,7 @@ and a sentence on the cepstrum gallery page).
 
 Status: accepted 2026-10-02. Cho accepted D1–D9 as recommended and chose
 HTK as the primary reference (D10). HTK's site returned 502 errors that
-day, so Cho chose Kaldi in its place (D11) until HCopy can be run.
+day, so Cho chose Kaldi in its place (D11) and then dropped HTK.
 Implemented in `src/sonore/analysis/mfcc.py`, tested in
 `tests/analysis/test_mfcc.py` against Kaldi's and librosa's stored output
 (C10, C9). The claims are checked by
@@ -400,38 +400,16 @@ librosa (and its numba dependency) to run the tests at all, and a test
 that is usually skipped protects nothing. The fixture records which
 librosa version it came from, and regenerating it is one command.
 
-**D10. HTK is the primary reference. (Cho's decision, 2026-10-02)** HTK's HCopy
-fixed the MFCC recipe that speech recognition uses, so it outranks
-librosa as a reference; librosa stays as the second, for the Slaney
-variant. HTK needs registration and may not be redistributed, so it
-cannot run in CI or in the cloud container. `tools/make_htk_fixtures.py`
-runs a locally built HCopy on the fixture's excerpt with four
-configurations (HTK's standard front end, a plain one with power, no
-pre-emphasis and no lifter, and the log filterbank outputs with power and
-with magnitude) and stores the results in
-`tests/data/htk_mfcc_reference.npz`. The four isolate HTK's steps, so
-each difference from `so.MFCC` can be named.
-
-From memory of the HTK Book and HTK's source, not yet checked, HCopy
-differs from the speech recipe here in these ways; the stored output will
-confirm or correct each, and each confirmed one becomes either an option
-of `MFCC` (named in sonore's own words, as `DIFFERENCES_FROM_WORLD` does
-for WORLD) or a documented difference:
-
-- the magnitude spectrum by default (`USEPOWER=F`);
-- triangles linear in mel rather than in Hz, with the DC bin left out;
-- channel outputs floored at 1.0 before the log, an absolute floor that
-  depends on the sample scale;
-- samples read as 16-bit integers, so values are 32768 times
-  `so.load`'s;
-- pre-emphasis applied inside each time window (the first sample scaled
-  by 1 − 0.97) rather than to the whole sound;
-- c0 scaled by √(2/M) like the other coefficients, not √(1/M);
-- time windows that start at the first sample with no padding;
-- c1–c12 first and c0 last in each vector.
-
-The tests then compare `so.MFCC`, set up as HTK, with the stored vectors;
-the tolerance follows from HTK's float32 output.
+**D10. HTK was to be the primary reference; dropped. (Cho's decisions,
+2026-10-02)** HTK's HCopy fixed the MFCC recipe that speech recognition
+uses, so Cho first chose it as the primary reference. HTK needs
+registration and may not be redistributed, so it would have been run by
+hand and its output stored. Its site returned 502 errors to Cho through
+the afternoon (a web fetch from here loaded it once, at 18:47), and Cho
+dropped it: the tests compare with Kaldi, which follows HTK closely
+(D11, C10), and with librosa (D9, C9). How HCopy itself differs from
+`so.MFCC` is not checked; the HTK column of the variants table is from
+memory.
 
 **D11. Kaldi stands in for HTK; the defaults follow it. (Cho's decision,
 2026-10-02)** HTK's site returned 502 errors, so Cho chose Kaldi, the
@@ -457,7 +435,6 @@ DC removal, in-window pre-emphasis and energy in place of c0 are not
 reproduced (D3, D6). A `kaldi_front_end` option that would add the three
 was offered; Cho declined it on 2026-10-02, so they stay a documented,
 measured difference.
-`tools/make_htk_fixtures.py` stays, for when HTK's site is back.
 
 ## API sketch
 
@@ -481,7 +458,6 @@ mfcc.envelope(env.f)  # for plotting against env
 - Against librosa's stored output (D9): mel power, MFCCs and deltas for
   three settings.
 - Against Kaldi's stored output (D11, C10): MFCCs and log mel energies.
-- Against HTK's stored output (D10), once HCopy can be run.
 - The mel weights, log and DCT against the checker's formulas for both
   scales and both triangle normalisations (C3, C8).
 - `MFCC(snd)` equals the formula pipeline on the same power spectra.
@@ -497,10 +473,7 @@ mfcc.envelope(env.f)  # for plotting against env
    CHANGELOG. Done.
 3. Kaldi through kaldi-native-fbank: fixture, tests, triangle axis and
    window defaults (D11). Done.
-4. HTK: `tools/make_htk_fixtures.py` (done); HCopy's output, the options
-   or documented differences it calls for, and tests against it (D10),
-   when HTK's site is reachable.
-5. Separately, if wanted: the gallery section (D8).
+4. Separately, if wanted: the gallery section (D8).
 
 ## Out of scope
 
