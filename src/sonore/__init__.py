@@ -14,6 +14,7 @@ Typical use in a notebook::
 from sonore import texture
 from sonore.analysis.cepstrum import Cepstrum
 from sonore.analysis.envelopes import Envelope, Envelopes
+from sonore.analysis.f0 import F0Track, f0_track
 from sonore.analysis.filterbank import (
     CosineFilterbank,
     ERBFilterbank,
@@ -121,6 +122,8 @@ __all__ = [
     "TVGaborFrame",
     "TVSTFT",
     "Cepstrum",
+    "F0Track",
+    "f0_track",
     "TFPower",
     "tandem_power",
     "ReassignedSpectrogram",
