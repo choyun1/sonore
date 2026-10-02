@@ -609,11 +609,10 @@ is how quickly the change comes and what the ears hear meanwhile. The glide take
 farther away the path passes, in proportion at this speed: from 95% to 5% of its range, 0.14 s
 at 50 cm, 0.27 s at 1 m and 0.53 s at 2 m. The level rises and falls as 1/r, by 6.5 dB on the
 path 10 m away and 31 dB on the one 50 cm away.</p>
-<p>This buzz has 41 harmonics, up to 4.9 kHz, so that a shift of several semitones up still keeps
-every harmonic below 8 kHz, half the sampling rate (see <a href="#h-a-path-no-source-could-take">A path no source could
+<p>The buzz stops at 5 kHz (<code>f_max</code>), so that a shift of several semitones up still keeps every
+harmonic below 8 kHz, half the sampling rate (see <a href="#h-a-path-no-source-could-take">A path no source could
 take</a>).</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">PATH_SOURCE = so.harmonic_complex(PASS_DURATION, fs, BUZZ_F0, harmonics=np.arange(1, 42)).normalize()
-TOWARD_30 = np.array([np.sin(np.radians(30)), np.cos(np.radians(30))])  # 30° to the right
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">TOWARD_30 = np.array([np.sin(np.radians(30)), np.cos(np.radians(30))])  # 30° to the right
 
 
 def straight(point, heading, at=None):
@@ -699,7 +698,7 @@ def path_scene(path, label, color):
 def render_path(number):
     title = list(PATHS)[number]
     path = PATHS[title]
-    rendered = so.move_sound(PATH_SOURCE, path, hrirs)
+    rendered = so.move_sound(buzz, path, hrirs)
     fig, playhead = show_path(rendered, path, f&quot;{title}, at 15 m/s&quot;, PATH_COLORS[number])
     return fig, playhead, path_scene(path, &quot;buzz&quot;, PATH_COLORS[number]), finish(rendered)</code></pre></details></div>
 
@@ -896,7 +895,7 @@ and the dots stop.</p></div>
     <img src="img/mw1_a_path_no_source_could_take.png" width="1000" height="600" alt="Plots of the a path no source could take sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">rendered = so.move_sound(PATH_SOURCE, jumping_path, hrirs, hop=0.5e-3)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rendered = so.move_sound(buzz, jumping_path, hrirs, hop=0.5e-3)
 fig, playhead = show_path(
     rendered,
     jumping_path,
@@ -910,7 +909,7 @@ sound = finish(rendered)</code></pre></details>
 </article>
 <p>What the renderer does with this, measured by <code>tools/check_moving_trajectories.py</code> (nobody has
 listened for these artifacts yet):</p>
-<ul><li>While the buzz holds still, the pitch the tracker finds is the buzz's own, to within 3 cents (95th percentile). During the jumps, where the tracker finds none, the shift was checked on a 1 kHz tone instead: its frequency at each ear follows the shift computed from the distance to that ear to within 9 cents (median) and 48 cents (95th percentile), while the shift itself spans more than ±500 cents. The rest of the difference is not yet explained; the HRIRs' phase, changing with direction, is one candidate.</li><li>Switching HRIR shapes at the usual 5 ms leaves an error 13 dB below the signal in the worst 20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 29 dB below.</li><li>Nothing aliases, by design: the largest upward shift, a factor of 1.35, takes the top harmonic to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, like the one passing by above, does alias: coming straight at the listener at 15 m/s, its top three harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB below the harmonics.</li><li>The source comes toward the head at up to 130 m/s here. <code>so.move_sound</code> refuses a source coming at the head faster than sound, whose sound would arrive in reverse order. It also refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances the HRIR onsets change a little faster than the travel time does.</li><li>Not modelled at all is the noise a body moving through air that fast would make itself.</li></ul>
+<ul><li>While the buzz holds still, the pitch the tracker finds is the buzz's own, to within 3 cents (95th percentile). During the jumps, where the tracker finds none, the shift was checked on a 1 kHz tone instead: its frequency at each ear follows the shift computed from the distance to that ear to within 9 cents (median) and 48 cents (95th percentile), while the shift itself spans more than ±500 cents. The rest of the difference is not yet explained; the HRIRs' phase, changing with direction, is one candidate.</li><li>Switching HRIR shapes at the usual 5 ms leaves an error 13 dB below the signal in the worst 20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 29 dB below.</li><li>Nothing aliases, by design: the largest upward shift, a factor of 1.35, takes the top harmonic to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, which is what <code>so.harmonic_complex</code> makes without <code>f_max</code>, does alias: coming straight at the listener at 15 m/s, its top three harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB below the harmonics.</li><li>The source comes toward the head at up to 130 m/s here. <code>so.move_sound</code> refuses a source coming at the head faster than sound, whose sound would arrive in reverse order. It also refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances the HRIR onsets change a little faster than the travel time does.</li><li>Not modelled at all is the noise a body moving through air that fast would make itself.</li></ul>
 </section>
 <section aria-labelledby="h-how-the-motion-is-rendered">
 <h2 id="h-how-the-motion-is-rendered">How the motion is rendered</h2>

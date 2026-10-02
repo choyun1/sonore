@@ -424,12 +424,11 @@ sound = finish(rendered)
 # at 50 cm, 0.27 s at 1 m and 0.53 s at 2 m. The level rises and falls as 1/r, by 6.5 dB on the
 # path 10 m away and 31 dB on the one 50 cm away.
 #
-# This buzz has 41 harmonics, up to 4.9 kHz, so that a shift of several semitones up still keeps
-# every harmonic below 8 kHz, half the sampling rate (see [A path no source could
+# The buzz stops at 5 kHz (`f_max`), so that a shift of several semitones up still keeps every
+# harmonic below 8 kHz, half the sampling rate (see [A path no source could
 # take](#h-a-path-no-source-could-take)).
 
 # %%
-PATH_SOURCE = so.harmonic_complex(PASS_DURATION, fs, BUZZ_F0, harmonics=np.arange(1, 42)).normalize()
 TOWARD_30 = np.array([np.sin(np.radians(30)), np.cos(np.radians(30))])  # 30° to the right
 
 
@@ -516,7 +515,7 @@ def path_scene(path, label, color):
 def render_path(number):
     title = list(PATHS)[number]
     path = PATHS[title]
-    rendered = so.move_sound(PATH_SOURCE, path, hrirs)
+    rendered = so.move_sound(buzz, path, hrirs)
     fig, playhead = show_path(rendered, path, f"{title}, at 15 m/s", PATH_COLORS[number])
     return fig, playhead, path_scene(path, "buzz", PATH_COLORS[number]), finish(rendered)
 
@@ -660,7 +659,7 @@ doppler_range = np.percentile(as_heard(jumping_path, 250001)[3], [0, 100])
 # and the dots stop.
 
 # %% [demo mw1] A path no source could take
-rendered = so.move_sound(PATH_SOURCE, jumping_path, hrirs, hop=0.5e-3)
+rendered = so.move_sound(buzz, jumping_path, hrirs, hop=0.5e-3)
 fig, playhead = show_path(
     rendered,
     jumping_path,
@@ -685,9 +684,10 @@ sound = finish(rendered)
 # - Switching HRIR shapes at the usual 5 ms leaves an error 13 dB below the signal in the worst
 #   20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 29 dB below.
 # - Nothing aliases, by design: the largest upward shift, a factor of 1.35, takes the top harmonic
-#   to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, like the one
-#   passing by above, does alias: coming straight at the listener at 15 m/s, its top three
-#   harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB below the harmonics.
+#   to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, which is what
+#   `so.harmonic_complex` makes without `f_max`, does alias: coming straight at the listener at
+#   15 m/s, its top three harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB
+#   below the harmonics.
 # - The source comes toward the head at up to 130 m/s here. `so.move_sound` refuses a source
 #   coming at the head faster than sound, whose sound would arrive in reverse order. It also
 #   refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances

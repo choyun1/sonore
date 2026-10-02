@@ -28,7 +28,8 @@ FS = 16000  # the gallery's sampling rate
 SPEED = 15.0  # m/s
 DURATION = 2.5  # s
 BUZZ_F0 = 120.0  # Hz
-HARMONICS = np.arange(1, 42)  # up to 4920 Hz, room for Doppler below 8 kHz
+F_MAX = 5000.0  # Hz, room for Doppler below 8 kHz
+HARMONICS = np.arange(1, 42)  # what f_max leaves: up to 4920 Hz, fading from 4500 Hz
 HOLD, MOVE = 0.10, 0.05  # s, the fast path: still, then a jump
 GRAVITY = 9.81  # m/s^2
 HEAD_RADIUS = 0.0875  # m, the ears on the x axis
@@ -38,7 +39,10 @@ def report(text, value, unit=""):
     print(f"{text:<78s} {value:>9.4g} {unit}")
 
 
-def buzz(fs, harmonics=HARMONICS):
+def buzz(fs, harmonics=None):
+    """The page's buzz (harmonics below F_MAX, faded at the top), or exactly ``harmonics``."""
+    if harmonics is None:
+        return so.harmonic_complex(DURATION, fs, BUZZ_F0, f_max=F_MAX).normalize()
     return so.harmonic_complex(DURATION, fs, BUZZ_F0, harmonics=harmonics).normalize()
 
 
@@ -126,7 +130,7 @@ def difference_db(estimate, reference, window=None):
 
 
 def main(hrirs):
-    print("Straight paths at 15 m/s, a 120 Hz buzz with 41 harmonics (to 4920 Hz)")
+    print("Straight paths at 15 m/s, a 120 Hz buzz with f_max 5 kHz (41 harmonics, to 4920 Hz)")
     source = buzz(FS)
     for name, path in STRAIGHT.items():
         t = np.linspace(0, emitted, 5001)
@@ -235,14 +239,14 @@ def main(hrirs):
     factor = 2 ** (doppler_cents(path, np.array([0.5, 1.0]))[1][0] / 1200)
     to_nyquist = np.arange(1, int(np.ceil(FS / 2 / BUZZ_F0)))  # what harmonic_complex makes by default
     for label, harmonics in (
-        ("41 harmonics, to 4920 Hz", HARMONICS),
+        ("below 5 kHz, as on the page", None),
         ("every harmonic below 8 kHz", to_nyquist),
     ):
         rendered = so.move_sound(buzz(FS, harmonics), path, hrirs)
         middle = rendered.data[round(0.5 * FS) : round(2.0 * FS), 1]  # right ear, 1.5 s
         spectrum = np.abs(np.fft.rfft(middle * np.hanning(len(middle)))) ** 2
         frequencies = np.fft.rfftfreq(len(middle), 1 / FS)
-        heard = BUZZ_F0 * harmonics * factor
+        heard = BUZZ_F0 * (HARMONICS if harmonics is None else harmonics) * factor
         folded = FS - heard[heard > FS / 2]
 
         def energy_near(targets, frequencies=frequencies, spectrum=spectrum):
