@@ -79,6 +79,35 @@ talkers page already cites, plus pointers for the standard results.
 - **Time window** and **hop**: as in `philosophy.md`; here, the stretch of
   sound one HRIR shape filters, and their spacing.
 
+## Which cues listeners use
+
+Doppler is not the reason for this design. Read from secondary sources
+only (Carlile & Leung's 2016 review, an abstract, and Ghazanfar & Maier's
+2009 PDF), the literature says:
+
+- Intensity change and ITD carry most of the information about linear
+  motion at moderate speeds; Doppler took over only at the fastest
+  speeds tested. Lutfi & Wang (1999), as summarized by Carlile & Leung
+  (2016): intensity and ITD "correlated most with displacement
+  discrimination, at least at slower velocities (10 m/s), while Doppler
+  shifts dominated at the faster velocities (50 m/s)".
+- What people report as the "Doppler" pitch rise of an approaching
+  source is largely driven by its rising level (Neuhoff & McBeath, 1996,
+  "the Doppler illusion"; abstract only). Rising intensity alone makes a
+  looming percept (Neuhoff, 1998; Seifritz et al., 2002, via the
+  review).
+- Rhesus monkeys treat rising frequency as looming, the same bias as
+  humans, although a real approaching source falls in frequency as it
+  passes (Ghazanfar & Maier, 2009, *Behavioral Neuroscience*).
+
+So the cues for a source changing distance are, in order, level, the
+direct-to-reverberant ratio (a distance cue for static sources; not
+checked here for moving ones), and only then Doppler. The continuous
+delay of stage 2 is still needed, but for a different reason: switching
+between fixed delays comb-filters (C4) whether or not listeners use the
+pitch change. Doppler comes for free with that delay, so the gallery can
+let listeners judge for themselves whether they hear it.
+
 ## The physics in brief [derived]
 
 A point source at distance r(t_e) from the head center emits s(t_e). In
@@ -380,6 +409,16 @@ about 30 m/s, sources inside 20 cm, and listener models.
 - Traer & McDermott (2016). Statistics of natural reverberation enable
   perceptual separation of sound and space. *PNAS* 113(48), E7856–E7865.
   The synthetic tail.
+- Carlile & Leung (2016). The perception of auditory motion. *Trends in
+  Hearing* 20. doi:10.1177/2331216516644254. Read for its summary of Lutfi
+  & Wang (1999), Neuhoff (1998) and Seifritz et al. (2002), which were not
+  read themselves.
+- Ghazanfar & Maier (2009). Rhesus monkeys (*Macaca mulatta*) hear rising
+  frequency sounds as looming. *Behavioral Neuroscience* 123(4), 822–827.
+  Read from the authors' PDF, in summary.
+- Neuhoff & McBeath (1996). The Doppler illusion: the influence of dynamic
+  intensity change on perceived pitch. *J. Exp. Psychol. Hum. Percept.
+  Perform.* 22(4), 970–985. Abstract only.
 - Pointers for standard results, not read for this document: Morse &
   Ingard (1968), *Theoretical Acoustics*, for the moving point source and
   its convective factor; Laakso, Välimäki, Karjalainen & Laine (1996),
