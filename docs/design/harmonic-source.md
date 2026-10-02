@@ -50,11 +50,11 @@ The listening examples (below) are not claims; they are for Cho's ears.
 
 ## The design
 
-Given F0 values f0[j] at frame times t[j] (0 meaning unvoiced, the form of
+Given F0 values f0[j] at window times t[j] (0 meaning unvoiced, the form of
 the stored Harvest track and of `F0Track`):
 
-1. **Fill the gaps.** Unvoiced frames take F0 values interpolated linearly
-   between the voiced frames on either side; leading and trailing ones hold
+1. **Fill the gaps.** Unvoiced time windows take F0 values interpolated linearly
+   between the voiced time windows on either side; leading and trailing ones hold
    the nearest voiced value (D3).
 2. **Interpolate to the sample rate.** Linear interpolation in Hz gives
    f(t) at every sample (D2).
@@ -66,7 +66,7 @@ the stored Harvest track and of `F0Track`):
    taper that fades harmonic k out as k f(t) approaches f_max (D5), and
    φ_k are starting phases from `harmonic_complex`'s presets (cosine by
    default).
-5. **Gate by voicing.** Multiply by a gate that is 1 on voiced frames and
+5. **Gate by voicing.** Multiply by a gate that is 1 on voiced time windows and
    0 on unvoiced ones, its steps smoothed by a 5 ms Hann window (D3).
    Optionally fill the unvoiced stretches with white noise (D4).
 6. **Normalize** to RMS 1, as every generator does.
@@ -82,9 +82,9 @@ not a different sound. That is what lets `harmonic_complex` take both (D1).
 **C2. The phase is exact for a contour that is linear between samples.**
 [proof] If f is linear between t_{i-1} and t_i, its integral over the step
 is the step times the mean of the endpoints, which is the trapezoid rule.
-Linear interpolation of a contour that is linear between frames is exact,
+Linear interpolation of a contour that is linear between window times is exact,
 so a linear glide is reproduced exactly. [check] A 100 → 300 Hz glide
-given as 5 ms frames matches the closed-form chirp cos(2π(100t + 100t²))
+given every 5 ms matches the closed-form chirp cos(2π(100t + 100t²))
 to 4.5e-13. The running sum the gallery pages use, 2π Σ_{j≤i} f_j / fs,
 differs from it by up to 0.078: it equals the trapezoid plus
 π(f_0 + f_i)/fs (checked to 6e-13), a phase lead of about one sample of
@@ -93,8 +93,8 @@ the current frequency. Inaudible in those pages, but not exact.
 **C3. Every harmonic follows k times the contour.** [proof] Harmonic k's
 phase is k Φ, so its instantaneous frequency is k f(t), and the
 interpolated f(t) differs from a smooth true contour g by at most
-h²/8 · max|g''| between frames of period h. [check] For a 150 Hz vibrato,
-±4% at 5.5 Hz, given as 5 ms frames, that bound is 1.56e-4 (relative).
+h²/8 · max|g''| between window times spaced h apart. [check] For a 150 Hz vibrato,
+±4% at 5.5 Hz, given every 5 ms, that bound is 1.56e-4 (relative).
 The instantaneous frequency measured from the analytic signal of
 harmonics 1, 10 and 40 alone stays within 1.43e-4, 1.56e-4 and 1.56e-4
 of k times the true contour, and harmonic 10's frequency divided by
@@ -103,14 +103,14 @@ harmonic 1's is 10 within 5.5e-4 (the Hilbert measurement's own error).
 **C4. The phase has no jumps.** [check] On the stored Harvest track of the
 gallery sentence (2.53 s, 16 kHz, harmonics to 7.2 kHz), each sample's
 phase step equals 2π times the mean frequency over the step to 5e-13 rad.
-The obvious shortcut, synthesizing each 5 ms frame with its own F0 against
+The obvious shortcut, synthesizing each 5 ms time window with its own F0 against
 absolute time, cos(2π k f0[j] t), puts 31 dB-below-total power above
-7.6 kHz (clicks at every frame boundary); the accumulated phase puts
+7.6 kHz (clicks at every time window boundary); the accumulated phase puts
 76 dB below.
 
 **C5. Gaps must be filled before interpolating.** [check] The track's
 lowest voiced F0 is 87.6 Hz. Interpolating straight through the zeros
-of unvoiced frames sweeps the pitch down to 11.5 Hz while the gate is
+of unvoiced time windows sweeps the pitch down to 11.5 Hz while the gate is
 still open at voicing boundaries, an audible downward chirp at every
 onset and offset; filling the gaps first keeps it at or above 87.6 Hz.
 Ramping the gate over 5 ms lowers the power above 7.6 kHz from −68 dB
@@ -151,15 +151,15 @@ of the gallery sentence and writes short files beside itself, first:
 As a rough check that the imposed pitch survives the vocoder, cepstral F0
 (`so.Cepstrum.f0`, 50 ms windows) of each output is within 5% of the
 imposed track on 89% (16 bands), 91% (32 bands) and 89% (raised a fifth)
-of the voiced frames, against 69% for the original recording and 0% for
+of the voiced time windows, against 69% for the original recording and 0% for
 the noise vocoder.
 
 Six more files drive the same source from the two F0 estimators sonore
 has, instead of the stored Harvest track: 9–11 from cepstral F0
-(`so.Cepstrum.f0`, 40 ms Hann frames, its defaults), the buzz alone and
+(`so.Cepstrum.f0`, 40 ms Hann time windows, its defaults), the buzz alone and
 the 16- and 32-band vocoders; 12–14 the same from `so.f0_track` at its
-defaults. On this sentence the cepstral track voices 64% of the frames
-and agrees with Harvest within 5% on 96% of the frames both voice;
+defaults. On this sentence the cepstral track voices 64% of the time windows
+and agrees with Harvest within 5% on 96% of the time windows both voice;
 `so.f0_track` voices 68% and agrees on 100%. Harvest voices 85–86%, so
 both put noise where Harvest has harmonics in weak voiced stretches.
 
@@ -194,15 +194,15 @@ one idea), and rebuilding the fixed-F0 case on the contour path (one code
 path, but every existing output would shift at the 1e-11 level for no
 gain to users).
 
-**D2. The contour is frame times and F0 values, interpolated linearly in
+**D2. The contour is window times and F0 values, interpolated linearly in
 Hz (accepted).** `harmonic_complex(duration, fs, (t, f0))`, `f0 = 0`
-meaning unvoiced; values are held beyond the first and last frames, so
+meaning unvoiced; values are held beyond the first and last time windows, so
 `duration` may run past the track. A per-sample contour is passed with
 `t = sound.t`. Alternatives: interpolation in log F0 (differs from linear
-by far less than C3's bound at 5 ms frames); band-limited (sinc)
+by far less than C3's bound at a 5 ms hop); band-limited (sinc)
 interpolation, which overshoots at the steps a real track has.
 
-**D3. Unvoiced frames: gaps filled, harmonics gated with 5 ms ramps
+**D3. Unvoiced time windows: gaps filled, harmonics gated with 5 ms ramps
 (accepted).** C5 shows why the filling is needed. The ramp is a
 parameter, `ramp=0.005`; 0 gives a hard gate.
 
@@ -231,7 +231,7 @@ at every harmonic's frequency k f(t) (for a fixed F0, at k f0). The
 second form keeps formants in
 place while the pitch moves, and is how a CheapTrick-style envelope (Morise, 2015) will
 drive the source in the WORLD step. Time-varying per-harmonic arrays
-(frames × harmonics) are left out until something needs them.
+(time windows × harmonics) are left out until something needs them.
 
 **D7. Phases and channels (accepted, with arbitrary starting phases).**
 Phases are cosine by default. `phases` also takes `harmonic_complex`'s
@@ -297,7 +297,7 @@ vowel = so.harmonic_complex(2.0, 16000, (t, 110 + 10 * np.sin(2 * np.pi * 5 * t)
 - C5: no F0 below the voiced minimum while the gate is open.
 - C6: an upward glide has no component above f_max (power above
   f_max + 400 Hz at least 90 dB below the total).
-- `unvoiced="noise"` is reproducible from `rng`, and silent frames are
+- `unvoiced="noise"` is reproducible from `rng`, and silent time windows are
   silent with `unvoiced="silence"`; a 2-D `f0` gives one channel per row.
 - D1: an `F0Track`, a `(t, f0)` pair and a 2-D pair give the same sound;
   a wrong-length phase array raises.

@@ -79,7 +79,7 @@ re-read for this document.
 | Formant resonators | Fixed filters only (`butter_filter`, `bandpass`); the cepstrum checker builds a fixed all-pole /a/ by hand | A resonator and antiresonator whose F and BW follow tracks (C1, C3) |
 | Cascade and parallel branches | nothing | Assembly; alternating signs in the parallel branch (C2) |
 | Radiation | nothing named | A first difference (C5, C6) |
-| Parameter tracks | `F0Track` (proposed) | A table of named tracks at 5 ms frames |
+| Parameter tracks | `F0Track` (proposed) | A table of named tracks at 5 ms time windows |
 | Voicing gate | in `harmonic_complex` (5 ms Hann ramps) | Reused for AV |
 
 ## Claims
@@ -101,10 +101,10 @@ frication, where formant levels are set one by one.
 **C3. Updating every 5 ms is clean if the filter state is carried.**
 [check] A /da/-like transition (F1 300 → 700 Hz and F2 1700 → 1200 Hz over
 40 ms) on a 120 Hz voiced source, first 60 ms: with coefficients held for
-each 5 ms frame and the state carried across updates, the power above 5 kHz
+each 5 ms time window and the state carried across updates, the power above 5 kHz
 is −95 dB re total; interpolating coefficients every sample gives −108 dB.
 Restarting the filter at each update instead gives −29 dB: clicks every
-5 ms. So Klatt's frame-held update is enough for listening, and per-sample
+5 ms. So Klatt's update, held for each time window, is enough for listening, and per-sample
 interpolation is a cheap refinement (D2).
 
 **C4. Klatt's voiced source is the harmonic source with RGP's spectrum.**
@@ -144,7 +144,7 @@ Layers follow `layout.md`:
   (voicing and aspiration), the parallel branch (frication, alternating
   signs, first difference for the upper formants, bypass) and radiation,
   from a parameter table: a mapping of Klatt's names (F0, AV, AH, AF, F1–F6,
-  B1–B6, A2–A6, AB, FNP, FNZ…) to tracks at 5 ms frames, with defaults for
+  B1–B6, A2–A6, AB, FNP, FNZ…) to tracks at 5 ms time windows, with defaults for
   everything not given (D3). Helpers for the classic cases: a steady vowel
   from (F1, F2, F3), and a two-endpoint continuum.
 - **gallery**: a "Formant synthesis" page: one vowel built up step by step
@@ -176,7 +176,7 @@ interpretable controls:
   `glottal-source.md`, which also records what of the citation could be
   checked.
 - **KlattGrid** (Weenink, 2009): Praat's reimplementation, with each
-  parameter a tier of time–value points rather than fixed 5 ms frames. That
+  parameter a tier of time–value points rather than fixed 5 ms time windows. That
   form fits sonore, whose tracks are already functions of time (D3).
 - **DDSP** (Engel, Hantrakul, Gu & Roberts, ICLR 2020): a harmonic
   oscillator plus filtered noise, the same sound model as the harmonic
@@ -206,9 +206,9 @@ All six were accepted as recommended (Cho, 2026-10-02).
 
 - **D1.** Do it, as a part of roadmap item 2 placed before the WORLD
   envelope work (recommended), or after it?
-- **D2.** Hold coefficients for 5 ms frames as Klatt did, or interpolate
+- **D2.** Hold coefficients for 5 ms time windows as Klatt did, or interpolate
   per sample (recommended: per sample, C3 shows it costs nothing in sound
-  and avoids a frame rate in the API)?
+  and avoids a fixed hop in the API)?
 - **D3.** Parameter tracks as Klatt-style 5 ms tables, or as time–value
   points like KlattGrid (recommended: time–value points, sampled to the
   sample rate, which also accept a 5 ms table)?

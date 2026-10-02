@@ -158,9 +158,9 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   <h1>Phase vocoder</h1>
 <p>Play a recording faster and it gets shorter and higher at once. The phase vocoder (Flanagan &amp;
 Golden, 1966) pulls the two apart: it measures the frequency of every partial in every short
-frame, precisely enough to rebuild the sound with its frames spaced differently, or its
+time window, precisely enough to rebuild the sound with its time windows spaced differently, or its
 partials moved, while everything else stays the same.</p>
-<ul><li><a href="#h-how-it-works">How it works</a>: the STFT, and the frequency hidden in how fast each bin's phase turns.</li><li><a href="#h-changing-duration">Changing duration</a>: frames resynthesized further apart, and why their phases have to be locked.</li><li><a href="#h-changing-pitch">Changing pitch</a>: stretching, then resampling.</li><li><a href="#h-moving-the-partials">Moving the partials</a>: an oscillator bank with every frequency remapped.</li></ul>
+<ul><li><a href="#h-how-it-works">How it works</a>: the STFT, and the frequency hidden in how fast each bin's phase turns.</li><li><a href="#h-changing-duration">Changing duration</a>: time windows resynthesized further apart, and why their phases have to be locked.</li><li><a href="#h-changing-pitch">Changing pitch</a>: stretching, then resampling.</li><li><a href="#h-moving-the-partials">Moving the partials</a>: an oscillator bank with every frequency remapped.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -170,10 +170,10 @@ partials moved, while everything else stays the same.</p>
 <p>The analysis is a short-time Fourier transform: Hann windows 46 ms long, one every quarter
 window, <span class="tex">H_a</span> samples apart. Each bin <span class="tex">k</span> of the transform is a bandpass filter centered on
 <span class="tex">\omega_k = 2\pi k / N</span> radians per sample, and its output is a slowly varying sinusoid with a
-magnitude and a phase <span class="tex">\varphi_k(m)</span> in frame <span class="tex">m</span>.</p>
+magnitude and a phase <span class="tex">\varphi_k(m)</span> in time window <span class="tex">m</span>.</p>
 <p>The bins are <span class="tex">f_s/N</span> apart, about 22 Hz here, far too coarse to say where a partial lies. The
 phase says it precisely. A partial at exactly <span class="tex">\omega_k</span> advances the phase by <span class="tex">\omega_k H_a</span>
-from one frame to the next; any extra advance, wrapped into <span class="tex">(-\pi, \pi]</span>, is the partial's
+from one time window to the next; any extra advance, wrapped into <span class="tex">(-\pi, \pi]</span>, is the partial's
 offset from the bin center:</p>
 <div class="tex display">\hat\omega_k(m) = \omega_k + \frac{\operatorname{wrap}\bigl(\varphi_k(m) - \varphi_k(m-1) -
 \omega_k H_a\bigr)}{H_a}.</div>
@@ -234,7 +234,7 @@ sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))</code>
 <article class="still" id="d-p0">
   <div class="about">
     <h3>Each bin reports its partial</h3>
-    <div class="desc"><p>One frame of the reference tone below, 0 to 1 kHz. Top: the magnitude of each bin, with the
+    <div class="desc"><p>One time window of the reference tone below, 0 to 1 kHz. Top: the magnitude of each bin, with the
 partials' main lobes spanning several bins each. Bottom: the frequency each bin reports. Across
 each main lobe the estimates agree on one value, the partial's frequency at that moment (orange),
 which the vibrato has pushed away from the bin centers (dotted).</p></div>
@@ -249,7 +249,7 @@ loud = level &gt; -30
 f0 = 220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * pv.t[m]))  # the vibrato at this moment
 fig, (ax_m, ax_f) = plt.subplots(2, 1, figsize=(10, 5), sharex=True, layout=&quot;constrained&quot;)
 ax_m.plot(centers, level, &quot;.-&quot;, color=&quot;k&quot;, lw=0.6, ms=3)
-ax_m.set(ylim=(-80, 3), ylabel=&quot;Magnitude [dB]&quot;, title=f&quot;Frame at {pv.t[m]:.2f} s&quot;)
+ax_m.set(ylim=(-80, 3), ylabel=&quot;Magnitude [dB]&quot;, title=f&quot;Time window at {pv.t[m]:.2f} s&quot;)
 ax_f.plot(centers, centers, &quot;:&quot;, color=&quot;k&quot;, lw=0.8, label=&quot;bin center&quot;)
 for k in range(1, 5):
     ax_f.axhline(k * f0, color=&quot;tab:orange&quot;, lw=0.8, label=&quot;true partials&quot; if k == 1 else None)
@@ -262,12 +262,12 @@ for ax in (ax_m, ax_f):
 </section>
 <section aria-labelledby="h-changing-duration">
 <h2 id="h-changing-duration">Changing duration</h2>
-<p>To make a sound twice as long, <code>so.time_stretch</code> reads frames every <span class="tex">H_a</span> samples and writes
+<p>To make a sound twice as long, <code>so.time_stretch</code> reads time windows every <span class="tex">H_a</span> samples and writes
 them out every <span class="tex">H_s = 2H_a</span>. Magnitudes are copied as they are, but phases cannot be: a partial
-now has <span class="tex">H_s</span> samples, not <span class="tex">H_a</span>, to get from one frame to the next, so each synthesis phase is
+now has <span class="tex">H_s</span> samples, not <span class="tex">H_a</span>, to get from one time window to the next, so each synthesis phase is
 the previous one advanced by the instantaneous frequency times the new hop,</p>
 <div class="tex display">\psi_k(m) = \psi_k(m-1) + \hat\omega_k(m)\, H_s.</div>
-<p>Overlap-adding the frames then gives a sound twice as long whose partials have the same
+<p>Overlap-adding the time windows then gives a sound twice as long whose partials have the same
 frequencies. Every bin advances its own phase independently, though, and the bins that make up
 one partial slowly drift out of step with each other, which smears the sound, a fault known as
 <em>phasiness</em>. <code>so.time_stretch</code> therefore locks the phases (Laroche &amp; Dolson, 1999): only the
@@ -378,7 +378,7 @@ fig, playhead = show(sound, fmax=5000)</code></pre></details>
 <section aria-labelledby="h-moving-the-partials">
 <h2 id="h-moving-the-partials">Moving the partials</h2>
 <p>The analysis can also drive a bank of oscillators, one per bin, each following its bin's
-magnitude and instantaneous frequency from frame to frame (Dolson, 1986). <code>pv.resynthesize</code>
+magnitude and instantaneous frequency from time window to time window (Dolson, 1986). <code>pv.resynthesize</code>
 does this, and its <code>freq_map</code> changes every frequency on the way: a ratio scales them all, a
 function can do anything. Scaling keeps a harmonic sound harmonic; adding a constant does not,
 unless the constant is a multiple of half the fundamental.</p>

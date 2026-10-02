@@ -26,19 +26,19 @@ As in `frames.md`, each claim is numbered and tagged:
 
 ## Setting
 
-One frame of a channel is a windowed segment x of length L, zero-padded to
+One time window of a channel is a windowed segment x of length L, zero-padded to
 N = n_fft and transformed: X[k], k = 0..N−1. Its **real cepstrum** is
 
     c[n] = IDFT_N( ln |X[k]| ),   n = 0..N−1,
 
 with quefrency n / fs seconds. The natural logarithm (not dB) is used so
 that exp undoes it exactly and the minimum-phase construction (C3) applies
-without rescaling. sonore's STFTs already hold X for every frame, so a
-cepstrum is one inverse FFT per frame on top of an existing analysis.
+without rescaling. sonore's STFTs already hold X for every time window, so a
+cepstrum is one inverse FFT per time window on top of an existing analysis.
 
 ## Claims
 
-**C1. The real cepstrum of a real frame is real and even, so half of it is
+**C1. The real cepstrum of a real time window is real and even, so half of it is
 stored.** [proof, check] ln|X[k]| is real and, because x is real, even in k
 (|X[N−k]| = |X[k]|). The IDFT of a real even sequence is real and even. So
 c is determined by n = 0..N/2, and `irfft` of the one-sided log magnitude
@@ -75,7 +75,7 @@ resolved only if the window holds several periods. The checker passes a
 band-limited pulse train through a four-formant /a/ and picks the largest
 peak in 1/400 to 1/60 s, refined by a parabola, at 7 F0s (80–300 Hz) and 11
 window positions. With a Hann window 1.5 or 2 periods long, 39 and 32 of
-77 frames are off by an octave or more. At 3 periods none are, and the
+77 time windows are off by an octave or more. At 3 periods none are, and the
 worst error is 0.48%; at 4 periods, 0.32%. A fixed 40 ms Hann window (3.2
 periods at 80 Hz) has a worst error of 0.24% over 80–300 Hz; a fixed 20 ms
 one fails at the low F0s (worst error 376%).
@@ -94,22 +94,22 @@ is a later step; this one provides the lifter.
 
 **C6. On the gallery sentence, cepstral F0 agrees with Harvest about as well
 as plain autocorrelation does, and its peak height is a usable voicing
-cue.** [check] `bdl_arctic_a0131`, 40 ms Hann frames at Harvest's 5 ms
-times, search 75–400 Hz. On the 432 frames Harvest calls voiced, 78.7%
+cue.** [check] `bdl_arctic_a0131`, 40 ms Hann windows at Harvest's 5 ms
+times, search 75–400 Hz. On the 432 time windows Harvest calls voiced, 78.7%
 agree within 5%; 7 are about double Harvest's F0 and none half. The median
-cepstral peak is 0.17 on Harvest-voiced frames and 0.076 on unvoiced ones.
-Calling a frame voiced when its peak exceeds 0.1 keeps 73% of
-Harvest-voiced frames, admits 11% of unvoiced ones, and on the frames both
+cepstral peak is 0.17 on Harvest-voiced time windows and 0.076 on unvoiced ones.
+Calling a time window voiced when its peak exceeds 0.1 keeps 73% of
+Harvest-voiced time windows, admits 11% of unvoiced ones, and on the time windows both
 call voiced, 95% agree within 5%. (The autocorrelation check in
-`docs/speech/SOURCES.md` found 96% on the frames where it was confident.)
+`docs/speech/SOURCES.md` found 96% on the time windows where it was confident.)
 So cepstral F0 is a fair baseline, not a tracker: it has no continuity, no
 candidate scoring and a crude voicing rule.
 
 **C7. ln 0 needs a floor, and real recordings stay well above a −200 dB
-one.** [check] A frame of digital silence has ln|X| = −inf everywhere (the
+one.** [check] A time window of digital silence has ln|X| = −inf everywhere (the
 checker confirms the log is not finite), and leading or trailing zeros in a
-file produce such frames. On the sentence, the lowest bin of any 40 ms frame
-is 143 dB below that frame's maximum, so a floor 200 dB below the channel's
+file produce such time windows. On the sentence, the lowest bin of any 40 ms time window
+is 143 dB below that time window's maximum, so a floor 200 dB below the channel's
 maximum changes no bin of real speech.
 
 ## Decisions
@@ -118,8 +118,8 @@ maximum changes no bin of real speech.
 `Cepstrum` class, exported as `so.Cepstrum`, built from an existing
 `STFT` or `TVSTFT`: `so.Cepstrum(coefs)`. It keeps the coefficients it was
 built from (for their phase, frame and times) and stores `data` of shape
-`(n_channels, n_fft // 2 + 1, n_frames)` (C1), with `q` the quefrencies in
-seconds and `t` the frame times. Recommended over methods on `STFT`
+`(n_channels, n_fft // 2 + 1, n_windows)` (C1), with `q` the quefrencies in
+seconds and `t` the window times. Recommended over methods on `STFT`
 (`stft.cepstrum()`): one way in, and `representations.py` (541 lines) does
 not grow. The module sits in the analysis layer and imports
 `representations`, not the other way round.
@@ -130,8 +130,8 @@ minimum phase comes from the real cepstrum (C3), and the original phase is
 taken from the STFT. Natural log of the magnitude, as in the Setting.
 
 **D3. The floor. (accepted 2026-10-01)** Magnitudes are floored at 200 dB below the channel's
-maximum over all frames before the log (C7). Relative, so scaling a sound
-only moves c[0] (C2); per channel rather than per frame, so a silent frame
+maximum over all time windows before the log (C7). Relative, so scaling a sound
+only moves c[0] (C2); per channel rather than per time window, so a silent time window
 gets a flat log spectrum at the floor instead of amplified noise; −200 dB to
 match the floor sonore already uses for STFT displays. An all-zero channel
 gets a cepstrum of zeros apart from c[0].
@@ -139,7 +139,7 @@ gets a cepstrum of zeros apart from c[0].
 **D4. Liftering. (accepted 2026-10-01)** `cep.lifter(cutoff, keep="low")` returns a new
 `Cepstrum` with a rectangular lifter: `"low"` keeps quefrencies below
 `cutoff` (and their mirror images), `"high"` keeps the rest. `cutoff` [s]
-is a scalar or one value per frame, so a pitch-adaptive cutoff (half a
+is a scalar or one value per time window, so a pitch-adaptive cutoff (half a
 period, as in C5) is one line from an F0 track. Smooth lifters, and
 CheapTrick's corrected one, are left for the envelope step.
 
@@ -150,7 +150,7 @@ the fold (C3). `cep.to_sound(phase=...)` is that, synthesized by the
 source's frame, so for modified coefficients it is the least-squares signal,
 as everywhere in sonore. `cep.envelope()` returns exp(DFT(c)) as a
 magnitude array for plotting and for the later envelope work. With
-`"minimum"`, the response of each frame starts at the frame's phase
+`"minimum"`, the response of each time window starts at its phase
 reference, the window's middle sample. That is the right convention for
 pulse-based synthesis later, but resynthesizing speech this way is not a
 goal of this step.
@@ -158,7 +158,7 @@ goal of this step.
 **D6. Cepstral F0. (accepted 2026-10-01)** `cep.f0(f_lo=75, f_hi=400, threshold=0.1)` returns
 `(t, f0, peak)`, with f0 = 0 where the peak is below `threshold`: the
 largest peak in 1/f_hi to 1/f_lo, refined by a parabola, as in the
-checker. It raises if any frame's window is shorter than three periods of
+checker. It raises if any time window is shorter than three periods of
 `f_lo` (C4), with a message saying how long the window must be. It is
 documented as the classic method (Noll, 1967), with C6's numbers, and not
 as a tracker. A `so.cepstral_f0(sound, ...)` shortcut that makes its own
@@ -174,7 +174,7 @@ roadmap item moves to Done. No gallery section in this step.
 ```python
 snd = so.load("docs/speech/bdl_arctic_a0131.flac")
 coefs = so.STFT(snd, win_dur=0.040, hop_dur=0.005)
-cep = so.Cepstrum(coefs)               # data (1, n_fft//2 + 1, n_frames)
+cep = so.Cepstrum(coefs)               # data (1, n_fft//2 + 1, n_windows)
 t, f0, peak = cep.f0(f_lo=75, f_hi=400)
 
 env = cep.lifter(0.5 / 120).envelope()  # low quefrencies: spectral envelope
@@ -187,12 +187,12 @@ z = cep.lifter(2e-3).to_sound(phase="minimum")
 
 - C1, C2: `Cepstrum(STFT)` and `Cepstrum(TVSTFT)` round trip to 1e-12 with
   the original phase; scaling moves only c[0].
-- C3: on a short minimum-phase FIR padded into one frame, `"minimum"`
+- C3: on a short minimum-phase FIR padded into one time window, `"minimum"`
   reproduces its spectrum; on a mixed-phase one, the magnitude only.
 - C4, D6: a synthetic vowel at 100 and 200 Hz with a 3-period window gives
   F0 within 1%; a window under three periods of `f_lo` raises.
 - D3: a sound with leading digital silence gives finite cepstra.
-- D4: a per-frame cutoff of the wrong length raises.
+- D4: a per-time-window cutoff of the wrong length raises.
 
 ## Patch plan
 
@@ -215,7 +215,7 @@ implementations (SciPy 1.17.1; Praat 6.1.38 through `parselmouth` 0.4.7, a
 development-time dependency only):
 
 - **MATLAB `rceps`**: its documented definition,
-  `real(ifft(log(abs(fft(x)))))`, written out in NumPy for one 40 ms frame,
+  `real(ifft(log(abs(fft(x)))))`, written out in NumPy for one 40 ms time window,
   matches to 4e-16.
 - **SciPy `scipy.signal.minimum_phase(method="homomorphic", half=False)`**,
   the same fold: on a 17-tap mixed-phase FIR at n_fft 4096, it matches to
@@ -223,7 +223,7 @@ development-time dependency only):
   log, which accounts for the difference.
 - **Praat's PowerCepstrogram** (Gaussian window, power spectrum in dB, sound
   resampled to 10 kHz), peak searched in 75–400 Hz on the gallery sentence.
-  On the 432 frames Harvest calls voiced, sonore's and Praat's peaks agree
+  On the 432 time windows Harvest calls voiced, sonore's and Praat's peaks agree
   within 5% on 81%; on the 318 of those whose sonore peak exceeds 0.1, on
   98%. Against Harvest, Praat's peak agrees on 75% and sonore's on 78%.
 

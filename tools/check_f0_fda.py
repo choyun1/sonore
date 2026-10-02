@@ -18,10 +18,10 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from check_f0_claims import F_HI, F_LO, FS, HOP, cepstral_track, frame_times, scored, viterbi, yin_candidates
+from check_f0_claims import F_HI, F_LO, FS, HOP, cepstral_track, scored, viterbi, window_times, yin_candidates
 from scipy.signal import resample_poly
 
-GUARD = 0.010  # frames this close to a reference voicing boundary are not scored for voicing [s]
+GUARD = 0.010  # time windows this close to a reference voicing boundary are not scored for voicing [s]
 
 
 def read_fx(path):
@@ -45,7 +45,7 @@ def read_fx(path):
 
 
 def reference(segs, t):
-    """Reference F0 at times t (0 outside every segment) and a mask of frames
+    """Reference F0 at times t (0 outside every segment) and a mask of time windows
     far enough from a voicing boundary to score voicing."""
     f0 = np.zeros(len(t))
     edge = np.zeros(len(t), bool)
@@ -58,14 +58,14 @@ def reference(segs, t):
 
 
 def methods(x16, x20):
-    t = frame_times(len(x16))
-    frames = scored(x16, t, yin_candidates(x16, t))
-    out = {f"tracker, threshold {th}": (t, viterbi(frames, theta=th)) for th in (0.5, 0.4)}
+    t = window_times(len(x16))
+    scored_windows = scored(x16, t, yin_candidates(x16, t))
+    out = {f"tracker, threshold {th}": (t, viterbi(scored_windows, theta=th)) for th in (0.5, 0.4)}
     # Candidates offered at every difference-function minimum, so that only
     # the score decides voicing.
-    frames = scored(x16, t, yin_candidates(x16, t, d_max=1.0))
+    scored_windows = scored(x16, t, yin_candidates(x16, t, d_max=1.0))
     for th in (0.5, 0.4):
-        out[f"tracker, all minima, {th}"] = (t, viterbi(frames, theta=th))
+        out[f"tracker, all minima, {th}"] = (t, viterbi(scored_windows, theta=th))
     out["cepstral baseline"] = cepstral_track(x16)
     try:
         import sonore as so
@@ -102,7 +102,7 @@ def main(root):
                 rel = np.abs(est / np.where(rv, ref, 1) - 1)
                 c = n.setdefault(name, {})
                 for key, mask in [
-                    ("voiced", rv & ok),  # frames scored for voicing
+                    ("voiced", rv & ok),  # time windows scored for voicing
                     ("missed", rv & ok & ~ev),
                     ("unvoiced", ~rv & ok),
                     ("false", ~rv & ok & ev),
@@ -113,7 +113,7 @@ def main(root):
                     ("both_5", rv & ev & (rel <= 0.05)),
                 ]:
                     c[key] = c.get(key, 0) + int(np.sum(mask))
-        print(f"speaker {spk}: {n[next(iter(n))]['ref']} reference-voiced frames")
+        print(f"speaker {spk}: {n[next(iter(n))]['ref']} reference-voiced time windows")
         for name, c in n.items():
             print(
                 f"  {name:27s} misses {c['missed'] / c['voiced']:5.1%} of voiced, "

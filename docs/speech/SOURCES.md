@@ -58,14 +58,14 @@ pip install pyworld   # development only; not a sonore dependency
 python tools/make_speech_f0.py docs/speech/bdl_arctic_a0131.flac
 ```
 
-- 506 frames, 85% voiced, F0 88–193 Hz (median about 120 Hz).
+- 506 time windows, 85% voiced, F0 88–193 Hz (median about 120 Hz).
 - Why Harvest: D13 preferred an F0 track from the corpus's EGG channel.
   These files are the single-channel `wav/` versions, which carry no EGG
   channel, so D13's fallback applies.
 - Sanity check (not a claim about Harvest's accuracy): on the 343 voiced
-  frames where a plain autocorrelation (40 ms Hann frame, peak > 0.5) finds a
-  clear period, 96% agree with Harvest to within 5%. On 9 frames the
-  autocorrelation gives twice Harvest's F0; none gives half. The frames
+  time windows where a plain autocorrelation (40 ms Hann window, peak > 0.5) finds a
+  clear period, 96% agree with Harvest to within 5%. On 9 time windows the
+  autocorrelation gives twice Harvest's F0; none gives half. The time windows
   above 160 Hz are two brief runs (at 0.82 s and 1.71 s, 15–20 ms each).
 - Cross-check against the corpus's own pitch marks
   (`bdl_arctic_a0131.pm`: 285 marks, about one per glottal cycle in voiced

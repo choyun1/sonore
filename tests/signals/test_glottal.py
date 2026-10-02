@@ -108,8 +108,8 @@ def test_source_does_not_alias():
     """A tense pulse sampled directly folds its high harmonics back; the
     source made from harmonics has none above f_max."""
     x = so.glottal_source(1.0, FS, ([0.0, 1.0], [100.0, 300.0]), 0.3).data[:, 0]
-    frames = np.lib.stride_tricks.sliding_window_view(x, 512)[::128] * np.hanning(512)
-    power = np.abs(np.fft.rfft(frames, axis=1)) ** 2
+    time_windows = np.lib.stride_tricks.sliding_window_view(x, 512)[::128] * np.hanning(512)
+    power = np.abs(np.fft.rfft(time_windows, axis=1)) ** 2
     freqs = np.fft.rfftfreq(512, 1 / FS)
     assert 10 * np.log10(power[:, freqs > 0.45 * FS + 400].sum() / power.sum()) < -90
 

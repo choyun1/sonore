@@ -225,7 +225,7 @@ fig = msg.slices(2.0, rate=4.0)
 #   a modulation is rather than how modulated a band is (`msg.power`, and `msg.average()` over
 #   time). Pooled over bands it is dominated by the loudest bands and reads less clearly than
 #   depth.
-# - **Live analysis.** With `align="causal"` every window ends at its frame, as a live analysis
+# - **Live analysis.** With `align="causal"` every window ends at the time it reports, as a live analysis
 #   would see the sound, at the cost of a delay of half a window. The analysis can run on blocks
 #   of a stream and give the same numbers; a streaming version is planned.
 # - **Inversion.** The phase of each filter output is dropped and the local mean divided out, so

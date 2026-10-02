@@ -1,5 +1,5 @@
 """The modulation spectrogram: how strongly each band's envelope is modulated
-at each rate, frame by frame.
+at each rate, time window by time window.
 
 An STFT shows how a sound's power spectrum changes over time; a
 :class:`ModulationSpectrogram` shows how its modulation spectrum changes over
@@ -25,26 +25,26 @@ __all__ = ["ModulationSpectrogram"]
 
 
 class ModulationSpectrogram:
-    """Modulation power, local mean and depth for every frame, acoustic band
+    """Modulation power, local mean and depth for every time window, acoustic band
     and modulation band.
 
     For band envelope ``e_b`` and modulation band ``k`` with complex kernel
     ``h_k`` and window ``w_k`` (see
     :class:`~sonore.analysis.modulation.HannModulationFilterbank`), at each
-    frame::
+    time window::
 
         y    = sum_j e_b[n + j - c] conj(h_k[j])     (c: centred or causal)
         mean = sum_j e_b[n + j - c] w_k[j]
 
     and the stored arrays are ``power = |2 y|**2`` and ``mean``, both of shape
-    ``(n_channels, n_bands, n_mod, n_frames)``. :attr:`depth` is
+    ``(n_channels, n_bands, n_mod, n_windows)``. :attr:`depth` is
     ``2 |y| / mean``: a sinusoidal AM of depth ``m`` at the band's rate reads
     ``m``, so 100% modulation is 0 dB. Power says how much of the sound a
     modulation is; depth says how modulated the band is.
 
     The acoustic axis :attr:`f` is the envelopes' filterbank without its edge
-    bands, :attr:`fm` holds the modulation rates and :attr:`t` the frame
-    times. :attr:`valid` (``(n_bands, n_mod, n_frames)``) is False where a
+    bands, :attr:`fm` holds the modulation rates and :attr:`t` the window
+    times. :attr:`valid` (``(n_bands, n_mod, n_windows)``) is False where a
     number can't be trusted: where the modulation rate exceeds the band's
     -3 dB width (a band's envelope can't move faster than the band is wide),
     and where the window runs past either end of the envelopes (outside them
@@ -68,10 +68,10 @@ class ModulationSpectrogram:
         (constant Q); ``window`` [s] one window for every rate (the STFT of
         each envelope).
     hop
-        Frame step [s], independent of the window, as in an STFT.
+        Spacing between time windows [s], independent of the window, as in an STFT.
     align
-        ``"center"`` (windows centred on the frames) or ``"causal"`` (windows
-        ending at the frames: what a live analysis would see).
+        ``"center"`` (windows centred on the window times) or ``"causal"`` (windows
+        ending at them: what a live analysis would see).
     bank
         A ready-made bank, instead of ``f_lo`` .. ``window``.
     """
@@ -107,13 +107,13 @@ class ModulationSpectrogram:
         keep = slice(None) if getattr(filterbank, "edges", True) is False else slice(1, -1)
         band_env = band_env[:, keep, :]
         n_samples = band_env.shape[0]
-        frames = np.arange(0, n_samples, hop_samples)
+        positions = np.arange(0, n_samples, hop_samples)
 
-        y = np.empty((len(frames),) + band_env.shape[1:] + (bank.n_bands,), complex)
+        y = np.empty((len(positions),) + band_env.shape[1:] + (bank.n_bands,), complex)
         mean = np.empty(y.shape)
         for k, (kernel, hann) in enumerate(bank.kernels(fs)):
-            y[..., k] = _correlate(band_env, kernel, align)[frames]
-            mean[..., k] = _correlate(band_env, hann, align)[frames].real
+            y[..., k] = _correlate(band_env, kernel, align)[positions]
+            mean[..., k] = _correlate(band_env, hann, align)[positions].real
         # (F, B, C, K) -> (C, B, K, F)
         self.power = np.transpose(np.abs(2 * y) ** 2, (2, 1, 3, 0))
         self.mean = np.maximum(np.transpose(mean, (2, 1, 3, 0)), 0.0)
@@ -122,26 +122,26 @@ class ModulationSpectrogram:
         self.fs, self.hop = fs, hop_samples / fs
         self.f = np.asarray(filterbank.cfs)[keep]
         self.fm = bank.cfs
-        self.t = frames / fs
-        self.valid = self._valid(filterbank, keep, n_samples, frames)
+        self.t = positions / fs
+        self.valid = self._valid(filterbank, keep, n_samples, positions)
 
-    def _valid(self, fb, keep, n: int, frames: np.ndarray) -> np.ndarray:
+    def _valid(self, fb, keep, n: int, positions: np.ndarray) -> np.ndarray:
         bandwidth = _band_widths(fb)[keep]  # (B,)
         rate_ok = self.fm[None, :] <= bandwidth[:, None]  # (B, K)
         lengths = self.bank.lengths(self.fs)[:, None]  # (K, 1)
         if self.align == "causal":
-            time_ok = frames[None, :] >= lengths - 1
+            time_ok = positions[None, :] >= lengths - 1
         else:
-            before = lengths - 1 - (lengths - 1) // 2  # samples before the frame's own
+            before = lengths - 1 - (lengths - 1) // 2  # samples before the time window's own
             after = (lengths - 1) // 2
-            time_ok = (frames[None, :] >= before) & (frames[None, :] + after <= n - 1)
+            time_ok = (positions[None, :] >= before) & (positions[None, :] + after <= n - 1)
         return rate_ok[:, :, None] & time_ok[None, :, :]
 
     def __repr__(self) -> str:
-        n_channels, n_bands, n_mod, n_frames = self.power.shape
+        n_channels, n_bands, n_mod, n_windows = self.power.shape
         return (
             f"ModulationSpectrogram({n_bands} bands x {n_mod} rates ({self.fm[0]:.3g}-{self.fm[-1]:.3g} Hz), "
-            f"{n_frames} frames every {1000 * self.hop:g} ms, {n_channels} ch, {self.align})"
+            f"{n_windows} time windows every {1000 * self.hop:g} ms, {n_channels} ch, {self.align})"
         )
 
     @property
@@ -153,22 +153,22 @@ class ModulationSpectrogram:
             return np.where(self.mean > tiny, np.sqrt(self.power) / self.mean, np.nan)
 
     def at(self, t: float, kind: str = "depth") -> np.ndarray:
-        """The acoustic band x modulation rate image at the frame nearest
+        """The acoustic band x modulation rate image at the time window nearest
         ``t`` [s], shape ``(n_channels, n_bands, n_mod)``: Atlas and Shamma's
         joint acoustic and modulation frequency display at one moment.
         ``kind`` is ``"depth"`` or ``"power"``."""
-        frame_index = int(np.argmin(np.abs(self.t - t)))
-        return self._kind(kind)[..., frame_index]
+        window_index = int(np.argmin(np.abs(self.t - t)))
+        return self._kind(kind)[..., window_index]
 
     def average(self, kind: str = "power") -> np.ndarray:
-        """Average over frames, shape ``(n_channels, n_bands, n_mod)``. The
+        """Average over time windows, shape ``(n_channels, n_bands, n_mod)``. The
         average power is the per-band modulation power spectrum, the same kind
         of quantity as the texture statistics' ``mod_power``."""
         return np.nanmean(self._kind(kind), axis=-1)
 
     def pooled_depth(self) -> np.ndarray:
         """Depth pooled over acoustic bands, shape ``(n_channels, n_mod,
-        n_frames)``: ``sqrt(sum_b power) / sqrt(sum_b mean**2)`` over the
+        n_windows)``: ``sqrt(sum_b power) / sqrt(sum_b mean**2)`` over the
         bands whose cell is :attr:`valid`, which weights bands by their level.
         NaN where no band is valid."""
         valid = self.valid[None]
@@ -197,7 +197,7 @@ class ModulationSpectrogram:
         return plot_modulation_slices(self, t, rate=rate, **kwargs)
 
     def animate(self, path=None, sound=None, fps: float = 25.0, **kwargs):
-        """The band x rate image (depth, dB) frame by frame, as a matplotlib
+        """The band x rate image (depth, dB) time window by time window, as a matplotlib
         animation. With ``path``, it is written to a video file (needs
         ffmpeg), and with ``sound`` as well, the sound becomes its audio
         track. Returns the animation."""

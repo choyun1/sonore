@@ -259,7 +259,7 @@ def glottal_source(
     The pulses are built from their harmonics (:func:`lf_harmonics`) by
     :func:`harmonic_complex`, so they do not alias, each period takes its
     own length on a moving F0, and ``f0``, ``f_max`` and ``ramp`` work as
-    there (unvoiced frames are silent). The result is the flow derivative,
+    there (unvoiced time windows are silent). The result is the flow derivative,
     the source as it excites the vocal tract with radiation folded in, or
     with ``flow=True`` the flow itself; normalized to RMS 1.
 

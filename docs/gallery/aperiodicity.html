@@ -247,9 +247,9 @@ def true_aperiodicity(f):
 
 
 vowel = formants(buzz + hiss)
-frame_times = np.arange(0, DUR, 0.005)
-track = (frame_times, np.full(len(frame_times), F0))  # the exact F0, every 5 ms
-inside = (frame_times &gt; 0.1) &amp; (frame_times &lt; 0.9)  # frames away from the ends</code></pre></details></div>
+window_times = np.arange(0, DUR, 0.005)
+track = (window_times, np.full(len(window_times), F0))  # the exact F0, every 5 ms
+inside = (window_times &gt; 0.1) &amp; (window_times &lt; 0.9)  # time windows away from the ends</code></pre></details></div>
 </section>
 <section aria-labelledby="h-buzz-hiss-and-both">
 <h2 id="h-buzz-hiss-and-both">Buzz, hiss, and both</h2>
@@ -332,14 +332,14 @@ ax.legend(loc=&quot;lower right&quot;, fontsize=8)</code></pre></details>
 <p>The definition suggests the measurement: find the best periodic sound, take it away, and see
 how much is left. If the pitch is known, the periodic part of a short stretch is a sum of
 harmonics whose phases follow the running phase <span class="tex">\Phi(t) = 2\pi \int F_0</span>, each with an amplitude
-and a phase to be found. That is a linear least-squares fit. Here is one frame, under a Hann
+and a phase to be found. That is a linear least-squares fit. Here is one time window, under a Hann
 window four periods long, with each harmonic also allowed an amplitude that changes linearly
 across the window.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">centre = int(0.5 * FS)  # the frame at 0.5 s
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">centre = int(0.5 * FS)  # the time window at 0.5 s
 half = int(round(2 * FS / F0))  # half of four periods
 offsets = np.arange(-half, half + 1)
 window = 0.5 + 0.5 * np.cos(np.pi * offsets / (half + 1))
-phase = 2 * np.pi * F0 * offsets / FS  # the running phase over the frame
+phase = 2 * np.pi * F0 * offsets / FS  # the running phase over the time window
 harmonic_phases = np.outer(phase, np.arange(1, int(FS / 2 / F0) + 1))
 ramp = (offsets / half)[:, None]
 columns = np.column_stack(
@@ -357,28 +357,28 @@ windowed residual power over windowed signal power: 0.012</pre></div>
 
 <article class="still" id="d-ap5">
   <div class="about">
-    <h3>One frame, before and after the harmonics are taken away</h3>
-    <div class="desc"><p>The frame's spectrum, and the spectrum of what is left after the fit. The harmonic peaks are
+    <h3>One time window, before and after the harmonics are taken away</h3>
+    <div class="desc"><p>The time window's spectrum, and the spectrum of what is left after the fit. The harmonic peaks are
 gone from the residual, and what remains is the noise between and under them. Where the noise
-was below the harmonics (low frequencies) the residual lies far below the frame's spectrum;
+was below the harmonics (low frequencies) the residual lies far below the time window's spectrum;
 above 4 kHz the two are close. Their ratio, read across frequency, is the aperiodicity.</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/ap5_one_frame_before_and_after_the_harmonics_are_taken_away.png" width="1000" height="340" alt="One frame, before and after the harmonics are taken away" loading="lazy">
+    <img src="img/ap5_one_time_window_before_and_after_the_harmonics_are_taken_away.png" width="1000" height="340" alt="One time window, before and after the harmonics are taken away" loading="lazy">
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">n_fft = 4096
-frame_freqs = np.fft.rfftfreq(n_fft, 1 / FS)
-frame_db = 20 * np.log10(np.abs(np.fft.rfft(window * segment, n_fft)) + 1e-12)
+segment_freqs = np.fft.rfftfreq(n_fft, 1 / FS)
+segment_db = 20 * np.log10(np.abs(np.fft.rfft(window * segment, n_fft)) + 1e-12)
 residual_db = 20 * np.log10(np.abs(np.fft.rfft(window * residual, n_fft)) + 1e-12)
 fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
-ax.plot(frame_freqs, frame_db, color=&quot;0.6&quot;, lw=0.7, label=&quot;the frame&quot;)
-ax.plot(frame_freqs, residual_db, color=&quot;C3&quot;, lw=0.7, label=&quot;the frame less the fitted harmonics&quot;)
-top = frame_db.max() + 5
+ax.plot(segment_freqs, segment_db, color=&quot;0.6&quot;, lw=0.7, label=&quot;the time window&quot;)
+ax.plot(segment_freqs, residual_db, color=&quot;C3&quot;, lw=0.7, label=&quot;the time window less the fitted harmonics&quot;)
+top = segment_db.max() + 5
 ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Level (dB)&quot;, xlim=(0, 6000), ylim=(top - 95, top))
-ax.set_title(&quot;One frame of the breathy vowel (Hann, four periods)&quot;)
+ax.set_title(&quot;One time window of the breathy vowel (Hann, four periods)&quot;)
 ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
 </article>
-<p><code>so.harmonic_aperiodicity</code> does this at every frame. It adds one correction: the fit also
+<p><code>so.harmonic_aperiodicity</code> does this at every time window. It adds one correction: the fit also
 absorbs a little of the noise, the part that happens to look like the harmonics near each
 harmonic frequency, so the residual is a little too small there. How much is known exactly from
 the fit itself (it is what the fit would do to white noise), and is divided out. The shares are
@@ -398,7 +398,7 @@ ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color=&quot;k&quot;, lw=
 measured = residual_share.share[0][:, inside]
 ax.plot(residual_share.f, 10 * np.log10(measured.mean(axis=1)), color=&quot;C3&quot;, label=&quot;so.harmonic_aperiodicity&quot;)
 ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Share of noise (dB)&quot;, xlim=(0, 7200), ylim=(-40, 3))
-ax.set_title(&quot;The harmonic residual reads the vowel&#x27;s aperiodicity (mean over frames)&quot;)
+ax.set_title(&quot;The harmonic residual reads the vowel&#x27;s aperiodicity (mean over time windows)&quot;)
 ax.legend(loc=&quot;lower right&quot;, fontsize=8)</code></pre></details>
 </article>
 <p>The measure is the definition, which makes it easy to explain and to check. It has one
@@ -410,7 +410,7 @@ irregularity (jitter and shimmer) as noise.</p>
 <section aria-labelledby="h-what-world-reports">
 <h2 id="h-what-world-reports">What WORLD reports</h2>
 <p>WORLD's own measure is D4C (Morise, 2016), which <code>so.d4c</code> reproduces exactly. It works from a
-"group delay" of the frame, smoothed over the harmonics, whose spectrum is sorted to see how
+"group delay" of the time window, smoothed over the harmonics, whose spectrum is sorted to see how
 much of its power lies outside the strongest components, in bands 3 kHz wide around each
 multiple of 3 kHz. A correction for F0 follows, and the curve is drawn as straight lines (in dB)
 from −60 dB at 0 Hz through the bands' values to 0 dB at the top. At 16 kHz there is only one
@@ -439,7 +439,7 @@ ax.legend(loc=&quot;lower right&quot;, fontsize=8)</code></pre></details>
 <p>So the two answer different questions. The harmonic residual reports the share of noise. D4C
 reports a value that makes WORLD's synthesis sound natural, and below 3 kHz it is far from
 the share of noise on this vowel. In exchange, D4C hardly cares whether the pitch is exact.
-Averaged over bands and frames, with the exact pitch track and with one 1% too high:</p>
+Averaged over bands and time windows, with the exact pitch track and with one 1% too high:</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">band_edges = [0, 1000, 2000, 4000, 7000]
 envelope = so.cheaptrick(vowel, track)
 # the truth in each band: noise power over total power, the envelope weighting each frequency
@@ -450,7 +450,7 @@ for low, high in zip(band_edges[:-1], band_edges[1:], strict=True):
     in_band = (envelope.f &gt;= low) &amp; (envelope.f &lt; high)
     share = np.sum(true_aperiodicity(envelope.f[in_band]) * weights[in_band]) / np.sum(weights[in_band])
     truth_db.append(10 * np.log10(share))
-wrong_track = (frame_times, track[1] * 1.01)
+wrong_track = (window_times, track[1] * 1.01)
 bands = &quot;&quot;.join(f&quot;{f&#x27;{low}-{high}&#x27;:&gt;11}&quot; for low, high in zip(band_edges[:-1], band_edges[1:], strict=True))
 print(f&quot;{&#x27;Share of noise [dB], band [Hz]&#x27;:&lt;34}{bands}&quot;)
 print(f&quot;{&#x27;truth&#x27;:&lt;34}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in truth_db))
@@ -471,8 +471,8 @@ high harmonics drift out of phase with the fit; D4C's numbers do not change.</p>
 <p>The sentence from <a href="speech.html">Seeing speech</a>, with the F0 track WORLD's Harvest (Morise, 2017)
 measured, stored with it. On recorded speech there is no truth to compare with, but the two
 maps can be set side by side. Both are 1 (0 dB, all noise) where the track says unvoiced. In
-voiced frames the harmonic residual is low below 1 to 2 kHz, where the harmonics are strong,
-and near 0 dB above about 4 kHz in many frames; D4C has the same shape in every voiced frame,
+voiced time windows the harmonic residual is low below 1 to 2 kHz, where the harmonics are strong,
+and near 0 dB above about 4 kHz in many time windows; D4C has the same shape in every voiced time window,
 a single bend at 3 kHz.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
 harvest_times, harvest_f0 = np.loadtxt(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;, delimiter=&quot;,&quot;, skiprows=2).T
@@ -509,7 +509,7 @@ axes[2].set_xlabel(&quot;Time (s)&quot;)</code></pre></details>
 it adds two pieces: the harmonics' share of the envelope, <span class="tex">S(1 - A)</span>, as one pulse, and the
 noise's share, <span class="tex">S A</span>, as a short burst of filtered noise. Below, the same pitch track and
 envelope with four aperiodicities. (WORLD keeps <span class="tex">A</span> between −60 dB and just under 0 dB, and
-frames the track calls unvoiced are always noise.)</p>
+time windows the track calls unvoiced are always noise.)</p>
 
 <article class="sound" id="d-ap9" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
@@ -561,7 +561,7 @@ fig, playhead = show(sound, &quot;so.world_synthesize with so.harmonic_aperiodic
 <article class="sound" id="d-ap12" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
   <div class="about">
     <h3>No noise in the voice</h3>
-    <div class="desc"><p>With <span class="tex">A = 0</span> in every voiced frame: harmonics only, the voicing switch of the first-order
+    <div class="desc"><p>With <span class="tex">A = 0</span> in every voiced time window: harmonics only, the voicing switch of the first-order
 picture. The voiced parts are harmonics all the way up.</p></div>
     <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice.flac"></audio>
     <p class="file">ap12_no_noise_in_the_voice.flac, 2.5 s, mono</p>
@@ -594,11 +594,11 @@ fig, playhead = show(sound, &quot;so.world_synthesize with A = 1&quot;, fmax=800
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>WORLD's pitch tracker.</strong> Harvest is not part of sonore; its track is stored with the sentence. With <code>so.f0_track</code> instead, the analysis is still WORLD's but the numbers are not the ones WORLD would give, which <code>so.DIFFERENCES_FROM_WORLD</code> notes.</li><li><strong>Phase.</strong> WORLD's synthesis gives every pulse a minimum phase, so the waveform within each period is not the original's. Its authors call minimum phase inappropriate for low-pitched speech, where differences of phase are easier to hear.</li><li><strong>Jitter and shimmer.</strong> A pitch track smoothed over 5 ms frames cannot follow cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis can only carry it as noise.</li></ul>
+<ul><li><strong>WORLD's pitch tracker.</strong> Harvest is not part of sonore; its track is stored with the sentence. With <code>so.f0_track</code> instead, the analysis is still WORLD's but the numbers are not the ones WORLD would give, which <code>so.DIFFERENCES_FROM_WORLD</code> notes.</li><li><strong>Phase.</strong> WORLD's synthesis gives every pulse a minimum phase, so the waveform within each period is not the original's. Its authors call minimum phase inappropriate for low-pitched speech, where differences of phase are easier to hear.</li><li><strong>Jitter and shimmer.</strong> A pitch track smoothed over 5 ms time windows cannot follow cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis can only carry it as noise.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L396"><code>vocoder.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L455"><code>vocoder.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68">doi:10.21437/Interspeech.2017-68</a>. The stored F0 track.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/vocoder.py#L34"><code>vocoder.world_synthesize</code></a></li></ul>
+<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L398"><code>vocoder.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L457"><code>vocoder.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68">doi:10.21437/Interspeech.2017-68</a>. The stored F0 track.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/vocoder.py#L34"><code>vocoder.world_synthesize</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/seeing/aperiodicity.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/aperiodicity.py</code>, or a cell at a time.</footer>
 </main>

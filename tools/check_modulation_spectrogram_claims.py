@@ -17,7 +17,7 @@ from scipy.signal import fftconvolve, resample_poly
 
 FS = 16000.0  # audio rate [Hz]
 FE = 1000.0  # envelope rate [Hz]
-HOP = 0.010  # frame hop [s]
+HOP = 0.010  # hop between time windows [s]
 CYCLES = 3  # constant-Q kernels hold this many cycles of their own rate
 rng = np.random.default_rng(0)
 SPEECH = Path(__file__).resolve().parent.parent / "docs" / "speech"
@@ -189,16 +189,16 @@ def c3():
     cfs, env = band_envelopes(x)
     t = np.arange(env.shape[0]) / FE
     fr = mod_bands()
-    frames = np.arange(0, env.shape[0], int(HOP * FE))
-    P = np.zeros((len(frames), len(cfs), len(fr)))
+    window_index = np.arange(0, env.shape[0], int(HOP * FE))
+    P = np.zeros((len(window_index), len(cfs), len(fr)))
     D = np.zeros_like(P)
     for j, f in enumerate(fr):
         h, w = kernel(f, cq_length(f))
         for b in range(len(cfs)):
             y, mm = sliding(env[:, b], h, w)
-            P[:, b, j] = np.abs(2 * y[frames]) ** 2
-            D[:, b, j] = depth(y[frames], mm[frames])
-    tf = t[frames]
+            P[:, b, j] = np.abs(2 * y[window_index]) ** 2
+            D[:, b, j] = depth(y[window_index], mm[window_index])
+    tf = t[window_index]
     mid = (tf > 1.5) & (tf < 2.5)
     b, j = np.unravel_index(np.argmax(P[mid].mean(0)), P.shape[1:])
     report("C3", "largest modulation power: audio band centre [Hz]", cfs[b])
@@ -239,7 +239,7 @@ def c4():
     e = env[:, b]
     te = np.arange(len(e)) / FE
     true = r0 * (r1 / r0) ** (te / dur)
-    frames = np.arange(0, len(e), int(HOP * FE))
+    window_index = np.arange(0, len(e), int(HOP * FE))
     # quarter-octave bands for tracking; a fixed window only searches rates
     # above its own DC lobe (2 / T)
     for label, fr, lengths in (
@@ -248,25 +248,30 @@ def c4():
         ("fixed 0.25 s window", mod_bands(8.0, 64.0, 4), 250),
     ):
         lengths = [cq_length(f) for f in fr] if lengths is None else [lengths] * len(fr)
-        D = np.zeros((len(frames), len(fr)))
+        D = np.zeros((len(window_index), len(fr)))
         for j, f in enumerate(fr):
             h, w = kernel(f, lengths[j])
             y, mm = sliding(e, h, w)
-            D[:, j] = depth(y[frames], mm[frames]) + 1e-12
+            D[:, j] = depth(y[window_index], mm[window_index]) + 1e-12
         k = np.argmax(D, axis=1)
         k = np.clip(k, 1, len(fr) - 2)
         y0, y1, y2 = (np.log(D[np.arange(len(k)), k + s]) for s in (-1, 0, 1))
         with np.errstate(divide="ignore", invalid="ignore"):
             off = np.nan_to_num(0.5 * (y0 - y2) / (y0 - 2 * y1 + y2))
         est = fr[k] * 2.0 ** (off / 4)
-        err = np.abs(np.log2(est / true[frames]))
+        err = np.abs(np.log2(est / true[window_index]))
         for lo, hi in ((1.0, 2.5), (2.5, 5.0)):
-            sel = (te[frames] > lo) & (te[frames] < hi) & (true[frames] > fr[1]) & (true[frames] < fr[-2])
+            sel = (
+                (te[window_index] > lo)
+                & (te[window_index] < hi)
+                & (true[window_index] > fr[1])
+                & (true[window_index] < fr[-2])
+            )
             if not sel.any():
                 continue
             report(
                 "C4",
-                f"{label}: rate {true[frames][sel][0]:.1f}-{true[frames][sel][-1]:.1f} Hz, "
+                f"{label}: rate {true[window_index][sel][0]:.1f}-{true[window_index][sel][-1]:.1f} Hz, "
                 "median error [oct]",
                 np.median(err[sel]),
             )
@@ -365,7 +370,7 @@ def c8():
     report("C8", "causal vs centred shifted by (L-1)/2, worst difference", worst_shift)
     for f in (0.5, 4.0, 64.0):
         report("C8", f"causal latency (half the kernel) at {f:g} Hz [s]", (cq_length(f) - 1) / 2 / FE)
-    # per frame and band: a complex kernel (2 real multiply-adds per tap) and
+    # per time window and band: a complex kernel (2 real multiply-adds per tap) and
     # the window for the mean (1 per tap)
     ops = 3 * sum(cq_length(f) for f in mod_bands()) / HOP
     report("C8", "multiply-adds per second per audio band, direct, 10 ms hop [M]", ops / 1e6)
@@ -407,26 +412,26 @@ FRONT_ENDS = (
 
 
 def analyse(env, rates):
-    """y and local mean for every band and rate, centred, at 10 ms frames:
-    shapes (n_frames, n_bands, n_rates). Also a mask of frames at least half
+    """y and local mean for every band and rate, centred, at time windows 10 ms apart:
+    shapes (n_windows, n_bands, n_rates). Also a mask of time windows at least half
     a kernel from either end."""
-    frames = np.arange(0, env.shape[0], int(HOP * FE))
-    Y = np.zeros((len(frames), env.shape[1], len(rates)), complex)
+    window_index = np.arange(0, env.shape[0], int(HOP * FE))
+    Y = np.zeros((len(window_index), env.shape[1], len(rates)), complex)
     M = np.zeros(Y.shape)
-    ok = np.zeros((len(frames), len(rates)), bool)
+    ok = np.zeros((len(window_index), len(rates)), bool)
     for j, f in enumerate(rates):
         L = cq_length(f)
         h, w = kernel(f, L)
         for b in range(env.shape[1]):
             y, m = sliding(env[:, b], h, w)
-            Y[:, b, j], M[:, b, j] = y[frames], m[frames]
-        ok[:, j] = (frames >= L // 2) & (frames < env.shape[0] - L // 2)
+            Y[:, b, j], M[:, b, j] = y[window_index], m[window_index]
+        ok[:, j] = (window_index >= L // 2) & (window_index < env.shape[0] - L // 2)
     return Y, M, ok
 
 
 def pooled_depth(Y, M):
-    """Depth pooled over bands, weighting bands by level: (n_frames, n_rates).
-    Frames whose window sees only digital silence give NaN; they lie at the
+    """Depth pooled over bands, weighting bands by level: (n_windows, n_rates).
+    Time windows whose mean window sees only digital silence give NaN; they lie at the
     ends, outside the cells compared."""
     with np.errstate(invalid="ignore", divide="ignore"):
         return 2 * np.sqrt(np.sum(np.abs(Y) ** 2, axis=1)) / np.sqrt(np.sum(M**2, axis=1))

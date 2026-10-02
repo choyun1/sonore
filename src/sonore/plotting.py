@@ -78,7 +78,7 @@ def _tf_image(ax, values, t, f, cmap, vmin, vmax, colorbar, label):
 
 
 def _interior(stft):
-    """Frames whose window lies entirely inside the signal (edge frames are
+    """Time windows that lie entirely inside the signal (edge time windows are
     zero-padded, which looks like a click)."""
     start = np.round(stft.t * stft.fs).astype(int) - stft.sft.m_num_mid
     inside = np.flatnonzero((start >= 0) & (start + stft.sft.m_num <= stft.n_samples))
@@ -240,16 +240,16 @@ def animate_modulation_spectrogram(
     from matplotlib.animation import FuncAnimation
 
     times = np.arange(0.0, msg.t[-1] + 1e-9, 1.0 / fps)
-    frame_idx = np.clip(np.round(times / msg.hop).astype(int), 0, len(msg.t) - 1)
+    window_index = np.clip(np.round(times / msg.hop).astype(int), 0, len(msg.t) - 1)
     db = _depth_db(msg.depth[channel], msg.valid)
     vmin, vmax = _depth_limits(db, db_range)
     colormap = _depth_cmap(cmap)
     fig, ax = plt.subplots(figsize=figsize, layout="constrained")
-    im = _plot_band_rate(msg, ax, frame_idx[0], channel, vmin, vmax, colormap)
+    im = _plot_band_rate(msg, ax, window_index[0], channel, vmin, vmax, colormap)
     fig.colorbar(im, ax=ax, label="Depth [dB]")
 
     def update(j):
-        im.set_array(db[:, :, frame_idx[j]].ravel())
+        im.set_array(db[:, :, window_index[j]].ravel())
         ax.set_title(f"Band x rate at {times[j]:.2f} s")
         return (im,)
 
@@ -399,8 +399,8 @@ def plot_envelopes(
 
 
 def plot_tf_db(db, t, f, ax=None, db_range=60.0, cmap="magma", colorbar=True, fmax=None, title=None):
-    """A time-frequency image from levels ``db`` (shape ``(n_freqs, n_frames)``)
-    at frame times ``t`` [s] and frequencies ``f`` [Hz], which need not be
+    """A time-frequency image from levels ``db`` (shape ``(n_freqs, n_windows)``)
+    at window times ``t`` [s] and frequencies ``f`` [Hz], which need not be
     uniform: each cell extends halfway to its neighbors. Frequency is linear
     in kHz, as in :func:`plot_stft`."""
     ax = _ax(ax)

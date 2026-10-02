@@ -28,7 +28,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # This page applies `so.Cepstrum` to the sentence from [Seeing speech](speech.html):
 #
-# - [One frame](#h-one-frame): a log spectrum, its cepstrum, and the envelope a lifter recovers.
+# - [One time window](#h-one-time-window): a log spectrum, its cepstrum, and the envelope a lifter recovers.
 # - [Pitch from the cepstrum](#h-pitch-from-the-cepstrum): the cepstrogram, and the pitch read off
 #   its peaks.
 # - [A tracker beside the cepstrum](#h-a-tracker-beside-the-cepstrum): `so.f0_track` and Harvest
@@ -73,25 +73,25 @@ cep = so.Cepstrum(stft)
 FMAX = 5000
 
 # %% [markdown]
-# ## One frame
+# ## One time window
 #
-# Take one frame in the middle of a vowel. Its log spectrum is a comb of harmonics riding on the
+# Take one time window in the middle of a vowel. Its log spectrum is a comb of harmonics riding on the
 # formant envelope. Its cepstrum has most of its weight in the first couple of milliseconds, and
 # one clear peak at the pitch period. Keeping only the quefrencies below half a period (a
 # *lifter*, the cepstral counterpart of a filter) and transforming back gives the smooth
 # envelope.
 
 # %% [about]
-# Top: the frame's log spectrum and the liftered envelope. Bottom: its cepstrum, with the peak
+# Top: the time window's log spectrum and the liftered envelope. Bottom: its cepstrum, with the peak
 # at one period. The envelope runs a few dB under the harmonic peaks because the lifter averages
 # the peaks with the dips between them; spectral-envelope estimators such as WORLD's CheapTrick
 # correct for this (Morise, 2015).
 
-# %% [figure c1] One frame
+# %% [figure c1] One time window
 i = int(np.argmin(np.abs(cep.t - 0.50)))
 _, f0_all, peak_all = cep.f0()
-t_frame, f0_frame, peak_frame = cep.t[i], f0_all[0, i], peak_all[0, i]
-cutoff = 0.5 / f0_frame  # half a period
+t_window, f0_window, peak_window = cep.t[i], f0_all[0, i], peak_all[0, i]
+cutoff = 0.5 / f0_window  # half a period
 envelope = cep.lifter(cutoff).envelope()[0, :, i]
 
 fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), layout="constrained")
@@ -101,14 +101,14 @@ ax0.set(
     xlim=(0, FMAX),
     xlabel="Frequency [Hz]",
     ylabel="Level [dB]",
-    title=f"Frame at {t_frame:.3f} s: log spectrum and envelope",
+    title=f"Time window at {t_window:.3f} s: log spectrum and envelope",
 )
 ax0.legend(loc="upper right", fontsize=8)
 q_ms = cep.q * 1e3
 ax1.plot(q_ms, cep.data[0, :, i], color="k", lw=0.8)
 ax1.axvline(cutoff * 1e3, color="tab:red", ls="--", lw=1, label=f"lifter cutoff, {cutoff * 1e3:.1f} ms")
-peak_label = f"peak at {1e3 / f0_frame:.2f} ms: F0 = {f0_frame:.0f} Hz"
-ax1.plot(1e3 / f0_frame, peak_frame, "o", color="tab:blue", label=peak_label)
+peak_label = f"peak at {1e3 / f0_window:.2f} ms: F0 = {f0_window:.0f} Hz"
+ax1.plot(1e3 / f0_window, peak_window, "o", color="tab:blue", label=peak_label)
 ax1.set(xlim=(0, 15), ylim=(-0.2, 0.6), xlabel="Quefrency [ms]", ylabel="Cepstrum", title="Its cepstrum")
 ax1.legend(loc="upper right", fontsize=8)
 for ax in (ax0, ax1):
@@ -117,15 +117,15 @@ for ax in (ax0, ax1):
 # %% [markdown]
 # ## Pitch from the cepstrum
 #
-# Doing this for every frame gives a *cepstrogram*: time across, quefrency up. Wherever the
+# Doing this for every time window gives a *cepstrogram*: time across, quefrency up. Wherever the
 # voice is voiced, a bright line runs at one period, falling as the pitch rises. Picking the
-# largest peak between 2.5 and 13.3 ms (400 and 75 Hz) in each frame is classic cepstral pitch
-# estimation (Noll, 1967). A frame counts as voiced when its peak is taller than 0.1.
+# largest peak between 2.5 and 13.3 ms (400 and 75 Hz) in each time window is classic cepstral pitch
+# estimation (Noll, 1967). A time window counts as voiced when its peak is taller than 0.1.
 
 # %% [about]
 # Top: the cepstrogram, with Harvest's pitch period drawn over it. Bottom: the cepstral F0 next
-# to Harvest's. Each frame is judged on its own, with no continuity from one frame to the next,
-# so the occasional frame jumps an octave.
+# to Harvest's. Each time window is judged on its own, with no continuity from one to the next,
+# so the occasional time window jumps an octave.
 
 # %% [demo c2] The cepstrogram and its pitch
 t, f0_cep, peak = cep.f0(f_lo=75, f_hi=400)
@@ -149,26 +149,26 @@ sound = sentence
 harvest_at = np.interp(t, f0_times, f0_harvest)
 both = (harvest_at > 0) & (f0_cep[0] > 0)
 agree = np.mean(np.abs(f0_cep[0][both] / harvest_at[both] - 1) < 0.05)
-print(f"frames both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}")
+print(f"time windows both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}")
 
 # %% [markdown]
 # ## A tracker beside the cepstrum
 #
 # `so.f0_track` works the other way round. It looks for the period in the waveform rather than
 # the log spectrum, with YIN's difference function (de Cheveigné & Kawahara, 2002): up to four
-# candidate periods per frame, each sharpened from the instantaneous frequencies of the first six
+# candidate periods per time window, each sharpened from the instantaneous frequencies of the first six
 # harmonics, as WORLD does. Each candidate is scored by how well the waveform repeats one period
 # later, and a single pass picks the cheapest path through the candidates, so that the pitch
-# rarely jumps and a frame is voiced only when some candidate repeats well (a score above 0.5).
+# rarely jumps and a time window is voiced only when some candidate repeats well (a score above 0.5).
 
 # %% [about]
 # Top: the tracker's candidates in grey, darker for a higher score, and the path it chose. The
 # darkest row, an octave below the path, is the subharmonic: anything that repeats every period
 # also repeats every two, so it scores as well, and the tracker never chooses a candidate whose
 # octave above scores about as well (`subharmonic_margin`). Bottom: the three pitch tracks
-# together. Where the tracker and Harvest both call a frame voiced they agree; Harvest voices
-# more frames, stretches where the tracker's best score falls below 0.5.
-# Against laryngograph recordings Harvest calls about a third of the unvoiced frames voiced, which
+# together. Where the tracker and Harvest both call a time window voiced they agree; Harvest voices
+# more time windows, stretches where the tracker's best score falls below 0.5.
+# Against laryngograph recordings Harvest calls about a third of the unvoiced time windows voiced, which
 # is why the tracker is stricter by default (see `docs/design/f0.md`).
 
 # %% [demo f1] Cepstral F0, a tracker, and Harvest
@@ -191,7 +191,7 @@ playhead = [ax0, ax1]
 sound = sentence
 
 # %%
-# Compare frame by frame on the tracker's frames, which the cepstrogram's frames include.
+# Compare at every time window of the tracker; the cepstrogram's time windows include them.
 at = np.searchsorted(np.round(t, 6), np.round(track.t, 6))
 pitch = {
     "Harvest": np.interp(track.t, f0_times, f0_harvest),
@@ -199,25 +199,25 @@ pitch = {
     "so.f0_track": np.where(track.voiced[0], track.f0[0], 0.0),
 }
 for name, f in pitch.items():
-    print(f"{name:12s} voiced on {np.mean(f > 0):.0%} of frames")
+    print(f"{name:12s} voiced on {np.mean(f > 0):.0%} of time windows")
 for a, b in [("cepstral", "Harvest"), ("so.f0_track", "Harvest"), ("cepstral", "so.f0_track")]:
     both = (pitch[a] > 0) & (pitch[b] > 0)
     agree = np.mean(np.abs(pitch[a][both] / pitch[b][both] - 1) < 0.05)
-    print(f"{a} and {b}: both voiced on {both.sum()} frames, within 5% on {agree:.0%}")
+    print(f"{a} and {b}: both voiced on {both.sum()} time windows, within 5% on {agree:.0%}")
 
 # %% [markdown]
 # ## Splitting the voice in two
 #
-# Lifter the other way and the two parts can be heard separately. Each frame keeps its own
+# Lifter the other way and the two parts can be heard separately. Each time window keeps its own
 # lifter cutoff, half of its pitch period, following Harvest's track (bridged across unvoiced
 # stretches). Low quefrencies keep the vocal tract; high quefrencies keep the source.
 
 # %%
 voiced_t, voiced_f0 = f0_times[voiced], f0_harvest[voiced]
-cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per frame
+cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per time window
 tract = cep.lifter(cutoffs)  # low quefrencies: the envelope
 source = cep.lifter(cutoffs, keep="high")  # high quefrencies: the harmonics
-source.data[:, 0] = cep.data[:, 0]  # but keep each frame's mean log level, so pauses stay quiet
+source.data[:, 0] = cep.data[:, 0]  # but keep each time window's mean log level, so pauses stay quiet
 
 
 def show(snd, title, win_dur=0.005):
@@ -228,8 +228,8 @@ def show(snd, title, win_dur=0.005):
 
 
 # %% [about]
-# The vocal tract alone: every frame's envelope given its minimum phase, so that each frame
-# becomes one short pulse at the frame's center. The frames are 5 ms apart, so the pulses make
+# The vocal tract alone: every time window's envelope given its minimum phase, so that each time window
+# becomes one short pulse at its center. The time windows are 5 ms apart, so the pulses make
 # a steady 200 Hz buzz. The words survive; the intonation does not.
 
 # %% [demo c3] Envelope only, on a 200 Hz pulse train
@@ -238,7 +238,7 @@ fig, playhead = show(robot, "Envelope only, minimum phase")
 sound = robot
 
 # %% [about]
-# The source alone: the high quefrencies, plus each frame's overall level, with the original
+# The source alone: the high quefrencies, plus each time window's overall level, with the original
 # phase. The formants are flattened away, leaving the harmonics at roughly equal level, a buzzy
 # voice that still carries the talker's intonation. The narrowband spectrogram shows the
 # harmonics running flat across frequency.
@@ -265,22 +265,22 @@ sound = finish(whole)
 # three independent implementations; the numbers below are from SciPy 1.17.1 and Praat 6.1.38.
 #
 # - **MATLAB `rceps`.** Its documented definition, `real(ifft(log(abs(fft(x)))))`, written out in
-#   NumPy for one 40 ms frame, matches sonore's real cepstrum to 4e-16.
+#   NumPy for one 40 ms time window, matches sonore's real cepstrum to 4e-16.
 # - **SciPy `scipy.signal.minimum_phase`** (`method="homomorphic", half=False`) builds a
 #   minimum-phase filter by the same folding of the real cepstrum. On a 17-tap mixed-phase filter
 #   it matches sonore's minimum phase to 4e-8 of the peak; SciPy adds a tiny constant to the
 #   magnitude before the log, which is the whole difference.
 # - **Praat's PowerCepstrogram** (Boersma & Weenink), through `parselmouth`, measures the same
 #   peak by a different route: a Gaussian window, the power spectrum in dB, and the sound
-#   resampled to 10 kHz. On the frames of this sentence that sonore calls voiced, the two peaks
-#   agree within 5% on 98% of frames; on every frame Harvest calls voiced, on 81%.
+#   resampled to 10 kHz. On the time windows of this sentence that sonore calls voiced, the two peaks
+#   agree within 5% on 98% of them; on every time window Harvest calls voiced, on 81%.
 #
 # See also the design and its numerical checks, `docs/design/cepstrum.md`.
 
 # %% [markdown]
 # ## What this page leaves out
 #
-# - **Tracking from the cepstrum.** Cepstral F0 judges each frame alone. The tracker above
+# - **Tracking from the cepstrum.** Cepstral F0 judges each time window alone. The tracker above
 #   chooses a path through candidates from the waveform; the same could be done with cepstral
 #   peaks as the candidates.
 # - **Better envelopes.** A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick
