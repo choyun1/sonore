@@ -248,7 +248,8 @@ class Sound:
     # ------------------------------------------------------------- operations
     def gain_db(self, db: float | Decibels) -> Sound:
         """Change level by ``db`` decibels. Same as ``snd + db*dB``."""
-        return self * float(db_to_amp(float(db)))
+        value = db.value if isinstance(db, Decibels) else float(db)
+        return self * float(db_to_amp(value))
 
     def normalize(self, rms: float | None = 1.0, peak: float | None = None) -> Sound:
         """Scale to a target RMS (default 1) or, if ``peak`` is given, a target peak."""

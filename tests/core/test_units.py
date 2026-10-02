@@ -20,7 +20,6 @@ class TestDecibels:
             (lambda x, dB: x - 3 * dB, -3),
             (lambda x, dB: 6 * dB + x, 6),
             (lambda x, dB: x + np.float64(2.5) * dB, 2.5),
-            (lambda x, dB: x + dB * 6, 6),
             (lambda x, dB: x + (6 * dB + 3 * dB), 9),
             (lambda x, dB: x + -(4 * dB), -4),
             (lambda x, dB: x + (12 * dB) / 2, 6),
@@ -45,7 +44,23 @@ class TestDecibels:
         with pytest.raises(TypeError):
             3 * so.dB - self.x
 
+    def test_number_comes_first(self):
+        with pytest.raises(TypeError, match=r"did you mean 6\*dB\?"):
+            so.dB * 6
+        with pytest.raises(TypeError, match=r"did you mean 2\*\(6\*dB\)\?"):
+            (6 * so.dB) * 2
+        assert 2 * (6 * so.dB) == 12 * so.dB
+
     def test_repr_and_value(self):
         assert repr(6 * so.dB) == "6 dB"
         assert (6 * so.dB).gain == pytest.approx(10**0.3)
         assert 3 * so.dB < 6 * so.dB
+        assert 3 * so.dB <= 3 * so.dB and not 6 * so.dB <= 3 * so.dB
+        assert 6 * so.dB - 3 * so.dB == 3 * so.dB
+
+    def test_not_a_plain_number(self):
+        with pytest.raises(TypeError, match=r"\(6\*dB\)\.value"):
+            float(6 * so.dB)
+        assert (6 * so.dB).value == 6
+        with pytest.raises(TypeError):
+            True * so.dB

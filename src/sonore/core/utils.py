@@ -36,7 +36,11 @@ def db_to_amp(db: ArrayLike) -> np.ndarray:
 
 
 def freq_to_erb(freq: ArrayLike) -> np.ndarray:
-    """Frequency [Hz] to ERB-number [Cams] (Glasberg & Moore, 1990)."""
+    """Frequency [Hz] to ERB-number [Cams] (Glasberg & Moore, 1990).
+
+    The exact integral of ``1 / erb_bandwidth``, ``9.265 ln(1 + f / 228.8)``.
+    The paper prints the rounded form ``21.4 log10(1 + 0.00437 f)``, which
+    is about 0.3% higher (15.62 rather than 15.57 Cams at 1 kHz)."""
     return 9.265 * np.log1p(np.asarray(freq, dtype=float) / (24.7 * 9.265))
 
 
@@ -51,7 +55,9 @@ def erb_bandwidth(freq: ArrayLike) -> np.ndarray:
 
 
 def n_samples(duration: float, fs: float) -> int:
-    """Number of samples in ``duration`` seconds (rounded, not floored)."""
+    """Number of samples in ``duration`` seconds, rounded to the nearest whole
+    number rather than floored (exact halves round to even, as Python's
+    ``round`` does)."""
     return int(round(duration * fs))
 
 

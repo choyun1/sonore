@@ -16,7 +16,11 @@ __all__ = ["Decibels", "dB"]
 
 @dataclass(frozen=True)
 class Decibels:
-    """A level change in decibels (amplitude: ``gain = 10**(value/20)``)."""
+    """A level change in decibels (amplitude: ``gain = 10**(value/20)``).
+
+    Write the number first (``6*dB``, ``2*(6*dB)``); ``dB*6`` is refused. A
+    level is not a plain number either: ``float(6*dB)`` raises, and
+    ``(6*dB).value`` is 6."""
 
     value: float
 
@@ -31,13 +35,24 @@ class Decibels:
     def __repr__(self) -> str:
         return f"{self.value:g} dB"
 
-    def __float__(self) -> float:
-        return float(self.value)
+    def __float__(self):
+        # A level never passes silently as a bare number; read .value on purpose.
+        raise TypeError(f"a level is not a plain number; use ({self!r}).value".replace(" dB)", "*dB)"))
 
-    # scaling: 6*dB, dB*6, -3*dB, (6*dB)/2
-    def __mul__(self, other):
+    # scaling: 6*dB, -3*dB, 2*(6*dB), (6*dB)/2. The number comes first, as it is
+    # written and read; dB*6 is refused rather than quietly meaning the same.
+    def __rmul__(self, other):
         if isinstance(other, numbers.Real) and not isinstance(other, bool):
             return Decibels(self.value * float(other))
+        return self._refuse(other)
+
+    def __mul__(self, other):
+        if isinstance(other, numbers.Real) and not isinstance(other, bool):
+            level = "dB" if self.value == 1 else f"({self!r})".replace(" dB", "*dB")
+            raise TypeError(f"write the number first: did you mean {other:g}*{level}?")
+        return self._refuse(other)
+
+    def _refuse(self, other):
         from sonore.core.sound import Sound
 
         if isinstance(other, Sound):
@@ -46,8 +61,6 @@ class Decibels:
                 "(note that snd * 6*dB parses as (snd * 6) * dB)"
             )
         return NotImplemented
-
-    __rmul__ = __mul__
 
     def __truediv__(self, other):
         if isinstance(other, numbers.Real) and not isinstance(other, bool):

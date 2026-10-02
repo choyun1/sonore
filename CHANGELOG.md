@@ -59,6 +59,11 @@ version (0.x.y) only fixes bugs.
   the HRIR download tests to `tests/stimuli/test_hrir_data.py`.
 
 ### Changed
+- The number goes first in a level: `dB*6` and `(6*dB)*2` now raise a
+  `TypeError` that suggests `6*dB` and `2*(6*dB)`. `6*dB` is unchanged.
+- A level is no longer a plain number: `float(6*dB)` raises and suggests
+  `(6*dB).value`, so a `Decibels` can't slip silently into a function that
+  expects a float. `snd.gain_db(6*dB)` still works.
 - The band-limited `square_wave`, `sawtooth_wave` and `pulse_train` are
   now computed by `harmonic_complex`; their outputs differ from before by
   less than 1e-10. Fixed-F0 `harmonic_complex` and `schroeder_complex`
