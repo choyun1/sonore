@@ -32,8 +32,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   only in where the formants start.
 # - [Noise](#h-noise): frication, aspiration and breathy voice.
 # - [Cascade and parallel](#h-cascade-and-parallel): why the parallel formants alternate in sign.
-# - [What this page leaves out](#h-what-this-page-leaves-out): voice quality, and copying a
-#   recording.
+# - [Voice quality](#h-voice-quality): the same vowel from a tense, a modal and a lax glottal
+#   pulse.
+# - [What this page leaves out](#h-what-this-page-leaves-out): the rest of voice quality, and
+#   copying a recording.
 
 # %% [markdown]
 # ## Code the examples share
@@ -414,11 +416,128 @@ print(f"  same signs        {np.abs(db(same) - db(cascade))[inside].max():5.1f} 
 print(f"  alternating signs {np.abs(db(alternating) - db(cascade))[inside].max():5.1f} dB")
 
 # %% [markdown]
+# ## Voice quality
+#
+# Everything above used Klatt's 1980 source, whose spectrum is fixed. The glottal pulse itself
+# changes with how the vocal folds are held: pressed together they close abruptly, which makes
+# strong high harmonics; held loosely they close gradually, leaving little but the fundamental.
+# The Liljencrants-Fant (LF) model (Fant, Liljencrants & Lin, 1985) describes one period of the
+# glottal flow's derivative $E(t)$: an exponentially growing sinusoid while the glottis opens,
+#
+# $$E(t) = E_0\, e^{\alpha t} \sin(\pi t / t_p), \qquad 0 \le t \le t_e,$$
+#
+# down to its sharp negative peak $-E_e$ at closure $t_e$, then an exponential return to zero.
+# Fant (1995) set the whole shape with one number,
+#
+# $$R_d = \frac{U_0}{0.11\, E_e T_0},$$
+#
+# the peak flow $U_0$ against the strength of the closure, in a period $T_0$: about 0.3 for a
+# tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical men's
+# voices. `so.glottal_source` makes LF pulses from their harmonics, which have an exact
+# formula, so nothing aliases, and `so.klatt_synthesize` uses them with `SS=3` (the source
+# switch of Klatt & Klatt's KLSYN88) and `RD`.
+
+# %% [about]
+# The same peak excitation $E_e$ in all three. The tense pulse opens for a shorter part of the
+# period and passes less air; the lax one stays open longer, and its closure is a gentle slope
+# rather than a sharp corner. The sharp corner is what makes high harmonics.
+
+# %% [figure fq1] One period of the LF pulse at three values of Rd
+x = np.linspace(0, 1, 1000)
+RDS = {0.5: "tense, Rd 0.5", 1.0: "modal, Rd 1", 2.5: "lax, Rd 2.5"}
+fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 3.2), layout="constrained")
+for (rd, label), color in zip(RDS.items(), ["C3", "k", "C0"], strict=True):
+    ax0.plot(x, so.lf_pulse(x, rd, flow=True), color=color, label=label)
+    ax1.plot(x, so.lf_pulse(x, rd), color=color, label=label)
+ax0.set(xlabel="Time (fraction of a period)", ylabel="Flow (units of $E_e T_0$)")
+ax0.set_title("Glottal flow")
+ax1.set(xlabel="Time (fraction of a period)", ylabel="$E(t)$ (units of $E_e$)")
+ax1.set_title("Its derivative: the excitation, with radiation from the lips")
+ax0.legend(fontsize=8)
+
+# %% [about]
+# The harmonics' levels depend on the harmonic number only, not on $F_0$. The difference
+# between the first two harmonics, H1-H2, is the usual measure of this in recordings; Fant's
+# (1995) fit to it, $-7.6 + 11.1\,R_d$ dB, agrees with these spectra to within 0.4 dB up to
+# $R_d$ 1.4. Klatt's 1980 source has the H1-H2 of a modal voice, but around 3 kHz its harmonics
+# are stronger than even the tense pulse's.
+
+# %% [figure fq2] The spectra of the three pulses, and of the 1980 source
+k = np.arange(1, 41)
+klatt_1980 = gain(0, 100, k * 100) * np.abs(1 - np.exp(-2j * np.pi * k * 100 / FS))
+fig, ax = plt.subplots(figsize=(10, 3.4), layout="constrained")
+ax.plot(
+    k * 100,
+    20 * np.log10(klatt_1980 / klatt_1980[0]),
+    "s-",
+    ms=3,
+    lw=0.8,
+    color="0.6",
+    label="Klatt's 1980 source",
+)
+for (rd, label), color in zip(RDS.items(), ["C3", "k", "C0"], strict=True):
+    levels = 20 * np.log10(np.abs(so.lf_harmonics(k, rd)))
+    levels -= levels[0]
+    ax.plot(k * 100, levels, "o-", ms=3, lw=0.8, color=color, label=f"{label}: H1-H2 {-levels[1]:.1f} dB")
+ax.set(xlabel="Frequency at F0 = 100 Hz (Hz)", ylabel="Level re first harmonic (dB)", xlim=(0, 4100))
+ax.set_title("Harmonics of the excitation (the flow derivative), relative to the first")
+ax.legend(fontsize=8)
+
+# %% [about]
+# The vowel of "hod" three times, with everything the same except the pulse: tense (Rd 0.5),
+# modal (Rd 1) and lax (Rd 2.5). The vowel stays the same; the voice goes from pressed and
+# bright to soft and muffled.
+
+# %% [demo fq3] One vowel, three voices
+parts = []
+for rd in RDS:
+    snd = so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), SS=3, RD=rd, **hod)
+    parts += [snd, so.silence(0.2, FS)]
+sound = finish(so.concat(parts[:-1]))
+fig, playhead = show(sound, "Rd 0.5, Rd 1, Rd 2.5", [730, 1090, 2440])
+
+# %% [about]
+# Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical men's voices.
+# The LF voice is darker: at 3 kHz its harmonics are about 12 dB weaker, relative to the first.
+
+# %% [demo fq4] The 1980 source, then LF at Rd 0.7
+parts = [
+    so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), **hod),
+    so.silence(0.2, FS),
+    so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), SS=3, **hod),
+]
+sound = finish(so.concat(parts))
+fig, playhead = show(sound, "SS=1 (the default), then SS=3 with RD=0.7", [730, 1090, 2440])
+
+# %% [about]
+# A voice relaxing at the end of a phrase: Rd rises from 0.6 to 2.4 while the pitch falls. The
+# LF model is the periodic pulse only, and a lax pulse alone sounds soft rather than breathy;
+# Klatt & Klatt (1990) found aspiration noise the most important cue to breathiness, so the
+# aspiration (`AH`) rises with Rd.
+
+# %% [demo fq5] Relaxing into breathy voice
+dur = 1.6
+sound = finish(
+    so.klatt_synthesize(
+        dur,
+        FS,
+        F0=([0, dur], [130, 90]),
+        AV=onoff(dur),
+        SS=3,
+        RD=([0.3, 1.3], [0.6, 2.4]),
+        AH=([0.3, 1.3, dur - 0.05, dur], [0, 52, 52, 0]),
+        rng=0,
+        **hod,
+    )
+)
+fig, playhead = show(sound, "Rd from 0.6 to 2.4, with aspiration rising", [730, 1090, 2440])
+
+# %% [markdown]
 # ## What this page leaves out
 #
-# - **Voice quality.** The glottal source here is Klatt's 1980 one, with a fixed spectral slope.
-#   His later KLSYN88 (Klatt & Klatt, 1990) adds a glottal pulse model with controls for voice
-#   quality, to match the differences between female and male voices and breathy ones.
+# - **The rest of voice quality.** KLSYN88 (Klatt & Klatt, 1990) has more voice controls than
+#   the LF pulse: open quotient, a spectral tilt filter, flutter (slow random jitter of $F_0$)
+#   and double pulsing, and its own polynomial pulse (KLGLOTT88). sonore has the LF pulse only.
 # - **Copying a recording.** The parameters here were written by hand. Copy synthesis fits
 #   formant tracks to a recording, which needs a formant tracker that sonore does not have; the
 #   [Voices from harmonics](harmonics.html) page rebuilds a recording from its measured pitch and
@@ -433,9 +552,14 @@ print(f"  alternating signs {np.abs(db(alternating) - db(cascade))[inside].max()
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
 #   [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/klatt.py#L101)
 #   [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/processing.py#L188)
+# - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis.
+#   *STL-QPSR* 36(2–3), 119–156. The Rd parameter.
+#   [`glottal.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/glottal.py#L247)
+# - Fant, Liljencrants & Lin (1985). A four-parameter model of glottal flow. *STL-QPSR* 26(4),
+#   1–13. [`glottal.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/glottal.py#L171)
 # - Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among
-#   female and male talkers. *J. Acoust. Soc. Am.* 87.
-#   [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894).
+#   female and male talkers. *J. Acoust. Soc. Am.* 87(2), 820–857.
+#   [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894). The `SS` source switch.
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
 #   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The vowels' formant frequencies.

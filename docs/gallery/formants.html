@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html" aria-current="page">Formant synthesis</a><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a></li><li><a href="#h-source-times-filter">Source times filter</a></li><li><a href="#h-six-vowels">Six vowels</a></li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a></li><li><a href="#h-noise">Noise</a></li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html" aria-current="page">Formant synthesis</a><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a></li><li><a href="#h-source-times-filter">Source times filter</a></li><li><a href="#h-six-vowels">Six vowels</a></li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a></li><li><a href="#h-noise">Noise</a></li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a></li><li><a href="#h-voice-quality">Voice quality</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -166,7 +166,7 @@ formants are second-order resonators</p>
 formant at <span class="tex">F_k</span> Hz, <span class="tex">B_k</span> Hz wide, sampled every <span class="tex">T</span> seconds. Every parameter is a number or a
 track of <code>(times, values)</code>, so the sounds below are written down rather than recorded, and any
 cue can be changed while the others stay put.</p>
-<ul><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a>: the source, then one formant at a time.</li><li><a href="#h-source-times-filter">Source times filter</a>: the same vowel as a product of spectra.</li><li><a href="#h-six-vowels">Six vowels</a>: Peterson and Barney's averages, and a continuum between two.</li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a>: /ba/, /da/ and /ga/ differ only in where the formants start.</li><li><a href="#h-noise">Noise</a>: frication, aspiration and breathy voice.</li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a>: why the parallel formants alternate in sign.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: voice quality, and copying a recording.</li></ul>
+<ul><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a>: the source, then one formant at a time.</li><li><a href="#h-source-times-filter">Source times filter</a>: the same vowel as a product of spectra.</li><li><a href="#h-six-vowels">Six vowels</a>: Peterson and Barney's averages, and a continuum between two.</li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a>: /ba/, /da/ and /ga/ differ only in where the formants start.</li><li><a href="#h-noise">Noise</a>: frication, aspiration and breathy voice.</li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a>: why the parallel formants alternate in sign.</li><li><a href="#h-voice-quality">Voice quality</a>: the same vowel from a tense, a modal and a lax glottal pulse.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: the rest of voice quality, and copying a recording.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -660,13 +660,159 @@ print(f&quot;  alternating signs {np.abs(db(alternating) - db(cascade))[inside].
   same signs         13.7 dB
   alternating signs   0.1 dB</pre></div>
 </section>
+<section aria-labelledby="h-voice-quality">
+<h2 id="h-voice-quality">Voice quality</h2>
+<p>Everything above used Klatt's 1980 source, whose spectrum is fixed. The glottal pulse itself
+changes with how the vocal folds are held: pressed together they close abruptly, which makes
+strong high harmonics; held loosely they close gradually, leaving little but the fundamental.
+The Liljencrants-Fant (LF) model (Fant, Liljencrants &amp; Lin, 1985) describes one period of the
+glottal flow's derivative <span class="tex">E(t)</span>: an exponentially growing sinusoid while the glottis opens,</p>
+<div class="tex display">E(t) = E_0\, e^{\alpha t} \sin(\pi t / t_p), \qquad 0 \le t \le t_e,</div>
+<p>down to its sharp negative peak <span class="tex">-E_e</span> at closure <span class="tex">t_e</span>, then an exponential return to zero.
+Fant (1995) set the whole shape with one number,</p>
+<div class="tex display">R_d = \frac{U_0}{0.11\, E_e T_0},</div>
+<p>the peak flow <span class="tex">U_0</span> against the strength of the closure, in a period <span class="tex">T_0</span>: about 0.3 for a
+tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical men's
+voices. <code>so.glottal_source</code> makes LF pulses from their harmonics, which have an exact
+formula, so nothing aliases, and <code>so.klatt_synthesize</code> uses them with <code>SS=3</code> (the source
+switch of Klatt &amp; Klatt's KLSYN88) and <code>RD</code>.</p>
+
+<article class="still" id="d-fq1">
+  <div class="about">
+    <h3>One period of the LF pulse at three values of Rd</h3>
+    <div class="desc"><p>The same peak excitation <span class="tex">E_e</span> in all three. The tense pulse opens for a shorter part of the
+period and passes less air; the lax one stays open longer, and its closure is a gentle slope
+rather than a sharp corner. The sharp corner is what makes high harmonics.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fq1_one_period_of_the_lf_pulse_at_three_values_of_rd.png" width="1000" height="320" alt="One period of the LF pulse at three values of Rd" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">x = np.linspace(0, 1, 1000)
+RDS = {0.5: &quot;tense, Rd 0.5&quot;, 1.0: &quot;modal, Rd 1&quot;, 2.5: &quot;lax, Rd 2.5&quot;}
+fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10, 3.2), layout=&quot;constrained&quot;)
+for (rd, label), color in zip(RDS.items(), [&quot;C3&quot;, &quot;k&quot;, &quot;C0&quot;], strict=True):
+    ax0.plot(x, so.lf_pulse(x, rd, flow=True), color=color, label=label)
+    ax1.plot(x, so.lf_pulse(x, rd), color=color, label=label)
+ax0.set(xlabel=&quot;Time (fraction of a period)&quot;, ylabel=&quot;Flow (units of $E_e T_0$)&quot;)
+ax0.set_title(&quot;Glottal flow&quot;)
+ax1.set(xlabel=&quot;Time (fraction of a period)&quot;, ylabel=&quot;$E(t)$ (units of $E_e$)&quot;)
+ax1.set_title(&quot;Its derivative: the excitation, with radiation from the lips&quot;)
+ax0.legend(fontsize=8)</code></pre></details>
+</article>
+
+<article class="still" id="d-fq2">
+  <div class="about">
+    <h3>The spectra of the three pulses, and of the 1980 source</h3>
+    <div class="desc"><p>The harmonics' levels depend on the harmonic number only, not on <span class="tex">F_0</span>. The difference
+between the first two harmonics, H1-H2, is the usual measure of this in recordings; Fant's
+(1995) fit to it, <span class="tex">-7.6 + 11.1\,R_d</span> dB, agrees with these spectra to within 0.4 dB up to
+<span class="tex">R_d</span> 1.4. Klatt's 1980 source has the H1-H2 of a modal voice, but around 3 kHz its harmonics
+are stronger than even the tense pulse's.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fq2_the_spectra_of_the_three_pulses_and_of_the_1980_source.png" width="1000" height="340" alt="The spectra of the three pulses, and of the 1980 source" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">k = np.arange(1, 41)
+klatt_1980 = gain(0, 100, k * 100) * np.abs(1 - np.exp(-2j * np.pi * k * 100 / FS))
+fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+ax.plot(
+    k * 100,
+    20 * np.log10(klatt_1980 / klatt_1980[0]),
+    &quot;s-&quot;,
+    ms=3,
+    lw=0.8,
+    color=&quot;0.6&quot;,
+    label=&quot;Klatt&#x27;s 1980 source&quot;,
+)
+for (rd, label), color in zip(RDS.items(), [&quot;C3&quot;, &quot;k&quot;, &quot;C0&quot;], strict=True):
+    levels = 20 * np.log10(np.abs(so.lf_harmonics(k, rd)))
+    levels -= levels[0]
+    ax.plot(k * 100, levels, &quot;o-&quot;, ms=3, lw=0.8, color=color, label=f&quot;{label}: H1-H2 {-levels[1]:.1f} dB&quot;)
+ax.set(xlabel=&quot;Frequency at F0 = 100 Hz (Hz)&quot;, ylabel=&quot;Level re first harmonic (dB)&quot;, xlim=(0, 4100))
+ax.set_title(&quot;Harmonics of the excitation (the flow derivative), relative to the first&quot;)
+ax.legend(fontsize=8)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fq3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]">
+  <div class="about">
+    <h3>One vowel, three voices</h3>
+    <div class="desc"><p>The vowel of "hod" three times, with everything the same except the pulse: tense (Rd 0.5),
+modal (Rd 1) and lax (Rd 2.5). The vowel stays the same; the voice goes from pressed and
+bright to soft and muffled.</p></div>
+    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices.flac"></audio>
+    <p class="file">fq3_one_vowel_three_voices.flac, 3.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fq3_one_vowel_three_voices.png" width="1000" height="420" alt="Plots of the one vowel, three voices sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">parts = []
+for rd in RDS:
+    snd = so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), SS=3, RD=rd, **hod)
+    parts += [snd, so.silence(0.2, FS)]
+sound = finish(so.concat(parts[:-1]))
+fig, playhead = show(sound, &quot;Rd 0.5, Rd 1, Rd 2.5&quot;, [730, 1090, 2440])</code></pre></details>
+</article>
+
+<article class="sound" id="d-fq4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}]">
+  <div class="about">
+    <h3>The 1980 source, then LF at Rd 0.7</h3>
+    <div class="desc"><p>Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical men's voices.
+The LF voice is darker: at 3 kHz its harmonics are about 12 dB weaker, relative to the first.</p></div>
+    <audio controls preload="metadata" src="audio/fq4_the_1980_source_then_lf_at_rd_0.7.flac"></audio>
+    <p class="file">fq4_the_1980_source_then_lf_at_rd_0.7.flac, 2.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fq4_the_1980_source_then_lf_at_rd_0.7.png" width="1000" height="420" alt="Plots of the the 1980 source, then lf at rd 0.7 sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">parts = [
+    so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), **hod),
+    so.silence(0.2, FS),
+    so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), SS=3, **hod),
+]
+sound = finish(so.concat(parts))
+fig, playhead = show(sound, &quot;SS=1 (the default), then SS=3 with RD=0.7&quot;, [730, 1090, 2440])</code></pre></details>
+</article>
+
+<article class="sound" id="d-fq5" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999998, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.6}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999998, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.6}]">
+  <div class="about">
+    <h3>Relaxing into breathy voice</h3>
+    <div class="desc"><p>A voice relaxing at the end of a phrase: Rd rises from 0.6 to 2.4 while the pitch falls. The
+LF model is the periodic pulse only, and a lax pulse alone sounds soft rather than breathy;
+Klatt &amp; Klatt (1990) found aspiration noise the most important cue to breathiness, so the
+aspiration (<code>AH</code>) rises with Rd.</p></div>
+    <audio controls preload="metadata" src="audio/fq5_relaxing_into_breathy_voice.flac"></audio>
+    <p class="file">fq5_relaxing_into_breathy_voice.flac, 1.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fq5_relaxing_into_breathy_voice.png" width="1000" height="420" alt="Plots of the relaxing into breathy voice sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">dur = 1.6
+sound = finish(
+    so.klatt_synthesize(
+        dur,
+        FS,
+        F0=([0, dur], [130, 90]),
+        AV=onoff(dur),
+        SS=3,
+        RD=([0.3, 1.3], [0.6, 2.4]),
+        AH=([0.3, 1.3, dur - 0.05, dur], [0, 52, 52, 0]),
+        rng=0,
+        **hod,
+    )
+)
+fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quot;, [730, 1090, 2440])</code></pre></details>
+</article>
+</section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>Voice quality.</strong> The glottal source here is Klatt's 1980 one, with a fixed spectral slope. His later KLSYN88 (Klatt &amp; Klatt, 1990) adds a glottal pulse model with controls for voice quality, to match the differences between female and male voices and breathy ones.</li><li><strong>Copying a recording.</strong> The parameters here were written by hand. Copy synthesis fits formant tracks to a recording, which needs a formant tracker that sonore does not have; the <a href="harmonics.html">Voices from harmonics</a> page rebuilds a recording from its measured pitch and envelope instead.</li><li><strong>Rules.</strong> Text-to-speech systems drive formant synthesizers from phonetic rules, which generate the tracks from a transcription. Here every track is set by hand.</li></ul>
+<ul><li><strong>The rest of voice quality.</strong> KLSYN88 (Klatt &amp; Klatt, 1990) has more voice controls than the LF pulse: open quotient, a spectral tilt filter, flutter (slow random jitter of <span class="tex">F_0</span>) and double pulsing, and its own polynomial pulse (KLGLOTT88). sonore has the LF pulse only.</li><li><strong>Copying a recording.</strong> The parameters here were written by hand. Copy synthesis fits formant tracks to a recording, which needs a formant tracker that sonore does not have; the <a href="harmonics.html">Voices from harmonics</a> page rebuilds a recording from its measured pitch and envelope instead.</li><li><strong>Rules.</strong> Text-to-speech systems drive formant synthesizers from phonetic rules, which generate the tracks from a transcription. Here every track is set by hand.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940">doi:10.1121/1.383940</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/klatt.py#L104"><code>klatt.klatt_synthesize</code></a> <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/signals/processing.py#L188"><code>processing.resonator</code></a></li><li>Klatt &amp; Klatt (1990). Analysis, synthesis, and perception of voice quality variations among female and male talkers. <em>J. Acoust. Soc. Am.</em> 87. <a href="https://doi.org/10.1121/1.398894">doi:10.1121/1.398894</a>.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels">ASA</a>. The vowels' formant frequencies.</li></ul>
+<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940">doi:10.1121/1.383940</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/klatt.py#L104"><code>klatt.klatt_synthesize</code></a> <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/signals/processing.py#L188"><code>processing.resonator</code></a></li><li>Fant (1995). The LF-model revisited. Transformations and frequency domain analysis. <em>STL-QPSR</em> 36(2–3), 119–156. The Rd parameter. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/signals/glottal.py#L247"><code>glottal.glottal_source</code></a></li><li>Fant, Liljencrants &amp; Lin (1985). A four-parameter model of glottal flow. <em>STL-QPSR</em> 26(4), 1–13. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/signals/glottal.py#L171"><code>glottal.lf_harmonics</code></a></li><li>Klatt &amp; Klatt (1990). Analysis, synthesis, and perception of voice quality variations among female and male talkers. <em>J. Acoust. Soc. Am.</em> 87(2), 820–857. <a href="https://doi.org/10.1121/1.398894">doi:10.1121/1.398894</a>. The <code>SS</code> source switch.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels">ASA</a>. The vowels' formant frequencies.</li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/seeing/formants.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/formants.py</code>, or a cell at a time.</footer>
 </main>

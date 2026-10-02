@@ -14,6 +14,10 @@ class TestSpatialization:
         x, y, z = so.hcc_to_rect(100, 0, 90)
         np.testing.assert_allclose([x, y, z], [1, 0, 0], atol=1e-12)  # 90 deg = right
 
+    def test_linear_trajectory_endpoints_and_even_steps(self):
+        path = so.linear_trajectory((0, 0, 0), (3, -6, 9), 4)
+        np.testing.assert_allclose(path, [[0, 0, 0], [1, -2, 3], [2, -4, 6], [3, -6, 9]], atol=1e-15)
+
     def test_distance_gain(self):
         assert so.distance_gain_db(2.0) == pytest.approx(-6.02, abs=0.01)
 

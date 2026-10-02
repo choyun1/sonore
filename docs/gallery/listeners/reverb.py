@@ -20,11 +20,11 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [How a room is synthesized](#h-how-a-room-is-synthesized): decaying noise in cochlear bands,
 #   and the parameters that shape it.
 # - [Natural rooms](#h-natural-rooms): a starter pistol and a spoken sentence in a synthetic room
-#   that listeners can't tell from a real one.
+#   built like those Traer & McDermott's listeners could not tell from real ones.
 # - [Farther away](#h-farther-away): the same sentence four times as far from the listener,
 #   where less of what arrives is direct sound.
 # - [Rooms that break the rules](#h-rooms-that-break-the-rules): the paper's atypical rooms,
-#   which listeners hear as wrong.
+#   which their listeners heard as wrong.
 
 # %% [markdown]
 # ## How a room is synthesized
@@ -158,8 +158,8 @@ fig, playhead = show(sound, None)
 
 # %% [about]
 # A synthetic room with RT60 = 1 s whose decay follows the statistics of 271 real rooms:
-# exponential, with mid frequencies ringing longest. Listeners can't tell such IRs from real
-# ones.
+# exponential, with mid frequencies ringing longest. In Traer & McDermott's experiments, listeners
+# could not tell IRs synthesized this way from real ones.
 
 # %% [demo 17] In a natural room
 ir = room()

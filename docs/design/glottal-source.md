@@ -10,8 +10,9 @@ source, and the decisions for Cho.
 
 Status: D1–D7 accepted by Cho 2026-10-02, all as recommended. Built as
 `so.lf_harmonics`, `so.lf_pulse`, `so.glottal_source` and the `SS` and
-`RD` parameters of `so.klatt_synthesize` (see "As built" below). The
-gallery section (Order step 5) is still to do.
+`RD` parameters of `so.klatt_synthesize` (see "As built" below), and
+the "Voice quality" section of the Formant synthesis gallery page
+(`docs/gallery/seeing/formants.py`).
 
 ## Why
 
