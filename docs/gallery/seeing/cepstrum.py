@@ -36,6 +36,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Splitting the voice in two](#h-splitting-the-voice-in-two): the vocal tract and the source,
 #   heard separately.
 # - [A higher voice](#h-a-higher-voice): the same analysis on a woman's voice.
+# - [MFCCs: a cepstrum on the mel scale](#h-mfccs-a-cepstrum-on-the-mel-scale): the speech
+#   recogniser's version, how much pitch leaks into it, and what it cannot tell apart.
 # - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
 #   and Praat.
 # - [What this page leaves out](#h-what-this-page-leaves-out): tracking from the cepstrum, better
@@ -51,8 +53,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.fft import dct, idct
 
 import sonore as so
+from sonore.analysis.mfcc import freq_to_mel, mel_filterbank
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 
@@ -364,6 +368,235 @@ print(
 print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 
 # %% [markdown]
+# ## MFCCs: a cepstrum on the mel scale
+#
+# Speech recognisers have long described each time window by its *mel-frequency cepstral
+# coefficients* (Davis & Mermelstein, 1980). The recipe is the cepstrum's, with one step put in
+# front: the power spectrum is first summed into a few dozen triangular bands spaced evenly on
+# the mel scale, a frequency scale that is roughly linear below 1 kHz and logarithmic above, as
+# the ear's resolution is. Then the logarithm, and a cosine transform (a DCT) of the 26 log band
+# powers in place of the Fourier transform. Keeping the first 13 coefficients is a lifter, as in
+# [One time window](#h-one-time-window): it keeps the slow shape across the bands and drops the
+# fine detail. `so.MFCC` follows the HTK and Kaldi speech recipe by default: 25 ms Hamming
+# windows every 10 ms, 26 bands up to half the sampling rate, 13 coefficients.
+#
+# The aim is to keep the vocal tract and drop the pitch. The bands and the lifter both smooth over
+# the harmonics, but not completely: the lowest bands are narrower than the gap between
+# harmonics of a higher voice, so some sit on a harmonic and their neighbours between two, and
+# the pitch leaks back into the coefficients. A vowel synthesised with a known vocal tract shows how much.
+
+# %%
+# Two vowels as sums of harmonics, each harmonic weighted by a vocal tract of four resonances
+# (rounded Peterson & Barney, 1952, male averages; bandwidths chosen here), so the true
+# envelope is known exactly.
+FORMANTS = {
+    "a": [(730, 60), (1090, 100), (2440, 120), (3400, 175)],
+    "i": [(270, 60), (2290, 100), (3010, 120), (3400, 175)],
+}
+
+
+def tract_gain(freqs, vowel):
+    """The vocal tract's |H(f)|: a cascade of second-order resonators."""
+    z = np.exp(-2j * np.pi * np.asarray(freqs, dtype=float) / fs)
+    denominator = np.ones_like(z)
+    for centre, bandwidth in FORMANTS[vowel]:
+        radius = np.exp(-np.pi * bandwidth / fs)
+        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * centre / fs) * z + radius**2 * z**2
+    return 1 / np.abs(denominator)
+
+
+def synthetic_vowel(f0, vowel, duration=0.4):
+    times = np.arange(round(duration * fs)) / fs
+    harmonic_freqs = f0 * np.arange(1, int(0.45 * fs / f0) + 1)
+    amplitudes = tract_gain(harmonic_freqs, vowel)
+    waves = amplitudes[:, None] * np.cos(2 * np.pi * harmonic_freqs[:, None] * times)
+    return so.Sound(waves.sum(0), fs)
+
+
+def keep_13(band_power):
+    """Band powers to 13 MFCCs and back: the log band powers the coefficients keep."""
+    coefficients = dct(np.log(band_power), type=2, norm="ortho", axis=0)
+    coefficients[13:] = 0
+    return idct(coefficients, type=2, norm="ortho", axis=0)
+
+
+f_plot = np.linspace(0, FMAX, 1001)
+f0s = (100, 150, 200, 250, 300)
+smoothed = {}  # (source, vowel, F0): the 13-coefficient log band powers, level removed
+for vowel in FORMANTS:
+    for f0 in f0s:
+        vowel_sound = synthetic_vowel(f0, vowel)
+        mfcc_vowel = so.MFCC(vowel_sound)
+        middle = len(mfcc_vowel.t) // 2
+        envelope_vowel = so.cheaptrick(
+            vowel_sound, (mfcc_vowel.t[middle : middle + 1], np.array([float(f0)]))
+        )
+        envelope_freqs = np.arange(envelope_vowel.n_fft // 2 + 1) * fs / envelope_vowel.n_fft
+        envelope_weights, _ = mel_filterbank(26, envelope_freqs, 0, fs / 2)
+        for source_name, band_power in (
+            ("power spectrum", mfcc_vowel.mel_power[0, :, middle]),
+            ("CheapTrick envelope", envelope_weights @ envelope_vowel.data[0, :, 0]),
+        ):
+            log_power = keep_13(band_power)
+            smoothed[source_name, vowel, f0] = log_power - log_power.mean()
+band_mels = freq_to_mel(mfcc_vowel.cfs)
+true_db = 20 * np.log10(tract_gain(f_plot, "a"))
+
+
+def on_plot_axis(log_power):
+    """13-coefficient log band powers in dB, drawn between the band centres as so.MFCC.envelope
+    does (linear in mel), and shifted to the true envelope's mean level from 100 Hz up."""
+    level_db = 10 / np.log(10) * np.interp(freq_to_mel(f_plot), band_mels, log_power)
+    above_100 = f_plot >= 100
+    return level_db + np.mean(true_db[above_100] - level_db[above_100])
+
+
+# %% [about]
+# The vowel /a/ at three pitches, each analysed in one 25 ms time window. Left: the 13 MFCCs of
+# its power spectrum, drawn back as an envelope (as `mfcc.envelope(f)` does). Right: the same 13
+# coefficients taken from CheapTrick's envelope instead, summed into the same mel bands. Dashed:
+# the vocal tract the harmonics were weighted by. Levels are matched to it, since only the
+# shape matters here (the level is `c0`). From the power spectrum, the lowest bands, below the
+# first harmonic of the 200 and 300 Hz voices, drop by 30 dB and more, and the first formant
+# changes shape with the pitch. CheapTrick has already smoothed over one harmonic spacing, so
+# the three curves nearly coincide. The 13 coefficients cannot follow the formant peaks at
+# any of the pitches: that is the lifter, and it is the same for all three.
+
+# %% [figure m1] One vowel at three pitches
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True, layout="constrained")
+for ax, source_name in zip(axes, ("power spectrum", "CheapTrick envelope"), strict=True):
+    for f0, color in zip((100, 200, 300), ("tab:blue", "tab:orange", "tab:green"), strict=True):
+        ax.plot(
+            f_plot, on_plot_axis(smoothed[source_name, "a", f0]), color=color, lw=1.5, label=f"F0 {f0} Hz"
+        )
+    ax.plot(f_plot, true_db, "k--", lw=1, label="vocal tract")
+    ax.set(xlim=(0, FMAX), xlabel="Frequency [Hz]", title=f"13 MFCCs of the {source_name}")
+    ax.legend(loc="upper right", fontsize=8)
+    ax.grid(ls=":")
+axes[0].set_ylabel("Level [dB]")
+
+# %% [markdown]
+# The distance between two such curves, the rms difference over the 26 bands in dB, puts a
+# number on it. Between F0s of 100 to 300 Hz the same vowel moves about a third as far as the
+# change from /a/ to /i/; taken from CheapTrick's envelope, about a tenth as far.
+
+
+# %%
+def distance_db(first, second):
+    return 10 / np.log(10) * np.sqrt(np.mean((first - second) ** 2))
+
+
+for source_name in ("power spectrum", "CheapTrick envelope"):
+    same_vowel = [
+        distance_db(smoothed[source_name, vowel, low], smoothed[source_name, vowel, high])
+        for vowel in FORMANTS
+        for low in f0s
+        for high in f0s
+        if low < high
+    ]
+    across = [distance_db(smoothed[source_name, "a", f0], smoothed[source_name, "i", f0]) for f0 in f0s]
+    print(
+        f"from the {source_name}: same vowel at two F0s, median {np.median(same_vowel):.1f} dB "
+        f"(largest {max(same_vowel):.1f}); /a/ vs /i/ at one F0, {min(across):.1f} to {max(across):.1f} dB"
+    )
+
+# %% [about]
+# The sentence, analysed with `so.MFCC(sentence)`. From the top: the 26 log band powers (the mel
+# spectrogram, `mfcc.plot(kind="mel")`); the 13 coefficients, without `c0`, the level
+# (`mfcc.plot()`); the band powers the 13 coefficients keep, drawn back from them; and
+# CheapTrick's envelope on the same bands, from the `so.f0_track` pitch track above (unvoiced
+# time windows are analysed as if at 500 Hz). The coefficients are hard to read by eye; drawn
+# back, they are a mel spectrogram smoothed across the bands.
+
+# %% [demo m2] The sentence as MFCCs
+mfcc = so.MFCC(sentence)
+envelope = so.cheaptrick(sentence, track)
+envelope_freqs = np.arange(envelope.n_fft // 2 + 1) * fs / envelope.n_fft
+envelope_weights, _ = mel_filterbank(26, envelope_freqs, 0, fs / 2)
+band_rows = np.arange(len(mfcc.cfs))
+row_ticks = band_rows[::5]
+
+
+def band_image(ax, times, band_db, title):
+    vmax = band_db.max()
+    ax.pcolormesh(
+        times, band_rows, band_db, cmap="magma", vmin=vmax - 60, vmax=vmax, shading="auto", rasterized=True
+    )
+    ax.set_yticks(row_ticks, [f"{mfcc.cfs[row]:.0f}" for row in row_ticks])
+    ax.set(title=title, xlabel="", ylabel="Band centre [Hz]")
+
+
+fig, axes = plt.subplots(4, 1, figsize=(10, 9), sharex=True, layout="constrained")
+mfcc.plot(axes[0], kind="mel", colorbar=False)
+axes[0].set(title="Mel spectrogram: 26 log band powers", xlabel="")
+mfcc.plot(axes[1], colorbar=False)
+axes[1].set(title="MFCCs c1 to c12 (c0, the level, left out)", xlabel="")
+kept_db = 10 * np.log10(mfcc.envelope(mfcc.cfs)[0])
+band_image(axes[2], mfcc.t, kept_db, "The band powers 13 coefficients keep")
+band_image(
+    axes[3],
+    envelope.t,
+    10 * np.log10(envelope_weights @ envelope.data[0]),
+    "CheapTrick's envelope in the same bands",
+)
+axes[3].set_xlabel("Time [s]")
+for ax in axes:
+    ax.set_xlim(0, sentence.duration)
+playhead = list(axes)
+sound = sentence
+
+# %% [markdown]
+# The mel bands and the cut to 13 coefficients both discard information, so MFCCs are a one-way
+# view: no sound can be rebuilt from them, and many different spectra share the same
+# coefficients. Within one band, power can move from one bin to another without the band's sum
+# changing; with 257 bins and 26 bands there are 231 independent ways to do it.
+
+# %% [about]
+# The loudest time window of the sentence, and the same spectrum with every bin's power changed
+# by a factor between 0.1 and 1.9, in a direction that leaves all 26 band powers unchanged.
+# Middle: the change in each bin. Bottom: the mel bands. The two spectra have the
+# same MFCCs to rounding error.
+
+# %% [figure m3] Two spectra, one set of MFCCs
+loudest = int(np.argmax(mfcc.mel_power[0].sum(0)))
+power = np.abs(mfcc.source.data[0, :, loudest]) ** 2
+# A relative change of each bin, at most 0.9, that no band sees: it lies in the null space of the
+# band weights times the spectrum.
+_, _, right_vectors = np.linalg.svd(mfcc.weights * power[None, :])
+null_space = right_vectors[len(mfcc.cfs) :]
+random_signs = np.random.default_rng(0).choice([-1.0, 1.0], power.size)
+relative_change = null_space.T @ (null_space @ random_signs)
+relative_change *= 0.9 / np.abs(relative_change).max()
+gains = np.ones(mfcc.source.data.shape[1:])
+gains[:, loudest] = np.sqrt(1 + relative_change)
+mfcc_altered = so.MFCC(mfcc.source * gains)
+
+bin_freqs = np.arange(mfcc.n_fft // 2 + 1) * fs / mfcc.n_fft
+altered_power = np.abs(mfcc_altered.source.data[0, :, loudest]) ** 2
+fig, (ax0, ax1, ax2) = plt.subplots(
+    3, 1, figsize=(10, 6), sharex=True, height_ratios=[3, 1.4, 1], layout="constrained"
+)
+ax0.plot(bin_freqs, 10 * np.log10(power), color="0.3", lw=1, label="the sentence")
+ax0.plot(bin_freqs, 10 * np.log10(altered_power), color="tab:red", lw=1, label="changed, same band powers")
+ax0.set(ylabel="Level [dB]", title=f"Time window at {mfcc.t[loudest]:.2f} s: two spectra with the same MFCCs")
+ax0.legend(loc="upper right", fontsize=8)
+ax1.vlines(bin_freqs, 0, 10 * np.log10(altered_power / power), color="tab:red", lw=1)
+ax1.set(ylim=(-11, 4), ylabel="Change [dB]", title="The change in each bin")
+ax2.plot(bin_freqs, mfcc.weights.T, color="0.5", lw=0.6)
+ax2.set(xlim=(0, FMAX), xlabel="Frequency [Hz]", ylabel="Weight", title="The 26 mel bands")
+for ax in (ax0, ax1):
+    ax.grid(ls=":")
+
+# %%
+change_db = np.abs(10 * np.log10(altered_power / power))
+coefficient_change = np.abs(mfcc_altered.data[0, :, loudest] - mfcc.data[0, :, loudest]).max()
+print(
+    f"bins changed by more than 3 dB: {np.mean(change_db > 3):.0%}; "
+    f"median change {np.median(change_db):.1f} dB"
+)
+print(f"largest change of any MFCC: {coefficient_change:.1e}")
+
+# %% [markdown]
 # ## Reference implementations
 #
 # `so.Cepstrum` is written from the definitions. `tools/crosscheck_cepstrum.py` compares it with
@@ -381,6 +614,10 @@ print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 #   agree within 5% on 98% of them; on every time window Harvest calls voiced, on 81%.
 #
 # See also the design and its numerical checks, `docs/design/cepstrum.md`.
+#
+# `so.MFCC` is tested against Kaldi's MFCCs (through kaldi-native-fbank, a re-implementation of
+# Kaldi's feature code) to float32 precision, and against librosa's to 1e-8 of the largest
+# coefficient; see `docs/design/mfcc.md`.
 
 # %% [markdown]
 # ## What this page leaves out
@@ -389,8 +626,10 @@ print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 #   chooses a path through candidates from the waveform; the same could be done with cepstral
 #   peaks as the candidates.
 # - **Better envelopes.** A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick
-#   smooths the spectrum over one $F_0$ first and corrects the lifter. Mel-cepstra, the basis of
-#   MFCCs, warp the frequency axis first.
+#   smooths the spectrum over one $F_0$ first and corrects the lifter.
+# - **Other cepstra on a warped axis.** The mel-generalised cepstra of speech synthesis warp the
+#   frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other
+#   auditory bands. MFCC deltas (`mfcc.deltas()`) are not shown.
 # - **The complex cepstrum.** It keeps the phase as well, but needs phase unwrapping, which is
 #   fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or
 #   from the minimum-phase fold.
@@ -403,6 +642,10 @@ print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
 #   Analysis*. Wiley. [Semantic Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
 #   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16)
+# - Davis & Mermelstein (1980). Comparison of parametric representations for monosyllabic word
+#   recognition in continuously spoken sentences. *IEEE Trans. Acoust., Speech, Signal Process.*
+#   28(4), 357–366.
+#   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L126)
 # - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
 #   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
 #   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62)
@@ -416,6 +659,9 @@ print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Harvest.
+# - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
+#   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
+#   The formants of the synthetic vowels.
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
 #   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L145)
