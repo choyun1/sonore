@@ -105,6 +105,33 @@ class TestSpatialization:
         assert error_db(y.data[middle, 0], expected[middle]) < -80
         assert error_db(y.data[middle, 1], expected[middle]) < -80
 
+    def test_fast_sources(self):
+        """Through impulse HRIRs, a tone coming straight at the head at 250 m/s
+        rises by 1 / (1 - 250/343) as the closed form says; receding at 400 m/s
+        renders; coming toward the head at 400 m/s is refused."""
+        toy, _ = toy_hrirs()
+        fs = toy.fs
+        irs = np.zeros_like(toy.irs)
+        irs[:, :, 140] = 1.0
+        hs = so.HRIRSet(irs, toy.positions, fs)
+        f = 200.0
+        x = so.Sound(np.sin(2 * np.pi * f * np.arange(int(0.5 * fs)) / fs), fs)
+        emitted = (len(x) - 1) / fs
+
+        def straight_at(speed):  # ends 2 m in front
+            return lambda t: np.outer(2 + speed * (emitted - np.atleast_1d(t)), [0.0, 1.0, 0.0])
+
+        y = so.move_sound(x, straight_at(250.0), hs)
+        arriving = np.flatnonzero(np.abs(y.data[:, 0]) > 1e-3)
+        middle = y.data[arriving[0] + 200 : arriving[-1] - 200, 0]
+        crossings = np.flatnonzero(np.diff(np.signbit(middle)))
+        heard = (len(crossings) - 1) / 2 / ((crossings[-1] - crossings[0]) / fs)
+        assert heard == pytest.approx(f / (1 - 250.0 / 343.0), rel=1e-3)
+        receding = so.move_sound(x, lambda t: np.outer(2 + 400.0 * np.atleast_1d(t), [0.0, 1.0, 0.0]), hs)
+        assert receding.duration > x.duration + 400.0 * emitted / 343.0
+        with pytest.raises(ValueError, match="faster than"):
+            so.move_sound(x, straight_at(400.0), hs)
+
     def test_beyond_the_measured_distance(self):
         hs, _ = toy_hrirs()
         x = so.gaussian_noise(
