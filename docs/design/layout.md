@@ -5,10 +5,10 @@ dependencies shows in the file tree. Bottom to top:
 
 | Subpackage | Modules | What it is | Imports from |
 |---|---|---|---|
-| `core` | `sound`, `units`, `utils` | `Sound`, decibels, numeric helpers | nothing in sonore |
+| `core` | `sound`, `units`, `utils`, `fft` | `Sound`, decibels, numeric helpers, FFT sizes and threads | nothing in sonore |
 | `signals` | `generators`, `processing` | making and editing sounds | core |
 | `analysis` | `frames`, `filterbank`, `representations`, `cepstrum`, `f0`, `envelopes`, `modulation`, `modspectrogram` | taking sounds apart | core, signals |
-| `stimuli` | `ripples`, `binaural`, `spatialization`, `reverb`, `phasevocoder`, `klatt` | stimuli built from the analysis tools | core, signals, analysis |
+| `stimuli` | `ripples`, `binaural`, `spatialization`, `hrir_data`, `reverb`, `phasevocoder`, `klatt` | stimuli built from the analysis tools | core, signals, analysis |
 | `texture` | `stats`, `grad`, `synth` | sound texture statistics and synthesis | everything below |
 | `plotting.py` | | the `plot_*` functions and `overview` | imported only inside `.plot()` methods |
 
@@ -17,6 +17,10 @@ Inside a layer any import is fine (`filterbank` and `representations` build on
 its own.
 
 ![Import graph](layout.svg)
+
+The diagram is drawn from the source by `python tools/draw_layout.py`, and
+`tests/test_layers.py` fails when it is out of date. Inside a band, a module
+sits one row above the modules of its own layer that it imports.
 
 Grey arrows are module-level imports. The red dashed ones are imports inside a
 function or a `TYPE_CHECKING` block that point up or sideways. They exist so

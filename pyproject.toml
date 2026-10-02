@@ -69,6 +69,7 @@ src = ["src"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/gallery/build.py" = ["E501"]  # prose in string literals
+"tools/draw_layout.py" = ["E501"]  # SVG in string literals
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "NPY"]
