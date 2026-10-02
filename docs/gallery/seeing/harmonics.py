@@ -37,7 +37,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # ## The sentence, and code the examples share
 #
 # The sentence is the one from [Seeing speech](speech.html). Its pitch is measured three ways, as
-# on the [Cepstral analysis](cepstrum.html) page: the cepstral peak in each 40 ms frame, every
+# on the [Cepstral analysis](cepstrum.html) page: the cepstral peak in each 40 ms time window, every
 # 5 ms (Noll, 1967); `so.f0_track`, which chooses a path through YIN-style candidates
 # (de Cheveigné & Kawahara, 2002); and WORLD's Harvest (Morise, 2017), stored with the sentence.
 # Unless stated, the syntheses below follow `so.f0_track`.
@@ -99,7 +99,7 @@ def show(snd, title, contour=None):
 #
 # The quickest way to hear a pitch track is to play it. A band-limited sawtooth that follows each
 # track, silent where the track says unvoiced, keeps the intonation and nothing else. Errors that
-# are small on a plot are easy to hear: an octave slip is a sudden jump, and a frame wrongly
+# are small on a plot are easy to hear: an octave slip is a sudden jump, and a time window wrongly
 # called voiced or unvoiced is a click or a hole.
 
 # %% [about]
@@ -110,8 +110,8 @@ fig, playhead = show(sentence, "the sentence")
 sound = sentence
 
 # %% [about]
-# A sawtooth on the cepstral F0. Each frame is judged on its own, so the buzz flickers on and off
-# where the cepstral peak hovers around its threshold, and jumps where a frame picks the wrong
+# A sawtooth on the cepstral F0. Each time window is judged on its own, so the buzz flickers on and off
+# where the cepstral peak hovers around its threshold, and jumps where a time window picks the wrong
 # peak.
 
 # %% [demo hp1] A sawtooth on the cepstral F0
@@ -139,28 +139,28 @@ sound = buzz
 
 # %%
 for name, (_, f) in contours.items():
-    print(f"{name:12s} voiced on {np.mean(f > 0):.0%} of its frames")
+    print(f"{name:12s} voiced on {np.mean(f > 0):.0%} of its time windows")
 
 # %% [markdown]
 # ## Putting the envelope back
 #
 # The buzz has the right pitch and the wrong timbre: every vowel sounds the same. The timbre is in
-# the spectral envelope, and the cepstrum separates it from the harmonics. Lifter each frame below
+# the spectral envelope, and the cepstrum separates it from the harmonics. Lifter each time window below
 # half its pitch period, as on the [Cepstral analysis](cepstrum.html) page, and evaluate that
 # envelope at every harmonic's frequency at every instant. Passed to `so.harmonic_complex` as the
 # amplitudes, it gives harmonics that follow the track, with heights that follow the formants.
 
 # %%
 voiced_t, voiced_f0 = track.t[track.voiced[0]], track.f0[0][track.voiced[0]]
-cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per frame
-envelope = cep.lifter(cutoffs).envelope()[0]  # (frequencies, frames)
+cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per time window
+envelope = cep.lifter(cutoffs).envelope()[0]  # (frequencies, time windows)
 log_envelope = RegularGridInterpolator(
     (cep.t, stft.f), np.log(envelope.T), bounds_error=False, fill_value=None
 )
 
 
 def formants(t, f):
-    """The envelope's gain at times t and frequencies f, interpolated in dB between frames and bins."""
+    """The envelope's gain at times t and frequencies f, interpolated in dB between time windows and bins."""
     return np.exp(log_envelope(np.stack([t, f], axis=-1)))
 
 
@@ -206,8 +206,8 @@ sound = vocoded
 # ## Unvoiced gaps
 #
 # Where the track says unvoiced, the sound is noise: fricatives, bursts and breath. Noise shaped
-# by the same envelope fills the gaps: white noise whose STFT magnitude is replaced, frame by
-# frame, by the envelope. It is faded in where the track's voicing turns off, and set as loud,
+# by the same envelope fills the gaps: white noise whose STFT magnitude is replaced, at every
+# time window, by the envelope. It is faded in where the track's voicing turns off, and set as loud,
 # relative to the harmonics, as the unvoiced parts of the sentence are relative to its voiced
 # parts.
 
@@ -217,7 +217,7 @@ coloured = so.STFT(noise, win_dur=0.040, hop_dur=0.005)
 coloured.data = envelope[None] * np.exp(1j * np.angle(coloured.data))
 breath = coloured.to_sound().data[: len(sentence), 0]
 
-# Voicing between frames, 1 where voiced; the harmonics are switched by the same frames.
+# Voicing between time windows, 1 where voiced; the harmonics are switched at the same time windows.
 t_samples = np.arange(len(sentence)) / fs
 voicing = np.interp(t_samples, track.t, track.voiced[0].astype(float))
 
@@ -270,13 +270,13 @@ print(f"median voiced F0: {median:.0f} Hz")
 
 
 def on(values):
-    """The resynthesis on another contour, at so.f0_track's frame times."""
+    """The resynthesis on another contour, at so.f0_track's window times."""
     contour = (track.t, np.where(voiced, values, 0.0))
     return finish(with_breath(so.harmonic_complex(duration, fs, contour, amplitudes=formants))), contour
 
 
 # %% [about]
-# Monotone: every voiced frame at the median F0. The words are all there, without the
+# Monotone: every voiced time window at the median F0. The words are all there, without the
 # intonation that marks the question and the stress.
 
 # %% [demo hm1] Monotone
@@ -368,9 +368,9 @@ sound = snd
 # - **Better envelopes.** The liftered envelope sits a few dB below the harmonic peaks, and is
 #   measured with a fixed 40 ms window. WORLD's CheapTrick (Morise, 2015) smooths over one period
 #   with a pitch-adaptive window first and corrects the lifter.
-# - **Aperiodicity.** Here every frame is either harmonics or noise. Real voices mix the two, with
+# - **Aperiodicity.** Here every time window is either harmonics or noise. Real voices mix the two, with
 #   more noise at high frequencies and in breathy voice, and WORLD measures the mixture in each
-#   band and frame (D4C). The [Source, filter and aperiodicity](aperiodicity.html) page does.
+#   band and time window (D4C). The [Source, filter and aperiodicity](aperiodicity.html) page does.
 # - **The glottal pulse.** The harmonics' phases here are fixed numbers. A voice's phases come from
 #   the shape of each glottal pulse and the vocal tract's phase response; a minimum-phase envelope
 #   (as in the [envelope only](cepstrum.html#d-c3) example) is one step towards it.

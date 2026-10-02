@@ -79,7 +79,7 @@ class DelayedGaussianFilterbank(GaussianFilterbank):
 def coef_matrix(coefs) -> np.ndarray:
     """Coefficients as a matrix, one column per channel: ``Subbands`` in
     (time, band) order including padding, ``STFT`` and ``TVSTFT`` in
-    (freq, frame) order."""
+    (freq, time window) order."""
     if isinstance(coefs, so.Subbands):
         return coefs._full.reshape(-1, coefs._full.shape[2])
     return np.moveaxis(coefs.data, 0, -1).reshape(-1, coefs.data.shape[0])

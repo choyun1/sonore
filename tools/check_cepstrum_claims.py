@@ -27,9 +27,9 @@ def hann_periodic(n):
     return 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(n) / n)
 
 
-def real_cepstrum(frame, n_fft):
+def real_cepstrum(segment, n_fft):
     """Inverse FFT of the natural log magnitude, full length n_fft."""
-    return np.fft.ifft(np.log(np.abs(np.fft.fft(frame, n_fft))))
+    return np.fft.ifft(np.log(np.abs(np.fft.fft(segment, n_fft))))
 
 
 def fold(c):
@@ -71,10 +71,10 @@ def impulse_vowel(f0, dur=0.5):
     return np.sum(np.abs(H)[:, None] * np.cos(2 * np.pi * harm[:, None] * t + np.angle(H)[:, None]), axis=0)
 
 
-def cepstral_f0(frame, n_fft, f_lo=60.0, f_hi=400.0):
+def cepstral_f0(segment, n_fft, f_lo=60.0, f_hi=400.0):
     """F0 from the largest real-cepstrum peak in 1/f_hi..1/f_lo s, refined by
     a parabola through the peak and its neighbours. Returns (f0, peak height)."""
-    c = np.real(real_cepstrum(frame, n_fft))
+    c = np.real(real_cepstrum(segment, n_fft))
     q_lo, q_hi = int(np.floor(FS / f_hi)), int(np.ceil(FS / f_lo))
     k = q_lo + int(np.argmax(c[q_lo : q_hi + 1]))
     y0, y1, y2 = c[k - 1], c[k], c[k + 1]
@@ -88,7 +88,7 @@ x = rng.standard_normal(256)
 c = real_cepstrum(x * hann_periodic(256), 512)
 report(
     "C1",
-    "real cepstrum of a real frame: max |imag| / max |real|",
+    "real cepstrum of a real time window: max |imag| / max |real|",
     np.abs(c.imag).max() / np.abs(c.real).max(),
 )
 report("C1", "real cepstrum is even: max |c[n] - c[N-n]|", np.abs(c.real[1:] - c.real[1:][::-1]).max())
@@ -154,7 +154,7 @@ for periods in (1.5, 2, 3, 4):
             else:
                 worst = max(worst, err)
     report("C4", f"Hann {periods:g} periods, 7 F0s x 11 positions: worst relative error (non-octave)", worst)
-    report("C4", f"Hann {periods:g} periods: frames off by an octave or more (of 77)", octave_errors)
+    report("C4", f"Hann {periods:g} periods: time windows off by an octave or more (of 77)", octave_errors)
 for win_ms in (20, 40):
     n_win = int(win_ms * FS / 1000)
     worst = 0.0
@@ -169,8 +169,8 @@ for f0 in (100, 200):
     sig = impulse_vowel(f0)
     n_win = int(round(3 / f0 * FS))  # pitch-adaptive, 3 periods
     n_fft = 4096
-    frame = sig[3000 : 3000 + n_win] * hann_periodic(n_win)
-    X = np.fft.rfft(frame, n_fft)
+    segment = sig[3000 : 3000 + n_win] * hann_periodic(n_win)
+    X = np.fft.rfft(segment, n_fft)
     cq = np.fft.irfft(np.log(np.abs(X)), n_fft)
     q_c = int(0.5 * FS / f0)  # half a period
     lif = np.zeros(n_fft)
@@ -212,16 +212,16 @@ ok = np.isfinite(est)
 voiced = ok & (harvest > 0)
 unvoiced = ok & (harvest == 0)
 ratio = est[voiced] / harvest[voiced]
-report("C6", "bdl sentence, 40 ms Hann, Harvest-voiced frames compared", voiced.sum())
+report("C6", "bdl sentence, 40 ms Hann, Harvest-voiced time windows compared", voiced.sum())
 report("C6", "agree with Harvest within 5%, fraction", np.mean(np.abs(ratio - 1) < 0.05))
-report("C6", "about double Harvest (ratio 1.8-2.2), frames", np.sum((ratio > 1.8) & (ratio < 2.2)))
-report("C6", "about half Harvest (ratio 0.45-0.55), frames", np.sum((ratio > 0.45) & (ratio < 0.55)))
-report("C6", "median cepstral peak height, Harvest-voiced frames", np.median(peak[voiced]))
-report("C6", "median cepstral peak height, Harvest-unvoiced frames", np.median(peak[unvoiced]))
+report("C6", "about double Harvest (ratio 1.8-2.2), time windows", np.sum((ratio > 1.8) & (ratio < 2.2)))
+report("C6", "about half Harvest (ratio 0.45-0.55), time windows", np.sum((ratio > 0.45) & (ratio < 0.55)))
+report("C6", "median cepstral peak height, Harvest-voiced time windows", np.median(peak[voiced]))
+report("C6", "median cepstral peak height, Harvest-unvoiced time windows", np.median(peak[unvoiced]))
 thr = 0.1
 vd = peak > thr
-report("C6", f"peak > {thr}: fraction of Harvest-voiced frames called voiced", np.mean(vd[voiced]))
-report("C6", f"peak > {thr}: fraction of Harvest-unvoiced frames called voiced", np.mean(vd[unvoiced]))
+report("C6", f"peak > {thr}: fraction of Harvest-voiced time windows called voiced", np.mean(vd[voiced]))
+report("C6", f"peak > {thr}: fraction of Harvest-unvoiced time windows called voiced", np.mean(vd[unvoiced]))
 both = voiced & vd
 report(
     "C6",
@@ -233,7 +233,7 @@ report(
 with np.errstate(divide="ignore"):
     report(
         "C7",
-        "digital silence: log|X| of an all-zero frame is finite? (1 = yes)",
+        "digital silence: log|X| of an all-zero time window is finite? (1 = yes)",
         float(np.isfinite(np.log(np.abs(np.fft.rfft(np.zeros(512))))).all()),
     )
 lowest = []
@@ -243,4 +243,8 @@ for t in times:
         m = np.abs(np.fft.rfft(snd[s : s + n_win] * w, n_fft))
         if m.max() > 0:
             lowest.append(20 * np.log10(m.min() / m.max()))
-report("C7", "bdl sentence, 40 ms frames: lowest bin relative to the frame maximum, dB", min(lowest))
+report(
+    "C7",
+    "bdl sentence, 40 ms time windows: lowest bin relative to the time window's maximum, dB",
+    min(lowest),
+)

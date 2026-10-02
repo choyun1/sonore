@@ -114,9 +114,9 @@ def true_aperiodicity(f):
 
 
 vowel = formants(buzz + hiss)
-frame_times = np.arange(0, DUR, 0.005)
-track = (frame_times, np.full(len(frame_times), F0))  # the exact F0, every 5 ms
-inside = (frame_times > 0.1) & (frame_times < 0.9)  # frames away from the ends
+window_times = np.arange(0, DUR, 0.005)
+track = (window_times, np.full(len(window_times), F0))  # the exact F0, every 5 ms
+inside = (window_times > 0.1) & (window_times < 0.9)  # time windows away from the ends
 
 # %% [markdown]
 # ## Buzz, hiss, and both
@@ -173,16 +173,16 @@ ax.legend(loc="lower right", fontsize=8)
 # The definition suggests the measurement: find the best periodic sound, take it away, and see
 # how much is left. If the pitch is known, the periodic part of a short stretch is a sum of
 # harmonics whose phases follow the running phase $\Phi(t) = 2\pi \int F_0$, each with an amplitude
-# and a phase to be found. That is a linear least-squares fit. Here is one frame, under a Hann
+# and a phase to be found. That is a linear least-squares fit. Here is one time window, under a Hann
 # window four periods long, with each harmonic also allowed an amplitude that changes linearly
 # across the window.
 
 # %%
-centre = int(0.5 * FS)  # the frame at 0.5 s
+centre = int(0.5 * FS)  # the time window at 0.5 s
 half = int(round(2 * FS / F0))  # half of four periods
 offsets = np.arange(-half, half + 1)
 window = 0.5 + 0.5 * np.cos(np.pi * offsets / (half + 1))
-phase = 2 * np.pi * F0 * offsets / FS  # the running phase over the frame
+phase = 2 * np.pi * F0 * offsets / FS  # the running phase over the time window
 harmonic_phases = np.outer(phase, np.arange(1, int(FS / 2 / F0) + 1))
 ramp = (offsets / half)[:, None]
 columns = np.column_stack(
@@ -198,26 +198,26 @@ residual_power, signal_power = np.sum((window * residual) ** 2), np.sum((window 
 print(f"windowed residual power over windowed signal power: {residual_power / signal_power:.3f}")
 
 # %% [about]
-# The frame's spectrum, and the spectrum of what is left after the fit. The harmonic peaks are
+# The time window's spectrum, and the spectrum of what is left after the fit. The harmonic peaks are
 # gone from the residual, and what remains is the noise between and under them. Where the noise
-# was below the harmonics (low frequencies) the residual lies far below the frame's spectrum;
+# was below the harmonics (low frequencies) the residual lies far below the time window's spectrum;
 # above 4 kHz the two are close. Their ratio, read across frequency, is the aperiodicity.
 
-# %% [figure ap5] One frame, before and after the harmonics are taken away
+# %% [figure ap5] One time window, before and after the harmonics are taken away
 n_fft = 4096
-frame_freqs = np.fft.rfftfreq(n_fft, 1 / FS)
-frame_db = 20 * np.log10(np.abs(np.fft.rfft(window * segment, n_fft)) + 1e-12)
+segment_freqs = np.fft.rfftfreq(n_fft, 1 / FS)
+segment_db = 20 * np.log10(np.abs(np.fft.rfft(window * segment, n_fft)) + 1e-12)
 residual_db = 20 * np.log10(np.abs(np.fft.rfft(window * residual, n_fft)) + 1e-12)
 fig, ax = plt.subplots(figsize=(10, 3.4), layout="constrained")
-ax.plot(frame_freqs, frame_db, color="0.6", lw=0.7, label="the frame")
-ax.plot(frame_freqs, residual_db, color="C3", lw=0.7, label="the frame less the fitted harmonics")
-top = frame_db.max() + 5
+ax.plot(segment_freqs, segment_db, color="0.6", lw=0.7, label="the time window")
+ax.plot(segment_freqs, residual_db, color="C3", lw=0.7, label="the time window less the fitted harmonics")
+top = segment_db.max() + 5
 ax.set(xlabel="Frequency (Hz)", ylabel="Level (dB)", xlim=(0, 6000), ylim=(top - 95, top))
-ax.set_title("One frame of the breathy vowel (Hann, four periods)")
+ax.set_title("One time window of the breathy vowel (Hann, four periods)")
 ax.legend(loc="upper right", fontsize=8)
 
 # %% [markdown]
-# `so.harmonic_aperiodicity` does this at every frame. It adds one correction: the fit also
+# `so.harmonic_aperiodicity` does this at every time window. It adds one correction: the fit also
 # absorbs a little of the noise, the part that happens to look like the harmonics near each
 # harmonic frequency, so the residual is a little too small there. How much is known exactly from
 # the fit itself (it is what the fit would do to white noise), and is divided out. The shares are
@@ -230,7 +230,7 @@ ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color="k", lw=2.5, alpha
 measured = residual_share.share[0][:, inside]
 ax.plot(residual_share.f, 10 * np.log10(measured.mean(axis=1)), color="C3", label="so.harmonic_aperiodicity")
 ax.set(xlabel="Frequency (Hz)", ylabel="Share of noise (dB)", xlim=(0, 7200), ylim=(-40, 3))
-ax.set_title("The harmonic residual reads the vowel's aperiodicity (mean over frames)")
+ax.set_title("The harmonic residual reads the vowel's aperiodicity (mean over time windows)")
 ax.legend(loc="lower right", fontsize=8)
 
 # %% [markdown]
@@ -244,7 +244,7 @@ ax.legend(loc="lower right", fontsize=8)
 # ## What WORLD reports
 #
 # WORLD's own measure is D4C (Morise, 2016), which `so.d4c` reproduces exactly. It works from a
-# "group delay" of the frame, smoothed over the harmonics, whose spectrum is sorted to see how
+# "group delay" of the time window, smoothed over the harmonics, whose spectrum is sorted to see how
 # much of its power lies outside the strongest components, in bands 3 kHz wide around each
 # multiple of 3 kHz. A correction for F0 follows, and the curve is drawn as straight lines (in dB)
 # from −60 dB at 0 Hz through the bands' values to 0 dB at the top. At 16 kHz there is only one
@@ -267,7 +267,7 @@ ax.legend(loc="lower right", fontsize=8)
 # So the two answer different questions. The harmonic residual reports the share of noise. D4C
 # reports a value that makes WORLD's synthesis sound natural, and below 3 kHz it is far from
 # the share of noise on this vowel. In exchange, D4C hardly cares whether the pitch is exact.
-# Averaged over bands and frames, with the exact pitch track and with one 1% too high:
+# Averaged over bands and time windows, with the exact pitch track and with one 1% too high:
 
 # %%
 band_edges = [0, 1000, 2000, 4000, 7000]
@@ -280,7 +280,7 @@ for low, high in zip(band_edges[:-1], band_edges[1:], strict=True):
     in_band = (envelope.f >= low) & (envelope.f < high)
     share = np.sum(true_aperiodicity(envelope.f[in_band]) * weights[in_band]) / np.sum(weights[in_band])
     truth_db.append(10 * np.log10(share))
-wrong_track = (frame_times, track[1] * 1.01)
+wrong_track = (window_times, track[1] * 1.01)
 bands = "".join(f"{f'{low}-{high}':>11}" for low, high in zip(band_edges[:-1], band_edges[1:], strict=True))
 print(f"{'Share of noise [dB], band [Hz]':<34}{bands}")
 print(f"{'truth':<34}" + "".join(f"{value:>11.1f}" for value in truth_db))
@@ -299,8 +299,8 @@ for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", s
 # The sentence from [Seeing speech](speech.html), with the F0 track WORLD's Harvest (Morise, 2017)
 # measured, stored with it. On recorded speech there is no truth to compare with, but the two
 # maps can be set side by side. Both are 1 (0 dB, all noise) where the track says unvoiced. In
-# voiced frames the harmonic residual is low below 1 to 2 kHz, where the harmonics are strong,
-# and near 0 dB above about 4 kHz in many frames; D4C has the same shape in every voiced frame,
+# voiced time windows the harmonic residual is low below 1 to 2 kHz, where the harmonics are strong,
+# and near 0 dB above about 4 kHz in many time windows; D4C has the same shape in every voiced time window,
 # a single bend at 3 kHz.
 
 # %%
@@ -332,7 +332,7 @@ axes[2].set_xlabel("Time (s)")
 # it adds two pieces: the harmonics' share of the envelope, $S(1 - A)$, as one pulse, and the
 # noise's share, $S A$, as a short burst of filtered noise. Below, the same pitch track and
 # envelope with four aperiodicities. (WORLD keeps $A$ between −60 dB and just under 0 dB, and
-# frames the track calls unvoiced are always noise.)
+# time windows the track calls unvoiced are always noise.)
 
 # %% [about]
 # The sentence, for reference.
@@ -358,7 +358,7 @@ sound = finish(so.world_synthesize(harvest, sentence_envelope, sentence_residual
 fig, playhead = show(sound, "so.world_synthesize with so.harmonic_aperiodicity", fmax=8000)
 
 # %% [about]
-# With $A = 0$ in every voiced frame: harmonics only, the voicing switch of the first-order
+# With $A = 0$ in every voiced time window: harmonics only, the voicing switch of the first-order
 # picture. The voiced parts are harmonics all the way up.
 
 # %% [demo ap12] No noise in the voice
@@ -384,7 +384,7 @@ fig, playhead = show(sound, "so.world_synthesize with A = 1", fmax=8000)
 # - **Phase.** WORLD's synthesis gives every pulse a minimum phase, so the waveform within each
 #   period is not the original's. Its authors call minimum phase inappropriate for low-pitched
 #   speech, where differences of phase are easier to hear.
-# - **Jitter and shimmer.** A pitch track smoothed over 5 ms frames cannot follow cycle-to-cycle
+# - **Jitter and shimmer.** A pitch track smoothed over 5 ms time windows cannot follow cycle-to-cycle
 #   irregularity, so the harmonic residual counts it as noise, and a resynthesis can only carry
 #   it as noise.
 

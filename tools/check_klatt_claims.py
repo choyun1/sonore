@@ -54,9 +54,9 @@ def resonate(x, f, bw, fs=FS):
     return y
 
 
-def frames_to_samples(track, n, hop=HOP, fs=FS, hold=True):
+def windows_to_samples(track, n, hop=HOP, fs=FS, hold=True):
     """A parameter track given every `hop` seconds onto n samples: held for
-    each 5 ms frame (Klatt's update) or interpolated linearly."""
+    each 5 ms time window (Klatt's update) or interpolated linearly."""
     t = np.arange(n) / fs
     tf = np.arange(len(track)) * hop
     if hold:
@@ -116,7 +116,7 @@ def c2_cascade_parallel():
 
 
 def c3_updates():
-    """Holding coefficients for 5 ms frames vs interpolating them per sample,
+    """Holding coefficients for 5 ms time windows vs interpolating them per sample,
     on a /da/-like F1 and F2 transition."""
     dur = 0.3
     n = int(dur * FS)
@@ -126,20 +126,20 @@ def c3_updates():
     f2 = np.interp(tf, [0, 0.04, dur], [1700, 1200, 1200])
     x = harmonic_source(120.0, lambda fk: rgp_gain(fk), n)
     hop = int(HOP * FS)
-    for name, hold in [("held for 5 ms frames", True), ("interpolated per sample", False)]:
+    for name, hold in [("held for 5 ms time windows", True), ("interpolated per sample", False)]:
         y = x
         for track, bw in [(f1, 60), (f2, 100)]:
-            y = resonate(y, frames_to_samples(track, n, hold=hold), bw)
+            y = resonate(y, windows_to_samples(track, n, hold=hold), bw)
         report(
             "C3",
             f"F1, F2 coefficients {name}, state carried: power above 5 kHz [dB re total]",
             _above(y, 5000),
         )
-    # The same held coefficients, but each 5 ms frame filtered from zero
+    # The same held coefficients, but each 5 ms time window filtered from zero
     # state, as if the filter were restarted at every update.
     y = x
     for track, bw in [(f1, 60), (f2, 100)]:
-        held = frames_to_samples(track, n)
+        held = windows_to_samples(track, n)
         z = np.zeros(n)
         for s in range(0, n, hop):
             a, b, c = resonator_coefs(held[s], bw)

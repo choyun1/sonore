@@ -11,7 +11,7 @@ meant to be readable without them.
   and every operation returns a new one. Code is written as pure array
   functions, which also keeps a JAX port mechanical.
 - **Quantities are written in the units people think in.** Levels in dB
-  (`snd + 6*dB`), times in seconds (`snd[0.1:0.5]`), frames and windows
+  (`snd + 6*dB`), times in seconds (`snd[0.1:0.5]`), hops and windows
   specified in seconds and rounded to samples per sampling rate. Adding a bare
   number to a sound is an error rather than a silent DC offset.
 - **No global side effects.** Plotting functions take an `ax` and never
@@ -65,6 +65,17 @@ meant to be readable without them.
   resonator's coefficients `a`, `b`, `c`); and symbols a docstring defines as the
   notation of a formula, used in the code that implements it. A new
   exception is written down here or in the docstring that uses it.
+- **"Frame" means only the mathematical frame.** A frame is an analysis
+  with frame bounds 0 < A ≤ B and so a stable exact inverse: `Frame`,
+  `GaborFrame`, `TVGaborFrame`, a filterbank seen as a frame, the frame
+  operator. The speech and STFT sense, one point of an analysis's time grid
+  and the stretch of sound under the window there, is a **time window**:
+  "per time window", "voiced time windows", shapes `(n_channels, n_windows)`.
+  Write "time window" in full, because a bare "window" is the window shape
+  (Hann, `win_dur`). The spacing of time windows is the **hop**, also where
+  WORLD says "frame period". Outside names keep their own words (pyworld's
+  `frame_period=`, paper titles), and an animation's frames are "video
+  frames".
 
 ## Verification and records
 

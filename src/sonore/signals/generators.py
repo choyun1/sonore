@@ -57,7 +57,7 @@ _PHASE_PRESETS = ("cosine", "sine", "alternating", "random", "schroeder+", "schr
 
 
 class F0Contour(Protocol):
-    """Anything with frame times ``t`` [s] and F0 values ``f0`` [Hz], 0 where
+    """Anything with window times ``t`` [s] and F0 values ``f0`` [Hz], 0 where
     unvoiced, such as an :class:`~sonore.analysis.f0.F0Track`. ``f0`` is one
     row of values per channel, or a single row."""
 
@@ -94,7 +94,7 @@ def _harmonic_phases(harmonics: np.ndarray, phases, rng: RNG) -> np.ndarray:
 
 
 def _contour(f0) -> tuple[np.ndarray, np.ndarray] | None:
-    """``(frame times, values of shape (n_channels, n_frames))`` for an F0
+    """``(window times, values of shape (n_channels, n_windows))`` for an F0
     contour, or None for a fixed F0 (a number)."""
     match f0:
         case numbers.Real():
@@ -111,10 +111,10 @@ def _contour(f0) -> tuple[np.ndarray, np.ndarray] | None:
     values = np.atleast_2d(np.asarray(values, float))
     if t.ndim != 1 or len(t) == 0 or values.ndim != 2 or values.shape[1] != len(t):
         raise ValueError(
-            f"an F0 contour needs one value per frame time: got {np.shape(t)} times and {values.shape} values"
+            f"an F0 contour needs one value per time: got {np.shape(t)} times and {values.shape} values"
         )
     if np.any(np.diff(t) <= 0):
-        raise ValueError("an F0 contour's frame times must increase")
+        raise ValueError("an F0 contour's times must increase")
     if not np.all(np.isfinite(values)) or np.any(values < 0):
         raise ValueError("an F0 contour's values must be finite and >= 0 (0 where unvoiced)")
     return t, values
@@ -143,11 +143,11 @@ def _taper(freq: np.ndarray, f_max: float) -> np.ndarray:
 
 
 def _voicing_gate(
-    t: np.ndarray, t_frames: np.ndarray, voiced: np.ndarray, ramp: float, fs: float
+    t: np.ndarray, window_times: np.ndarray, voiced: np.ndarray, ramp: float, fs: float
 ) -> np.ndarray:
-    """1 where the nearest frame is voiced, 0 elsewhere, every step smoothed by
+    """1 where the nearest time window is voiced, 0 elsewhere, every step smoothed by
     a Hann window ``ramp`` seconds long. The ends are extended, not faded."""
-    gate = (np.interp(t, t_frames, voiced.astype(float)) >= 0.5).astype(float)
+    gate = (np.interp(t, window_times, voiced.astype(float)) >= 0.5).astype(float)
     n_ramp = int(round(ramp * fs))
     if n_ramp < 2:
         return gate
@@ -234,7 +234,7 @@ def harmonic_complex(
     as the pitch rises. Harmonics are switched off where the contour is
     unvoiced, with Hann ramps ``ramp`` seconds long; ``unvoiced="noise"``
     fills those stretches with white noise of the harmonics' power instead
-    of silence. Values are held beyond the first and last frames. With a
+    of silence. Values are held beyond the first and last times. With a
     contour, ``phases`` has one value per harmonic number up to the highest
     that fits below ``f_max`` at the lowest voiced F0, unless ``harmonics``
     is given.
@@ -267,7 +267,7 @@ def harmonic_complex(
 
 
 def _contour_complex(
-    duration, fs, t_frames, values, harmonics, amplitudes, phases, rng, f_max, ramp, unvoiced
+    duration, fs, window_times, values, harmonics, amplitudes, phases, rng, f_max, ramp, unvoiced
 ) -> Sound:
     f_max = 0.45 * fs if f_max is None else float(f_max)
     if not 0 < f_max <= fs / 2:
@@ -289,9 +289,9 @@ def _contour_complex(
         harmonic_sum = np.zeros(length)
         gate = np.zeros(length)
         if voiced.any():
-            frame_index = np.arange(len(channel_f0))
+            window_index = np.arange(len(channel_f0))
             f0_at_sample = np.interp(
-                t, t_frames, np.interp(frame_index, frame_index[voiced], channel_f0[voiced])
+                t, window_times, np.interp(window_index, window_index[voiced], channel_f0[voiced])
             )
             # the trapezoid rule: exact for an F0 linear between samples
             cumulative_f0 = np.concatenate([[0.0], np.cumsum((f0_at_sample[1:] + f0_at_sample[:-1]) / 2)])
@@ -300,7 +300,7 @@ def _contour_complex(
                 freq = number * f0_at_sample
                 amplitude = amplitudes(t, freq) if gains is None else gains[index]
                 harmonic_sum += amplitude * _taper(freq, f_max) * np.cos(number * phase + start_phase)
-            gate = _voicing_gate(t, t_frames, voiced, ramp, fs)
+            gate = _voicing_gate(t, window_times, voiced, ramp, fs)
         data[:, channel] = gate * harmonic_sum
         if unvoiced == "noise":
             weight = gate.sum()

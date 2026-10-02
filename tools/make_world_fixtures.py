@@ -21,7 +21,7 @@ import soundfile as sf
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "tests" / "data" / "world_reference.npz"
 FS = 16000
-FRAME_PERIOD_MS = 5.0
+HOP_MS = 5.0
 BIN_STEP = 8
 
 
@@ -39,9 +39,9 @@ def breathy_vowel(duration=0.3, seed=7):
         below_nyquist = number * f0_per_sample < 0.45 * FS
         sound += below_nyquist * amplitude * np.cos(number * phase)
     sound += rng.standard_normal(len(sound)) * np.std(sound) * 10 ** (-25 / 20)
-    frame_times = np.arange(0, duration, FRAME_PERIOD_MS / 1000)
-    frame_f0 = 120 * (1 + 0.03 * np.sin(2 * np.pi * 5.5 * frame_times))
-    return 0.3 * sound / np.abs(sound).max(), frame_times, frame_f0
+    window_times = np.arange(0, duration, HOP_MS / 1000)
+    window_f0 = 120 * (1 + 0.03 * np.sin(2 * np.pi * 5.5 * window_times))
+    return 0.3 * sound / np.abs(sound).max(), window_times, window_f0
 
 
 def sentence_excerpt(start=0.6, stop=0.9):
@@ -56,18 +56,18 @@ def sentence_excerpt(start=0.6, stop=0.9):
     return excerpt, track[rows, 0] - start, track[rows, 1]
 
 
-def world_outputs(sound, frame_times, frame_f0):
-    sound, frame_times, frame_f0 = (
-        np.ascontiguousarray(values, dtype=float) for values in (sound, frame_times, frame_f0)
+def world_outputs(sound, window_times, window_f0):
+    sound, window_times, window_f0 = (
+        np.ascontiguousarray(values, dtype=float) for values in (sound, window_times, window_f0)
     )
-    envelope = pyworld.cheaptrick(sound, frame_f0, frame_times, FS)
-    envelope_paper = pyworld.cheaptrick(sound, frame_f0, frame_times, FS, q1=-0.09)
-    aperiodicity = pyworld.d4c(sound, frame_f0, frame_times, FS)
-    synthesized = pyworld.synthesize(frame_f0, envelope, aperiodicity, FS, FRAME_PERIOD_MS)
+    envelope = pyworld.cheaptrick(sound, window_f0, window_times, FS)
+    envelope_paper = pyworld.cheaptrick(sound, window_f0, window_times, FS, q1=-0.09)
+    aperiodicity = pyworld.d4c(sound, window_f0, window_times, FS)
+    synthesized = pyworld.synthesize(window_f0, envelope, aperiodicity, FS, HOP_MS)
     return {
         "sound": sound,
-        "t": frame_times,
-        "f0": frame_f0,
+        "t": window_times,
+        "f0": window_f0,
         "envelope": envelope[:, ::BIN_STEP],
         "envelope_paper_q1": envelope_paper[:, ::BIN_STEP],
         "aperiodicity": aperiodicity[:, ::BIN_STEP],
@@ -77,11 +77,11 @@ def world_outputs(sound, frame_times, frame_f0):
 
 def main():
     arrays = {"pyworld_version": np.array(pyworld.__version__), "bin_step": np.array(BIN_STEP)}
-    for name, (sound, frame_times, frame_f0) in {
+    for name, (sound, window_times, window_f0) in {
         "vowel": breathy_vowel(),
         "sentence": sentence_excerpt(),
     }.items():
-        for key, value in world_outputs(sound, frame_times, frame_f0).items():
+        for key, value in world_outputs(sound, window_times, window_f0).items():
             arrays[f"{name}_{key}"] = value
     OUT.parent.mkdir(exist_ok=True)
     np.savez_compressed(OUT, **arrays)

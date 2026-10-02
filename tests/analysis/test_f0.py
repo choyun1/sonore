@@ -30,7 +30,7 @@ def vowel(f0):
 
 
 def errors(track, f0):
-    """Largest relative error [%] and number of unvoiced frames, away from the ends."""
+    """Largest relative error [%] and number of unvoiced time windows, away from the ends."""
     truth = np.interp(track.t, np.arange(len(f0)) / FS, f0)
     inner = (track.t > 0.05) & (track.t < len(f0) / FS - 0.05)
     est = track.f0[0][inner]
@@ -99,7 +99,7 @@ def test_channels_are_tracked_separately():
     np.testing.assert_allclose(trk.f0[:, inner] / [[110.0], [220.0]], 1, rtol=1e-4)
 
 
-def test_frames_and_arguments():
+def test_time_windows_and_arguments():
     trk = so.f0_track(so.Sound(vowel(np.full(N, 120.0)), FS), hop=0.01)
     np.testing.assert_allclose(trk.t, np.arange(0, 0.3, 0.01))
     bad = ({"f_lo": 0}, {"f_lo": 300, "f_hi": 200}, {"f_hi": 9000}, {"hop": 0}, {"subharmonic_margin": -0.1})

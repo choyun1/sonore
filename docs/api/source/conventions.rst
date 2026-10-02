@@ -15,7 +15,7 @@ short everywhere:
    * - ``fs``
      - sampling rate [Hz]
    * - ``t``
-     - times [s] of samples or frames
+     - times [s] of samples or time windows
    * - ``f0``
      - fundamental frequency [Hz]; 0 where unvoiced
    * - ``cf``, ``cfs``
@@ -25,7 +25,7 @@ short everywhere:
    * - ``n_fft``
      - FFT length [samples]
    * - ``hop``
-     - step between analysis frames [samples, or s where stated]
+     - step between time windows [samples, or s where stated]
    * - ``rms``, ``db``
      - root-mean-square level; level in decibels
    * - ``erb``
@@ -38,6 +38,12 @@ short everywhere:
      - filter coefficients as second-order sections (SciPy's format)
    * - ``rng``
      - a seed or ``numpy.random.Generator``
+
+"Frame" means only the mathematical frame (``Frame``, ``GaborFrame``,
+``TVGaborFrame``: an analysis with an exact inverse). One point of an
+analysis's time grid, and the stretch of sound under the window there, is a
+*time window*; arrays over them have ``n_windows`` entries, and ``t`` holds
+the window centre times.
 
 Counts start with ``n_`` (``n_samples``, ``n_channels``); a plural is an array
 of the singular (``freqs``, ``harmonics``). Sounds are ``(n_samples,

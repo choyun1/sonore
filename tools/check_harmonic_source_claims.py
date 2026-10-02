@@ -19,7 +19,7 @@ import numpy as np
 from scipy.signal import hilbert
 
 FS = 16000.0
-HOP = 0.005  # F0 frame period [s], as in the stored track and docs/design/f0.md
+HOP = 0.005  # hop of the F0 track [s], as in the stored track and docs/design/f0.md
 ROOT = Path(__file__).resolve().parent.parent
 SPEECH = ROOT / "docs" / "speech"
 
@@ -30,15 +30,15 @@ def report(claim, text, value):
 
 # ------------------------------------------------------------- the prototype
 def fill_unvoiced(f0):
-    """Unvoiced frames (F0 = 0) take values interpolated linearly between the
-    voiced frames around them; leading and trailing ones hold the nearest."""
+    """Unvoiced time windows (F0 = 0) take values interpolated linearly between the
+    voiced time windows around them; leading and trailing ones hold the nearest."""
     v = f0 > 0
     i = np.arange(len(f0))
     return np.interp(i, i[v], f0[v])
 
 
 def to_samples(t_c, values, n, fs=FS):
-    """A frame-rate contour onto n samples by linear interpolation (ends held)."""
+    """A contour given at the times t_c onto n samples by linear interpolation (ends held)."""
     return np.interp(np.arange(n) / fs, t_c, values)
 
 
@@ -53,7 +53,7 @@ def phase_rectangle(f, fs=FS):
 
 
 def voicing_gate(t_c, f0_c, n, ramp, fs=FS):
-    """1 where the nearest frame is voiced, 0 elsewhere, with every step
+    """1 where the nearest time window is voiced, 0 elsewhere, with every step
     smoothed by a Hann window of `ramp` seconds (none if ramp == 0)."""
     g = (to_samples(t_c, (f0_c > 0).astype(float), n, fs) >= 0.5).astype(float)
     m = int(round(ramp * fs))
@@ -94,13 +94,13 @@ def inst_freq(x, fs=FS):
 def power_above(x, f_cut, fs=FS, n_win=512):
     """Power above f_cut over total, from a Hann STFT with 75% overlap [dB]."""
     w = np.hanning(n_win)
-    frames = np.lib.stride_tricks.sliding_window_view(x, n_win)[:: n_win // 4] * w
-    p = np.abs(np.fft.rfft(frames, axis=1)) ** 2
+    segments = np.lib.stride_tricks.sliding_window_view(x, n_win)[:: n_win // 4] * w
+    p = np.abs(np.fft.rfft(segments, axis=1)) ** 2
     f = np.fft.rfftfreq(n_win, 1 / fs)
     return 10 * np.log10(p[:, f > f_cut].sum() / p.sum() + 1e-300)
 
 
-def frames(f_of_t, dur):
+def time_windows(f_of_t, dur):
     t_c = np.arange(0, dur + HOP / 2, HOP)
     return t_c, f_of_t(t_c)
 
@@ -110,7 +110,7 @@ def frames(f_of_t, dur):
 dur = 0.5
 n = int(dur * FS)
 t = np.arange(n) / FS
-t_c, f_c = frames(lambda t: np.full_like(t, 220.0), dur)
+t_c, f_c = time_windows(lambda t: np.full_like(t, 220.0), dur)
 x = harmonic_source(to_samples(t_c, f_c, n), harmonics=range(1, 11))
 ref = sum(np.cos(2 * np.pi * k * 220.0 * t) for k in range(1, 11))
 report(
@@ -120,20 +120,20 @@ report(
 )
 
 # ---------------------------------------------------------------- C2
-# A linear glide sampled at 5 ms frames is reproduced exactly: linear
+# A linear glide sampled every 5 ms is reproduced exactly: linear
 # interpolation of a linear contour is exact, and the trapezoid integrates it
 # exactly. The running sum leads by (f_0 + f_i) / (2 fs) cycles.
 dur = 1.0
 n = int(dur * FS)
 t = np.arange(n) / FS
-t_c, f_c = frames(lambda t: 100 + 200 * t, dur)
+t_c, f_c = time_windows(lambda t: 100 + 200 * t, dur)
 f = to_samples(t_c, f_c, n)
 closed = np.cos(2 * np.pi * (100 * t + 100 * t**2))
 x_trap = harmonic_source(f, harmonics=[1])
 x_rect = harmonic_source(f, harmonics=[1], phase=phase_rectangle)
 report(
     "C2",
-    "glide 100->300 Hz from 5 ms frames vs closed-form chirp, max abs diff (trapezoid)",
+    "glide 100->300 Hz sampled every 5 ms vs closed-form chirp, max abs diff (trapezoid)",
     np.max(np.abs(x_trap - closed)),
 )
 report(
@@ -148,7 +148,7 @@ report(
 # ---------------------------------------------------------------- C3
 # The instantaneous frequency of every harmonic follows k times the contour.
 # Vibrato: 150 Hz, +-4%, 5.5 Hz, sampled every 5 ms. Linear interpolation
-# errs by at most h^2/8 max|f''| between frames.
+# errs by at most h^2/8 max|f''| between time windows.
 dur = 2.0
 n = int(dur * FS)
 t = np.arange(n) / FS
@@ -158,12 +158,12 @@ def vib(t):
     return 150 * (1 + 0.04 * np.sin(2 * np.pi * 5.5 * t))
 
 
-t_c, f_c = frames(vib, dur)
+t_c, f_c = time_windows(vib, dur)
 f = to_samples(t_c, f_c, n)
 mid = (np.arange(n - 1) + 0.5) / FS
 inner = (mid > 0.1) & (mid < dur - 0.1)
 bound = HOP**2 / 8 * 150 * 0.04 * (2 * np.pi * 5.5) ** 2 / (150 * 0.96)
-report("C3", "vibrato from 5 ms frames: bound h^2/8 max|f''| / min f (relative)", bound)
+report("C3", "vibrato sampled every 5 ms: bound h^2/8 max|f''| / min f (relative)", bound)
 for k in (1, 10, 40):
     ifk = inst_freq(harmonic_source(f, harmonics=[k]))
     err = np.max(np.abs(ifk[inner] / (k * vib(mid[inner])) - 1))
@@ -178,8 +178,8 @@ report(
 
 # ---------------------------------------------------------------- C4
 # On a real track (the stored Harvest track of the gallery sentence), the
-# accumulated phase has no jumps, while per-frame synthesis with absolute
-# time, the obvious shortcut, clicks at every frame boundary.
+# accumulated phase has no jumps, while per-time-window synthesis with absolute
+# time, the obvious shortcut, clicks at every time window boundary.
 track = np.loadtxt(SPEECH / "bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2)
 t_c, f0_c = track[:, 0], track[:, 1]
 n = int(round(2.53 * FS))
@@ -189,8 +189,8 @@ gate = voicing_gate(t_c, f0_c, n, ramp=0.005)
 x_acc = harmonic_source(f, gate, F_MAX)
 
 t = np.arange(n) / FS
-frame_of = np.clip(np.round((t - t_c[0]) / HOP).astype(int), 0, len(t_c) - 1)
-f_naive = fill_unvoiced(f0_c)[frame_of]  # piecewise constant, phase from absolute time
+window_of = np.clip(np.round((t - t_c[0]) / HOP).astype(int), 0, len(t_c) - 1)
+f_naive = fill_unvoiced(f0_c)[window_of]  # piecewise constant, phase from absolute time
 x_naive = np.zeros(n)
 for k in range(1, int(F_MAX / f_naive.min()) + 1):
     x_naive += taper(k * f_naive, F_MAX) * np.cos(2 * np.pi * k * f_naive * t)
@@ -203,7 +203,7 @@ report(
 report("C4", "bdl track, power above 7.6 kHz, accumulated phase [dB re total]", power_above(x_acc, 7600))
 report(
     "C4",
-    "bdl track, power above 7.6 kHz, per-frame phase from absolute time [dB re total]",
+    "bdl track, power above 7.6 kHz, phase per time window from abs. time [dB re total]",
     power_above(x_naive, 7600),
 )
 
@@ -228,7 +228,7 @@ report("C5", "power above 7.6 kHz with 5 ms Hann ramps [dB re total]", power_abo
 # every component below f_max.
 dur = 1.0
 n = int(dur * FS)
-t_c, f_c = frames(lambda t: 100 * 10**t, dur)
+t_c, f_c = time_windows(lambda t: 100 * 10**t, dur)
 f = to_samples(t_c, f_c, n)
 K = int(FS / 2 / 100) - 1  # 79: every harmonic below Nyquist at 100 Hz
 ks = np.arange(1, K + 1)

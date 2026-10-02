@@ -20,7 +20,7 @@ import soundfile as sf
 from scipy.signal import butter, fftconvolve, sosfiltfilt
 
 FS = 16000.0
-HOP = 0.005  # frame period [s], Harvest's default
+HOP = 0.005  # hop [s], Harvest's default frame period
 F_LO, F_HI = 60.0, 500.0  # search range [Hz]
 ROOT = Path(__file__).resolve().parent.parent
 SPEECH = ROOT / "docs" / "speech"
@@ -79,7 +79,7 @@ def with_noise(x, snr_db):
 HP300 = butter(8, 300, "highpass", fs=FS, output="sos")
 
 
-def frame_times(n):
+def window_times(n):
     return np.arange(0, n / FS, HOP)
 
 
@@ -112,7 +112,7 @@ def bank_candidates(x, t, per_oct=24, tol=0.1):
     cosine at fc spanning 4 periods; its output's four event series (upward
     and downward zero crossings, peaks, dips) each give a rate, and their
     mean is a candidate where it lies within tol of fc. Candidates within 3%
-    of each other are merged. Returns one array of candidates per frame."""
+    of each other are merged. Returns one array of candidates per time window."""
     n_ch = int(np.ceil(np.log2(F_HI / F_LO) * per_oct)) + 1
     rates = np.full((n_ch, len(t)), np.nan)
     for i, fc in enumerate(F_LO * 2 ** (np.arange(n_ch) / per_oct)):
@@ -145,7 +145,7 @@ def bank_candidates(x, t, per_oct=24, tol=0.1):
 def yin_candidates(x, t, win=0.025, max_cand=4, d_max=0.5):
     """Local minima of the cumulative-mean-normalized difference function
     (de Cheveigne & Kawahara, 2002) below d_max, refined by a parabola, best
-    max_cand per frame. The integration window is win seconds."""
+    max_cand per time window. The integration window is win seconds."""
     W = int(win * FS)
     tau_max = int(np.ceil(FS / F_LO)) + 1
     tau_min = max(int(np.floor(FS / F_HI)), 1)
@@ -234,7 +234,7 @@ def periodicity(x, tc, f, periods=3.0):
 
 
 def scored(x, t, cands, do_refine=True):
-    """Refine and score every candidate: one (f, score) pair of arrays per frame."""
+    """Refine and score every candidate: one (f, score) pair of arrays per time window."""
     out = []
     for tc, cs in zip(t, cands, strict=True):
         f = np.array([refine(x, tc, c) if do_refine else c for c in cs])
@@ -246,12 +246,12 @@ def scored(x, t, cands, do_refine=True):
 # ------------------------------------------------------------- tracking
 
 
-def viterbi(frames, theta=0.5, jump=2.0, switch=0.5):
-    """Cheapest path through (unvoiced, candidates...) per frame. Local cost
+def viterbi(scored_windows, theta=0.5, jump=2.0, switch=0.5):
+    """Cheapest path through (unvoiced, candidates...) per time window. Local cost
     1 - score for a candidate, 1 - theta for unvoiced; moving between
     candidates costs jump * |log2 ratio|, and a voicing change costs switch."""
     prev_f, prev_cost, states, back = np.zeros(1), np.zeros(1), [], []
-    for j, (f, s) in enumerate(frames):
+    for j, (f, s) in enumerate(scored_windows):
         fj = np.concatenate([[0.0], f])
         local = np.concatenate([[1 - theta], 1 - s])
         va, vb = fj[:, None] > 0, prev_f[None, :] > 0
@@ -264,21 +264,21 @@ def viterbi(frames, theta=0.5, jump=2.0, switch=0.5):
         prev_f = fj
         states.append(fj)
         back.append(bi)
-    path = np.zeros(len(frames))
+    path = np.zeros(len(scored_windows))
     k = int(np.argmin(prev_cost))
-    for j in range(len(frames) - 1, -1, -1):
+    for j in range(len(scored_windows) - 1, -1, -1):
         path[j] = states[j][k]
         k = back[j][k]
     return path
 
 
-def best_per_frame(frames, theta=0.5):
+def best_per_window(scored_windows, theta=0.5):
     """No tracking: the highest-scoring candidate if its score exceeds theta."""
-    return np.array([f[np.argmax(s)] if len(s) and s.max() > theta else 0.0 for f, s in frames])
+    return np.array([f[np.argmax(s)] if len(s) and s.max() > theta else 0.0 for f, s in scored_windows])
 
 
 def track(x, gen="diff", **kw):
-    t = frame_times(len(x))
+    t = window_times(len(x))
     cands = yin_candidates(x, t) if gen == "diff" else bank_candidates(x, t)
     return t, viterbi(scored(x, t, cands), **kw)
 
@@ -290,7 +290,7 @@ def cepstral_track(x, win=0.050, threshold=0.1):
     """Classic cepstral F0 as in so.Cepstrum.f0: a Hann window three periods of
     F_LO long, the largest real-cepstrum peak in 1/F_HI..1/F_LO refined by a
     parabola, unvoiced where the peak is below threshold."""
-    t = frame_times(len(x))
+    t = window_times(len(x))
     L = int(win * FS)
     n_fft = 1 << int(np.ceil(np.log2(2 * L)))
     w = 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(L) / L)
@@ -317,7 +317,7 @@ def cepstral_track(x, win=0.050, threshold=0.1):
 
 def errors(t, est, f0):
     """Gross error rate (unvoiced, or off by more than 20%, as in Morise 2017)
-    and the median and largest fine error [%] over the other frames, on frames
+    and the median and largest fine error [%] over the other time windows, on time windows
     at least 50 ms from either end."""
     truth = np.interp(t, np.arange(len(f0)) / FS, f0)
     inner = (t > 0.05) & (t < len(f0) / FS - 0.05)
@@ -346,15 +346,15 @@ def main():
         ("vibrato, white noise 10 dB SNR", with_noise(vowel(VIBRATO), 10)),
         ("vibrato, high-passed at 300 Hz", sosfiltfilt(HP300, vowel(VIBRATO))),
     ]:
-        t = frame_times(len(x))
+        t = window_times(len(x))
         report(
             "C1",
-            f"{label}: frames with a bank candidate within 5% of F0",
+            f"{label}: time windows with a bank candidate within 5% of F0",
             candidate_hit(t, bank_candidates(x, t), VIBRATO),
         )
         report(
             "C1",
-            f"{label}: frames with a difference-function candidate within 5%",
+            f"{label}: time windows with a difference-function candidate within 5%",
             candidate_hit(t, yin_candidates(x, t), VIBRATO),
         )
     report(
@@ -364,7 +364,7 @@ def main():
     )
     x = vowel(CONTOURS["steady 120 Hz"])
     ch = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
-    t = frame_times(len(x))
+    t = window_times(len(x))
     for r in ch:
         fc = 120 * r
         half = int(round(2 * FS / fc))
@@ -377,7 +377,7 @@ def main():
     # Refinement by instantaneous frequency.
     for label, f0 in CONTOURS.items():
         x = vowel(f0)
-        t = frame_times(len(x))
+        t = window_times(len(x))
         cands = yin_candidates(x, t)
         raw = viterbi(scored(x, t, cands, do_refine=False))
         ref = viterbi(scored(x, t, cands))
@@ -407,41 +407,44 @@ def main():
             f"    ideal s / (1 + s); with linear interpolation, {s / (1 + s):.3f}",
             s / np.sqrt((1 + s) * (s + g)),
         )
-    t = frame_times(N1)
+    t = window_times(N1)
     best = [s.max() if len(s) else 0.0 for _, s in scored(NOISE, t, yin_candidates(NOISE, t))]
-    report("C3", "white noise alone: largest score of any frame", np.max(best))
+    report("C3", "white noise alone: largest score of any time window", np.max(best))
 
     # ================================================================== C4
-    # Tracking against picking the best candidate in each frame.
+    # Tracking against picking the best candidate in each time window.
     snd, fs = sf.read(SPEECH / "bdl_arctic_a0131.flac")
     assert fs == FS
     harvest = np.loadtxt(SPEECH / "bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2)
-    t_sent = frame_times(len(snd))
+    t_sent = window_times(len(snd))
     h = np.interp(t_sent, harvest[:, 0], harvest[:, 1])
     hv = np.interp(t_sent, harvest[:, 0], (harvest[:, 1] > 0).astype(float)) > 0.5
-    frames_sent = scored(snd, t_sent, yin_candidates(snd, t_sent))
+    windows_sent = scored(snd, t_sent, yin_candidates(snd, t_sent))
     noisy = with_noise(vowel(VIBRATO), 5)
-    t5 = frame_times(N1)
-    frames_noisy = scored(noisy, t5, yin_candidates(noisy, t5))
+    t5 = window_times(N1)
+    windows_noisy = scored(noisy, t5, yin_candidates(noisy, t5))
     truth5 = np.interp(t5, TT, VIBRATO)
-    for label, est_fn in [("best candidate per frame", best_per_frame), ("tracked (Viterbi)", viterbi)]:
-        est = est_fn(frames_sent)
+    for label, est_fn in [
+        ("best candidate per time window", best_per_window),
+        ("tracked (Viterbi)", viterbi),
+    ]:
+        est = est_fn(windows_sent)
         both = (est > 0) & hv
         ratio = est[both] / h[both]
         report(
             "C4",
-            f"sentence, {label}: frames voiced by both, off from Harvest by >20%",
+            f"sentence, {label}: time windows voiced by both, off from Harvest by >20%",
             np.sum(np.abs(ratio - 1) > 0.2),
         )
         report("C4", f"sentence, {label}: voicing switches", np.sum(np.diff(est > 0)))
-        est = est_fn(frames_noisy)
+        est = est_fn(windows_noisy)
         v = est > 0
         report(
             "C4",
-            f"vibrato at 5 dB SNR, {label}: voiced frames off by >20%, fraction",
+            f"vibrato at 5 dB SNR, {label}: voiced time windows off by >20%, fraction",
             np.mean(np.abs(est[v] / truth5[v] - 1) > 0.2),
         )
-        report("C4", f"vibrato at 5 dB SNR, {label}: frames voiced, fraction", np.mean(v))
+        report("C4", f"vibrato at 5 dB SNR, {label}: time windows voiced, fraction", np.mean(v))
 
     # ================================================================== C5
     # Synthetic set: tracker (both candidate stages) against the cepstral baseline.
@@ -476,14 +479,16 @@ def main():
     # ================================================================== C6
     # Noise alone.
     for name, (_, est) in [("tracker", track(NOISE)), ("cepstral baseline", cepstral_track(NOISE))]:
-        report("C6", f"one second of white noise, {name}: frames called voiced, fraction", np.mean(est > 0))
+        report(
+            "C6", f"one second of white noise, {name}: time windows called voiced, fraction", np.mean(est > 0)
+        )
 
     # ================================================================== C7, C8
     # The sentence against Harvest and against the corpus pitch marks.
     pm = np.loadtxt(SPEECH / "bdl_arctic_a0131.pm", skiprows=8)[:, 0]
     d = np.diff(pm)
     # The marks run on through unvoiced stretches as runs of identical intervals
-    # slower than 110 Hz; frames in those runs have no mark-based F0.
+    # slower than 110 Hz; time windows in those runs have no mark-based F0.
     filler = np.zeros(len(d), bool)
     i = 0
     while i < len(d):
@@ -497,35 +502,39 @@ def main():
     inside = (k >= 0) & (k < len(d))
     pm_f0 = np.where(inside, 1 / d[np.clip(k, 0, len(d) - 1)], 0.0)
     pm_ok = inside & ~filler[np.clip(k, 0, len(d) - 1)] & (d[np.clip(k, 0, len(d) - 1)] < 0.015)
-    report("C7", "sentence: frames Harvest calls voiced", hv.sum())
-    report("C7", "sentence: frames with a pitch-mark F0 (marks not in an unvoiced run)", pm_ok.sum())
+    report("C7", "sentence: time windows Harvest calls voiced", hv.sum())
+    report("C7", "sentence: time windows with a pitch-mark F0 (marks not in an unvoiced run)", pm_ok.sum())
     report(
         "C7",
-        "sentence: Harvest-voiced frames inside the marks' unvoiced runs",
+        "sentence: Harvest-voiced time windows inside the marks' unvoiced runs",
         np.sum(hv & inside & filler[np.clip(k, 0, len(d) - 1)]),
     )
     for name, est in [
-        ("tracker", viterbi(frames_sent)),
+        ("tracker", viterbi(windows_sent)),
         ("tracker, bank candidates", track(snd, gen="bank")[1]),
         ("cepstral baseline", cepstral_track(snd)[1]),
         ("Harvest", h * hv),
     ]:
         v = est > 0
         both = v & hv
-        report("C7", f"{name}: frames voiced", v.sum())
+        report("C7", f"{name}: time windows voiced", v.sum())
         if name != "Harvest":
-            report("C7", f"{name}: Harvest-voiced frames it calls voiced, fraction", np.mean(v[hv]))
-            report("C7", f"{name}: Harvest-unvoiced frames it calls voiced, fraction", np.mean(v[~hv]))
+            report("C7", f"{name}: Harvest-voiced time windows it calls voiced, fraction", np.mean(v[hv]))
+            report("C7", f"{name}: Harvest-unvoiced time windows it calls voiced, fraction", np.mean(v[~hv]))
             report(
                 "C7",
-                f"{name}: frames both voiced, within 5% of Harvest, fraction",
+                f"{name}: time windows both voiced, within 5% of Harvest, fraction",
                 np.mean(np.abs(est[both] / h[both] - 1) < 0.05),
             )
-        report("C8", f"{name}: frames with a pitch-mark F0 that it calls voiced, fraction", np.mean(v[pm_ok]))
+        report(
+            "C8",
+            f"{name}: time windows with a pitch-mark F0 that it calls voiced, fraction",
+            np.mean(v[pm_ok]),
+        )
         m = v & pm_ok
         report(
             "C8",
-            f"{name}: voiced frames with a pitch-mark F0, within 5% of the marks, fraction",
+            f"{name}: voiced time windows with a pitch-mark F0, within 5% of the marks, fraction",
             np.mean(np.abs(est[m] / pm_f0[m] - 1) < 0.05),
         )
         report(

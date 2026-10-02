@@ -336,15 +336,15 @@ class GaborFrame(Frame):
 
     def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
         """``s(t) = K sum_q |w(t - q hop)|**2`` for ``t`` in ``0..n_samples-1``:
-        the diagonal of the frame operator. Sums over every frame
-        that overlaps the signal; frames SciPy leaves out overlap it only
+        the diagonal of the frame operator. Sums over every time window
+        that overlaps the signal; time windows SciPy leaves out overlap it only
         where the window is zero, so they add nothing."""
         n = int(n_samples)
         window_power = np.abs(self.window_samples(fs)) ** 2
         n_win, hop, n_fft = self.lengths(fs)
         centre_index = n_win // 2
-        frame_indices = np.arange((centre_index - n_win) // hop + 1, -(-(n + centre_index) // hop))
-        positions = frame_indices[:, None] * hop - centre_index + np.arange(n_win)[None, :]
+        window_indices = np.arange((centre_index - n_win) // hop + 1, -(-(n + centre_index) // hop))
+        positions = window_indices[:, None] * hop - centre_index + np.arange(n_win)[None, :]
         inside = (positions >= 0) & (positions < n)
         weights = np.broadcast_to(window_power, positions.shape)[inside]
         return n_fft * np.bincount(positions[inside], weights=weights, minlength=n)
@@ -367,7 +367,7 @@ class GaborFrame(Frame):
         return weights
 
     def analyze(self, sound: Sound) -> STFT:
-        """The STFT of ``sound``, data shape ``(n_channels, n_freqs, n_frames)``."""
+        """The STFT of ``sound``, data shape ``(n_channels, n_freqs, n_windows)``."""
         from sonore.analysis.representations import STFT
 
         return STFT(sound, frame=self)
@@ -459,7 +459,7 @@ class TVGaborFrame(Frame):
     ``analyze`` returns a :class:`~sonore.analysis.representations.TVSTFT`, data shape
     ``(n_channels, n_fft // 2 + 1, len(times))``. The signal is zero outside
     its own extent, as in :class:`GaborFrame`. A constant schedule over the
-    frames SciPy uses reproduces :class:`GaborFrame` exactly.
+    time windows SciPy uses reproduces :class:`GaborFrame` exactly.
     """
 
     times: Sequence[float]
@@ -566,7 +566,7 @@ class TVGaborFrame(Frame):
         return weights
 
     def analyze(self, sound: Sound) -> TVSTFT:
-        """The time-varying STFT of ``sound``, data shape ``(n_channels, n_freqs, n_frames)``."""
+        """The time-varying STFT of ``sound``, data shape ``(n_channels, n_freqs, n_windows)``."""
         from sonore.analysis.representations import TVSTFT
 
         frame_layout, n = self.layout(sound.fs), len(sound)
@@ -581,24 +581,24 @@ class TVGaborFrame(Frame):
         frame_layout = self.layout(coefs.fs)
         expected = (frame_layout.n_fft // 2 + 1, len(self.times))
         if coefs.data.shape[1:] != expected:
-            raise ValueError(f"expected (n_freqs, n_frames) = {expected}, got {coefs.data.shape[1:]}")
+            raise ValueError(f"expected (n_freqs, n_windows) = {expected}, got {coefs.data.shape[1:]}")
         return frame_layout
 
     def _overlap_add(self, coefs: TVSTFT, frame_layout: _TVLayout) -> np.ndarray:
         n = coefs.n_samples
         signal_index, valid = frame_layout.positions(n)
-        frames = frame_layout.n_fft * np.fft.irfft(coefs.data, n=frame_layout.n_fft, axis=1).transpose(
+        segments = frame_layout.n_fft * np.fft.irfft(coefs.data, n=frame_layout.n_fft, axis=1).transpose(
             0, 2, 1
         )  # (C, Q, M)
-        weighted_frames = frames * np.conj(frame_layout.windows)[None]
+        weighted_segments = segments * np.conj(frame_layout.windows)[None]
         channel_signals = [
-            np.bincount(signal_index[valid], weights=channel_frames[valid], minlength=n)
-            for channel_frames in weighted_frames
+            np.bincount(signal_index[valid], weights=channel_segments[valid], minlength=n)
+            for channel_segments in weighted_segments
         ]
         return np.stack(channel_signals, axis=1)
 
     def adjoint(self, coefs: TVSTFT) -> Sound:
-        """Conjugate-window overlap-add of ``n_fft * irfft`` of each frame,
+        """Conjugate-window overlap-add of ``n_fft * irfft`` of each time window,
         without dividing by ``s``."""
         return Sound(self._overlap_add(coefs, self._check(coefs)), coefs.fs)
 
@@ -638,7 +638,7 @@ def _bridged_f0(f0_times: Sequence[float], f0: Sequence[float]) -> Callable[[flo
 @dataclass(frozen=True)
 class _TVLayout:
     """A :class:`TVGaborFrame` in samples at one rate. Row ``q`` of
-    ``offsets``/``windows`` is FFT buffer index ``j`` of frame ``q``: the
+    ``offsets``/``windows`` is FFT buffer index ``j`` of time window ``q``: the
     signal sample ``centers[q] + offsets[q, j]`` and its window weight (0 in
     the zero padding). Index 0 is the window's middle sample, as in SciPy."""
 

@@ -2,7 +2,7 @@
 
 The phase vocoder treats each STFT channel as a slowly varying sinusoid with an
 amplitude and an *instantaneous frequency*, estimated from how much the
-channel's phase advances between frames beyond what its center frequency
+channel's phase advances between time windows beyond what its center frequency
 predicts. With amplitudes and frequencies in hand you can:
 
 - change duration without changing pitch (:func:`time_stretch`), by
@@ -45,7 +45,7 @@ def _inst_freq(phase: np.ndarray, n_win: int, hop: int) -> np.ndarray:
     omega = 2 * np.pi * np.arange(phase.shape[-2]) / n_win  # bin centers
     phase_deviation = _wrap(np.diff(phase, axis=-1) - omega[:, None] * hop)
     inst_freq = omega[:, None] + phase_deviation / hop
-    return np.concatenate([inst_freq[..., :1], inst_freq], axis=-1)  # frame 0 borrows frame 1
+    return np.concatenate([inst_freq[..., :1], inst_freq], axis=-1)  # time window 0 borrows time window 1
 
 
 def _win_len(win_dur: float, fs: float) -> int:
@@ -56,12 +56,12 @@ def _win_len(win_dur: float, fs: float) -> int:
 @dataclass(frozen=True)
 class PVAnalysis:
     """Phase-vocoder analysis: per-channel magnitude, phase and instantaneous
-    frequency, all shaped ``(n_channels, n_bins, n_frames)``."""
+    frequency, all shaped ``(n_channels, n_bins, n_windows)``."""
 
     magnitude: np.ndarray
     phase: np.ndarray
     freq: np.ndarray  # Hz
-    t: np.ndarray  # frame center times [s]
+    t: np.ndarray  # window center times [s]
     fs: float
     n_win: int
     hop: int
@@ -77,7 +77,7 @@ class PVAnalysis:
         """Oscillator-bank resynthesis.
 
         Each bin drives a sinusoid whose amplitude and frequency are
-        interpolated between frames and whose phase is the running integral of
+        interpolated between time windows and whose phase is the running integral of
         frequency. ``time_scale`` stretches the time axis; ``freq_map`` is a
         ratio (e.g. ``1.5``) or a function mapping frequencies in Hz to new
         frequencies. For example ``lambda f: f + 70`` makes a 220 Hz harmonic
@@ -101,20 +101,20 @@ class PVAnalysis:
 
         n_out = int(round(self.n_samples * time_scale))
         sample_times = np.arange(n_out) / self.fs
-        frame_times = self.t * time_scale
+        window_times = self.t * time_scale
         # filterbank-summation gain: sum over bins of |X| equals N*w(center)*amplitude
         gain = np.full(self.magnitude.shape[1], 2.0)
         gain[0] = 1.0
         if self.n_win % 2 == 0:
             gain[-1] = 1.0
         gain /= self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
-        # Anchor each oscillator's phase at the first frame whose window lies
-        # fully inside the signal; edge frames are truncated, which scrambles
+        # Anchor each oscillator's phase at the first time window that lies
+        # fully inside the signal; edge time windows are truncated, which scrambles
         # the phase relationship between neighbouring bins.
         half = self.n_win / 2 / self.fs
         interior = np.flatnonzero((self.t - half >= 0) & (self.t + half <= self.n_samples / self.fs))
-        anchor_frame = int(interior[0]) if len(interior) else int(np.argmin(np.abs(self.t)))
-        anchor_sample = min(int(round(frame_times[anchor_frame] * self.fs)), n_out - 1)
+        anchor_window = int(interior[0]) if len(interior) else int(np.argmin(np.abs(self.t)))
+        anchor_sample = min(int(round(window_times[anchor_window] * self.fs)), n_out - 1)
 
         out = np.zeros((n_out, self.magnitude.shape[0]))
         for channel in range(self.magnitude.shape[0]):
@@ -123,15 +123,15 @@ class PVAnalysis:
             for start in range(0, len(active), chunk):
                 bins = active[start : start + chunk]
                 amplitude = (
-                    np.array([np.interp(sample_times, frame_times, magnitude[k]) for k in bins])
+                    np.array([np.interp(sample_times, window_times, magnitude[k]) for k in bins])
                     * gain[bins, None]
                 )
-                freqs = np.array([np.interp(sample_times, frame_times, self.freq[channel, k]) for k in bins])
+                freqs = np.array([np.interp(sample_times, window_times, self.freq[channel, k]) for k in bins])
                 if map_freqs is not None:
                     freqs = map_freqs(freqs)
                     amplitude = np.where((freqs > 0) & (freqs < self.fs / 2), amplitude, 0.0)
                 cycles = np.cumsum(freqs, axis=1) / self.fs
-                osc_phase = self.phase[channel, bins, anchor_frame][:, None] + 2 * np.pi * (
+                osc_phase = self.phase[channel, bins, anchor_window][:, None] + 2 * np.pi * (
                     cycles - cycles[:, anchor_sample : anchor_sample + 1]
                 )
                 out[:, channel] += np.sum(amplitude * np.cos(osc_phase), axis=0)
@@ -181,46 +181,49 @@ def time_stretch(sound: Sound, factor: float, win_dur: float = 46e-3, phase_lock
     magnitude, analysis_phase = np.abs(spectrum), np.angle(spectrum)
     inst_freq = _inst_freq(analysis_phase, n_win, analysis_hop)
 
-    # Seed synthesis phases from the first frame whose window lies fully inside
-    # the signal. Earlier (zero-padded) frames have distorted phases, and any
+    # Seed synthesis phases from the first time window that lies fully inside
+    # the signal. Earlier (zero-padded) time windows have distorted phases, and any
     # error in the seed persists as lost phase coherence between partials.
     starts = np.round(analysis_sft.t(len(sound)) * fs).astype(int) - analysis_sft.m_num_mid
     interior = np.flatnonzero((starts >= 0) & (starts + n_win <= len(sound)))
-    first_frame = int(interior[0]) if len(interior) else 0
+    first_window = int(interior[0]) if len(interior) else 0
     synthesis_phase = np.empty_like(analysis_phase)
-    synthesis_phase[..., : first_frame + 1] = analysis_phase[..., : first_frame + 1]
-    for frame in range(first_frame + 1, analysis_phase.shape[-1]):
-        advanced = synthesis_phase[..., frame - 1] + inst_freq[..., frame] * synthesis_hop
+    synthesis_phase[..., : first_window + 1] = analysis_phase[..., : first_window + 1]
+    for window_index in range(first_window + 1, analysis_phase.shape[-1]):
+        advanced = synthesis_phase[..., window_index - 1] + inst_freq[..., window_index] * synthesis_hop
         if not phase_lock:
-            synthesis_phase[..., frame] = advanced
+            synthesis_phase[..., window_index] = advanced
             continue
         for channel in range(analysis_phase.shape[0]):
-            frame_magnitude = magnitude[channel, :, frame]
-            is_peak = np.zeros(len(frame_magnitude), bool)
+            window_magnitude = magnitude[channel, :, window_index]
+            is_peak = np.zeros(len(window_magnitude), bool)
             is_peak[1:-1] = (
-                (frame_magnitude[1:-1] > frame_magnitude[:-2])
-                & (frame_magnitude[1:-1] >= frame_magnitude[2:])
-                & (frame_magnitude[1:-1] > 1e-6 * frame_magnitude.max())
+                (window_magnitude[1:-1] > window_magnitude[:-2])
+                & (window_magnitude[1:-1] >= window_magnitude[2:])
+                & (window_magnitude[1:-1] > 1e-6 * window_magnitude.max())
             )
             peaks = np.flatnonzero(is_peak)
             if len(peaks) == 0:
-                synthesis_phase[channel, :, frame] = advanced[channel]
+                synthesis_phase[channel, :, window_index] = advanced[channel]
             else:
-                synthesis_phase[channel, :, frame] = _lock_phases(
-                    frame_magnitude, analysis_phase[channel, :, frame], advanced[channel, peaks], peaks
+                synthesis_phase[channel, :, window_index] = _lock_phases(
+                    window_magnitude,
+                    analysis_phase[channel, :, window_index],
+                    advanced[channel, peaks],
+                    peaks,
                 )
     stretched = magnitude * np.exp(1j * synthesis_phase)
 
-    # place analysis frame m (time (analysis_sft.p_min + m)*analysis_hop) at synthesis
+    # place analysis time window m (time (analysis_sft.p_min + m)*analysis_hop) at synthesis
     # slot analysis_sft.p_min + m
     n_out = int(round(len(sound) * factor))
     n_slots = synthesis_sft.p_max(n_out) - synthesis_sft.p_min
     offset = analysis_sft.p_min - synthesis_sft.p_min
     slotted = np.zeros(stretched.shape[:-1] + (n_slots,), complex)
-    source_frames = np.arange(stretched.shape[-1])
-    target_slots = source_frames + offset
+    source_windows = np.arange(stretched.shape[-1])
+    target_slots = source_windows + offset
     in_range = (target_slots >= 0) & (target_slots < n_slots)
-    slotted[..., target_slots[in_range]] = stretched[..., source_frames[in_range]]
+    slotted[..., target_slots[in_range]] = stretched[..., source_windows[in_range]]
     signal = synthesis_sft.istft(slotted, k1=n_out)
     return Sound(np.real(signal).T, fs)
 

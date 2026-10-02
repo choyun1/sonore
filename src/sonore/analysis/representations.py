@@ -100,7 +100,7 @@ def long_term_spectrum(sounds: Sound | Sequence[Sound], nperseg: int = 4096) -> 
 class STFT:
     """Short-time Fourier transform (wraps :class:`scipy.signal.ShortTimeFFT`).
 
-    ``data`` has shape ``(n_channels, n_freqs, n_frames)``. Resynthesis with
+    ``data`` has shape ``(n_channels, n_freqs, n_windows)``. Resynthesis with
     :meth:`to_sound` is exact for an unmodified STFT, and the least-squares
     signal for a modified one.
 
@@ -143,10 +143,10 @@ class STFT:
         return new
 
     def __repr__(self) -> str:
-        n_channels, n_freqs, n_frames = self.data.shape
+        n_channels, n_freqs, n_windows = self.data.shape
         win_ms, hop_ms = self.sft.m_num / self.fs * 1e3, self.sft.hop / self.fs * 1e3
         return (
-            f"STFT({n_freqs} freqs x {n_frames} frames, {n_channels} ch, "
+            f"STFT({n_freqs} freqs x {n_windows} time windows, {n_channels} ch, "
             f"win {win_ms:.1f} ms, hop {hop_ms:.1f} ms)"
         )
 
@@ -156,7 +156,7 @@ class STFT:
 
     @property
     def t(self) -> np.ndarray:
-        """Frame center times [s]."""
+        """Window center times [s]."""
         return self.sft.t(self.n_samples)
 
     @property
@@ -203,9 +203,9 @@ class TVSTFT:
     """Coefficients of a :class:`~sonore.analysis.frames.TVGaborFrame`: a short-time
     Fourier transform whose window changes over time.
 
-    ``data`` has shape ``(n_channels, n_freqs, n_frames)`` like
+    ``data`` has shape ``(n_channels, n_freqs, n_windows)`` like
     :class:`STFT`, on one frequency grid :attr:`f` (every window is
-    zero-padded to the same FFT length) and at non-uniform frame centers
+    zero-padded to the same FFT length) and at non-uniform window centers
     :attr:`t`. :meth:`to_sound` is exact for unmodified coefficients and the
     least-squares signal for modified ones. Multiply by an array to mask.
     """
@@ -220,10 +220,10 @@ class TVSTFT:
         return cls(data, template.fs, template.n_samples, template.frame)
 
     def __repr__(self) -> str:
-        n_channels, n_freqs, n_frames = self.data.shape
+        n_channels, n_freqs, n_windows = self.data.shape
         win_ms = self.frame.layout(self.fs).lengths / self.fs * 1e3
         return (
-            f"TVSTFT({n_freqs} freqs x {n_frames} frames, {n_channels} ch, "
+            f"TVSTFT({n_freqs} freqs x {n_windows} time windows, {n_channels} ch, "
             f"win {win_ms.min():.1f}-{win_ms.max():.1f} ms, n_fft {self.frame.layout(self.fs).n_fft})"
         )
 
@@ -233,7 +233,7 @@ class TVSTFT:
 
     @property
     def t(self) -> np.ndarray:
-        """Frame center times [s], rounded to samples."""
+        """Window center times [s], rounded to samples."""
         return self.frame.layout(self.fs).centers / self.fs
 
     @property
@@ -255,7 +255,7 @@ class TVSTFT:
         return self.frame.synthesize(self)
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
-        """Spectrogram in dB on the frame centers (see :func:`~sonore.plotting.plot_tf_db`)."""
+        """Spectrogram in dB at the window centers (see :func:`~sonore.plotting.plot_tf_db`)."""
         from sonore.plotting import plot_tf_db
 
         kwargs.setdefault("title", "Time-varying spectrogram")
@@ -268,8 +268,8 @@ class TFPower:
     """A time-frequency power that is not a frame's coefficients, so it has
     no synthesis: for example :func:`tandem_power`.
 
-    ``power`` has shape ``(n_channels, n_freqs, n_frames)``, on frequencies
-    :attr:`f` [Hz] and frame times :attr:`t` [s], which need not be uniform.
+    ``power`` has shape ``(n_channels, n_freqs, n_windows)``, on frequencies
+    :attr:`f` [Hz] and window times :attr:`t` [s], which need not be uniform.
     """
 
     power: np.ndarray
@@ -299,7 +299,7 @@ def tandem_power(
 ) -> TFPower:
     """A TANDEM-STRAIGHT-style power spectrogram: the average of two
     pitch-adaptive spectrograms whose windows sit a quarter period before
-    and after each frame center.
+    and after each window center.
 
     For a periodic sound, the power through a window centered at ``t``
     fluctuates with period T0 as the window slides across the glottal
@@ -335,7 +335,7 @@ class ReassignedSpectrogram:
     """Spectrogram cells moved to their reassigned times and frequencies.
 
     ``t_hat``, ``f_hat`` and ``power`` have shape ``(n_channels, n_freqs,
-    n_frames)``, one entry per STFT cell; ``keep`` marks the cells within
+    n_windows)``, one entry per STFT cell; ``keep`` marks the cells within
     the threshold of the maximum. :meth:`binned` sums the kept power onto a
     grid for display. There is no synthesis: reassignment is not linear.
     """
@@ -365,7 +365,7 @@ def reassigned_spectrogram(
 ) -> ReassignedSpectrogram:
     """The reassigned spectrogram (Kodera et al., 1978; Auger & Flandrin, 1995).
 
-    Each cell of ``frame``'s spectrogram is moved from its frame time ``t``
+    Each cell of ``frame``'s spectrogram is moved from its window time ``t``
     and bin frequency ``f`` to
 
     - ``t_hat = t + Re(X_tw conj X) / |X|**2``,
@@ -374,7 +374,7 @@ def reassigned_spectrogram(
     where ``X`` uses the window ``w``, ``X_tw`` the time-weighted window
     ``tau w(tau)`` and ``X_dw`` its derivative ``w'(tau)``, with ``tau`` in
     seconds from the window's middle sample, which is where SciPy (and so
-    ``GaborFrame``) references each frame's phase. A tone off the bin grid,
+    ``GaborFrame``) references each time window's phase. A tone off the bin grid,
     an impulse and a linear chirp land on their true frequency, time and
     instantaneous-frequency line.
 

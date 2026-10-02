@@ -79,8 +79,8 @@ def simple_bir(fs: float, itd: float = 0.0, ild: float = 0.0, half_width: int = 
 
 @dataclass(frozen=True)
 class InterauralCues:
-    """Short-time interaural cues. Arrays are ``(n_frames,)`` for broadband
-    analysis or ``(n_frames, n_bands)`` per band. Silent frames are NaN."""
+    """Short-time interaural cues. Arrays are ``(n_windows,)`` for broadband
+    analysis or ``(n_windows, n_bands)`` per band. Silent time windows are NaN."""
 
     t: np.ndarray
     itd: np.ndarray
@@ -109,7 +109,7 @@ def interaural_cues(
     cross-correlation, refined by parabolic interpolation. ``iac`` is that
     peak's height (interaural coherence); ``corr0`` is the zero-lag
     correlation, which can be negative (use it for Oscor/Phasewarp).
-    Frames more than ``silence_db`` below the loudest frame are NaN. If a
+    Time windows more than ``silence_db`` below the loudest one are NaN. If a
     ``filterbank`` is given, cues are computed per band.
     """
     if sound.n_channels != 2:
@@ -127,9 +127,9 @@ def interaural_cues(
         cfs = filterbank.cfs
 
     window = hann(n_win, sym=False)
-    frames = sliding_window_view(bands, n_win, axis=0)[::hop]  # (F, B, 2, n_win)
-    frames = frames * window
-    left, right = frames[:, :, 0, :], frames[:, :, 1, :]
+    segments = sliding_window_view(bands, n_win, axis=0)[::hop]  # (F, B, 2, n_win)
+    segments = segments * window
+    left, right = segments[:, :, 0, :], segments[:, :, 1, :]
     n_fft = 1 << int(np.ceil(np.log2(2 * n_win)))
     xcorr = np.fft.irfft(np.fft.rfft(left, n_fft) * np.conj(np.fft.rfft(right, n_fft)), n_fft)
     lags = np.r_[0 : max_lag + 1, -max_lag:0]
@@ -164,7 +164,7 @@ def interaural_cues(
     silent = level_db < silence_db
     itd, ild, iac, corr0 = (np.where(silent, np.nan, cue) for cue in (itd, ild, iac, corr0))
 
-    t = (np.arange(frames.shape[0]) * hop + n_win / 2) / fs
+    t = (np.arange(segments.shape[0]) * hop + n_win / 2) / fs
     if filterbank is None:
         itd, ild, iac, corr0 = itd[:, 0], ild[:, 0], iac[:, 0], corr0[:, 0]
     return InterauralCues(t, itd, ild, iac, corr0, cfs)

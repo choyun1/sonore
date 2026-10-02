@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html" aria-current="page">Cepstral analysis</a><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-one-frame">One frame</a></li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a></li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a></li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a></li><li><a href="#h-reference-implementations">Reference implementations</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html" aria-current="page">Cepstral analysis</a><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-one-time-window">One time window</a></li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a></li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a></li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a></li><li><a href="#h-reference-implementations">Reference implementations</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -168,7 +168,7 @@ spectrum once every <span class="tex">F_0</span> hertz, so they land at one peri
 The two parts of the voice that were tangled in the spectrum come apart, and can be measured
 or edited separately.</p>
 <p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>:</p>
-<ul><li><a href="#h-one-frame">One frame</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
+<ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -202,9 +202,9 @@ stft = so.STFT(sentence, win_dur=0.040, hop_dur=0.005)
 cep = so.Cepstrum(stft)
 FMAX = 5000</code></pre></details></div>
 </section>
-<section aria-labelledby="h-one-frame">
-<h2 id="h-one-frame">One frame</h2>
-<p>Take one frame in the middle of a vowel. Its log spectrum is a comb of harmonics riding on the
+<section aria-labelledby="h-one-time-window">
+<h2 id="h-one-time-window">One time window</h2>
+<p>Take one time window in the middle of a vowel. Its log spectrum is a comb of harmonics riding on the
 formant envelope. Its cepstrum has most of its weight in the first couple of milliseconds, and
 one clear peak at the pitch period. Keeping only the quefrencies below half a period (a
 <em>lifter</em>, the cepstral counterpart of a filter) and transforming back gives the smooth
@@ -212,19 +212,19 @@ envelope.</p>
 
 <article class="still" id="d-c1">
   <div class="about">
-    <h3>One frame</h3>
-    <div class="desc"><p>Top: the frame's log spectrum and the liftered envelope. Bottom: its cepstrum, with the peak
+    <h3>One time window</h3>
+    <div class="desc"><p>Top: the time window's log spectrum and the liftered envelope. Bottom: its cepstrum, with the peak
 at one period. The envelope runs a few dB under the harmonic peaks because the lifter averages
 the peaks with the dips between them; spectral-envelope estimators such as WORLD's CheapTrick
 correct for this (Morise, 2015).</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/c1_one_frame.png" width="1000" height="560" alt="One frame" loading="lazy">
+    <img src="img/c1_one_time_window.png" width="1000" height="560" alt="One time window" loading="lazy">
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">i = int(np.argmin(np.abs(cep.t - 0.50)))
 _, f0_all, peak_all = cep.f0()
-t_frame, f0_frame, peak_frame = cep.t[i], f0_all[0, i], peak_all[0, i]
-cutoff = 0.5 / f0_frame  # half a period
+t_window, f0_window, peak_window = cep.t[i], f0_all[0, i], peak_all[0, i]
+cutoff = 0.5 / f0_window  # half a period
 envelope = cep.lifter(cutoff).envelope()[0, :, i]
 
 fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), layout=&quot;constrained&quot;)
@@ -234,14 +234,14 @@ ax0.set(
     xlim=(0, FMAX),
     xlabel=&quot;Frequency [Hz]&quot;,
     ylabel=&quot;Level [dB]&quot;,
-    title=f&quot;Frame at {t_frame:.3f} s: log spectrum and envelope&quot;,
+    title=f&quot;Time window at {t_window:.3f} s: log spectrum and envelope&quot;,
 )
 ax0.legend(loc=&quot;upper right&quot;, fontsize=8)
 q_ms = cep.q * 1e3
 ax1.plot(q_ms, cep.data[0, :, i], color=&quot;k&quot;, lw=0.8)
 ax1.axvline(cutoff * 1e3, color=&quot;tab:red&quot;, ls=&quot;--&quot;, lw=1, label=f&quot;lifter cutoff, {cutoff * 1e3:.1f} ms&quot;)
-peak_label = f&quot;peak at {1e3 / f0_frame:.2f} ms: F0 = {f0_frame:.0f} Hz&quot;
-ax1.plot(1e3 / f0_frame, peak_frame, &quot;o&quot;, color=&quot;tab:blue&quot;, label=peak_label)
+peak_label = f&quot;peak at {1e3 / f0_window:.2f} ms: F0 = {f0_window:.0f} Hz&quot;
+ax1.plot(1e3 / f0_window, peak_window, &quot;o&quot;, color=&quot;tab:blue&quot;, label=peak_label)
 ax1.set(xlim=(0, 15), ylim=(-0.2, 0.6), xlabel=&quot;Quefrency [ms]&quot;, ylabel=&quot;Cepstrum&quot;, title=&quot;Its cepstrum&quot;)
 ax1.legend(loc=&quot;upper right&quot;, fontsize=8)
 for ax in (ax0, ax1):
@@ -250,17 +250,17 @@ for ax in (ax0, ax1):
 </section>
 <section aria-labelledby="h-pitch-from-the-cepstrum">
 <h2 id="h-pitch-from-the-cepstrum">Pitch from the cepstrum</h2>
-<p>Doing this for every frame gives a <em>cepstrogram</em>: time across, quefrency up. Wherever the
+<p>Doing this for every time window gives a <em>cepstrogram</em>: time across, quefrency up. Wherever the
 voice is voiced, a bright line runs at one period, falling as the pitch rises. Picking the
-largest peak between 2.5 and 13.3 ms (400 and 75 Hz) in each frame is classic cepstral pitch
-estimation (Noll, 1967). A frame counts as voiced when its peak is taller than 0.1.</p>
+largest peak between 2.5 and 13.3 ms (400 and 75 Hz) in each time window is classic cepstral pitch
+estimation (Noll, 1967). A time window counts as voiced when its peak is taller than 0.1.</p>
 
 <article class="sound" id="d-c2" data-regions="[{&quot;x0&quot;: 0.056447707465277774, &quot;x1&quot;: 0.9950613025728856, &quot;top&quot;: 0.041165417286705974, &quot;bottom&quot;: 0.4514075730096725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.056447707465277774, &quot;x1&quot;: 0.9950613025728856, &quot;top&quot;: 0.5094940809461801, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>The cepstrogram and its pitch</h3>
     <div class="desc"><p>Top: the cepstrogram, with Harvest's pitch period drawn over it. Bottom: the cepstral F0 next
-to Harvest's. Each frame is judged on its own, with no continuity from one frame to the next,
-so the occasional frame jumps an octave.</p></div>
+to Harvest's. Each time window is judged on its own, with no continuity from one to the next,
+so the occasional time window jumps an octave.</p></div>
     <audio controls preload="metadata" src="audio/c2_the_cepstrogram_and_its_pitch.flac"></audio>
     <p class="file">c2_the_cepstrogram_and_its_pitch.flac, 2.5 s, mono</p>
   </div>
@@ -288,16 +288,16 @@ sound = sentence</code></pre></details>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">harvest_at = np.interp(t, f0_times, f0_harvest)
 both = (harvest_at &gt; 0) &amp; (f0_cep[0] &gt; 0)
 agree = np.mean(np.abs(f0_cep[0][both] / harvest_at[both] - 1) &lt; 0.05)
-print(f&quot;frames both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}&quot;)</code></pre></details><pre class="out">frames both call voiced: 318; cepstral F0 within 5% of Harvest on 96%</pre></div>
+print(f&quot;time windows both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}&quot;)</code></pre></details><pre class="out">time windows both call voiced: 318; cepstral F0 within 5% of Harvest on 96%</pre></div>
 </section>
 <section aria-labelledby="h-a-tracker-beside-the-cepstrum">
 <h2 id="h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</h2>
 <p><code>so.f0_track</code> works the other way round. It looks for the period in the waveform rather than
 the log spectrum, with YIN's difference function (de Cheveigné &amp; Kawahara, 2002): up to four
-candidate periods per frame, each sharpened from the instantaneous frequencies of the first six
+candidate periods per time window, each sharpened from the instantaneous frequencies of the first six
 harmonics, as WORLD does. Each candidate is scored by how well the waveform repeats one period
 later, and a single pass picks the cheapest path through the candidates, so that the pitch
-rarely jumps and a frame is voiced only when some candidate repeats well (a score above 0.5).</p>
+rarely jumps and a time window is voiced only when some candidate repeats well (a score above 0.5).</p>
 
 <article class="sound" id="d-f1" data-regions="[{&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951108075233805, &quot;top&quot;: 0.041964880952381156, &quot;bottom&quot;: 0.45180730484250997, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951108075233805, &quot;top&quot;: 0.5098938127790178, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
@@ -306,9 +306,9 @@ rarely jumps and a frame is voiced only when some candidate repeats well (a scor
 darkest row, an octave below the path, is the subharmonic: anything that repeats every period
 also repeats every two, so it scores as well, and the tracker never chooses a candidate whose
 octave above scores about as well (<code>subharmonic_margin</code>). Bottom: the three pitch tracks
-together. Where the tracker and Harvest both call a frame voiced they agree; Harvest voices
-more frames, stretches where the tracker's best score falls below 0.5.
-Against laryngograph recordings Harvest calls about a third of the unvoiced frames voiced, which
+together. Where the tracker and Harvest both call a time window voiced they agree; Harvest voices
+more time windows, stretches where the tracker's best score falls below 0.5.
+Against laryngograph recordings Harvest calls about a third of the unvoiced time windows voiced, which
 is why the tracker is stricter by default (see <code>docs/design/f0.md</code>).</p></div>
     <audio controls preload="metadata" src="audio/f1_cepstral_f0_a_tracker_and_harvest.flac"></audio>
     <p class="file">f1_cepstral_f0_a_tracker_and_harvest.flac, 2.5 s, mono</p>
@@ -335,7 +335,7 @@ for ax in (ax0, ax1):
 playhead = [ax0, ax1]
 sound = sentence</code></pre></details>
 </article>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># Compare frame by frame on the tracker&#x27;s frames, which the cepstrogram&#x27;s frames include.
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># Compare at every time window of the tracker; the cepstrogram&#x27;s time windows include them.
 at = np.searchsorted(np.round(t, 6), np.round(track.t, 6))
 pitch = {
     &quot;Harvest&quot;: np.interp(track.t, f0_times, f0_harvest),
@@ -343,27 +343,27 @@ pitch = {
     &quot;so.f0_track&quot;: np.where(track.voiced[0], track.f0[0], 0.0),
 }
 for name, f in pitch.items():
-    print(f&quot;{name:12s} voiced on {np.mean(f &gt; 0):.0%} of frames&quot;)
+    print(f&quot;{name:12s} voiced on {np.mean(f &gt; 0):.0%} of time windows&quot;)
 for a, b in [(&quot;cepstral&quot;, &quot;Harvest&quot;), (&quot;so.f0_track&quot;, &quot;Harvest&quot;), (&quot;cepstral&quot;, &quot;so.f0_track&quot;)]:
     both = (pitch[a] &gt; 0) &amp; (pitch[b] &gt; 0)
     agree = np.mean(np.abs(pitch[a][both] / pitch[b][both] - 1) &lt; 0.05)
-    print(f&quot;{a} and {b}: both voiced on {both.sum()} frames, within 5% on {agree:.0%}&quot;)</code></pre></details><pre class="out">Harvest      voiced on 86% of frames
-cepstral     voiced on 65% of frames
-so.f0_track  voiced on 68% of frames
-cepstral and Harvest: both voiced on 318 frames, within 5% on 96%
-so.f0_track and Harvest: both voiced on 342 frames, within 5% on 100%
-cepstral and so.f0_track: both voiced on 300 frames, within 5% on 98%</pre></div>
+    print(f&quot;{a} and {b}: both voiced on {both.sum()} time windows, within 5% on {agree:.0%}&quot;)</code></pre></details><pre class="out">Harvest      voiced on 86% of time windows
+cepstral     voiced on 65% of time windows
+so.f0_track  voiced on 68% of time windows
+cepstral and Harvest: both voiced on 318 time windows, within 5% on 96%
+so.f0_track and Harvest: both voiced on 342 time windows, within 5% on 100%
+cepstral and so.f0_track: both voiced on 300 time windows, within 5% on 98%</pre></div>
 </section>
 <section aria-labelledby="h-splitting-the-voice-in-two">
 <h2 id="h-splitting-the-voice-in-two">Splitting the voice in two</h2>
-<p>Lifter the other way and the two parts can be heard separately. Each frame keeps its own
+<p>Lifter the other way and the two parts can be heard separately. Each time window keeps its own
 lifter cutoff, half of its pitch period, following Harvest's track (bridged across unvoiced
 stretches). Low quefrencies keep the vocal tract; high quefrencies keep the source.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">voiced_t, voiced_f0 = f0_times[voiced], f0_harvest[voiced]
-cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per frame
+cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per time window
 tract = cep.lifter(cutoffs)  # low quefrencies: the envelope
 source = cep.lifter(cutoffs, keep=&quot;high&quot;)  # high quefrencies: the harmonics
-source.data[:, 0] = cep.data[:, 0]  # but keep each frame&#x27;s mean log level, so pauses stay quiet
+source.data[:, 0] = cep.data[:, 0]  # but keep each time window&#x27;s mean log level, so pauses stay quiet
 
 
 def show(snd, title, win_dur=0.005):
@@ -375,8 +375,8 @@ def show(snd, title, win_dur=0.005):
 <article class="sound" id="d-c3" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Envelope only, on a 200 Hz pulse train</h3>
-    <div class="desc"><p>The vocal tract alone: every frame's envelope given its minimum phase, so that each frame
-becomes one short pulse at the frame's center. The frames are 5 ms apart, so the pulses make
+    <div class="desc"><p>The vocal tract alone: every time window's envelope given its minimum phase, so that each time window
+becomes one short pulse at its center. The time windows are 5 ms apart, so the pulses make
 a steady 200 Hz buzz. The words survive; the intonation does not.</p></div>
     <audio controls preload="metadata" src="audio/c3_envelope_only_on_a_200_hz_pulse_train.flac"></audio>
     <p class="file">c3_envelope_only_on_a_200_hz_pulse_train.flac, 2.5 s, mono</p>
@@ -393,7 +393,7 @@ sound = robot</code></pre></details>
 <article class="sound" id="d-c4" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Harmonics only, the envelope flattened</h3>
-    <div class="desc"><p>The source alone: the high quefrencies, plus each frame's overall level, with the original
+    <div class="desc"><p>The source alone: the high quefrencies, plus each time window's overall level, with the original
 phase. The formants are flattened away, leaving the harmonics at roughly equal level, a buzzy
 voice that still carries the talker's intonation. The narrowband spectrogram shows the
 harmonics running flat across frequency.</p></div>
@@ -431,12 +431,12 @@ sound = finish(whole)</code></pre></details>
 <h2 id="h-reference-implementations">Reference implementations</h2>
 <p><code>so.Cepstrum</code> is written from the definitions. <code>tools/crosscheck_cepstrum.py</code> compares it with
 three independent implementations; the numbers below are from SciPy 1.17.1 and Praat 6.1.38.</p>
-<ul><li>**MATLAB <code>rceps</code>.** Its documented definition, <code>real(ifft(log(abs(fft(x)))))</code>, written out in NumPy for one 40 ms frame, matches sonore's real cepstrum to 4e-16.</li><li>**SciPy <code>scipy.signal.minimum_phase</code>** (<code>method=&quot;homomorphic&quot;, half=False</code>) builds a minimum-phase filter by the same folding of the real cepstrum. On a 17-tap mixed-phase filter it matches sonore's minimum phase to 4e-8 of the peak; SciPy adds a tiny constant to the magnitude before the log, which is the whole difference.</li><li><strong>Praat's PowerCepstrogram</strong> (Boersma &amp; Weenink), through <code>parselmouth</code>, measures the same peak by a different route: a Gaussian window, the power spectrum in dB, and the sound resampled to 10 kHz. On the frames of this sentence that sonore calls voiced, the two peaks agree within 5% on 98% of frames; on every frame Harvest calls voiced, on 81%.</li></ul>
+<ul><li>**MATLAB <code>rceps</code>.** Its documented definition, <code>real(ifft(log(abs(fft(x)))))</code>, written out in NumPy for one 40 ms time window, matches sonore's real cepstrum to 4e-16.</li><li>**SciPy <code>scipy.signal.minimum_phase</code>** (<code>method=&quot;homomorphic&quot;, half=False</code>) builds a minimum-phase filter by the same folding of the real cepstrum. On a 17-tap mixed-phase filter it matches sonore's minimum phase to 4e-8 of the peak; SciPy adds a tiny constant to the magnitude before the log, which is the whole difference.</li><li><strong>Praat's PowerCepstrogram</strong> (Boersma &amp; Weenink), through <code>parselmouth</code>, measures the same peak by a different route: a Gaussian window, the power spectrum in dB, and the sound resampled to 10 kHz. On the time windows of this sentence that sonore calls voiced, the two peaks agree within 5% on 98% of them; on every time window Harvest calls voiced, on 81%.</li></ul>
 <p>See also the design and its numerical checks, <code>docs/design/cepstrum.md</code>.</p>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>Tracking from the cepstrum.</strong> Cepstral F0 judges each frame alone. The tracker above chooses a path through candidates from the waveform; the same could be done with cepstral peaks as the candidates.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter. Mel-cepstra, the basis of MFCCs, warp the frequency axis first.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
+<ul><li><strong>Tracking from the cepstrum.</strong> Cepstral F0 judges each time window alone. The tracker above chooses a path through candidates from the waveform; the same could be done with cepstral peaks as the candidates.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter. Mel-cepstra, the basis of MFCCs, warp the frequency axis first.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>

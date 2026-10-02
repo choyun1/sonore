@@ -228,7 +228,7 @@ TVS = {
 
 
 def _constant_schedule(gabor, n=N):
-    """The TVGaborFrame with ``gabor``'s window at SciPy's frame centers."""
+    """The TVGaborFrame with ``gabor``'s window at SciPy's window centers."""
     sft, (n_win, hop, n_fft) = gabor.sft(FS), gabor.lengths(FS)
     q = np.arange(sft.p_min, sft.p_max(n))
     return so.TVGaborFrame(q * hop / FS, [n_win / FS] * len(q), n_fft=n_fft, window=gabor.window)
@@ -304,8 +304,8 @@ def test_tvstft_container():
     assert C.f[-1] == FS / 2 and C.magnitude.shape == C.data.shape and C.db.shape == C.data.shape
     half = 0.5 * C
     assert isinstance(half, so.TVSTFT) and np.allclose(half.to_sound().data, 0.5 * C.to_sound().data)
-    assert repr(C).startswith("TVSTFT(9 freqs x 26 frames, 1 ch, win 1.0-2.0 ms")
-    with pytest.raises(ValueError, match="n_freqs, n_frames"):
+    assert repr(C).startswith("TVSTFT(9 freqs x 26 time windows, 1 ch, win 1.0-2.0 ms")
+    with pytest.raises(ValueError, match="n_freqs, n_windows"):
         TVS["tv hann^1.5, n_fft 21"].synthesize(C)
 
 

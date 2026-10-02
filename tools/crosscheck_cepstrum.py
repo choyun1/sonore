@@ -2,9 +2,9 @@
 
 - Minimum phase: SciPy's ``scipy.signal.minimum_phase(method="homomorphic",
   half=False)``, which computes a minimum-phase filter from the folded real
-  cepstrum, on a mixed-phase FIR placed alone in one frame.
+  cepstrum, on a mixed-phase FIR placed alone in one time window.
 - Real cepstrum: the definition MATLAB's ``rceps`` documents,
-  ``real(ifft(log(abs(fft(x)))))``, written out with NumPy for one frame.
+  ``real(ifft(log(abs(fft(x)))))``, written out with NumPy for one time window.
 - Cepstral peak: Praat's PowerCepstrogram (through parselmouth), whose peak
   quefrency on the gallery sentence is compared with ``Cepstrum.f0`` and
   with the Harvest track.
@@ -37,7 +37,7 @@ roots[:3] = 1 / roots[:3].conj()  # three conjugate pairs outside the unit circl
 h = np.real(np.poly(np.concatenate([roots, roots.conj()])))
 n_fft = 4096
 x = np.zeros(3 * n_fft)
-x[n_fft : n_fft + len(h)] = h  # starts at the phase reference of the frame centered at n_fft
+x[n_fft : n_fft + len(h)] = h  # starts at the phase reference of the time window centered at n_fft
 frame = so.GaborFrame(n_fft / FS, n_fft / 4 / FS, window="boxcar")
 cep = so.Cepstrum(frame.analyze(so.Sound(x, FS)))
 i = int(np.argmin(np.abs(cep.t - n_fft / FS)))
@@ -59,7 +59,7 @@ c = so.Cepstrum(
     )
 )
 j = int(np.argmin(np.abs(c.t - 640 / FS)))
-print("MATLAB rceps definition, real(ifft(log(abs(fft(x))))), one 40 ms frame")
+print("MATLAB rceps definition, real(ifft(log(abs(fft(x))))), one 40 ms time window")
 report("  max |sonore - rceps| over quefrencies 0..n_fft/2", np.abs(c.data[0, :, j] - rceps[:513]).max())
 
 # --------------------------------------------------------------- Praat peak
@@ -79,7 +79,7 @@ for k, t in enumerate(times):
         praat_f0[k] = 1 / call(sl, "Get quefrency of peak", 75, 400, "parabolic")
 ok = np.isfinite(praat_f0) & (harvest > 0)
 print(f"Praat {parselmouth.PRAAT_VERSION} PowerCepstrogram (floor 75 Hz, 5 ms, to 5 kHz), search 75-400 Hz")
-report("  Harvest-voiced frames compared", ok.sum())
+report("  Harvest-voiced time windows compared", ok.sum())
 report(
     "  sonore and Praat peak agree within 5%, fraction",
     np.mean(np.abs(ours_at[ok] / praat_f0[ok] - 1) < 0.05),
@@ -93,7 +93,7 @@ report(
     np.mean(np.abs(ours_at[ok] / harvest[ok] - 1) < 0.05),
 )
 sure = ok & (peak_at > 0.1)
-report("  frames where sonore's peak also exceeds 0.1 (its voicing rule)", sure.sum())
+report("  time windows where sonore's peak also exceeds 0.1 (its voicing rule)", sure.sum())
 report(
     "  on those, sonore and Praat agree within 5%, fraction",
     np.mean(np.abs(ours_at[sure] / praat_f0[sure] - 1) < 0.05),
