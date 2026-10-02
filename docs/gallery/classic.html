@@ -158,7 +158,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   <h1>Classic stimuli</h1>
 <p>A few stimuli that turn up again and again in hearing research, each built in a line or two
 from sonore's generators.</p>
-<ul><li><a href="#h-speech-shaped-noise">Speech-shaped noise</a>: noise with the long-term spectrum of speech, and none of its modulation.</li><li><a href="#h-beats-and-roughness">Beats and roughness</a>: two tones close in frequency, from a slow wobble to roughness to two separate tones, and amplitude modulation as the same thing seen another way.</li><li><a href="#h-binaural-beats">Binaural beats</a>: one tone in each ear, a beat that exists only in the head.</li><li><a href="#h-random-tone-sequences">Random tone sequences</a>: concurrent streams of tones at random frequencies.</li><li><a href="#h-band-limited-waveforms">Band-limited waveforms</a>: a sawtooth gliding up four octaves, with and without aliasing.</li></ul>
+<ul><li><a href="#h-speech-shaped-noise">Speech-shaped noise</a>: noise with the long-term spectrum of speech, and none of its modulation, and the long-term spectra of a man and a woman.</li><li><a href="#h-beats-and-roughness">Beats and roughness</a>: two tones close in frequency, from a slow wobble to roughness to two separate tones, and amplitude modulation as the same thing seen another way.</li><li><a href="#h-binaural-beats">Binaural beats</a>: one tone in each ear, a beat that exists only in the head.</li><li><a href="#h-random-tone-sequences">Random tone sequences</a>: concurrent streams of tones at random frequencies.</li><li><a href="#h-band-limited-waveforms">Band-limited waveforms</a>: a sawtooth gliding up four octaves, with and without aliasing.</li></ul>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import sawtooth
@@ -234,6 +234,43 @@ would spread over the slow rates of syllables and words.</p></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(ssn)
 fig, playhead = show(sound, fmax=8000, win_dur=20e-3)</code></pre></details>
+</article>
+<p>Those sentences are all by men. Averaged over many talkers, Byrne et al. (1994) found men's
+and women's long-term spectra nearly the same from 250 Hz to 5 kHz, with men's higher at
+160 Hz and below, where their fundamentals lie. Two single sentences, the same words read by
+one man (bdl) and one woman (slt), can differ by more. The cell prints how each sentence's
+power divides among octave bands.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">pair = [so.load(f&quot;docs/speech/{name}_arctic_a0131.flac&quot;).normalize(rms=0.1) for name in (&quot;bdl&quot;, &quot;slt&quot;)]
+pair_spectra = [so.long_term_spectrum([sentence]) for sentence in pair]
+octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
+print(&quot;octave from [Hz]     &quot; + &quot;&quot;.join(f&quot;{low:&gt;6}&quot; for low in octave_edges[:-1]))
+for speaker, spectrum in zip((&quot;bdl&quot;, &quot;slt&quot;), pair_spectra, strict=True):
+    power = 10 ** (spectrum.level / 10)
+    shares = [
+        10 * np.log10(power[(spectrum.f &gt;= low) &amp; (spectrum.f &lt; high)].sum() / power.sum())
+        for low, high in zip(octave_edges[:-1], octave_edges[1:], strict=True)
+    ]
+    print(f&quot;{speaker}, share [dB]      &quot; + &quot;&quot;.join(f&quot;{share:6.1f}&quot; for share in shares))</code></pre></details><pre class="out">octave from [Hz]         63   125   250   500  1000  2000  4000
+bdl, share [dB]       -15.3  -8.1  -5.0  -4.8  -9.4 -14.1 -21.1
+slt, share [dB]       -41.1  -3.3  -7.9  -5.3 -13.0 -25.8 -18.7</pre></div>
+
+<article class="still" id="d-k2">
+  <div class="about">
+    <h3>Long-term spectra of a man and a woman</h3>
+    <div class="desc"><p>The two long-term spectra, smoothed to a third of an octave, each relative to its own peak.
+Below 125 Hz the woman's sentence has almost nothing, since her fundamental never goes that
+low, and the octave from 125 to 250 Hz, where her fundamental lies, holds most of her power. In
+this pair hers is also lower from 2 to 4 kHz and higher from 4 to 8 kHz.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/k2_long-term_spectra_of_a_man_and_a_woman.png" width="1000" height="360" alt="Long-term spectra of a man and a woman" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(10, 3.6), layout=&quot;constrained&quot;)
+for speaker, spectrum in zip((&quot;man (bdl)&quot;, &quot;woman (slt)&quot;), pair_spectra, strict=True):
+    spectrum.smooth(1 / 3).plot(ax, label=speaker)
+ax.set_xlim(50, 8000)
+ax.legend()
+ax.grid(ls=&quot;:&quot;, which=&quot;both&quot;)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-beats-and-roughness">
@@ -440,7 +477,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)</code></pre></details>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Byrne et al. (1994). An international comparison of long-term average speech spectra. <em>J. Acoust. Soc. Am.</em> 96(4), 2108–2120. <a href="https://doi.org/10.1121/1.410152">doi:10.1121/1.410152</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L82"><code>representations.long_term_spectrum</code></a></li><li>Glasberg &amp; Moore (1990). Derivation of auditory filter shapes from notched-noise data. <em>Hearing Research</em> 47. <a href="https://doi.org/10.1016/0378-5955(90)90170-T">doi:10.1016/0378-5955(90)90170-T</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences.</li><li>Licklider, Webster &amp; Hedlun (1950). On the frequency limits of binaural beats. <em>J. Acoust. Soc. Am.</em> 22(4), 468–473. <a href="https://doi.org/10.1121/1.1906629">doi:10.1121/1.1906629</a>.</li><li>Plomp &amp; Levelt (1965). Tonal consonance and critical bandwidth. <em>J. Acoust. Soc. Am.</em> 38(4), 548–560. <a href="https://doi.org/10.1121/1.1909741">doi:10.1121/1.1909741</a>.</li></ul>
+<ul><li>Byrne et al. (1994). An international comparison of long-term average speech spectra. <em>J. Acoust. Soc. Am.</em> 96(4), 2108–2120. <a href="https://doi.org/10.1121/1.410152">doi:10.1121/1.410152</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L82"><code>representations.long_term_spectrum</code></a></li><li>Glasberg &amp; Moore (1990). Derivation of auditory filter shapes from notched-noise data. <em>Hearing Research</em> 47. <a href="https://doi.org/10.1016/0378-5955(90)90170-T">doi:10.1016/0378-5955(90)90170-T</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences, by speakers bdl, rms and slt.</li><li>Licklider, Webster &amp; Hedlun (1950). On the frequency limits of binaural beats. <em>J. Acoust. Soc. Am.</em> 22(4), 468–473. <a href="https://doi.org/10.1121/1.1906629">doi:10.1121/1.1906629</a>.</li><li>Plomp &amp; Levelt (1965). Tonal consonance and critical bandwidth. <em>J. Acoust. Soc. Am.</em> 38(4), 548–560. <a href="https://doi.org/10.1121/1.1909741">doi:10.1121/1.1909741</a>.</li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/stimuli/classic.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/stimuli/classic.py</code>, or a cell at a time.</footer>
 </main>

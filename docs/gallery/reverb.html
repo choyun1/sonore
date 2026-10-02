@@ -160,7 +160,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 click. Convolve any dry sound with it and the sound is in that room. Traer &amp; McDermott (2016)
 measured the IRs of 271 real rooms and found them tightly constrained, and <code>so.synth_ir</code> builds
 new ones from their statistics.</p>
-<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a spoken sentence in a synthetic room built like those Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which their listeners heard as wrong.</li></ul>
+<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a sentence, read by a man and by a woman, in a synthetic room built like those Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which their listeners heard as wrong.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -324,6 +324,23 @@ reverberation fills the gaps between words and smears each syllable into the nex
 sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)</code></pre></details>
 </article>
+
+<article class="sound" id="d-r3" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.4999999999999998, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}, {&quot;x0&quot;: 0.5602807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.8685}]">
+  <div class="about">
+    <h3>A higher voice in the same room</h3>
+    <div class="desc"><p>The same sentence read by a woman (slt), in the same room. The impulse response is the room's,
+not the talker's, so it does to her voice what it did to his.</p></div>
+    <audio controls preload="metadata" src="audio/r3_a_higher_voice_in_the_same_room.flac"></audio>
+    <p class="file">r3_a_higher_voice_in_the_same_room.flac, 3.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r3_a_higher_voice_in_the_same_room.png" width="1000" height="620" alt="Plots of the a higher voice in the same room sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;).resample(FS)
+sound = finish(sentence_female.convolve(ir))
+fig, playhead = show(sound, ir)</code></pre></details>
+</article>
 </section>
 <section aria-labelledby="h-farther-away">
 <h2 id="h-farther-away">Farther away</h2>
@@ -475,7 +492,7 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Traer &amp; McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. <em>Proc. Natl. Acad. Sci. USA</em> 113(48), E7856–E7865. <a href="https://doi.org/10.1073/pnas.1612524113">doi:10.1073/pnas.1612524113</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/reverb.py#L77"><code>reverb.synth_ir</code></a></li></ul>
+<ul><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Traer &amp; McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. <em>Proc. Natl. Acad. Sci. USA</em> 113(48), E7856–E7865. <a href="https://doi.org/10.1073/pnas.1612524113">doi:10.1073/pnas.1612524113</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/reverb.py#L77"><code>reverb.synth_ir</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/listeners/reverb.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/listeners/reverb.py</code>, or a cell at a time.</footer>
 </main>

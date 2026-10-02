@@ -28,6 +28,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [The same plane, tiled four ways](#h-the-same-plane-tiled-four-ways): how each analysis
 #   divides time and frequency.
 # - [Reassignment](#h-reassignment): moving energy to where it actually is.
+# - [A higher voice](#h-a-higher-voice): the same sentence read by a woman, and what a higher
+#   pitch changes.
 # - [Nothing is lost](#h-nothing-is-lost): the analyses keep the same information; what differs is
 #   what each one makes easy to see.
 
@@ -467,6 +469,63 @@ playhead = shared_time(fig, axes, images=axes)
 sound = sentence
 
 # %% [markdown]
+# ## A higher voice
+#
+# Everything above used one male voice. Women's voices sit about half an octave to an octave
+# higher, and that changes which picture works. Here is the same sentence read by a woman (CMU
+# ARCTIC, speaker slt). Her harmonics are about one and a half times as far apart as his, so:
+#
+# - The narrowband window resolves her harmonics even more clearly, since they are further apart
+#   than its bandwidth by a wider margin.
+# - The wideband window, 5 ms, is now nearly one of her periods long, so it no longer sees one
+#   pulse at a time and her striations blur.
+# - Each formant is drawn by fewer harmonics, so the envelope between harmonics is a guess. This
+#   is why female voices have long been harder to analyze: at an $F_0$ of 200 Hz and above, a
+#   formant peak that falls between two harmonics is simply not in the spectrum.
+#   [`docs/design/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md)
+#   measures how much the envelope estimates suffer.
+#
+# The pitch-adaptive window adjusts by itself: three of her periods are about 16 ms. The F0 track
+# here is from `so.f0_track`, sonore's own tracker, since this recording has no stored track.
+
+# %%
+# The same sentence read by a woman, and its F0 track from sonore's tracker.
+sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+track_female = so.f0_track(sentence_female)
+f0_female = track_female.f0[0]
+voiced_female = f0_female[f0_female > 0]
+print(f"median F0: {np.median(f0[f0 > 0]):.0f} Hz (bdl), {np.median(voiced_female):.0f} Hz (slt)")
+adaptive_female = so.TVGaborFrame.pitch_adaptive(
+    track_female.t, f0_female, t_end=sentence_female.duration + 0.02, periods=3
+)
+lengths_female = 1e3 * np.asarray(adaptive_female.win_durs)
+print(f"pitch-adaptive windows for slt: {lengths_female.min():.1f} to {lengths_female.max():.1f} ms long")
+
+# %% [about]
+# The woman's sentence through the windows used above for the man's. Top: the waveform. Then the
+# wideband spectrogram, Hann 5 ms, where her pulses, about 5.5 ms apart, are barely separate.
+# Then the narrowband one, Hann 33.3 ms, with ten times her F0 (dashed), where her harmonics stand
+# well apart. Bottom: the pitch-adaptive frame, 3 of her periods long. Compare with
+# [Two classic spectrograms](#d-27) and [Following the pitch](#d-29).
+
+# %% [demo f1] The same sentence, a higher voice
+fig, axes = panels(4, [0.55, 1, 1, 1], height=9.0)
+sentence_female.plot(axes[0], color="k", lw=0.4)
+axes[0].set_title("Waveform (slt)")
+image(axes[1], wide.analyze(sentence_female), "Wideband: Hann 5 ms (about 300 Hz)")
+image(
+    axes[2], narrow.analyze(sentence_female), "Narrowband: Hann 33.3 ms (about 45 Hz), with 10 × F0 (dashed)"
+)
+axes[2].plot(
+    track_female.t, np.where(f0_female > 0, 10 * f0_female / 1000, np.nan), color="w", ls="--", lw=0.9
+)
+image(axes[3], adaptive_female.analyze(sentence_female), "Pitch-adaptive: Hann, 3 periods")
+playhead = shared_time(fig, axes, images=axes[1:])
+for ax in axes:
+    ax.set_xlim(0, sentence_female.duration)
+sound = sentence_female
+
+# %% [markdown]
 # ## Nothing is lost
 #
 # Every analysis above except the last two is a *frame*: its coefficients determine the signal,
@@ -524,4 +583,4 @@ for name, frame in frames.items():
 #   [`representations.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L363)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentence.
+#   The sentence, by speakers bdl and slt.

@@ -148,9 +148,10 @@ whether these numbers are right.
 
 ## Follow-ups
 
-1. **Gallery pages.** Add female examples next to the male ones on every
-   speech page, as planned in the project thread, and say on the
-   Cepstral analysis and Aperiodicity pages what the tables above show.
+1. **Gallery pages.** Done: every gallery page that uses recorded speech
+   now has a female example next to the male one, with `slt`'s reading of
+   the same sentence, and Formant synthesis has the six vowels with women's
+   formants.
 
 ## References
 

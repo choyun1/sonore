@@ -19,8 +19,9 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # - [How a room is synthesized](#h-how-a-room-is-synthesized): decaying noise in cochlear bands,
 #   and the parameters that shape it.
-# - [Natural rooms](#h-natural-rooms): a starter pistol and a spoken sentence in a synthetic room
-#   built like those Traer & McDermott's listeners could not tell from real ones.
+# - [Natural rooms](#h-natural-rooms): a starter pistol and a sentence, read by a man and by a
+#   woman, in a synthetic room built like those Traer & McDermott's listeners could not tell
+#   from real ones.
 # - [Farther away](#h-farther-away): the same sentence four times as far from the listener,
 #   where less of what arrives is direct sound.
 # - [Rooms that break the rules](#h-rooms-that-break-the-rules): the paper's atypical rooms,
@@ -175,6 +176,15 @@ sentence = so.load("docs/speech/bdl_arctic_a0131.flac").resample(FS)
 sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)
 
+# %% [about]
+# The same sentence read by a woman (slt), in the same room. The impulse response is the room's,
+# not the talker's, so it does to her voice what it did to his.
+
+# %% [demo r3] A higher voice in the same room
+sentence_female = so.load("docs/speech/slt_arctic_a0131.flac").resample(FS)
+sound = finish(sentence_female.convolve(ir))
+fig, playhead = show(sound, ir)
+
 # %% [markdown]
 # ## Farther away
 #
@@ -275,7 +285,7 @@ fig, playhead = show(sound, ir, kw)
 #
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentence.
+#   The sentence, by speakers bdl and slt.
 # - Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of
 #   sound and space. *Proc. Natl. Acad. Sci. USA* 113(48), E7856–E7865.
 #   [doi:10.1073/pnas.1612524113](https://doi.org/10.1073/pnas.1612524113).

@@ -35,6 +35,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   on the same sentence.
 # - [Splitting the voice in two](#h-splitting-the-voice-in-two): the vocal tract and the source,
 #   heard separately.
+# - [A higher voice](#h-a-higher-voice): the same analysis on a woman's voice.
 # - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
 #   and Praat.
 # - [What this page leaves out](#h-what-this-page-leaves-out): tracking from the cepstrum, better
@@ -155,7 +156,7 @@ print(f"time windows both call voiced: {both.sum()}; cepstral F0 within 5% of Ha
 # ## A tracker beside the cepstrum
 #
 # `so.f0_track` works the other way round. It looks for the period in the waveform rather than
-# the log spectrum, with YIN's difference function (de Cheveigné & Kawahara, 2002): up to four
+# the log spectrum, with YIN's difference function (de Cheveigné & Kawahara, 2002): up to eight
 # candidate periods per time window, each sharpened from the instantaneous frequencies of the first six
 # harmonics, as WORLD does. Each candidate is scored by how well the waveform repeats one period
 # later, and a single pass picks the cheapest path through the candidates, so that the pitch
@@ -164,12 +165,12 @@ print(f"time windows both call voiced: {both.sum()}; cepstral F0 within 5% of Ha
 # %% [about]
 # Top: the tracker's candidates in grey, darker for a higher score, and the path it chose. The
 # darkest row, an octave below the path, is the subharmonic: anything that repeats every period
-# also repeats every two, so it scores as well, and the tracker never chooses a candidate whose
-# octave above scores about as well (`subharmonic_margin`). Bottom: the three pitch tracks
-# together. Where the tracker and Harvest both call a time window voiced they agree; Harvest voices
-# more time windows, stretches where the tracker's best score falls below 0.5.
-# Against laryngograph recordings Harvest calls about a third of the unvoiced time windows voiced, which
-# is why the tracker is stricter by default (see `docs/design/f0.md`).
+# also repeats every two, so it scores as well, and the tracker never chooses a candidate when
+# another at a whole multiple of its frequency scores about as well (`subharmonic_margin`).
+# Bottom: the three pitch tracks together. Where the tracker and Harvest both call a time window
+# voiced they agree; Harvest voices more time windows, stretches where the tracker's best score
+# falls below 0.5. Against laryngograph recordings Harvest calls about a third of the unvoiced
+# time windows voiced, which is why the tracker is stricter by default (see `docs/design/f0.md`).
 
 # %% [demo f1] Cepstral F0, a tracker, and Harvest
 track = so.f0_track(sentence)
@@ -259,6 +260,110 @@ fig, playhead = show(whole, "Unliftered, original phase")
 sound = finish(whole)
 
 # %% [markdown]
+# ## A higher voice
+#
+# The same sentence read by a woman (CMU ARCTIC, speaker slt), whose pitch sits around 180 to
+# 210 Hz, half as high again as the man's. Two things change in the cepstrum. The pitch peak moves
+# down to about 5 ms, closer to the envelope's first couple of milliseconds, though still clear of
+# them. And a lifter at half a period now keeps only the quefrencies below about 2.5 ms, against 4
+# ms for the man, so the envelope it recovers is smoother and follows the formants less closely:
+# with harmonics further apart, there is less of the envelope to recover. On a database of
+# laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female voice's time
+# windows and none on a male voice's
+# ([`docs/design/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md)).
+# There is no stored F0 track for this recording, so `so.f0_track` stands in for Harvest.
+
+# %%
+sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+stft_female = so.STFT(sentence_female, win_dur=0.040, hop_dur=0.005)
+cep_female = so.Cepstrum(stft_female)
+t_female, f0_cep_female, peak_female = cep_female.f0(f_lo=75, f_hi=400)
+track_female = so.f0_track(sentence_female)
+
+# %% [about]
+# One time window of her sentence, drawn as for the man's above. The harmonics are further apart,
+# so the log spectrum ripples less often, and the cepstral peak sits at a shorter quefrency. The
+# lifter cutoff, at half her period, is lower too.
+
+# %% [figure c6] One time window, a higher voice
+i_female = int(np.argmin(np.abs(t_female - 0.60)))
+f0_window_female = f0_cep_female[0, i_female]
+cutoff_female = 0.5 / f0_window_female
+envelope_female = cep_female.lifter(cutoff_female).envelope()[0, :, i_female]
+
+fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), layout="constrained")
+spectrum_db = 20 * np.log10(np.abs(stft_female.data[0, :, i_female]))
+ax0.plot(stft_female.f, spectrum_db, color="0.4", lw=0.8, label="spectrum")
+ax0.plot(
+    stft_female.f,
+    20 * np.log10(envelope_female),
+    color="tab:red",
+    lw=1.6,
+    label="liftered below half a period",
+)
+ax0.set(
+    xlim=(0, FMAX),
+    xlabel="Frequency [Hz]",
+    ylabel="Level [dB]",
+    title=f"slt, time window at {t_female[i_female]:.3f} s: log spectrum and envelope",
+)
+ax0.legend(loc="upper right", fontsize=8)
+ax1.plot(cep_female.q * 1e3, cep_female.data[0, :, i_female], color="k", lw=0.8)
+ax1.axvline(
+    cutoff_female * 1e3, color="tab:red", ls="--", lw=1, label=f"lifter cutoff, {cutoff_female * 1e3:.1f} ms"
+)
+peak_label = f"peak at {1e3 / f0_window_female:.2f} ms: F0 = {f0_window_female:.0f} Hz"
+ax1.plot(1e3 / f0_window_female, peak_female[0, i_female], "o", color="tab:blue", label=peak_label)
+ax1.set(xlim=(0, 15), ylim=(-0.2, 0.6), xlabel="Quefrency [ms]", ylabel="Cepstrum", title="Its cepstrum")
+ax1.legend(loc="upper right", fontsize=8)
+for ax in (ax0, ax1):
+    ax.grid(ls=":")
+
+# %% [about]
+# Top: her cepstrogram, with the tracker's pitch period drawn over it; the bright line runs lower
+# than the man's. Bottom: cepstral F0 beside `so.f0_track`.
+
+# %% [demo c7] The cepstrogram of a higher voice
+voiced_female = track_female.voiced[0]
+fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout="constrained")
+cep_female.plot(ax0, colorbar=False)
+ax0.set_xlabel("")
+period_ms = 1e3 / track_female.f0[0][voiced_female]
+ax0.plot(track_female.t[voiced_female], period_ms, ".", ms=1.5, color="c", label="so.f0_track period")
+ax0.legend(loc="upper right", fontsize=8, markerscale=4)
+tracked_female = np.where(voiced_female, track_female.f0[0], np.nan)
+cep_voiced = f0_cep_female[0] > 0
+ax1.plot(track_female.t, tracked_female, color="tab:orange", lw=1.5, label="so.f0_track")
+ax1.plot(
+    t_female[cep_voiced],
+    f0_cep_female[0][cep_voiced],
+    ".",
+    ms=3,
+    color="tab:blue",
+    label="cepstral peak > 0.1",
+)
+ax1.set(ylim=(60, 400), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
+ax1.legend(loc="upper right", fontsize=8, markerscale=2)
+ax1.grid(ls=":")
+for ax in (ax0, ax1):
+    ax.set_xlim(0, sentence_female.duration)
+playhead = [ax0, ax1]
+sound = sentence_female
+
+# %%
+at_female = np.searchsorted(np.round(t_female, 6), np.round(track_female.t, 6))
+cep_at_track = f0_cep_female[0][np.minimum(at_female, len(t_female) - 1)]
+tracked_hz = np.where(voiced_female, track_female.f0[0], 0.0)
+both = (cep_at_track > 0) & (tracked_hz > 0)
+ratio = cep_at_track[both] / tracked_hz[both]
+print(f"median F0 (so.f0_track): {np.median(tracked_hz[tracked_hz > 0]):.0f} Hz")
+agree_female = np.mean(np.abs(ratio - 1) < 0.05)
+print(
+    f"both voiced on {both.sum()} time windows; cepstral F0 within 5% of the tracker on {agree_female:.0%},"
+)
+print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
+
+# %% [markdown]
 # ## Reference implementations
 #
 # `so.Cepstrum` is written from the definitions. `tools/crosscheck_cepstrum.py` compares it with
@@ -303,7 +408,7 @@ sound = finish(whole)
 #   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentence.
+#   The sentence, by speakers bdl and slt.
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
