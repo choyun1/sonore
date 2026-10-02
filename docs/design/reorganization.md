@@ -351,6 +351,26 @@ GaborFrame` change.
   `synthesize`, and calling it fails with Python's plain `AttributeError`,
   which gives no reason.
 
+- **D14. Frequency scales in one place.** `core/utils.py` holds the ERB
+  scale (`freq_to_erb`, `erb_to_freq`, `erb_bandwidth`, exported as
+  `so.freq_to_erb` and `so.erb_to_freq`) beside `amp_to_db` and
+  `db_to_amp`, while the mel scale (`freq_to_mel`, `mel_to_freq`, with
+  their HTK and Slaney forms) sits in `analysis/mfcc.py` and is not
+  exported at the top level. Both pairs are plain unit conversions with no
+  dependency on anything in sonore. (a) Move `freq_to_mel` and
+  `mel_to_freq` (and their two Slaney constants) to `core/utils.py` and
+  export them as `so.freq_to_mel` and `so.mel_to_freq`, matching the ERB
+  pair (recommended, Cho 2026-10-02: "should that be made a part of
+  utilities?"). `mel_filterbank`, `symmetric_hamming` and `delta_features`
+  stay in `mfcc`, since they build MFCC features rather than convert units.
+  (b) A new `core/scales.py` for the frequency scales (ERB, mel) and
+  `units` for decibels: tidier once a third scale (Bark) arrives, but today
+  it would be a module of five functions. The octave scale stays as it is,
+  `log2` inside `OctaveFilterbank`, since it needs no function of its own.
+  This rides the source PR (step 4). Four files name the mel functions
+  today: `mfcc.py`, its test, and the Cepstral analysis page's script and
+  HTML.
+
 ## What a user sees (D13)
 
 Cho asked (2026-10-02) whether hearing scientists would be confused that no
@@ -407,7 +427,7 @@ The reverb speech examples (PR #78) and the Changing a voice page (PR #77)
 merged before this proposal was last measured, so they are counted above.
 A folder move and an edit to the same script in two open PRs conflict, so:
 
-1. Cho decides D1 to D13.
+1. Cho decides D1 to D14.
 2. Any gallery PR still open then merges first.
 3. **Gallery PR** (small, what readers see): `git mv` the nine scripts,
    rewrite TOPICS and the comment above it, patch the menus and sidebar of
