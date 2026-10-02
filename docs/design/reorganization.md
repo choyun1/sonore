@@ -323,7 +323,9 @@ GaborFrame` change.
   means "try the other operand", and a method returning it would hand the
   caller a sentinel instead of an error. A test checks that every `View`
   subclass has a non-empty `discards` and that its `synthesize` raises.
-  Proposed sentences (to be checked against each docstring when built):
+  The message also names the route back to sound where one exists (see
+  "What a user sees" below). Proposed sentences (to be checked against each
+  docstring when built):
 
   | View | Discards |
   |---|---|
@@ -348,6 +350,56 @@ GaborFrame` change.
   (recommended). (b) No `View` base class; views simply have no
   `synthesize`, and calling it fails with Python's plain `AttributeError`,
   which gives no reason.
+
+## What a user sees (D13)
+
+Cho asked (2026-10-02) whether hearing scientists would be confused that no
+view has `synthesize`. Precedent says they already expect it: LTFAT (whose
+frame theory `Filterbank` follows, Balazs et al., 2011) separates frame
+analysis and synthesis from everything else, and librosa keeps its
+approximate inversions (`mel_to_audio`, Griffin-Lim) in a separate `inverse`
+module under names that say what they assume. What would confuse is a
+`synthesize` that quietly approximates. This is a newcomer's session on the
+Seeing speech sentence. Lines marked "today" are printed by
+`python tools/check_reorganization_walkthrough.py`; the error messages
+marked "proposed" are D13's and do not exist yet.
+
+```python
+import sonore as so
+sentence = so.load("docs/speech/bdl_arctic_a0131.flac")   # 2.525 s at 16 kHz
+
+# A frame goes both ways.
+frame = so.GaborFrame(win_dur=0.025, hop_dur=0.005)
+coefs = frame.analyze(sentence)          # an STFT
+frame.synthesize(coefs)                  # today: the sentence, max error 2.2e-16
+so.subbands(sentence, n_bands=16).synthesize()   # today: max error 6.4e-16
+
+# A view goes one way.
+mfcc = so.MFCC(sentence)
+mfcc.synthesize()
+# today:    AttributeError: 'MFCC' object has no attribute 'synthesize'
+# proposed: NotInvertibleError: MFCC discards the phase, the detail inside each
+#           mel band, and every coefficient past the last kept, so no sound has
+#           these MFCCs alone. For an approximate voice, read the envelope with
+#           mfcc.envelope_view() and synthesize it with so.world_synthesize.
+
+so.subbands(sentence, n_bands=16).envelopes().synthesize()
+# today:    AttributeError: 'Envelopes' object has no attribute 'synthesize'
+# proposed: NotInvertibleError: Envelopes discard the fine structure: only the
+#           Hilbert magnitude of each band is kept. To hear them, impose them on
+#           a carrier's subbands (envelopes * subbands), as the vocoder does.
+
+# The honest routes back to sound keep their own names.
+so.Cepstrum(coefs).to_sound()            # today: exact (4.4e-16), because it
+                                         # borrows the STFT's phase
+so.world_synthesize(f0_track, mfcc.envelope_view(), aperiodicity)
+                                         # today: 2.530 s of a voice rebuilt
+                                         # from 13 MFCCs, a pitch track and D4C
+```
+
+So the message is the useful part of D13: each view's `discards` sentence
+says what was lost, and a second sentence names the route back to sound
+that exists, if one does. A view with no such route says so.
 
 ## Order
 
