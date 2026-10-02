@@ -88,6 +88,7 @@ EXAMPLE_PAGES = [
     "cepstrum",
     "harmonics",
     "formants",
+    "aperiodicity",
     "modspectrogram",
     "resynthesis",
     "pv",
@@ -521,6 +522,7 @@ TITLES = {
     "pv.html": "Phase vocoder",
     "harmonics.html": "Voices from harmonics",
     "formants.html": "Formant synthesis",
+    "aperiodicity.html": "Source, filter and aperiodicity",
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Synthetic reverberation",
     "moving.html": "Moving talkers",
@@ -558,6 +560,10 @@ TOPICS = [
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
             ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
             ("formants.html", "vowels and consonants written as a source, formants and a few numbers."),
+            (
+                "aperiodicity.html",
+                "how much of a voice is noise, frequency by frequency, and WORLD's resynthesis.",
+            ),
         ],
     ),
     (

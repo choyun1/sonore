@@ -370,7 +370,7 @@ sound = snd
 #   with a pitch-adaptive window first and corrects the lifter.
 # - **Aperiodicity.** Here every frame is either harmonics or noise. Real voices mix the two, with
 #   more noise at high frequencies and in breathy voice, and WORLD measures the mixture in each
-#   band and frame (D4C).
+#   band and frame (D4C). The [Source, filter and aperiodicity](aperiodicity.html) page does.
 # - **The glottal pulse.** The harmonics' phases here are fixed numbers. A voice's phases come from
 #   the shape of each glottal pulse and the vocal tract's phase response; a minimum-phase envelope
 #   (as in the [envelope only](cepstrum.html#d-c3) example) is one step towards it.

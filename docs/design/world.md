@@ -13,7 +13,8 @@ first draft proposed several departures from WORLD to fit sonore's own
 pieces; Cho asked how to square that with reproducibility and decided:
 reproduce WORLD, with no pyworld dependency ("Reproducing WORLD" below).
 Steps 1–5 of "Order" are built (`sonore.analysis.vocoder`,
-`sonore.stimuli.vocoder`); the gallery page is next.
+`sonore.stimuli.vocoder`), and the gallery page explains aperiodicity
+(`docs/gallery/seeing/aperiodicity.py`).
 
 ## Why
 
