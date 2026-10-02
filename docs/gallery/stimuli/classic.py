@@ -16,7 +16,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # from sonore's generators.
 #
 # - [Speech-shaped noise](#h-speech-shaped-noise): noise with the long-term spectrum of speech,
-#   and none of its modulation.
+#   and none of its modulation, and the long-term spectra of a man and a woman.
 # - [Beats and roughness](#h-beats-and-roughness): two tones close in frequency, from a slow
 #   wobble to roughness to two separate tones, and amplitude modulation as the same thing seen
 #   another way.
@@ -92,6 +92,40 @@ ax.grid(ls=":", which="both")
 # %% [demo k1] Speech-shaped noise
 sound = finish(ssn)
 fig, playhead = show(sound, fmax=8000, win_dur=20e-3)
+
+# %% [markdown]
+# Those sentences are all by men. Averaged over many talkers, Byrne et al. (1994) found men's
+# and women's long-term spectra nearly the same from 250 Hz to 5 kHz, with men's higher at
+# 160 Hz and below, where their fundamentals lie. Two single sentences, the same words read by
+# one man (bdl) and one woman (slt), can differ by more. The cell prints how each sentence's
+# power divides among octave bands.
+
+# %%
+pair = [so.load(f"docs/speech/{name}_arctic_a0131.flac").normalize(rms=0.1) for name in ("bdl", "slt")]
+pair_spectra = [so.long_term_spectrum([sentence]) for sentence in pair]
+octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
+print("octave from [Hz]     " + "".join(f"{low:>6}" for low in octave_edges[:-1]))
+for speaker, spectrum in zip(("bdl", "slt"), pair_spectra, strict=True):
+    power = 10 ** (spectrum.level / 10)
+    shares = [
+        10 * np.log10(power[(spectrum.f >= low) & (spectrum.f < high)].sum() / power.sum())
+        for low, high in zip(octave_edges[:-1], octave_edges[1:], strict=True)
+    ]
+    print(f"{speaker}, share [dB]      " + "".join(f"{share:6.1f}" for share in shares))
+
+# %% [about]
+# The two long-term spectra, smoothed to a third of an octave, each relative to its own peak.
+# Below 125 Hz the woman's sentence has almost nothing, since her fundamental never goes that
+# low, and the octave from 125 to 250 Hz, where her fundamental lies, holds most of her power. In
+# this pair hers is also lower from 2 to 4 kHz and higher from 4 to 8 kHz.
+
+# %% [figure k2] Long-term spectra of a man and a woman
+fig, ax = plt.subplots(figsize=(10, 3.6), layout="constrained")
+for speaker, spectrum in zip(("man (bdl)", "woman (slt)"), pair_spectra, strict=True):
+    spectrum.smooth(1 / 3).plot(ax, label=speaker)
+ax.set_xlim(50, 8000)
+ax.legend()
+ax.grid(ls=":", which="both")
 
 # %% [markdown]
 # ## Beats and roughness
@@ -259,7 +293,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955(90)90170-T).
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentences.
+#   The sentences, by speakers bdl, rms and slt.
 # - Licklider, Webster & Hedlun (1950). On the frequency limits of binaural beats. *J. Acoust.
 #   Soc. Am.* 22(4), 468–473. [doi:10.1121/1.1906629](https://doi.org/10.1121/1.1906629).
 # - Plomp & Levelt (1965). Tonal consonance and critical bandwidth. *J. Acoust. Soc. Am.* 38(4),
