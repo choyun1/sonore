@@ -86,6 +86,7 @@ def file_name(key: str, title: str) -> str:
 EXAMPLE_PAGES = [
     "speech",
     "cepstrum",
+    "harmonics",
     "modspectrogram",
     "resynthesis",
     "pv",
@@ -479,6 +480,7 @@ TITLES = {
     "cepstrum.html": "Cepstral analysis",
     "modspectrogram.html": "Modulation spectrogram",
     "pv.html": "Phase vocoder",
+    "harmonics.html": "Voices from harmonics",
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Synthetic reverberation",
     "moving.html": "Moving talkers",
@@ -487,8 +489,8 @@ TITLES = {
 # The topic pages in three groups, for the index and the menus at the top of every page.
 # Groups and the pages within them run from simple to elaborate, roughly up sonore's layers:
 # stimuli from plain generators (signals) to binaural cues (stimuli) and textures (texture);
-# analysis from one frame (the STFT) to views built on it and a phase vocoder that changes
-# the sound; then whole listening scenes.
+# analysis from one frame (the STFT) to views built on it, a phase vocoder that changes the
+# sound, and a voice rebuilt from its F0 track and envelope; then whole listening scenes.
 TOPICS = [
     (
         "Stimuli",
@@ -508,6 +510,7 @@ TOPICS = [
             ("cepstrum.html", "separating a voice's pitch from its timbre."),
             ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
+            ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
         ],
     ),
     (
