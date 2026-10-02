@@ -331,8 +331,12 @@ fig, playhead = show(sound, ir)</code></pre></details>
 square law; <code>so.distance_gain_db</code>). The reverberant tail, built up from reflections off every
 wall, stays at about the same level anywhere in the room. So moving a talker away lowers the
 direct-to-reverberant ratio by as much as it lowers the direct sound, and that ratio is one of
-the cues to how far away a source is. Here the talker is four times farther than above.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">print(so.distance_gain_db([1, 2, 4]))</code></pre></details><pre class="out">[ -0.          -6.02059991 -12.04119983]</pre></div>
+the cues to how far away a source is. Here the talker is four times farther than above. The
+cell below prints the direct sound's level change at two and four times the distance: the
+second number is the 12 dB the next demo takes off the direct sound.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">for distance_ratio in [2, 4]:
+    print(f&quot;{distance_ratio} times farther: {so.distance_gain_db(distance_ratio):.1f} dB&quot;)</code></pre></details><pre class="out">2 times farther: -6.0 dB
+4 times farther: -12.0 dB</pre></div>
 
 <article class="sound" id="d-r2" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
   <div class="about">
