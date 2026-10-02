@@ -176,7 +176,8 @@ for name, shapes in (("power spectrum", raw), ("CheapTrick envelope", smooth)):
 # exact: sonore's Hann STFT has librosa's time windows (plus one before and
 # two after), and the formulas on its power reproduce the stored output.
 reference = np.load(Path(__file__).resolve().parents[1] / "tests" / "data" / "librosa_mfcc_reference.npz")
-sentence = so.load(SPEECH)
+speech = reference["samples_int16"] / 32768.0  # the excerpt the fixture analysed
+sentence = so.Sound(speech, fs)
 settings = {
     "defaults": (2048, 512, 2048, 128, 20, "slaney"),
     "speech_htk": (400, 160, 512, 26, 13, "htk"),

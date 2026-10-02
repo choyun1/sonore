@@ -22,6 +22,7 @@ __all__ = [
     "plot_envelopes",
     "plot_tf_db",
     "plot_cepstrum",
+    "plot_mfcc",
     "plot_interaural_cues",
     "plot_ripple_pattern",
     "overview",
@@ -432,6 +433,57 @@ def plot_cepstrum(cep, ax=None, channel=0, q_range=(1e-3, 15e-3), cmap="magma", 
     ax.set(title="Cepstrum", xlabel="Time [s]", ylabel="Quefrency [ms]")
     if colorbar:
         ax.figure.colorbar(im, ax=ax, label="Cepstrum")
+    return ax
+
+
+def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, db_range=60.0):
+    """MFCCs as an image, time [s] across.
+
+    ``kind="mfcc"``: coefficients ``c1`` and up (``c0``, the level, would set
+    the color scale), on a diverging color scale symmetric about 0 and
+    clipped at the 99th percentile of the magnitudes. ``kind="mel"``: the
+    floored mel spectrogram in dB, one row per band, equally spaced so the
+    rows read as the mel scale, labelled with their centre frequencies, over
+    ``db_range`` dB."""
+    ax = _ax(ax)
+    if kind == "mfcc":
+        values = mfcc.data[channel][1:]
+        limit = np.percentile(np.abs(values), 99) or 1.0
+        rows = np.arange(1, values.shape[0] + 1)
+        im = ax.pcolormesh(
+            mfcc.t,
+            rows,
+            values,
+            cmap=cmap or "RdBu_r",
+            vmin=-limit,
+            vmax=limit,
+            shading="auto",
+            rasterized=True,
+        )
+        ax.set(title="MFCCs", xlabel="Time [s]", ylabel="Coefficient")
+        label = "MFCC (natural log units)"
+    elif kind == "mel":
+        values = mfcc.mel_db[channel]
+        vmax = values.max()
+        rows = np.arange(len(mfcc.cfs))
+        im = ax.pcolormesh(
+            mfcc.t,
+            rows,
+            values,
+            cmap=cmap or "magma",
+            vmin=vmax - db_range,
+            vmax=vmax,
+            shading="auto",
+            rasterized=True,
+        )
+        ticks = np.unique(np.linspace(0, len(rows) - 1, 6).round().astype(int))
+        ax.set_yticks(ticks, [f"{mfcc.cfs[tick]:.0f}" for tick in ticks])
+        ax.set(title="Mel spectrogram", xlabel="Time [s]", ylabel="Band centre [Hz]")
+        label = "dB"
+    else:
+        raise ValueError(f"kind must be 'mfcc' or 'mel', not {kind!r}")
+    if colorbar:
+        ax.figure.colorbar(im, ax=ax, label=label)
     return ax
 
 

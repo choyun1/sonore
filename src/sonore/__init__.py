@@ -26,6 +26,7 @@ from sonore.analysis.filterbank import (
     subbands,
 )
 from sonore.analysis.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
+from sonore.analysis.mfcc import MFCC
 from sonore.analysis.modspectrogram import ModulationSpectrogram
 from sonore.analysis.modulation import (
     ConstantQModulationFilterbank,
@@ -136,6 +137,7 @@ __all__ = [
     "TVGaborFrame",
     "TVSTFT",
     "Cepstrum",
+    "MFCC",
     "F0Track",
     "f0_track",
     "Aperiodicity",

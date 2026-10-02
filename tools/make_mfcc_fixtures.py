@@ -1,6 +1,8 @@
 """Stores librosa's own MFCC output for the MFCC tests (tests/data/librosa_mfcc_reference.npz).
 
-Runs librosa 0.11.0 on the gallery sentence with three settings: librosa's
+Runs librosa 0.11.0 on 0.8 s of the gallery sentence (0.5 to 1.3 s, stored
+in the file as 16-bit samples, so the tests need no docs folder) with three
+settings: librosa's
 defaults (Slaney mel, area-normalised triangles, 2048-point windows,
 128 bands, 20 coefficients, dB with an 80 dB floor below the loudest cell),
 the speech recipe's sizes with HTK mel and height-1 triangles (400-sample
@@ -36,8 +38,9 @@ SETTINGS = {
 
 
 def main():
-    speech, fs = sf.read(SPEECH)
-    arrays = {"librosa_version": np.array(librosa.__version__)}
+    samples, fs = sf.read(SPEECH, dtype="int16", start=int(0.5 * 16000), stop=int(1.3 * 16000))
+    speech = samples / 32768.0  # what soundfile and so.load return as floats
+    arrays = {"librosa_version": np.array(librosa.__version__), "samples_int16": samples, "fs": np.array(fs)}
     for name, setting in SETTINGS.items():
         mel_power = librosa.feature.melspectrogram(
             y=speech,
