@@ -347,11 +347,6 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 .side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
 .side ul ul a { color: var(--muted); font-size: 0.85rem; }
 .side ul ul a:hover { color: var(--ink); }
-.side-links { margin: 2rem 0 0; padding-top: 1rem; border-top: 1px solid var(--rule); }
-.side-links a { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
-.side-links a.repo { color: var(--muted); }
-.side-links a.repo:hover { color: var(--ink); }
-.side-links svg { width: 18px; height: 18px; }
 """
 
 JS = """
@@ -646,8 +641,7 @@ def nav(current: str) -> str:
 
 def sidebar(current: str, sections_html: str) -> str:
     """The menu down the left of a wide screen: every page by group, and under the page
-    being read, its sections, then the API reference and the repository. The menu and each
-    group fold away (SIDE_JS). Narrow screens keep only the menus at the top."""
+    being read, its sections. The menu and each group fold away (SIDE_JS). Narrow screens keep only the menus at the top."""
 
     def link(href: str) -> str:
         here = ' aria-current="page"' if href == current else ""
@@ -676,11 +670,7 @@ def sidebar(current: str, sections_html: str) -> str:
             f'<details class="{css_class}" data-group="{folder}" open><summary>{html.escape(group)}</summary>'
             f"<ul>{''.join(link(href) for href, _ in pages)}</ul></details>"
         )
-    links = (
-        '<div class="side-links"><a href="../api/">API reference</a>'
-        f'<a class="repo" href="https://github.com/choyun1/sonore">{GITHUB_MARK}sonore on GitHub</a></div>'
-    )
-    body = f'<div class="side-body">{"".join(groups)}{links}</div>'
+    body = f'<div class="side-body">{"".join(groups)}</div>'
     return f'<aside class="side" aria-label="All gallery pages">{top}{body}<script>{SIDE_JS}</script></aside>'
 
 
