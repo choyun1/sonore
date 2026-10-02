@@ -59,8 +59,8 @@ As in the other design documents, each claim is numbered and tagged:
   a prototype of the proposed propagation stage, of the current switching
   and of a batched version of it, and runs in about ten seconds. The
   numbers come from NumPy 2.4 and SciPy 1.17.1 at 48 kHz.
-- **[open]**: needs data this container cannot download (the PKU-IOA
-  files); the checker has the code, run as
+- C7 needs the PKU-IOA files, which sonore never bundles; it ran on
+  Cho's original `.dat` files with
   `python tools/check_moving_sound_claims.py --pku DIR`.
 
 Nothing new was read for this document. The physics of a moving point
@@ -211,15 +211,21 @@ half of it HRIR interpolation and resampling. Rendering speed is not the
 problem the roadmap assumed; the new per-sample delay (C3) will cost more
 than the switching does.
 
-**C7. [open] Whether each PKU-IOA distance carries its own 1/r level and
-r/c delay.** The checker prints, for each distance file, the mean level
-and mean onset over all directions and both ears, re the 1 m file, beside
-what 1/r and r/c predict. If the files follow 1/r, applying 1/r again
-from the geometry would count distance twice; if they were normalized,
-using them as measured would lose the level change between 20 and 160 cm.
-D4 proposes a normalization that is right either way, and C7 says how
-much it changes. It needs the eight SOFA files, which the cloud container
-cannot download.
+**C7. The PKU-IOA responses carry their own travel time and 1/r.**
+[check] Run on Cho's original `.dat` files (6456 files, one of them empty,
+the azimuth-360 duplicates included), the mean onset over all directions
+and both ears, re the 1 m shell, follows r/c to within 0.07 ms at every
+distance (−2.27 ms at 20 cm against −2.33 predicted, +1.74 ms at 1.6 m
+against +1.75). In absolute terms each shell's mean onset is r/c less
+about 12 samples at 65536 Hz (0.18 ms), the same at every distance, so
+the files keep the travel time from the source, not a trimmed one. The
+mean level follows 1/r to within 0.4 dB from 40 cm out (+7.6 dB at 40 cm
+against +8.0, −4.3 dB at 1.6 m against −4.1), and falls short of it near
+the head: +9.7 dB at 30 cm against +10.5, and +11.8 dB at 20 cm against
++14.0. That shortfall is a measured near-field effect, not an offset to
+remove. So inside 20–160 cm the measured responses already are the
+propagation (as Cho expected), and the renderer should take delay and
+level from them rather than from geometry (D4).
 
 ## Proposed design
 
@@ -229,14 +235,17 @@ stays `move_sound` with one fixed point, so the two always agree.
 1. **Path.** The trajectory becomes a function of emission time (D1):
    given as a function, as `(times, points)`, or as today's `(N, 3)`
    array spread evenly over the sound.
-2. **Propagation, per ear.** For each output sample and each ear, solve
-   t = t_e + r(t_e)/c + e_ear(direction(t_e)) for t_e (C3's iteration),
-   and read the input at t_e with the 32-tap windowed sinc, times
-   1/r(t_e) (0 dB at 1 m, as `distance_gain_db`). Doppler, the travel
-   time and the continuously changing interaural delay all come out of
-   this one read. The interaural delays come from the HRIR onsets
-   `HRIRSet` already measures, interpolated at the hop points and then
-   smoothly in time.
+2. **Delay, per ear.** Each ear's delay d_ear(t_e) is the onset
+   `HRIRSet` already measures and interpolates for that position, which
+   for PKU-IOA holds the travel time (C7); beyond the outermost shell it
+   is the outermost shell's onset in that direction plus
+   (r − r_outer)/c. Interpolated at the hop points and then smoothly in
+   time, it gives, for each output sample and each ear, t = t_e +
+   d_ear(t_e), solved for t_e by C3's iteration, and the input is read at
+   t_e with the 32-tap windowed sinc. Doppler, the travel time and the
+   continuously changing interaural delay all come out of this one read.
+   The level stays in the HRIR shapes as measured; beyond the outermost
+   shell it is scaled by r_outer/r.
 3. **Direction, per ear.** The onset-aligned HRIR shapes, interpolated at
    points one hop apart (5 ms by default), filter each ear's propagated
    signal with today's raised-cosine switching on the output timeline.
@@ -250,9 +259,14 @@ stays `move_sound` with one fixed point, so the two always agree.
    the Synthetic reverberation page. `drr_db` sets it at 1 m.
 
 Distances outside the HRIR set: beyond the outermost measured distance,
-the shape and interaural delays come from the outermost shell in the same
-direction, and distance acts only through r/c and 1/r (far field). Inside
-the innermost shell (20 cm for PKU-IOA) the renderer raises an error, as
+the shape and onsets come from the outermost shell in the same direction,
+and further distance acts only through the extra (r − r_outer)/c and
+r_outer/r (far field). Because PKU-IOA's 1.6 m shell already follows r/c
+and 1/r (C7), this continues it without a step. A set measured at one
+distance only (the 1 m default) is extended the same way in both
+directions, so it still renders distance, without near-field cues. With
+several shells, a point inside the innermost one (20 cm for PKU-IOA)
+raises an error, as
 `HRIRSet.at` does today for points outside the measured region.
 
 API sketch (names provisional until D1, D7, D8):
@@ -291,27 +305,33 @@ so.move_sound(talker, so.circular_trajectory((100, 0, 90), (100, 0, -90), 200), 
   interpolated in Cartesian space cuts corners on a sparse arc, which
   shortens the distance between points; `hcc_trajectory` (D8)
   interpolates in distance, elevation and azimuth instead.
-- **D2. Propagation on by default?** (a) On (recommended: the point of
-  the roadmap item; for a source at a fixed 1 m it adds only the 2.9 ms
-  travel time and no level change). (b) Off by default behind
-  `propagation=True`, so existing outputs change only on request. The
-  convective factor (C1) is left out either way.
+- **D2. A continuous delay on by default?** Since C7 the delay and
+  level inside the measured range are the HRIRs' own; what is new is
+  applying the delay continuously (stage 2) instead of switching it with
+  each time window, and extending it past the outermost shell. (a) On
+  (recommended: for a source at a fixed distance the output is the same
+  as today's up to interpolation error, since a constant delay switches
+  cleanly; only moving distance changes). (b) Off by default behind
+  `continuous_delay=True`. The convective factor (C1) is left out either
+  way.
 - **D3. Where time zero is.** (a) The output starts at emission time
   zero, so the sound arrives r/c later, 2.9 ms at 1 m and 29 ms at 10 m
   (recommended: talkers at different distances mixed with `so.mix` then
-  arrive in the right order). (b) Shift each output so its first arrival
+  arrive in the right order, and it is what the PKU-IOA responses
+  already do, C7). (b) Shift each output so its first arrival
   is at zero, which loses the relative timing between sources.
-- **D4. HRIR sets that hold several distances.** (a) Before
-  interpolating, scale each distance shell to the mean energy of the
-  shell nearest 1 m and remove each shell's mean onset, then take level
-  and travel time from the geometry (recommended: right whether or not
-  the files carry 1/r, C7; it keeps every within-shell difference,
-  including near-field ILD growth; a single-distance set is unchanged).
-  (b) Use the shells as measured and apply 1/r and r/c only beyond the
-  outermost shell: simplest, but correct only if C7 shows the files
-  follow 1/r and r/c closely, and it puts a kink at 1.6 m. Either way C7
-  should be run first; Cho can run it locally with `--pku`, or upload
-  the eight SOFA files (about 104 MB) to the project files.
+- **D4. HRIR sets that hold several distances.** (a) Use the shells as
+  measured, with their own onsets and levels, and extend beyond the
+  outermost shell with (r − r_outer)/c and r_outer/r (recommended since
+  C7: the PKU-IOA files hold the travel time to within 0.07 ms and 1/r
+  to within 0.4 dB from 40 cm out, and their shortfall from 1/r near the
+  head is real near-field data worth keeping). (b) Equalize every shell
+  to the 1 m shell's mean energy and remove each shell's mean onset, then
+  take level and delay from geometry everywhere: right for a database
+  that trimmed or normalized its responses, but for PKU-IOA it would
+  erase the 2.2 dB near-field shortfall at 20 cm. A database known to be
+  trimmed could get (b) through a registry flag, as `azimuth_clockwise`
+  marks the mirrored SOFA copy.
 - **D5. How the changing filter is applied.** (a) The continuous
   per-ear delay of stage 2 plus switched aligned shapes (recommended:
   exact for distance and timing, C3, and leaves only slowly changing
@@ -367,12 +387,12 @@ and should sound the same (C5).
 
 ## Tests
 
-- A still source matches `spatialize` with the travel-time delay and
-  1/r gain applied (to float precision).
+- A still source matches today's `spatialize` (to float precision).
 - A tone on a pass-by, through a set whose shapes are unit impulses,
   matches the closed form p(t) to within C3's −90 dB.
 - The interaural delay of a swing follows the HRIR onsets.
-- A source at exactly 1 m with no room has 0 dB distance gain.
+- Beyond the outermost shell, level falls as r_outer/r and the delay
+  grows as (r − r_outer)/c, with no step at the shell.
 - The tail's level does not change with distance; the direct sound's
   falls 6 dB per doubling.
 - At build time, measured on the MIT KEMAR set: aligned shapes switched
@@ -381,10 +401,10 @@ and should sound the same (C5).
 
 ## Order
 
-1. Answer D1–D8; run C7.
+1. Answer D1–D8.
 2. Trajectory forms and `hcc_trajectory`.
 3. Propagation stage, with the claim tests.
-4. Shell normalization (D4), after C7.
+4. Extension beyond the outermost shell (D4).
 5. Room tail.
 6. Gallery section, built locally; README roadmap and Done.
 
