@@ -75,7 +75,9 @@ meant to be readable without them.
   (Hann, `win_dur`). The spacing of time windows is the **hop**, also where
   WORLD says "frame period". Outside names keep their own words (pyworld's
   `frame_period=`, paper titles), and an animation's frames are "video
-  frames".
+  frames". In prose, the classes are always set as code (`Frame`,
+  `GaborFrame`, `TVGaborFrame`), so a capital-F "Frame" in plain text never
+  stands for the class.
 
 ## Verification and records
 

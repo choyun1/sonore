@@ -1,4 +1,4 @@
-"""Frames: the Frame/Filterbank contract (docs/design/frames.md).
+"""Frames: the ``Frame``/``Filterbank`` contract (docs/design/frames.md).
 
 The first sections cover the interface, the tight/general equivalence and the
 non-frame behaviour; the last checks every frame against the dense-matrix
