@@ -8,7 +8,8 @@ the gallery- right now a ton falls under seeing sound category, but maybe
 most of the voice stuff should be in one category, another category for more
 premitive stimuli, one for spatial hearing, etc."
 
-Status: proposed. Nothing has been moved. Every count below is printed by
+Status: partly accepted. On 2026-10-02 Cho accepted D1 (a), D8 to D11,
+D12 (a) and D13 to D14; D2 to D7 are open. Nothing has been moved. Every count below is printed by
 `python tools/count_reorganization_references.py`, run on 2026-10-02 at
 main `b08063c`; numbers that are not are labelled estimates.
 
