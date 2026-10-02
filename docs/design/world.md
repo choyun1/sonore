@@ -381,7 +381,7 @@ WORLD computes it, not a view of a sonore frame (D2).
 **Tests.** `tools/make_world_fixtures.py` (pyworld, development only)
 stores WORLD's envelope (with both q̃₁), aperiodicity and synthesis for a
 breathy vowel with vibrato and 0.3 s of the gallery sentence, every 8th
-frequency bin, in `tests/data/world_reference.npz` (277 kB).
+frequency bin, in `tests/data/world_reference.npz` (289 kB, sounds included, since the sdist carries no docs).
 `tests/analysis/test_vocoder.py` holds sonore to within 1e-6 dB (envelope),
 1e-8 dB (aperiodicity) and 1e-9 of the peak (synthesis); the measured
 differences are about 4e-9 dB, 7e-12 dB and 1e-13.

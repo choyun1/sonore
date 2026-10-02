@@ -11,7 +11,6 @@ import sonore as so
 from sonore.analysis.vocoder import world_fft_size, world_randn
 
 REFERENCE = Path(__file__).resolve().parents[1] / "data" / "world_reference.npz"
-SPEECH = Path(__file__).resolve().parents[2] / "docs" / "speech"
 FS = 16000
 
 
@@ -22,10 +21,7 @@ def reference():
 
 def case(reference, name):
     """The sound and F0 track WORLD analysed, and its stored outputs."""
-    if name == "sentence":
-        sound = so.load(SPEECH / "bdl_arctic_a0131.flac")[0.6:0.9]
-    else:
-        sound = so.Sound(reference["vowel_sound"], FS)
+    sound = so.Sound(reference[f"{name}_sound"], FS)
     return sound, (reference[f"{name}_t"], reference[f"{name}_f0"])
 
 

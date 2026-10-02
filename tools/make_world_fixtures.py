@@ -82,8 +82,6 @@ def main():
         "sentence": sentence_excerpt(),
     }.items():
         for key, value in world_outputs(sound, frame_times, frame_f0).items():
-            if name == "sentence" and key == "sound":
-                continue  # the tests read it from docs/speech
             arrays[f"{name}_{key}"] = value
     OUT.parent.mkdir(exist_ok=True)
     np.savez_compressed(OUT, **arrays)
