@@ -246,9 +246,9 @@ What changed from the proposal above while writing the code:
   given explicitly raises an error.
 - Klatt's quasi-sinusoidal voicing (AVS, RGS) and RGZ are left out (D4).
 
-`tests/test_klatt.py` checks the vowel against source × formants ×
+`tests/stimuli/test_klatt.py` checks the vowel against source × formants ×
 radiation (C6, to 1e-6 dB), the parallel levels, the source calibration,
-and the continuum; `tests/test_processing.py` checks C1 and C3 on the
+and the continuum; `tests/signals/test_processing.py` checks C1 and C3 on the
 library resonator.
 
 ## Listening examples
