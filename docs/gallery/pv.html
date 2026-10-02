@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html" aria-current="page">Phase vocoder</a><ul><li><a href="#h-how-it-works">How it works</a></li><li><a href="#h-changing-duration">Changing duration</a></li><li><a href="#h-changing-pitch">Changing pitch</a></li><li><a href="#h-moving-the-partials">Moving the partials</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html" aria-current="page">Phase vocoder</a><ul><li><a href="#h-how-it-works">How it works</a></li><li><a href="#h-changing-duration">Changing duration</a></li><li><a href="#h-changing-pitch">Changing pitch</a></li><li><a href="#h-a-higher-voice">A higher voice</a></li><li><a href="#h-moving-the-partials">Moving the partials</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -160,7 +160,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 Golden, 1966) pulls the two apart: it measures the frequency of every partial in every short
 time window, precisely enough to rebuild the sound with its time windows spaced differently, or its
 partials moved, while everything else stays the same.</p>
-<ul><li><a href="#h-how-it-works">How it works</a>: the STFT, and the frequency hidden in how fast each bin's phase turns.</li><li><a href="#h-changing-duration">Changing duration</a>: time windows resynthesized further apart, and why their phases have to be locked.</li><li><a href="#h-changing-pitch">Changing pitch</a>: stretching, then resampling.</li><li><a href="#h-moving-the-partials">Moving the partials</a>: an oscillator bank with every frequency remapped.</li></ul>
+<ul><li><a href="#h-how-it-works">How it works</a>: the STFT, and the frequency hidden in how fast each bin's phase turns.</li><li><a href="#h-changing-duration">Changing duration</a>: time windows resynthesized further apart, and why their phases have to be locked.</li><li><a href="#h-changing-pitch">Changing pitch</a>: stretching, then resampling.</li><li><a href="#h-a-higher-voice">A higher voice</a>: a woman's sentence stretched, and lowered to the man's pitch.</li><li><a href="#h-moving-the-partials">Moving the partials</a>: an oscillator bank with every frequency remapped.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -375,6 +375,59 @@ envelope separated from the harmonics first, as on the <a href="cepstrum.html">C
 fig, playhead = show(sound, fmax=5000)</code></pre></details>
 </article>
 </section>
+<section aria-labelledby="h-a-higher-voice">
+<h2 id="h-a-higher-voice">A higher voice</h2>
+<p>The same sentence read by a woman (slt), whose voice is about a fifth higher than the man's,
+so lowering it by a fifth brings her pitch to his.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+
+
+def median_f0(snd):
+    &quot;&quot;&quot;Median F0 [Hz] of the voiced time windows, from so.f0_track.&quot;&quot;&quot;
+    f0_track = so.f0_track(snd).f0[0]
+    return np.median(f0_track[f0_track &gt; 0])
+
+
+lowered = so.pitch_shift(sentence_female, -7)
+print(
+    f&quot;median F0: him {median_f0(sentence):.0f} Hz, her {median_f0(sentence_female):.0f} Hz, &quot;
+    f&quot;her down a fifth {median_f0(lowered):.0f} Hz&quot;
+)</code></pre></details><pre class="out">median F0: him 119 Hz, her 183 Hz, her down a fifth 122 Hz</pre></div>
+
+<article class="sound" id="d-p4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.979833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33787374982768104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.270125}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.5900505290464744, &quot;top&quot;: 0.4475517194177351, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.270125}]">
+  <div class="about">
+    <h3>Her sentence, twice as long</h3>
+    <div class="desc"><p>Her sentence twice as long, with phase locking.</p></div>
+    <audio controls preload="metadata" src="audio/p4_her_sentence_twice_as_long.flac"></audio>
+    <p class="file">p4_her_sentence_twice_as_long.flac, 5.3 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/p4_her_sentence_twice_as_long.png" width="1000" height="620" alt="Plots of the her sentence, twice as long sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sentence_female, 2))
+fig, playhead = show(sound, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-p5" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.979833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33787374982768104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5869736059695514, &quot;top&quot;: 0.4475517194177351, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+  <div class="about">
+    <h3>Her sentence down a fifth</h3>
+    <div class="desc"><p>Her sentence down a fifth, the reverse of the man's sentence up a fifth above. Her pitch now
+sits at his, as the printout shows, but her formants have moved down by a third as well. In
+the averages of Hillenbrand et al. (1995), women's first three formants are 11 to 28% higher
+than men's in the vowels of heed, hod and who'd, so lowering hers by a third puts them below
+a typical man's: the voice belongs to a larger speaker than either.</p></div>
+    <audio controls preload="metadata" src="audio/p5_her_sentence_down_a_fifth.flac"></audio>
+    <p class="file">p5_her_sentence_down_a_fifth.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/p5_her_sentence_down_a_fifth.png" width="1000" height="620" alt="Plots of the her sentence down a fifth sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(lowered)
+fig, playhead = show(sound, fmax=5000)</code></pre></details>
+</article>
+</section>
 <section aria-labelledby="h-moving-the-partials">
 <h2 id="h-moving-the-partials">Moving the partials</h2>
 <p>The analysis can also drive a bank of oscillators, one per bin, each following its bin's
@@ -418,7 +471,7 @@ fig, playhead = show(sound)</code></pre></details>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Dolson (1986). The phase vocoder: a tutorial. <em>Computer Music Journal</em> 10(4), 14–27. <a href="https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Flanagan &amp; Golden (1966). Phase vocoder. <em>Bell System Technical Journal</em> 45(9), 1493–1509. <a href="https://doi.org/10.1002/j.1538-7305.1966.tb01706.x">doi:10.1002/j.1538-7305.1966.tb01706.x</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Gordon &amp; Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), <em>Digital Audio Signal Processing: An Anthology</em>. <a href="https://ccrma.stanford.edu/papers/introduction-phase-vocoder">CCRMA</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Laroche &amp; Dolson (1999). Improved phase vocoder time-scale modification of audio. <em>IEEE Trans. Speech Audio Process.</em> 7(3), 323–332. <a href="https://ieeexplore.ieee.org/document/759041/">IEEE Xplore</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L164"><code>phasevocoder.time_stretch</code></a></li></ul>
+<ul><li>Dolson (1986). The phase vocoder: a tutorial. <em>Computer Music Journal</em> 10(4), 14–27. <a href="https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Flanagan &amp; Golden (1966). Phase vocoder. <em>Bell System Technical Journal</em> 45(9), 1493–1509. <a href="https://doi.org/10.1002/j.1538-7305.1966.tb01706.x">doi:10.1002/j.1538-7305.1966.tb01706.x</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Gordon &amp; Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), <em>Digital Audio Signal Processing: An Anthology</em>. <a href="https://ccrma.stanford.edu/papers/introduction-phase-vocoder">CCRMA</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py"><code>phasevocoder</code></a></li><li>Hillenbrand, Getty, Clark &amp; Wheeler (1995). Acoustic characteristics of American English vowels. <em>J. Acoust. Soc. Am.</em> 97(5), 3099–3111. <a href="https://doi.org/10.1121/1.411872">doi:10.1121/1.411872</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Laroche &amp; Dolson (1999). Improved phase vocoder time-scale modification of audio. <em>IEEE Trans. Speech Audio Process.</em> 7(3), 323–332. <a href="https://ieeexplore.ieee.org/document/759041/">IEEE Xplore</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L164"><code>phasevocoder.time_stretch</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/seeing/pv.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/pv.py</code>, or a cell at a time.</footer>
 </main>

@@ -22,6 +22,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Changing duration](#h-changing-duration): time windows resynthesized further apart, and why their
 #   phases have to be locked.
 # - [Changing pitch](#h-changing-pitch): stretching, then resampling.
+# - [A higher voice](#h-a-higher-voice): a woman's sentence stretched, and lowered to the man's
+#   pitch.
 # - [Moving the partials](#h-moving-the-partials): an oscillator bank with every frequency remapped.
 
 # %% [markdown]
@@ -192,6 +194,46 @@ sound = finish(so.pitch_shift(sentence, 7))
 fig, playhead = show(sound, fmax=5000)
 
 # %% [markdown]
+# ## A higher voice
+#
+# The same sentence read by a woman (slt), whose voice is about a fifth higher than the man's,
+# so lowering it by a fifth brings her pitch to his.
+
+# %%
+sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+
+
+def median_f0(snd):
+    """Median F0 [Hz] of the voiced time windows, from so.f0_track."""
+    f0_track = so.f0_track(snd).f0[0]
+    return np.median(f0_track[f0_track > 0])
+
+
+lowered = so.pitch_shift(sentence_female, -7)
+print(
+    f"median F0: him {median_f0(sentence):.0f} Hz, her {median_f0(sentence_female):.0f} Hz, "
+    f"her down a fifth {median_f0(lowered):.0f} Hz"
+)
+
+# %% [about]
+# Her sentence twice as long, with phase locking.
+
+# %% [demo p4] Her sentence, twice as long
+sound = finish(so.time_stretch(sentence_female, 2))
+fig, playhead = show(sound, fmax=5000)
+
+# %% [about]
+# Her sentence down a fifth, the reverse of the man's sentence up a fifth above. Her pitch now
+# sits at his, as the printout shows, but her formants have moved down by a third as well. In
+# the averages of Hillenbrand et al. (1995), women's first three formants are 11 to 28% higher
+# than men's in the vowels of heed, hod and who'd, so lowering hers by a third puts them below
+# a typical man's: the voice belongs to a larger speaker than either.
+
+# %% [demo p5] Her sentence down a fifth
+sound = finish(lowered)
+fig, playhead = show(sound, fmax=5000)
+
+# %% [markdown]
 # ## Moving the partials
 #
 # The analysis can also drive a bank of oscillators, one per bin, each following its bin's
@@ -229,9 +271,12 @@ fig, playhead = show(sound)
 # - Gordon & Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), *Digital
 #   Audio Signal Processing: An Anthology*. [CCRMA](https://ccrma.stanford.edu/papers/introduction-phase-vocoder).
 #   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+# - Hillenbrand, Getty, Clark & Wheeler (1995). Acoustic characteristics of American English
+#   vowels. *J. Acoust. Soc. Am.* 97(5), 3099–3111.
+#   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872).
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentence.
+#   The sentence, by speakers bdl and slt.
 # - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans.
 #   Speech Audio Process.* 7(3), 323–332. [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/).
 #   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L164)
