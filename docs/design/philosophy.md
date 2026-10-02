@@ -53,6 +53,19 @@ meant to be readable without them.
   use for them appears, and the simpler behavior is documented where it
   differs.
 
+## Code
+
+- **Name every variable for what it holds,** locals included: `n_ramp`,
+  `start_phases`, `impulse_response`, not `n`, `ph`, `h`. A reader auditing a
+  line should not have to work out what a name stands for. There are three
+  exceptions, and only these: the field's own short names (`fs`, `f0`, `cfs`,
+  `n_fft`, `itd` and the others listed under "Names and conventions" in the
+  API reference); names taken from a cited paper, where matching the paper
+  matters more (Klatt's synthesis parameters such as `AV` and `F1`, and a
+  resonator's coefficients `a`, `b`, `c`); and symbols a docstring defines as the
+  notation of a formula, used in the code that implements it. A new
+  exception is written down here or in the docstring that uses it.
+
 ## Verification and records
 
 - **Implement from the papers, and check every mathematical claim

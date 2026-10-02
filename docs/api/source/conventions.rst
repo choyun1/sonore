@@ -1,9 +1,10 @@
 Names and conventions
 =====================
 
-Variables are named for what they hold (``n_ramp``, ``start_phases``,
-``impulse_response``). A few short names are the field's own and stay short
-everywhere:
+Variables, locals included, are named for what they hold (``n_ramp``,
+``start_phases``, ``impulse_response``); the rule and its exceptions are in
+``docs/design/philosophy.md``. A few short names are the field's own and stay
+short everywhere:
 
 .. list-table::
    :header-rows: 1
