@@ -6,6 +6,7 @@
 <title>Listening to sonore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
 <script>(() => { const moved = {"15": "vocoder.html", "w1": "speech.html", "w2": "speech.html", "27": "speech.html", "28": "speech.html", "29": "speech.html", "t1": "speech.html", "30": "speech.html", "c1": "cepstrum.html", "c2": "cepstrum.html", "c3": "cepstrum.html", "c4": "cepstrum.html", "c5": "cepstrum.html", "26": "resynthesis.html", "24": "resynthesis.html", "25": "resynthesis.html", "p0": "pv.html", "11": "pv.html", "12": "pv.html", "p1": "pv.html", "p2": "pv.html", "13": "pv.html", "p3": "pv.html", "14": "pv.html", "14b": "pv.html", "01": "ripples.html", "02": "ripples.html", "03": "ripples.html", "04": "ripples.html", "05": "ripples.html", "06": "ripples.html", "09": "irn.html", "i1": "irn.html", "i4": "irn.html", "i0": "irn.html", "in": "irn.html", "10": "binaural.html", "07": "binaural.html", "08": "binaural.html", "t00a": "textures.html", "t00b": "textures.html", "t01a": "textures.html", "t01b": "textures.html", "t02a": "textures.html", "t02b": "textures.html", "t03a": "textures.html", "t03b": "textures.html", "t04a": "textures.html", "t04b": "textures.html", "t05a": "textures.html", "t05b": "textures.html", "t06a": "textures.html", "t06b": "textures.html", "u00": "textures.html", "u01": "textures.html", "u10": "textures.html", "u11": "textures.html", "u20": "textures.html", "u21": "textures.html", "16": "reverb.html", "17": "reverb.html", "r1": "reverb.html", "18": "reverb.html", "19": "reverb.html", "20": "reverb.html", "21": "reverb.html", "22": "reverb.html", "23": "reverb.html", "ci0": "vocoder.html", "ci1": "vocoder.html", "ci4": "vocoder.html", "ci8": "vocoder.html", "ci16": "vocoder.html", "ct8": "vocoder.html", "cp0": "vocoder.html", "cp8": "vocoder.html", "cm0": "vocoder.html", "cm8": "vocoder.html", "cm8p": "vocoder.html", "m1": "moving.html", "m2": "moving.html", "m3": "moving.html", "m4": "moving.html", "k0": "classic.html", "k1": "classic.html", "b1": "classic.html", "b2": "classic.html", "b3": "classic.html", "a1": "classic.html", "b4": "classic.html", "s1": "classic.html", "r2": "reverb.html"}; const k = location.hash.slice(3); if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
   --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
@@ -88,15 +89,33 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 .side { display: none; }
 @media (min-width: 75rem) {
   .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
-  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 3.5rem 1.25rem 2rem 1.75rem;
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 2.5rem 1.25rem 2rem 1.75rem;
     border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
-  nav.pages > a:first-child, nav.pages details { display: none; }
+  html:not(.side-closed) nav.pages > a:first-child, html:not(.side-closed) nav.pages details { display: none; }
+  .side-closed .layout { grid-template-columns: 3rem minmax(0, 1fr); }
+  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
+  .side-closed .side .home, .side-closed .side-body { display: none; }
+  .side-closed .side-top { justify-content: center; }
 }
 .side a { text-decoration: none; }
 .side a:hover { text-decoration: underline; }
 .side a[aria-current] { color: var(--ink); font-weight: 700; }
-.side .home { display: block; font-size: 1.05rem; margin: 0 0 1.5rem; }
-.side .group { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.4rem; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
 .side ul { list-style: none; margin: 0; padding: 0; }
 .side li a { display: block; padding: 0.2rem 0; }
 .side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
@@ -106,7 +125,21 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><a class="home" href="index.html" aria-current="page">Listening gallery</a><p class="group">Stimuli</p><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul><p class="group">Seeing and changing sounds</p><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul><p class="group">Listeners in the world</p><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></aside>
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-current="page">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed"); show(closed);
+    save("sonore-side", closed ? "closed" : "open"); });
+  let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
+  groups.forEach((group) => { const name = group.dataset.group;
+    if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
+    group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
+      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); }); });
+})();</script></aside>
 <main>
 <nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul></details><details><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
