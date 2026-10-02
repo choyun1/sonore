@@ -53,6 +53,7 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
   font-size: 0.9rem; font-weight: 700; color: var(--accent); }
 audio { width: 100%; max-width: 19rem; display: block; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
@@ -95,7 +96,7 @@ spectrum once every <span class="tex">F_0</span> hertz, so they land at one peri
 The two parts of the voice that were tangled in the spectrum come apart, and can be measured
 or edited separately.</p>
 <p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>:</p>
-<ul><li><a href="#h-one-frame">One frame</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking, better envelopes, and the complex cepstrum.</li></ul>
+<ul><li><a href="#h-one-frame">One frame</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -217,6 +218,70 @@ both = (harvest_at &gt; 0) &amp; (f0_cep[0] &gt; 0)
 agree = np.mean(np.abs(f0_cep[0][both] / harvest_at[both] - 1) &lt; 0.05)
 print(f&quot;frames both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}&quot;)</code></pre><pre class="out">frames both call voiced: 318; cepstral F0 within 5% of Harvest on 96%</pre></div>
 </section>
+<section aria-labelledby="h-a-tracker-beside-the-cepstrum">
+<h2 id="h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</h2>
+<p><code>so.f0_track</code> works the other way round. It looks for the period in the waveform rather than
+the log spectrum, with YIN's difference function (de Cheveigné &amp; Kawahara, 2002): up to four
+candidate periods per frame, each sharpened from the instantaneous frequencies of the first six
+harmonics, as WORLD does. Each candidate is scored by how well the waveform repeats one period
+later, and a single pass picks the cheapest path through the candidates, so that the pitch
+rarely jumps and a frame is voiced only when some candidate repeats well (a score above 0.5).</p>
+
+<article class="sound" id="d-f1" data-regions="[{&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951108075233805, &quot;top&quot;: 0.041964880952381156, &quot;bottom&quot;: 0.45180730484250997, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951108075233805, &quot;top&quot;: 0.5098938127790178, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>Cepstral F0, a tracker, and Harvest</h3>
+    <div class="desc"><p>Top: the tracker's candidates in grey, darker for a higher score, and the path it chose. The
+darkest row, an octave below the path, is the subharmonic: anything that repeats every period
+also repeats every two, so it scores as well, and the tracker never chooses a candidate whose
+octave above scores about as well (<code>subharmonic_margin</code>). Bottom: the three pitch tracks
+together. Where the tracker and Harvest both call a frame voiced they agree; Harvest voices
+more frames, stretches where the tracker's best score falls below 0.5.
+Against laryngograph recordings Harvest calls about a third of the unvoiced frames voiced, which
+is why the tracker is stricter by default (see <code>docs/design/f0.md</code>).</p></div>
+    <audio controls preload="metadata" src="audio/f1_cepstral_f0_a_tracker_and_harvest.flac"></audio>
+    <p class="file">f1_cepstral_f0_a_tracker_and_harvest.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/f1_cepstral_f0_a_tracker_and_harvest.png" width="1000" height="560" alt="Plots of the cepstral f0, a tracker, and harvest sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code" open><summary>Code</summary><pre><code class="language-python">track = so.f0_track(sentence)
+fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout=&quot;constrained&quot;)
+track.plot(ax0, candidates=True, color=&quot;tab:orange&quot;)
+ax0.set(ylim=(50, 500), yscale=&quot;log&quot;, xlabel=&quot;&quot;, title=&quot;so.f0_track: candidates and chosen path&quot;)
+ax0.set_yticks([60, 100, 150, 200, 300, 400], labels=[&quot;60&quot;, &quot;100&quot;, &quot;150&quot;, &quot;200&quot;, &quot;300&quot;, &quot;400&quot;])
+ax0.minorticks_off()
+ax1.plot(f0_times[voiced], f0_harvest[voiced], &quot;.&quot;, ms=3, color=&quot;0.6&quot;, label=&quot;Harvest&quot;)
+ax1.plot(t[f0_cep[0] &gt; 0], f0_cep[0][f0_cep[0] &gt; 0], &quot;.&quot;, ms=3, color=&quot;tab:blue&quot;, label=&quot;cepstral&quot;)
+tracked = np.where(track.voiced[0], track.f0[0], np.nan)
+ax1.plot(track.t, tracked, color=&quot;tab:orange&quot;, lw=1.5, label=&quot;so.f0_track&quot;)
+ax1.set(ylim=(60, 260), xlabel=&quot;Time [s]&quot;, ylabel=&quot;F0 [Hz]&quot;, title=&quot;Pitch&quot;)
+ax1.legend(loc=&quot;upper right&quot;, fontsize=8, markerscale=2)
+ax1.grid(ls=&quot;:&quot;)
+for ax in (ax0, ax1):
+    ax.set_xlim(0, sentence.duration)
+playhead = [ax0, ax1]
+sound = sentence</code></pre></details>
+</article>
+<div class="cell"><pre><code class="language-python"># Compare frame by frame on the tracker&#x27;s frames, which the cepstrogram&#x27;s frames include.
+at = np.searchsorted(np.round(t, 6), np.round(track.t, 6))
+pitch = {
+    &quot;Harvest&quot;: np.interp(track.t, f0_times, f0_harvest),
+    &quot;cepstral&quot;: f0_cep[0][at],
+    &quot;so.f0_track&quot;: np.where(track.voiced[0], track.f0[0], 0.0),
+}
+for name, f in pitch.items():
+    print(f&quot;{name:12s} voiced on {np.mean(f &gt; 0):.0%} of frames&quot;)
+for a, b in [(&quot;cepstral&quot;, &quot;Harvest&quot;), (&quot;so.f0_track&quot;, &quot;Harvest&quot;), (&quot;cepstral&quot;, &quot;so.f0_track&quot;)]:
+    both = (pitch[a] &gt; 0) &amp; (pitch[b] &gt; 0)
+    agree = np.mean(np.abs(pitch[a][both] / pitch[b][both] - 1) &lt; 0.05)
+    print(f&quot;{a} and {b}: both voiced on {both.sum()} frames, within 5% on {agree:.0%}&quot;)</code></pre><pre class="out">Harvest      voiced on 86% of frames
+cepstral     voiced on 65% of frames
+so.f0_track  voiced on 68% of frames
+cepstral and Harvest: both voiced on 318 frames, within 5% on 96%
+so.f0_track and Harvest: both voiced on 342 frames, within 5% on 100%
+cepstral and so.f0_track: both voiced on 300 frames, within 5% on 98%</pre></div>
+</section>
 <section aria-labelledby="h-splitting-the-voice-in-two">
 <h2 id="h-splitting-the-voice-in-two">Splitting the voice in two</h2>
 <p>Lifter the other way and the two parts can be heard separately. Each frame keeps its own
@@ -299,11 +364,11 @@ three independent implementations; the numbers below are from SciPy 1.17.1 and P
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>Tracking.</strong> Cepstral F0 judges each frame alone. Real pitch trackers, such as WORLD's Harvest used above, generate several candidates per frame and choose a smooth path through them, which removes the octave jumps.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter. Mel-cepstra, the basis of MFCCs, warp the frequency axis first.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
+<ul><li><strong>Tracking from the cepstrum.</strong> Cepstral F0 judges each frame alone. The tracker above chooses a path through candidates from the waveform; the same could be done with cepstral peaks as the candidates.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter. Mel-cepstra, the basis of MFCCs, warp the frequency axis first.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Boersma &amp; Weenink. Praat: doing phonetics by computer. <a href="https://www.praat.org">praat.org</a>.</li><li>Bogert, Healy &amp; Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum, pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), <em>Time Series Analysis</em>. Wiley. <a href="https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16"><code>cepstrum.Cepstrum</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L504"><code>frames.TVGaborFrame.pitch_adaptive</code></a></li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. Harvest.</li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L142"><code>cepstrum.Cepstrum.f0</code></a></li></ul>
+<ul><li>Boersma &amp; Weenink. Praat: doing phonetics by computer. <a href="https://www.praat.org">praat.org</a>.</li><li>Bogert, Healy &amp; Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum, pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), <em>Time Series Analysis</em>. Wiley. <a href="https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16"><code>cepstrum.Cepstrum</code></a></li><li>de Cheveigné &amp; Kawahara (2002). YIN, a fundamental frequency estimator for speech and music. <em>J. Acoust. Soc. Am.</em> 111(4), 1917–1930. <a href="https://doi.org/10.1121/1.1458024">doi:10.1121/1.1458024</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62"><code>f0.f0_track</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L504"><code>frames.TVGaborFrame.pitch_adaptive</code></a></li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. Harvest.</li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L142"><code>cepstrum.Cepstrum.f0</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/cepstrum.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/cepstrum.py</code>, or a cell at a time.</footer>
 </main>
@@ -322,7 +387,15 @@ three independent implementations; the numbers below are from SciPy 1.17.1 and P
     });
     const canvas = el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
+    const liveCanvas = el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live };
   });
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
@@ -363,8 +436,47 @@ three independent implementations; the numbers below are from SciPy 1.17.1 and P
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
   }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the colour bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
   function draw(item) {
     drawScene(item);
+    drawLive(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -377,12 +489,18 @@ three independent implementations; the numbers below are from SciPy 1.17.1 and P
   function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
   items.forEach((item) => {
     drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      if (item.live) item.live.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
