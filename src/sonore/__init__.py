@@ -107,7 +107,7 @@ from sonore.views.spectral_envelope import GridEnvelope, SpectralEnvelope, cheap
 from sonore.views.spectrum import Spectrum, TFPower, long_term_spectrum, tandem_power
 from sonore.views.view import NotInvertibleError, View
 
-__version__ = "0.3.1"
+__version__ = "0.4.0"
 
 __all__ = [
     "SPEED_OF_SOUND",

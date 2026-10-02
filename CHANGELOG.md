@@ -6,6 +6,15 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-02
+
+The package is reorganized as a trunk (core, signals, frames, views) and
+three branches (spatial, stimuli, texture). Every `so.name` is unchanged,
+but deep import paths move (see Changed). Views now refuse to synthesize,
+with the reason. Also new since 0.3.1: MFCCs, F0 tracking, WORLD's
+analysis and synthesis, Klatt and LF voice synthesis, voice changes and a
+moving-sound renderer.
+
 ### Added
 - `so.View` and `so.NotInvertibleError`: every view (the spectra,
   envelopes, modulation spectra, the cepstrum, MFCCs, F0 tracks, spectral
@@ -15,6 +24,28 @@ version (0.x.y) only fixes bugs.
   where one exists, such as `Cepstrum.to_sound` or `so.world_synthesize`.
   Before, `synthesize` on a view failed with a plain `AttributeError`. See
   "Only frames synthesize" in `docs/design/reorganization.md`.
+- `so.cheaptrick`, `so.d4c` and `so.world_synthesize`: WORLD's spectral
+  envelope (Morise, 2015), aperiodicity (Morise, 2016) and synthesis,
+  ported exactly to NumPy with no pyworld dependency, returning
+  `SpectralEnvelope` and `Aperiodicity` views. A stored pyworld fixture
+  holds them to WORLD's numbers; `so.DIFFERENCES_FROM_WORLD` lists every way
+  sonore departs from WORLD. `so.harmonic_aperiodicity` is a second
+  measure, not WORLD's: the share of noise left after fitting the
+  harmonics. See `docs/design/world.md` and the gallery page
+  "Aperiodicity".
+- `so.ModulationSpectrogram` and `so.HannModulationFilterbank`: modulation
+  power, local mean and depth for every time window, acoustic band and
+  modulation rate, from any `Envelopes`, with a `valid` mask, plots and an
+  animation. See `docs/design/modulation-spectrogram.md` and the gallery
+  page "Modulation spectrogram".
+- `so.move_sound` is a new renderer: each ear reads the sound through its
+  own smoothly changing delay, so a source changing distance glides in
+  pitch (Doppler) instead of comb-filtering; HRIRs are interpolated between
+  measured distances and travel time and 1/r carry it beyond them; an
+  optional `room` tail with `drr_db`. A path can be a function of time;
+  `so.hcc_trajectory` builds one in head-centred coordinates, and
+  `so.SPEED_OF_SOUND` is the default 343 m/s. See
+  `docs/design/moving-sound.md` and the gallery page "Moving talkers".
 - `so.scale_f0` and `so.warp_frequency`: a pitch change (voiced F0 times a
   ratio, optionally spread around the median) and a formant shift (an
   envelope read at `f / ratio`; a number, a ratio over time, or any
@@ -94,11 +125,6 @@ version (0.x.y) only fixes bugs.
   name documented; the names still waiting are listed in
   `tests/undocumented.txt`.
 
-### Changed (development)
-- Tests are in folders that mirror `src/sonore` (`tests/core/`,
-  `tests/analysis/`, ...). The dB tests moved to `tests/core/test_units.py` and
-  the HRIR download tests to `tests/stimuli/test_hrir_data.py`.
-
 ### Changed
 - The package is reorganized as a trunk and three branches
   (`docs/design/reorganization.md`, `docs/design/layout.md`). Every
@@ -174,6 +200,11 @@ version (0.x.y) only fixes bugs.
   (and, with PKU-IOA, one at 300 m/s, where the measured onsets change
   faster than the travel time). Slower paths are unchanged to 1e-10.
 
+### Changed (development)
+- Tests are in folders that mirror `src/sonore` (`tests/core/`,
+  `tests/frames/`, `tests/views/`, ...). The dB tests moved to `tests/core/test_units.py` and
+  the HRIR download tests to `tests/spatial/test_hrir_data.py`.
+
 ## [0.3.1] - 2026-10-01
 
 The first release archived on Zenodo, which gives it a DOI. No change to the
@@ -221,7 +252,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.3.1...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.4.0...main
+[0.4.0]: https://github.com/choyun1/sonore/releases/tag/v0.4.0
 [0.3.1]: https://github.com/choyun1/sonore/releases/tag/v0.3.1
 [0.3.0]: https://github.com/choyun1/sonore/releases/tag/v0.3.0
 [0.2.0]: https://github.com/choyun1/sonore/commit/213e21a
