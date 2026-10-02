@@ -134,10 +134,8 @@ class LFShape:
 
 
 def rd_to_r_parameters(rd):
-    """Fant's (1995) prediction of Ra, Rk, Rg from Rd. The Ra and Rk lines
-    and the Rd equation they are solved against are as widely quoted
-    (e.g. Degottex's implementations); they could not be read in the paper's
-    extracted text, see the design document."""
+    """Fant's (1995) prediction of Ra, Rk, Rg from Rd: his Eqs. 2 and 3 for
+    Ra and Rk, and Rg from his Eq. 4 given those, as he recommends."""
     ra = (-1 + 4.8 * rd) / 100
     rk = (22.4 + 11.8 * rd) / 100
     # Rd = (1 / 0.11) (0.5 + 1.2 Rk) (Rk / (4 Rg) + Ra), solved for Rg
@@ -271,8 +269,23 @@ def claim_rd_mapping():
         true_rd = shape.flow_peak() / 0.11  # U0 / (Ee T0) / 0.11, with Ee = 1 and T0 = 1
         worst = max(worst, abs(true_rd - rd) / rd)
     report("C2", "Rd 0.3-2.7: worst relative error of the pulse's own Rd = U0 F0/(0.11 Ee)", worst)
-    for rd in (0.5, 1.0, 2.5):
-        report("C2", f"Rd {rd}: the pulse's own Rd", lf_from_rd(rd).flow_peak() / 0.11)
+    for rd in (0.5, 1.0, 1.4, 2.5, 2.7):
+        true_rd = lf_from_rd(rd).flow_peak() / 0.11
+        report("C2", f"Rd {rd}: the pulse's own Rd, and its error in dB (next line)", true_rd)
+        report("C2", f"Rd {rd}: 20 log10(own Rd / Rd), dB", 20 * np.log10(true_rd / rd))
+    # Fant (1995) Fig. 5A prints OQ, Fa (F0 = 100 Hz), Rk and Rg for four Rd values.
+    printed = {
+        0.3: (0.35, 3600, 0.26, 1.79),
+        0.7: (0.55, 660, 0.31, 1.18),
+        1.4: (0.73, 280, 0.39, 0.95),
+        2.7: (0.79, 130, 0.54, 0.98),
+    }
+    worst = 0.0
+    for rd, values in printed.items():
+        ra, rg, rk = rd_to_r_parameters(rd)
+        computed = ((1 + rk) / (2 * rg), 100 / (2 * np.pi * ra), rk, rg)
+        worst = max(worst, max(abs(c - v) / v for c, v in zip(computed, values, strict=True)))
+    report("C2", "Fant (1995) Fig. 5A OQ, Fa, Rk, Rg vs these formulas: worst relative difference", worst)
     for rd in (0.3, 1.0, 2.7):
         shape = lf_from_rd(rd)
         report("C2", f"Rd {rd}: open quotient te + ta (approx.), share of the period", shape.te + shape.ta)
@@ -345,7 +358,7 @@ def claim_slopes():
         "current RGP source at the lips, F0 100 Hz: slope 400-3200 Hz, dB/octave",
         octave_slope(rgp_levels, numbers[:79], 4, 32),
     )
-    for rd in (0.5, 1.0, 2.5):
+    for rd in (0.5, 0.7, 1.0, 2.5):
         lips = db(lf_at_lips(lf_from_rd(rd), 100.0, numbers[:79]))
         report(
             "C4",
@@ -363,10 +376,12 @@ def claim_h1_h2():
         first, second = np.abs(shape.harmonics([1, 2]))
         h1_h2.append(db(first / second))
     h1_h2 = np.array(h1_h2)
-    for rd in (0.3, 1.0, 2.7):
-        report("C5", f"LF Rd {rd}: H1-H2 of the flow derivative, dB", h1_h2[np.argmin(abs(rds - rd))])
-    for rd in (0.3, 1.0, 2.7):
-        report("C5", f"Fant's (1995) reported line -7.6 + 11.1 Rd at Rd {rd}, dB", -7.6 + 11.1 * rd)
+    for rd in (0.3, 1.0, 1.4, 2.0, 2.7):
+        h1_h2_here = h1_h2[np.argmin(abs(rds - rd))]
+        report("C5", f"LF Rd {rd}: H1-H2 of the flow derivative, dB", h1_h2_here)
+        report(
+            "C5", f"Rd {rd}: minus Fant's (1995) Eq. 8, -7.6 + 11.1 Rd, dB", h1_h2_here - (-7.6 + 11.1 * rd)
+        )
     slope, intercept = np.polyfit(rds, h1_h2, 1)
     report("C5", "LF: fitted line H1-H2 = a + b Rd over Rd 0.3-2.7, intercept a (dB)", intercept)
     report("C5", "LF: fitted line, slope b (dB per unit Rd)", slope)
@@ -384,7 +399,7 @@ def claim_levels():
     f0 = 100.0
     numbers = np.array([1, 2, 5, 10, 20, 30])
     sources = {"current RGP": rgp_at_lips(f0, numbers)}
-    for rd in (0.5, 1.0, 2.5):
+    for rd in (0.5, 0.7, 1.0, 2.5):
         sources[f"LF Rd {rd}"] = lf_at_lips(lf_from_rd(rd), f0, numbers)
     for name, levels in sources.items():
         relative = db(levels / levels[0])

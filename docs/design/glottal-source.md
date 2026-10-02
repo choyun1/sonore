@@ -34,13 +34,13 @@ As in the other design documents, each claim is numbered and tagged:
   runs in under two seconds. The numbers come from NumPy 2.4.6 and SciPy
   1.17.1.
 
-The sources were harder to reach than usual, so this is said up front:
+The sources were harder to reach than usual, so this says what was read:
 
 - **Fant, Liljencrants & Lin (1985)** could not be read: the KTH archive
-  returned a server error every time. Two sources cite it differently:
-  VOICEBOX's `v_glotlf` (Brookes) as *STL-QPSR* 26(4), 1–13, and Fant (1986)
-  as a paper presented at the French–Swedish Symposium, Grenoble, April
-  1985. Both are listed below.
+  returned a server error every time. Fant's own (1995) reference list and
+  VOICEBOX's `v_glotlf` (Brookes) cite it as *STL-QPSR* 4/1985, 1–13
+  (volume 26); Fant (1986) cites it as a paper presented at the
+  French–Swedish Symposium, Grenoble, April 1985.
 - **Fant (1986)**, *Glottal flow: models and interaction*, was read in full
   (PDF from Cho). It states the model: the open-phase equation, the
   return-phase equation, ta as the projection on the time axis of the slope
@@ -51,13 +51,13 @@ The sources were harder to reach than usual, so this is said up front:
   The equations used here are VOICEBOX's, which agree with Fant (1986)
   apart from that slip. The checker verifies their own properties (zero
   net flow, continuity, the closed-form spectrum).
-- **Fant (1995)** was read through a web text extractor whose output was
-  garbled where equations are. From it: the definition of Rd, its main
-  range, and an H1–H2 line. The formulas that predict Ra, Rk and Rg from Rd
-  (its Eqs. 2–4) were not legible. The ones used here are the forms widely
-  quoted in voice-source code, written from memory; they need checking
-  against the paper (D6).
-- **Fant (1986)** does not define Rd, which came later.
+- **Fant (1995)**, *The LF-model revisited*, was read from the PDF Cho
+  supplied (pages 119–126 closely, the rest searched). From it: the
+  normalized parameters Ra, Rg, Rk and OQ (its Fig. 1), Rd (Eq. 1), the
+  prediction of Ra, Rk and Rg from Rd (Eqs. 2–4), the main range of Rd, the
+  OQ, Fa, Rk and Rg it prints for four Rd values (Fig. 5A), typical male
+  and female values, and the H1–H2 line (Eq. 8). The formulas used here
+  are exactly its Eqs. 2–4; C2 reproduces its Fig. 5A values.
 - **Klatt & Klatt (1990)** was not read. What is said about KLGLOTT88 comes
   from Praat's manual and source code (KlattGrid, `PointProcess: To Sound
   (phonation)`), read in the praat-parselmouth 0.4.7 source distribution.
@@ -90,13 +90,27 @@ shape parameter
 
 > Rd = (U0 / Ee)(F0 / 110), with U0 / Ee in milliseconds,
 
-that is, Rd = U0 / (0.11 Ee T0), where U0 is the peak flow; it gives the
-main range as 0.4 < Rd < 2.7, small Rd being tense (pressed) voice and large
-Rd lax, breathy voice. It reports H1–H2 ≈ −7.6 + 11.1 Rd dB. The prediction
-formulas used here (D6):
+that is, Rd = U0 / (0.11 Ee T0), where U0 is the peak flow (the constant
+110 makes Rd numerically equal to U0/Ee in ms for an average F0 of 110 Hz).
+It gives the main range as 0.3 < Rd < 2.7, from tight, adducted phonation
+(small open quotient, high Fa) to breathy, abducted phonation; Rd above 2.7
+is for transitions toward full abduction, as at the end of a phrase. Its
+Eqs. 2–4 predict the other parameters from Rd alone (subscript p for
+predicted):
 
-    Ra = (−1 + 4.8 Rd) / 100,   Rk = (22.4 + 11.8 Rd) / 100,
-    Rd = (1 / 0.11)(0.5 + 1.2 Rk)(Rk / (4 Rg) + Ra), solved for Rg.
+    Rap = (−1 + 4.8 Rd) / 100                                 (2)
+    Rkp = (22.4 + 11.8 Rd) / 100                              (3)
+    Rd ≈ (1 / 0.11)(0.5 + 1.2 Rk)(Rk / (4 Rg) + Ra)           (4)
+
+with Rgp from Eq. 4 given Rap and Rkp, which Fant recommends over a
+separate regression "to ensure conformity with the LF model". Eq. 4 is an
+approximation to Eq. 1: Fant gives its accuracy as 0.5 dB for Rd < 1.4 and
+at most 1.7 dB at Rd = 2.7. The open quotient is OQ = (1 + Rk) / (2 Rg).
+Typical values he quotes (from Gobl and Karlsson): male vowels Fa = 700 Hz,
+Rk = 0.30, Rg = 1.20, which at 100 Hz is close to Rd 0.7; female vowels
+Fa = 400 Hz, Rk = 0.30, Rg = 1; "a sonorous voice has a relatively high Fa
+of the order of 2000 Hz". And in the flow derivative spectrum, an "almost
+perfect linear rise" H1–H2 = −7.6 + 11.1 Rd dB (Eq. 8).
 
 **KLGLOTT88** [source, through Praat]: Praat's manual gives the glottal flow
 U(x) = x² − x³ over the open part of the cycle (x running from 0 to 1 while
@@ -120,10 +134,14 @@ coefficient depends only on k and the shape, not on F0.
 **C2. Rd sets a feasible pulse, and the pulse's own Rd is close to it.**
 [check] Over Rd 0.3–2.7 the predicted Ra, Rk, Rg always give a valid pulse.
 The Rd computed back from that pulse's own peak flow differs from the
-requested Rd by up to 12% (Rd 1 gives 1.06, Rd 2.5 gives 2.24): Fant's Rd
-equation is an approximation, so "Rd" should be read as the input to the
-prediction, not a measured property. The open part of the cycle (te + ta)
-grows from 36% of the period at Rd 0.3 to 69% at Rd 1 and 91% at Rd 2.7.
+requested Rd by up to 12%: +0.5 dB at Rd 1 (1.06), +0.3 dB at 1.4,
+−1.1 dB at 2.7 (2.38). That is within Fant's own accuracy for Eq. 4 at
+large Rd (1.7 dB) and slightly over his 0.5 dB below 1.4 (0.6 dB at Rd 0.5),
+so "Rd" is best read as the input to the prediction, not a measured
+property. The formulas reproduce the OQ, Fa, Rk and Rg printed in Fant's
+(1995) Fig. 5A for Rd 0.3, 0.7, 1.4 and 2.7 to within 2.4% (the rest is his
+rounding: Fa 674 Hz against his 660 at Rd 0.7). The open part of the
+cycle (te + ta) grows from 36% of the period at Rd 0.3 to 69% at Rd 1 and 91% at Rd 2.7.
 
 **C3. Sampling the pulse aliases; building it from harmonics does not.**
 [check] At 200 Hz and 16 kHz (exactly 80 samples per period, so only
@@ -148,13 +166,19 @@ at fixed Ee a longer return phase carries more flow). The polynomial pulse
 which is why KLSYN88 needs a separate tilt filter (Praat's version is down
 exactly TL at 3 kHz: 20.0 dB for TL = 20). At the lips at 100 Hz, from
 400 to 3200 Hz, the current RGP source falls 5.8 dB/octave; LF falls 9.6
-(Rd 0.5), 11.5 (Rd 1) and 12.5 (Rd 2.5).
+(Rd 0.5), 10.8 (Rd 0.7), 11.5 (Rd 1) and 12.5 (Rd 2.5).
 
 **C5. H1–H2 follows Rd, and is independent of F0.** [check] The LF flow
-derivative's H1–H2 is −4.0 dB at Rd 0.3, 3.8 at Rd 1 and 19.3 at Rd 2.7,
-close to a line −6.1 + 9.7 Rd (worst deviation 0.9 dB). Fant's reported
-line gives −4.3, 3.5 and 22.4 at the same Rd; the gap grows at large Rd,
-which may come from the prediction formulas (D6) or from the line itself.
+derivative's H1–H2 is −4.0 dB at Rd 0.3, 3.8 at Rd 1, 8.3 at Rd 1.4 and
+19.3 at Rd 2.7. Fant's Eq. 8 (−7.6 + 11.1 Rd) agrees to within 0.4 dB up
+to Rd 1.4, then this computation falls below it: by 1.1 dB at Rd 2 and
+3.1 dB at Rd 2.7. Fant calls his line an "almost perfect linear rise" of
+his Fig. 6, which this computation does not reproduce above Rd 1.4; the
+formulas are his and his Fig. 5A values are reproduced (C2), so the gap is
+likely in how his Fig. 6 measured H1 and H2 (from spectra of a sampled
+signal, not from the closed form) or in the line fit, but that is a guess.
+Across the whole range the closed form follows −6.1 + 9.7 Rd (worst
+deviation 0.9 dB).
 The current RGP source's H1–H2 is fixed in Hz, not in harmonics: 4.6 dB at
 100 Hz and 5.6 dB at 200 Hz. The polynomial pulse's is −2.5 dB at OQ 0.4
 and 6.5 dB at OQ 0.7: open quotient is its H1–H2 control.
@@ -162,14 +186,15 @@ and 6.5 dB at OQ 0.7: open quotient is its H1–H2 control.
 **C6. The current source is much brighter than any LF voice.** [check] At
 the lips at 100 Hz, relative to the first harmonic:
 
-| Harmonic | current RGP | LF Rd 0.5 | LF Rd 1 | LF Rd 2.5 |
-|---|---|---|---|---|
-| 2 (200 Hz) | −4.6 dB | +2.0 | −3.8 | −17.6 |
-| 10 (1 kHz) | −18.0 | −14.2 | −27.8 | −43.5 |
-| 30 (3 kHz) | −27.1 | −30.7 | −46.8 | −64.7 |
+| Harmonic | current RGP | LF Rd 0.5 | LF Rd 0.7 | LF Rd 1 | LF Rd 2.5 |
+|---|---|---|---|---|---|
+| 2 (200 Hz) | −4.6 dB | +2.0 | −0.3 | −3.8 | −17.6 |
+| 10 (1 kHz) | −18.0 | −14.2 | −20.8 | −27.8 | −43.5 |
+| 30 (3 kHz) | −27.1 | −30.7 | −38.9 | −46.8 | −64.7 |
 
-The current source has a modal H1–H2 but the high harmonics of a pressed
-voice and stronger still: 20 dB above modal LF at 3 kHz.
+Rd 0.7 is close to Fant's typical male values. The current source has the
+H1–H2 of Rd 1 but upper harmonics stronger than even Rd 0.5: 12 dB above
+the typical male LF pulse at 3 kHz, 20 dB above Rd 1.
 
 **C7. A fixed voice quality is a harmonic complex with fixed amplitudes and
 phases.** [check] The cosine sum with amplitudes 2|c_k| and phases
@@ -203,8 +228,8 @@ glide from 130 to 100 Hz, same formants; output levels equalized):
 
 - **The current source** is bright: modal H1–H2 but strong upper
   harmonics, so the upper formants stand out.
-- **LF Rd 1 (modal)** is darker: the upper formants are 15–20 dB weaker
-  relative to F1.
+- **LF Rd 0.7 (typical male, after Fant's quoted values)** and **Rd 1**
+  are darker: the upper formants are 10–20 dB weaker relative to F1.
 - **LF Rd 0.5 (pressed)**: H2 above H1 and more energy in the middle
   frequencies: the spectrum of a tense voice.
 - **LF Rd 2.5 (lax)**: nearly a sinusoid at F0 with weak formants: soft,
@@ -231,7 +256,7 @@ Layers follow `layout.md`.
   - `lf_pulse(rd, x)`: one period of the flow derivative (and, with
     `flow=True`, the flow) at fractions of a period `x`, for plotting.
     Sampled, so it aliases (C3); documented as a picture, not a source.
-  - `glottal_source(duration, fs, f0, rd=1.0)`: an LF voiced source on a
+  - `glottal_source(duration, fs, f0, rd=0.7)`: an LF voiced source on a
     fixed F0 or an F0 contour, built by `harmonic_complex` (C7). `rd` is a
     number or a `(times, values)` track; a track uses the Rd table (C8)
     and needs `harmonic_complex` to accept per-harmonic gains that change
@@ -298,10 +323,10 @@ unchanged. This proposal touches none of the WORLD files.
 - **D5.** Public names `lf_harmonics`, `lf_pulse`, `glottal_source`
   (recommended), or fewer: only `glottal_source` public and the rest
   private?
-- **D6.** The Rd prediction formulas could not be read in Fant (1995).
-  Could Cho check its Eqs. 2–4 (or upload the PDF) before the library code
-  lands (recommended), or accept them as widely quoted, with the docstring
-  saying so? They decide every number in C2, C5 and C6 at a given Rd.
+- **D6.** Default Rd: 0.7, close to Fant's typical male values
+  (recommended, as `klatt_synthesize`'s defaults are an adult male), or
+  1.0, the middle of the range in round numbers? (The Rd formulas
+  themselves are now checked against Fant (1995), see C2.)
 - **D7.** Phases: the LF pulse's own (recommended: it is the model, and
   `lf_pulse` then matches what is heard), or cosine phase like the current
   source? C9 says the difference is about 1 dB of crest factor.
@@ -309,11 +334,11 @@ unchanged. This proposal touches none of the WORLD files.
 ## Listening examples
 
 `/mnt/project-files/notes/glottal-source/make_examples.py` (project files,
-not the repository) writes nine 1 s, 16 kHz files beside itself, all the
+not the repository) writes ten 1 s, 16 kHz files beside itself, all the
 same /a/ (formants as in `klatt.md`, F0 130 → 100 Hz): 1 the current
 source, 2–4 LF at Rd 0.5, 1 and 2.5, 5 Rd 2.5 with aspiration, 6 LF Rd 1
 levels in cosine phase, 7–8 the polynomial pulse at OQ 0.4 and 0.7 (no tilt
-filter), 9 an Rd glide from 0.5 to 2.5 at 100 Hz. It uses the checker's
+filter), 9 an Rd glide from 0.5 to 2.5 at 100 Hz, 10 LF at Rd 0.7. It uses the checker's
 prototype for the pulse spectra and the library's `harmonic_complex` and
 `resonator` for the rest; its version of the current source matches
 `so.klatt_synthesize` to 1e-13, so only the source differs. Not claims.
@@ -322,15 +347,14 @@ prototype for the pulse spectra and the library's `harmonic_complex` and
 
 - Fant, G., Liljencrants, J., & Lin, Q. (1985). A four-parameter model of
   glottal flow. *STL-QPSR* 26(4), 1–13. KTH Speech, Music and Hearing.
-  Not read (server error); as cited by VOICEBOX `v_glotlf`.
-- Fant, G., Liljencrants, J., & Lin, Q. (1985). A four-parameter model of
-  glottal flow. Paper presented at the French–Swedish Symposium, Grenoble,
-  April 1985 (as cited by Fant, 1986).
+  Not read (server error); as cited in Fant (1995) and by VOICEBOX. Fant
+  (1986) cites it as a paper at the French–Swedish Symposium, Grenoble,
+  April 1985.
 - Fant, G. (1986). Glottal flow: models and interaction. *Journal of
   Phonetics* 14, 393–399. Read in full.
 - Fant, G. (1995). The LF-model revisited. Transformations and frequency
-  domain analysis. *STL-QPSR* 36(2–3), 119–156. Read in part, through a
-  text extractor (see above).
+  domain analysis. *STL-QPSR* 36(2–3), 119–156. Read: pp. 119–126, the
+  Eq. 8 passage, and the reference list.
 - Klatt, D. H. (1980). Software for a cascade/parallel formant synthesizer.
   *JASA* 67(3), 971–995. doi:10.1121/1.383940. (Read for `klatt.md`.)
 - Klatt, D. H., & Klatt, L. C. (1990). Analysis, synthesis, and perception
