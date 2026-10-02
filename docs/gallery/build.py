@@ -37,6 +37,10 @@ plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 # ------------------------------------------------------------------- figures
 def encode_figure(fig, time_axes) -> tuple[bytes, list[dict], tuple[int, int]]:
     """The figure as a 256-colour PNG, and where each time axis sits (for the playhead)."""
+    # Constrained layout moves the axes a little on its second pass, so lay the figure out once without
+    # drawing anything, then draw it for real: the pixels and the playhead regions below then come from
+    # the same, settled layout, and the figure is rendered only once.
+    fig.draw_without_rendering()
     fig.canvas.draw()
     regions = []
     for ax in time_axes:
@@ -46,14 +50,14 @@ def encode_figure(fig, time_axes) -> tuple[bytes, list[dict], tuple[int, int]]:
         regions.append(
             {"x0": box.x0, "x1": box.x1, "top": 1 - box.y1, "bottom": 1 - box.y0, "t0": t0, "t1": t1}
         )
-    buf = io.BytesIO()
-    fig.savefig(buf, dpi=100)  # no bbox_inches: keeps figure fractions valid for the playhead
+    # The pixels of that draw are what savefig would write (the figure dpi is 100 in rcParams, and there
+    # is no bbox_inches cropping, which keeps figure fractions valid for the playhead).
+    image = Image.fromarray(np.asarray(fig.canvas.buffer_rgba())).convert("RGB")
     plt.close(fig)
-    im = Image.open(io.BytesIO(buf.getvalue())).convert("RGB")
-    q = im.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+    quantized = image.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
     out = io.BytesIO()
-    q.save(out, "PNG", optimize=True)
-    return out.getvalue(), regions, im.size
+    quantized.save(out, "PNG", optimize=True)
+    return out.getvalue(), regions, image.size
 
 
 def flac_bytes(snd: so.Sound) -> bytes:
