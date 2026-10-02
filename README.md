@@ -293,6 +293,7 @@ listed at the end.
    methods are reviewed by Brandtsegg et al. (2018); sonore's windowed
    switching with onset-aligned interpolation is described on the
    [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) page.
+   Design proposal: `docs/design/moving-sound.md`.
 2. **Texture modulation convergence.** Rebalance the objective so
    modulation power converges (see Texture synthesis below).
 

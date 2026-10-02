@@ -1,0 +1,389 @@
+# Moving sound sources
+
+What it would take to make `so.move_sound` render sources that move
+convincingly: sources that change distance (level, travel time, Doppler
+shift and the balance with a room's reverberation), paths given as
+functions of time such as the sinusoidal azimuth swing of Cho & Kidd
+(2022), and how the stages compose with measured HRIRs. It sets out what
+`move_sound` does today, the physics of a moving point source, what the
+current method gets right and wrong (measured), a proposed renderer, and
+the decisions for Cho.
+
+Status: proposal. No library code until the decisions below are answered.
+
+## Why
+
+The README roadmap's first Next item: "Revisit `move_sound`, since linear
+trajectories sound unconvincing: sources that change distance (level
+change, travel-time delay, Doppler shift and room reverberation), a
+sinusoidal azimuth trajectory like the one in Cho & Kidd (2022), and
+faster rendering via batched frequency-domain filtering."
+
+A source that only changes direction is already rendered well (C5). What
+is missing is everything that depends on distance. Today a path that
+moves away from the head is filtered by HRIRs at the new positions, but
+nothing makes it quieter, later or lower in pitch unless the HRIR set
+itself holds several distances, and even then nothing beyond the
+outermost measured distance (1.6 m for PKU-IOA) changes at all.
+
+## What `move_sound` does today
+
+`move_sound(sound, trajectory, hrirs)` takes an `(N, 3)` array of
+Cartesian points and spreads them evenly over the sound's duration. Each
+point gets a raised-cosine window on the input, centered on its moment;
+neighbouring windows overlap and sum to one. Each windowed piece is
+convolved with the HRIR interpolated at that point, and the outputs are
+added. The HRIRs are interpolated with their onsets aligned and the onset
+delays interpolated separately, so neighbouring directions do not
+comb-filter when averaged. The Moving talkers gallery page uses 200 points
+per second.
+
+This is filter switching on the input side, smoothed (Brandtsegg et al.,
+2018, review it with output crossfading and partitioned-convolution
+updates). Within one time window the filter is fixed, so a delay that
+changes continuously is approximated by a staircase of fixed delays,
+cross-faded. That is harmless while neighbouring delays differ by a small
+fraction of a period, and fails when they do not (C4).
+
+Distance enters only through `distance_gain_db`, which the caller applies
+by hand to a static source (the Synthetic reverberation page does this).
+
+## How the claims are verified
+
+As in the other design documents, each claim is numbered and tagged:
+
+- **[derived]**: follows from the stated physics in a line or two, shown
+  here.
+- **[check]**: a number printed by `tools/check_moving_sound_claims.py`.
+  The script uses only NumPy and SciPy, shares no code with sonore, holds
+  a prototype of the proposed propagation stage, of the current switching
+  and of a batched version of it, and runs in about ten seconds. The
+  numbers come from NumPy 2.4 and SciPy 1.17.1 at 48 kHz.
+- **[open]**: needs data this container cannot download (the PKU-IOA
+  files); the checker has the code, run as
+  `python tools/check_moving_sound_claims.py --pku DIR`.
+
+Nothing new was read for this document. The physics of a moving point
+source is textbook acoustics, derived below and checked numerically
+against its own closed form; the references are the ones the Moving
+talkers page already cites, plus pointers for the standard results.
+
+## Words used here
+
+- **Emission time** t_e: when the source emits a sample, on the source's
+  own clock. The input sound is indexed by emission time.
+- **Arrival time** t: when that sample reaches the ear. The output is
+  indexed by arrival time.
+- **Path**: where the source is, as a function of emission time. A
+  **trajectory** argument is any of the forms in D1 that describe a path.
+- **Time window** and **hop**: as in `philosophy.md`; here, the stretch of
+  sound one HRIR shape filters, and their spacing.
+
+## The physics in brief [derived]
+
+A point source at distance r(t_e) from the head center emits s(t_e). In
+free air the sound reaches the head center at
+
+    t = t_e + r(t_e) / c,          c = 343 m/s,
+
+with its amplitude falling as 1/r. So the signal at the head center is
+
+    p(t) = s(t_e(t)) / r(t_e(t)),
+
+where t_e(t) solves the equation above. Doppler shift is not a separate
+effect: it is what reading s at t_e(t) does when r changes. The received
+frequency is the emitted one times dt_e/dt = 1 / (1 + ṙ/c), up for an
+approaching source and down for a receding one.
+
+The equation has one solution whenever the source is slower than sound,
+and fixed-point iteration t_e ← t − r(t_e)/c, started from t − r(t)/c,
+converges with contraction factor |ṙ|/c (C3).
+
+Two refinements are left out on purpose. A moving monopole's amplitude
+also carries a convective factor 1/(1 − M_r)², with M_r = ṙ/c the radial
+Mach number toward the listener; it is below 0.8 dB at 15 m/s (C1) and
+depends on what one calls "the source signal", so the renderer treats
+the input as the sound a still listener at 1 m would record from a still
+source. Air absorption is a few tenths of a dB per 10 m below 4 kHz
+(inferred from ISO 9613-1 orders of magnitude, not computed here), so it
+matters only for distances beyond the scope of this work.
+
+At the ears, the head adds what the HRIR holds: a direction-dependent
+filter and the extra delay to each ear. With onset-aligned HRIRs (as
+`HRIRSet` already builds them) this splits cleanly into an **interaural
+delay** per ear, e_ear(direction), and an aligned **shape**. The delay to
+each ear is then r/c + e_ear, and each ear reads the source at its own
+emission time. A source moving sideways at constant distance has no
+Doppler at the head center, but its two ear delays change in opposite
+directions, so each ear hears a slightly different pitch (C2).
+
+## Claims
+
+**C1. Doppler shifts are small but audible at street speeds; the
+convective level change is not worth modelling.** [check] Straight toward
+the head the pitch rises by 7.1 cents at walking speed (1.4 m/s), 25 cents
+running (5 m/s) and 77 cents for a car in town (15 m/s); receding, it falls
+by about as much, so a pass-by at 15 m/s glides about 150 cents. The
+convective factor changes the level by 0.07 dB at 1.4 m/s and 0.78 dB at
+15 m/s.
+
+**C2. The azimuth swing of Cho & Kidd (2022) has no Doppler at the head
+center, and about 6 cents between the ears.** [check] A source swinging
+30° to either side of straight ahead at 2 Hz on a 1 m circle keeps its
+distance exactly (range 1e-16 m), while moving at up to 6.6 m/s along its
+arc. With Woodworth's interaural delays (head radius 8.75 cm) the two
+ears' delays change in opposite directions, and the pitch difference
+between the ears peaks at 5.8 cents as the source crosses the front.
+
+**C3. The propagation stage is exact up to the fractional-delay read,
+and a 32-tap windowed sinc makes that read negligible.** [check] For a
+source passing 2 m in front at 15 m/s over 3 s, the fixed-point solve
+reaches 1e-12 s in 7 iterations (contraction factor 0.044). With t_e
+exact, the received tone differs from the closed form p(t) above only by
+the interpolation used to read s between samples:
+
+| read | 500 Hz | 2 kHz | 8 kHz |
+|---|---|---|---|
+| linear | −68 dB | −44 dB | −20 dB |
+| cubic Lagrange | −130 dB | −82 dB | −35 dB |
+| Kaiser-windowed sinc, 32 taps, β = 8 | −96 dB | −97 dB | −97 dB |
+
+(error energy re signal energy). The sinc's error is flat in frequency;
+Lagrange is better at low frequencies and poor near the top. The
+received tone glides from +77 to −74 cents. In plain NumPy the 32-tap read
+takes about 1.8 s for 3 s of sound and two ears.
+
+**C4. Switching between fixed filters cannot follow a changing
+distance.** [check] Rendering the same pass-by the way `move_sound` does
+today, with 200 points per second and each point's filter an exact delay
+r/c with gain 1/r, neighbouring delays differ by up to 218 µs. Two copies
+of a sound 218 µs apart cross-fading is a comb filter with its first notch
+near 2.3 kHz. Against the closed form the error is −26 dB at 500 Hz,
+−9 dB at 2 kHz and +1 dB at 8 kHz (as much error as signal). With the
+source still, the same code is exact to −136 dB, so the error is the
+switching, not the filters. More points per second shrink the steps but
+never remove them.
+
+**C5. For the azimuth swing, the current switching is already good.**
+[check] For the 30° swing at 2 Hz, with Woodworth delays as the only
+filters, the current switching's error (worse ear) is −54 dB at 500 Hz and
+−39 dB at 4 kHz. So the Moving talkers page's stimuli are not wrong; the
+renderer is needed for distance, not for direction.
+
+**C6. Batched frequency-domain filtering gives the same output, but
+little speed.** [check] Transforming every windowed piece in one batched
+FFT and multiplying by every filter's spectrum at once matches the loop
+to 7e-16 of the peak (3 s, 200 points per second, 750 taps, the length of
+a PKU-IOA HRIR resampled to 48 kHz), and takes about 0.10 s against the
+loop's 0.12 s. Measured separately with sonore and the MIT KEMAR set
+(1.4 m, 512 taps at 44.1 kHz, shipped with libmysofa), today's
+`move_sound` renders 3 s at 48 kHz through 600 points in 0.22 s, about
+half of it HRIR interpolation and resampling. Rendering speed is not the
+problem the roadmap assumed; the new per-sample delay (C3) will cost more
+than the switching does.
+
+**C7. [open] Whether each PKU-IOA distance carries its own 1/r level and
+r/c delay.** The checker prints, for each distance file, the mean level
+and mean onset over all directions and both ears, re the 1 m file, beside
+what 1/r and r/c predict. If the files follow 1/r, applying 1/r again
+from the geometry would count distance twice; if they were normalized,
+using them as measured would lose the level change between 20 and 160 cm.
+D4 proposes a normalization that is right either way, and C7 says how
+much it changes. It needs the eight SOFA files, which the cloud container
+cannot download.
+
+## Proposed design
+
+`move_sound` keeps its name and signature and gains stages; `spatialize`
+stays `move_sound` with one fixed point, so the two always agree.
+
+1. **Path.** The trajectory becomes a function of emission time (D1):
+   given as a function, as `(times, points)`, or as today's `(N, 3)`
+   array spread evenly over the sound.
+2. **Propagation, per ear.** For each output sample and each ear, solve
+   t = t_e + r(t_e)/c + e_ear(direction(t_e)) for t_e (C3's iteration),
+   and read the input at t_e with the 32-tap windowed sinc, times
+   1/r(t_e) (0 dB at 1 m, as `distance_gain_db`). Doppler, the travel
+   time and the continuously changing interaural delay all come out of
+   this one read. The interaural delays come from the HRIR onsets
+   `HRIRSet` already measures, interpolated at the hop points and then
+   smoothly in time.
+3. **Direction, per ear.** The onset-aligned HRIR shapes, interpolated at
+   points one hop apart (5 ms by default), filter each ear's propagated
+   signal with today's raised-cosine switching on the output timeline.
+   The shapes carry no delay that changes with direction, so switching
+   them does not comb-filter the way C4 does.
+4. **Room** (D6). A two-channel reverberant tail, such as
+   `so.synth_ir(rt60, fs, n_channels=2)`, is driven by the source signal
+   delayed by the path's travel time but without the 1/r, so the tail's
+   level stays put while the direct sound falls 6 dB per doubling of
+   distance, and the direct-to-reverberant ratio follows distance as on
+   the Synthetic reverberation page. `drr_db` sets it at 1 m.
+
+Distances outside the HRIR set: beyond the outermost measured distance,
+the shape and interaural delays come from the outermost shell in the same
+direction, and distance acts only through r/c and 1/r (far field). Inside
+the innermost shell (20 cm for PKU-IOA) the renderer raises an error, as
+`HRIRSet.at` does today for points outside the measured region.
+
+API sketch (names provisional until D1, D7, D8):
+
+```python
+hrirs = so.load_hrirs(distances="all")
+
+# Cho & Kidd (2022): azimuth swing at 1 m, as a function of time
+swing = so.hcc_trajectory(dist=100, elev=0, azim=lambda t: 30 * np.sin(2 * np.pi * 2 * t))
+so.move_sound(talker, swing, hrirs)
+
+# a talker walking toward the listener, 3 m to 0.5 m, in a room
+approach = so.hcc_trajectory(dist=([0, 2], [300, 50]), elev=0, azim=20)
+room = so.synth_ir(0.6, fs, n_channels=2)
+so.move_sound(talker, approach, hrirs, room=room, drr_db=0)
+
+# today's call, unchanged in form
+so.move_sound(talker, so.circular_trajectory((100, 0, 90), (100, 0, -90), 200), hrirs)
+```
+
+## Decisions
+
+- **D1. How a trajectory is given.** (a) Dispatch on the argument's
+  type, as `harmonic_complex` does for `f0`: an `(N, 3)` array is spread
+  evenly over the sound (today's meaning, so existing calls keep their
+  meaning), a `(times, points)` pair is interpolated linearly in time like
+  a `Track`, and a callable `t -> (n, 3)` is evaluated wherever the
+  renderer needs a position (recommended: one argument, no new class,
+  and the callable gives the propagation stage an exact position at every
+  sample, which C3's exactness needs). (b) A `Trajectory` class with
+  `times`, `points`, an `.at(t)` method and constructors; its best form
+  is what (a) reaches without a class, and it would make every caller
+  build one. (c) Arrays only, with a `times=` keyword: the smallest
+  change, but a swing then has to be sampled by hand finely enough for
+  the per-sample delay. Note for (a): a `(times, points)` pair
+  interpolated in Cartesian space cuts corners on a sparse arc, which
+  shortens the distance between points; `hcc_trajectory` (D8)
+  interpolates in distance, elevation and azimuth instead.
+- **D2. Propagation on by default?** (a) On (recommended: the point of
+  the roadmap item; for a source at a fixed 1 m it adds only the 2.9 ms
+  travel time and no level change). (b) Off by default behind
+  `propagation=True`, so existing outputs change only on request. The
+  convective factor (C1) is left out either way.
+- **D3. Where time zero is.** (a) The output starts at emission time
+  zero, so the sound arrives r/c later, 2.9 ms at 1 m and 29 ms at 10 m
+  (recommended: talkers at different distances mixed with `so.mix` then
+  arrive in the right order). (b) Shift each output so its first arrival
+  is at zero, which loses the relative timing between sources.
+- **D4. HRIR sets that hold several distances.** (a) Before
+  interpolating, scale each distance shell to the mean energy of the
+  shell nearest 1 m and remove each shell's mean onset, then take level
+  and travel time from the geometry (recommended: right whether or not
+  the files carry 1/r, C7; it keeps every within-shell difference,
+  including near-field ILD growth; a single-distance set is unchanged).
+  (b) Use the shells as measured and apply 1/r and r/c only beyond the
+  outermost shell: simplest, but correct only if C7 shows the files
+  follow 1/r and r/c closely, and it puts a kink at 1.6 m. Either way C7
+  should be run first; Cho can run it locally with `--pku`, or upload
+  the eight SOFA files (about 104 MB) to the project files.
+- **D5. How the changing filter is applied.** (a) The continuous
+  per-ear delay of stage 2 plus switched aligned shapes (recommended:
+  exact for distance and timing, C3, and leaves only slowly changing
+  shapes to switching). (b) Today's switching of whole HRIRs, extended
+  with r/c and 1/r per point: fails for distance (C4). (c) A truly
+  time-varying convolution, a fresh interpolated HRIR at every sample:
+  the textbook definition, but about 750 taps × 2 ears per sample, two
+  orders of magnitude more work than (a) for no audible gain once the
+  delays are continuous. For the read, the 32-tap windowed sinc
+  (recommended, flat −97 dB) or cubic Lagrange (cheaper, −35 dB at
+  8 kHz).
+- **D6. The room.** (a) `room=` a two-channel tail Sound plus `drr_db`
+  at 1 m, driven by the delayed source without 1/r (recommended: any
+  tail works, measured or `synth_ir`, and the direct path keeps its exact
+  rendering). (b) `room=(rt60, drr_db)`, building the tail inside: shorter
+  to call but hides `synth_ir`'s options. (c) Early reflections by the
+  image-source method, each reflection a moving source of its own: the
+  most physical, a later step if (a) sounds too diffuse. `synth_ir`'s
+  independent channels make the tail's interaural correlation zero at
+  every frequency, unlike a real diffuse field at low frequencies; that
+  is a property of the existing tail, unchanged here.
+- **D7. One function or a new one.** (a) Extend `move_sound`
+  (recommended: one name for one job, `spatialize` stays its special
+  case, and D1's dispatch keeps old calls valid). (b) A new
+  `so.render_source` beside an unchanged `move_sound`: old outputs stay
+  exactly as they are, at the cost of two renderers that disagree on a
+  receding source. (c) A `Scene` that holds the HRIR set, the room and
+  several sources and renders the mix: matches how an experiment is
+  described (three talkers, one room), but `so.mix` already composes, and
+  a class with state is more than this needs. And: keep the loop or move
+  to the batched FFT of C6? Recommended: whichever reads more simply once
+  the shapes run on the output timeline; C6 shows it is not a speed
+  decision, and the roadmap's "faster rendering" can be dropped.
+- **D8. A helper for paths.** (a) `so.hcc_trajectory(dist, elev, azim)`
+  where each coordinate is a number, a `(times, values)` pair or a
+  function of time, returning a callable path (recommended: one helper
+  covers the swing, an approach, an orbit or a pass-by, in the
+  coordinates people think in, with the `Track` convention the Klatt
+  parameters use, plus callables). (b) A dedicated
+  `so.sinusoidal_trajectory(center, amplitude, rate, phase)`: reads well
+  for the one experiment, but every other path needs its own function.
+  `linear_trajectory` and `circular_trajectory` stay as they are.
+
+## What a listener hears
+
+The Moving talkers page gains a section on distance, all of it built
+locally by Cho (the cloud container cannot download the HRIRs): a talker
+walking toward the listener from 3 m to 50 cm, dry and in a room, where
+the room makes the approach audible as the direct sound grows out of the
+reverberation; and a pass-by at 15 m/s, where the pitch glides about 150
+cents as it passes (C1, C3). The existing swing examples stay, re-rendered,
+and should sound the same (C5).
+
+## Tests
+
+- A still source matches `spatialize` with the travel-time delay and
+  1/r gain applied (to float precision).
+- A tone on a pass-by, through a set whose shapes are unit impulses,
+  matches the closed form p(t) to within C3's −90 dB.
+- The interaural delay of a swing follows the HRIR onsets.
+- A source at exactly 1 m with no room has 0 dB distance gain.
+- The tail's level does not change with distance; the direct sound's
+  falls 6 dB per doubling.
+- At build time, measured on the MIT KEMAR set: aligned shapes switched
+  at 5 ms against the same shapes switched at 0.5 ms, to show the
+  switching left in stage 3 is inaudible.
+
+## Order
+
+1. Answer D1–D8; run C7.
+2. Trajectory forms and `hcc_trajectory`.
+3. Propagation stage, with the claim tests.
+4. Shell normalization (D4), after C7.
+5. Room tail.
+6. Gallery section, built locally; README roadmap and Done.
+
+## Out of scope
+
+Head rotation (paths are relative to the head, so a turning listener is
+a rotating path), ground reflections, air absorption, sources faster than
+about 30 m/s, sources inside 20 cm, and listener models.
+
+## References
+
+- Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying
+  filters. *Applied Sciences* 8(1), 103. The switching and crossfading
+  methods.
+- Cho & Kidd (2022). Auditory motion as a cue for source segregation and
+  selection in a "cocktail party" listening environment. *J. Acoust. Soc.
+  Am.* 152(3), 1684–1694. doi:10.1121/10.0013990. The azimuth swing.
+- Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related
+  transfer functions measured with high spatial resolution using a spark
+  gap. *IEEE Trans. Audio, Speech, Lang. Process.* 17(6), 1124–1132. The
+  HRIRs at 20–160 cm.
+- Traer & McDermott (2016). Statistics of natural reverberation enable
+  perceptual separation of sound and space. *PNAS* 113(48), E7856–E7865.
+  The synthetic tail.
+- Pointers for standard results, not read for this document: Morse &
+  Ingard (1968), *Theoretical Acoustics*, for the moving point source and
+  its convective factor; Laakso, Välimäki, Karjalainen & Laine (1996),
+  Splitting the unit delay, *IEEE Signal Processing Magazine* 13(1),
+  30–60, for fractional-delay interpolation; Woodworth & Schlosberg
+  (1954), *Experimental Psychology*, for the spherical-head interaural
+  delay used in C2 and C5.
