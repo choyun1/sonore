@@ -30,6 +30,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Unvoiced gaps](#h-unvoiced-gaps): silence or shaped noise where the voice is not voiced.
 # - [Pitch and timbre apart](#h-pitch-and-timbre-apart): the same envelope on other contours.
 # - [Phases on a moving pitch](#h-phases-on-a-moving-pitch): cosine, Schroeder and random phase.
+# - [A higher voice](#h-a-higher-voice): the same resynthesis on a woman's voice.
 # - [What this page leaves out](#h-what-this-page-leaves-out): better envelopes, aperiodicity,
 #   and the glottal pulse.
 
@@ -361,6 +362,74 @@ sound = snd
 snd = finish(buzzes["random"])
 fig, playhead = show(snd, "equal harmonics, random phase", contours["so.f0_track"])
 sound = snd
+
+# %% [markdown]
+# ## A higher voice
+#
+# The same recipe on the same sentence read by a woman (CMU ARCTIC, speaker slt), whose pitch is
+# about half as high again as the man's. Two things are harder. Her harmonics are further apart,
+# so they sample the formants more sparsely, and whatever lies between them is not in the
+# spectrum to be measured. And the lifter at half a period keeps fewer quefrencies, so the
+# envelope it recovers is smoother. Everything else, the tracker, the noise in the gaps and its
+# balance, is done as above. Listen for whether her vowels come back as clearly as his.
+
+
+# %%
+def resynthesize(snd, seed=2):
+    """A pitch track and a cepstral envelope from snd, put back together as above:
+    harmonics on so.f0_track shaped by the envelope, and envelope-shaped noise where unvoiced."""
+    snd_stft = so.STFT(snd, win_dur=0.040, hop_dur=0.005)
+    snd_cep = so.Cepstrum(snd_stft)
+    snd_track = so.f0_track(snd)
+    is_voiced = snd_track.voiced[0]
+    voiced_times, voiced_f0s = snd_track.t[is_voiced], snd_track.f0[0][is_voiced]
+    lifter_cutoffs = 0.5 / np.exp(np.interp(snd_cep.t, voiced_times, np.log(voiced_f0s)))
+    snd_envelope = snd_cep.lifter(lifter_cutoffs).envelope()[0]
+    snd_log_envelope = RegularGridInterpolator(
+        (snd_cep.t, snd_stft.f), np.log(snd_envelope.T), bounds_error=False, fill_value=None
+    )
+
+    def snd_formants(t, f):
+        return np.exp(snd_log_envelope(np.stack([t, f], axis=-1)))
+
+    snd_duration = snd.duration
+    harmonics = so.harmonic_complex(snd_duration, fs, snd_track, amplitudes=snd_formants).data[:, 0]
+    noise_stft = so.STFT(so.gaussian_noise(snd_duration, fs, rng=seed), win_dur=0.040, hop_dur=0.005)
+    noise_stft.data = snd_envelope[None] * np.exp(1j * np.angle(noise_stft.data))
+    snd_breath = noise_stft.to_sound().data[: len(snd), 0]
+    sample_times = np.arange(len(snd)) / fs
+    snd_voicing = np.interp(sample_times, snd_track.t, is_voiced.astype(float))
+    original = snd.data[:, 0]
+    snd_balance = rms((1 - snd_voicing) * original) / rms(snd_voicing * original)
+    gap = (1 - snd_voicing) * snd_breath
+    out = harmonics + gap * snd_balance * rms(harmonics) / rms(gap)
+    return finish(so.Sound(out, fs)), (snd_track.t, snd_track.f0[0])
+
+
+sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+resynthesis_female, contour_female = resynthesize(sentence_female)
+f0_female = contour_female[1]
+print(f"median voiced F0: {np.median(f0_female[f0_female > 0]):.0f} Hz (slt), {median:.0f} Hz (bdl)")
+
+# %% [about]
+# Her sentence, for reference, with `so.f0_track`'s contour over the narrowband spectrogram.
+
+# %% [demo hv1] The sentence, a higher voice
+fig, playhead = show(sentence_female, "the sentence read by slt", contour_female)
+for ax in playhead:
+    ax.set_xlim(0, sentence_female.duration)
+sound = sentence_female
+
+# %% [about]
+# Her sentence from a pitch track and a cepstral envelope, as in
+# [Shaped noise in the gaps](#d-hu2) for his. Each harmonic carries the envelope's level at its
+# own frequency, so with her harmonics further apart, the formants are drawn from fewer samples.
+
+# %% [demo hv2] Resynthesized from pitch and envelope, a higher voice
+fig, playhead = show(resynthesis_female, "harmonics and shaped noise, slt", contour_female)
+for ax in playhead:
+    ax.set_xlim(0, sentence_female.duration)
+sound = resynthesis_female
 
 # %% [markdown]
 # ## What this page leaves out
