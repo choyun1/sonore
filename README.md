@@ -386,8 +386,8 @@ listed at the end.
 - **F0 tracking.** `so.f0_track`: YIN-style candidates refined by
   instantaneous frequency (after WORLD's StoneMask), a periodicity score and
   a Viterbi voicing decision. Against laryngograph reference F0 (the FDA
-  database, Bagshaw et al., 1993) it gets the voicing of 5.5% (male) and
-  1.6% (female) of time windows wrong, where WORLD's Harvest gets about 21%; see
+  database, Bagshaw et al., 1993) it gets the voicing of 5.6% (male) and
+  1.5% (female) of time windows wrong, where WORLD's Harvest gets about 21%; see
   `docs/design/f0.md`.
 - **Harmonic complexes on an F0 contour.** `so.harmonic_complex` takes an
   F0 contour as well as a number: the phase is the contour's exact running

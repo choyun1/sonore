@@ -73,6 +73,14 @@ version (0.x.y) only fixes bugs.
   the HRIR download tests to `tests/stimuli/test_hrir_data.py`.
 
 ### Changed
+- `so.f0_track` keeps up to eight candidates per time window (was four),
+  and its subharmonic rule now covers every whole multiple of a candidate's
+  frequency, not only the octave. Steady synthetic vowels at 250 to 400 Hz
+  were tracked at F0/3 or F0/5 (`docs/design/female-voices.md`); now they
+  are tracked exactly. On the FDA laryngograph database the voicing error
+  is 5.6% (male) and 1.5% (female), as before within 0.1 points, and
+  tracking takes about twice as long. `F0Track.candidates` has eight
+  columns.
 - The number goes first in a level: `dB*6` and `(6*dB)*2` now raise a
   `TypeError` that suggests `6*dB` and `2*(6*dB)`. `6*dB` is unchanged.
 - A level is no longer a plain number: `float(6*dB)` raises and suggests

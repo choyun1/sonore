@@ -2,7 +2,9 @@
 
 The spoken sentences used by the gallery: the "seeing speech" sentence
 (docs/design/frames.md, step 3: decisions D12 and D13), which is also the
-target on the moving talkers page, and that page's two masker sentences.
+target on the moving talkers page, and that page's two masker sentences;
+and the same sentence read by a female speaker, for checking the analyses on
+a voice an octave higher (tools/check_female_voices.py).
 
 ## Sources
 
@@ -11,6 +13,7 @@ target on the moving talkers page, and that page's two masker sentences.
 | `bdl_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `bdl` (US English, male) | CMU ARCTIC `bdl` database, file `arctic_a0131.wav`, downloaded by Cho from festvox.org/cmu_arctic (2026-10-01) | CMU ARCTIC licence (CMU, permissive; see below) | 2.53 s, 16 kHz, 16-bit, mono |
 | `rms_arctic_a0132.flac` | CMU ARCTIC utterance `arctic_a0132` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0132.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC licence (see below) | 2.81 s, 16 kHz, 16-bit, mono |
 | `rms_arctic_a0133.flac` | CMU ARCTIC utterance `arctic_a0133` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0133.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC licence (see below) | 4.82 s, 16 kHz, 16-bit, mono |
+| `slt_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `slt` (US English, female) | CMU ARCTIC `slt` database, file `arctic_a0131.wav`, supplied by Cho (2026-10-02) | CMU ARCTIC licence (see below) | 2.64 s, 16 kHz, 16-bit, mono |
 
 Citation: Kominek, J. & Black, A. W. (2004). The CMU Arctic speech databases.
 *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224.
@@ -36,6 +39,10 @@ converted to Unix ones. It is the same notice as the `bdl` one except for the
 copyright year (2004 rather than 2003). The prompt text of these two
 utterances has not been copied here.
 
+**The `slt` file.** Its release's notice, as supplied by Cho (2026-10-02),
+is byte for byte the `bdl` one, so [`COPYING_CMU_ARCTIC`](COPYING_CMU_ARCTIC)
+covers it too. It reads the same sentence as `bdl_arctic_a0131.flac`.
+
 **Modifications** (marked as the licence requires):
 `bdl_arctic_a0131.flac` is the original `arctic_a0131.wav` re-encoded
 losslessly as FLAC. The samples are identical (checked sample for sample);
@@ -43,6 +50,8 @@ there is no trimming, resampling or level change, and the gallery keeps
 it at its native 16 kHz (D12).
 `bdl_arctic_a0131.pm` is the release's pitch-mark file for this utterance,
 unmodified.
+`slt_arctic_a0131.flac` is likewise the original `arctic_a0131.wav` of the
+`slt` release re-encoded losslessly, identical sample for sample.
 `rms_arctic_a0132.flac` and `rms_arctic_a0133.flac` are the original
 `.wav` files re-encoded losslessly as FLAC, identical sample for sample, with
 no trimming, resampling or level change.

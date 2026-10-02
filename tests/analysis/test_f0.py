@@ -48,6 +48,26 @@ def test_steady_vowels_are_tracked_exactly(f0):
     assert err < 0.01
 
 
+@pytest.mark.parametrize("f0", [250.0, 300.0, 400.0])
+def test_steady_high_vowels_are_not_tracked_at_a_subharmonic(f0):
+    # A perfectly periodic sound has a difference-function minimum at every
+    # multiple of its period; the period itself must stay among the
+    # candidates, and its multiples (F0/2, F0/3, ...) must not win.
+    gains = [(436, 60), (2761, 100), (3372, 120), (4100, 175)]  # women's heed (Hillenbrand et al. 1995)
+    phase = 2 * np.pi * f0 * TT
+    y = np.zeros(N)
+    for k in range(1, int(0.95 * FS / 2 / f0) + 1):
+        z = np.exp(-2j * np.pi * k * f0 / FS)
+        h = 1.0
+        for f, bw in gains:
+            r = np.exp(-np.pi * bw / FS)
+            h = h / (1 - 2 * r * np.cos(2 * np.pi * f / FS) * z + r * r * z * z)
+        y += np.abs(h) * np.cos(k * phase)
+    err, unvoiced = errors(so.f0_track(so.Sound(y, FS)), np.full(N, f0))
+    assert unvoiced == 0
+    assert err < 0.01
+
+
 @pytest.mark.parametrize(
     "contour",
     [100 * 2**TT, 150 * (1 + 0.06 * np.sin(2 * np.pi * 5.5 * TT))],
@@ -94,7 +114,7 @@ def test_channels_are_tracked_separately():
     a, b = vowel(np.full(N, 110.0)), vowel(np.full(N, 220.0))
     trk = so.f0_track(so.Sound(np.column_stack([a, b]), FS))
     assert trk.f0.shape == (2, len(trk.t)) == trk.score.shape
-    assert trk.candidates.shape == (2, len(trk.t), 4)
+    assert trk.candidates.shape == (2, len(trk.t), 8)
     inner = (trk.t > 0.05) & (trk.t < 0.25)
     np.testing.assert_allclose(trk.f0[:, inner] / [[110.0], [220.0]], 1, rtol=1e-4)
 
