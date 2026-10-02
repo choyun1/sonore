@@ -259,17 +259,28 @@ def main():
                 (est.max(0) - est.min(0)).max(),
             )
 
-    # C3: the recovery lifter's share (q1 = 0 against WORLD's -0.15)
-    f0 = 200.0
-    f = contour("steady", n, f0)
-    x = vowel(f, lambda q: np.full_like(q, -200.0), rng, noise=False)
-    k = np.arange(1, int(4000 / f0) + 1)
-    bins = np.round(k * f0 / FS * N_FFT).astype(int)
-    true_db = 10 * np.log10(envelope_amp(k * f0) ** 2 * peak_level(f0))
-    for q1 in (0.0, -0.15):
-        e = 10 * np.log10(cheaptrick(x, 0.3, f0, q1)[bins]) - true_db
-        f1 = np.argmin(np.abs(k * f0 - 730))
-        report("C3", f"q1 = {q1:+.2f}: level at the harmonic nearest F1, re its peak [dB]", e[f1])
+    # C3: the recovery lifter: none, the CheapTrick paper's q1, WORLD's code
+    for f0 in (100.0, 200.0, 300.0):
+        f = contour("steady", n, f0)
+        x = vowel(f, lambda q: np.full_like(q, -200.0), rng, noise=False)
+        k = np.arange(1, int(4000 / f0) + 1)
+        bins = np.round(k * f0 / FS * N_FFT).astype(int)
+        true_db = 10 * np.log10(envelope_amp(k * f0) ** 2 * peak_level(f0))
+        times = 0.3 + np.arange(10) / f0 / 10
+        for q1 in (0.0, -0.09, -0.15):
+            err = np.array([10 * np.log10(cheaptrick(x, t, f0, q1)[bins]) - true_db for t in times])
+            report(
+                "C3",
+                f"F0 {f0:.0f} Hz, q1 = {q1:+.2f}: RMS shape error, offset removed [dB]",
+                np.sqrt(np.mean((err - err.mean()) ** 2)),
+            )
+            if f0 == 200.0:
+                f1 = np.argmin(np.abs(k * f0 - 730))
+                report(
+                    "C3",
+                    f"F0 {f0:.0f} Hz, q1 = {q1:+.2f}: F1 harmonic re its peak, less the mean offset [dB]",
+                    err[:, f1].mean() - err.mean(),
+                )
 
     # C4: aperiodicity of the test vowel by harmonic residual
     bands = [(0, 1000), (1000, 2000), (2000, 4000), (4000, 7000)]

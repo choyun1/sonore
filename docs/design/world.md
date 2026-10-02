@@ -36,11 +36,13 @@ synthesis that combines a periodic and an aperiodic part by frequency.
 
 As in the other design documents, each claim is numbered and tagged:
 
+- **[paper]**: read from the three papers (Morise, 2015; Morise, 2016;
+  Morise, Yokomori & Ozawa, 2016), whose PDFs Cho supplied on
+  2026-10-02.
 - **[source]**: read from WORLD's C++ source (github.com/mmorise/World,
   commit d625e76 of 2025-02-21, files `cheaptrick.cpp`, `d4c.cpp`,
-  `synthesis.cpp`, `common.cpp`; modified BSD). The papers' full texts
-  could not be read from the container (see References), so algorithm
-  details come from the code, not from the papers.
+  `synthesis.cpp`, `common.cpp`; modified BSD). Where the code and the
+  papers differ, both are given ("Papers and code" below).
 - **[check]**: a number printed by `tools/check_world_claims.py`. The
   script uses only NumPy and SciPy, shares no code with sonore, and holds
   a prototype of the two estimators below. It runs in about half a minute.
@@ -55,7 +57,7 @@ harmonics of a steady 120 Hz F0 or a 5.5 Hz ±3% vibrato, with Klatt's
 glottal low-pass, five /a/ formants and radiation, plus noise whose power
 at every frequency is a set share A(f) of the total, 16 kHz.
 
-## What WORLD does [source]
+## What WORLD's code does [source]
 
 **CheapTrick (envelope).** At each frame, the sound under a Hann window
 three F0 periods long, scaled to unit energy, minus its weighted mean;
@@ -88,6 +90,45 @@ aperiodic part is white noise as long as the pulse interval, through the
 minimum-phase response of S·A². The responses are overlap-added. Unvoiced
 stretches carry pulses every 1/500 s with noise only.
 
+## Papers and code [paper, source]
+
+The papers were read after the first draft of this document. Where they
+and the code differ:
+
+- **CheapTrick's recovery lifter.** The paper gives q̃₀ = 1.18 and
+  q̃₁ = −0.09, "obtained" by "an exploratory evaluation"; the code uses
+  q̃₁ = −0.15 (and q̃₀ = 1 − 2q̃₁ = 1.3). Both make the lifter 1 at zero
+  quefrency. On the test vowels the paper's value fits the envelope's
+  shape better (C3). The paper also explains the 2F0/3 smoothing as
+  ensuring the power spectrum "has no zeros" before the log, with
+  neighbouring harmonics' influence below 30 dB. The folding below F0 and
+  the weighted-mean removal are in the code only.
+- **D4C's bands and anchors.** The paper evaluates at 48 kHz with five
+  centre frequencies (3, 6, 9, 12, 15 kHz) and a 6 kHz window. The
+  −60 dB at 0 Hz is described as added for interpolation in the
+  subjective evaluation, "on the basis of our past research (Kawahara and
+  Morise, 2012)". The paper concludes that "only one estimated
+  aperiodicity (3 kHz) is enough to synthesize natural speech", which is
+  what the code does at 16 kHz.
+- **D4C's tuning.** The Blackman window of 4T0 and "the other parameters"
+  were chosen from "an exploratory experiment including an unofficial
+  listening test with limited speech and few subjects", and the paper
+  says they "were not optimized". It reports a bias of "around 6 dB" for
+  SNRs above 5 dB, and errors within 3 dB for F0 errors of ±10%. The
+  + (F0 − 100)/50 dB correction and the LoveTrain voicing test are in the
+  code, not the paper.
+- **D4C's own tests** use harmonics plus white or pink noise and look only
+  at 3 kHz and above; none measures the bands below 3 kHz that C6 finds
+  far off.
+- **The WORLD paper predates D4C.** It describes PLATINUM, which extracts
+  an excitation signal (the windowed waveform divided by the envelope's
+  minimum-phase spectrum) instead of an aperiodicity, and says WORLD then
+  "cannot manipulate the aperiodic parameter as well as" STRAIGHT. Current
+  WORLD uses D4C. The paper also says that "an approximation using the
+  minimum phase is inappropriate for low-pitch speech", since phase
+  differences are easier to hear at low F0, and names phase modelling as
+  future work (D6).
+
 So WORLD's aperiodicity has a plain meaning in synthesis: **the share of
 the power at each frequency that is noise rather than harmonics.** The
 D4C abstract defines it the same way (a power ratio between the signal
@@ -116,10 +157,16 @@ window still sees the period's structure; the smoothing over 2F0/3 is
 what removes it. This is what makes the envelope usable frame by frame
 for synthesis.
 
-**C3. The recovery lifter lifts the peaks.** [check] At 200 Hz, the
-harmonic nearest F1 sits 3.5 dB below its peak with q₁ = 0 and 2.1 dB
-below with WORLD's q₁ = −0.15. It is a fixed, fitted correction, kept as
-WORLD has it.
+**C3. The paper's recovery lifter fits the shape better than the
+code's.** [check] Noise-free test vowels, harmonics below 4 kHz, RMS
+shape error with the offset removed, for q̃₁ = 0 (no recovery), −0.09
+(the paper) and −0.15 (the code): 0.24, 0.24, 0.41 dB at F0 100 Hz;
+0.42, 0.36, 0.64 dB at 200 Hz; 0.64, 0.52, 0.92 dB at 300 Hz. At 200 Hz
+the harmonic nearest F1, relative to the mean offset, is 0.63 dB low
+without recovery, 0.19 dB high with the paper's value and 0.74 dB high
+with the code's: the code's value overshoots the sharpest peak. C1's
+numbers use the code's value, to match pyworld. One vowel is not a
+tuning study; it is enough to make the value a choice (D1).
 
 **C4. Fitting the harmonics and measuring what is left recovers a known
 aperiodicity.** [check] The proposed estimator (D3): at each frame, a
@@ -307,7 +354,10 @@ Each option is stated in its best form before the recommendation.
 **D1. Envelope estimator.**
 - *CheapTrick* (recommended): temporally stable within a period (C2),
   WORLD's choice, a few lines on top of sonore's frame and cepstrum, and
-  matched to WORLD's own output (C1).
+  matched to WORLD's own output (C1). Its recovery lifter's q̃₁ is a
+  sub-choice: the paper's −0.09 (recommended: published, and the better
+  shape in C3) or the code's −0.15 (what pyworld users get). It would be
+  an argument with the default stated.
 - *The plain cepstral lifter* sonore already has: no new code and one
   idea fewer for the reader; but 4.6 dB low and flickering by up to 5 dB
   within a period (C1, C2), so a resynthesis would be modulated at F0.
@@ -341,7 +391,8 @@ Each option is stated in its best form before the recommendation.
   the F0 track's phase, as `harmonic_complex` does. Its weakness is real:
   it needs F0 to 0.1% (C5), so it reports jitter and tracker error as
   noise.
-- *A port of D4C*: robust to F0 error (C6), WORLD's standard, tuned by
+- *A port of D4C*: robust to F0 error (C6; its paper reports errors
+  within 3 dB for F0 errors of ±10%), WORLD's standard, tuned by
   listening tests for natural synthesis, and the number WORLD users quote.
   But at 16 kHz it measures one band, pins 0 Hz at −60 dB and Nyquist at
   0 dB, and misreads every test vowel by 23–41 dB in some band (C6);
@@ -388,6 +439,11 @@ Each option is stated in its best form before the recommendation.
   then differs from a vocal tract's (it is maximally peaky); that it
   sounds harsher at low F0 is expected but has not been listened to.
 
+Minimum phase is itself an approximation that the WORLD paper calls
+"inappropriate for low-pitch speech" (see "Papers and code"). Complex
+amplitudes leave room for a better phase model later without another
+change to `harmonic_complex`.
+
 **D7. API shape and names.**
 - *Two view classes plus one synthesis function* (recommended):
   `so.SpectralEnvelope`, `so.Aperiodicity` (callable, so they plug into
@@ -412,19 +468,20 @@ synthesis page, which already has the breathy vowel (C9) but no analysis.
 
 ## References
 
-Verified by lookup on 2026-10-02: Morise (2015) by its Crossref record;
-Morise (2016) by its ScienceDirect abstract (quoted for the definition of
-aperiodicity); Morise, Yokomori & Ozawa (2016) by its J-STAGE abstract
-page. The full texts could not be read (the J-STAGE PDF is closed to
-automated fetching and Semantic Scholar refused the request), so the
-algorithm details above are from WORLD's source code, cited by commit.
-Kawahara et al. (1999) was verified for `frames.md`. Röbel & Rodet (2005)
-is cited from memory.
+Morise (2015), Morise (2016) and Morise, Yokomori & Ozawa (2016) were read
+in full from PDFs Cho supplied on 2026-10-02; their citation details
+match the Crossref, ScienceDirect and J-STAGE records checked earlier
+that day. Kawahara et al. (1999) was verified for `frames.md`. Kawahara &
+Morise (2012) is cited as the D4C paper cites it, not read. Röbel & Rodet
+(2005) is cited from memory.
 
 - Kawahara, H., Masuda-Katsuse, I. & de Cheveigné, A. (1999). Restructuring
   speech representations using a pitch-adaptive time-frequency smoothing
   and an instantaneous-frequency-based F0 extraction. *Speech
   Communication* 27, 187–207.
+- Kawahara, H. & Morise, M. (2012). Simplified aperiodicity representation
+  for high-quality speech manipulation systems. *Proc. ICSP 2012*,
+  579–584. As cited by Morise (2016).
 - Morise, M. (2015). CheapTrick, a spectral envelope estimator for
   high-quality speech synthesis. *Speech Communication* 67, 1–7.
   doi:10.1016/j.specom.2014.09.003.
