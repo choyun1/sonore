@@ -406,8 +406,10 @@ class HRIRSet:
         power = np.mean(np.abs(np.fft.rfft(hrir, n_fft, axis=-1)) ** 2, axis=0)  # (2, bins)
         # A linear-phase filter with this power response; its minimum-phase version
         # has the square root of it as magnitude, the average magnitude we want.
+        # The first sample, the lag of half the FFT length, is dropped (the window is zero there)
+        # so the filter is symmetric about its middle sample, as minimum_phase expects.
         linear_phase = (
-            np.fft.fftshift(np.fft.irfft(power, n_fft, axis=-1), axes=-1) * np.hanning(n_fft + 1)[:-1]
+            np.fft.fftshift(np.fft.irfft(power, n_fft, axis=-1), axes=-1)[:, 1:] * np.hanning(n_fft + 1)[1:-1]
         )
         filters = np.array([minimum_phase(linear_phase[ear], method="homomorphic") for ear in range(2)])
         return energy, filters
