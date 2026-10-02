@@ -34,23 +34,23 @@ As in the other design documents, each claim is numbered and tagged:
   runs in under two seconds. The numbers come from NumPy 2.4.6 and SciPy
   1.17.1.
 
-The sources were harder to reach than usual, so this says what was read:
+What was read (all four papers from PDFs Cho supplied):
 
-- **Fant, Liljencrants & Lin (1985)** could not be read: the KTH archive
-  returned a server error every time. Fant's own (1995) reference list and
-  VOICEBOX's `v_glotlf` (Brookes) cite it as *STL-QPSR* 4/1985, 1–13
-  (volume 26); Fant (1986) cites it as a paper presented at the
-  French–Swedish Symposium, Grenoble, April 1985.
-- **Fant (1986)**, *Glottal flow: models and interaction*, was read in full
-  (PDF from Cho). It states the model: the open-phase equation, the
-  return-phase equation, ta as the projection on the time axis of the slope
-  just after te, the four wave-shape parameters tp, te, ta and Ee, and the
-  return phase as a first-order low-pass with cut-off Fa = 1/(2π ta)
-  (C4). Its printed return-phase equation has E0 where continuity at te
-  needs Ee, the same slip VOICEBOX's code notes in the 1985 paper's Fig. 2.
-  The equations used here are VOICEBOX's, which agree with Fant (1986)
-  apart from that slip. The checker verifies their own properties (zero
-  net flow, continuity, the closed-form spectrum).
+- **Fant, Liljencrants & Lin (1985)**, *STL-QPSR* 26(4), 1–13 (a paper
+  presented at the French–Swedish Symposium, Grenoble, April 22–24, 1985),
+  read in full. From it: the open phase (its Eq. 1), the return phase
+  (Eq. 11) with ε from Eq. 12, tc set to the period, zero net flow over the
+  period, and the return phase as a first-order low-pass with cut-off
+  Fa = 1/(2π ta) (Eq. 17), with ΔL = 10 log(1 + f²/Fa²) dB of extra loss.
+  Its Eq. 11 has Ee in the return phase; the caption of its Fig. 2 prints
+  E0 instead, the slip VOICEBOX's `v_glotlf` notes, and Fant (1986) repeats
+  the caption's version. The equations used here are Eqs. 1, 11 and 12.
+  **Names differ from the later papers:** in 1985, "Rd" is 2α/ωg (the open
+  phase's growth rate) and "Ra" is ta/(tc − te). This document uses Fant's
+  (1995) definitions throughout, in which Rd is the shape parameter and
+  Ra = ta/T0.
+- **Fant (1986)**, *Glottal flow: models and interaction*, read in full: a
+  summary of the same model and of the low-pass view of ta (C4).
 - **Fant (1995)**, *The LF-model revisited*, was read from the PDF Cho
   supplied (pages 119–126 closely, the rest searched). From it: the
   normalized parameters Ra, Rg, Rk and OQ (its Fig. 1), Rd (Eq. 1), the
@@ -58,9 +58,12 @@ The sources were harder to reach than usual, so this says what was read:
   OQ, Fa, Rk and Rg it prints for four Rd values (Fig. 5A), typical male
   and female values, and the H1–H2 line (Eq. 8). The formulas used here
   are exactly its Eqs. 2–4; C2 reproduces its Fig. 5A values.
-- **Klatt & Klatt (1990)** was not read. What is said about KLGLOTT88 comes
-  from Praat's manual and source code (KlattGrid, `PointProcess: To Sound
-  (phonation)`), read in the praat-parselmouth 0.4.7 source distribution.
+- **Klatt & Klatt (1990)**: read the KLSYN88 source sections (pp.
+  838–840), the synthesis-procedure steps for OQ and TL, the summary, the
+  parameter table and the abstract; the perception study was read only
+  through its abstract and summary. Praat's manual and source code
+  (KlattGrid, read in the praat-parselmouth 0.4.7 source distribution) are
+  used only for Praat's own tilt filter.
 
 ## The LF model in brief [source]
 
@@ -112,14 +115,29 @@ Fa = 400 Hz, Rk = 0.30, Rg = 1; "a sonorous voice has a relatively high Fa
 of the order of 2000 Hz". And in the flow derivative spectrum, an "almost
 perfect linear rise" H1–H2 = −7.6 + 11.1 Rd dB (Eq. 8).
 
-**KLGLOTT88** [source, through Praat]: Praat's manual gives the glottal flow
-U(x) = x² − x³ over the open part of the cycle (x running from 0 to 1 while
-the glottis is open) as Rosenberg's (1971) shape, "upon which for instance
-the Klatt synthesizer is based (Klatt & Klatt, 1990)". The open part's
-length is the open quotient OQ; the flow derivative 2x − 3x² ends with a
-jump to zero at closure. Praat's KlattGrid adds a one-pole spectral tilt
-low-pass, set by how many dB it removes at 3 kHz (TL), and generalizes the
-shape to x^p1 − x^p2 (default 3 and 4).
+**KLSYN88 and KLGLOTT88** [source]: Klatt & Klatt (1990) gave KLSYN88 a
+source switch, SS: 1 = the impulse source of Klatt (1980), the one sonore
+has now; 2 = "natural", the new KLGLOTT88 model; 3 = "a slightly modified
+version" of the LF model, which they say "can easily be recast" in terms of
+AV, F0, OQ (open quotient), SQ (speed quotient) and TL (spectral tilt);
+they chose LF because Fant et al. (1985) and Fujisaki and Ljungqvist (1986)
+found it better than other models of the same complexity. KLGLOTT88's flow
+during the open phase is Ug(t) = at² − bt³, the shape "first proposed by
+Rosenberg (1971)", with a and b set by the voicing amplitude and the length
+of the open phase, which is OQ in percent of the period (a typical default
+50% for a male voice, 60% for a female). The flow derivative 2at − 3bt²
+jumps to zero at closure. Its other controls: TL, the extra tilt in dB down
+at 3 kHz, applied by a low-pass resonator whose frequency and bandwidth
+depend on TL (the mapping is not given in the parts read); FL, a slow
+flutter of F0, Δf0 = (FL/50)(F0/100)[sin(2π 12.7 t) + sin(2π 7.1 t) +
+sin(2π 4.7 t)] Hz; DI, diplophonic double pulsing; and AH, aspiration.
+Praat's KlattGrid implements its own version of TL as a one-pole low-pass
+down TL dB at 3 kHz, and generalizes the flow to x^p1 − x^p2.
+
+Their perception study bears on what a listener hears (abstract and
+summary): aspiration noise was the perceptually most important cue to
+breathiness, and "without its presence, increases to the fundamental
+component may induce the sensation of nasality in a high-pitched voice".
 
 ## Claims
 
@@ -157,14 +175,15 @@ Klatt's impulses, `klatt.md` C4).
 nearly instantaneous closure (Ra 0.0005) the flow derivative falls
 6.1 dB/octave; with Ra 0.01 or 0.05 it falls 12.0 dB/octave above
 Fa = F0 / (2π Ra), so Ra is a spectral tilt control built into the pulse.
-Fant's (1986) first-order low-pass predicts the change from an abrupt
-closure (T0 10 ms, tp 4 ms, te 5 ms, 0.5–4 kHz): with ta = 0.15 ms the
+Fant, Liljencrants & Lin's (1985) first-order low-pass predicts the
+change from an abrupt closure (T0 10 ms, tp 4 ms, te 5 ms, 0.5–4 kHz): with ta = 0.15 ms the
 spectrum's change follows it to within 0.22 dB of spread, with ta = 0.6 ms
 within 1.1 dB, apart from an overall level shift (1.7 and 4.8 dB, because
 at fixed Ee a longer return phase carries more flow). The polynomial pulse
 (OQ 0.6) falls 6.0 dB/octave: it has no return phase,
 which is why KLSYN88 needs a separate tilt filter (Praat's version is down
-exactly TL at 3 kHz: 20.0 dB for TL = 20). At the lips at 100 Hz, from
+exactly TL at 3 kHz: 20.0 dB for TL = 20; KLSYN88's is a resonator, not
+checked here). At the lips at 100 Hz, from
 400 to 3200 Hz, the current RGP source falls 5.8 dB/octave; LF falls 9.6
 (Rd 0.5), 10.8 (Rd 0.7), 11.5 (Rd 1) and 12.5 (Rd 2.5).
 
@@ -234,15 +253,17 @@ glide from 130 to 100 Hz, same formants; output levels equalized):
   frequencies: the spectrum of a tense voice.
 - **LF Rd 2.5 (lax)**: nearly a sinusoid at F0 with weak formants: soft,
   muffled voice. It needs aspiration noise (`AH`) to sound breathy, since
-  LF models the periodic pulse only (example 5 adds it).
+  LF models the periodic pulse only (example 5 adds it). Klatt & Klatt
+  (1990) found aspiration the most important breathiness cue, and a
+  stronger fundamental alone could sound nasal in a high voice.
 - **Phase only** (LF levels in cosine phase): close to LF Rd 1 (C9).
 - **An Rd glide** from 0.5 to 2.5 over one second at a fixed pitch: the
   voice relaxes from pressed to lax while the vowel stays /a/; that is the
   didactic point, voice quality as a source property separate from the
   filter.
 
-These are descriptions of the spectra, not perception claims; the examples
-let Cho judge.
+Apart from that cited finding, these are descriptions of the spectra, not
+perception claims; the examples let Cho judge.
 
 ## Proposed design
 
@@ -261,10 +282,11 @@ Layers follow `layout.md`.
     number or a `(times, values)` track; a track uses the Rd table (C8)
     and needs `harmonic_complex` to accept per-harmonic gains that change
     over time and carry a phase (D4). Like the other generators, RMS 1.
-- **stimuli** (`stimuli/klatt.py`): a new table parameter `RD`. `RD = 0`
-  (the default) is Klatt's RGP source, unchanged to the last bit; `RD > 0`
-  is the LF source with that Rd, entering as flow through the same
-  radiation difference (C7). Being a table parameter it can be a track, so
+- **stimuli** (`stimuli/klatt.py`): KLSYN88's source switch `SS`, 1 (the
+  default) for Klatt's (1980) source, unchanged to the last bit, and 3 for
+  LF, as in KLSYN88 (2 stays free for KLGLOTT88, D1); and a new table
+  parameter `RD` for the LF shape, used when `SS` is 3. The LF source
+  enters as flow through the same radiation difference (C7). Being a table parameter it can be a track, so
   a voice can relax at the end of a phrase, and `klatt_continuum` can make
   an Rd continuum. Levels keep their meaning: the voiced source still has
   RMS 1 at the lips at `AV` = 60.
@@ -303,17 +325,22 @@ unchanged. This proposal touches none of the WORLD files.
 ## Decisions
 
 - **D1.** Which pulse model: LF only (recommended: it has the closure
-  abruptness built in, C4, and Rd is a single control with a literature
-  behind it), LF and KLGLOTT88, or KLGLOTT88 only? KLGLOTT88 is simpler
-  (a polynomial) and what KLSYN88 users know, but it needs a separate tilt
-  filter to stop sounding bright, and aliases worst if ever sampled (C3).
+  abruptness built in, C4, Rd is a single control with a literature behind
+  it, and KLSYN88 itself offers LF), LF and KLGLOTT88, or KLGLOTT88 only?
+  KLGLOTT88 is simpler (a polynomial) and was KLSYN88's main source, but it
+  needs its tilt filter to stop sounding bright, and KLSYN88's tilt
+  resonator mapping was not found in the parts read.
 - **D2.** Controls: Rd as the one public knob, with `ra`, `rg`, `rk` as an
   expert alternative in `lf_harmonics` only (recommended), or all four
   everywhere, including `klatt_synthesize`?
-- **D3.** In `klatt_synthesize`: a table parameter `RD`, 0 = Klatt's
-  source (recommended: it can vary in time, interpolates in continua, and
-  keeps every existing call bit-for-bit), or a keyword
-  `glottal="klatt"|"lf"` with Rd as a separate argument?
+- **D3.** In `klatt_synthesize`: KLSYN88's switch `SS` (1 = Klatt 1980,
+  default; 3 = LF) plus a table parameter `RD` (recommended: it keeps
+  Klatt's names as `klatt.md` D5 chose, and every existing call
+  bit-for-bit; `RD` can vary in time and interpolates in continua), or
+  `RD` alone with 0 meaning Klatt's source (this document's first
+  proposal, before Klatt & Klatt was read), or a keyword
+  `glottal="klatt"|"lf"`? KLSYN88's own LF takes OQ, SQ and TL rather than
+  Rd; Rd is recommended because it is one control (D2).
 - **D4.** Time-varying Rd: (a) let `harmonic_complex`'s amplitude function
   return complex gains (level and phase) and take the harmonic number as a
   third argument when it accepts one (recommended: small, and the real-gain
@@ -346,10 +373,9 @@ prototype for the pulse spectra and the library's `harmonic_complex` and
 ## References
 
 - Fant, G., Liljencrants, J., & Lin, Q. (1985). A four-parameter model of
-  glottal flow. *STL-QPSR* 26(4), 1–13. KTH Speech, Music and Hearing.
-  Not read (server error); as cited in Fant (1995) and by VOICEBOX. Fant
-  (1986) cites it as a paper at the French–Swedish Symposium, Grenoble,
-  April 1985.
+  glottal flow. *STL-QPSR* 26(4), 1–13. KTH Speech, Music and Hearing
+  (presented at the French–Swedish Symposium, Grenoble, April 1985). Read
+  in full.
 - Fant, G. (1986). Glottal flow: models and interaction. *Journal of
   Phonetics* 14, 393–399. Read in full.
 - Fant, G. (1995). The LF-model revisited. Transformations and frequency
@@ -358,14 +384,12 @@ prototype for the pulse spectra and the library's `harmonic_complex` and
 - Klatt, D. H. (1980). Software for a cascade/parallel formant synthesizer.
   *JASA* 67(3), 971–995. doi:10.1121/1.383940. (Read for `klatt.md`.)
 - Klatt, D. H., & Klatt, L. C. (1990). Analysis, synthesis, and perception
-  of voice quality variations among female and male talkers. *JASA* 87,
-  820–856 (pages as given in Praat's manual). doi:10.1121/1.398894. Not
-  read.
+  of voice quality variations among female and male talkers. *JASA* 87(2),
+  820–857. doi:10.1121/1.398894. Read in part (see above).
 - Rosenberg, A. (1971). Effect of glottal pulse shape on the quality of
-  natural vowels. *JASA* 49, 583–590 (as given in Praat's manual). Not
-  read.
+  natural vowels. *JASA* 49, 583–590. Not read; cited through Klatt &
+  Klatt (1990).
 - Brookes, M. VOICEBOX: speech processing toolbox for MATLAB, `v_glotlf.m`
   (version 10865, 2018). Read: code and comments.
 - Boersma, P., & Weenink, D. Praat (as packaged in praat-parselmouth
-  0.4.7): `KlattGrid.cpp`, `manual_KlattGrid.cpp`, `manual_Fon.cpp`. Read:
-  code and manual text.
+  0.4.7): `KlattGrid.cpp`. Read: the spectral tilt filter.

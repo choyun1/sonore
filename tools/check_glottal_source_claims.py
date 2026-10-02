@@ -48,9 +48,9 @@ class LFShape:
     with omega_g = pi / tp (the flow peaks at tp), epsilon fixed by
     epsilon ta = 1 - exp(-epsilon (1 - te)) (the return phase starts with
     slope 1/ta), E0 by continuity at te, and alpha by zero net flow over the
-    cycle (the flow starts and ends at zero). This is the form VOICEBOX's
-    v_glotlf implements, which notes that the return-phase equation printed
-    in Fig. 2 of Fant, Liljencrants & Lin (1985) has an error.
+    cycle (the flow starts and ends at zero): Eqs. 1, 11 and 12 of Fant,
+    Liljencrants & Lin (1985), with tc at the end of the period. (The
+    caption of their Fig. 2 prints E0 for Ee in the return phase.)
     """
 
     def __init__(self, tp, te, ta):
@@ -153,8 +153,8 @@ def lf_from_rd(rd):
 # ------------------------------------------------------ KLGLOTT88-style pulse
 def polynomial_pulse_harmonics(open_quotient, numbers):
     """Flow U(x) = (x/OQ)^2 - (x/OQ)^3 while open (0 <= x <= OQ), 0 when
-    closed: the shape Praat's manual attributes to Rosenberg (1971) and to
-    the KLSYN88 source (Klatt & Klatt, 1990). Returns the closed-form Fourier
+    closed: KLGLOTT88's Ug(t) = a t^2 - b t^3 (Klatt & Klatt, 1990, after
+    Rosenberg, 1971), scaled so the flow closes at OQ. Returns the closed-form Fourier
     coefficients of its derivative E(x) = 2x/OQ^2 - 3x^2/OQ^3, which jumps
     from -1/OQ to 0 at closure."""
     beta = 2 * np.pi * np.asarray(numbers, float)
@@ -329,7 +329,7 @@ def claim_slopes():
             f"LF Ra {ra} (Fa at harmonic {corner:.1f}): slope, harmonics 64-399, dB/octave",
             octave_slope(levels, numbers, 64, 399),
         )
-    # Fant (1986): the return phase acts as a first-order low-pass,
+    # Fant, Liljencrants & Lin (1985): the return phase acts as a first-order low-pass,
     # delta L = -10 log10(1 + (2 pi ta f)^2). T0 = 10 ms, tp 4 ms, te 5 ms.
     period_ms = 10.0
     reference = LFShape(0.4, 0.5, 1e-5)
