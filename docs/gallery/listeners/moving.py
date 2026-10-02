@@ -23,6 +23,7 @@ the PKU-IOA head-related impulse responses at 1 m (about 13 MB) the first time i
 # - [One talker, moving](#h-one-talker-moving): what motion alone sounds like.
 # - [Three talkers](#h-three-talkers): the target swinging back and forth in azimuth while the
 #   other two stay still.
+# - [A different voice](#h-a-different-voice): a woman as the target, still and moving.
 # - [How the motion is rendered](#h-how-the-motion-is-rendered): filtering with HRIRs that change
 #   over time, without clicks.
 #
@@ -88,12 +89,12 @@ LABELS = ("target", "left masker", "right masker")
 COLORS = ("#d62728", "#7f7f7f", "#b0b0b0")  # one per talker, in plots and in the view from above
 
 
-def render(amplitude, phase=0.0, alone=False):
-    """The target oscillating with ``amplitude`` [deg] about straight ahead, with the
-    maskers standing still unless ``alone``. Returns the mix, the target as rendered
-    on its own, the trajectories' times and each talker's azimuth."""
+def render(amplitude, phase=0.0, alone=False, talker=None):
+    """The target (``talker``, by default the sentence above) oscillating with ``amplitude``
+    [deg] about straight ahead, with the maskers standing still unless ``alone``. Returns the
+    mix, the target as rendered on its own, the trajectories' times and each talker's azimuth."""
     t, az_target, points = trajectory(CENTERS[0], amplitude, phase)
-    parts = [so.move_sound(target, points, hrirs)]
+    parts = [so.move_sound(target if talker is None else talker, points, hrirs)]
     azimuths = [az_target]
     if not alone:
         for snd, center in zip(maskers, CENTERS[1:], strict=True):
@@ -111,14 +112,15 @@ def scene_of(t, azimuths):
     ]
 
 
-def show(mix, target_alone, t, azimuths, title):
+def show(mix, target_alone, t, azimuths, title, talking=TALKING):
     """Each talker's azimuth, and the interaural time and level differences at the ears,
-    measured in 20 ms windows: of the mix (black) and of the target on its own (red)."""
+    measured in 20 ms windows: of the mix (black) and of the target on its own (red).
+    ``talking`` is when the target speaks [s]."""
     fig = plt.figure(figsize=(10, 6.0), layout="constrained")
     axes = fig.subplots(3, 1, sharex=True)
     for az, label, color in zip(azimuths, LABELS, COLORS, strict=False):
         axes[0].plot(t, az, color=color, lw=1.5, label=label)
-    axes[0].axvspan(*TALKING, color=COLORS[0], alpha=0.08, lw=0, label="target talking")
+    axes[0].axvspan(*talking, color=COLORS[0], alpha=0.08, lw=0, label="target talking")
     axes[0].set(ylim=(-75, 75), yticks=[-60, -40, -20, 0, 20, 40, 60], ylabel="Azimuth [deg]", title=title)
     axes[0].legend(loc="upper right", fontsize=8, ncols=4)
     sources = [(mix, "k", "mix")] if len(azimuths) > 1 else []
@@ -199,6 +201,42 @@ scene = scene_of(t, azimuths)
 sound = finish(mix)
 
 # %% [markdown]
+# ## A different voice
+#
+# Motion is one way to set the target apart. A different voice is another, and a strong one: with
+# two talkers at once, Brungart (2001) found a masker of the other sex far easier to ignore than
+# one of the same sex. Here the target is the same sentence read by a woman (slt), among the same
+# two men.
+
+# %%
+target_female = so.normalize(
+    so.pad([so.load("docs/speech/slt_arctic_a0131.flac"), maskers[0]], align="center")
+)[0]
+spoken_female = so.load("docs/speech/slt_arctic_a0131.flac").duration
+TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)
+
+# %% [about]
+# The woman straight ahead and the men 40° to either side, nobody moving. Compare it with the
+# three men standing still above.
+
+# %% [demo m5] A woman among two men, standing still
+mix, target_alone, t, azimuths = render(0.0, talker=target_female)
+fig, playhead = show(mix, target_alone, t, azimuths, "A woman ahead, nobody moves", TALKING_FEMALE)
+scene = scene_of(t, azimuths)
+sound = finish(mix)
+
+# %% [about]
+# The woman swings 10° to either side, as the man did above: both cues at once.
+
+# %% [demo m6] A woman among two men, swinging 10 degrees
+mix, target_alone, t, azimuths = render(10.0, talker=target_female)
+fig, playhead = show(
+    mix, target_alone, t, azimuths, "A woman ahead swings 10° to either side", TALKING_FEMALE
+)
+scene = scene_of(t, azimuths)
+sound = finish(mix)
+
+# %% [markdown]
 # ## How the motion is rendered
 #
 # `so.move_sound` spaces the trajectory's points evenly over the sound, here 200 a second. Each
@@ -223,6 +261,9 @@ sound = finish(mix)
 # - Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying filters. *Applied
 #   Sciences* 8(1), 103. [MDPI](https://www.mdpi.com/2076-3417/8/1/103).
 #   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L274)
+# - Brungart (2001). Informational and energetic masking effects in the perception of two
+#   simultaneous talkers. *J. Acoust. Soc. Am.* 109(3), 1101–1109.
+#   [doi:10.1121/1.1345696](https://doi.org/10.1121/1.1345696).
 # - Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail
 #   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
 #   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Experiment code:
@@ -235,7 +276,7 @@ sound = finish(mix)
 #   [`spatialization.HRIRSet`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L93)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentences.
+#   The sentences, by speakers bdl, rms and slt.
 # - Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer functions
 #   measured with high spatial resolution using a spark gap. *IEEE Trans. Audio, Speech, Lang.
 #   Process.* 17(6), 1124–1132. [PKU
