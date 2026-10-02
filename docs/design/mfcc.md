@@ -364,7 +364,7 @@ option.
 labelled in Hz. Both via `sonore.plotting`. README: a module-table row,
 a short recipe, Davis & Mermelstein (1980) in the references.
 
-**D8. Gallery: proposed, not part of this step. (accepted 2026-10-02)** A section "MFCCs: a
+**D8. Gallery. (accepted 2026-10-02; built 2026-10-02, all three parts)** A section "MFCCs: a
 cepstrum on the mel scale" on the cepstral analysis page
 (`docs/gallery/seeing/cepstrum.py`, which already mentions mel-cepstra):
 
@@ -375,6 +375,16 @@ cepstrum on the mel scale" on the cepstral analysis page
    CheapTrick's envelope on the same mel bands.
 3. Optionally, C4's two spectra that differ by several dB in 43% of their
    bins and give identical MFCCs.
+
+As built (figures m1 to m3): part 1 compares the 13 MFCCs of the power
+spectrum with the 13 MFCCs of CheapTrick's envelope summed into the same
+bands, which is what C5 measures, rather than the raw CheapTrick envelope;
+the page prints C5's distances (median 5.6 dB, largest 9.2, against 1.9 and
+3.4 from CheapTrick; /a/ to /i/ 15.4 to 18.4 dB). Part 2 adds the band
+powers the 13 coefficients keep (`envelope` at the band centres). Part 3
+uses a different random direction in the null space from the checker's, so
+30% of the bins change by more than 3 dB (median 1.9 dB) instead of 43%;
+the MFCCs still agree to 9e-16.
 
 **D9. Tests match librosa. (accepted 2026-10-02, at Cho's request)** The tests compare
 `so.MFCC` with librosa's own output, stored by
@@ -473,7 +483,7 @@ mfcc.envelope(env.f)  # for plotting against env
    CHANGELOG. Done.
 3. Kaldi through kaldi-native-fbank: fixture, tests, triangle axis and
    window defaults (D11). Done.
-4. Separately, if wanted: the gallery section (D8).
+4. The gallery section (D8), built separately.
 
 ## Out of scope
 

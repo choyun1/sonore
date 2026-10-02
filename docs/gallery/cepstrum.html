@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html" aria-current="page">Cepstral analysis</a><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-one-time-window">One time window</a></li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a></li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a></li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a></li><li><a href="#h-a-higher-voice">A higher voice</a></li><li><a href="#h-reference-implementations">Reference implementations</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html" aria-current="page">Cepstral analysis</a><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-one-time-window">One time window</a></li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a></li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a></li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a></li><li><a href="#h-a-higher-voice">A higher voice</a></li><li><a href="#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</a></li><li><a href="#h-reference-implementations">Reference implementations</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -168,7 +168,7 @@ spectrum once every <span class="tex">F_0</span> hertz, so they land at one peri
 The two parts of the voice that were tangled in the spectrum come apart, and can be measured
 or edited separately.</p>
 <p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>:</p>
-<ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same analysis on a woman's voice.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
+<ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same analysis on a woman's voice.</li><li><a href="#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</a>: the speech recogniser's version, how much pitch leaks into it, and what it cannot tell apart.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -180,8 +180,10 @@ must hold about three periods for the harmonics to show as a ripple, and 40 ms i
 at 75 Hz, below this speaker's lowest pitch.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
+from scipy.fft import dct, idct
 
 import sonore as so
+from sonore.analysis.mfcc import freq_to_mel, mel_filterbank
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
 
@@ -255,7 +257,7 @@ voice is voiced, a bright line runs at one period, falling as the pitch rises. P
 largest peak between 2.5 and 13.3 ms (400 and 75 Hz) in each time window is classic cepstral pitch
 estimation (Noll, 1967). A time window counts as voiced when its peak is taller than 0.1.</p>
 
-<article class="sound" id="d-c2" data-regions="[{&quot;x0&quot;: 0.056447707465277774, &quot;x1&quot;: 0.9950613025728856, &quot;top&quot;: 0.041165417286705974, &quot;bottom&quot;: 0.4514075730096725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.056447707465277774, &quot;x1&quot;: 0.9950613025728856, &quot;top&quot;: 0.5094940809461801, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound" id="d-c2" data-regions="[{&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951268464994719, &quot;top&quot;: 0.041165417286706196, &quot;bottom&quot;: 0.4514075730096726, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951268464994719, &quot;top&quot;: 0.5094940809461805, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>The cepstrogram and its pitch</h3>
     <div class="desc"><p>Top: the cepstrogram, with Harvest's pitch period drawn over it. Bottom: the cepstral F0 next
@@ -299,7 +301,7 @@ harmonics, as WORLD does. Each candidate is scored by how well the waveform repe
 later, and a single pass picks the cheapest path through the candidates, so that the pitch
 rarely jumps and a time window is voiced only when some candidate repeats well (a score above 0.5).</p>
 
-<article class="sound" id="d-f1" data-regions="[{&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951108075233805, &quot;top&quot;: 0.041964880952381156, &quot;bottom&quot;: 0.45180730484250997, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951108075233805, &quot;top&quot;: 0.5098938127790178, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound" id="d-f1" data-regions="[{&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951268513524227, &quot;top&quot;: 0.041964880952380934, &quot;bottom&quot;: 0.45180730484250975, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951268513524227, &quot;top&quot;: 0.5098938127790176, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Cepstral F0, a tracker, and Harvest</h3>
     <div class="desc"><p>Top: the tracker's candidates in grey, darker for a higher score, and the path it chose. The
@@ -372,7 +374,7 @@ def show(snd, title, win_dur=0.005):
     ax.set(xlim=(0, sentence.duration), title=f&quot;{title} (Hann {win_dur * 1e3:g} ms spectrogram)&quot;)
     return fig, [ax]</code></pre></details></div>
 
-<article class="sound" id="d-c3" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound" id="d-c3" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952768512068342, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Envelope only, on a 200 Hz pulse train</h3>
     <div class="desc"><p>The vocal tract alone: every time window's envelope given its minimum phase, so that each time window
@@ -390,7 +392,7 @@ fig, playhead = show(robot, &quot;Envelope only, minimum phase&quot;)
 sound = robot</code></pre></details>
 </article>
 
-<article class="sound" id="d-c4" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound" id="d-c4" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952768512068342, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Harmonics only, the envelope flattened</h3>
     <div class="desc"><p>The source alone: the high quefrencies, plus each time window's overall level, with the original
@@ -409,7 +411,7 @@ fig, playhead = show(flat, &quot;Harmonics only, original phase&quot;, win_dur=0
 sound = flat</code></pre></details>
 </article>
 
-<article class="sound" id="d-c5" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952593223748659, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound" id="d-c5" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952768512068342, &quot;top&quot;: 0.07833444444444437, &quot;bottom&quot;: 0.850174308449074, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Both parts together</h3>
     <div class="desc"><p>For comparison, both parts put back together: an unliftered cepstrum resynthesizes the
@@ -541,20 +543,258 @@ print(f&quot;an octave below on {np.mean(np.abs(ratio - 0.5) &lt; 0.05):.1%}&quo
 both voiced on 333 time windows; cepstral F0 within 5% of the tracker on 96%,
 an octave below on 0.9%</pre></div>
 </section>
+<section aria-labelledby="h-mfccs-a-cepstrum-on-the-mel-scale">
+<h2 id="h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</h2>
+<p>Speech recognisers have long described each time window by its <em>mel-frequency cepstral
+coefficients</em> (Davis &amp; Mermelstein, 1980). The recipe is the cepstrum's, with one step put in
+front: the power spectrum is first summed into a few dozen triangular bands spaced evenly on
+the mel scale, a frequency scale that is roughly linear below 1 kHz and logarithmic above, as
+the ear's resolution is. Then the logarithm, and a cosine transform (a DCT) of the 26 log band
+powers in place of the Fourier transform. Keeping the first 13 coefficients is a lifter, as in
+<a href="#h-one-time-window">One time window</a>: it keeps the slow shape across the bands and drops the
+fine detail. <code>so.MFCC</code> follows the HTK and Kaldi speech recipe by default: 25 ms Hamming
+windows every 10 ms, 26 bands up to half the sampling rate, 13 coefficients.</p>
+<p>The aim is to keep the vocal tract and drop the pitch. The bands and the lifter both smooth over
+the harmonics, but not completely: the lowest bands are narrower than the gap between
+harmonics of a higher voice, so some sit on a harmonic and their neighbours between two, and
+the pitch leaks back into the coefficients. A vowel synthesised with a known vocal tract shows how much.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># Two vowels as sums of harmonics, each harmonic weighted by a vocal tract of four resonances
+# (rounded Peterson &amp; Barney, 1952, male averages; bandwidths chosen here), so the true
+# envelope is known exactly.
+FORMANTS = {
+    &quot;a&quot;: [(730, 60), (1090, 100), (2440, 120), (3400, 175)],
+    &quot;i&quot;: [(270, 60), (2290, 100), (3010, 120), (3400, 175)],
+}
+
+
+def tract_gain(freqs, vowel):
+    &quot;&quot;&quot;The vocal tract&#x27;s |H(f)|: a cascade of second-order resonators.&quot;&quot;&quot;
+    z = np.exp(-2j * np.pi * np.asarray(freqs, dtype=float) / fs)
+    denominator = np.ones_like(z)
+    for centre, bandwidth in FORMANTS[vowel]:
+        radius = np.exp(-np.pi * bandwidth / fs)
+        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * centre / fs) * z + radius**2 * z**2
+    return 1 / np.abs(denominator)
+
+
+def synthetic_vowel(f0, vowel, duration=0.4):
+    times = np.arange(round(duration * fs)) / fs
+    harmonic_freqs = f0 * np.arange(1, int(0.45 * fs / f0) + 1)
+    amplitudes = tract_gain(harmonic_freqs, vowel)
+    waves = amplitudes[:, None] * np.cos(2 * np.pi * harmonic_freqs[:, None] * times)
+    return so.Sound(waves.sum(0), fs)
+
+
+def keep_13(band_power):
+    &quot;&quot;&quot;Band powers to 13 MFCCs and back: the log band powers the coefficients keep.&quot;&quot;&quot;
+    coefficients = dct(np.log(band_power), type=2, norm=&quot;ortho&quot;, axis=0)
+    coefficients[13:] = 0
+    return idct(coefficients, type=2, norm=&quot;ortho&quot;, axis=0)
+
+
+f_plot = np.linspace(0, FMAX, 1001)
+f0s = (100, 150, 200, 250, 300)
+smoothed = {}  # (source, vowel, F0): the 13-coefficient log band powers, level removed
+for vowel in FORMANTS:
+    for f0 in f0s:
+        vowel_sound = synthetic_vowel(f0, vowel)
+        mfcc_vowel = so.MFCC(vowel_sound)
+        middle = len(mfcc_vowel.t) // 2
+        envelope_vowel = so.cheaptrick(
+            vowel_sound, (mfcc_vowel.t[middle : middle + 1], np.array([float(f0)]))
+        )
+        envelope_freqs = np.arange(envelope_vowel.n_fft // 2 + 1) * fs / envelope_vowel.n_fft
+        envelope_weights, _ = mel_filterbank(26, envelope_freqs, 0, fs / 2)
+        for source_name, band_power in (
+            (&quot;power spectrum&quot;, mfcc_vowel.mel_power[0, :, middle]),
+            (&quot;CheapTrick envelope&quot;, envelope_weights @ envelope_vowel.data[0, :, 0]),
+        ):
+            log_power = keep_13(band_power)
+            smoothed[source_name, vowel, f0] = log_power - log_power.mean()
+band_mels = freq_to_mel(mfcc_vowel.cfs)
+true_db = 20 * np.log10(tract_gain(f_plot, &quot;a&quot;))
+
+
+def on_plot_axis(log_power):
+    &quot;&quot;&quot;13-coefficient log band powers in dB, drawn between the band centres as so.MFCC.envelope
+    does (linear in mel), and shifted to the true envelope&#x27;s mean level from 100 Hz up.&quot;&quot;&quot;
+    level_db = 10 / np.log(10) * np.interp(freq_to_mel(f_plot), band_mels, log_power)
+    above_100 = f_plot &gt;= 100
+    return level_db + np.mean(true_db[above_100] - level_db[above_100])</code></pre></details></div>
+
+<article class="still" id="d-m1">
+  <div class="about">
+    <h3>One vowel at three pitches</h3>
+    <div class="desc"><p>The vowel /a/ at three pitches, each analysed in one 25 ms time window. Left: the 13 MFCCs of
+its power spectrum, drawn back as an envelope (as <code>mfcc.envelope(f)</code> does). Right: the same 13
+coefficients taken from CheapTrick's envelope instead, summed into the same mel bands. Dashed:
+the vocal tract the harmonics were weighted by. Levels are matched to it, since only the
+shape matters here (the level is <code>c0</code>). From the power spectrum, the lowest bands, below the
+first harmonic of the 200 and 300 Hz voices, drop by 30 dB and more, and the first formant
+changes shape with the pitch. CheapTrick has already smoothed over one harmonic spacing, so
+the three curves nearly coincide. The 13 coefficients cannot follow the formant peaks at
+any of the pitches: that is the lifter, and it is the same for all three.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m1_one_vowel_at_three_pitches.png" width="1000" height="380" alt="One vowel at three pitches" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True, layout=&quot;constrained&quot;)
+for ax, source_name in zip(axes, (&quot;power spectrum&quot;, &quot;CheapTrick envelope&quot;), strict=True):
+    for f0, color in zip((100, 200, 300), (&quot;tab:blue&quot;, &quot;tab:orange&quot;, &quot;tab:green&quot;), strict=True):
+        ax.plot(
+            f_plot, on_plot_axis(smoothed[source_name, &quot;a&quot;, f0]), color=color, lw=1.5, label=f&quot;F0 {f0} Hz&quot;
+        )
+    ax.plot(f_plot, true_db, &quot;k--&quot;, lw=1, label=&quot;vocal tract&quot;)
+    ax.set(xlim=(0, FMAX), xlabel=&quot;Frequency [Hz]&quot;, title=f&quot;13 MFCCs of the {source_name}&quot;)
+    ax.legend(loc=&quot;upper right&quot;, fontsize=8)
+    ax.grid(ls=&quot;:&quot;)
+axes[0].set_ylabel(&quot;Level [dB]&quot;)</code></pre></details>
+</article>
+<p>The distance between two such curves, the rms difference over the 26 bands in dB, puts a
+number on it. Between F0s of 100 to 300 Hz the same vowel moves about a third as far as the
+change from /a/ to /i/; taken from CheapTrick's envelope, about a tenth as far.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def distance_db(first, second):
+    return 10 / np.log(10) * np.sqrt(np.mean((first - second) ** 2))
+
+
+for source_name in (&quot;power spectrum&quot;, &quot;CheapTrick envelope&quot;):
+    same_vowel = [
+        distance_db(smoothed[source_name, vowel, low], smoothed[source_name, vowel, high])
+        for vowel in FORMANTS
+        for low in f0s
+        for high in f0s
+        if low &lt; high
+    ]
+    across = [distance_db(smoothed[source_name, &quot;a&quot;, f0], smoothed[source_name, &quot;i&quot;, f0]) for f0 in f0s]
+    print(
+        f&quot;from the {source_name}: same vowel at two F0s, median {np.median(same_vowel):.1f} dB &quot;
+        f&quot;(largest {max(same_vowel):.1f}); /a/ vs /i/ at one F0, {min(across):.1f} to {max(across):.1f} dB&quot;
+    )</code></pre></details><pre class="out">from the power spectrum: same vowel at two F0s, median 5.6 dB (largest 9.2); /a/ vs /i/ at one F0, 15.4 to 17.6 dB
+from the CheapTrick envelope: same vowel at two F0s, median 1.9 dB (largest 3.4); /a/ vs /i/ at one F0, 16.0 to 18.4 dB</pre></div>
+
+<article class="sound" id="d-m2" data-regions="[{&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.02611148148148157, &quot;bottom&quot;: 0.22999109977816357, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.26613381582754636, &quot;bottom&quot;: 0.4700134341242289, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.5061561501736116, &quot;bottom&quot;: 0.7100357684702938, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.7461784845196762, &quot;bottom&quot;: 0.950058102816358, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>The sentence as MFCCs</h3>
+    <div class="desc"><p>The sentence, analysed with <code>so.MFCC(sentence)</code>. From the top: the 26 log band powers (the mel
+spectrogram, <code>mfcc.plot(kind=&quot;mel&quot;)</code>); the 13 coefficients, without <code>c0</code>, the level
+(<code>mfcc.plot()</code>); the band powers the 13 coefficients keep, drawn back from them; and
+CheapTrick's envelope on the same bands, from the <code>so.f0_track</code> pitch track above (unvoiced
+time windows are analysed as if at 500 Hz). The coefficients are hard to read by eye; drawn
+back, they are a mel spectrogram smoothed across the bands.</p></div>
+    <audio controls preload="metadata" src="audio/m2_the_sentence_as_mfccs.flac"></audio>
+    <p class="file">m2_the_sentence_as_mfccs.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m2_the_sentence_as_mfccs.png" width="1000" height="900" alt="Plots of the the sentence as mfccs sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mfcc = so.MFCC(sentence)
+envelope = so.cheaptrick(sentence, track)
+envelope_freqs = np.arange(envelope.n_fft // 2 + 1) * fs / envelope.n_fft
+envelope_weights, _ = mel_filterbank(26, envelope_freqs, 0, fs / 2)
+band_rows = np.arange(len(mfcc.cfs))
+row_ticks = band_rows[::5]
+
+
+def band_image(ax, times, band_db, title):
+    vmax = band_db.max()
+    ax.pcolormesh(
+        times, band_rows, band_db, cmap=&quot;magma&quot;, vmin=vmax - 60, vmax=vmax, shading=&quot;auto&quot;, rasterized=True
+    )
+    ax.set_yticks(row_ticks, [f&quot;{mfcc.cfs[row]:.0f}&quot; for row in row_ticks])
+    ax.set(title=title, xlabel=&quot;&quot;, ylabel=&quot;Band centre [Hz]&quot;)
+
+
+fig, axes = plt.subplots(4, 1, figsize=(10, 9), sharex=True, layout=&quot;constrained&quot;)
+mfcc.plot(axes[0], kind=&quot;mel&quot;, colorbar=False)
+axes[0].set(title=&quot;Mel spectrogram: 26 log band powers&quot;, xlabel=&quot;&quot;)
+mfcc.plot(axes[1], colorbar=False)
+axes[1].set(title=&quot;MFCCs c1 to c12 (c0, the level, left out)&quot;, xlabel=&quot;&quot;)
+kept_db = 10 * np.log10(mfcc.envelope(mfcc.cfs)[0])
+band_image(axes[2], mfcc.t, kept_db, &quot;The band powers 13 coefficients keep&quot;)
+band_image(
+    axes[3],
+    envelope.t,
+    10 * np.log10(envelope_weights @ envelope.data[0]),
+    &quot;CheapTrick&#x27;s envelope in the same bands&quot;,
+)
+axes[3].set_xlabel(&quot;Time [s]&quot;)
+for ax in axes:
+    ax.set_xlim(0, sentence.duration)
+playhead = list(axes)
+sound = sentence</code></pre></details>
+</article>
+<p>The mel bands and the cut to 13 coefficients both discard information, so MFCCs are a one-way
+view: no sound can be rebuilt from them, and many different spectra share the same
+coefficients. Within one band, power can move from one bin to another without the band's sum
+changing; with 257 bins and 26 bands there are 231 independent ways to do it.</p>
+
+<article class="still" id="d-m3">
+  <div class="about">
+    <h3>Two spectra, one set of MFCCs</h3>
+    <div class="desc"><p>The loudest time window of the sentence, and the same spectrum with every bin's power changed
+by a factor between 0.1 and 1.9, in a direction that leaves all 26 band powers unchanged.
+Middle: the change in each bin. Bottom: the mel bands. The two spectra have the
+same MFCCs to rounding error.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m3_two_spectra_one_set_of_mfccs.png" width="1000" height="600" alt="Two spectra, one set of MFCCs" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">loudest = int(np.argmax(mfcc.mel_power[0].sum(0)))
+power = np.abs(mfcc.source.data[0, :, loudest]) ** 2
+# A relative change of each bin, at most 0.9, that no band sees: it lies in the null space of the
+# band weights times the spectrum.
+_, _, right_vectors = np.linalg.svd(mfcc.weights * power[None, :])
+null_space = right_vectors[len(mfcc.cfs) :]
+random_signs = np.random.default_rng(0).choice([-1.0, 1.0], power.size)
+relative_change = null_space.T @ (null_space @ random_signs)
+relative_change *= 0.9 / np.abs(relative_change).max()
+gains = np.ones(mfcc.source.data.shape[1:])
+gains[:, loudest] = np.sqrt(1 + relative_change)
+mfcc_altered = so.MFCC(mfcc.source * gains)
+
+bin_freqs = np.arange(mfcc.n_fft // 2 + 1) * fs / mfcc.n_fft
+altered_power = np.abs(mfcc_altered.source.data[0, :, loudest]) ** 2
+fig, (ax0, ax1, ax2) = plt.subplots(
+    3, 1, figsize=(10, 6), sharex=True, height_ratios=[3, 1.4, 1], layout=&quot;constrained&quot;
+)
+ax0.plot(bin_freqs, 10 * np.log10(power), color=&quot;0.3&quot;, lw=1, label=&quot;the sentence&quot;)
+ax0.plot(bin_freqs, 10 * np.log10(altered_power), color=&quot;tab:red&quot;, lw=1, label=&quot;changed, same band powers&quot;)
+ax0.set(ylabel=&quot;Level [dB]&quot;, title=f&quot;Time window at {mfcc.t[loudest]:.2f} s: two spectra with the same MFCCs&quot;)
+ax0.legend(loc=&quot;upper right&quot;, fontsize=8)
+ax1.vlines(bin_freqs, 0, 10 * np.log10(altered_power / power), color=&quot;tab:red&quot;, lw=1)
+ax1.set(ylim=(-11, 4), ylabel=&quot;Change [dB]&quot;, title=&quot;The change in each bin&quot;)
+ax2.plot(bin_freqs, mfcc.weights.T, color=&quot;0.5&quot;, lw=0.6)
+ax2.set(xlim=(0, FMAX), xlabel=&quot;Frequency [Hz]&quot;, ylabel=&quot;Weight&quot;, title=&quot;The 26 mel bands&quot;)
+for ax in (ax0, ax1):
+    ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">change_db = np.abs(10 * np.log10(altered_power / power))
+coefficient_change = np.abs(mfcc_altered.data[0, :, loudest] - mfcc.data[0, :, loudest]).max()
+print(
+    f&quot;bins changed by more than 3 dB: {np.mean(change_db &gt; 3):.0%}; &quot;
+    f&quot;median change {np.median(change_db):.1f} dB&quot;
+)
+print(f&quot;largest change of any MFCC: {coefficient_change:.1e}&quot;)</code></pre></details><pre class="out">bins changed by more than 3 dB: 30%; median change 1.9 dB
+largest change of any MFCC: 8.9e-16</pre></div>
+</section>
 <section aria-labelledby="h-reference-implementations">
 <h2 id="h-reference-implementations">Reference implementations</h2>
 <p><code>so.Cepstrum</code> is written from the definitions. <code>tools/crosscheck_cepstrum.py</code> compares it with
 three independent implementations; the numbers below are from SciPy 1.17.1 and Praat 6.1.38.</p>
 <ul><li>**MATLAB <code>rceps</code>.** Its documented definition, <code>real(ifft(log(abs(fft(x)))))</code>, written out in NumPy for one 40 ms time window, matches sonore's real cepstrum to 4e-16.</li><li>**SciPy <code>scipy.signal.minimum_phase</code>** (<code>method=&quot;homomorphic&quot;, half=False</code>) builds a minimum-phase filter by the same folding of the real cepstrum. On a 17-tap mixed-phase filter it matches sonore's minimum phase to 4e-8 of the peak; SciPy adds a tiny constant to the magnitude before the log, which is the whole difference.</li><li><strong>Praat's PowerCepstrogram</strong> (Boersma &amp; Weenink), through <code>parselmouth</code>, measures the same peak by a different route: a Gaussian window, the power spectrum in dB, and the sound resampled to 10 kHz. On the time windows of this sentence that sonore calls voiced, the two peaks agree within 5% on 98% of them; on every time window Harvest calls voiced, on 81%.</li></ul>
 <p>See also the design and its numerical checks, <code>docs/design/cepstrum.md</code>.</p>
+<p><code>so.MFCC</code> is tested against Kaldi's MFCCs (through kaldi-native-fbank, a re-implementation of
+Kaldi's feature code) to float32 precision, and against librosa's to 1e-8 of the largest
+coefficient; see <code>docs/design/mfcc.md</code>.</p>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>Tracking from the cepstrum.</strong> Cepstral F0 judges each time window alone. The tracker above chooses a path through candidates from the waveform; the same could be done with cepstral peaks as the candidates.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter. Mel-cepstra, the basis of MFCCs, warp the frequency axis first.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
+<ul><li><strong>Tracking from the cepstrum.</strong> Cepstral F0 judges each time window alone. The tracker above chooses a path through candidates from the waveform; the same could be done with cepstral peaks as the candidates.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter.</li><li><strong>Other cepstra on a warped axis.</strong> The mel-generalised cepstra of speech synthesis warp the frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other auditory bands. MFCC deltas (<code>mfcc.deltas()</code>) are not shown.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Boersma &amp; Weenink. Praat: doing phonetics by computer. <a href="https://www.praat.org">praat.org</a>.</li><li>Bogert, Healy &amp; Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum, pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), <em>Time Series Analysis</em>. Wiley. <a href="https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16"><code>cepstrum.Cepstrum</code></a></li><li>de Cheveigné &amp; Kawahara (2002). YIN, a fundamental frequency estimator for speech and music. <em>J. Acoust. Soc. Am.</em> 111(4), 1917–1930. <a href="https://doi.org/10.1121/1.1458024">doi:10.1121/1.1458024</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62"><code>f0.f0_track</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L508"><code>frames.TVGaborFrame.pitch_adaptive</code></a></li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. Harvest.</li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L145"><code>cepstrum.Cepstrum.f0</code></a></li></ul>
+<ul><li>Boersma &amp; Weenink. Praat: doing phonetics by computer. <a href="https://www.praat.org">praat.org</a>.</li><li>Bogert, Healy &amp; Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum, pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), <em>Time Series Analysis</em>. Wiley. <a href="https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16"><code>cepstrum.Cepstrum</code></a></li><li>Davis &amp; Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 28(4), 357–366. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L126"><code>mfcc.MFCC</code></a></li><li>de Cheveigné &amp; Kawahara (2002). YIN, a fundamental frequency estimator for speech and music. <em>J. Acoust. Soc. Am.</em> 111(4), 1917–1930. <a href="https://doi.org/10.1121/1.1458024">doi:10.1121/1.1458024</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62"><code>f0.f0_track</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L508"><code>frames.TVGaborFrame.pitch_adaptive</code></a></li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. Harvest.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels">ASA</a>. The formants of the synthetic vowels.</li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L145"><code>cepstrum.Cepstrum.f0</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/seeing/cepstrum.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/cepstrum.py</code>, or a cell at a time.</footer>
 </main>
@@ -595,30 +835,38 @@ three independent implementations; the numbers below are from SciPy 1.17.1 and P
     const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size, size);
-    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
     g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
-    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
     g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
-    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
     g.strokeStyle = ink; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
     g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
-    const at = (src, time) => {
-      if (!src.t) return src.az[0];
-      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
-      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
     };
-    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
     item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
       if (src.t) {  // the path it travels, faintly
-        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
-        const lo = Math.min(...src.az), hi = Math.max(...src.az);
-        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
         g.globalAlpha = 1;
       }
-      const [x, y] = xy(at(src, t));
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
       g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
