@@ -50,21 +50,21 @@ class Sound:
     __array_ufunc__ = None
 
     def __init__(self, data: ArrayLike, fs: float):
-        arr = np.array(data, dtype=float)  # always copy
-        if arr.ndim == 1:
-            arr = arr[:, None]
-        if arr.ndim != 2:
-            raise ValueError(f"data must be 1-D or 2-D, got shape {arr.shape}")
-        if arr.shape[1] > _MAX_CHANNELS:
+        samples = np.array(data, dtype=float)  # always copy
+        if samples.ndim == 1:
+            samples = samples[:, None]
+        if samples.ndim != 2:
+            raise ValueError(f"data must be 1-D or 2-D, got shape {samples.shape}")
+        if samples.shape[1] > _MAX_CHANNELS:
             raise ValueError(
-                f"data has shape {arr.shape}; expected (n_samples, n_channels). "
+                f"data has shape {samples.shape}; expected (n_samples, n_channels). "
                 "Did you pass channels-first data? Transpose it, or use "
                 "Sound.from_channels(left, right, fs=...)."
             )
         if fs <= 0:
             raise ValueError("fs must be positive")
-        arr.flags.writeable = False
-        self._data = arr
+        samples.flags.writeable = False
+        self._data = samples
         self.fs = fs
 
     # ------------------------------------------------------------------ basics
@@ -72,20 +72,20 @@ class Sound:
     def from_channels(cls, *channels: ArrayLike | Sound, fs: float | None = None) -> Sound:
         """Stack 1-D arrays or mono Sounds into a multichannel Sound."""
         arrays = []
-        for ch in channels:
-            if isinstance(ch, Sound):
-                fs = ch.fs if fs is None else fs
-                if ch.fs != fs:
+        for channel in channels:
+            if isinstance(channel, Sound):
+                fs = channel.fs if fs is None else fs
+                if channel.fs != fs:
                     raise ValueError("all channels must share a sampling rate")
-                ch = ch.mono().data[:, 0]
-            arrays.append(np.asarray(ch, dtype=float))
+                channel = channel.mono().data[:, 0]
+            arrays.append(np.asarray(channel, dtype=float))
         if fs is None:
             raise ValueError("fs is required when channels are plain arrays")
-        n = max(len(a) for a in arrays)
-        out = np.zeros((n, len(arrays)))
-        for i, a in enumerate(arrays):
-            out[: len(a), i] = a
-        return cls(out, fs)
+        n_samples = max(len(array) for array in arrays)
+        samples = np.zeros((n_samples, len(arrays)))
+        for index, array in enumerate(arrays):
+            samples[: len(array), index] = array
+        return cls(samples, fs)
 
     @classmethod
     def load(cls, path: str | PathLike, **kwargs) -> Sound:
@@ -186,17 +186,17 @@ class Sound:
         if isinstance(other, numbers.Real):
             return np.asarray(float(other))
         if isinstance(other, np.ndarray):
-            arr = other.astype(float)
-            if arr.ndim == 1:
-                arr = arr[:, None]
-            return arr
+            array = other.astype(float)
+            if array.ndim == 1:
+                array = array[:, None]
+            return array
         return NotImplemented
 
     def _binary(self, other, op, reflected=False):
-        o = self._coerce(other)
-        if o is NotImplemented:
+        other_data = self._coerce(other)
+        if other_data is NotImplemented:
             return NotImplemented
-        return Sound(op(o, self._data) if reflected else op(self._data, o), self.fs)
+        return Sound(op(other_data, self._data) if reflected else op(self._data, other_data), self.fs)
 
     def __add__(self, other):
         if isinstance(other, Decibels):
@@ -264,27 +264,27 @@ class Sound:
 
         ``shape`` is ``"cosine"`` (raised cosine) or ``"linear"``.
         """
-        n = int(round(duration * self.fs))
-        if n == 0:
+        n_ramp = int(round(duration * self.fs))
+        if n_ramp == 0:
             return self
-        if 2 * n > self.n_samples:
+        if 2 * n_ramp > self.n_samples:
             raise ValueError("ramps are longer than the sound")
-        u = np.linspace(0, 1, n, endpoint=False) + 0.5 / n
+        phase = np.linspace(0, 1, n_ramp, endpoint=False) + 0.5 / n_ramp
         if shape == "cosine":
-            r = (1 - np.cos(np.pi * u)) / 2
+            ramp_up = (1 - np.cos(np.pi * phase)) / 2
         elif shape == "linear":
-            r = u
+            ramp_up = phase
         else:
             raise ValueError("shape must be 'cosine' or 'linear'")
-        env = np.ones(self.n_samples)
-        env[:n] = r
-        env[-n:] = r[::-1]
-        return self * env
+        gain = np.ones(self.n_samples)
+        gain[:n_ramp] = ramp_up
+        gain[-n_ramp:] = ramp_up[::-1]
+        return self * gain
 
     def pad(self, before: float = 0.0, after: float = 0.0) -> Sound:
         """Zero-pad by ``before``/``after`` seconds."""
-        nb, na = int(round(before * self.fs)), int(round(after * self.fs))
-        return Sound(np.pad(self._data, ((nb, na), (0, 0))), self.fs)
+        n_before, n_after = int(round(before * self.fs)), int(round(after * self.fs))
+        return Sound(np.pad(self._data, ((n_before, n_after), (0, 0))), self.fs)
 
     def pad_to(self, n: int, align: str = "start") -> Sound:
         """Zero-pad to ``n`` samples. ``align`` is ``start``, ``center``, or ``end``."""
@@ -304,17 +304,17 @@ class Sound:
         """
         if seconds < 0:
             raise ValueError("delay must be non-negative")
-        d = seconds * self.fs
-        d_int = int(np.floor(d))
-        frac = d - d_int
-        data = np.pad(self._data, ((d_int, 0), (0, 0)))
-        if frac > 1e-9:
+        delay_samples = seconds * self.fs
+        whole_samples = int(np.floor(delay_samples))
+        fraction = delay_samples - whole_samples
+        data = np.pad(self._data, ((whole_samples, 0), (0, 0)))
+        if fraction > 1e-9:
             guard = data.shape[0]  # sinc tails decay slowly; keep them from wrapping around
-            n = data.shape[0] + 1 + guard
-            spec = np.fft.rfft(data, n=n, axis=0)
-            f = np.fft.rfftfreq(n)
-            spec *= np.exp(-2j * np.pi * f * frac)[:, None]
-            data = np.fft.irfft(spec, n=n, axis=0)[: data.shape[0] + 1]
+            n_fft = data.shape[0] + 1 + guard
+            spectrum = np.fft.rfft(data, n=n_fft, axis=0)
+            freq = np.fft.rfftfreq(n_fft)
+            spectrum *= np.exp(-2j * np.pi * freq * fraction)[:, None]
+            data = np.fft.irfft(spectrum, n=n_fft, axis=0)[: data.shape[0] + 1]
         return Sound(data, self.fs)
 
     def resample(self, fs: float) -> Sound:
@@ -331,12 +331,12 @@ class Sound:
         A mono IR is applied to every channel; a multichannel IR convolves a
         mono sound into that many channels, or channel-by-channel otherwise.
         """
-        h = ir.data if isinstance(ir, Sound) else np.atleast_1d(np.asarray(ir, float))
+        impulse_response = ir.data if isinstance(ir, Sound) else np.atleast_1d(np.asarray(ir, float))
         if isinstance(ir, Sound) and ir.fs != self.fs:
             raise ValueError("impulse response has a different sampling rate")
-        if h.ndim == 1:
-            h = h[:, None]
-        return Sound(fftconvolve(self._data, h, axes=0), self.fs)
+        if impulse_response.ndim == 1:
+            impulse_response = impulse_response[:, None]
+        return Sound(fftconvolve(self._data, impulse_response, axes=0), self.fs)
 
     def envelope(self, pad: float | str = "auto"):
         """Hilbert envelope of each channel, as an :class:`~sonore.analysis.envelopes.Envelope`
@@ -350,20 +350,20 @@ class Sound:
         """
         from sonore.analysis.envelopes import Envelope
 
-        p = self.n_samples if pad == "auto" else int(round(float(pad) * self.fs))
-        x = np.pad(self._data, ((p, p), (0, 0))) if p else self._data
-        return Envelope(np.abs(hilbert(x, axis=0))[p : p + self.n_samples], self.fs)
+        n_pad = self.n_samples if pad == "auto" else int(round(float(pad) * self.fs))
+        padded = np.pad(self._data, ((n_pad, n_pad), (0, 0))) if n_pad else self._data
+        return Envelope(np.abs(hilbert(padded, axis=0))[n_pad : n_pad + self.n_samples], self.fs)
 
     # ---------------------------------------------------------------- output
     def play(self, blocking: bool = False, **kwargs) -> None:
         """Play through the default device (requires the ``sounddevice`` extra)."""
         try:
             import sounddevice as sd
-        except (ImportError, OSError) as e:
+        except (ImportError, OSError) as error:
             raise RuntimeError(
                 "playback needs sounddevice and PortAudio: pip install 'sonore[play]'. "
                 "In a notebook, just display the Sound instead."
-            ) from e
+            ) from error
         sd.play(self._data, self.fs, blocking=blocking, **kwargs)
 
     def save(self, path: str | PathLike, **kwargs) -> None:

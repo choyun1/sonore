@@ -36,20 +36,20 @@ def match_fs(sounds: Sequence[Sound], fs: float | None = None, mode: str = "down
 
 def match_channels(sounds: Sequence[Sound]) -> list[Sound]:
     """Upmix mono sounds to the channel count of the others."""
-    n = max(s.n_channels for s in sounds)
-    return [s.to_channels(n) for s in sounds]
+    n_channels = max(s.n_channels for s in sounds)
+    return [s.to_channels(n_channels) for s in sounds]
 
 
 def pad(sounds: Sequence[Sound], align: str = "start") -> list[Sound]:
     """Zero-pad to the longest length. ``align``: ``start``, ``center``, ``end``."""
-    n = max(len(s) for s in sounds)
-    return [s.pad_to(n, align) for s in sounds]
+    length = max(len(s) for s in sounds)
+    return [s.pad_to(length, align) for s in sounds]
 
 
 def truncate(sounds: Sequence[Sound]) -> list[Sound]:
     """Cut all sounds to the shortest length."""
-    n = min(len(s) for s in sounds)
-    return [Sound(s.data[:n], s.fs) for s in sounds]
+    length = min(len(s) for s in sounds)
+    return [Sound(s.data[:length], s.fs) for s in sounds]
 
 
 def normalize(sounds: Sequence[Sound], rms: float = 1.0) -> list[Sound]:
@@ -78,8 +78,8 @@ def mix(sounds: Sequence[Sound], align: str = "start") -> Sound:
 
 def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
     """Level of each sound in dB relative to ``sounds[ref]``."""
-    r = sounds[ref].rms
-    return [float(amp_to_db(s.rms / r)) for s in sounds]
+    ref_rms = sounds[ref].rms
+    return [float(amp_to_db(s.rms / ref_rms)) for s in sounds]
 
 
 def butter_filter(
@@ -95,8 +95,8 @@ def butter_filter(
     ``zero_phase=True`` runs it forward and backward (doubling the order in dB).
     """
     sos = butter(order, cutoff, btype=btype, fs=sound.fs, output="sos")
-    f = sosfiltfilt if zero_phase else sosfilt
-    return Sound(f(sos, sound.data, axis=0), sound.fs)
+    run_filter = sosfiltfilt if zero_phase else sosfilt
+    return Sound(run_filter(sos, sound.data, axis=0), sound.fs)
 
 
 def bandpass(sound: Sound, f_lo: float, f_hi: float, order: int = 4, zero_phase: bool = True) -> Sound:

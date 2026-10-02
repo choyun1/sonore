@@ -22,6 +22,7 @@ these objects at work.
 .. toctree::
    :maxdepth: 2
 
+   conventions
    core
    signals
    analysis
