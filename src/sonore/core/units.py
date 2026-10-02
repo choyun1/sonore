@@ -16,7 +16,11 @@ __all__ = ["Decibels", "dB"]
 
 @dataclass(frozen=True)
 class Decibels:
-    """A level change in decibels (amplitude: ``gain = 10**(value/20)``)."""
+    """A level change in decibels (amplitude: ``gain = 10**(value/20)``).
+
+    Write the number first (``6*dB``, ``2*(6*dB)``); ``dB*6`` is refused. A
+    level is not a plain number either: ``float(6*dB)`` raises, and
+    ``(6*dB).value`` is 6."""
 
     value: float
 
@@ -31,8 +35,9 @@ class Decibels:
     def __repr__(self) -> str:
         return f"{self.value:g} dB"
 
-    def __float__(self) -> float:
-        return float(self.value)
+    def __float__(self):
+        # A level never passes silently as a bare number; read .value on purpose.
+        raise TypeError(f"a level is not a plain number; use ({self!r}).value".replace(" dB)", "*dB)"))
 
     # scaling: 6*dB, -3*dB, 2*(6*dB), (6*dB)/2. The number comes first, as it is
     # written and read; dB*6 is refused rather than quietly meaning the same.

@@ -55,3 +55,12 @@ class TestDecibels:
         assert repr(6 * so.dB) == "6 dB"
         assert (6 * so.dB).gain == pytest.approx(10**0.3)
         assert 3 * so.dB < 6 * so.dB
+        assert 3 * so.dB <= 3 * so.dB and not 6 * so.dB <= 3 * so.dB
+        assert 6 * so.dB - 3 * so.dB == 3 * so.dB
+
+    def test_not_a_plain_number(self):
+        with pytest.raises(TypeError, match=r"\(6\*dB\)\.value"):
+            float(6 * so.dB)
+        assert (6 * so.dB).value == 6
+        with pytest.raises(TypeError):
+            True * so.dB
