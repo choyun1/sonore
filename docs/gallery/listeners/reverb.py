@@ -25,7 +25,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Farther away](#h-farther-away): the same sentence four times as far from the listener,
 #   where less of what arrives is direct sound.
 # - [Rooms that break the rules](#h-rooms-that-break-the-rules): the paper's atypical rooms,
-#   which their listeners heard as wrong.
+#   which their listeners heard as wrong, each heard with the starter pistol and then with the
+#   sentence.
 
 # %% [markdown]
 # ## How a room is synthesized
@@ -214,9 +215,10 @@ fig, playhead = show(sound, ir_far)
 # ## Rooms that break the rules
 #
 # Synthetic rooms that break the regularities of real ones sound wrong (Traer & McDermott,
-# 2016). Each room below changes one thing about the natural room above. Where the decay is no
-# longer exponential, an RT60 no longer describes it, so the last panel shows only what natural
-# rooms would do.
+# 2016). Each room below changes one thing about the natural room above, and is heard twice:
+# first with the starter pistol, which lays the room bare, then with the sentence, to compare
+# with [the sentence in the natural room](#d-r1). Where the decay is no longer exponential, an
+# RT60 no longer describes it, so the last panel shows only what natural rooms would do.
 
 # %% [about]
 # The same decay run backwards: the reverberation swells up to the shot instead of dying away
@@ -226,6 +228,15 @@ fig, playhead = show(sound, ir_far)
 kw = {"decay_shape": "time_reversed"}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# The sentence in the time-reversed room. Each sound's reverberation now grows after it rather
+# than fading, cresting about a second later, so every syllable is followed by a swell of itself
+# and the swells pile up across the sentence.
+
+# %% [demo r4] The sentence, time-reversed decay
+sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir, kw)
 
 # %% [about]
@@ -239,6 +250,15 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)
 
 # %% [about]
+# The sentence in the room whose decay falls linearly from the natural starting level. Its tail
+# is over within a quarter of a second, where the natural one lasts more than a second, so less
+# of each word spills into the gaps after it.
+
+# %% [demo r5] The sentence, linear decay, matched start
+sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
 # Linear decay that reaches zero where the natural decay is 60 dB down, again with the same
 # energy per band. On a dB scale the decay bows outward instead of falling in a straight line.
 
@@ -246,6 +266,15 @@ fig, playhead = show(sound, ir, kw)
 kw = {"decay_shape": "linear_matched_end"}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# The sentence in the room whose linear decay ends where the natural one is 60 dB down. Half a
+# second in, its tail is about 11 dB below where it started, the natural one about 27 dB, so each
+# word lingers at nearly full strength before it falls away.
+
+# %% [demo r6] The sentence, linear decay, matched end
+sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir, kw)
 
 # %% [about]
@@ -260,6 +289,15 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)
 
 # %% [about]
+# The sentence in the room where low and high frequencies ring longest. Under 1% of the
+# sentence's energy is above 4 kHz, against about 20% of the shot's, so the long high-frequency
+# tail has much less to ring with here.
+
+# %% [demo r7] The sentence, inverted frequency dependence
+sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
 # The profile of a room twice as reverberant, scaled down: more sharply peaked than real rooms
 # of this size. The subtlest variant; in the paper it was detected with impulses but not with
 # speech.
@@ -271,6 +309,14 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)
 
 # %% [about]
+# The sentence in the room with the sharply peaked profile: the room the paper's listeners
+# could not tell apart from a natural one when they heard it with speech.
+
+# %% [demo r8] The sentence, exaggerated frequency dependence
+sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
 # The profile of a room half as reverberant, scaled up: flatter than real rooms of this size.
 # Also subtle.
 
@@ -278,6 +324,13 @@ fig, playhead = show(sound, ir, kw)
 kw = {"rt60_profile": "reduced"}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)
+
+# %% [about]
+# The sentence in the room with the flatter profile.
+
+# %% [demo r9] The sentence, reduced frequency dependence
+sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir, kw)
 
 # %% [markdown]

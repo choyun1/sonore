@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group here" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html" aria-current="page">Synthetic reverberation</a><ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a></li><li><a href="#h-natural-rooms">Natural rooms</a></li><li><a href="#h-farther-away">Farther away</a></li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group here" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html" aria-current="page">Synthetic reverberation</a><ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a></li><li><a href="#h-natural-rooms">Natural rooms</a></li><li><a href="#h-farther-away">Farther away</a></li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -145,7 +145,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="here"><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html" aria-current="page">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="here"><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html" aria-current="page">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -160,7 +160,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 click. Convolve any dry sound with it and the sound is in that room. Traer &amp; McDermott (2016)
 measured the IRs of 271 real rooms and found them tightly constrained, and <code>so.synth_ir</code> builds
 new ones from their statistics.</p>
-<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a sentence, read by a man and by a woman, in a synthetic room built like those Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which their listeners heard as wrong.</li></ul>
+<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a sentence, read by a man and by a woman, in a synthetic room built like those Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which their listeners heard as wrong, each heard with the starter pistol and then with the sentence.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -376,9 +376,10 @@ fig, playhead = show(sound, ir_far)</code></pre></details>
 <section aria-labelledby="h-rooms-that-break-the-rules">
 <h2 id="h-rooms-that-break-the-rules">Rooms that break the rules</h2>
 <p>Synthetic rooms that break the regularities of real ones sound wrong (Traer &amp; McDermott,
-2016). Each room below changes one thing about the natural room above. Where the decay is no
-longer exponential, an RT60 no longer describes it, so the last panel shows only what natural
-rooms would do.</p>
+2016). Each room below changes one thing about the natural room above, and is heard twice:
+first with the starter pistol, which lays the room bare, then with the sentence, to compare
+with <a href="#d-r1">the sentence in the natural room</a>. Where the decay is no longer exponential, an
+RT60 no longer describes it, so the last panel shows only what natural rooms would do.</p>
 
 <article class="sound" id="d-18" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
   <div class="about">
@@ -395,6 +396,23 @@ after it.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;time_reversed&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-r4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.5039999999999998, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5642807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+  <div class="about">
+    <h3>The sentence, time-reversed decay</h3>
+    <div class="desc"><p>The sentence in the time-reversed room. Each sound's reverberation now grows after it rather
+than fading, cresting about a second later, so every syllable is followed by a swell of itself
+and the swells pile up across the sentence.</p></div>
+    <audio controls preload="metadata" src="audio/r4_the_sentence_time-reversed_decay.flac"></audio>
+    <p class="file">r4_the_sentence_time-reversed_decay.flac, 3.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r4_the_sentence_time-reversed_decay.png" width="1000" height="620" alt="Plots of the the sentence, time-reversed decay sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
@@ -416,6 +434,23 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
+<article class="sound" id="d-r5" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.49999999999999967, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.79297052154195}, {&quot;x0&quot;: 0.5602807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.7924999999999995}]">
+  <div class="about">
+    <h3>The sentence, linear decay, matched start</h3>
+    <div class="desc"><p>The sentence in the room whose decay falls linearly from the natural starting level. Its tail
+is over within a quarter of a second, where the natural one lasts more than a second, so less
+of each word spills into the gaps after it.</p></div>
+    <audio controls preload="metadata" src="audio/r5_the_sentence_linear_decay_matched_start.flac"></audio>
+    <p class="file">r5_the_sentence_linear_decay_matched_start.flac, 2.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r5_the_sentence_linear_decay_matched_start.png" width="1000" height="620" alt="Plots of the the sentence, linear decay, matched start sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
 <article class="sound" id="d-20" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
   <div class="about">
     <h3>Linear decay, matched end</h3>
@@ -431,6 +466,23 @@ energy per band. On a dB scale the decay bows outward instead of falling in a st
   <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;decay_shape&quot;: &quot;linear_matched_end&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-r6" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+  <div class="about">
+    <h3>The sentence, linear decay, matched end</h3>
+    <div class="desc"><p>The sentence in the room whose linear decay ends where the natural one is 60 dB down. Half a
+second in, its tail is about 11 dB below where it started, the natural one about 27 dB, so each
+word lingers at nearly full strength before it falls away.</p></div>
+    <audio controls preload="metadata" src="audio/r6_the_sentence_linear_decay_matched_end.flac"></audio>
+    <p class="file">r6_the_sentence_linear_decay_matched_end.flac, 3.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r6_the_sentence_linear_decay_matched_end.png" width="1000" height="620" alt="Plots of the the sentence, linear decay, matched end sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
@@ -453,6 +505,23 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
+<article class="sound" id="d-r7" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.5039999999999998, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5642807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+  <div class="about">
+    <h3>The sentence, inverted frequency dependence</h3>
+    <div class="desc"><p>The sentence in the room where low and high frequencies ring longest. Under 1% of the
+sentence's energy is above 4 kHz, against about 20% of the shot's, so the long high-frequency
+tail has much less to ring with here.</p></div>
+    <audio controls preload="metadata" src="audio/r7_the_sentence_inverted_frequency_dependence.flac"></audio>
+    <p class="file">r7_the_sentence_inverted_frequency_dependence.flac, 3.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r7_the_sentence_inverted_frequency_dependence.png" width="1000" height="620" alt="Plots of the the sentence, inverted frequency dependence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
 <article class="sound" id="d-22" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.494516764463766, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}, {&quot;x0&quot;: 0.5641360133140114, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.4685}]">
   <div class="about">
     <h3>Exaggerated frequency dependence</h3>
@@ -472,6 +541,22 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
+<article class="sound" id="d-r8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.4957179045759746, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.863877551020408}, {&quot;x0&quot;: 0.5645628028893032, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.8635}]">
+  <div class="about">
+    <h3>The sentence, exaggerated frequency dependence</h3>
+    <div class="desc"><p>The sentence in the room with the sharply peaked profile: the room the paper's listeners
+could not tell apart from a natural one when they heard it with speech.</p></div>
+    <audio controls preload="metadata" src="audio/r8_the_sentence_exaggerated_frequency_dependence.flac"></audio>
+    <p class="file">r8_the_sentence_exaggerated_frequency_dependence.flac, 3.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r8_the_sentence_exaggerated_frequency_dependence.png" width="1000" height="620" alt="Plots of the the sentence, exaggerated frequency dependence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
 <article class="sound" id="d-23" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49490035886066647, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}, {&quot;x0&quot;: 0.5637524189171116, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.2794999999999999}]">
   <div class="about">
     <h3>Reduced frequency dependence</h3>
@@ -487,6 +572,21 @@ Also subtle.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">kw = {&quot;rt60_profile&quot;: &quot;reduced&quot;}
 ir = room(**kw)
 sound = finish(pistol.convolve(ir))
+fig, playhead = show(sound, ir, kw)</code></pre></details>
+</article>
+
+<article class="sound" id="d-r9" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.4961014187283854, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.674784580498866}, {&quot;x0&quot;: 0.5641792887368924, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.6745}]">
+  <div class="about">
+    <h3>The sentence, reduced frequency dependence</h3>
+    <div class="desc"><p>The sentence in the room with the flatter profile.</p></div>
+    <audio controls preload="metadata" src="audio/r9_the_sentence_reduced_frequency_dependence.flac"></audio>
+    <p class="file">r9_the_sentence_reduced_frequency_dependence.flac, 3.7 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/r9_the_sentence_reduced_frequency_dependence.png" width="1000" height="620" alt="Plots of the the sentence, reduced frequency dependence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 </section>
@@ -512,7 +612,15 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
     });
     const canvas = el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
+    const liveCanvas = el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live };
   });
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
@@ -525,36 +633,83 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
     const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size, size);
-    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
     g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
-    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
     g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
-    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
     g.strokeStyle = ink; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
     g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
-    const at = (src, time) => {
-      if (!src.t) return src.az[0];
-      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
-      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
     };
-    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
     item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
       if (src.t) {  // the path it travels, faintly
-        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
-        const lo = Math.min(...src.az), hi = Math.max(...src.az);
-        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
         g.globalAlpha = 1;
       }
-      const [x, y] = xy(at(src, t));
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
       g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
   }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the colour bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
   function draw(item) {
     drawScene(item);
+    drawLive(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -567,12 +722,18 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
   function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
   items.forEach((item) => {
     drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      if (item.live) item.live.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
