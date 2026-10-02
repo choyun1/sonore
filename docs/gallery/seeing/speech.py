@@ -566,7 +566,7 @@ for name, frame in frames.items():
 # - Auger & Flandrin (1995). Improving the readability of time-frequency and time-scale
 #   representations by the reassignment method. *IEEE Trans. Signal Processing* 43(5).
 #   [doi:10.1109/78.382394](https://doi.org/10.1109/78.382394).
-#   [`reassigned.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/reassigned.py#L49)
+#   [`reassigned.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/reassigned.py#L56)
 # - Gabor (1946). Theory of communication. Part 1: The analysis of information. *J. IEE* 93(26).
 #   [doi:10.1049/ji-3-2.1946.0074](https://doi.org/10.1049/ji-3-2.1946.0074).
 #   [`gabor.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L42)
@@ -577,11 +577,11 @@ for name, frame in frames.items():
 # - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
 #   modification and synthesis framework. *Sādhanā* 36(5).
 #   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).
-#   [`spectrum.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L112)
+#   [`spectrum.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L126)
 # - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values.
 #   *IEEE Trans. ASSP* 26(1).
 #   [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047).
-#   [`reassigned.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/reassigned.py#L49)
+#   [`reassigned.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/reassigned.py#L56)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.

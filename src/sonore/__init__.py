@@ -105,6 +105,7 @@ from sonore.views.modulation import (
 from sonore.views.reassigned import ReassignedSpectrogram, reassigned_spectrogram
 from sonore.views.spectral_envelope import GridEnvelope, SpectralEnvelope, cheaptrick, warp_frequency
 from sonore.views.spectrum import Spectrum, TFPower, long_term_spectrum, tandem_power
+from sonore.views.view import NotInvertibleError, View
 
 __version__ = "0.3.1"
 
@@ -121,6 +122,8 @@ __all__ = [
     "CosineFilterbank",
     "Filterbank",
     "Frame",
+    "View",
+    "NotInvertibleError",
     "GaborFrame",
     "GammatoneFilterbank",
     "MorletFilterbank",

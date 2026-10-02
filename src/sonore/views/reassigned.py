@@ -11,13 +11,14 @@ from scipy.signal import ShortTimeFFT
 from sonore.core.sound import Sound
 from sonore.frames.gabor import GaborFrame
 from sonore.views.spectrum import TFPower
+from sonore.views.view import View
 
 __all__ = ["ReassignedSpectrogram", "reassigned_spectrogram"]
 
 
 # ---------------------------------------------------------------- reassignment
 @dataclass(frozen=True)
-class ReassignedSpectrogram:
+class ReassignedSpectrogram(View):
     """Spectrogram cells moved to their reassigned times and frequencies.
 
     ``t_hat``, ``f_hat`` and ``power`` have shape ``(n_channels, n_freqs,
@@ -25,6 +26,12 @@ class ReassignedSpectrogram:
     the threshold of the maximum. :meth:`binned` sums the kept power onto a
     grid for display. There is no synthesis: reassignment is not linear.
     """
+
+    discards = (
+        "ReassignedSpectrogram discards the phase and moves each cell's power to a new time and frequency, "
+        "many cells to one point, so different sounds give the same picture."
+    )
+    back_to_sound = ""
 
     t_hat: np.ndarray
     f_hat: np.ndarray

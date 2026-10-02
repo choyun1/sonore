@@ -13,14 +13,21 @@ from scipy.signal import welch
 from sonore.core.sound import Sound
 from sonore.core.utils import amp_to_db
 from sonore.frames.gabor import _FLOOR_DB, TVGaborFrame
+from sonore.views.view import View
 
 __all__ = ["Spectrum", "long_term_spectrum", "TFPower", "tandem_power"]
 
 
 # ---------------------------------------------------------------- spectrum
 @dataclass(frozen=True)
-class Spectrum:
+class Spectrum(View):
     """A magnitude spectrum: frequencies [Hz] and levels [dB]."""
+
+    discards = (
+        "Spectrum keeps only the level at each frequency: it discards the phase, and with it all timing, so "
+        "many sounds share one spectrum."
+    )
+    back_to_sound = "Spectrum.to_noise draws a new noise with this spectrum, which is not the analysed sound."
 
     f: np.ndarray
     level: np.ndarray
@@ -54,7 +61,8 @@ class Spectrum:
         return Spectrum(self.f, 10 * np.log10(np.maximum(mean_power, 10 ** (_FLOOR_DB / 10))))
 
     def to_noise(self, duration: float, fs: float, rng=None, **kwargs) -> Sound:
-        """Gaussian noise with this spectral shape."""
+        """Gaussian noise with this spectral shape: a new draw, not an inverse
+        of the spectrum."""
         from sonore.signals.generators import gaussian_noise
 
         return gaussian_noise(duration, fs, spectrum=self, rng=rng, **kwargs)
@@ -84,13 +92,19 @@ def long_term_spectrum(sounds: Sound | Sequence[Sound], nperseg: int = 4096) -> 
 
 # ------------------------------------------------- magnitude-only analyses
 @dataclass(frozen=True)
-class TFPower:
+class TFPower(View):
     """A time-frequency power that is not a frame's coefficients, so it has
     no synthesis: for example :func:`tandem_power`.
 
     ``power`` has shape ``(n_channels, n_freqs, n_windows)``, on frequencies
     :attr:`f` [Hz] and window times :attr:`t` [s], which need not be uniform.
     """
+
+    discards = (
+        "TFPower keeps only the power of each cell: it discards the phase, and the cells are not a frame's "
+        "coefficients, so no synthesis undoes them."
+    )
+    back_to_sound = ""
 
     power: np.ndarray
     t: np.ndarray

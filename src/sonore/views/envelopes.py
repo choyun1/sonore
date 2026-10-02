@@ -31,6 +31,7 @@ import numpy as np
 from scipy.signal import butter, resample_poly, sosfiltfilt
 
 from sonore.core.utils import amp_to_db
+from sonore.views.view import View
 
 if TYPE_CHECKING:
     from sonore.core.sound import Sound
@@ -89,13 +90,16 @@ def _check_duration(n_env: int, fs_env: float, n: int, fs: float) -> None:
         raise ValueError(f"durations differ ({n_env / fs_env:.4f} s envelope vs {n / fs:.4f} s signal)")
 
 
-class Envelope:
+class Envelope(View):
     """A single (possibly multichannel) envelope, shape ``(n_samples, n_channels)``.
 
     Arithmetic: ``*``, ``/`` and ``+`` with numbers and other Envelopes (so
     ``1 + 0.5 * env`` works), and ``env * snd`` / ``snd * env`` modulate a
     :class:`~sonore.Sound`. ``snd / env`` divides the envelope out of a sound.
     """
+
+    discards = "Envelope discards the fine structure: only a magnitude over time is kept."
+    back_to_sound = "To hear it, impose it on a sound (envelope * sound)."
 
     __array_ufunc__ = None
 
@@ -195,7 +199,7 @@ class Envelope:
         return plot_envelope(self, ax=ax, **kwargs)
 
 
-class Envelopes:
+class Envelopes(View):
     """One envelope per band of a filterbank: a spectrotemporal envelope.
 
     Conceptually this is a **cochleagram**: the envelope of each filter's
@@ -203,7 +207,8 @@ class Envelopes:
     include the filterbank's lowpass and highpass edge filters, as in
     :class:`~sonore.frames.filterbank.Subbands`.
 
-    ``env[i]`` is an :class:`Envelope`; ``env * subbands`` modulates each band;
+    ``env[i]`` is an :class:`Envelope`; ``env * subbands`` modulates each band
+    (imposing the envelopes on a carrier, not an inverse);
     ``env.modulation_spectrum()`` gives its 2-D modulation spectrum on the
     filterbank's frequency scale (cycles/octave or cycles/ERB).
 
@@ -213,6 +218,12 @@ class Envelopes:
     from scratch (e.g. a rendered ripple pattern) have ``pad=0`` and are
     zero outside their own extent when combined with padded bands.
     """
+
+    discards = "Envelopes discard the fine structure: only the Hilbert magnitude of each band is kept."
+    back_to_sound = (
+        "To hear them, impose them on a carrier's subbands (envelopes * subbands) and synthesize those, as "
+        "the noise vocoder does."
+    )
 
     __array_ufunc__ = None
 

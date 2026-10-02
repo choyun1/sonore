@@ -1,11 +1,10 @@
 """Runs the "What a user sees" walkthrough of docs/design/reorganization.md (D13) against
-today's sonore, and prints what each step gives now.
+today's sonore, and prints what each step gives.
 
     python tools/check_reorganization_walkthrough.py
 
-The walkthrough's proposed error messages are not implemented; this prints what the
-same calls do today (an AttributeError with no reason), and the errors and durations of
-the steps that already work.
+It prints the reason each view gives when asked to synthesize (NotInvertibleError), and
+the errors and durations of the steps that make a sound.
 """
 
 import numpy as np
@@ -27,8 +26,8 @@ print(f"subbands: synthesize max error {error:.1e}")
 for name, view in [("MFCC", so.MFCC(sentence)), ("Envelopes", bands.envelopes())]:
     try:
         view.synthesize()
-    except AttributeError as err:
-        print(f"{name}.synthesize() today: AttributeError: {err}")
+    except so.NotInvertibleError as err:
+        print(f"{name}.synthesize(): NotInvertibleError: {err}")
 
 cepstrum = so.Cepstrum(coefs)
 error = np.max(np.abs(cepstrum.to_sound().data - sentence.data))

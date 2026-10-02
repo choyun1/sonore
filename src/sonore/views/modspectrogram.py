@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from sonore.views.modulation import HannModulationFilterbank, _correlate
+from sonore.views.view import View
 
 if TYPE_CHECKING:
     from sonore.views.envelopes import Envelopes
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 __all__ = ["ModulationSpectrogram"]
 
 
-class ModulationSpectrogram:
+class ModulationSpectrogram(View):
     """Modulation power, local mean and depth for every time window, acoustic band
     and modulation band.
 
@@ -75,6 +76,12 @@ class ModulationSpectrogram:
     bank
         A ready-made bank, instead of ``f_lo`` .. ``window``.
     """
+
+    discards = (
+        "ModulationSpectrogram discards the fine structure under the envelopes and the phase of every "
+        "modulation band, as a magnitude spectrogram drops an STFT's phase."
+    )
+    back_to_sound = ""
 
     def __init__(
         self,

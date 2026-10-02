@@ -57,6 +57,14 @@ class Aperiodicity(_FrequencyView):
     the measure that made it ("D4C" or "harmonic residual").
     """
 
+    discards = (
+        "Aperiodicity keeps only the share of noise in each frequency and time window: it discards the "
+        "spectrum, the pitch and the phase."
+    )
+    back_to_sound = (
+        "so.world_synthesize rebuilds a voice from it together with an F0 track and a spectral envelope."
+    )
+
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, method: str):
         self.data = data
         self.t = t

@@ -10,11 +10,12 @@ import numpy as np
 from sonore.core.sound import Sound
 from sonore.frames.gabor import STFT, TVSTFT
 from sonore.views.spectral_envelope import GridEnvelope
+from sonore.views.view import View
 
 __all__ = ["Cepstrum"]
 
 
-class Cepstrum:
+class Cepstrum(View):
     """The real cepstrum of each time window of an :class:`~sonore.frames.gabor.STFT`
     or :class:`~sonore.frames.gabor.TVSTFT`.
 
@@ -41,6 +42,12 @@ class Cepstrum:
     floor_db
         The floor, in dB below each channel's maximum.
     """
+
+    discards = "Cepstrum discards the phase: the real cepstrum is the transform of the log magnitude."
+    back_to_sound = (
+        "Cepstrum.to_sound borrows the phase of the STFT it was computed from, and gives the sound back "
+        "exactly only for an unliftered cepstrum with phase='original'."
+    )
 
     def __init__(self, coefs: STFT | TVSTFT, floor_db: float = -200.0):
         if not isinstance(coefs, (STFT, TVSTFT)):
@@ -150,7 +157,8 @@ class Cepstrum:
     def to_sound(self, phase: str = "original") -> Sound:
         """:meth:`to_stft` synthesized by the source's frame: exact for an
         unliftered cepstrum with the original phase, and otherwise the
-        least-squares signal for those coefficients."""
+        least-squares signal for those coefficients. It is not an inverse of
+        the cepstrum alone: the phase comes from the source STFT."""
         return self.to_stft(phase).to_sound()
 
     def f0(

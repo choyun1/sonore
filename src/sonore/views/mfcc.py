@@ -11,6 +11,7 @@ from sonore.core.sound import Sound
 from sonore.core.utils import freq_to_mel, mel_to_freq
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame
 from sonore.views.spectral_envelope import GridEnvelope
+from sonore.views.view import View
 
 __all__ = ["mel_filterbank", "symmetric_hamming", "delta_features", "MFCC"]
 
@@ -95,7 +96,7 @@ def delta_features(values: np.ndarray, order: int = 1, width: int = 5, axis: int
     return savgol_filter(values, width, polyorder=order, deriv=order, axis=axis, mode="interp")
 
 
-class MFCC:
+class MFCC(View):
     """Mel-frequency cepstral coefficients of each time window (Davis &
     Mermelstein, 1980).
 
@@ -199,6 +200,15 @@ class MFCC:
     source
         The STFT or TVSTFT analysed.
     """
+
+    discards = (
+        "MFCC discards the phase, the detail inside each mel band, and every coefficient past the last kept, "
+        "so no sound has these MFCCs alone."
+    )
+    back_to_sound = (
+        "For an approximate voice, read the envelope with mfcc.envelope_view() and pass it to "
+        "so.world_synthesize with an F0 track and an aperiodicity."
+    )
 
     def __init__(
         self,

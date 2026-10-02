@@ -32,6 +32,7 @@ from sonore.core.fft import threads
 from sonore.core.sound import Sound
 from sonore.core.utils import amp_to_db
 from sonore.frames.gabor import _FLOOR_DB, STFT
+from sonore.views.view import View
 
 __all__ = [
     "ModulationFilterbank",
@@ -277,7 +278,7 @@ def _correlate(x: np.ndarray, h: np.ndarray, align: str) -> np.ndarray:
 
 
 # ------------------------------------------------------ modulation spectrum
-class ModulationSpectrum:
+class ModulationSpectrum(View):
     """2-D Fourier transform of a time-frequency envelope (Singh & Theunissen,
     2003; Chi et al., 1999).
 
@@ -291,6 +292,13 @@ class ModulationSpectrum:
     ``(+rate, +density)``. Only non-negative spectral modulations are kept
     (the other half is the complex conjugate).
     """
+
+    discards = (
+        "ModulationSpectrum keeps only the magnitude of the 2-D Fourier transform of an envelope: it "
+        "discards the phase of the modulations, the envelope's mean, and the fine structure under the "
+        "envelope."
+    )
+    back_to_sound = ""
 
     def __init__(self, stft: STFT, channel: int = 0):
         spectrogram_db = stft.db[channel]
