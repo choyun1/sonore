@@ -1,13 +1,19 @@
 # Changing a voice: pitch and formants
 
-The design of two changes to a recorded voice, made with the WORLD pieces
-already in sonore (`so.f0_track`, `so.cheaptrick`, `so.d4c`,
-`so.harmonic_aperiodicity`, `so.world_synthesize`; see `world.md`):
+The design of two changes to a recorded voice that work whatever measured
+it and whatever puts it back together:
 
 - a **pitch change**, which multiplies the F0 track and leaves the
   spectral envelope alone, so the formants stay where they were;
 - a **formant shift**, which moves the spectral envelope along frequency
   and leaves the F0 track alone, so the pitch stays where it was.
+
+The F0 can come from `so.f0_track`, WORLD's Harvest or `Cepstrum.f0`; the
+envelope from CheapTrick or the cepstral lifter; the result can be
+synthesized by `so.world_synthesize` or `so.harmonic_complex`. The two
+operations act on what all of these share, an F0 contour and an envelope
+read as `env(t, f)`, not on any one estimator (Cho, 2026-10-02: "shouldn't
+voice warping be method agnostic?").
 
 Together they are the two numbers of the classic "change gender" manipulation
 (Praat's command of that name takes a formant shift ratio and a new pitch
@@ -26,17 +32,31 @@ here claims it.
   changed F0 is a pitch shift with the envelope and aperiodicity kept. So a
   pitch change needs no new code: `(track.t, track.f0 * 1.5)`. What is
   missing is a statement of what it does to the measured pitch and
-  formants (C2), and a named form if Cho wants one (D2).
+  formants (C2), and a named form if Cho wants one (D5).
 - `so.pitch_shift` (phase vocoder) changes pitch by stretching and
   resampling, which moves the formants with the pitch (C2 measures it).
 - There is no formant shift anywhere in sonore, and no gallery page or
   section changes a voice with WORLD. `world.md` D9 listed "pitch change,
   formant shift, breathiness" as possible demos; the aperiodicity page did
   not include them.
-- `SpectralEnvelope` and `Aperiodicity` are callable, `env(t, f)`, reading
-  the view at any times and frequencies (linear in time, linear in dB
-  between bins). A linear formant shift is that call at `f / ratio`, so the
-  prototype in the checker is two lines.
+- **F0 is already method-agnostic.** `harmonic_complex` takes an
+  `F0Contour`, anything with `.t` and `.f0`, or a `(times, f0)` pair, so an
+  `F0Track`, a Harvest track and `Cepstrum.f0`'s first two outputs all
+  work. `world_synthesize` takes the same, but needs time windows evenly
+  spaced from time 0, as WORLD assumes; `Cepstrum.f0`'s windows start at
+  −15 ms, so it has to be read onto that grid first.
+- **Envelopes are not, yet.** `SpectralEnvelope` and `Aperiodicity` are
+  callable, `env(t, f)`, giving power on a grid of shape `(n_channels,
+  len(f), len(t))`, linear in time and in dB between bins. A linear
+  formant shift is that call at `f / ratio`. But `Cepstrum.envelope()`
+  returns a bare magnitude array, and `harmonic_complex` reads
+  `amplitudes(t, f)` point by point (one amplitude per sample and
+  harmonic, `t` and `f` the same shape), not on a grid. So sonore has two
+  envelope conventions, and the cepstral envelope has neither.
+- **MFCCs are not in sonore.** An envelope from MFCCs would be a
+  reconstruction (mel bands and a truncated cosine transform discard
+  detail), so it would enter as one more envelope source once someone
+  designs that view; nothing here depends on it.
 
 ## How the claims are verified
 
@@ -63,7 +83,16 @@ time windows. The **peaks** are the highest local maxima of that average
 within 15% of each expected formant. The fitted warp uses the whole
 envelope, so it is the steadier of the two.
 
-The checker runs in about 40 s (NumPy 2.4.6, SciPy 1.17.1).
+C7 mixes sources: F0 from `so.f0_track`, Harvest (the stored track
+`docs/speech/bdl_arctic_a0131_f0.csv`) and `Cepstrum.f0` (40 ms Hann time
+windows, hop 5 ms); envelope from CheapTrick or the cepstral lifter at half
+the median voiced period; synthesis by `world_synthesize` (any envelope
+sampled at WORLD's time windows and frequencies) or `harmonic_complex`
+(the envelope sampled once on a 5 ms by 10 Hz grid and read point by
+point, as the Voices from harmonics gallery page does). Each changed output
+is compared with the same sources synthesized unchanged.
+
+The checker runs in about a minute (NumPy 2.4.6, SciPy 1.17.1).
 
 ## Claims
 
@@ -161,49 +190,80 @@ Hz) goes from 6.24 dB with F0 alone to 4.54 dB with warp 1.65, 4.97 dB
 with 1.22 and 4.86 dB with 1.174. These are distances between average
 envelopes, not a statement about how the result sounds. [check]
 
+**C7. Both operations do the same thing whatever measured the voice and
+whatever synthesizes it.** Pitch × 1.5 and formants × 1.2 on the bdl
+sentence, against the same sources unchanged:
+
+| F0 from | envelope | synthesizer | F0 out/unchanged | within 5% | fitted warp (residual) |
+|---|---|---|---|---|---|
+| `so.f0_track` | CheapTrick | `world_synthesize` | 1.500 | 100% | 1.200 (0.36 dB) |
+| `so.f0_track` | cepstral | `world_synthesize` | 1.501 | 100% | 1.199 (0.62 dB) |
+| Harvest | CheapTrick | `world_synthesize` | 1.500 | 98% | 1.200 (0.35 dB) |
+| Harvest | CheapTrick | `harmonic_complex` | 1.500 | 100% | 1.201 (0.27 dB) |
+| Harvest | cepstral | `world_synthesize` | 1.500 | 100% | 1.200 (0.57 dB) |
+| Harvest | cepstral | `harmonic_complex` | 1.500 | 100% | 1.200 (0.55 dB) |
+| `Cepstrum.f0` | CheapTrick | `world_synthesize` | 1.500 | 100% | 1.200 (0.34 dB) |
+| `Cepstrum.f0` | cepstral | `world_synthesize` | 1.500 | 100% | 1.199 (0.57 dB) |
+
+`world_synthesize` uses D4C measured with the same F0; `harmonic_complex`
+has no noise (unvoiced stretches silent). The prototypes need only the
+interface: a warped envelope is any envelope read at `f / ratio`, and the
+synthesizers see an envelope like any other. Sources differ in what the
+output sounds like, which these numbers do not judge. [check]
+
 ## Proposed design
 
-Two operations on the views, which are what WORLD's analysis returns, so
-the synthesis stays the exact port and every change is visible in the
-calling code:
+Two functions on two interfaces, both of which sonore already half has:
+
+- an **F0 contour**: anything with `.t` and `.f0`, or a `(times, f0)`
+  pair (the existing `F0Contour`);
+- an **envelope**: anything callable as `env(t, f)` returning power,
+  shape `(n_channels, len(f), len(t))` (the existing `SpectralEnvelope`
+  convention; `Aperiodicity` reads the same way).
 
 ```python
-track = so.f0_track(snd)
-env = so.cheaptrick(snd, track)
+track = so.f0_track(snd)               # or a Harvest pair, or Cepstrum.f0
+env = so.cheaptrick(snd, track)        # or cepstrum.lifter(...).envelope_view()
 ap = so.d4c(snd, track)
 
-higher = so.world_synthesize(track.scale(1.5), env, ap)          # pitch only
-shorter_tract = so.world_synthesize(track, env.warp(1.2), ap)    # formants only
-both = so.world_synthesize(track.scale(1.53), env.warp(1.17), ap)
+higher = so.world_synthesize(so.scale_f0(track, 1.5), env, ap)            # pitch only
+shorter_tract = so.world_synthesize(track, so.warp_frequency(env, 1.2), ap)  # formants only
+on_harmonics = so.harmonic_complex(snd.duration, snd.fs, so.scale_f0(track, 1.53),
+                                   amplitudes=so.warp_frequency(env, 1.17))
 ```
 
-- `F0Track.scale(ratio, *, range=1.0)` returns a new `F0Track` with voiced
-  values multiplied by `ratio` and, if `range` is not 1, spread around
-  their median on a log scale:
-  `median * ratio * (f0 / median) ** range`. (Praat's "Change gender"
-  has a "pitch range factor"; this definition is sonore's, not read from
-  Praat.) Unvoiced windows stay 0. A
-  `(times, f0)` pair is changed with NumPy, as now.
-- `SpectralEnvelope.warp(ratio)` returns a new envelope with
-  `new(f) = old(f / ratio)`. `ratio` is dispatched with `match`, as
+- `so.scale_f0(contour, ratio, *, range=1.0)` multiplies the voiced
+  values by `ratio` and, if `range` is not 1, spreads them around their
+  median on a log scale: `median * ratio * (f0 / median) ** range`.
+  (Praat's "Change gender" has a "pitch range factor"; this definition is
+  sonore's, not read from Praat.) Unvoiced windows stay 0. It returns what
+  it was given: an `F0Track` stays an `F0Track` (so `.plot` and the
+  voicing stay), a pair stays a pair.
+- `so.warp_frequency(view, ratio)` returns a view read as
+  `new(t, f) = view(t, f / ratio)`. It never looks inside the view, so it
+  moves a CheapTrick envelope, a cepstral one, an aperiodicity, or
+  anything else read as `(t, f)`. `ratio` is dispatched with `match`, as
   `harmonic_complex` dispatches its `f0`:
   - a number: one ratio for the whole sound;
-  - a `(times, ratios)` contour: a ratio that changes over time, read at
-    each time window, for a voice whose tract lengthens or shortens;
-  - a callable `f -> f_source`: any frequency map, for a warp that is not
-    a single ratio (piecewise or bilinear, D3), the inverse map so the
-    envelope is read where each new frequency comes from.
-  Ratio exactly 1 returns the same data unchanged (C1).
-- `Aperiodicity.warp(...)` with the same signature, so moving the
-  aperiodicity is one more call when wanted (D6).
-
-Views stay one-way about what they keep: a warp of an envelope is a new
-envelope, which `world_synthesize` takes like any other. No new module.
+  - a `(times, ratios)` contour: a ratio that changes over time, for a
+    voice whose tract lengthens or shortens;
+  - a callable `f -> f_source`: any frequency map (piecewise or bilinear,
+    D6), giving where each new frequency is read from.
+  Ratio exactly 1 returns the view itself (C1).
+- Every envelope source offers the interface. `SpectralEnvelope` and
+  `Aperiodicity` already do; `Cepstrum` gains a view of its lifted
+  envelope (D3), on the general grid class below.
+- Every synthesizer takes any envelope (D4). `world_synthesize` uses its
+  own `SpectralEnvelope` as it is (so the exact port is untouched) and
+  samples any other envelope at its time windows and frequencies, which
+  it already knows from the aperiodicity; it reads an F0 contour that is
+  not on its grid onto it. `harmonic_complex` recognises a grid envelope
+  and reads it point by point itself, as amplitude.
 
 ### What these changes are not
 
-They change the vocoder's description of a voice, so they inherit its
-limits: minimum-phase pulses (`world.md`), CheapTrick's error rising with
+They change a description of a voice, so they inherit the limits of
+whichever analysis and synthesis are used; with WORLD's: minimum-phase pulses (`world.md`), CheapTrick's error rising with
 F0 (`female-voices.md`: 0.75 dB at 100 Hz to 3.0 dB at 350 Hz), and D4C's
 single band at 16 kHz. A formant shift is a uniform scaling of the whole
 envelope, a first-order model of a longer or shorter vocal tract; it does
@@ -213,29 +273,67 @@ large part of what separates bdl from slt.
 ## Decisions
 
 **D1. Where the operations live.**
-- *Methods on the views* (recommended): `F0Track.scale`,
-  `SpectralEnvelope.warp`, `Aperiodicity.warp`. Each view changes itself,
-  the result is the same type, and `world_synthesize` stays the exact port.
-  It composes: warp only the envelope, or the envelope and aperiodicity,
-  or a time-varying ratio, without a new parameter for each.
+- *Free functions on the interfaces* (recommended): `so.scale_f0`,
+  `so.warp_frequency`. They depend on nothing but the interface, so any
+  F0 tracker, any envelope estimator and any synthesizer combine (C7), and
+  a new estimator joins by offering `env(t, f)`, without the operations
+  changing. `world_synthesize` stays the exact port.
+- *Methods on each class* (`F0Track.scale`, `SpectralEnvelope.warp`,
+  `Aperiodicity.warp`): reads well in a chain, but a Harvest pair or a
+  cepstral envelope has no such method, which is the objection Cho raised.
+  At its best, each method is a one-line call to the free function, so
+  they could be added later as sugar without a second implementation.
 - *One function*, `so.change_voice(snd, pitch=1.5, formants=1.2)`, which
-  runs the analysis, changes and synthesis, like Praat's "Change gender".
-  In its best form it dispatches on its first argument, a `Sound`
-  (analyse with defaults) or an already-made `(track, env, ap)` triple
-  (skip the slow D4C), and passes `aperiodicity="keep" | "warp"`. One line
-  for a stimulus maker; but it hides the three views that `world.md` and
-  the aperiodicity page teach, and every analysis option needs a
-  pass-through. It could be added later on top of the methods.
-- *Keywords on `world_synthesize`* (`formant_ratio=`, `f0_ratio=`): one
-  call, and a time-varying ratio could be applied per pulse. But
-  `world.md` decided that the WORLD-named functions reproduce WORLD and
-  anything different gets its own name.
+  runs analysis, changes and synthesis, like Praat's "Change gender". In
+  its best form it takes `f0=`, `envelope=` and `synthesizer=` as
+  callables or ready-made views, defaulting to WORLD's, so it is
+  method-agnostic too. One line for a stimulus maker; but it hides the
+  views the gallery teaches, and every option needs a pass-through. It
+  can sit on top of the free functions later.
+- *Keywords on `world_synthesize`*: ties the change to one synthesizer,
+  and `world.md` decided the WORLD-named functions reproduce WORLD.
 
-**D2. A named pitch change.**
-- *`F0Track.scale(ratio, range=1.0)`* (recommended): the change is one
-  line either way, but a method keeps the `F0Track` (so `.plot` and the
-  voicing remain) and the range factor is easy to get wrong by hand
-  (applied to unvoiced zeros, or around the mean in Hz).
+**D2. The envelope convention.**
+- *Grid, power: `env(t, f)` gives `(n_channels, len(f), len(t))`*
+  (recommended): what `SpectralEnvelope` and `Aperiodicity` already do, so
+  nothing merged changes; a grid is what plots and WORLD's synthesis need.
+- *Point by point, amplitude*, as `harmonic_complex` reads `amplitudes(t,
+  f)`: natural for oscillators, which need one value per sample and
+  harmonic, but it would change both merged views.
+- Either way, the other side gets an adapter, not a second convention: in
+  the recommendation, `harmonic_complex` recognises a grid envelope (D4).
+
+**D3. A general grid envelope.**
+- *`so.GridEnvelope(power, t, f)`* (recommended; name open): power on any
+  time and frequency grid, read as `env(t, f)` with the same interpolation
+  as `SpectralEnvelope`, which becomes the case whose grid is WORLD's.
+  `Cepstrum` returns one from `envelope_view()` (squared magnitude, its own
+  time windows and frequencies), and any future source (LPC, MFCC
+  reconstruction, a hand-drawn envelope) can too. C7's prototype is this
+  class.
+- *Leave it to the reader*: wrap the array in a function by hand, as the
+  checker does. No new name, but every source needs its own wrapper, and
+  dB interpolation is easy to get wrong.
+
+**D4. Synthesizers that take any envelope.**
+- *Each synthesizer adapts on the way in* (recommended):
+  `world_synthesize` dispatches on its `envelope` (its own
+  `SpectralEnvelope` on its grid: used as it is, exact; anything else:
+  sampled at its time windows and frequencies) and reads off-grid F0
+  contours onto its time windows; `harmonic_complex` dispatches on
+  `amplitudes` (an array, a point-by-point function, or a grid envelope
+  it reads point by point as amplitude). The adaptations are listed in
+  `DIFFERENCES_FROM_WORLD` only if they change an output WORLD could give,
+  which they do not.
+- *An explicit conversion*, `so.to_world_grid(env, aperiodicity)` and
+  `env.amplitude` for `harmonic_complex`: nothing implicit, at the cost of
+  a step the reader must know about for each synthesizer.
+
+**D5. A named pitch change.**
+- *`so.scale_f0(contour, ratio, range=1.0)`* (recommended): the change is
+  one line either way, but the function keeps the contour's type and the
+  range factor is easy to get wrong by hand (applied to unvoiced zeros, or
+  around the mean in Hz).
 - *Nothing new*: `(track.t, track.f0 * ratio)` already works with every
   WORLD function. Fewer names; the range factor is left to the reader.
 - *Semitones* (`transpose(semitones)`) instead of a ratio: musical, and
@@ -243,7 +341,7 @@ large part of what separates bdl from slt.
   a ratio, and two units side by side invite mistakes. A ratio for both is
   recommended; the docstring gives `2 ** (st / 12)`.
 
-**D3. The shape of the warp.**
+**D6. The shape of the warp.**
 - *Linear, `f / ratio`* (recommended as the number form): the first-order
   model of a uniformly longer or shorter tract; C3 and C4 show it does
   what it says.
@@ -254,16 +352,16 @@ large part of what separates bdl from slt.
   and mel-cepstral analysis: smooth, maps 0 to 0 and fs/2 to fs/2, but its
   parameter is not a formant ratio and it shifts low formants more than
   high ones.
-  With the callable form of D1 both alternatives are a function the
+  With the callable form of `ratio` both alternatives are a function the
   reader passes, so no decision is needed beyond the default.
 
-**D4. Above fs/2 when lowering the formants.**
+**D7. Above fs/2 when lowering the formants.**
 - *Hold the value at fs/2* (recommended): what the view's interpolation
   already does; at 16 kHz and ratio 0.8 it affects 6.4–8 kHz (C4).
 - *Extrapolate the slope* of the top of the envelope: closer to a real
   tract, but a guess, and it can run away.
 
-**D5. The level.**
+**D8. The level.**
 - *Pure warp* (recommended): the envelope's values move, nothing else; the
   output level changes by −1.5 to +0.4 dB for ratios 0.8 to 1.2 (C4), which
   any `normalize` removes.
@@ -271,25 +369,25 @@ large part of what separates bdl from slt.
   also changes the envelope's values, and "the envelope read at f / ratio"
   is no longer exactly true.
 
-**D6. The aperiodicity.**
+**D9. The aperiodicity.**
 - *Keep it as measured; warp it only when asked* (recommended): first-order
   source-filter theory puts the noise in the source, and C5 shows that is
   right where it holds; with D4C at 16 kHz the choice changes the output by
-  −28 dB re its level. `Aperiodicity.warp` is there for the other case.
+  −28 dB re its level. `so.warp_frequency(ap, ratio)` is there for the other case.
 - *Warp it with the envelope by default*: right if the measured noise is
   tied to the resonances, which the harmonic residual's −0.33 on bdl
   hints at (C5); it changes the output by −15 dB re its level with that
   measure. Cho's listening would decide between these better than the
   numbers can.
-- *A `change_voice` keyword* (`aperiodicity="keep" | "warp"`) if D1 picks
+- *A `change_voice` keyword* (`aperiodicity="keep" | "warp"`) if D1 adds
   the function.
 
-**D7. Ratio 1 is exact.** Return the envelope's data unchanged at ratio 1
+**D10. Ratio 1 is exact.** Return the view itself at ratio 1
 (recommended, C1), so identity settings give `world_synthesize`'s output
 sample for sample and a test can say so; or accept 1e−16 and test with a
 tolerance.
 
-**D8. A listening gallery page, later.** Proposed, not part of this step:
+**D11. A listening gallery page, later.** Proposed, not part of this step:
 "Changing a voice", with the bdl sentence at F0 × 1.5 (formants kept),
 formants × 1.2 (pitch kept), both, the bdl-to-slt numbers of C6 beside the
 real slt, the phase vocoder's pitch shift for contrast, and the
@@ -299,10 +397,11 @@ measure, and nothing about how it sounds until Cho has listened.
 ## Order
 
 1. This document and the checker (this step).
-2. After Cho's answers: the methods, tests (identity is exact; the
+2. After Cho's answers: the functions, the grid envelope and the
+   synthesizers' dispatch, tests (identity is exact; the
    measured F0 ratio and fitted warp of C2–C4 on a short synthetic vowel),
    README row, CHANGELOG.
-3. The gallery page (D8), as its own PR.
+3. The gallery page (D11), as its own PR.
 
 ## References
 

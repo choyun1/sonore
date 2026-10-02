@@ -16,16 +16,17 @@ are not listening tests.
 
     python tools/check_voice_change_claims.py
 
-Runs in a few minutes (the harmonic-residual aperiodicity is the slow part).
+Runs in about a minute.
 """
 
 import time
 
 import numpy as np
+from scipy.interpolate import RegularGridInterpolator
 from scipy.signal import find_peaks, freqz
 
 import sonore as so
-from sonore.analysis.vocoder import Aperiodicity, SpectralEnvelope
+from sonore.analysis.vocoder import Aperiodicity, SpectralEnvelope, world_fft_size
 
 FS = 16000.0
 HOP = 0.005
@@ -364,6 +365,115 @@ def c6_bdl_to_slt(bdl, bdl_track, bdl_env, bdl_ap):
         )
 
 
+# ------------------------------------------------------------ any source, any synthesizer
+class GridEnvelope:
+    """Any envelope held as power on a (frequency, time) grid, read as
+    env(t, f) like SpectralEnvelope: shape (n_channels, len(f), len(t)),
+    linear in time and in dB over frequency, held beyond the ends."""
+
+    def __init__(self, power, t, f):
+        self.log_power, self.t, self.f = np.log(np.maximum(power, 1e-30)), np.asarray(t), np.asarray(f)
+
+    def __call__(self, t, f):
+        times, freqs = np.atleast_1d(t), np.atleast_1d(f)
+        out = np.empty((self.log_power.shape[0], len(freqs), len(times)))
+        for channel, log_power in enumerate(self.log_power):
+            over_f = np.array([np.interp(freqs, self.f, column) for column in log_power.T]).T
+            out[channel] = np.array([np.interp(times, self.t, row) for row in over_f])
+        return np.exp(out)
+
+
+class Warped:
+    """Any envelope moved along frequency: warped(t, f) = env(t, f / ratio)."""
+
+    def __init__(self, envelope, ratio):
+        self.envelope, self.ratio = envelope, ratio
+
+    def __call__(self, t, f):
+        return self.envelope(t, np.asarray(f) / self.ratio)
+
+
+def on_world_grid(envelope, times, fs, n_fft):
+    """Any envelope sampled at WORLD's time windows and frequencies."""
+    freqs = np.arange(n_fft // 2 + 1) * fs / n_fft
+    return SpectralEnvelope(envelope(times, freqs), np.asarray(times), fs, np.nan)
+
+
+def pointwise_amplitude(envelope, times, freqs):
+    """Any envelope as harmonic_complex reads amplitudes(t, f): one value per
+    point, t and f the same shape, not a grid. Sampled once on a grid and
+    interpolated in dB, as the Voices from harmonics gallery page does."""
+    log_amplitude = 0.5 * np.log(envelope(times, freqs)[0]).T  # (times, freqs)
+    interpolator = RegularGridInterpolator((times, freqs), log_amplitude, bounds_error=False, fill_value=None)
+    return lambda t, f: np.exp(interpolator(np.column_stack([np.ravel(t), np.ravel(f)]))).reshape(np.shape(t))
+
+
+def contour_on_grid(times, f0_values, grid):
+    """Any F0 contour read at the grid's times: linear between voiced
+    neighbours, 0 where the nearest time window is unvoiced."""
+    f0_values = np.asarray(f0_values, float)
+    voiced = f0_values > 0
+    nearest = np.clip(np.searchsorted(times, grid), 0, len(times) - 1)
+    previous = np.clip(nearest - 1, 0, len(times) - 1)
+    nearest = np.where(np.abs(times[previous] - grid) < np.abs(times[nearest] - grid), previous, nearest)
+    filled = np.interp(grid, times[voiced], f0_values[voiced])
+    return np.where(voiced[nearest], filled, 0.0)
+
+
+def c7_any_source(sentence, tracked):
+    print("C7. Mixed sources: F0 from three trackers, envelope from two estimators, two synthesizers")
+    print("    pitch x 1.5 and formants x 1.2, measured against the same sources unchanged")
+    fs = sentence.fs
+    grid = tracked.t
+    harvest_times, harvest_f0 = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
+    cepstrum = so.Cepstrum(so.STFT(sentence, win_dur=0.040, hop_dur=HOP))
+    cep_times, cep_f0, _ = cepstrum.f0()
+    f0_sources = {
+        "so.f0_track": (tracked.t, tracked.f0[0]),
+        "Harvest": (harvest_times, harvest_f0),
+        "Cepstrum.f0": (cep_times, cep_f0[0]),
+    }
+    tracks = {name: (grid, contour_on_grid(*source, grid)) for name, source in f0_sources.items()}
+    voiced_median = np.median(tracked.f0[0][tracked.f0[0] > 0])
+    lifted = cepstrum.lifter(0.5 / voiced_median)
+    stft_freqs = np.fft.rfftfreq(2 * (lifted.envelope().shape[1] - 1), 1 / fs)
+    cepstral = GridEnvelope(lifted.envelope() ** 2, cep_times, stft_freqs)
+    n_fft = world_fft_size(fs)
+    print("  F0 source    envelope    synthesizer        | F0 out/unchanged  within 5% | fitted warp")
+    for f0_name, track in tracks.items():
+        aperiodicity = so.d4c(sentence, track)
+        envelopes = {"CheapTrick": so.cheaptrick(sentence, track), "cepstral": cepstral}
+        for env_name, envelope in envelopes.items():
+            for synth_name in ("world_synthesize", "harmonic_complex"):
+                if synth_name == "harmonic_complex" and f0_name != "Harvest":
+                    continue
+                outputs = []
+                for pitch, formant in ((1.0, 1.0), (1.5, 1.2)):
+                    changed = change_pitch(track, pitch)
+                    view = envelope if formant == 1.0 else Warped(envelope, formant)
+                    if synth_name == "world_synthesize":
+                        world_envelope = on_world_grid(view, grid, fs, n_fft)
+                        outputs.append(so.world_synthesize(changed, world_envelope, aperiodicity))
+                    else:
+                        amplitude = pointwise_amplitude(view, grid, np.arange(0, fs / 2 + 1, 10.0))
+                        outputs.append(
+                            so.harmonic_complex(sentence.duration, fs, changed, amplitudes=amplitude)
+                        )
+                plain, moved = outputs
+                plain_track, moved_track = so.f0_track(plain), so.f0_track(moved)
+                median, within, _ = voiced_ratio(
+                    (plain_track.t, plain_track.f0[0]), (moved_track.t, moved_track.f0[0])
+                )
+                both_voiced = np.asarray(track[1]) > 0
+                plain_db = mean_db(so.cheaptrick(plain, track), both_voiced)
+                moved_db = mean_db(so.cheaptrick(moved, change_pitch(track, 1.5)), both_voiced)
+                warp, residual = fitted_warp(plain_db, moved_db, np.arange(n_fft // 2 + 1) * fs / n_fft)
+                print(
+                    f"  {f0_name:12s} {env_name:11s} {synth_name:18s} | {median:8.3f} {within:16.0%} |"
+                    f" {warp:.3f} ({residual:.2f} dB)"
+                )
+
+
 def main():
     start = time.time()
     rng = np.random.default_rng(1)
@@ -378,6 +488,7 @@ def main():
     c4_sentence_formants(track, envelope, aperiodicity, reference_out)
     c5_aperiodicity(sentence, track, envelope, rng)
     c6_bdl_to_slt(sentence, track, envelope, aperiodicity)
+    c7_any_source(sentence, tracked)
     print(f"({time.time() - start:.0f} s)")
 
 
