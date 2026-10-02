@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group here" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html" aria-current="page">Hearing through a vocoder</a><ul><li><a href="#h-motivation">Motivation</a></li><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-how-many-bands">How many bands</a></li><li><a href="#h-noise-or-tones">Noise or tones</a></li><li><a href="#h-pitch-from-the-envelope">Pitch from the envelope</a></li><li><a href="#h-a-melody">A melody</a></li><li><a href="#h-what-this-simulation-leaves-out">What this simulation leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group here" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html" aria-current="page">Hearing through a vocoder</a><ul><li><a href="#h-motivation">Motivation</a></li><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-how-many-bands">How many bands</a></li><li><a href="#h-noise-or-tones">Noise or tones</a></li><li><a href="#h-pitch-from-the-envelope">Pitch from the envelope</a></li><li><a href="#h-a-higher-voice">A higher voice</a></li><li><a href="#h-a-melody">A melody</a></li><li><a href="#h-what-this-simulation-leaves-out">What this simulation leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -165,7 +165,7 @@ band's envelope modulates a band of noise in its place (Shannon et al., 1995). I
 standard way to let a listener with normal hearing hear roughly what an implant passes on.</p>
 <p>Everything on this page is one function, <code>so.noise_vocode</code>, applied to the sentence from
 <a href="speech.html">Seeing speech</a> and to a short melody:</p>
-<ul><li><a href="#h-how-many-bands">How many bands</a>: from a coarse picture of the spectrum to a fine one.</li><li><a href="#h-noise-or-tones">Noise or tones</a>: what carries the envelopes.</li><li><a href="#h-pitch-from-the-envelope">Pitch from the envelope</a>: the weak temporal pitch cue an implant leaves.</li><li><a href="#h-a-melody">A melody</a>: music, which cannot do without pitch.</li><li><a href="#h-what-this-simulation-leaves-out">What this simulation leaves out</a>: current spread, insertion depth, and the rest.</li></ul>
+<ul><li><a href="#h-how-many-bands">How many bands</a>: from a coarse picture of the spectrum to a fine one.</li><li><a href="#h-noise-or-tones">Noise or tones</a>: what carries the envelopes.</li><li><a href="#h-pitch-from-the-envelope">Pitch from the envelope</a>: the weak temporal pitch cue an implant leaves.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the sentence read by a woman, through the same vocoders.</li><li><a href="#h-a-melody">A melody</a>: music, which cannot do without pitch.</li><li><a href="#h-what-this-simulation-leaves-out">What this simulation leaves out</a>: current spread, insertion depth, and the rest.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -397,6 +397,64 @@ fig, playhead = show(vocoded, bands(sentence, 8, env_lowpass=300), &quot;eight b
 sound = vocoded</code></pre></details>
 </article>
 </section>
+<section aria-labelledby="h-a-higher-voice">
+<h2 id="h-a-higher-voice">A higher voice</h2>
+<p>The same sentence read by a woman (slt). Her fundamental, about 150 to 230 Hz here by
+<code>so.f0_track</code>, is higher than the man's, so a temporal cue has to follow faster pulses.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+track_female = so.f0_track(sentence_female)
+print(f&quot;her F0: {track_female}&quot;)</code></pre></details><pre class="out">her F0: F0Track(528 time windows, 1 ch, 68% voiced, F0 148-227 Hz)</pre></div>
+
+<article class="sound" id="d-cf0" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.3254814896820064, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.4029301669306835, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+  <div class="about">
+    <h3>Her sentence</h3>
+    <div class="desc"><p>Her sentence as recorded.</p></div>
+    <audio controls preload="metadata" src="audio/cf0_her_sentence.flac"></audio>
+    <p class="file">cf0_her_sentence.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cf0_her_sentence.png" width="1000" height="420" alt="Plots of the her sentence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence_female)
+sound = sentence_female</code></pre></details>
+</article>
+
+<article class="sound" id="d-cf8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188944, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+  <div class="about">
+    <h3>Her sentence, eight bands</h3>
+    <div class="desc"><p>Through eight noise bands with 50 Hz envelopes. As with his sentence, the words come through
+and the intonation does not; with the pitch gone, the main difference left between the two
+vocoded voices is where their formants sit.</p></div>
+    <audio controls preload="metadata" src="audio/cf8_her_sentence_eight_bands.flac"></audio>
+    <p class="file">cf8_her_sentence_eight_bands.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cf8_her_sentence_eight_bands.png" width="1000" height="640" alt="Plots of the her sentence, eight bands sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, rng=8))
+fig, playhead = show(vocoded, bands(sentence_female, 8), &quot;eight bands&quot;)
+sound = vocoded</code></pre></details>
+</article>
+
+<article class="sound" id="d-cf8p" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188944, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+  <div class="about">
+    <h3>Her sentence, eight bands, 300 Hz envelopes</h3>
+    <div class="desc"><p>Eight bands with 300 Hz envelopes. Her fundamental is still below the cutoff, so the envelopes
+pulse with it, as his do. Listen for the intonation, and compare it with his above.</p></div>
+    <audio controls preload="metadata" src="audio/cf8p_her_sentence_eight_bands_300_hz_envelopes.flac"></audio>
+    <p class="file">cf8p_her_sentence_eight_bands_300_hz_envelopes.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/cf8p_her_sentence_eight_bands_300_hz_envelopes.png" width="1000" height="640" alt="Plots of the her sentence, eight bands, 300 hz envelopes sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+fig, playhead = show(vocoded, bands(sentence_female, 8, env_lowpass=300), &quot;eight bands, 300 Hz envelopes&quot;)
+sound = vocoded</code></pre></details>
+</article>
+</section>
 <section aria-labelledby="h-a-melody">
 <h2 id="h-a-melody">A melody</h2>
 <p>Speech can be understood without pitch; a melody cannot. The opening of "Twinkle, Twinkle,
@@ -466,7 +524,7 @@ implant user, and several things that matter for real implants are not on this p
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Dorman, Loizou &amp; Rainey (1997). Speech intelligibility as a function of the number of channels of stimulation for signal processors using sine-wave and noise-band outputs. <em>J. Acoust. Soc. Am.</em> 102(4), 2403–2411. <a href="https://doi.org/10.1121/1.420354">doi:10.1121/1.420354</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li><li>Friesen, Shannon, Baskent &amp; Wang (2001). Speech recognition in noise as a function of the number of spectral channels: comparison of acoustic hearing and cochlear implants. <em>J. Acoust. Soc. Am.</em> 110(2), 1150–1163. <a href="https://pubmed.ncbi.nlm.nih.gov/11519582/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Shannon, Zeng, Kamath, Wygonski &amp; Ekelid (1995). Speech recognition with primarily temporal cues. <em>Science</em> 270(5234), 303–304. <a href="https://doi.org/10.1126/science.270.5234.303">doi:10.1126/science.270.5234.303</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li><li>Wilson, Finley, Lawson, Wolford, Eddington &amp; Rabinowitz (1991). Better speech recognition with cochlear implants. <em>Nature</em> 352, 236–238. <a href="https://pubmed.ncbi.nlm.nih.gov/1857418/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li></ul>
+<ul><li>Dorman, Loizou &amp; Rainey (1997). Speech intelligibility as a function of the number of channels of stimulation for signal processors using sine-wave and noise-band outputs. <em>J. Acoust. Soc. Am.</em> 102(4), 2403–2411. <a href="https://doi.org/10.1121/1.420354">doi:10.1121/1.420354</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li><li>Friesen, Shannon, Baskent &amp; Wang (2001). Speech recognition in noise as a function of the number of spectral channels: comparison of acoustic hearing and cochlear implants. <em>J. Acoust. Soc. Am.</em> 110(2), 1150–1163. <a href="https://pubmed.ncbi.nlm.nih.gov/11519582/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Shannon, Zeng, Kamath, Wygonski &amp; Ekelid (1995). Speech recognition with primarily temporal cues. <em>Science</em> 270(5234), 303–304. <a href="https://doi.org/10.1126/science.270.5234.303">doi:10.1126/science.270.5234.303</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li><li>Wilson, Finley, Lawson, Wolford, Eddington &amp; Rabinowitz (1991). Better speech recognition with cochlear implants. <em>Nature</em> 352, 236–238. <a href="https://pubmed.ncbi.nlm.nih.gov/1857418/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L474"><code>filterbank.noise_vocode</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/listeners/vocoder.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/listeners/vocoder.py</code>, or a cell at a time.</footer>
 </main>
