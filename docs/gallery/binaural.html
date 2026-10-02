@@ -49,8 +49,7 @@ article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; 
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
 .desc p { margin: 0 0 0.75rem; }
-.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
-  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
@@ -139,7 +138,7 @@ def show(snd):
 
 <article class="sound" id="d-10" data-regions="[{&quot;x0&quot;: 0.06681977777777778, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.301235404045644, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.06681977777777778, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.3786354040456439, &quot;bottom&quot;: 0.6442642424347218, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.06681977777777778, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.665515437705198, &quot;bottom&quot;: 0.9311442760942761, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}]">
   <div class="about">
-    <h3>Timing alone</h3>
+    <h3>Timing alone <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Noise with a 500 µs interaural time difference, leading in the left ear and then in the right.
 The level difference is zero throughout; the sideways shift comes from timing.</p></div>
     <audio controls preload="metadata" src="audio/10_timing_alone.flac"></audio>
@@ -173,7 +172,7 @@ phase rotates.</p>
 
 <article class="sound" id="d-07" data-regions="[{&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.3010202031333067, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.3784202031333066, &quot;bottom&quot;: 0.6438338406100472, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9491802222222222, &quot;top&quot;: 0.6657306386175352, &quot;bottom&quot;: 0.9311442760942761, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
   <div class="about">
-    <h3>Oscor</h3>
+    <h3>Oscor <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Interaural correlation swings between +1 and −1 three times a second. The image in your head
 alternates between focused and diffuse; only the correlation panel shows what changes.</p></div>
     <audio controls preload="metadata" src="audio/07_oscor.flac"></audio>
@@ -189,7 +188,7 @@ fig, playhead = show(sound)</code></pre></details>
 
 <article class="sound" id="d-08" data-regions="[{&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9371802222222222, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.301235404045644, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9371802222222222, &quot;top&quot;: 0.3786354040456439, &quot;bottom&quot;: 0.6442642424347218, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07481977777777779, &quot;x1&quot;: 0.9371802222222222, &quot;top&quot;: 0.665515437705198, &quot;bottom&quot;: 0.9311442760942761, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
   <div class="about">
-    <h3>Phasewarp</h3>
+    <h3>Phasewarp <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The interaural phase of every component rotates through 360° twice a second, so the zero-lag
 correlation follows a 2 Hz cosine.</p></div>
     <audio controls preload="metadata" src="audio/08_phasewarp.flac"></audio>
