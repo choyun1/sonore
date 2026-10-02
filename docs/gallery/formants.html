@@ -374,21 +374,24 @@ bandwidths.</p>
     &quot;hawed&quot;: (570, 840, 2410),
     &quot;who&#x27;d&quot;: (300, 870, 2240),
 }
+VOWEL_DUR = 0.42
 gap = so.silence(0.15, FS)
 parts, starts = [], []
 t = 0.0
 for f1, f2, f3 in VOWELS.values():
-    v = so.klatt_synthesize(0.35, FS, F0=([0, 0.35], [125, 105]), AV=onoff(0.35), F1=f1, F2=f2, F3=f3)
+    v = so.klatt_synthesize(
+        VOWEL_DUR, FS, F0=([0, VOWEL_DUR], [125, 105]), AV=onoff(VOWEL_DUR), F1=f1, F2=f2, F3=f3
+    )
     parts += [v, gap]
     starts.append(t)
-    t += 0.5</code></pre></details></div>
+    t += VOWEL_DUR + gap.duration</code></pre></details></div>
 
-<article class="sound" id="d-fw1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9858330000000001, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9858330000000001, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-fw1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}]">
   <div class="about">
     <h3>Six vowels</h3>
     <div class="desc"><p>The six vowels in turn, from "heed" to "who'd". The dashed lines are each vowel's F1, F2 and F3.</p></div>
     <audio controls preload="metadata" src="audio/fw1_six_vowels.flac"></audio>
-    <p class="file">fw1_six_vowels.flac, 3.0 s, mono</p>
+    <p class="file">fw1_six_vowels.flac, 3.4 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fw1_six_vowels.png" width="1000" height="420" alt="Plots of the six vowels sound" loading="lazy">
@@ -396,7 +399,7 @@ for f1, f2, f3 in VOWELS.values():
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.concat(parts))
 tracks = [
-    (np.repeat(starts, 2) + np.tile([0, 0.35], 6), np.repeat([v[i] for v in VOWELS.values()], 2))
+    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS.values()], 2))
     for i in range(3)
 ]
 fig, playhead = show(sound, &quot;heed, head, had, hod, hawed, who&#x27;d&quot;)
@@ -421,28 +424,30 @@ ax.set(xlabel=&quot;F2 (Hz)&quot;, ylabel=&quot;F1 (Hz)&quot;, xlim=(2500, 600),
 ax.set_title(&quot;F1 against F2, axes reversed as is usual:\nthe tongue&#x27;s height and backness&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fw3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.15}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.15}]">
+<article class="sound" id="d-fw3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.57}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.57}]">
   <div class="about">
     <h3>From heed to hod in seven steps</h3>
     <div class="desc"><p>A continuum from "heed" to "hod" in seven equal steps of F1, F2 and F3, made with
 <code>so.klatt_continuum</code>. Somewhere in the middle the vowel stops being one and becomes the
 other; experiments on vowel categories use continua like this one.</p></div>
     <audio controls preload="metadata" src="audio/fw3_from_heed_to_hod_in_seven_steps.flac"></audio>
-    <p class="file">fw3_from_heed_to_hod_in_seven_steps.flac, 3.1 s, mono</p>
+    <p class="file">fw3_from_heed_to_hod_in_seven_steps.flac, 3.6 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fw3_from_heed_to_hod_in_seven_steps.png" width="1000" height="420" alt="Plots of the from heed to hod in seven steps sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">steps = so.klatt_continuum(dict(F1=270, F2=2290, F3=3010), dict(F1=730, F2=1090, F3=2440), 7)
+STEP_DUR = 0.36
 parts = []
 for p in steps:
-    parts += [so.klatt_synthesize(0.3, FS, p, F0=110, AV=onoff(0.3)), so.silence(0.15, FS)]
+    parts += [so.klatt_synthesize(STEP_DUR, FS, p, F0=110, AV=onoff(STEP_DUR)), so.silence(0.15, FS)]
 sound = finish(so.concat(parts))
 fig, playhead = show(sound, &quot;seven steps from heed to hod&quot;)
 for i, p in enumerate(steps):
     for name in (&quot;F1&quot;, &quot;F2&quot;, &quot;F3&quot;):
-        playhead[1].plot([0.45 * i, 0.45 * i + 0.3], [p[name] / 1000] * 2, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)</code></pre></details>
+        step_start = (STEP_DUR + 0.15) * i
+        playhead[1].plot([step_start, step_start + STEP_DUR], [p[name] / 1000] * 2, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-consonants-from-transitions">
@@ -526,7 +531,7 @@ constriction near the front of the mouth and excites mainly the resonances in fr
 While voicing is on, both noises are modulated at <span class="tex">F_0</span>, 50% deep, as breath through vibrating
 vocal folds is.</p>
 
-<article class="sound" id="d-fn1" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999997, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999997, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]">
+<article class="sound" id="d-fn1" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}]">
   <div class="about">
     <h3>The syllable sa</h3>
     <div class="desc"><p>/sa/: frication through the parallel formants 5 and 6 (4500 and 5500 Hz), then the vowel. As
@@ -534,21 +539,21 @@ in speech, there is no silence between them: the voicing starts while the fricat
 fading, and the first two formants glide from where the tongue left them (F1 low, F2 near
 1700 Hz) to the vowel's values over the first 60 ms of voicing.</p></div>
     <audio controls preload="metadata" src="audio/fn1_the_syllable_sa.flac"></audio>
-    <p class="file">fn1_the_syllable_sa.flac, 0.6 s, mono</p>
+    <p class="file">fn1_the_syllable_sa.flac, 0.5 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fn1_the_syllable_sa.png" width="1000" height="420" alt="Plots of the the syllable sa sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">dur = 0.6
-tracks = dict(F1=([0.165, 0.225], [300, 730]), F2=([0.165, 0.225], [1700, 1090]))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">dur = 0.515
+tracks = dict(F1=([0.08, 0.14], [300, 730]), F2=([0.08, 0.14], [1700, 1090]))
 sound = finish(
     so.klatt_synthesize(
         dur,
         FS,
         F0=([0, dur], [125, 100]),
-        AV=([0, 0.165, 0.17, 0.19, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
-        AF=([0, 0.03, 0.17, 0.185, 0.2], [0, 74, 74, 64, 0]),
+        AV=([0, 0.08, 0.085, 0.105, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
+        AF=([0, 0.015, 0.085, 0.1, 0.115], [0, 74, 74, 64, 0]),
         A5=60,
         A6=62,
         F6=5500,
@@ -561,14 +566,14 @@ sound = finish(
 fig, playhead = show(sound, &quot;/sa/: frication, then voicing&quot;, [tracks[&quot;F1&quot;], tracks[&quot;F2&quot;], 4500, 5500])</code></pre></details>
 </article>
 
-<article class="sound" id="d-fn2" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999997, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999997, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]">
+<article class="sound" id="d-fn2" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}]">
   <div class="about">
     <h3>The syllable ha</h3>
     <div class="desc"><p>/ha/: aspiration alone through the vowel's formants, then voicing. The formants of the vowel
 are already there in the breath, and the breath carries on into the first 50 ms or so of the
 voicing, fading as it goes, so the vowel starts breathy.</p></div>
     <audio controls preload="metadata" src="audio/fn2_the_syllable_ha.flac"></audio>
-    <p class="file">fn2_the_syllable_ha.flac, 0.6 s, mono</p>
+    <p class="file">fn2_the_syllable_ha.flac, 0.5 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fn2_the_syllable_ha.png" width="1000" height="420" alt="Plots of the the syllable ha sound" loading="lazy">
@@ -579,8 +584,8 @@ voicing, fading as it goes, so the vowel starts breathy.</p></div>
         dur,
         FS,
         F0=([0, dur], [125, 100]),
-        AV=([0, 0.165, 0.17, 0.19, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
-        AH=([0, 0.03, 0.18, 0.21, 0.25], [0, 62, 62, 56, 0]),
+        AV=([0, 0.08, 0.085, 0.105, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
+        AH=([0, 0.015, 0.095, 0.125, 0.165], [0, 62, 62, 56, 0]),
         rng=0,
         **hod,
     )
