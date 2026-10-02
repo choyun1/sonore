@@ -443,7 +443,12 @@ and should sound the same (C5).
   distance over the speed of sound and scaled by the ratio of distances.
 - The room tail is scaled so that the direct-to-reverberant ratio at 1 m,
   averaged over directions and ears, is `drr_db`. It is driven by the
-  sound read at the average of the two ears' emission times.
+  sound read at the average of the two ears' emission times and filtered,
+  at each ear, by the diffuse-field response: a minimum-phase filter with
+  the HRIR power spectrum averaged over the directions of the shell
+  nearest 1 m. Without it the tail kept the source's flat spectrum while
+  the direct sound took the HRIRs' tilt, and for speech the DRR heard was
+  not the one asked for (found building the gallery's walk in a room).
 - Tests (`tests/stimuli/test_spatialization.py`): a 1 kHz tone passing at
   15 m/s through impulse HRIRs matches the closed form to better than
   −80 dB; the three trajectory forms agree to 1e-12; a still source
