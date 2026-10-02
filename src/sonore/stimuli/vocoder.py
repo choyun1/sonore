@@ -72,7 +72,9 @@ def world_synthesize(f0, envelope, aperiodicity: Aperiodicity, *, rng=None) -> S
         first. WORLD's synthesis computes a minimum-phase response on its
         own FFT length, which suits a smooth envelope like CheapTrick's; an
         envelope with deep, narrow valleys (tens of dB) comes out a few dB
-        off at the harmonics, so smooth such an envelope first.
+        off at the harmonics, so smooth such an envelope first, or give it
+        to :func:`~sonore.signals.generators.harmonic_complex` as its
+        ``amplitudes``, which reads the envelope at each harmonic exactly.
     aperiodicity
         An :class:`~sonore.analysis.vocoder.Aperiodicity`, which sets the
         time windows and frequencies.
