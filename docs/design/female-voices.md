@@ -68,8 +68,8 @@ voice. On `bdl` it is 99.3%. Both voices disagree with Harvest on voicing in abo
 (`f0.md`, C9). The cepstrum disagrees with Harvest by more
 than 20% on 53% of the 15 `slt` time windows Harvest puts at 250 to 300 Hz.
 
-**On steady synthetic vowels above 250 Hz the tracker locks onto a third
-of F0.** At 300 and 350 Hz, and at 250 Hz on two vowels, `so.f0_track`
+**On steady synthetic vowels from 250 Hz up the tracker can lock onto a third
+of F0.** At 300 Hz on all six vowels, at 350 Hz on four and at 250 Hz on two, `so.f0_track`
 returns F0/3 (99 Hz for a 300 Hz vowel) on nearly every time window. With
 `f_lo` raised to F0/2.5 it returns the right F0. The subharmonic rule (C10
 in `f0.md`) checks only the octave above a candidate, so a candidate at a
