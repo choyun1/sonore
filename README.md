@@ -191,6 +191,7 @@ More in the gallery:
 - [Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html): separating a voice's pitch from its timbre, [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3) and [▶ harmonics only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c4).
 - [Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html): a voice rebuilt from a pitch track and a spectral envelope, from [▶ a buzz on the pitch track](https://choyun1.github.io/sonore/gallery/harmonics.html#d-hp2) to the [▶ full resynthesis](https://choyun1.github.io/sonore/gallery/harmonics.html#d-hu2), then [▶ up a fifth](https://choyun1.github.io/sonore/gallery/harmonics.html#d-hm2) with the formants kept.
 - [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html): Klatt's synthesizer taken apart, from [▶ the source alone](https://choyun1.github.io/sonore/gallery/formants.html#d-fv1) through [▶ five formants](https://choyun1.github.io/sonore/gallery/formants.html#d-fv4), then [▶ six vowels](https://choyun1.github.io/sonore/gallery/formants.html#d-fw1) and [▶ /da/](https://choyun1.github.io/sonore/gallery/formants.html#d-fc2) from its formant transitions.
+- [Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html): how much of a voice is noise, frequency by frequency, from [▶ a breathy vowel](https://choyun1.github.io/sonore/gallery/aperiodicity.html#d-ap3) whose aperiodicity is known to the sentence [▶ rebuilt by WORLD's synthesis](https://choyun1.github.io/sonore/gallery/aperiodicity.html#d-ap10) and [▶ whispered](https://choyun1.github.io/sonore/gallery/aperiodicity.html#d-ap13).
 - [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html): how fast and how deeply each band's envelope moves, moment by moment, from a [▶ gliding modulation rate](https://choyun1.github.io/sonore/gallery/modspectrogram.html#d-g1) to [▶ speech, babble and noise](https://choyun1.github.io/sonore/gallery/modspectrogram.html#d-s1).
 - [Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html): rooms built from the statistics of real ones (Traer & McDermott, 2016), from a [▶ natural room](https://choyun1.github.io/sonore/gallery/reverb.html#d-17) to ones that break the rules, such as a [▶ time-reversed decay](https://choyun1.github.io/sonore/gallery/reverb.html#d-18).
 - [Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html): a pitch made from noise and a delay (Yost, 1996), from [▶ one iteration](https://choyun1.github.io/sonore/gallery/irn.html#d-i1) to [▶ sixteen](https://choyun1.github.io/sonore/gallery/irn.html#d-09).
@@ -229,12 +230,14 @@ also at the top level as `so.name`; the texture ones are under
 | [`analysis.representations`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py) | `Spectrum`, `long_term_spectrum`, `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis), `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`), `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
 | [`analysis.cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py) | `Cepstrum` (the real cepstrum of an `STFT` or `TVSTFT`: rectangular liftering with a fixed or per-frame cutoff, the cepstral envelope, resynthesis with the original phase, exact when unliftered, or the minimum phase, and classic cepstral F0 after Noll, 1967) |
 | [`analysis.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py) | `f0_track` → `F0Track` (F0 every 5 ms with a voiced/unvoiced decision: candidates from YIN's difference function, refinement by the instantaneous frequency of six harmonics, a periodicity score, a Viterbi pass; `.plot()`; checked against laryngograph F0) |
+| [`analysis.vocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py) | `cheaptrick` → `SpectralEnvelope`, `d4c` → `Aperiodicity` (WORLD's CheapTrick and D4C, ported exactly: they match WORLD to floating-point precision), `harmonic_aperiodicity` (the share of noise, by fitting the harmonics), `DIFFERENCES_FROM_WORLD` |
 | [`analysis.envelopes`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/envelopes.py) | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`) |
 | [`analysis.modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py) | `ConstantQModulationFilterbank`, `OctaveModulationFilterbank` (circular, analytic output optional), `HannModulationFilterbank` (Hann-windowed complex kernels of a whole number of cycles, defined in time: constant Q or one fixed window, centred or causal) |
 | [`analysis.modspectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modspectrogram.py) | `ModulationSpectrogram` (a modulation spectrum per frame: power, local mean and depth for every acoustic band and modulation rate, from any `Envelopes`, with a `valid` mask; `.plot()` as rate against time, one band, or band against time at one rate; `.at(t)`, `.slices(t)`, `.animate()`; not invertible) |
 | [`stimuli.ripples`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py) | `Ripple`, `RippleSum`, `DynamicRipple`, `ripple_sound`; patterns can also be any function `f(t, x)` of time and octaves, and `pattern.render(filterbank, dur, fs)` gives their `Envelopes` |
 | [`stimuli.phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py) | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `resynthesize` with `time_scale` and `freq_map`) |
 | [`stimuli.klatt`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/klatt.py) | `klatt_synthesize` (a Klatt-style cascade/parallel formant synthesizer: harmonic voicing with Klatt's glottal spectrum, aspiration and frication noise modulated at F0, nasal pole and zero, formants 1-5 in cascade and 1-6 in parallel, radiation; every parameter a number or a `(times, values)` track), `klatt_continuum` (evenly spaced parameter sets between two endpoints), `KLATT_DEFAULTS` |
+| [`stimuli.vocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/vocoder.py) | `world_synthesize` (WORLD's synthesis, sample for sample, from an F0 track, envelope and aperiodicity; WORLD's own noise stream by default, or fresh noise from an `rng`) |
 | [`stimuli.binaural`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py) | `apply_itd_ild`, `simple_bir`, `interaural_cues`, `oscor`, `phasewarp` |
 | [`stimuli.spatialization`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py) | `HRIRSet` (PKU-IOA, SOFA; onset-aligned interpolation), `spatialize`, `move_sound`, trajectories, coordinate conversions, `distance_gain_db` |
 | [`stimuli.hrir_data`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py) | `load_hrirs`: public HRIR databases (PKU-IOA) downloaded on first use, checksum-verified and cached |
@@ -281,16 +284,7 @@ listed at the end.
 
 **Next, in order**
 
-1. **Speech analysis and synthesis.** The rest of a WORLD-style model
-   (after STRAIGHT, Kawahara et al., 1999; WORLD, Morise et al., 2016),
-   built on the F0 tracker, the
-   cepstrum and the pitch-adaptive frame: a CheapTrick-style spectral
-   envelope (Morise, 2015), aperiodicity, and the noise half of
-   pulse-plus-noise synthesis (the harmonic half, harmonic complexes on an
-   F0 contour, is done). The Klatt-style formant synthesizer built on the
-   same harmonic source is done, with its gallery page (see below); later
-   come the voice-quality controls of KLSYN88 (Klatt & Klatt, 1990).
-2. **Moving-sound renderer.** Revisit `move_sound`, since linear
+1. **Moving-sound renderer.** Revisit `move_sound`, since linear
    trajectories sound unconvincing: sources that change distance (level
    change, travel-time delay, Doppler shift and room reverberation), a
    sinusoidal azimuth trajectory like the one in Cho & Kidd (2022), and
@@ -298,7 +292,7 @@ listed at the end.
    methods are reviewed by Brandtsegg et al. (2018); sonore's windowed
    switching with onset-aligned interpolation is described on the
    [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) page.
-3. **Texture modulation convergence.** Rebalance the objective so
+2. **Texture modulation convergence.** Rebalance the objective so
    modulation power converges (see Texture synthesis below).
 
 **Texture synthesis**
@@ -325,6 +319,7 @@ listed at the end.
 
 **Other**
 
+- The voice-quality controls of KLSYN88 (Klatt & Klatt, 1990) for the formant synthesizer.
 - Free-form modulation patterns: specify a modulation spectrum and synthesize it.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
@@ -410,6 +405,16 @@ listed at the end.
   harmonics equal source x formants x radiation to 1e-6 dB; see
   `docs/design/klatt.md` and the
   [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html) gallery page.
+- **WORLD vocoder.** `so.cheaptrick` (spectral envelope; Morise, 2015),
+  `so.d4c` (aperiodicity; Morise, 2016) and `so.world_synthesize` reproduce
+  WORLD (Morise et al., 2016, the successor of STRAIGHT, Kawahara et al.,
+  1999) in NumPy, including its own noise generator: on the gallery
+  sentence they match pyworld to 4e-9 dB, 7e-12 dB and 1e-13 of the peak,
+  and the tests compare against stored WORLD output, so pyworld is not a
+  dependency. Options that depart from WORLD are listed in
+  `so.DIFFERENCES_FROM_WORLD`. `so.harmonic_aperiodicity` measures the
+  share of noise directly, beside D4C. See `docs/design/world.md` and the
+  [Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) gallery page.
 
 </details>
 
@@ -460,9 +465,10 @@ Works with no tag are not implemented yet.
 - Licklider, Webster & Hedlun (1950). On the frequency limits of binaural beats. *JASA* 22(4), 468–473. [doi:10.1121/1.1906629](https://doi.org/10.1121/1.1906629). · [▶ Classic stimuli](https://choyun1.github.io/sonore/gallery/classic.html)
 - McAulay & Quatieri (1986). Speech analysis/synthesis based on a sinusoidal representation. *IEEE TASSP* 34. [Internet Archive](https://archive.org/details/SpeechAnalysisSynthesisBasedOnASinusoidalRepresentation). · [Roadmap](#roadmap)
 - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. *Neuron* 71. [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032). [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) [`filterbank.CosineFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L45) [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py) · [▶ Sound textures](https://choyun1.github.io/sonore/gallery/textures.html)
-- Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. *Speech Communication* 67. [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003). [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L508) · [▶ Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html) [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) · [Roadmap](#roadmap)
-- Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. *Proc. Interspeech 2017*. [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). Compared with `f0_track` in `tools/check_f0_fda.py`. · [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html)
-- Morise, Yokomori & Ozawa (2016). WORLD: A vocoder-based high-quality speech synthesis system for real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7). [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Its StoneMask refinement is followed by `f0_track`. [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62) · [▶ Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html) [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) · [Roadmap](#roadmap)
+- Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. *Speech Communication* 67. [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003). [`vocoder.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L396) [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L508) · [▶ Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html) [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) [▶ Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) · [Roadmap](#roadmap)
+- Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech Communication* 84, 57–65. [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001). [`vocoder.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L455) · [▶ Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) · [Roadmap](#roadmap)
+- Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. *Proc. Interspeech 2017*. [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). Compared with `f0_track` in `tools/check_f0_fda.py`. · [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) [▶ Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html)
+- Morise, Yokomori & Ozawa (2016). WORLD: A vocoder-based high-quality speech synthesis system for real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7). [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Its synthesis is reproduced by `world_synthesize`, and its StoneMask refinement followed by `f0_track`. [`vocoder.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/vocoder.py#L34) [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62) · [▶ Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html) [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) [▶ Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) · [Roadmap](#roadmap)
 - Noll (1967). Cepstrum pitch determination. *JASA* 41(2). [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/). [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L145) · [▶ Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html) [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html)
 - Oppenheim & Schafer (2010). *Discrete-Time Signal Processing*, 3rd ed., ch. 13. Pearson. [Pearson](https://www.pearson.com/en-us/subject-catalog/p/Oppenheim-Discrete-Time-Signal-Processing-3rd-Edition/P200000003226). [`cepstrum.Cepstrum.to_stft`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L112)
 - Patterson, Robinson, Holdsworth, McKeown, Zhang & Allerhand (1992). Complex sounds and auditory images. In *Auditory Physiology and Perception* (Proc. 9th International Symposium on Hearing). [doi:10.1016/B978-0-08-041847-6.50054-X](https://doi.org/10.1016/B978-0-08-041847-6.50054-X). [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L263)

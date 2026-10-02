@@ -551,8 +551,10 @@ def _d4c_bands(samples, fs, time, f0, n_fft, n_bands, nuttall, noise):
     segment = _windowed_waveform(samples, fs, f0, time, "hann", 4.0, noise, _D4C_SAFEGUARD)
     power = np.abs(np.fft.rfft(segment, n_fft)) ** 2
     power = _linear_smoothing(_dc_correction(power, f0, fs, n_fft), f0, fs, n_fft)
-    group_delay = _linear_smoothing(centroid / power, f0 / 2.0, fs, n_fft)
-    group_delay = group_delay - _linear_smoothing(group_delay, f0, fs, n_fft)
+    # WORLD divides without a guard; where the power is 0 the C code gets inf or NaN as here
+    with np.errstate(divide="ignore", invalid="ignore"):
+        group_delay = _linear_smoothing(centroid / power, f0 / 2.0, fs, n_fft)
+        group_delay = group_delay - _linear_smoothing(group_delay, f0, fs, n_fft)
     window_length = len(nuttall)
     boundary = _matlab_round(n_fft * 8.0 / window_length)
     bands = np.empty(n_bands)
