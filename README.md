@@ -233,6 +233,7 @@ also at the top level as `so.name`; the texture ones are under
 | [`analysis.filterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py) | `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `GammatoneFilterbank` (exact 4th-order gammatone responses, causal or zero-phase; `envelope_peak_delay` gives each filter's latency), `MorletFilterbank` (log-spaced Morlet wavelets); both add edge filters by default so synthesis is exact on the whole band, and `edges=False` gives the bare bank for cochleagrams. `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`), `noise_vocode` |
 | [`analysis.representations`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py) | `Spectrum`, `long_term_spectrum`, `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis), `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`), `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
 | [`analysis.cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py) | `Cepstrum` (the real cepstrum of an `STFT` or `TVSTFT`: rectangular liftering with a fixed or per-time-window cutoff, the cepstral envelope, resynthesis with the original phase, exact when unliftered, or the minimum phase, and classic cepstral F0 after Noll, 1967) |
+| [`analysis.mfcc`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py) | `MFCC` (mel-frequency cepstral coefficients of a `Sound`, with the usual speech settings, or of any `STFT` or `TVSTFT`: HTK or Slaney mel, height- or area-normalised triangles straight in mel or in Hz, the mel spectrogram, deltas, the smoothed envelope the coefficients keep, `.plot()`; reproduces Kaldi's and librosa's numbers to rounding error; not invertible) |
 | [`analysis.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py) | `f0_track` → `F0Track` (F0 every 5 ms with a voiced/unvoiced decision: candidates from YIN's difference function, refinement by the instantaneous frequency of six harmonics, a periodicity score, a Viterbi pass; `.plot()`; checked against laryngograph F0) |
 | [`analysis.vocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py) | `cheaptrick` → `SpectralEnvelope`, `d4c` → `Aperiodicity` (WORLD's CheapTrick and D4C, ported exactly: they match WORLD to floating-point precision), `harmonic_aperiodicity` (the share of noise, by fitting the harmonics), `DIFFERENCES_FROM_WORLD` |
 | [`analysis.envelopes`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/envelopes.py) | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`) |
@@ -261,7 +262,7 @@ Where to go for what sonore leaves out:
 
   ```python
   s = slab.Sound(snd.data, samplerate=snd.fs)  # sonore to slab; then set s.level in dB SPL
-  snd = so.Sound(s.data, s.samplerate)          # slab to sonore
+  snd = so.Sound(s.data, s.samplerate)  # slab to sonore
   ```
 
   slab reads samples as pascals, so a sonore sound at RMS 1 shows as 94 dB SPL
@@ -435,6 +436,10 @@ listed at the end.
   [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html)
   page has a talker walking in from 3 m, dry and in a room, and a buzz
   passing at 15 m/s whose measured pitch follows the Doppler shift.
+- **MFCCs.** `so.MFCC` on a sound or any STFT: mel band powers, their log
+  and a DCT, deltas, the mel spectrogram and the smoothed envelope the
+  coefficients keep. Tests compare it with Kaldi's and librosa's stored output; see
+  `docs/design/mfcc.md`.
 
 </details>
 
@@ -460,6 +465,7 @@ Works with no tag are not implemented yet.
 - Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail party" listening environment. *JASA* 152(3), 1684–1694. [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Its experiment code is archived at [choyun1/MSM](https://github.com/choyun1/MSM). [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L500) [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L98) · [▶ Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) · [Roadmap](#roadmap)
 - Christensen (2003). *An Introduction to Frames and Riesz Bases*. Birkhäuser. [doi:10.1007/978-0-8176-8224-8](https://doi.org/10.1007/978-0-8176-8224-8). [`frames.Frame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L78)
 - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899. [doi:10.1371/journal.pone.0211899](https://doi.org/10.1371/journal.pone.0211899). Removes the interaural delay before interpolating HRIRs, as sonore's onset alignment does. [`spatialization.HRIRSet`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L178) · [▶ Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html)
+- Davis & Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. *IEEE Trans. Acoust., Speech, Signal Process.* 28(4), 357–366. [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L126)
 - Daubechies, Grossmann & Meyer (1986). Painless nonorthogonal expansions. *J. Math. Phys.* 27(5). [doi:10.1063/1.527388](https://doi.org/10.1063/1.527388). [`frames.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L273)
 - Dau, Kollmeier & Kohlrausch (1997). Modeling auditory processing of amplitude modulation. I. Detection and masking with narrow-band carriers. *JASA* 102(5), 2892–2905. [PubMed](https://pubmed.ncbi.nlm.nih.gov/9373976/). [`modulation.HannModulationFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py#L140) · [▶ Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html)
 - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music. *JASA* 111(4). [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024). [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62) · [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html)
@@ -538,6 +544,16 @@ numerically; "consulted" means the code was read for behavior but not copied.
   (homomorphic method), the real-cepstrum definition MATLAB's `rceps` documents, and Praat's
   PowerCepstrogram through [parselmouth](https://github.com/YannickJadoul/Parselmouth) (GPLv3):
   cross-checked by `tools/crosscheck_cepstrum.py`, Praat at development time only. [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16)
+- Kaldi's `compute-mfcc-feats`, through [kaldi-native-fbank](https://github.com/csukuangfj/kaldi-native-fbank)
+  (Apache-2.0), a C++ re-implementation of Kaldi's feature code: its MFCCs and log mel energies are stored by
+  `tools/make_kaldi_fixtures.py`, and the tests compare `MFCC` with them to float32 precision (no DC removal,
+  pre-emphasis or energy, which sonore leaves to the sound). The primary reference, standing in for HTK,
+  whose download site was unreachable. [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L126)
+- [librosa](https://librosa.org/) (ISC) `feature.mfcc`, `feature.melspectrogram` and `feature.delta`: their
+  output for three settings is stored by `tools/make_mfcc_fixtures.py`, and the tests compare `MFCC` with it
+  (mel power to 3e-7, coefficients to 1e-8, both relative to the largest value). `tools/crosscheck_mfcc.py` also
+  reproduces [python_speech_features](https://github.com/jameslyons/python_speech_features) 0.6 exactly. Both
+  are development-time only. [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L126)
 - [LTFAT](https://ltfat.github.io/) (GPLv3) and [nsgt](https://github.com/grrrr/nsgt) (Artistic License 2.0):
   frame theory in code, for dev-time cross-checks only because of their licenses. Not yet cross-checked. [`frames`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py)
 
