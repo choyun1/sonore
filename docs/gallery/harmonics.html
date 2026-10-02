@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html" aria-current="page">Voices from harmonics</a><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-three-pitch-tracks-heard">Three pitch tracks, heard</a></li><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a></li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a></li><li><a href="#h-pitch-and-timbre-apart">Pitch and timbre apart</a></li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html" aria-current="page">Voices from harmonics</a><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-three-pitch-tracks-heard">Three pitch tracks, heard</a></li><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a></li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a></li><li><a href="#h-pitch-and-timbre-apart">Pitch and timbre apart</a></li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a></li><li><a href="#h-a-higher-voice">A higher voice</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -164,7 +164,7 @@ as well as a fixed F0: every harmonic follows <span class="tex">n</span> times t
 at every harmonic. A pitch track and an envelope are then enough to make a voice, and either one
 can be changed without touching the other, which is the idea behind vocoders such as WORLD
 (Morise et al., 2016).</p>
-<ul><li><a href="#h-three-pitch-tracks-heard">Three pitch tracks, heard</a>: a buzz that follows cepstral F0, <code>so.f0_track</code>, and Harvest.</li><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a>: harmonics shaped by the cepstral envelope, and the same pitch carried through a vocoder.</li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a>: silence or shaped noise where the voice is not voiced.</li><li><a href="#h-pitch-and-timbre-apart">Pitch and timbre apart</a>: the same envelope on other contours.</li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a>: cosine, Schroeder and random phase.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: better envelopes, aperiodicity, and the glottal pulse.</li></ul>
+<ul><li><a href="#h-three-pitch-tracks-heard">Three pitch tracks, heard</a>: a buzz that follows cepstral F0, <code>so.f0_track</code>, and Harvest.</li><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a>: harmonics shaped by the cepstral envelope, and the same pitch carried through a vocoder.</li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a>: silence or shaped noise where the voice is not voiced.</li><li><a href="#h-pitch-and-timbre-apart">Pitch and timbre apart</a>: the same envelope on other contours.</li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a>: cosine, Schroeder and random phase.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same resynthesis on a woman's voice.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: better envelopes, aperiodicity, and the glottal pulse.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -462,7 +462,7 @@ print(f&quot;median voiced F0: {median:.0f} Hz&quot;)
 def on(values):
     &quot;&quot;&quot;The resynthesis on another contour, at so.f0_track&#x27;s window times.&quot;&quot;&quot;
     contour = (track.t, np.where(voiced, values, 0.0))
-    return finish(with_breath(so.harmonic_complex(duration, fs, contour, amplitudes=formants))), contour</code></pre></details><pre class="out">median voiced F0: 120 Hz</pre></div>
+    return finish(with_breath(so.harmonic_complex(duration, fs, contour, amplitudes=formants))), contour</code></pre></details><pre class="out">median voiced F0: 119 Hz</pre></div>
 
 <article class="sound" id="d-hm1" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
@@ -609,6 +609,86 @@ sound = snd</code></pre></details>
   <details class="code"><summary>Code</summary><pre><code class="language-python">snd = finish(buzzes[&quot;random&quot;])
 fig, playhead = show(snd, &quot;equal harmonics, random phase&quot;, contours[&quot;so.f0_track&quot;])
 sound = snd</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-a-higher-voice">
+<h2 id="h-a-higher-voice">A higher voice</h2>
+<p>The same recipe on the same sentence read by a woman (CMU ARCTIC, speaker slt), whose pitch is
+about half as high again as the man's. Two things are harder. Her harmonics are further apart,
+so they sample the formants more sparsely, and whatever lies between them is not in the
+spectrum to be measured. And the lifter at half a period keeps fewer quefrencies, so the
+envelope it recovers is smoother. Everything else, the tracker, the noise in the gaps and its
+balance, is done as above. Listen for whether her vowels come back as clearly as his.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def resynthesize(snd, seed=2):
+    &quot;&quot;&quot;A pitch track and a cepstral envelope from snd, put back together as above:
+    harmonics on so.f0_track shaped by the envelope, and envelope-shaped noise where unvoiced.&quot;&quot;&quot;
+    snd_stft = so.STFT(snd, win_dur=0.040, hop_dur=0.005)
+    snd_cep = so.Cepstrum(snd_stft)
+    snd_track = so.f0_track(snd)
+    is_voiced = snd_track.voiced[0]
+    voiced_times, voiced_f0s = snd_track.t[is_voiced], snd_track.f0[0][is_voiced]
+    lifter_cutoffs = 0.5 / np.exp(np.interp(snd_cep.t, voiced_times, np.log(voiced_f0s)))
+    snd_envelope = snd_cep.lifter(lifter_cutoffs).envelope()[0]
+    snd_log_envelope = RegularGridInterpolator(
+        (snd_cep.t, snd_stft.f), np.log(snd_envelope.T), bounds_error=False, fill_value=None
+    )
+
+    def snd_formants(t, f):
+        return np.exp(snd_log_envelope(np.stack([t, f], axis=-1)))
+
+    snd_duration = snd.duration
+    harmonics = so.harmonic_complex(snd_duration, fs, snd_track, amplitudes=snd_formants).data[:, 0]
+    noise_stft = so.STFT(so.gaussian_noise(snd_duration, fs, rng=seed), win_dur=0.040, hop_dur=0.005)
+    noise_stft.data = snd_envelope[None] * np.exp(1j * np.angle(noise_stft.data))
+    snd_breath = noise_stft.to_sound().data[: len(snd), 0]
+    sample_times = np.arange(len(snd)) / fs
+    snd_voicing = np.interp(sample_times, snd_track.t, is_voiced.astype(float))
+    original = snd.data[:, 0]
+    snd_balance = rms((1 - snd_voicing) * original) / rms(snd_voicing * original)
+    gap = (1 - snd_voicing) * snd_breath
+    out = harmonics + gap * snd_balance * rms(harmonics) / rms(gap)
+    return finish(so.Sound(out, fs)), (snd_track.t, snd_track.f0[0])
+
+
+sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+resynthesis_female, contour_female = resynthesize(sentence_female)
+f0_female = contour_female[1]
+print(f&quot;median voiced F0: {np.median(f0_female[f0_female &gt; 0]):.0f} Hz (slt), {median:.0f} Hz (bdl)&quot;)</code></pre></details><pre class="out">median voiced F0: 183 Hz (slt), 119 Hz (bdl)</pre></div>
+
+<article class="sound" id="d-hv1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+  <div class="about">
+    <h3>The sentence, a higher voice</h3>
+    <div class="desc"><p>Her sentence, for reference, with <code>so.f0_track</code>'s contour over the narrowband spectrogram.</p></div>
+    <audio controls preload="metadata" src="audio/hv1_the_sentence_a_higher_voice.flac"></audio>
+    <p class="file">hv1_the_sentence_a_higher_voice.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hv1_the_sentence_a_higher_voice.png" width="1000" height="420" alt="Plots of the the sentence, a higher voice sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence_female, &quot;the sentence read by slt&quot;, contour_female)
+for ax in playhead:
+    ax.set_xlim(0, sentence_female.duration)
+sound = sentence_female</code></pre></details>
+</article>
+
+<article class="sound" id="d-hv2" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+  <div class="about">
+    <h3>Resynthesized from pitch and envelope, a higher voice</h3>
+    <div class="desc"><p>Her sentence from a pitch track and a cepstral envelope, as in
+<a href="#d-hu2">Shaped noise in the gaps</a> for his. Each harmonic carries the envelope's level at its
+own frequency, so with her harmonics further apart, the formants are drawn from fewer samples.</p></div>
+    <audio controls preload="metadata" src="audio/hv2_resynthesized_from_pitch_and_envelope_a_higher_voice.flac"></audio>
+    <p class="file">hv2_resynthesized_from_pitch_and_envelope_a_higher_voice.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hv2_resynthesized_from_pitch_and_envelope_a_higher_voice.png" width="1000" height="420" alt="Plots of the resynthesized from pitch and envelope, a higher voice sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead = show(resynthesis_female, &quot;harmonics and shaped noise, slt&quot;, contour_female)
+for ax in playhead:
+    ax.set_xlim(0, sentence_female.duration)
+sound = resynthesis_female</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">

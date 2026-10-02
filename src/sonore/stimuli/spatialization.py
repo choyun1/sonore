@@ -39,7 +39,7 @@ from pathlib import Path
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.interpolate import CubicSpline
-from scipy.signal import fftconvolve, resample_poly
+from scipy.signal import fftconvolve, minimum_phase, resample_poly
 from scipy.spatial import ConvexHull
 from scipy.special import i0
 
@@ -392,15 +392,27 @@ class HRIRSet:
         indices, weights = self._weights(points)
         return np.einsum("nk,nkc->nc", weights, self._onsets[indices]) / self.fs
 
-    def _direct_energy_at_1m(self, fs: float) -> float:
-        """Energy of one ear's HRIR at 1 m, averaged over directions and ears,
-        as rendered at ``fs``: the measured distance nearest 1 m, scaled by
-        1/r to 1 m when it is not at 1 m."""
+    def _diffuse_field(self, fs: float) -> tuple[float, np.ndarray]:
+        """What sound arriving from every direction at once sounds like at the ears,
+        at the measured distance nearest 1 m, at ``fs``: the energy of one ear's HRIR
+        averaged over directions and ears (scaled by 1/r to 1 m if that distance is
+        not 1 m), and a minimum-phase filter per ear, shape (2, taps), whose power
+        response is the HRIRs' power response averaged over directions."""
         radii = np.linalg.norm(self.positions, axis=1)
         nearest = self.distances[np.argmin(np.abs(self.distances - 1.0))]
-        members = np.abs(radii - nearest) < 1e-3 * nearest
-        energy = np.mean(np.sum(self.irs[members] ** 2, axis=-1))
-        return float(energy * (fs / self.fs) * nearest**2)
+        hrir = self.at(self.positions[np.abs(radii - nearest) < 1e-3 * nearest], fs=fs) * nearest
+        energy = float(np.mean(np.sum(hrir**2, axis=-1)))
+        n_fft = 2 * int(2 ** np.ceil(np.log2(hrir.shape[-1])))
+        power = np.mean(np.abs(np.fft.rfft(hrir, n_fft, axis=-1)) ** 2, axis=0)  # (2, bins)
+        # A linear-phase filter with this power response; its minimum-phase version
+        # has the square root of it as magnitude, the average magnitude we want.
+        # The first sample, the lag of half the FFT length, is dropped (the window is zero there)
+        # so the filter is symmetric about its middle sample, as minimum_phase expects.
+        linear_phase = (
+            np.fft.fftshift(np.fft.irfft(power, n_fft, axis=-1), axes=-1)[:, 1:] * np.hanning(n_fft + 1)[1:-1]
+        )
+        filters = np.array([minimum_phase(linear_phase[ear], method="homomorphic") for ear in range(2)])
+        return energy, filters
 
     def at(self, positions: ArrayLike, fs: float | None = None) -> np.ndarray:
         """Interpolated HRIRs at Cartesian ``positions`` (N, 3), resampled to
@@ -517,7 +529,9 @@ def move_sound(
         A reverberant tail, one or two channels, such as
         ``so.synth_ir(rt60, fs, n_channels=2)`` (without ``drr_db``, so it has
         no direct sound). It is driven by the source as it arrives, without the
-        1/r, so its level stays put while the direct sound falls with distance.
+        1/r, so its level stays put while the direct sound falls with distance,
+        and each ear hears it through the HRIRs averaged over directions, since
+        reverberation arrives from everywhere.
     drr_db
         Direct-to-reverberant energy ratio at 1 m, averaged over directions.
     hop
@@ -579,10 +593,14 @@ def move_sound(
         tail = room.to_channels(2) if room.n_channels == 1 else room
         if tail.fs != fs or tail.n_channels != 2:
             raise ValueError("room must be one or two channels at the sound's sampling rate")
-        tail_energy = np.mean(np.sum(tail.data**2, axis=0))
-        scale = np.sqrt(hrirs._direct_energy_at_1m(fs) * 10 ** (-drr_db / 10) / tail_energy)
+        # Reverberation reaches the ears from every direction, so each ear hears the tail
+        # through the HRIRs' average over directions.
+        direct_energy, diffuse_filters = hrirs._diffuse_field(fs)
+        tail_at_ears = fftconvolve(tail.data, diffuse_filters.T, axes=0)
+        tail_energy = np.mean(np.sum(tail_at_ears**2, axis=0))
+        scale = np.sqrt(direct_energy * 10 ** (-drr_db / 10) / tail_energy)
         arriving = _read_between_samples(signal, (emission_by_ear[0] + emission_by_ear[1]) / 2 * fs)
-        reverberant = fftconvolve(arriving[:, None], tail.data * scale, axes=0)
+        reverberant = fftconvolve(arriving[:, None], tail_at_ears * scale, axes=0)
         total = np.zeros((max(len(out), len(reverberant)), 2))
         total[: len(out)] += out
         total[: len(reverberant)] += reverberant

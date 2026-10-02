@@ -32,6 +32,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [A sentence](#h-a-sentence): both measures on recorded speech.
 # - [Listening](#h-listening): the sentence rebuilt by WORLD's synthesis with each aperiodicity,
 #   with none, and with nothing else.
+# - [A higher voice](#h-a-higher-voice): the breathy vowel at twice the pitch, and the sentence
+#   read by a woman.
 # - [What this page leaves out](#h-what-this-page-leaves-out).
 
 # %% [markdown]
@@ -376,6 +378,121 @@ sound = finish(so.world_synthesize(harvest, sentence_envelope, noise_only))
 fig, playhead = show(sound, "so.world_synthesize with A = 1", fmax=8000)
 
 # %% [markdown]
+# ## A higher voice
+#
+# Women's voices sit about half an octave to an octave above men's, so their harmonics are
+# further apart, and both measures have fewer of them to work with. The breathy vowel again,
+# made the same way but at 230 Hz, twice the pitch, with a woman's formants for "hod" (average
+# F1 to F3 from Hillenbrand et al., 1995). The noise is again as strong as the harmonics at 4 kHz,
+# so the truth has the same shape as before.
+
+# %%
+F0_HIGH = 230.0
+HOD_WOMEN = [(936, 60), (1551, 90), (2815, 150), (4100, 200), (4900, 250)]
+harmonic_numbers_high = np.arange(1, int(0.45 * FS / F0_HIGH) + 1)
+buzz_high = so.harmonic_complex(
+    DUR, FS, F0_HIGH, harmonics=harmonic_numbers_high, amplitudes=lambda t, f: source_gain(f)
+)
+scale_high = 1 / np.sqrt(np.sum(source_gain(harmonic_numbers_high * F0_HIGH) ** 2) / 2)
+
+
+def harmonic_density_high(f):
+    return (scale_high * source_gain(f)) ** 2 / 2 / F0_HIGH
+
+
+noise_density_high = harmonic_density_high(4000.0)
+hiss_high = so.gaussian_noise(DUR, FS, rng=1) * np.sqrt(noise_density_high * FS / 2)
+vowel_high = buzz_high + hiss_high
+for freq, bandwidth in HOD_WOMEN:
+    vowel_high = so.resonator(vowel_high, freq, bandwidth)
+track_high = (window_times, np.full(len(window_times), F0_HIGH))
+residual_high = so.harmonic_aperiodicity(vowel_high, track_high)
+d4c_high = so.d4c(vowel_high, track_high)
+n_low, n_high = len(harmonic_numbers), len(harmonic_numbers_high)
+print(f"harmonics below 7.2 kHz: {n_low} at {F0:.0f} Hz, {n_high} at {F0_HIGH:.0f} Hz")
+
+# %% [about]
+# Both measures at 115 Hz (thin lines, as above) and at 230 Hz (thick lines), against the truth,
+# which is the same at both pitches. The harmonic residual fits half as many harmonics at the
+# higher pitch, in a window four of its shorter periods long; D4C's single band at 3 kHz gets a
+# different F0 correction.
+
+# %% [figure ap14] Both measures at twice the pitch
+fig, ax = plt.subplots(figsize=(10, 3.4), layout="constrained")
+ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color="k", lw=2.5, alpha=0.35, label="truth")
+for share, color in [(residual_share, "C3"), (d4c_share, "C0")]:
+    ax.plot(share.f, 10 * np.log10(share.share[0][:, inside].mean(axis=1)), color=color, lw=0.8, alpha=0.6)
+for share, color, label in [
+    (residual_high, "C3", "so.harmonic_aperiodicity"),
+    (d4c_high, "C0", "so.d4c (WORLD)"),
+]:
+    mean_share = share.share[0][:, inside].mean(axis=1)
+    ax.plot(share.f, 10 * np.log10(mean_share), color=color, lw=2, label=f"{label}, {F0_HIGH:.0f} Hz")
+ax.set(xlabel="Frequency (Hz)", ylabel="Share of noise (dB)", xlim=(0, 7200), ylim=(-62, 3))
+ax.set_title(f"The breathy vowel at {F0:.0f} Hz (thin) and {F0_HIGH:.0f} Hz (thick)")
+ax.legend(loc="lower right", fontsize=8)
+
+# %%
+truth_high_db = []
+envelope_high = so.cheaptrick(vowel_high, track_high)
+weights_high = envelope_high.data[0][:, inside].mean(axis=1)
+for low, high in zip(band_edges[:-1], band_edges[1:], strict=True):
+    in_band = (envelope_high.f >= low) & (envelope_high.f < high)
+    share = np.sum(true_aperiodicity(envelope_high.f[in_band]) * weights_high[in_band]) / np.sum(
+        weights_high[in_band]
+    )
+    truth_high_db.append(10 * np.log10(share))
+print(f"{'Share of noise [dB], band [Hz]':<34}{bands}")
+print(f"{'truth':<34}" + "".join(f"{value:>11.1f}" for value in truth_high_db))
+for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", so.d4c)]:
+    shares = measure(vowel_high, track_high).bands(band_edges, envelope_high)[0][:, inside].mean(axis=1)
+    print(
+        f"{name + f', {F0_HIGH:.0f} Hz':<34}" + "".join(f"{value:>11.1f}" for value in 10 * np.log10(shares))
+    )
+
+# %% [markdown]
+# The same sentence read by a woman (CMU ARCTIC, speaker slt). There is no stored Harvest track
+# for this recording, so the pitch comes from `so.f0_track`; the analysis is still WORLD's.
+
+# %%
+sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+track_female = so.f0_track(sentence_female)
+envelope_female = so.cheaptrick(sentence_female, track_female)
+d4c_female = so.d4c(sentence_female, track_female)
+residual_female = so.harmonic_aperiodicity(sentence_female, track_female)
+
+# %% [about]
+# Her envelope and the two aperiodicities, drawn as for the man's sentence above.
+
+# %% [figure ap15] Envelope and aperiodicities of a higher voice
+fig, axes = plt.subplots(3, 1, figsize=(10, 7.2), sharex=True, layout="constrained")
+envelope_female.plot(axes[0], db_range=70)
+axes[0].set_title("Spectral envelope (CheapTrick), slt")
+for ax, aperiodicity, title in [
+    (axes[1], d4c_female, "Aperiodicity: so.d4c (WORLD), slt"),
+    (axes[2], residual_female, "Aperiodicity: so.harmonic_aperiodicity, slt"),
+]:
+    aperiodicity.plot(ax, db_range=40)
+    ax.set_title(title)
+for ax in axes:
+    ax.set_xlim(0, sentence_female.duration)
+axes[2].set_xlabel("Time (s)")
+
+# %% [about]
+# Her sentence, for reference.
+
+# %% [demo ap16] The sentence, a higher voice
+sound = sentence_female
+fig, playhead = show(sound, "the sentence read by slt", fmax=8000)
+
+# %% [about]
+# WORLD's resynthesis of her sentence with D4C's aperiodicity, on `so.f0_track`'s pitch.
+
+# %% [demo ap17] Resynthesis with D4C, a higher voice
+sound = finish(so.world_synthesize(track_female, envelope_female, d4c_female))
+fig, playhead = show(sound, "so.world_synthesize with so.d4c, slt", fmax=8000)
+
+# %% [markdown]
 # ## What this page leaves out
 #
 # - **WORLD's pitch tracker.** Harvest is not part of sonore; its track is stored with the
@@ -391,11 +508,14 @@ fig, playhead = show(sound, "so.world_synthesize with A = 1", fmax=8000)
 # %% [markdown]
 # ## References
 #
+# - Hillenbrand, Getty, Clark & Wheeler (1995). Acoustic characteristics of American English
+#   vowels. *J. Acoust. Soc. Am.* 97(5), 3099–3111.
+#   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872). Women's formants for "hod".
 # - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940). The glottal source.
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentence.
+#   The sentence, by speakers bdl and slt.
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
