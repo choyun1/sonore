@@ -102,9 +102,23 @@ def test_channels_are_tracked_separately():
 def test_frames_and_arguments():
     trk = so.f0_track(so.Sound(vowel(np.full(N, 120.0)), FS), hop=0.01)
     np.testing.assert_allclose(trk.t, np.arange(0, 0.3, 0.01))
-    for kw in ({"f_lo": 0}, {"f_lo": 300, "f_hi": 200}, {"f_hi": 9000}, {"hop": 0}):
+    bad = ({"f_lo": 0}, {"f_lo": 300, "f_hi": 200}, {"f_hi": 9000}, {"hop": 0}, {"subharmonic_margin": -0.1})
+    for kw in bad:
         with pytest.raises(ValueError):
             so.f0_track(so.Sound(np.zeros(100), FS), **kw)
+
+
+def test_subharmonic_rule_can_be_turned_off():
+    """Anything periodic at 220 Hz is periodic at 110 Hz too. When the 110 Hz
+    candidate scores a little higher, the rule still picks 220 Hz; without
+    the rule the higher score wins."""
+    from sonore.analysis.f0 import _viterbi
+
+    cand = np.tile([110.0, 220.0, np.nan, np.nan], (20, 1))
+    score = np.tile([0.92, 0.9, np.nan, np.nan], (20, 1))
+    on, _ = _viterbi(cand, score, 0.5, 2.0, 0.5, 0.05)
+    off, _ = _viterbi(cand, score, 0.5, 2.0, 0.5, None)
+    assert np.all(on == 220) and np.all(off == 110)
 
 
 @pytest.mark.skipif(not SPEECH.exists(), reason="docs are not in the sdist")

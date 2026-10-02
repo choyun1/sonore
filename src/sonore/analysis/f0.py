@@ -17,7 +17,6 @@ N_HARMONICS = 6
 PERIODS = 3.0  # window length for refinement and scoring, in periods of the candidate
 SINC_HALF = 32  # half-length of the fractional-delay kernel [samples]
 CHUNK = 512  # candidates processed at once
-SUBHARMONIC_MARGIN = 0.05  # score margin of the subharmonic rule
 
 
 @dataclass(frozen=True)
@@ -69,6 +68,7 @@ def f0_track(
     *,
     octave_cost: float = 2.0,
     switch_cost: float = 0.5,
+    subharmonic_margin: float | None = 0.05,
 ) -> F0Track:
     """Track the F0 of each channel of a sound.
 
@@ -96,7 +96,8 @@ def f0_track(
        so a frame leans voiced when its best score exceeds ``threshold``;
        moving between candidates costs ``octave_cost`` per octave, and a
        voicing change costs ``switch_cost``. A candidate is never chosen if
-       another one an octave above scores about as well: anything periodic
+       another one an octave above scores at least as well, less
+       ``subharmonic_margin``: anything periodic
        with period T is also periodic with period 2T, and without this rule
        a female voice is tracked an octave low on about 1% of frames. No
        smoothing follows.
@@ -122,12 +123,17 @@ def f0_track(
         The periodicity score above which a frame leans voiced.
     octave_cost, switch_cost
         Tracking costs, as above.
+    subharmonic_margin
+        How much lower the octave above may score and still rule out a
+        candidate. ``None`` turns the rule off, to see the raw choice.
     """
     fs = float(sound.fs)
     if not 0 < f_lo < f_hi < fs / 2:
         raise ValueError(f"need 0 < f_lo < f_hi < fs/2, got f_lo={f_lo:g}, f_hi={f_hi:g}")
     if hop <= 0:
         raise ValueError(f"hop must be positive, got {hop:g}")
+    if subharmonic_margin is not None and not 0 <= subharmonic_margin < 1:
+        raise ValueError(f"subharmonic_margin must be in [0, 1) or None, got {subharmonic_margin:g}")
     t = np.arange(0.0, sound.duration, hop)
     n_ch = sound.n_channels
     shape = (n_ch, len(t))
@@ -148,7 +154,7 @@ def f0_track(
         s = np.full(c.shape, np.nan)
         s[ok] = np.where(keep, sc, np.nan)
         cand[ch], cand_score[ch] = c, s
-        f0[ch], score[ch] = _viterbi(c, s, threshold, octave_cost, switch_cost)
+        f0[ch], score[ch] = _viterbi(c, s, threshold, octave_cost, switch_cost, subharmonic_margin)
     return F0Track(t, f0, score, cand, cand_score, fs, threshold)
 
 
@@ -278,20 +284,21 @@ def _periodicity(x, tc, f, fs, f_lo):
     return out
 
 
-def _viterbi(cand, score, threshold, octave_cost, switch_cost):
+def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margin):
     """Cheapest path through (unvoiced, candidates...) per frame."""
     n = len(cand)
     f_states = np.concatenate([np.zeros((n, 1)), np.nan_to_num(cand, nan=-1.0)], axis=1)
     local = np.concatenate([np.full((n, 1), 1 - threshold), 1 - np.nan_to_num(score, nan=0.0)], axis=1)
-    # A candidate whose octave above is also a candidate, scoring nearly as
-    # well, is a subharmonic (anything periodic at T is periodic at 2T), so
-    # it is never chosen.
-    f = np.nan_to_num(cand, nan=-1.0)
-    sc = np.nan_to_num(score, nan=-np.inf)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        near = np.abs(f[:, None, :] / (2 * np.where(f > 0, f, np.nan))[:, :, None] - 1) < 0.05
-    sub = np.any(near & (sc[:, None, :] >= sc[:, :, None] - SUBHARMONIC_MARGIN), axis=2)
-    local[:, 1:] = np.where(sub, np.inf, local[:, 1:])
+    if subharmonic_margin is not None:
+        # A candidate whose octave above is also a candidate, scoring nearly
+        # as well, is a subharmonic (anything periodic at T is periodic at
+        # 2T), so it is never chosen.
+        f = np.nan_to_num(cand, nan=-1.0)
+        sc = np.nan_to_num(score, nan=-np.inf)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            near = np.abs(f[:, None, :] / (2 * np.where(f > 0, f, np.nan))[:, :, None] - 1) < 0.05
+        sub = np.any(near & (sc[:, None, :] >= sc[:, :, None] - subharmonic_margin), axis=2)
+        local[:, 1:] = np.where(sub, np.inf, local[:, 1:])
     local[f_states < 0] = np.inf  # missing candidates
     back = np.zeros(f_states.shape, int)
     cost = local[0].copy()
