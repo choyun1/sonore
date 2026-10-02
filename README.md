@@ -43,7 +43,8 @@ cepstrum, a phase vocoder, ripples and binaural cues.
 
 - **Psychophysical stimuli.** Pure tones, harmonic complexes with any phase
   scheme (cosine, sine, alternating, random, Schroeder±), band-limited square,
-  sawtooth and pulse trains, chirps, band-limited and spectrally tilted noise,
+  sawtooth and pulse trains, all on a fixed F0 or following any F0 contour
+  (an `F0Track`, or frame times and values) without aliasing, chirps, band-limited and spectrally tilted noise,
   iterated rippled noise. Everything is reproducible from a seed.
 - **Binaural and spatial hearing.** Exact fractional ITDs, ILDs, interaurally
   correlated noise, Oscor and Phasewarp, windowed ITD/ILD/coherence analysis
@@ -272,6 +273,15 @@ Where to go for what sonore leaves out:
   database, Bagshaw et al., 1993) it gets the voicing of 5.5% (male) and
   1.6% (female) of frames wrong, where WORLD's Harvest gets about 21%; see
   `docs/design/f0.md`.
+- **Harmonic complexes on an F0 contour.** `so.harmonic_complex` takes an
+  F0 contour as well as a number: the phase is the contour's exact running
+  integral, unvoiced gaps are bridged and switched off with 5 ms ramps (or
+  filled with noise), and harmonics fade out below `f_max` so a rising
+  pitch never aliases. The square, sawtooth, pulse train and Schroeder
+  complexes follow contours too. With `so.noise_vocode(snd, 16,
+  carrier=...)` it puts a sound's band envelopes on harmonics that follow
+  its own F0 track. The harmonic half of the pulse-plus-noise synthesis in
+  item 1 below; see `docs/design/harmonic-source.md`.
 - **Modulation spectrogram.** `ModulationSpectrogram`: how strongly each
   band's envelope is modulated at each rate, frame by frame, with linked
   slices and an animation; see `docs/design/modulation-spectrogram.md` and
@@ -418,14 +428,14 @@ Works with no tag are not implemented yet.
 - Perraudin, Balazs & Søndergaard (2013). A fast Griffin-Lim algorithm. *IEEE WASPAA*. [doi:10.1109/WASPAA.2013.6701851](https://doi.org/10.1109/WASPAA.2013.6701851). [`representations.STFT.griffin_lim`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L176)
 - Plomp & Levelt (1965). Tonal consonance and critical bandwidth. *JASA* 38(4), 548–560. [doi:10.1121/1.1909741](https://doi.org/10.1121/1.1909741). · [▶ Classic stimuli](https://choyun1.github.io/sonore/gallery/classic.html)
 - Qu et al. (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. *IEEE TASLP* 17. [PKU Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial). [`spatialization.HRIRSet.from_pku_ioa`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L130) [`hrir_data.load_hrirs`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py#L122) · [▶ Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html)
-- Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16. [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411). [`generators.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L108)
+- Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16. [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411). [`generators.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L310)
 - Shannon et al. (1995). Speech recognition with primarily temporal cues. *Science* 270. [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303). [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L469) · [▶ Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html)
 - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of auditory processing. *JASA* 114(6). [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067). [`representations.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L457) [`envelopes.Envelopes.modulation_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/envelopes.py#L342) · [▶ Spectrotemporal ripples](https://choyun1.github.io/sonore/gallery/ripples.html)
 - Siveke et al. (2008). Psychophysical and physiological evidence for fast binaural processing. *J. Neurosci.* 28. [J. Neurosci.](https://www.jneurosci.org/content/28/9/2043). [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L170) [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L179) · [▶ Binaural cues](https://choyun1.github.io/sonore/gallery/binaural.html)
 - Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. *PNAS* 113. [doi:10.1073/pnas.1612524113](https://doi.org/10.1073/pnas.1612524113). [`reverb.synth_ir`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/reverb.py#L77) · [▶ Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html)
 - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In *Speech Separation by Humans and Machines*. [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12). [`representations.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L443) · [▶ Analysis and resynthesis](https://choyun1.github.io/sonore/gallery/resynthesis.html)
 - Wilson, Finley, Lawson, Wolford, Eddington & Rabinowitz (1991). Better speech recognition with cochlear implants. *Nature* 352, 236–238. [PubMed](https://pubmed.ncbi.nlm.nih.gov/1857418/). [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L469) · [▶ Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html)
-- Yost (1996). Pitch of iterated rippled noise. *JASA* 100. [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf). [`generators.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L258) · [▶ Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html)
+- Yost (1996). Pitch of iterated rippled noise. *JASA* 100. [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf). [`generators.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L496) · [▶ Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html)
 
 ### Reference implementations
 
