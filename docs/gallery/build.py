@@ -269,8 +269,7 @@ article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; 
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
 .desc p { margin: 0 0 0.75rem; }
-.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
-  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
@@ -592,6 +591,9 @@ def live_json(live: dict, rate: float = 20.0) -> str:
     )
 
 
+HEADPHONES = "Headphones required for binaural sounds"
+
+
 def sound_article(
     key, title, desc_html, snd, audio_src, img_src, regions, size, extra="", code="", scene=None, live=None
 ) -> str:
@@ -608,11 +610,17 @@ def sound_article(
             f'aria-label="An image that changes with the sound as it plays"></canvas>'
         )
     chan = "stereo" if snd.n_channels == 2 else "mono"
+    # Every two-channel demo is binaural: its effect is lost over speakers.
+    phones = (
+        f' <span class="headphones" title="{HEADPHONES}" role="img" aria-label="{HEADPHONES}">🎧</span>'
+        if chan == "stereo"
+        else ""
+    )
     code = f'\n  <details class="code" open><summary>Code</summary>{code}</details>' if code else ""
     return f"""
 <article class="sound" id="d-{key}" data-regions="{html.escape(json.dumps(regions))}">
   <div class="about">
-    <h3>{html.escape(title)}</h3>{extra}
+    <h3>{html.escape(title)}{phones}</h3>{extra}
     {desc_html}
     <audio controls preload="metadata" src="{audio_src}"></audio>
     <p class="file">{html.escape(name)}.flac, {snd.duration:.1f} s, {chan}</p>{scene}

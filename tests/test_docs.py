@@ -119,14 +119,19 @@ def _github_anchor(heading):
 
 
 def test_readme_contents_matches_its_sections():
-    """The Contents list links every top-level README section, in order, and
+    """The Contents table links every top-level README section, in order, and
     every link lands on a real heading."""
     readme = (ROOT / "README.md").read_text()
     prose = re.sub(r"^```.*?^```", "", readme, flags=re.S | re.M)
     sections = re.findall(r"^## (.+)$", prose, flags=re.M)
     anchors = {_github_anchor(h) for h in re.findall(r"^#{1,6} (.+)$", prose, flags=re.M)}
     contents = prose.split("## Contents", 1)[1].split("\n## ", 1)[0]
-    links = re.findall(r"^- \[(.+?)\]\(#(.+?)\)$", contents, flags=re.M)
+    # A table read column by column; each entry is numbered in reading order.
+    numbered = re.findall(r"(\d+)\. \[(.+?)\]\(#(.+?)\)", contents)
+    assert [int(n) for n, _, _ in numbered] and sorted(int(n) for n, _, _ in numbered) == list(
+        range(1, len(numbered) + 1)
+    )
+    links = [(title, anchor) for _, title, anchor in sorted(numbered, key=lambda m: int(m[0]))]
     for _, anchor in links:
         assert anchor in anchors, f"Contents links #{anchor}, which is not a README heading"
     assert [title for title, _ in links] == [s for s in sections if s != "Contents"]
