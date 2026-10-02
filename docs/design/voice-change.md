@@ -23,14 +23,19 @@ Because the operations do not care where their inputs came from, the same
 harness also compares the methods: which F0 tracker and which envelope
 resynthesize a voice best, unchanged and changed ("Comparing methods").
 
-Status: proposal, 2026-10-02. No library code until Cho answers the
-decisions below. Every number is printed by
+Status: accepted. Cho accepted every recommendation (D1–D12) on
+2026-10-02, and step 2 of "Order" is built: `sonore.analysis.voice`
+(`scale_f0`, `warp_frequency`, `GridEnvelope`), `Cepstrum.envelope_view`,
+`MFCC.envelope_view`, and `world_synthesize` and `harmonic_complex` taking
+any envelope. For D4's open point, `world_synthesize` reads another
+envelope on its own grid and its docstring asks for a smooth one (C10),
+rather than raising the FFT length. Every number is printed by
 `tools/check_voice_change_claims.py` (C1–C7) or
 `tools/compare_voice_methods.py` (C8–C11), both rerun on 2026-10-02 after
-`so.MFCC` was merged.
-The checker measures what the library's own analyses see; whether the
-changed voices sound right is for Cho to judge by listening, and nothing
-here claims it.
+`so.MFCC` was merged; both prototype the operations rather than call the
+library, which `tests/analysis/test_voice.py` checks. The scripts measure what
+the library's own analyses see; whether the changed voices sound right is
+for Cho to judge by listening, and nothing here claims it.
 
 ## What exists already
 

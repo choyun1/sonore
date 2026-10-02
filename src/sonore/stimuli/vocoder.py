@@ -16,6 +16,7 @@ from sonore.analysis.vocoder import (
     _Stream,
     _time_windows,
 )
+from sonore.analysis.voice import _contour_on_grid
 from sonore.core.sound import Sound
 
 __all__ = ["world_synthesize"]
@@ -31,7 +32,7 @@ class _GaussianNoise:
         return self.rng.standard_normal(n)
 
 
-def world_synthesize(f0, envelope: SpectralEnvelope, aperiodicity: Aperiodicity, *, rng=None) -> Sound:
+def world_synthesize(f0, envelope, aperiodicity: Aperiodicity, *, rng=None) -> Sound:
     """WORLD's synthesis, ported exactly.
 
     Pulses are placed where the running phase of the F0 track (linearly
@@ -50,13 +51,31 @@ def world_synthesize(f0, envelope: SpectralEnvelope, aperiodicity: Aperiodicity,
     Parameters
     ----------
     f0
-        The F0 track the envelope and aperiodicity were measured with (an
-        :class:`~sonore.analysis.f0.F0Track` or a ``(times, f0)`` pair). Its
-        time windows must be evenly spaced from time 0, as WORLD assumes; the
-        spacing is the hop (WORLD's frame period). F0 can be changed before synthesis
-        (a pitch shift); the envelope and aperiodicity stay as measured.
-    envelope, aperiodicity
-        On the same time windows and frequencies.
+        An F0 track (an :class:`~sonore.analysis.f0.F0Track` or a ``(times,
+        f0)`` pair), usually the one the envelope and aperiodicity were
+        measured with, from any tracker. It is used as it is when its time
+        windows are the aperiodicity's; otherwise it is read onto them
+        (voiced where the nearest time window is voiced, linear between
+        voiced values). Those time windows must be evenly spaced from time
+        0, as WORLD assumes; the spacing is the hop (WORLD's frame period).
+        F0 can be changed before synthesis
+        (:func:`~sonore.analysis.voice.scale_f0`, a pitch change); the
+        envelope stays, so the formants stay.
+    envelope
+        A :class:`~sonore.analysis.vocoder.SpectralEnvelope` on the
+        aperiodicity's time windows and frequencies, used as it is; or any
+        other envelope read as ``envelope(t, f)`` (power, shape
+        ``(n_channels, len(f), len(t))``), such as a
+        :class:`~sonore.analysis.voice.GridEnvelope` from the cepstrum or
+        MFCCs, or one moved by :func:`~sonore.analysis.voice.warp_frequency`,
+        which is read at the aperiodicity's time windows and frequencies
+        first. WORLD's synthesis computes a minimum-phase response on its
+        own FFT length, which suits a smooth envelope like CheapTrick's; an
+        envelope with deep, narrow valleys (tens of dB) comes out a few dB
+        off at the harmonics, so smooth such an envelope first.
+    aperiodicity
+        An :class:`~sonore.analysis.vocoder.Aperiodicity`, which sets the
+        time windows and frequencies.
     rng
         ``None`` (default): WORLD's own noise stream, restarted at every
         call, so the same inputs give WORLD's output, sample for sample.
@@ -69,15 +88,14 @@ def world_synthesize(f0, envelope: SpectralEnvelope, aperiodicity: Aperiodicity,
         ``int(n_windows * hop * fs)`` samples, one channel per
         channel of the envelope.
     """
-    if envelope.data.shape != aperiodicity.data.shape or envelope.fs != aperiodicity.fs:
-        raise ValueError("the envelope and aperiodicity must share time windows and frequencies")
-    if not (np.array_equal(envelope.t, aperiodicity.t)):
-        raise ValueError("the envelope and aperiodicity must share window times")
+    envelope = _on_grid_of(envelope, aperiodicity)
     fs = int(envelope.fs)
     n_channels = envelope.data.shape[0]
     times, f0_values = _time_windows(Sound(np.zeros((1, n_channels)), fs), f0)
-    if len(times) != len(envelope.t):
-        raise ValueError(f"f0 has {len(times)} time windows, the envelope {len(envelope.t)}")
+    grid = aperiodicity.t
+    if len(times) != len(grid) or not np.allclose(times, grid, rtol=0, atol=1e-9):
+        f0_values = _contour_on_grid(times, f0_values, grid)
+        times = grid
     if len(times) < 2:
         raise ValueError("WORLD's synthesis needs at least two time windows")
     hop_ms = round((times[1] - times[0]) * 1000, 9)
@@ -99,6 +117,30 @@ def world_synthesize(f0, envelope: SpectralEnvelope, aperiodicity: Aperiodicity,
         for channel in range(n_channels)
     ]
     return Sound(np.column_stack(channels), fs)
+
+
+def _on_grid_of(envelope, aperiodicity: Aperiodicity) -> SpectralEnvelope:
+    """The envelope as a SpectralEnvelope on the aperiodicity's time windows
+    and frequencies: itself if it already is one, otherwise read there."""
+    if (
+        isinstance(envelope, SpectralEnvelope)
+        and envelope.data.shape == aperiodicity.data.shape
+        and envelope.fs == aperiodicity.fs
+        and np.array_equal(envelope.t, aperiodicity.t)
+    ):
+        return envelope
+    if not callable(envelope):
+        raise TypeError("envelope must be a SpectralEnvelope or be read as envelope(t, f)")
+    power = np.asarray(envelope(aperiodicity.t, aperiodicity.f), dtype=float)
+    n_channels = aperiodicity.data.shape[0]
+    expected = aperiodicity.data.shape[1:]
+    if power.ndim != 3 or power.shape[1:] != expected or power.shape[0] not in (1, n_channels):
+        raise ValueError(
+            f"envelope(t, f) gave shape {power.shape}; expected (n_channels, {expected[0]}, {expected[1]})"
+        )
+    if power.shape[0] != n_channels:
+        power = np.repeat(power, n_channels, axis=0)
+    return SpectralEnvelope(power, aperiodicity.t, aperiodicity.fs, q1=float("nan"))
 
 
 def _minimum_phase(log_amplitude: np.ndarray, n_fft: int) -> np.ndarray:

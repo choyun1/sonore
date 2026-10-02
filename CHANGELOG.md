@@ -7,6 +7,14 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.scale_f0` and `so.warp_frequency`: a pitch change (voiced F0 times a
+  ratio, optionally spread around the median) and a formant shift (an
+  envelope read at `f / ratio`; a number, a ratio over time, or any
+  frequency map), on any F0 contour and any envelope or aperiodicity,
+  whatever measured them. A ratio of 1 returns the input itself.
+  `so.GridEnvelope` holds any envelope as power on a grid of times and
+  frequencies; `Cepstrum.envelope_view()` and `MFCC.envelope_view()`
+  return one. See `docs/design/voice-change.md`.
 - `so.MFCC`: mel-frequency cepstral coefficients (Davis & Mermelstein,
   1980) of a sound, with the usual speech settings (25 ms Hamming window,
   10 ms hop, 26 HTK mel bands, 13 coefficients), or of any `STFT` or
@@ -83,6 +91,15 @@ version (0.x.y) only fixes bugs.
   the HRIR download tests to `tests/stimuli/test_hrir_data.py`.
 
 ### Changed
+- `so.world_synthesize` takes any envelope read as `envelope(t, f)` (a
+  `GridEnvelope`, a warped envelope, a function), reading it at the
+  aperiodicity's time windows and frequencies, and reads an F0 contour on
+  other time windows onto them (an F0 track whose times differ from the
+  aperiodicity's was refused before). A `SpectralEnvelope` and F0 track on
+  that grid are used as before, so WORLD's output is unchanged.
+- `so.harmonic_complex` takes a spectral envelope (`SpectralEnvelope`,
+  `GridEnvelope`) as `amplitudes`, read point by point as amplitude; the
+  new `SpectralEnvelope.amplitude(t, f)` does the reading.
 - `so.f0_track` keeps up to eight candidates per time window (was four),
   and its subharmonic rule now covers every whole multiple of a candidate's
   frequency, not only the octave. Steady synthetic vowels at 250 to 400 Hz

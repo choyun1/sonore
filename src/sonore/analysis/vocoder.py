@@ -247,6 +247,28 @@ def _integer_fs(sound: Sound) -> int:
     return int(sound.fs)
 
 
+# ------------------------------------------------------------ reading a grid
+def _positions(query: np.ndarray, grid: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """For each query value, the grid index below it, the one above, and the
+    weight of the upper one; held at the ends of the grid."""
+    position = np.interp(query, grid, np.arange(len(grid)))
+    lower = np.floor(position).astype(int)
+    upper = np.minimum(lower + 1, len(grid) - 1)
+    return lower, upper, position - lower
+
+
+def _pointwise(log_values: np.ndarray, grid_t: np.ndarray, grid_f: np.ndarray, t, f) -> np.ndarray:
+    """``log_values`` (one channel, ``(len(grid_f), len(grid_t))``) read at
+    the points ``(t[i], f[i])``: linear in time and frequency, held beyond
+    the ends of the grid."""
+    t, f = np.broadcast_arrays(np.asarray(t, dtype=float), np.asarray(f, dtype=float))
+    t_lower, t_upper, t_weight = _positions(t.ravel(), grid_t)
+    f_lower, f_upper, f_weight = _positions(f.ravel(), grid_f)
+    below = log_values[f_lower, t_lower] * (1 - t_weight) + log_values[f_lower, t_upper] * t_weight
+    above = log_values[f_upper, t_lower] * (1 - t_weight) + log_values[f_upper, t_upper] * t_weight
+    return (below * (1 - f_weight) + above * f_weight).reshape(t.shape)
+
+
 # ------------------------------------------------------------ the views
 class _FrequencyView:
     """Shared by the envelope and the aperiodicity: data of shape
@@ -318,6 +340,14 @@ class SpectralEnvelope(_FrequencyView):
         ``(n_channels, len(f), len(t))``: linear in time between time windows,
         linear in dB between bins."""
         return np.exp(self._interpolate(np.log(self.data), t, f))
+
+    def amplitude(self, t, f, channel: int = 0) -> np.ndarray:
+        """The amplitude (square root of the power) at the points ``(t[i],
+        f[i])``, ``t`` and ``f`` of the same shape: the form
+        :func:`~sonore.signals.generators.harmonic_complex` reads, one value
+        per sample and harmonic. Linear in time and in dB over frequency,
+        held beyond the first and last time windows."""
+        return np.exp(0.5 * _pointwise(np.log(self.data[channel]), self.t, self.f, t, f))
 
     def plot(self, ax=None, channel: int = 0, db_range: float = 70.0, fmax: float | None = None):
         """The envelope in dB as a time-frequency image."""
