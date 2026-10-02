@@ -195,14 +195,24 @@ def test_stft_is_the_gabor_frame():
     assert so.STFT(x).frame == so.GaborFrame(20e-3)
 
 
-def test_gabor_coverage_gap_raises_with_bounds():
-    gap = so.GaborFrame(WIN, WIN)  # periodic Hann is 0 at its first sample: hop = window leaves gaps
+@pytest.mark.parametrize("hop", [WIN, 1.25 * WIN])
+def test_gabor_coverage_gap_analyzes_but_refuses_to_synthesize(hop):
+    # periodic Hann is 0 at its first sample, so hop = window already leaves gaps
+    gap = so.GaborFrame(WIN, hop)
     lo, hi = gap.frame_bounds(N, FS)  # computed without SciPy's (refused) object
     assert lo == 0.0 and hi > 0
+    x = _noise()
+    C = gap.analyze(x)  # analysis works even on a non-frame
+    n_win, hop_samples, _ = gap.lengths(FS)
+    start = 2 * hop_samples - n_win // 2  # the third time window, as a direct FFT of the windowed samples
+    expected = np.fft.rfft(x.data[start : start + n_win, 0] * gap.window_samples(FS))
+    np.testing.assert_allclose(np.abs(C.data[0, :, 2]), np.abs(expected), atol=1e-12)
     with pytest.raises(ValueError, match=r"not a frame \(bounds A=0,"):
-        gap.analyze(_noise())
-    with pytest.raises(ValueError, match="leaves gaps"):
-        so.GaborFrame(WIN, 1.25 * WIN)
+        C.to_sound()
+    with pytest.raises(ValueError, match="not a frame"):
+        C.griffin_lim(n_iter=1)
+    with pytest.raises(ValueError, match="positive"):
+        so.GaborFrame(WIN, 0.0)
 
 
 def test_gabor_rejects_bad_parameters():

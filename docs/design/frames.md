@@ -251,6 +251,15 @@ A Gabor frame already raises at construction, because SciPy builds the dual
 window eagerly. sonore keeps that behavior but re-raises the error with a
 clearer message that includes the bounds.
 
+*Amended 2026-10-02 (after the philosophy audit, PR #86):* a Gabor frame now
+follows the same rule as the filterbanks. `analyze` works for any window and
+hop, gaps and hops longer than the window included, using a
+`ShortTimeFFT` whose dual is the window itself (analysis never reads the
+dual, so the coefficients are the ones the frame's own object gives).
+`synthesize`, `STFT.to_sound` and `griffin_lim` use the canonical dual and
+refuse with the bounds. The implementation note below describes the
+behaviour before this amendment.
+
 *Implementation note:* `GaborFrame` is defined in seconds, so "construction"
 of the SciPy object happens per sampling rate, at the frame's first use at
 that rate (`GaborFrame.sft(fs)`, cached). A coverage gap raises there, with
