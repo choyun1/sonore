@@ -96,3 +96,41 @@ def test_f0_track_is_accepted():
     a = so.klatt_synthesize(0.2, FS, F0=SimpleNamespace(t=t, f0=f0))  # what an F0Track carries
     b = so.klatt_synthesize(0.2, FS, F0=(t, f0))
     np.testing.assert_array_equal(a.data, b.data)
+
+
+def test_lf_vowel_is_lf_flow_times_formants_times_radiation():
+    formants = [(730, 60), (1090, 100), (2440, 120), (3400, 175), (4500, 250)]
+    p = {"SS": 3, "RD": 1.2}
+    for k, (f, b) in enumerate(formants, 1):
+        p |= {f"F{k}": f, f"B{k}": b}
+    y = so.klatt_synthesize(1.0, FS, F0=100, **p)
+    numbers = np.arange(1, 61)
+    f = numbers * 100.0
+    got = _line_spectrum(y, 100, 60)
+    radiation = np.abs(1 - np.exp(-2j * np.pi * f / FS))
+    flow = np.abs(so.lf_harmonics(numbers, 1.2, flow=True))
+    want = flow * radiation * np.prod([_gain(*fb, f) for fb in formants], axis=0)
+    np.testing.assert_allclose(20 * np.log10(got / got[0]), 20 * np.log10(want / want[0]), atol=1e-6)
+
+
+def test_lf_source_is_darker_than_the_impulse_source():
+    impulses = _line_spectrum(so.klatt_synthesize(1.0, FS), 100, 30)
+    lf = _line_spectrum(so.klatt_synthesize(1.0, FS, SS=3), 100, 30)
+    drop = 20 * np.log10((lf[29] / lf[0]) / (impulses[29] / impulses[0]))
+    assert drop == pytest.approx(-11.8, abs=0.1)  # 3 kHz, relative to the first harmonic
+
+
+def test_rd_may_change_over_time():
+    y = so.klatt_synthesize(0.3, FS, SS=3, RD=([0.0, 0.3], [0.4, 2.0]), F0=([0.0, 0.3], [100.0, 140.0]))
+    assert np.isfinite(y.data).all() and y.rms == pytest.approx(1)
+
+
+def test_source_switch_is_checked():
+    with pytest.raises(ValueError, match="KLGLOTT88"):
+        so.klatt_synthesize(0.1, FS, SS=2)
+    with pytest.raises(ValueError, match="SS must be"):
+        so.klatt_synthesize(0.1, FS, SS=([0.0, 0.1], [1, 3]))
+    with pytest.raises(ValueError, match="same at both ends"):
+        so.klatt_continuum({"SS": 1}, {"SS": 3}, 3)
+    steps = so.klatt_continuum({"SS": 3, "RD": 0.5}, {"SS": 3, "RD": 1.5}, 3)
+    assert [step["RD"] for step in steps] == [0.5, 1.0, 1.5] and all(step["SS"] == 3 for step in steps)

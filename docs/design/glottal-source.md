@@ -8,7 +8,10 @@ an alternative. It sets out the model, how it fits the harmonic source
 sonore already has, what a listener would hear compared with the current
 source, and the decisions for Cho.
 
-Status: proposal. No library code until Cho answers D1–D7.
+Status: D1–D7 accepted by Cho 2026-10-02, all as recommended. Built as
+`so.lf_harmonics`, `so.lf_pulse`, `so.glottal_source` and the `SS` and
+`RD` parameters of `so.klatt_synthesize` (see "As built" below). The
+gallery section (Order step 5) is still to do.
 
 ## Why
 
@@ -311,6 +314,45 @@ harder problem and is not proposed here. The only shared piece is
 `harmonic_complex`, and the change in D4 leaves its existing output
 unchanged. This proposal touches none of the WORLD files.
 
+## As built
+
+What changed from the proposal above while writing the code:
+
+- The three functions live in their own module, `signals/glottal.py`,
+  beside `generators.py` rather than in it, and the shape comes second:
+  `lf_harmonics(harmonics, rd=0.7)` and `lf_pulse(x, rd=0.7)`, so `rd`
+  can take its default. `ra`, `rg` and `rk` are keyword-only, given all
+  three together, in both (D2).
+- `Ee` is the value at the main excitation te, as in the papers: E(te) is
+  exactly −1. For the laxest pulses (near Rd 2.7) the open phase dips
+  about 0.2% below that just before te, so "negative peak" is not quite
+  the same thing there.
+- `harmonic_complex` (D4a): an amplitude function that accepts three
+  arguments gets the harmonic number as the third; a complex gain `a`
+  adds `Re(a)·cos − Im(a)·sin` of the harmonic's argument. Real gains run
+  the same arithmetic as before. Every existing output was hashed against
+  main (fixed and contour F0, envelope functions, noise in unvoiced gaps,
+  random phases, square, sawtooth, pulse train, Schroeder, and three
+  `klatt_synthesize` calls) and is bit-for-bit identical.
+- `glottal_source` with a fixed Rd passes `2|c_k|` and `arg c_k` as plain
+  amplitude and phase arrays (C7). An Rd track builds the table of C8 over
+  just the range the track covers, at 0.002 steps, and interpolates log
+  level and unwrapped phase to every sample.
+- `klatt_synthesize`: `SS` must be 1 or 3; 2 raises an error naming
+  KLGLOTT88. With `SS = 3` the voiced source is `glottal_source(...,
+  flow=True)` through the existing first difference and RMS calibration,
+  so `AV` keeps its meaning. `klatt_continuum` interpolates `RD` like any
+  number and refuses endpoints with different `SS`.
+
+`tests/signals/test_glottal.py` checks the coefficients against numerical
+integration (C1), zero net flow and E(te) = −1, Fant's Fig. 5A parameters
+at Rd 1 and the pulse's own Rd (C2), the source's line spectrum against
+`2|c_k|`, the Rd track against the exact coefficients at every sample
+(within 1e-3 of RMS), and no aliasing on a rising F0.
+`tests/stimuli/test_klatt.py` checks an LF vowel against LF flow ×
+radiation × formants to 1e-6 dB, the 11.8 dB drop at 3 kHz against the
+default source (C6), and the `SS` errors.
+
 ## Order
 
 1. `lf_harmonics` and `lf_pulse`, with tests against the checker's closed
@@ -319,7 +361,8 @@ unchanged. This proposal touches none of the WORLD files.
 2. `glottal_source` for a fixed Rd (no change to `harmonic_complex`, C7).
 3. The `harmonic_complex` change for time-varying Rd (D4), checked to leave
    every existing output bit-for-bit identical.
-4. `RD` in `klatt_synthesize`; `RD = 0` checked bit-for-bit against main.
+4. `SS` and `RD` in `klatt_synthesize`; `SS = 1` checked bit-for-bit
+   against main.
 5. The gallery section.
 
 ## Decisions

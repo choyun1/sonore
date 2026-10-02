@@ -150,6 +150,23 @@ class TestHarmonicContours:
         y = so.harmonic_complex(0.2, FAST, 200.0, [1])
         np.testing.assert_allclose(x.data, y.data, atol=1e-10)
 
+    def test_complex_amplitudes_by_harmonic_number(self):
+        """A complex gain shifts each harmonic's phase by its angle, and the
+        function may take the harmonic number as a third argument."""
+        amplitudes = np.array([1.0, 0.5, 0.25])
+        phases = np.array([0.3, -1.2, 2.0])
+
+        def gains(t, f, number):
+            return np.full_like(t, amplitudes[number - 1] * np.exp(1j * phases[number - 1]), dtype=complex)
+
+        want = so.harmonic_complex(0.2, FAST, 200.0, [1, 2, 3], amplitudes, phases)
+        got = so.harmonic_complex(0.2, FAST, 200.0, [1, 2, 3], gains)
+        np.testing.assert_allclose(got.data, want.data, atol=1e-12)
+        t, f = frames(lambda t: np.full_like(t, 200.0), 0.2)
+        want = so.harmonic_complex(0.2, FAST, (t, f), [1, 2, 3], amplitudes, phases)
+        got = so.harmonic_complex(0.2, FAST, (t, f), [1, 2, 3], gains)
+        np.testing.assert_allclose(got.data, want.data, atol=1e-12)
+
 
 class TestNamedWaveforms:
     """Square, sawtooth and pulse train go through harmonic_complex."""

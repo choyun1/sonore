@@ -6,7 +6,7 @@ dependencies shows in the file tree. Bottom to top:
 | Subpackage | Modules | What it is | Imports from |
 |---|---|---|---|
 | `core` | `sound`, `units`, `utils`, `fft` | `Sound`, decibels, numeric helpers, FFT sizes and threads | nothing in sonore |
-| `signals` | `generators`, `processing` | making and editing sounds | core |
+| `signals` | `generators`, `glottal`, `processing` | making and editing sounds | core |
 | `analysis` | `frames`, `filterbank`, `representations`, `cepstrum`, `f0`, `vocoder`, `envelopes`, `modulation`, `modspectrogram` | taking sounds apart | core, signals |
 | `stimuli` | `ripples`, `binaural`, `spatialization`, `hrir_data`, `reverb`, `phasevocoder`, `klatt`, `vocoder` | stimuli built from the analysis tools | core, signals, analysis |
 | `texture` | `stats`, `grad`, `synth` | sound texture statistics and synthesis | everything below |

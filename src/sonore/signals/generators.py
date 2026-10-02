@@ -7,6 +7,7 @@ so stimuli can be regenerated exactly.
 
 from __future__ import annotations
 
+import inspect
 import numbers
 import warnings
 from collections.abc import Callable
@@ -65,7 +66,12 @@ class F0Contour(Protocol):
     f0: ArrayLike
 
 
-Amplitudes = ArrayLike | Callable[[np.ndarray, np.ndarray], ArrayLike] | None
+Amplitudes = (
+    ArrayLike
+    | Callable[[np.ndarray, np.ndarray], ArrayLike]
+    | Callable[[np.ndarray, np.ndarray, int], ArrayLike]
+    | None
+)
 
 
 def _harmonic_phases(harmonics: np.ndarray, phases, rng: RNG) -> np.ndarray:
@@ -156,6 +162,25 @@ def _voicing_gate(
     return np.convolve(padded, window / window.sum(), mode="same")[n_ramp:-n_ramp]
 
 
+def _amplitude_function(amplitudes: Callable) -> Callable[[np.ndarray, np.ndarray, int], ArrayLike]:
+    """``amplitudes`` as a function of time, frequency and harmonic number,
+    whether it takes the harmonic number or not."""
+    try:
+        inspect.signature(amplitudes).bind(None, None, None)
+    except (TypeError, ValueError):  # takes only (t, f), or has no signature to read
+        return lambda t, freq, number: amplitudes(t, freq)
+    return amplitudes
+
+
+def _add_harmonic(total: np.ndarray, amplitude, argument: np.ndarray) -> None:
+    """Add ``amplitude * cos(argument)`` to ``total``; a complex amplitude
+    adds ``Re(amplitude * exp(i * argument))``, its angle shifting the phase."""
+    if np.iscomplexobj(amplitude):
+        total += amplitude.real * np.cos(argument) - amplitude.imag * np.sin(argument)
+    else:
+        total += amplitude * np.cos(argument)
+
+
 def _gains(amplitudes: Amplitudes, harmonics: np.ndarray) -> np.ndarray | None:
     """Per-harmonic amplitudes as an array, or None when they are a function."""
     if callable(amplitudes):
@@ -220,7 +245,12 @@ def harmonic_complex(
     Nyquist (fixed F0) or below ``f_max`` (contour). ``amplitudes`` is one
     value per harmonic, or a function ``amplitudes(t, f)`` giving the gain
     at times ``t`` and frequencies ``f`` (a spectral envelope, evaluated at
-    every harmonic's frequency). ``phases`` are starting phases: an array,
+    every harmonic's frequency). The function may also take the harmonic
+    number as a third argument, ``amplitudes(t, f, n)``, and may return
+    complex values: harmonic ``n`` is then ``Re(a_n exp(i(n Phi + phi_n)))``,
+    so the angle of ``a_n`` adds to its phase and can change over time (an
+    LF glottal pulse whose shape changes, as in :func:`glottal_source`).
+    ``phases`` are starting phases: an array,
     one per harmonic, or one of ``"cosine"``, ``"sine"``, ``"alternating"``,
     ``"random"``, ``"schroeder+"``, ``"schroeder-"``.
 
@@ -258,11 +288,12 @@ def harmonic_complex(
     t = time_axis(n_samples(duration, fs), fs)
     data = np.zeros_like(t)
     if gains is None:
-        gains = [amplitudes(t, np.full_like(t, number * f0)) for number in harmonics[keep]]
+        gain_function = _amplitude_function(amplitudes)
+        gains = [gain_function(t, np.full_like(t, number * f0), number) for number in harmonics[keep]]
     else:
         gains = gains[keep]
     for number, amplitude, start_phase in zip(harmonics[keep], gains, start_phases[keep], strict=True):
-        data += amplitude * np.cos(2 * np.pi * number * f0 * t + start_phase)
+        _add_harmonic(data, amplitude, 2 * np.pi * number * f0 * t + start_phase)
     return _finish(data, fs)
 
 
@@ -279,6 +310,7 @@ def _contour_complex(
         harmonics = np.arange(1, _max_harmonic(values, f_max) + 1)
     harmonics = np.atleast_1d(np.asarray(harmonics))
     gains = _gains(amplitudes, harmonics)
+    gain_function = _amplitude_function(amplitudes) if gains is None else None
     start_phases = _harmonic_phases(harmonics, phases, rng)
 
     length = n_samples(duration, fs)
@@ -298,8 +330,8 @@ def _contour_complex(
             phase = 2 * np.pi / fs * cumulative_f0
             for index, (number, start_phase) in enumerate(zip(harmonics, start_phases, strict=True)):
                 freq = number * f0_at_sample
-                amplitude = amplitudes(t, freq) if gains is None else gains[index]
-                harmonic_sum += amplitude * _taper(freq, f_max) * np.cos(number * phase + start_phase)
+                amplitude = gain_function(t, freq, number) if gains is None else gains[index]
+                _add_harmonic(harmonic_sum, amplitude * _taper(freq, f_max), number * phase + start_phase)
             gate = _voicing_gate(t, t_frames, voiced, ramp, fs)
         data[:, channel] = gate * harmonic_sum
         if unvoiced == "noise":

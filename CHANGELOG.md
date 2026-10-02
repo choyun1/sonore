@@ -7,6 +7,20 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.glottal_source`: a voiced source of Liljencrants-Fant (LF) glottal
+  pulses (Fant, Liljencrants & Lin, 1985) on a fixed F0 or an F0 contour,
+  built from the pulse's exact harmonics so it does not alias. Its shape is
+  Fant's (1995) `rd`, from tense (0.3) to lax (2.7), default 0.7; a number
+  or a `(times, values)` track. `so.lf_harmonics` gives the pulse's complex
+  Fourier coefficients in closed form (from `rd`, or from `ra`, `rg`, `rk`),
+  `so.lf_pulse` one period of the flow derivative or flow. See
+  `docs/design/glottal-source.md`.
+- `so.klatt_synthesize`: KLSYN88's source switch `SS` (1, the default, is
+  the existing source, unchanged; 3 is the LF source) and `RD`, the LF
+  shape, which may be a track.
+- `so.harmonic_complex`: an amplitude function may take the harmonic
+  number as a third argument and return complex gains, whose angle shifts
+  that harmonic's phase. Existing outputs are unchanged.
 - `so.klatt_synthesize`: a Klatt-style cascade/parallel formant synthesizer
   (Klatt, 1980). Voicing is `harmonic_complex` on F0 with Klatt's glottal
   spectrum; aspiration and frication are white noise, modulated at F0 while

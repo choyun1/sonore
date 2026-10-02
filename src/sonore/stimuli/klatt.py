@@ -20,6 +20,7 @@ import numpy as np
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng, n_samples, time_axis
 from sonore.signals.generators import RNG, harmonic_complex
+from sonore.signals.glottal import glottal_source
 from sonore.signals.processing import (
     Track,
     _check_resonance,
@@ -39,6 +40,8 @@ KLATT_DEFAULTS = MappingProxyType(
     {
         "F0": 100.0,  # fundamental frequency; 0 = unvoiced
         "AV": 60.0,  # voicing amplitude
+        "SS": 1,  # voicing source: 1 = impulses through a glottal low-pass, 3 = LF pulses
+        "RD": 0.7,  # shape of the LF pulses (SS = 3): Fant's Rd, tense 0.3 to lax 2.7
         "AH": 0.0,  # aspiration amplitude (through the cascade)
         "AF": 0.0,  # frication amplitude (through the parallel branch)
         "AB": 0.0,  # frication bypassing the formants (flat)
@@ -118,9 +121,17 @@ def klatt_synthesize(
     :class:`~sonore.F0Track`, to resynthesize a measured pitch contour.
 
     - **Sources.** Voicing: harmonics of ``F0`` (:func:`harmonic_complex`, so
-      the pitch can glide with no phase jumps or aliasing) with the spectrum
-      of Klatt's glottal low-pass, falling about 12 dB per octave, at level
-      ``AV``. Where ``F0`` is 0 the harmonics are switched off. Aspiration
+      the pitch can glide with no phase jumps or aliasing) at level ``AV``,
+      with the spectrum set by the source switch ``SS``, numbered as in
+      KLSYN88 (Klatt & Klatt, 1990). ``SS = 1`` (the default): Klatt's (1980)
+      impulses through his glottal low-pass, falling about 12 dB per octave.
+      ``SS = 3``: Liljencrants-Fant glottal pulses (:func:`glottal_source`),
+      their shape set by Fant's ``RD``, from tense (0.3, strong high
+      harmonics) to lax (2.7, a dominant fundamental); at the default 0.7
+      its 3 kHz harmonic is about 12 dB weaker, relative to the first, than
+      with ``SS = 1``.
+      KLSYN88's ``SS = 2`` (KLGLOTT88) is not included. Where ``F0`` is 0
+      the harmonics are switched off. Aspiration
       (``AH``) and frication (``AF``, ``AB``): white Gaussian noise. While
       voicing is on, both noises are amplitude modulated by a square wave at
       ``F0``, 50% deep, as in Klatt's synthesizer.
@@ -141,10 +152,9 @@ def klatt_synthesize(
     (before the formants), so equal values mean equal source levels; each
     20 dB is a factor of 10, and 0 or less is off. The result is normalized
     to RMS 1, like every generator; relative levels within one call are
-    kept. The voiced source
-    is Klatt's impulses through his glottal low-pass, made from harmonics;
-    his quasi-sinusoidal voicing (``AVS``) and later glottal pulse models are
-    not included.
+    kept. Klatt's quasi-sinusoidal voicing (``AVS``) and KLSYN88's other
+    voice-quality controls (open quotient, spectral tilt, flutter, double
+    pulsing) are not included.
 
     ``rng`` seeds the noise, so a call can be repeated exactly.
     """
@@ -154,6 +164,11 @@ def klatt_synthesize(
     if unknown:
         raise ValueError(f"unknown Klatt parameter(s) {unknown}; the names are {sorted(settings)}")
     settings.update(given)
+    source_switch = settings["SS"]
+    if not isinstance(source_switch, numbers.Real) or source_switch not in (1, 2, 3):
+        raise ValueError(f"SS must be 1 (impulses) or 3 (LF pulses), got {source_switch!r}")
+    if source_switch == 2:
+        raise ValueError("SS = 2 (the KLGLOTT88 source) is not implemented; use 1 or 3")
     if hasattr(settings["F0"], "f0"):  # an F0Track or any F0 contour object
         settings["F0"] = (np.asarray(settings["F0"].t, float), np.ravel(settings["F0"].f0))
     length = n_samples(duration, fs)
@@ -178,7 +193,10 @@ def klatt_synthesize(
     contour = ([0.0], [settings["F0"]]) if isinstance(settings["F0"], numbers.Real) else settings["F0"]
     voice = np.zeros(length)
     if np.any(av > 0) and np.any(f0 > 0):
-        glottal = harmonic_complex(duration, fs, contour, amplitudes=lambda _, f: _rgp(f, fs)).data[:, 0]
+        if source_switch == 1:
+            glottal = harmonic_complex(duration, fs, contour, amplitudes=lambda _, f: _rgp(f, fs)).data[:, 0]
+        else:  # the LF flow, so that the lips' difference makes its derivative
+            glottal = glottal_source(duration, fs, contour, settings["RD"], flow=True).data[:, 0]
         # Radiation from the lips, a first difference; then RMS 1 where voiced.
         lips = np.diff(glottal, prepend=0.0)
         voice = av * lips / np.sqrt(np.mean(lips[glottal != 0] ** 2))
@@ -227,7 +245,8 @@ def klatt_continuum(
     ``start`` to ``end`` (both included), such as a /ba/-/da/ continuum.
 
     A parameter given in only one of them takes its :data:`KLATT_DEFAULTS`
-    value in the other. Numbers are interpolated directly; ``(times,
+    value in the other. The source switch ``SS`` is not interpolated: it
+    must be the same at both ends. Numbers are interpolated directly; ``(times,
     values)`` pairs are interpolated value by value, so they must share their
     times (a number paired with a track is held at every one of its times).
     """
@@ -239,6 +258,12 @@ def klatt_continuum(
             raise ValueError(f"unknown Klatt parameter {name!r}")
         start_value = start.get(name, KLATT_DEFAULTS[name])
         end_value = end.get(name, KLATT_DEFAULTS[name])
+        if name == "SS":
+            if start_value != end_value:
+                raise ValueError("SS (the voicing source) must be the same at both ends of a continuum")
+            for step in out:
+                step[name] = start_value
+            continue
         start_times, start_values = _as_points(start_value)
         end_times, end_values = _as_points(end_value)
         if start_times is None and end_times is None:
