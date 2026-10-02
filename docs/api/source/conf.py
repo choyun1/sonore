@@ -35,39 +35,6 @@ add_module_names = False
 autodoc_default_options = {"members": True, "undoc-members": True, "show-inheritance": True}
 
 html_theme = "furo"
-# Colours and fonts from the listening gallery (docs/gallery/build.py), so the
-# two read as one site.
-_SANS = '"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif'
-_MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace'
-html_theme_options = {
-    "light_css_variables": {
-        "color-brand-primary": "#235B7C",
-        "color-brand-content": "#235B7C",
-        "color-foreground-primary": "#16202A",
-        "color-foreground-secondary": "#566573",
-        "color-background-secondary": "#ECEFF1",
-        "color-api-name": "#235B7C",
-        "color-api-pre-name": "#566573",
-        "font-stack": _SANS,
-        "font-stack--monospace": _MONO,
-    },
-    "dark_css_variables": {
-        "color-brand-primary": "#7FB6D6",
-        "color-brand-content": "#7FB6D6",
-        "color-foreground-primary": "#E4E9ED",
-        "color-foreground-secondary": "#9AA8B4",
-        "color-background-primary": "#121A21",
-        "color-background-secondary": "#0C1318",
-        "color-api-name": "#7FB6D6",
-        "color-api-pre-name": "#9AA8B4",
-    },
-}
-html_static_path = ["_static"]
-html_css_files = [
-    "https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700"
-    "&family=Spectral:wght@400;500;600&display=swap",
-    "sonore.css",
-]
 html_title = f"sonore {version}"
 html_copy_source = False
 html_show_sphinx = False
