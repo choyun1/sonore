@@ -52,7 +52,7 @@ def finish(snd):
 
 
 # %%
-def show_bands(snd, original):
+def show_bands(original):
     """The six bands of the sweep beside the original, the reconstruction and their difference.
     Returns the figure and the panels the playhead follows."""
     fig = plt.figure(figsize=(10, 6.2), layout="constrained")
@@ -84,7 +84,7 @@ def show_bands(snd, original):
 # %% [demo 26] Perfect reconstruction
 sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
 sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize())
-fig, playhead = show_bands(sound, sweep)
+fig, playhead = show_bands(sweep)
 
 # %% [markdown]
 # ## Masking the spectrogram

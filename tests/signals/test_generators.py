@@ -13,6 +13,14 @@ class TestGenerators:
         t = np.arange(len(x)) / FS
         np.testing.assert_allclose(x.data[:, 0], np.sqrt(2) * np.cos(2 * np.pi * 1000 * t), atol=1e-2)
 
+    def test_linear_chirp_phase(self):
+        """cos(2 pi (f0 t + (f1 - f0) t^2 / 2T) + phase), scaled to RMS 1."""
+        duration, f0, f1, phase = 0.05, 200.0, 2000.0, 0.3
+        x = so.linear_chirp(duration, FS, f0, f1, phase).data[:, 0]
+        t = np.arange(len(x)) / FS
+        expected = np.cos(2 * np.pi * (f0 * t + (f1 - f0) * t**2 / (2 * duration)) + phase)
+        np.testing.assert_allclose(x, expected / np.sqrt(np.mean(expected**2)), atol=1e-9)
+
     def test_harmonics_above_nyquist_dropped(self):
         with pytest.warns(UserWarning, match="Nyquist"):
             x = so.harmonic_complex(0.1, FS, 5000, np.arange(1, 6))

@@ -8,6 +8,25 @@ import sonore as so
 
 
 class TestBinaural:
+    def test_sign_convention_written_by_hand(self):
+        """Positive ITD and ILD point right (module docstring): the right ear leads and is louder.
+        Checked on the channels directly, so a sign flipped in both apply_itd_ild and
+        interaural_cues cannot pass the round trip below unnoticed."""
+        click = so.Sound(np.r_[1.0, np.zeros(99)], FS)
+        b = so.apply_itd_ild(click, itd=10 / FS, ild=6)
+        left, right = b.data[:, 0], b.data[:, 1]
+        assert np.argmax(right) == 0 and np.argmax(left) == 10
+        assert 20 * np.log10(right.max() / left.max()) == pytest.approx(6, abs=1e-12)
+
+    def test_interaural_cues_sign_on_a_hand_made_sound(self):
+        """The right channel is the left one 8 samples earlier and twice as large: ITD +8/FS, ILD +6.02 dB."""
+        g = so.gaussian_noise(1, FS, band=(100, 8000), rng=0).data[:, 0]
+        left, right = g[:-8], 2 * g[8:]
+        c = so.interaural_cues(so.Sound(np.column_stack([left, right]), FS), 50e-3)
+        assert np.nanmedian(c.itd) == pytest.approx(8 / FS, abs=1e-6)
+        # each window sees slightly different noise samples in the two ears, hence not exact
+        assert np.nanmedian(c.ild) == pytest.approx(20 * np.log10(2), abs=0.01)
+
     @pytest.mark.parametrize("itd", [300e-6, -500e-6, 123.4e-6])
     def test_itd_ild_roundtrip(self, itd):
         g = so.gaussian_noise(1, FS, band=(100, 8000), rng=0)
