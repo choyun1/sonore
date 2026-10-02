@@ -30,14 +30,29 @@ playable next to its plots, with a playhead that follows the sound.
 A first tour you can run in the browser, with nothing to install: stimuli, spectrograms, the
 cepstrum, a phase vocoder, ripples and binaural cues.
 
-## Contents
+<!-- Contents: one entry per ## section, in order (tests/test_docs.py checks it). -->
+<table><tr><td>
 
-| Using it | The library | Background | The project |
-|---|---|---|---|
-| 1. [What it's for](#what-its-for) | 5. [Conventions](#conventions) | 8. [Roadmap](#roadmap) | 11. [Development](#development) |
-| 2. [Install](#install) | 6. [What's in it](#whats-in-it) | 9. [References](#references) | 12. [How sonore was developed](#how-sonore-was-developed) |
-| 3. [A short tour](#a-short-tour) | 7. [Related projects](#related-projects) | 10. [Migrating from sigtools](#migrating-from-sigtools) | 13. [License and citation](#license-and-citation) |
-| 4. [Gallery](#gallery) |  |  |  |
+<small><b>Contents</b><br>
+1&ensp;Using it<br>
+&emsp;1.1&ensp;[What it's for](#what-its-for)<br>
+&emsp;1.2&ensp;[Install](#install)<br>
+&emsp;1.3&ensp;[A short tour](#a-short-tour)<br>
+&emsp;1.4&ensp;[Gallery](#gallery)<br>
+2&ensp;The library<br>
+&emsp;2.1&ensp;[Conventions](#conventions)<br>
+&emsp;2.2&ensp;[What's in it](#whats-in-it)<br>
+&emsp;2.3&ensp;[Related projects](#related-projects)<br>
+3&ensp;Background<br>
+&emsp;3.1&ensp;[Roadmap](#roadmap)<br>
+&emsp;3.2&ensp;[References](#references)<br>
+&emsp;3.3&ensp;[Migrating from sigtools](#migrating-from-sigtools)<br>
+4&ensp;The project<br>
+&emsp;4.1&ensp;[Development](#development)<br>
+&emsp;4.2&ensp;[How sonore was developed](#how-sonore-was-developed)<br>
+&emsp;4.3&ensp;[License and citation](#license-and-citation)</small>
+
+</td></tr></table>
 
 ## What it's for
 
@@ -255,69 +270,8 @@ Where to go for what sonore leaves out:
 
 ## Roadmap
 
-**Done**
-
-- **Frames.** A `Frame` contract for invertible time-frequency
-  analyses: `analyze`, `synthesize` (canonical dual, least-squares for
-  modified coefficients), `frame_bounds()` and `adjoint`. The STFT
-  (`GaborFrame`), the cosine, gammatone and Morlet filterbanks, and a
-  time-varying Gabor frame with pitch-adaptive windows are all frames; tests
-  enforce `synthesize(analyze(x)) == x` and the reported bounds. Reassigned
-  spectrograms and a TANDEM-STRAIGHT-style power spectrum are drawn beside
-  them in the [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html) page.
-- **Cepstrum.** `Cepstrum` on any STFT: liftering, resynthesis with the
-  original or minimum phase, and classic cepstral F0; see
-  `docs/design/cepstrum.md`.
-- **F0 tracking.** `so.f0_track`: YIN-style candidates refined by
-  instantaneous frequency (after WORLD's StoneMask), a periodicity score and
-  a Viterbi voicing decision. Against laryngograph reference F0 (the FDA
-  database, Bagshaw et al., 1993) it gets the voicing of 5.5% (male) and
-  1.6% (female) of frames wrong, where WORLD's Harvest gets about 21%; see
-  `docs/design/f0.md`.
-- **Harmonic complexes on an F0 contour.** `so.harmonic_complex` takes an
-  F0 contour as well as a number: the phase is the contour's exact running
-  integral, unvoiced gaps are bridged and switched off with 5 ms ramps (or
-  filled with noise), and harmonics fade out below `f_max` so a rising
-  pitch never aliases. The square, sawtooth, pulse train and Schroeder
-  complexes follow contours too. With `so.noise_vocode(snd, 16,
-  carrier=...)` it puts a sound's band envelopes on harmonics that follow
-  its own F0 track. The harmonic half of the pulse-plus-noise synthesis in
-  item 1 below; see `docs/design/harmonic-source.md`.
-- **Modulation spectrogram.** `ModulationSpectrogram`: how strongly each
-  band's envelope is modulated at each rate, frame by frame, with linked
-  slices and an animation; see `docs/design/modulation-spectrogram.md` and
-  the [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html) gallery page.
-- **Package layout.** One subpackage per layer (`core`, `signals`,
-  `analysis`, `stimuli`, `texture`), with imports pointing down a layer,
-  enforced by `tests/test_layers.py`; see `docs/design/layout.md`.
-- **CI and releases.** Tests and lint on Python 3.10 and 3.14 for every push
-  and pull request, a check that the PyPI files build and pass their tests,
-  and a trusted-publishing release workflow (`docs/releasing.md`).
-- **HRIRs on demand.** `so.load_hrirs()` downloads the PKU-IOA database
-  (Qu et al., 2009) on first use, checks each file's checksum and caches it,
-  correcting the left-right mirroring of its SOFA copy; see
-  `docs/design/hrir-data.md`.
-- **Gallery pages.** Fourteen pages, listed under [Gallery](#gallery), each
-  a runnable script shown with its code. The Cepstral analysis page is
-  cross-checked against SciPy, MATLAB's `rceps` and Praat by
-  `tools/crosscheck_cepstrum.py`; the Moving talkers page follows Cho & Kidd
-  (2022), with interaural cues and a top-down view that follows playback.
-- **The MSM archive.** The experiment code behind Cho & Kidd (2022), written
-  with sigtools 0.1, stays a separate archive at
-  [choyun1/MSM](https://github.com/choyun1/MSM) rather than being folded in;
-  the Moving talkers page carries its stimuli forward.
-- **PyPI, Zenodo and Colab.** sonore is on [PyPI](https://pypi.org/project/sonore/) from
-  0.3.0, and each GitHub release is archived on Zenodo with a DOI (from
-  0.3.1). A starter notebook runs in Colab with nothing to install.
-- **Faster filterbanks.** FFT lengths padded to fast sizes and the large
-  FFTs spread over all cores (`so.set_fft_workers`); subbands and envelopes
-  are 3 to 4 times faster, and texture synthesis is unchanged bit for bit.
-- **JAX trial, decided against for now.** A JAX port of the texture channel
-  objective matched the NumPy gradient to about 1e-15 but ran no faster
-  (about 2 ms per call either way, plus compile time), and float32 would
-  break bit-for-bit output. The core stays NumPy. An optional `sonore[jax]`
-  extra is worth revisiting only if inference work needs gradients through
-  the whole model.
+What is planned comes first, in the order it will be done; finished work is
+listed at the end.
 
 **Next, in order**
 
@@ -325,10 +279,12 @@ Where to go for what sonore leaves out:
    (after STRAIGHT, Kawahara et al., 1999; WORLD, Morise et al., 2016),
    built on the F0 tracker, the
    cepstrum and the pitch-adaptive frame: a CheapTrick-style spectral
-   envelope (Morise, 2015), aperiodicity, and pulse-plus-noise synthesis.
-   Alongside it, source-filter vowels (glottal source, formant resonators,
-   radiation) and the Klatt synthesizer (Klatt, 1980; KLSYN88, Klatt &
-   Klatt, 1990).
+   envelope (Morise, 2015), aperiodicity, and the noise half of
+   pulse-plus-noise synthesis (the harmonic half, harmonic complexes on an
+   F0 contour, is done). Alongside it, a Klatt-style formant synthesizer
+   (Klatt, 1980; KLSYN88, Klatt & Klatt, 1990) built on the same harmonic
+   source: its design is drafted in
+   [#47](https://github.com/choyun1/sonore/pull/47) and waits on decisions.
 2. **Moving-sound renderer.** Revisit `move_sound`, since linear
    trajectories sound unconvincing: sources that change distance (level
    change, travel-time delay, Doppler shift and room reverberation), a
@@ -370,8 +326,78 @@ Where to go for what sonore leaves out:
 - On-demand download of other public HRIR databases.
 - A block-by-block (streaming) modulation spectrogram, as the reference for a
   live version on a phone: the modulation spectrum of everyday sounds as they happen.
+- An API reference built from the docstrings, and a test folder that mirrors
+  `src/sonore` (in review in [#49](https://github.com/choyun1/sonore/pull/49)).
 - Gallery build: draw each figure once rather than twice (about 75 s of a
   6.5 min build).
+
+<details>
+<summary><b>Done</b>, oldest first</summary>
+
+- **Frames.** A `Frame` contract for invertible time-frequency
+  analyses: `analyze`, `synthesize` (canonical dual, least-squares for
+  modified coefficients), `frame_bounds()` and `adjoint`. The STFT
+  (`GaborFrame`), the cosine, gammatone and Morlet filterbanks, and a
+  time-varying Gabor frame with pitch-adaptive windows are all frames; tests
+  enforce `synthesize(analyze(x)) == x` and the reported bounds. Reassigned
+  spectrograms and a TANDEM-STRAIGHT-style power spectrum are drawn beside
+  them in the [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html) page.
+- **Package layout.** One subpackage per layer (`core`, `signals`,
+  `analysis`, `stimuli`, `texture`), with imports pointing down a layer,
+  enforced by `tests/test_layers.py`; see `docs/design/layout.md`.
+- **CI and releases.** Tests and lint on Python 3.10 and 3.14 for every push
+  and pull request, a check that the PyPI files build and pass their tests,
+  and a trusted-publishing release workflow (`docs/releasing.md`).
+- **HRIRs on demand.** `so.load_hrirs()` downloads the PKU-IOA database
+  (Qu et al., 2009) on first use, checks each file's checksum and caches it,
+  correcting the left-right mirroring of its SOFA copy; see
+  `docs/design/hrir-data.md`.
+- **Cepstrum.** `Cepstrum` on any STFT: liftering, resynthesis with the
+  original or minimum phase, and classic cepstral F0; see
+  `docs/design/cepstrum.md`.
+- **The MSM archive.** The experiment code behind Cho & Kidd (2022), written
+  with sigtools 0.1, stays a separate archive at
+  [choyun1/MSM](https://github.com/choyun1/MSM) rather than being folded in;
+  the Moving talkers page carries its stimuli forward.
+- **JAX trial, decided against for now.** A JAX port of the texture channel
+  objective matched the NumPy gradient to about 1e-15 but ran no faster
+  (about 2 ms per call either way, plus compile time), and float32 would
+  break bit-for-bit output. The core stays NumPy. An optional `sonore[jax]`
+  extra is worth revisiting only if inference work needs gradients through
+  the whole model.
+- **PyPI, Zenodo and Colab.** sonore is on [PyPI](https://pypi.org/project/sonore/) from
+  0.3.0, and each GitHub release is archived on Zenodo with a DOI (from
+  0.3.1). A starter notebook runs in Colab with nothing to install.
+- **Modulation spectrogram.** `ModulationSpectrogram`: how strongly each
+  band's envelope is modulated at each rate, frame by frame, with linked
+  slices and an animation; see `docs/design/modulation-spectrogram.md` and
+  the [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html) gallery page.
+- **Gallery pages.** Fourteen pages, listed under [Gallery](#gallery), each
+  a runnable script shown with its code. The Cepstral analysis page is
+  cross-checked against SciPy, MATLAB's `rceps` and Praat by
+  `tools/crosscheck_cepstrum.py`; the Moving talkers page follows Cho & Kidd
+  (2022), with interaural cues and a top-down view that follows playback.
+- **Faster filterbanks.** FFT lengths padded to fast sizes and the large
+  FFTs spread over all cores (`so.set_fft_workers`); subbands and envelopes
+  are 3 to 4 times faster, and texture synthesis is unchanged bit for bit.
+- **F0 tracking.** `so.f0_track`: YIN-style candidates refined by
+  instantaneous frequency (after WORLD's StoneMask), a periodicity score and
+  a Viterbi voicing decision. Against laryngograph reference F0 (the FDA
+  database, Bagshaw et al., 1993) it gets the voicing of 5.5% (male) and
+  1.6% (female) of frames wrong, where WORLD's Harvest gets about 21%; see
+  `docs/design/f0.md`.
+- **Harmonic complexes on an F0 contour.** `so.harmonic_complex` takes an
+  F0 contour as well as a number: the phase is the contour's exact running
+  integral, unvoiced gaps are bridged and switched off with 5 ms ramps (or
+  filled with noise), and harmonics fade out below `f_max` so a rising
+  pitch never aliases. The square, sawtooth, pulse train and Schroeder
+  complexes follow contours too. With `so.noise_vocode(snd, 16,
+  carrier=...)` it puts a sound's band envelopes on harmonics that follow
+  its own F0 track. The harmonic half of the pulse-plus-noise synthesis in
+  item 1 of Next; see `docs/design/harmonic-source.md` and the
+  [Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) gallery page.
+
+</details>
 
 ## References
 

@@ -252,10 +252,21 @@ header p { margin: 0 0 0.9rem; }
 header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
 header li { margin: 0 0 0.35rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
-nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
 nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
-nav.pages a.repo { margin-left: auto; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
+nav.pages a.repo:hover { color: var(--ink); }
+@media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
 a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
 h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
@@ -457,30 +468,95 @@ EXAMPLE_HEAD = f"""<link rel="stylesheet" href="{KATEX}katex.min.css" crossorigi
 <script defer src="{KATEX}katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
 <script defer src="{HLJS}highlight.min.js" onload="hljs.highlightAll()"></script>"""
 
-NAV = [
-    ("index.html", "Listening gallery"),
-    ("speech.html", "Seeing speech"),
-    ("cepstrum.html", "Cepstral analysis"),
-    ("harmonics.html", "Voices from harmonics"),
-    ("modspectrogram.html", "Modulation spectrogram"),
-    ("resynthesis.html", "Analysis and resynthesis"),
-    ("pv.html", "Phase vocoder"),
-    ("ripples.html", "Spectrotemporal ripples"),
-    ("irn.html", "Iterated rippled noise"),
-    ("binaural.html", "Binaural cues"),
-    ("classic.html", "Classic stimuli"),
-    ("textures.html", "Sound textures"),
-    ("moving.html", "Moving talkers"),
-    ("reverb.html", "Synthetic reverberation"),
-    ("vocoder.html", "Hearing through a vocoder"),
+TITLES = {
+    "index.html": "Listening gallery",
+    "classic.html": "Classic stimuli",
+    "irn.html": "Iterated rippled noise",
+    "ripples.html": "Spectrotemporal ripples",
+    "binaural.html": "Binaural cues",
+    "textures.html": "Sound textures",
+    "speech.html": "Seeing speech",
+    "resynthesis.html": "Analysis and resynthesis",
+    "cepstrum.html": "Cepstral analysis",
+    "modspectrogram.html": "Modulation spectrogram",
+    "pv.html": "Phase vocoder",
+    "harmonics.html": "Voices from harmonics",
+    "vocoder.html": "Hearing through a vocoder",
+    "reverb.html": "Synthetic reverberation",
+    "moving.html": "Moving talkers",
+}
+
+# The topic pages in three groups, for the index and the menus at the top of every page.
+# Groups and the pages within them run from simple to elaborate, roughly up sonore's layers:
+# stimuli from plain generators (signals) to binaural cues (stimuli) and textures (texture);
+# analysis from one frame (the STFT) to views built on it, a phase vocoder that changes the
+# sound, and a voice rebuilt from its F0 track and envelope; then whole listening scenes.
+TOPICS = [
+    (
+        "Stimuli",
+        [
+            ("classic.html", "speech-shaped noise, beats and roughness, binaural beats, tone sequences."),
+            ("irn.html", "a pitch made from noise and a delay."),
+            ("ripples.html", "sounds defined by a moving pattern of modulation."),
+            ("binaural.html", "differences between the ears: timing, and correlation that changes."),
+            ("textures.html", "recordings and their syntheses from statistics."),
+        ],
+    ),
+    (
+        "Seeing and changing sounds",
+        [
+            ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
+            ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
+            ("cepstrum.html", "separating a voice's pitch from its timbre."),
+            ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
+            ("pv.html", "how it works, and duration, pitch and partials changed independently."),
+            ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
+        ],
+    ),
+    (
+        "Listeners in the world",
+        [
+            ("vocoder.html", "a simulation of cochlear-implant hearing."),
+            ("reverb.html", "rooms built from the statistics of real ones, and rooms that break them."),
+            ("moving.html", "three talkers rendered through measured HRIRs, one of them moving."),
+        ],
+    ),
 ]
+
+# GitHub's mark (Octicons, MIT licence), so the repository link reads as a link out, not a page.
+GITHUB_MARK = (
+    '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 '
+    "0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23"
+    "-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78"
+    "-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 "
+    "1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29"
+    '.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>'
+)
+
+# One menu open at a time; a click elsewhere or Escape closes it.
+NAV_JS = """(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();"""
 
 
 def nav(current: str) -> str:
-    current_attr = ' aria-current="page"'
-    links = [f'<a href="{href}"{current_attr if href == current else ""}>{label}</a>' for href, label in NAV]
-    links.append('<a class="repo" href="https://github.com/choyun1/sonore">sonore on GitHub</a>')
-    return f'<nav class="pages" aria-label="Gallery pages">{"".join(links)}</nav>'
+    def link(href: str) -> str:
+        here = ' aria-current="page"' if href == current else ""
+        return f'<a href="{href}"{here}>{TITLES[href]}</a>'
+
+    parts = [link("index.html")]
+    for group, pages in TOPICS:
+        hrefs = [href for href, _ in pages]
+        here = ' class="here"' if current in hrefs else ""
+        items = "".join(f"<li>{link(href)}</li>" for href in hrefs)
+        parts.append(f"<details{here}><summary>{html.escape(group)}</summary><ul>{items}</ul></details>")
+    parts.append(
+        '<a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" '
+        f'aria-label="sonore on GitHub">{GITHUB_MARK}</a>'
+    )
+    return f'<nav class="pages" aria-label="Gallery pages">{"".join(parts)}<script>{NAV_JS}</script></nav>'
 
 
 HOW = """<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
@@ -749,38 +825,6 @@ def build_example_page(site: Site, name: str) -> list[str]:
     return keys
 
 
-# The index: no examples of its own, a list of the topic pages in three groups.
-TOPICS = [
-    (
-        "Seeing and changing sounds",
-        [
-            ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
-            ("cepstrum.html", "separating a voice's pitch from its timbre."),
-            ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
-            ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
-            ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
-            ("pv.html", "how it works, and duration, pitch and partials changed independently."),
-        ],
-    ),
-    (
-        "Stimuli",
-        [
-            ("ripples.html", "sounds defined by a moving pattern of modulation."),
-            ("irn.html", "a pitch made from noise and a delay."),
-            ("binaural.html", "differences between the ears: timing, and correlation that changes."),
-            ("classic.html", "speech-shaped noise, beats and roughness, binaural beats, tone sequences."),
-            ("textures.html", "recordings and their syntheses from statistics."),
-        ],
-    ),
-    (
-        "Listeners in the world",
-        [
-            ("moving.html", "three talkers rendered through measured HRIRs, one of them moving."),
-            ("reverb.html", "rooms built from the statistics of real ones, and rooms that break them."),
-            ("vocoder.html", "a simulation of cochlear-implant hearing."),
-        ],
-    ),
-]
 # Examples that were on the index before it became a list of pages. 15 (a noise-vocoded
 # syllabic tone) was dropped: the vocoder page covers noise vocoding, on speech.
 RETIRED = {"15": "vocoder.html"}
@@ -797,7 +841,6 @@ def build(out_dir: Path | None, single: Path | None) -> None:
         f"<script>(() => {{ const moved = {json.dumps(moved)}; const k = location.hash.slice(3);"
         ' if (location.hash.startsWith("#d-") && moved[k]) location.replace(moved[k] + location.hash); })();</script>'
     )
-    labels = dict(NAV)
     header = """  <p>Sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of the
   same audio you hear and the code that made it. Every topic has a page of its own.</p>"""
     sections = "\n".join(
@@ -806,7 +849,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
             [
                 "<ul>"
                 + "".join(
-                    f'<li><a href="{href}">{labels[href]}</a>: {html.escape(text)}</li>'
+                    f'<li><a href="{href}">{TITLES[href]}</a>: {html.escape(text)}</li>'
                     for href, text in pages
                 )
                 + "</ul>"
