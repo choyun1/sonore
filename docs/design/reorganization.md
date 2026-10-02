@@ -1,7 +1,7 @@
 # Reorganizing the package and the gallery
 
 A proposal for how `src/sonore` and the listening gallery should be grouped
-now that sonore has grown from five texture-era layers to 30 modules and 16
+now that sonore has grown from five texture-era layers to 30 modules and 17
 gallery pages. Cho asked for it on 2026-10-02: "i don't like that there's
 multiple vocoder.py - under stimuli and analysis. we should also rationalize
 the gallery- right now a ton falls under seeing sound category, but maybe
@@ -10,7 +10,7 @@ premitive stimuli, one for spatial hearing, etc."
 
 Status: proposed. Nothing has been moved. Every count below is printed by
 `python tools/count_reorganization_references.py`, run on 2026-10-02 at
-main `b3f6a10`; numbers that are not are labelled estimates.
+main `b08063c`; numbers that are not are labelled estimates.
 
 ## What is wrong today
 
@@ -39,7 +39,7 @@ are in `analysis`, and the Klatt synthesizer and WORLD's synthesis are in
 like the STFT it is built on. The channel vocoder is a stimulus but lives in
 `analysis/filterbank.py`.
 
-**The gallery's middle group is half of it.** Of 16 pages, 8 are under
+**The gallery's middle group is half of it.** Of 17 pages, 9 are under
 "Seeing and changing sounds", 5 under "Stimuli" and 3 under "Listeners in
 the world". The middle group holds both the time-frequency course and four
 voice pages, and the binaural page sits under "Stimuli" while the other
@@ -93,8 +93,8 @@ outside the module itself (each would need an edit):
 | Now | Proposed | Files naming it |
 |---|---|---|
 | `analysis/f0.py` | `voice/f0.py` | 13 |
-| `analysis/vocoder.py` | `voice/world.py` and `voice/aperiodicity.py` | 12 |
-| `stimuli/vocoder.py` | `voice/world.py` | 10 |
+| `analysis/vocoder.py` | `voice/world.py` and `voice/aperiodicity.py` | 14 |
+| `stimuli/vocoder.py` | `voice/world.py` | 12 |
 | `analysis/voice.py` | `analysis/spectral_envelope.py` and `voice/change.py` | 8 |
 | `signals/glottal.py` | `voice/glottal.py` | 7 |
 | `stimuli/klatt.py` | `voice/klatt.py` | 6 |
@@ -105,7 +105,7 @@ outside the module itself (each would need an edit):
 | `stimuli/phasevocoder.py` | `analysis/phasevocoder.py` | 6 |
 | `noise_vocode` in `analysis/filterbank.py` | `stimuli/channel_vocoder.py` | 6 |
 
-41 distinct files are touched in all. By kind they are the moved modules'
+43 distinct files are touched in all. By kind they are the moved modules'
 importers in `src`, the API reference pages (`docs/api/source/*.rst`, one
 `automodule` line per module), the README module table and References tags,
 gallery scripts that import a module by its path, the gallery HTML pages
@@ -127,8 +127,8 @@ synth_ir` change.
   `tests/test_layers.py` still fails on any import that points the wrong
   way; the rule changes from "below me in one list" to "below me in the
   trunk, or inside my own subpackage"). (b) Keep the five layers and fix only
-  the vocoder names (D2), moving 2 modules and touching 16 files instead of
-  41: the smallest change, but the voice code stays spread over three
+  the vocoder names (D2), moving 2 modules and touching 18 files instead of
+  43: the smallest change, but the voice code stays spread over three
   layers. (c) Go back to a flat package: rejected, since Cho split it in
   PR #12 to see the dependencies.
 - **D2. The four vocoders.** (a) Name each by its method: WORLD's analysis
@@ -186,14 +186,15 @@ synth_ir` change.
   |---|---|
   | Stimuli (`stimuli`) | Classic stimuli, Iterated rippled noise, Spectrotemporal ripples, Sound textures |
   | Seeing and changing sound (`seeing`) | Seeing speech, Analysis and resynthesis, Hearing through a vocoder, Modulation spectrogram, Phase vocoder |
-  | Voices (`voice`) | Formant synthesis, Cepstral analysis, Voices from harmonics, Source, filter and aperiodicity, and "Changing a voice" when it is written (voice-change.md D11) |
+  | Voices (`voice`) | Formant synthesis, Cepstral analysis, Voices from harmonics, Source, filter and aperiodicity, Changing a voice |
   | Spatial hearing (`spatial`) | Binaural cues, Synthetic reverberation, Moving talkers |
 
-  That is 4, 5, 4 and 3 pages instead of 5, 8 and 3. The voice pages run
+  That is 4, 5, 5 and 3 pages instead of 5, 9 and 3. The voice pages run
   from a vowel written as numbers (Klatt), to a recorded voice taken apart
   (cepstrum), rebuilt from pitch and envelope (harmonics), and with its
-  noise measured and resynthesized (WORLD); the formant page comes first
-  because it introduces source and filter, which the other three assume.
+  noise measured and resynthesized (WORLD), and finally with its pitch and
+  formants changed; the formant page comes first because it introduces
+  source and filter, which the other four assume.
   The cochlear-implant page joins "Seeing and changing sound" after
   "Analysis and resynthesis", since it is the subband analysis of that page
   with the fine structure replaced. "Listeners in the world" goes; it
@@ -207,13 +208,14 @@ synth_ir` change.
 - **D9. Gallery folders and URLs.** Each group's scripts live in a folder of
   `docs/gallery` named after it, as now (`script_path()` in build.py); the
   folders become `stimuli`, `seeing`, `voice` and `spatial`, and
-  `listeners` goes. Eight scripts change folder. The HTML pages stay flat
-  at `docs/gallery/<name>.html` (all 17, the index included), so no page URL
+  `listeners` goes. Nine scripts change folder. The HTML pages stay flat
+  at `docs/gallery/<name>.html` (all 18, the index included), so no page URL
   changes and no link in the README, the design docs or elsewhere breaks.
-  Apart from each page naming its own script, only 6 other files name a
-  moved script's path (`tools/check_moving_trajectories.py` and the design
-  docs cepstrum.md, mfcc.md, glottal-source.md, klatt.md and world.md).
-- **D10. README.** The "More in the gallery" list (16 entries today, in no
+  Apart from each page naming its own script, only 8 other files name a
+  moved script's path (`tools/check_moving_trajectories.py`, CHANGELOG.md
+  and the design docs cepstrum.md, mfcc.md, glottal-source.md, klatt.md,
+  voice-change.md and world.md).
+- **D10. README.** The "More in the gallery" list (17 entries today, in no
   particular order) is regrouped under the four group names, in the order of
   TOPICS, as short bold lead-ins rather than headings, so the Contents table
   and its test do not change. The three gallery images stay. The "What's in
@@ -227,15 +229,15 @@ synth_ir` change.
 
 ## Order
 
-Other threads are changing gallery pages now (speech examples on the reverb
-page, sections on the cepstrum and voice-change pages). A folder move and an
-edit to the same script in two open PRs conflict, so:
+The reverb speech examples (PR #78) and the Changing a voice page (PR #77)
+merged before this proposal was last measured, so they are counted above.
+A folder move and an edit to the same script in two open PRs conflict, so:
 
-1. Cho decides D1 to D10.
-2. The open gallery PRs merge first.
-3. **Gallery PR** (small, what readers see): `git mv` the eight scripts,
+1. Cho decides D1 to D11.
+2. Any gallery PR still open then merges first.
+3. **Gallery PR** (small, what readers see): `git mv` the nine scripts,
    rewrite TOPICS and the comment above it, patch the menus and sidebar of
-   all 17 HTML pages in place (a full rebuild does not run in the cloud
+   all 18 HTML pages in place (a full rebuild does not run in the cloud
    container), regroup the README gallery list (D10). Checks: the test
    suite, and every page's menu showing the four groups.
 4. **Source PR** (mechanical, one PR so the tree is never half-moved):

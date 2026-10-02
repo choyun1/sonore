@@ -54,6 +54,7 @@ GALLERY_MOVES = {
     "seeing/harmonics": "voice",
     "seeing/formants": "voice",
     "seeing/aperiodicity": "voice",
+    "seeing/voice": "voice",
 }
 
 SKIP_DIRS = {".git", "audio", "img", "_build", "__pycache__", ".pytest_cache", "build", "dist"}
@@ -78,8 +79,8 @@ def text_files():
         rel = path.relative_to(ROOT).parts
         if not path.is_file() or SKIP_DIRS.intersection(rel) or path.suffix in SKIP_SUFFIXES:
             continue
-        if path.name == Path(__file__).name:
-            continue
+        if path.name in (Path(__file__).name, "reorganization.md"):
+            continue  # this tool and the proposal it measures
         try:
             yield path, path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
