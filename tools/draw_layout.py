@@ -2,9 +2,11 @@
 
     python tools/draw_layout.py
 
-Each layer is a band, bottom to top as in tests/test_layers.py. Inside a band,
-a module sits one row above every module of its own layer that it imports at
-module level, so arrows inside a band point down. Grey arrows are module-level
+Each subpackage is a band. The trunk (core, signals, frames, views) is stacked
+bottom to top as in tests/test_layers.py, and the branches (spatial, stimuli,
+texture) sit side by side above it, since none depends on another. Inside a
+band, a module sits one row above every module of its own subpackage that it
+imports at module level, so arrows inside a band point down. Grey arrows are module-level
 imports; arrows into core from the layers above are left out, since nearly
 every module imports sound and utils. Red dashed arrows are imports inside a
 function or a TYPE_CHECKING block that point up or sideways. Imports of
@@ -20,19 +22,29 @@ ROOT = Path(__file__).resolve().parent.parent
 PACKAGE = ROOT / "src" / "sonore"
 OUT = ROOT / "docs" / "design" / "layout.svg"
 
-LAYERS = ["core", "signals", "analysis", "stimuli", "texture"]
+TRUNK = ["core", "signals", "frames", "views"]
+BRANCHES = ["spatial", "stimuli", "texture"]
+LAYERS = TRUNK + BRANCHES
 BAND_COLOURS = {
     "texture": "#efe6fb",
     "stimuli": "#fdeedd",
-    "analysis": "#e3f0fb",
+    "spatial": "#fbe4ea",
+    "views": "#e3f0fb",
+    "frames": "#e0f4f4",
     "signals": "#e5f5e8",
     "core": "#eeeeee",
 }
 GREY, RED = "#667", "#d0451b"
 
-BAND_LEFT, BAND_WIDTH = 10, 850
+BAND_LEFT, BAND_WIDTH = 10, 1030
 BOX_HEIGHT, ROW_HEIGHT, BAND_PADDING, BAND_GAP = 34, 70, 18, 35
-LABEL_WIDTH = 95  # room on the left of each band for its name
+LABEL_WIDTH = 95  # room on the left of each trunk band for its name
+BRANCH_GAP, BRANCH_LABEL = 12, 22  # between branch bands; room above a branch's boxes for its name
+BRANCH_WIDTH = (BAND_WIDTH - 2 * BRANCH_GAP) / len(BRANCHES)
+BAND_LEFTS = {layer: BAND_LEFT for layer in TRUNK} | {
+    layer: BAND_LEFT + index * (BRANCH_WIDTH + BRANCH_GAP) for index, layer in enumerate(BRANCHES)
+}
+BAND_WIDTHS = {layer: BAND_WIDTH for layer in TRUNK} | {layer: BRANCH_WIDTH for layer in BRANCHES}
 
 
 def modules() -> dict[str, Path]:
@@ -100,28 +112,53 @@ def render() -> str:
                 (module_level if at_top else inside)[name].add(target)
     row = rows_within_layers(module_level)
 
-    # Bands from the top of the picture down: texture first.
+    # Bands from the top of the picture down: the branches side by side, then the trunk
+    # from views to core. The branches share one height, their boxes aligned at the bottom.
     rows_per_layer = {layer: 1 + max(row[n] for n in known if n.startswith(layer + ".")) for layer in LAYERS}
+    branch_rows = max(rows_per_layer[layer] for layer in BRANCHES)
+    for layer in BRANCHES:
+        rows_per_layer[layer] = branch_rows
+    label_room = {layer: BRANCH_LABEL if layer in BRANCHES else 0 for layer in LAYERS}
+
+    def band_height(layer: str) -> float:
+        return (
+            rows_per_layer[layer] * ROW_HEIGHT
+            + 2 * BAND_PADDING
+            - (ROW_HEIGHT - BOX_HEIGHT)
+            + label_room[layer]
+        )
+
     band_top, y = {}, 22
-    for layer in reversed(LAYERS):
+    for layer in BRANCHES:
         band_top[layer] = y
-        y += rows_per_layer[layer] * ROW_HEIGHT + 2 * BAND_PADDING - (ROW_HEIGHT - BOX_HEIGHT) + BAND_GAP
+    y += band_height(BRANCHES[0]) + BAND_GAP
+    for layer in reversed(TRUNK):
+        band_top[layer] = y
+        y += band_height(layer) + BAND_GAP
     legend_y = y + 5
     height = legend_y + 45
 
     def box_y(name: str) -> float:
         layer = name.split(".")[0]
         top_row = rows_per_layer[layer] - 1 - row[name]
-        return band_top[layer] + BAND_PADDING + top_row * ROW_HEIGHT
+        return band_top[layer] + label_room[layer] + BAND_PADDING + top_row * ROW_HEIGHT
 
     # Place each module near the modules it is joined to, so arrows stay short: rows are laid
     # out bottom up from what they import, then top down from what imports them, a few times.
     # Within a row, modules keep at least a box's width apart and stay inside the band.
-    usable_left, usable_right = BAND_LEFT + LABEL_WIDTH, BAND_LEFT + BAND_WIDTH - 10
+    def usable(layer: str) -> tuple[float, float]:
+        """The x range a band's boxes may use."""
+        left = BAND_LEFTS[layer] + (10 if layer in BRANCHES else LABEL_WIDTH)
+        return left, BAND_LEFTS[layer] + BAND_WIDTHS[layer] - 10
+
     all_rows = [
-        sorted(n for n in known if n.startswith(layer + ".") and row[n] == level)
-        for layer in LAYERS
-        for level in range(rows_per_layer[layer])
+        members
+        for members in [
+            sorted(n for n in known if n.startswith(layer + ".") and row[n] == level)
+            for layer in LAYERS
+            for level in range(rows_per_layer[layer])
+        ]
+        if members
     ]
     neighbours = {name: module_level[name] | inside[name] for name in known}
     for name in known:
@@ -129,11 +166,13 @@ def render() -> str:
             neighbours[target].add(name)
     box_width = {name: 150.0 for name in known}
     for members in all_rows:
+        usable_left, usable_right = usable(members[0].split(".")[0])
         spacing = (usable_right - usable_left) / len(members)
         for name in members:
             box_width[name] = min(150.0, spacing - 12)
     x_centre = {}
     for members in all_rows:
+        usable_left, usable_right = usable(members[0].split(".")[0])
         spacing = (usable_right - usable_left) / len(members)
         for index, name in enumerate(members):
             x_centre[name] = usable_left + spacing * (index + 0.5)
@@ -141,6 +180,7 @@ def render() -> str:
     def spread(members: list[str], wanted: dict[str, float]) -> None:
         """Positions as close to `wanted` as the minimum gap and the band's edges allow."""
         members = sorted(members, key=lambda name: wanted[name])
+        usable_left, usable_right = usable(members[0].split(".")[0])
         gap = max(box_width[name] for name in members) + 12
         left, right = usable_left + gap / 2, usable_right - gap / 2
         positions = [wanted[name] for name in members]
@@ -191,22 +231,25 @@ def render() -> str:
         )
 
     parts = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 {height:.0f}" '
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 {height:.0f}" '
         'font-family="Helvetica,Arial,sans-serif" font-size="14">',
         '<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
         f'orient="auto"><path d="M0,0L10,5L0,10z" fill="{GREY}"/></marker>',
         '<marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
         f'orient="auto"><path d="M0,0L10,5L0,10z" fill="{RED}"/></marker></defs>',
-        f'<rect width="1000" height="{height:.0f}" fill="#ffffff"/>',
+        f'<rect width="1180" height="{height:.0f}" fill="#ffffff"/>',
     ]
     for layer in LAYERS:
-        band_height = rows_per_layer[layer] * ROW_HEIGHT + 2 * BAND_PADDING - (ROW_HEIGHT - BOX_HEIGHT)
         parts.append(
-            f'<rect x="{BAND_LEFT}" y="{band_top[layer]}" width="{BAND_WIDTH}" height="{band_height}" '
-            f'rx="8" fill="{BAND_COLOURS[layer]}"/>'
+            f'<rect x="{BAND_LEFTS[layer]:.0f}" y="{band_top[layer]}" width="{BAND_WIDTHS[layer]:.0f}" '
+            f'height="{band_height(layer):.0f}" rx="8" fill="{BAND_COLOURS[layer]}"/>'
         )
+        if layer in BRANCHES:
+            label_x, label_y = BAND_LEFTS[layer] + 10, band_top[layer] + 20
+        else:
+            label_x, label_y = 20, band_top[layer] + band_height(layer) / 2 + 5
         parts.append(
-            f'<text x="20" y="{band_top[layer] + band_height / 2 + 5:.0f}" font-weight="bold" fill="#444">{layer}/</text>'
+            f'<text x="{label_x:.0f}" y="{label_y:.0f}" font-weight="bold" fill="#444">{layer}/</text>'
         )
     for name in sorted(known):
         for target in sorted(module_level[name]):
@@ -215,26 +258,31 @@ def render() -> str:
             parts.append(edge(name, target, GREY, dashed=False))
     for name in sorted(known):
         for target in sorted(inside[name] - module_level[name]):
-            layer_up = LAYERS.index(target.split(".")[0]) > LAYERS.index(name.split(".")[0])
+            layer_up = (
+                TRUNK.index(target.split(".")[0]) > TRUNK.index(name.split(".")[0])
+                if (target.split(".")[0] in TRUNK and name.split(".")[0] in TRUNK)
+                else target.split(".")[0] in BRANCHES and name.split(".")[0] in TRUNK
+            )
             same_layer = target.split(".")[0] == name.split(".")[0]
             if layer_up or (same_layer and row[target] >= row[name]):
                 parts.append(edge(name, target, RED, dashed=True))
     for name in sorted(known):
         width = box_width[name]
         x, y = x_centre[name] - width / 2, box_y(name)
+        size = ' font-size="12"' if name.split(".")[0] in BRANCHES else ""  # branch bands are narrow
         parts.append(
             f'<rect x="{x:.1f}" y="{y:.0f}" width="{width:.1f}" height="{BOX_HEIGHT}" rx="5" fill="#fff" stroke="#556"/>'
         )
         parts.append(
-            f'<text x="{x_centre[name]:.1f}" y="{y + 22:.0f}" text-anchor="middle">{name.split(".")[1]}</text>'
+            f'<text x="{x_centre[name]:.1f}" y="{y + 22:.0f}" text-anchor="middle"{size}>{name.split(".")[1]}</text>'
         )
 
     # plotting, beside the bands, with the modules that call it.
-    plot_y = band_top["analysis"]
+    plot_y = band_top["views"]
     parts.append(
-        f'<rect x="875" y="{plot_y}" width="115" height="{BOX_HEIGHT}" rx="5" fill="#fff" stroke="{RED}"/>'
+        f'<rect x="1055" y="{plot_y}" width="115" height="{BOX_HEIGHT}" rx="5" fill="#fff" stroke="{RED}"/>'
     )
-    parts.append(f'<text x="932" y="{plot_y + 22}" text-anchor="middle">plotting</text>')
+    parts.append(f'<text x="1112" y="{plot_y + 22}" text-anchor="middle">plotting</text>')
     lines, line = ["called lazily by"], ""
     for user in sorted(set(plotting_users)):
         candidate = f"{line}, {user}" if line else user
@@ -246,7 +294,7 @@ def render() -> str:
     lines.append(line + " (.plot)")
     for index, text in enumerate(lines):
         parts.append(
-            f'<text x="932" y="{plot_y + 56 + 17 * index}" text-anchor="middle" font-size="12" fill="{RED}">{text}</text>'
+            f'<text x="1112" y="{plot_y + 56 + 17 * index}" text-anchor="middle" font-size="12" fill="{RED}">{text}</text>'
         )
 
     parts.append(

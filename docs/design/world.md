@@ -12,8 +12,8 @@ Status: accepted. Cho accepted every recommendation on 2026-10-02. The
 first draft proposed several departures from WORLD to fit sonore's own
 pieces; Cho asked how to square that with reproducibility and decided:
 reproduce WORLD, with no pyworld dependency ("Reproducing WORLD" below).
-Steps 1–5 of "Order" are built (`sonore.analysis.vocoder`,
-`sonore.stimuli.vocoder`), and the gallery page explains aperiodicity
+Steps 1–5 of "Order" are built (`sonore.views.spectral_envelope`, `sonore.views.aperiodicity`
+and `sonore.signals.world` since the reorganization), and the gallery page explains aperiodicity
 (`docs/gallery/voice/aperiodicity.py`).
 
 ## Why
@@ -383,7 +383,7 @@ WORLD computes it, not a view of a sonore frame (D2).
 stores WORLD's envelope (with both q̃₁), aperiodicity and synthesis for a
 breathy vowel with vibrato and 0.3 s of the gallery sentence, every 8th
 frequency bin, in `tests/data/world_reference.npz` (289 kB, sounds included, since the sdist carries no docs).
-`tests/analysis/test_vocoder.py` holds sonore to within 1e-6 dB (envelope),
+`tests/signals/test_world.py` holds sonore to within 1e-6 dB (envelope),
 1e-8 dB (aperiodicity) and 1e-9 of the peak (synthesis); the measured
 differences are about 4e-9 dB, 7e-12 dB and 1e-13.
 

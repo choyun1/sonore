@@ -1,5 +1,6 @@
-"""Stimuli built from the analysis tools: spectrotemporal ripples, binaural cues,
-HRIR spatialization, synthetic reverberation, and the phase vocoder.
+"""Sounds made by shaping or changing other sounds through an analysis:
+spectrotemporal ripples, the channel vocoder, and the phase vocoder.
 
-Imports from :mod:`sonore.core`, :mod:`sonore.signals` and :mod:`sonore.analysis`.
+A branch: imports from the trunk (:mod:`sonore.core`, :mod:`sonore.signals`,
+:mod:`sonore.frames`, :mod:`sonore.views`), never from another branch.
 """

@@ -519,10 +519,10 @@ fig, playhead = show(sound, "so.world_synthesize with so.d4c, slt", fmax=8000)
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`vocoder.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L396)
+#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L216)
 # - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
 #   Communication* 84, 57–65. [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
-#   [`vocoder.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L455)
+#   [`aperiodicity.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L117)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
@@ -530,4 +530,4 @@ fig, playhead = show(sound, "so.world_synthesize with so.d4c, slt", fmax=8000)
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
-#   [`vocoder.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/vocoder.py#L34)
+#   [`world.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/world.py#L224)

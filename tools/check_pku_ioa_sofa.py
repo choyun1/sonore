@@ -5,7 +5,7 @@ Run it where sofacoustics.org is reachable:
     python tools/check_pku_ioa_sofa.py                 # download, print SHA-256 lines for the registry
     python tools/check_pku_ioa_sofa.py --dat PKU-IOA/  # also compare with the original .dat files
 
-The SHA-256 lines go into ``HRIR_DATABASES`` in src/sonore/stimuli/hrir_data.py.
+The SHA-256 lines go into ``HRIR_DATABASES`` in src/sonore/spatial/hrir_data.py.
 With ``--dat``, every SOFA position must match a ``.dat`` position (as Cartesian
 points, so a flipped azimuth convention shows up) and carry the same IRs.
 """
@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 
 import sonore as so
-from sonore.stimuli import hrir_data
+from sonore.spatial import hrir_data
 
 
 def main():

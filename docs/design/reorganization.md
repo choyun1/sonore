@@ -13,9 +13,13 @@ recommended option: D1 (a), D2 (a), D3 (a), D4 (a), D5, D6 (a), D7 (a), D8
 to D11, D12 (a), D13 and D14. D2, D3 and D7 were rewritten before acceptance
 after Cho's point that "voice is not a signal different in kind": there is
 no `voice` subpackage, synthesizers go to `signals` and analyses of a voice
-to `views`. Nothing has been moved. Every count below is printed by `python
+to `views`. Every count below is printed by `python
 tools/count_reorganization_references.py`, run on 2026-10-02 at main
-`b08063c`; numbers that are not are labelled estimates.
+`b08063c` (before the move; the script runs only on that tree); numbers
+that are not are labelled estimates.
+
+Migration: step 3, the gallery (PR #82), is merged; step 4, the source
+move, follows in its own PR.
 
 ## What is wrong today
 

@@ -8,6 +8,9 @@ import paths can be in anyone's code. Nothing is changed.
 
     python tools/count_reorganization_references.py [--release v0.3.0]
 
+It measures the tree before the move, so it runs on a checkout of main at b08063c,
+where the doc's counts were taken (git worktree add /tmp/before b08063c).
+
 A reference is any text match of the dotted path (``analysis.vocoder``, which also matches
 ``sonore.analysis.vocoder``) or the file path (``analysis/vocoder.py``). Moving a module
 means editing each file counted; the count is files, not lines.
@@ -22,6 +25,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src" / "sonore"
+if not (SRC / "analysis").is_dir():
+    raise SystemExit("the package is already reorganized; run this on a checkout of b08063c")
 
 # Recommended option (A): current module -> proposed module. A split module has
 # several targets, separated by " + ". The trunk's analysis layer becomes two,

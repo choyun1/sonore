@@ -1,6 +1,6 @@
 # Cepstrum
 
-The design of `sonore.analysis.cepstrum`: a `Cepstrum` representation built
+The design of `sonore.views.cepstrum`: a `Cepstrum` representation built
 on sonore's STFTs, with liftering, resynthesis with the original or minimum
 phase, and classic cepstral F0. This was item 3 of the README roadmap (now
 Done). It is also the first step toward a WORLD-style analysis and synthesis: the
@@ -9,8 +9,8 @@ pulse-based vocoder need, and cepstral F0 is a baseline that a real F0
 tracker must beat.
 
 Status: accepted 2026-10-01, with decisions D1–D7 as recommended below.
-Implemented in `src/sonore/analysis/cepstrum.py`, tested in
-`tests/analysis/test_cepstrum.py`.
+Implemented in `src/sonore/views/cepstrum.py`, tested in
+`tests/views/test_cepstrum.py`.
 
 ## How the claims are verified
 

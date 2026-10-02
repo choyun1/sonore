@@ -12,62 +12,33 @@ Typical use in a notebook::
 """
 
 from sonore import texture
-from sonore.analysis.cepstrum import Cepstrum
-from sonore.analysis.envelopes import Envelope, Envelopes
-from sonore.analysis.f0 import F0Track, f0_track
-from sonore.analysis.filterbank import (
+from sonore.core.fft import fft_workers, set_fft_workers
+from sonore.core.sound import Sound, load
+from sonore.core.units import Decibels, dB
+from sonore.core.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, freq_to_mel, mel_to_freq, rms
+from sonore.frames.filterbank import (
     CosineFilterbank,
     ERBFilterbank,
+    Filterbank,
     GammatoneFilterbank,
     MorletFilterbank,
     OctaveFilterbank,
     Subbands,
-    noise_vocode,
     subbands,
 )
-from sonore.analysis.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
-from sonore.analysis.mfcc import MFCC
-from sonore.analysis.modspectrogram import ModulationSpectrogram
-from sonore.analysis.modulation import (
-    ConstantQModulationFilterbank,
-    HannModulationFilterbank,
-    ModulationFilterbank,
-    OctaveModulationFilterbank,
-)
-from sonore.analysis.representations import (
-    STFT,
-    TVSTFT,
-    Mask,
-    ModulationSpectrum,
-    ReassignedSpectrogram,
-    Spectrum,
-    TFPower,
-    ideal_binary_mask,
-    ideal_ratio_mask,
-    long_term_spectrum,
-    reassigned_spectrogram,
-    tandem_power,
-)
-from sonore.analysis.vocoder import (
-    DIFFERENCES_FROM_WORLD,
-    Aperiodicity,
-    SpectralEnvelope,
-    cheaptrick,
-    d4c,
-    harmonic_aperiodicity,
-)
-from sonore.analysis.voice import GridEnvelope, scale_f0, warp_frequency
-from sonore.core.fft import fft_workers, set_fft_workers
-from sonore.core.sound import Sound, load
-from sonore.core.units import Decibels, dB
-from sonore.core.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, rms
+from sonore.frames.frame import Frame
+from sonore.frames.gabor import STFT, TVSTFT, GaborFrame, TVGaborFrame
+from sonore.frames.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.plotting import overview
 from sonore.signals.generators import (
     correlated_noise,
     exponential_chirp,
     gaussian_noise,
+    glottal_source,
     harmonic_complex,
     iterated_ripple_noise,
+    lf_harmonics,
+    lf_pulse,
     linear_chirp,
     pulse_train,
     pure_tone,
@@ -76,7 +47,7 @@ from sonore.signals.generators import (
     silence,
     square_wave,
 )
-from sonore.signals.glottal import glottal_source, lf_harmonics, lf_pulse
+from sonore.signals.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
 from sonore.signals.processing import (
     amplitude_modulate,
     antiresonator,
@@ -92,7 +63,8 @@ from sonore.signals.processing import (
     resonator,
     truncate,
 )
-from sonore.stimuli.binaural import (
+from sonore.signals.world import DIFFERENCES_FROM_WORLD, world_synthesize
+from sonore.spatial.binaural import (
     InterauralCues,
     apply_itd_ild,
     interaural_cues,
@@ -100,12 +72,9 @@ from sonore.stimuli.binaural import (
     phasewarp,
     simple_bir,
 )
-from sonore.stimuli.hrir_data import load_hrirs
-from sonore.stimuli.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
-from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
-from sonore.stimuli.reverb import band_rt60s, measure_rt60, synth_ir
-from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
-from sonore.stimuli.spatialization import (
+from sonore.spatial.hrir_data import load_hrirs
+from sonore.spatial.reverb import band_rt60s, measure_rt60, synth_ir
+from sonore.spatial.spatialization import (
     SPEED_OF_SOUND,
     HRIRSet,
     circular_trajectory,
@@ -117,7 +86,25 @@ from sonore.stimuli.spatialization import (
     rect_to_hcc,
     spatialize,
 )
-from sonore.stimuli.vocoder import world_synthesize
+from sonore.stimuli.channel_vocoder import noise_vocode
+from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
+from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
+from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
+from sonore.views.cepstrum import Cepstrum
+from sonore.views.envelopes import Envelope, Envelopes
+from sonore.views.f0 import F0Track, f0_track, scale_f0
+from sonore.views.mfcc import MFCC
+from sonore.views.modspectrogram import ModulationSpectrogram
+from sonore.views.modulation import (
+    ConstantQModulationFilterbank,
+    HannModulationFilterbank,
+    ModulationFilterbank,
+    ModulationSpectrum,
+    OctaveModulationFilterbank,
+)
+from sonore.views.reassigned import ReassignedSpectrogram, reassigned_spectrogram
+from sonore.views.spectral_envelope import GridEnvelope, SpectralEnvelope, cheaptrick, warp_frequency
+from sonore.views.spectrum import Spectrum, TFPower, long_term_spectrum, tandem_power
 
 __version__ = "0.3.1"
 
@@ -190,6 +177,7 @@ __all__ = [
     "exponential_chirp",
     "fft_workers",
     "freq_to_erb",
+    "freq_to_mel",
     "gaussian_noise",
     "glottal_source",
     "harmonic_complex",
@@ -211,6 +199,7 @@ __all__ = [
     "Mask",
     "match_channels",
     "match_fs",
+    "mel_to_freq",
     "mix",
     "ModulationSpectrum",
     "move_sound",

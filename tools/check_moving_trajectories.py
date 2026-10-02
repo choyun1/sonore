@@ -22,7 +22,7 @@ import numpy as np
 from scipy.signal import butter, hilbert, sosfiltfilt
 
 import sonore as so
-import sonore.stimuli.spatialization as spatialization
+import sonore.spatial.spatialization as spatialization
 
 FS = 16000  # the gallery's sampling rate
 SPEED = 15.0  # m/s

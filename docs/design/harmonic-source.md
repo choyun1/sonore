@@ -23,7 +23,7 @@ what the two carry between them? Most of that already exists:
   (Shannon et al., 1995), takes any `Sound` as the
   carrier, splits it with the same ERB filterbank as the sound, and
   multiplies each band's fine structure by the sound's band envelope
-  (`src/sonore/analysis/filterbank.py`). The envelope half is done.
+  (`src/sonore/frames/filterbank.py`). The envelope half is done.
 - `docs/speech/bdl_arctic_a0131_f0.csv` holds a Harvest track (Morise,
   2017) of the gallery sentence (CMU ARCTIC `bdl`; Kominek & Black, 2004), and `so.f0_track` (`f0.md`) now tracks any sound.
 
