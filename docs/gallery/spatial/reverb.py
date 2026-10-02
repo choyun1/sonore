@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/reverb.
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/listeners/reverb.py
+    python docs/gallery/spatial/reverb.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """

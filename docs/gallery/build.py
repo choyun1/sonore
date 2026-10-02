@@ -559,21 +559,27 @@ TOPICS = [
             ),
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
-            ("binaural.html", "differences between the ears: timing, and correlation that changes."),
             ("textures.html", "recordings and their syntheses from statistics."),
         ],
     ),
     (
-        "Seeing and changing sounds",
+        "Seeing and changing sound",
         "seeing",
         [
             ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
             ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
-            ("cepstrum.html", "separating a voice's pitch from its timbre."),
+            ("vocoder.html", "a simulation of cochlear-implant hearing."),
             ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
-            ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
+        ],
+    ),
+    (
+        "Voices",
+        "voice",
+        [
             ("formants.html", "vowels and consonants written as a source, formants and a few numbers."),
+            ("cepstrum.html", "separating a voice's pitch from its timbre."),
+            ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
             (
                 "aperiodicity.html",
                 "how much of a voice is noise, frequency by frequency, and WORLD's resynthesis.",
@@ -582,10 +588,10 @@ TOPICS = [
         ],
     ),
     (
-        "Listeners in the world",
-        "listeners",
+        "Spatial hearing",
+        "spatial",
         [
-            ("vocoder.html", "a simulation of cochlear-implant hearing."),
+            ("binaural.html", "differences between the ears: timing, and correlation that changes."),
             ("reverb.html", "rooms built from the statistics of real ones, and rooms that break them."),
             ("moving.html", "three talkers rendered through measured HRIRs, one of them moving."),
         ],

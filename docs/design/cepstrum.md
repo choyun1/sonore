@@ -227,7 +227,7 @@ development-time dependency only):
   within 5% on 81%; on the 318 of those whose sonore peak exceeds 0.1, on
   98%. Against Harvest, Praat's peak agrees on 75% and sonore's on 78%.
 
-The gallery page `docs/gallery/seeing/cepstrum.py` (cepstrum.html) demonstrates the
+The gallery page `docs/gallery/voice/cepstrum.py` (cepstrum.html) demonstrates the
 class on the sentence and lists the same comparisons.
 
 ## References

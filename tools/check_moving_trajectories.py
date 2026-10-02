@@ -12,7 +12,7 @@ DIR holds the PKU-IOA HRIRs: the original .dat files (any layout). Without --pku
 uses so.load_hrirs(distances="all"), which downloads them. It takes about two minutes.
 
 Coordinates are sonore's head-centered Cartesian ones, in meters: x right, y front.
-The paths and the buzz are the same as on the page (docs/gallery/listeners/moving.py).
+The paths and the buzz are the same as on the page (docs/gallery/spatial/moving.py).
 """
 
 import argparse
