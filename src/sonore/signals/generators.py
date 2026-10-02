@@ -165,7 +165,12 @@ def _voicing_gate(
 
 def _amplitude_function(amplitudes: Callable) -> Callable[[np.ndarray, np.ndarray, int], ArrayLike]:
     """``amplitudes`` as a function of time, frequency and harmonic number,
-    whether it takes the harmonic number or not."""
+    whether it takes the harmonic number or not. A spectral envelope view
+    (power on a grid, with an ``amplitude`` method that reads it point by
+    point) is read through that method, from its first channel."""
+    reader = getattr(amplitudes, "amplitude", None)
+    if callable(reader):
+        return lambda t, freq, number: reader(t, freq)
     try:
         inspect.signature(amplitudes).bind(None, None, None)
     except (TypeError, ValueError):  # takes only (t, f), or has no signature to read
@@ -253,6 +258,11 @@ def harmonic_complex(
     complex values: harmonic ``n`` is then ``Re(a_n exp(i(n Phi + phi_n)))``,
     so the angle of ``a_n`` adds to its phase and can change over time (an
     LF glottal pulse whose shape changes, as in :func:`glottal_source`).
+    ``amplitudes`` may also be a spectral envelope, such as
+    :class:`~sonore.analysis.vocoder.SpectralEnvelope` or
+    :class:`~sonore.analysis.voice.GridEnvelope` (power on a grid of times
+    and frequencies), which is read point by point as amplitude, from its
+    first channel.
     ``phases`` are starting phases: an array,
     one per harmonic, or one of ``"cosine"``, ``"sine"``, ``"alternating"``,
     ``"random"``, ``"schroeder+"``, ``"schroeder-"``.

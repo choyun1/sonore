@@ -56,6 +56,7 @@ from sonore.analysis.vocoder import (
     d4c,
     harmonic_aperiodicity,
 )
+from sonore.analysis.voice import GridEnvelope, scale_f0, warp_frequency
 from sonore.core.fft import fft_workers, set_fft_workers
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
@@ -149,6 +150,9 @@ __all__ = [
     "d4c",
     "harmonic_aperiodicity",
     "world_synthesize",
+    "GridEnvelope",
+    "scale_f0",
+    "warp_frequency",
     "TFPower",
     "tandem_power",
     "ReassignedSpectrogram",

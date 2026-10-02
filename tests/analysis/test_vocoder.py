@@ -137,9 +137,11 @@ def test_bad_tracks_are_refused(reference):
         so.cheaptrick(sound, (times, f0[:-1]))
     with pytest.raises(TypeError):
         so.d4c(sound, f0)
-    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+    # an F0 track off the aperiodicity's time windows is read onto them, but
+    # those time windows themselves must start at 0, as WORLD assumes
+    late = (times + 0.01, f0)
     with pytest.raises(ValueError, match="evenly spaced from time 0"):
-        so.world_synthesize((times + 0.01, f0), envelope, aperiodicity)
+        so.world_synthesize(late, so.cheaptrick(sound, late), so.d4c(sound, late))
     with pytest.raises(ValueError, match="whole-number"):
         so.cheaptrick(so.Sound(sound.data, 16000.5), (times, f0))
 

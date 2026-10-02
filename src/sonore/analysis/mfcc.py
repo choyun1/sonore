@@ -9,6 +9,7 @@ from scipy.signal import savgol_filter
 
 from sonore.analysis.frames import GaborFrame
 from sonore.analysis.representations import STFT, TVSTFT
+from sonore.analysis.voice import GridEnvelope
 from sonore.core.sound import Sound
 
 __all__ = ["MFCC", "mel_filterbank", "freq_to_mel", "mel_to_freq", "delta_features", "symmetric_hamming"]
@@ -356,6 +357,19 @@ class MFCC:
         )
         log_power = np.einsum("qm,cmw->cqw", interpolation, smoothed_log_power)
         return np.exp(log_power)
+
+    def envelope_view(self, f=None) -> GridEnvelope:
+        """:meth:`envelope` on this analysis's time windows, at frequencies
+        ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
+        wherever a spectral envelope is taken
+        (:func:`~sonore.analysis.voice.warp_frequency`,
+        :func:`~sonore.stimuli.vocoder.world_synthesize`,
+        :func:`~sonore.signals.generators.harmonic_complex`). It holds band
+        powers, sums over triangles that widen with frequency, so with
+        ``triangles="height"`` it tilts upward against a spectral density;
+        ``triangles="area"`` removes most of that tilt."""
+        freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft if f is None else np.asarray(f, float)
+        return GridEnvelope(self.envelope(freqs), self.t, freqs)
 
     def plot(self, ax=None, channel: int = 0, kind: str = "mfcc", **kwargs):
         """The coefficients against time (``kind="mfcc"``) or the mel

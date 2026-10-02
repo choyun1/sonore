@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from sonore.analysis.representations import STFT, TVSTFT
+from sonore.analysis.voice import GridEnvelope
 from sonore.core.sound import Sound
 
 __all__ = ["Cepstrum"]
@@ -108,6 +109,16 @@ class Cepstrum:
         the shape of the true envelope but sits a few dB below the harmonic
         peaks, because the lifter averages the peaks with the dips between them."""
         return np.exp(np.fft.rfft(self._full(), axis=1).real)
+
+    def envelope_view(self) -> GridEnvelope:
+        """:meth:`envelope` as power on this cepstrum's time windows and
+        frequencies, read as ``env(t, f)``, so it goes wherever a spectral
+        envelope is taken (:func:`~sonore.analysis.voice.warp_frequency`,
+        :func:`~sonore.stimuli.vocoder.world_synthesize`,
+        :func:`~sonore.signals.generators.harmonic_complex`). Lifter first:
+        ``cep.lifter(0.5 / f0).envelope_view()``."""
+        freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
+        return GridEnvelope(self.envelope() ** 2, self.t, freqs)
 
     def to_stft(self, phase: str = "original") -> STFT | TVSTFT:
         """Coefficients of the source's type and frame with :meth:`envelope`
