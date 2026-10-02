@@ -19,8 +19,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # - [How a room is synthesized](#h-how-a-room-is-synthesized): decaying noise in cochlear bands,
 #   and the parameters that shape it.
-# - [Natural rooms](#h-natural-rooms): a starter pistol and a sentence, read by a man and by a
-#   woman, in a synthetic room built like those Traer & McDermott's listeners could not tell
+# - [Natural rooms](#h-natural-rooms): a starter pistol and a sentence, read by a male and by a
+#   female talker, in a synthetic room built like those Traer & McDermott's listeners could not tell
 #   from real ones.
 # - [Farther away](#h-farther-away): the same sentence four times as far from the listener,
 #   where less of what arrives is direct sound.
@@ -178,8 +178,8 @@ sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)
 
 # %% [about]
-# The same sentence read by a woman (slt), in the same room. The impulse response is the room's,
-# not the talker's, so it does to her voice what it did to his.
+# The same sentence read by a female talker (slt), in the same room. The impulse response is the
+# room's, not the talker's, so it does to her voice what it did to his.
 
 # %% [demo r3] A higher voice in the same room
 sentence_female = so.load("docs/speech/slt_arctic_a0131.flac").resample(FS)

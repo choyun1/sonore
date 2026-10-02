@@ -83,7 +83,7 @@ locally:
 
 Sounds: the bdl sentence `docs/speech/bdl_arctic_a0131.flac` with
 `so.f0_track` (hop 5 ms) and D4C; the same sentence by slt; and the
-synthetic vowel of `tools/check_female_voices.py` (men's "hod" from
+synthetic vowel of `tools/check_female_voices.py` (male "hod" from
 Hillenbrand et al. 1995, F0 120 Hz, envelope and noise share known exactly,
 the noise share a straight line from −30 dB at 0 Hz to −5 dB at 8 kHz).
 
@@ -201,7 +201,7 @@ close about a quarter of the distance.** On the same sentence, median voiced F0 
 bdl's mean voiced envelope to slt's is 1.65 (residual 4.41 dB, against
 6.31 dB unwarped); much of that is a difference in spectral slope, because
 allowing a straight line in dB against log frequency as well gives 1.22
-(residual 2.99 dB). Hillenbrand et al.'s women-to-men ratios of F1–F3 for
+(residual 2.99 dB). Hillenbrand et al.'s female-to-male ratios of F1–F3 for
 heed, hod and who'd run from 1.11 to 1.28, geometric mean 1.174. Applied to
 bdl, the mean voiced envelope's distance to slt's (level removed, 100–5000
 Hz) goes from 6.24 dB with F0 alone to 4.54 dB with warp 1.65, 4.97 dB
@@ -250,8 +250,8 @@ of the methods compared: the output's harmonics are measured by least
 squares at their known frequencies over 0.2–0.6 s and compared, level
 removed, with the true envelope over 100–5000 Hz (after a change, with the
 true envelope read at `f / 1.2` at harmonics of 1.5 F0). Twelve vowels:
-heed, hod and who'd with men's formants at F0 110 and 150 Hz and with
-women's at 200 and 250 Hz. On recordings there is no truth; the score is
+heed, hod and who'd with male formants at F0 110 and 150 Hz and with
+female ones at 200 and 250 Hz. On recordings there is no truth; the score is
 the level-free distance between the original's and the output's 40-band
 log mel spectra (median over voiced time windows), which smooths the way
 the MFCC envelope does and so favours it. It is a sanity check, not a
@@ -273,7 +273,7 @@ dB (within 0.11 dB of WORLD's), and the truth gives 0.00 dB, so the score
 itself adds nothing. Swapping the true F0 for Harvest or `Cepstrum.f0`
 changes the CheapTrick row by at most 0.02 dB; their F0 errors are 0.02%
 and 0.04% (median). By voice, CheapTrick's resynthesis error is 0.51 dB on
-the men's vowels and 0.80 dB on the women's; the cepstral envelope's 1.56
+the male vowels and 0.80 dB on the female ones; the cepstral envelope's 1.56
 and 3.20 dB; the MFCC envelope's 4.94 and 3.85 dB (area-normalized: 3.75
 and 2.90 dB). Area-normalized triangles help because `mfcc.envelope` gives
 band powers, sums over triangles that widen with frequency, so with
@@ -282,7 +282,7 @@ the remaining error is what 26 bands and 13 coefficients smooth away
 (`mfcc.md`, C4).
 
 **C9. A wobbling F0 costs more than its median error suggests.** [compare]
-`so.f0_track` has a median F0 error of 0.08%, but on women's heed at 250
+`so.f0_track` has a median F0 error of 0.08%, but on female heed at 250
 Hz its estimate wanders between 247 and 252 Hz, and the resynthesis error
 with CheapTrick rises to 3.76 dB (Harvest: 0.86 dB). The output's upper
 harmonics wander with it, up to 50 Hz at 5 kHz, which the fixed-frequency
@@ -294,7 +294,7 @@ differ in nothing else; their voicing errors on real speech are in
 **C10. WORLD's synthesis needs a smooth envelope: given the exact one it
 does worse than given CheapTrick's estimate.** [compare] With the true
 envelope, `world_synthesize`'s resynthesis error is 2.01 dB median and
-7.03 dB worst (men's who'd at 150 Hz), against 0.66 and 0.86 dB with
+7.03 dB worst (male who'd at 150 Hz), against 0.66 and 0.86 dB with
 CheapTrick. For that vowel, whose envelope spans 95 dB over 50–5000 Hz,
 the error is 7.04 dB at WORLD's FFT size (1024 at 16 kHz), 2.08 dB at 4096
 and 1.86 dB at 16384, so most of it comes from computing the

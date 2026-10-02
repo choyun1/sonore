@@ -35,7 +35,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   on the same sentence.
 # - [Splitting the voice in two](#h-splitting-the-voice-in-two): the vocal tract and the source,
 #   heard separately.
-# - [A higher voice](#h-a-higher-voice): the same analysis on a woman's voice.
+# - [A higher voice](#h-a-higher-voice): the same analysis on a female voice.
 # - [MFCCs: a cepstrum on the mel scale](#h-mfccs-a-cepstrum-on-the-mel-scale): the speech
 #   recogniser's version, how much pitch leaks into it, and what it cannot tell apart.
 # - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
@@ -266,14 +266,14 @@ sound = finish(whole)
 # %% [markdown]
 # ## A higher voice
 #
-# The same sentence read by a woman (CMU ARCTIC, speaker slt), whose pitch sits around 180 to
-# 210 Hz, half as high again as the man's. Two things change in the cepstrum. The pitch peak moves
-# down to about 5 ms, closer to the envelope's first couple of milliseconds, though still clear of
-# them. And a lifter at half a period now keeps only the quefrencies below about 2.5 ms, against 4
-# ms for the man, so the envelope it recovers is smoother and follows the formants less closely:
-# with harmonics further apart, there is less of the envelope to recover. On a database of
-# laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female voice's time
-# windows and none on a male voice's
+# The same sentence read by a female talker (CMU ARCTIC, speaker slt), whose pitch sits around 180
+# to 210 Hz, half as high again as the male talker's. Two things change in the cepstrum. The pitch
+# peak moves down to about 5 ms, closer to the envelope's first couple of milliseconds, though still
+# clear of them. And a lifter at half a period now keeps only the quefrencies below about 2.5 ms,
+# against 4 ms for the male talker, so the envelope it recovers is smoother and follows the formants
+# less closely: with harmonics further apart, there is less of the envelope to recover. On a
+# database of laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female
+# voice's time windows and none on a male voice's
 # ([`docs/design/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md)).
 # There is no stored F0 track for this recording, so `so.f0_track` stands in for Harvest.
 
@@ -285,9 +285,9 @@ t_female, f0_cep_female, peak_female = cep_female.f0(f_lo=75, f_hi=400)
 track_female = so.f0_track(sentence_female)
 
 # %% [about]
-# One time window of her sentence, drawn as for the man's above. The harmonics are further apart,
-# so the log spectrum ripples less often, and the cepstral peak sits at a shorter quefrency. The
-# lifter cutoff, at half her period, is lower too.
+# One time window of her sentence, drawn as for the male talker's above. The harmonics are further
+# apart, so the log spectrum ripples less often, and the cepstral peak sits at a shorter quefrency.
+# The lifter cutoff, at half her period, is lower too.
 
 # %% [figure c6] One time window, a higher voice
 i_female = int(np.argmin(np.abs(t_female - 0.60)))
@@ -325,7 +325,7 @@ for ax in (ax0, ax1):
 
 # %% [about]
 # Top: her cepstrogram, with the tracker's pitch period drawn over it; the bright line runs lower
-# than the man's. Bottom: cepstral F0 beside `so.f0_track`.
+# than the male talker's. Bottom: cepstral F0 beside `so.f0_track`.
 
 # %% [demo c7] The cepstrogram of a higher voice
 voiced_female = track_female.voiced[0]

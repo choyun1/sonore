@@ -8,7 +8,7 @@ truth is known, and prints the errors side by side for male and female
 voices. Nothing is tuned here: every analysis runs with its defaults, and
 the gallery's 40 ms window for the cepstrum.
 
-Part 1, synthetic vowels: three vowels with men's and with women's average
+Part 1, synthetic vowels: three vowels with male and with female average
 formant frequencies (Hillenbrand et al. 1995), each at steady F0 from 100 to
 350 Hz, built so that the envelope and the share of noise at every frequency
 are known exactly. Prints the envelope error of CheapTrick and of the
@@ -50,10 +50,10 @@ F0S = [100, 150, 200, 250, 300, 350]
 # Hillenbrand, Getty, Clark & Wheeler (1995), Table V: average F1-F3 [Hz] of
 # heed, hod and who'd; F4 and F5 are fixed. Bandwidths as the WORLD checker's.
 VOWELS = {
-    "men": {"i": (342, 2322, 3000), "a": (768, 1333, 2522), "u": (378, 997, 2343)},
-    "women": {"i": (437, 2761, 3372), "a": (936, 1551, 2815), "u": (459, 1105, 2735)},
+    "male": {"i": (342, 2322, 3000), "a": (768, 1333, 2522), "u": (378, 997, 2343)},
+    "female": {"i": (437, 2761, 3372), "a": (936, 1551, 2815), "u": (459, 1105, 2735)},
 }
-UPPER = {"men": (3500, 4500), "women": (4100, 4900)}
+UPPER = {"male": (3500, 4500), "female": (4100, 4900)}
 BANDWIDTHS = (60, 100, 120, 175, 250)
 SCORED = (100.0, 5000.0)  # envelope error is scored over this range [Hz]
 

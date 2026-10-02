@@ -19,7 +19,7 @@ numbers below are with it.
 `so.harmonic_aperiodicity`) on three sets of sounds:
 
 1. **Synthetic vowels**, where the truth is exact. There are three vowels
-   (heed, hod, who'd) with men's and with women's average formants
+   (heed, hod, who'd) with male and with female average formants
    (Hillenbrand et al. 1995), each at a steady F0 from 100 to 350 Hz. They
    are built as `tools/check_world_claims.py` builds its test vowel, so the
    envelope and the share of noise (−30 dB at 0 Hz rising to −5 dB at
@@ -102,7 +102,7 @@ averaged over the six vowels, with overall level removed:
 At the F1 peak itself, CheapTrick's level is off by between +3 and −13 dB.
 At 300 and 350 Hz it is 8 to 13 dB low in 8 of the 12 cases, because no harmonic sits
 near the peak and the smoothing over F0 flattens it. The cepstral lifter
-sits 6 to 15 dB under F1 from 150 Hz up. The men's and women's formant
+sits 6 to 15 dB under F1 from 150 Hz up. The male and female formant
 sets give much the same numbers, so F0 drives the error, not the vowel.
 This is the "sparse harmonics" problem, and no envelope estimator can fully
 avoid it: between two harmonics the spectrum holds no information about the
@@ -150,7 +150,7 @@ whether these numbers are right.
 
 1. **Gallery pages.** Done: every gallery page that uses recorded speech
    now has a female example next to the male one, with `slt`'s reading of
-   the same sentence, and Formant synthesis has the six vowels with women's
+   the same sentence, and Formant synthesis has the six vowels with female
    formants.
 
 ## References

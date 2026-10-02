@@ -14,17 +14,17 @@ time it runs.
 # %% [markdown]
 # # Moving talkers
 #
-# Three men talk at once, one straight ahead and one 40° to each side. Which one do you follow?
-# If one of them moves, does that help? Cho & Kidd (2022) asked this with stimuli like the ones
-# on this page; the experiment's code, written with sonore's predecessor sigtools, is archived at
-# [github.com/choyun1/MSM](https://github.com/choyun1/MSM).
+# Three male talkers speak at once, one straight ahead and one 40° to each side. Which one do you
+# follow? If one of them moves, does that help? Cho & Kidd (2022) asked this with stimuli like the
+# ones on this page; the experiment's code, written with sonore's predecessor sigtools, is archived
+# at [github.com/choyun1/MSM](https://github.com/choyun1/MSM).
 #
 # - [The talkers and the trajectories](#h-the-talkers-and-the-trajectories): three sentences, and
 #   the paths the target takes.
 # - [One talker, moving](#h-one-talker-moving): what motion alone sounds like.
 # - [Three talkers](#h-three-talkers): the target swinging back and forth in azimuth while the
 #   other two stay still.
-# - [A different voice](#h-a-different-voice): a woman as the target, still and moving.
+# - [A different voice](#h-a-different-voice): a female talker as the target, still and moving.
 # - [Coming closer](#h-coming-closer): the target walking up to the listener, without and with
 #   a room.
 # - [Passing by](#h-passing-by): a buzz going past at 15 m/s, and the Doppler glide of its pitch.
@@ -46,8 +46,8 @@ time it runs.
 # ## The talkers and the trajectories
 #
 # The target is the sentence from [Seeing speech](speech.html); the two maskers are sentences by
-# another man in the CMU ARCTIC corpus (sources in docs/speech/SOURCES.md). Each is scaled to the
-# same RMS before rendering, as in the experiment.
+# another male talker in the CMU ARCTIC corpus (sources in docs/speech/SOURCES.md). Each is scaled
+# to the same RMS before rendering, as in the experiment.
 #
 # Azimuth is measured clockwise from straight ahead, so $+40°$ is to the right. A talker at
 # center azimuth $\theta_0$ that oscillates with amplitude $A$ at rate $f$ follows
@@ -216,9 +216,9 @@ sound = finish(mix)
 # ## A different voice
 #
 # Motion is one way to set the target apart. A different voice is another, and a strong one: with
-# two talkers at once, Brungart (2001) found a masker of the other sex far easier to ignore than
-# one of the same sex. Here the target is the same sentence read by a woman (slt), among the same
-# two men.
+# two talkers at once, Brungart (2001) found a masker of the other sex far easier to ignore than one
+# of the same sex. Here the target is the same sentence read by a female talker (slt), among the
+# same two male talkers.
 
 # %%
 target_female = so.normalize(
@@ -228,22 +228,22 @@ spoken_female = so.load("docs/speech/slt_arctic_a0131.flac").duration
 TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)
 
 # %% [about]
-# The woman straight ahead and the men 40° to either side, nobody moving. Compare it with the
-# three men standing still above.
+# The female talker straight ahead and the male talkers 40° to either side, nobody moving. Compare
+# it with the three male talkers standing still above.
 
-# %% [demo m8] A woman among two men, standing still
+# %% [demo m8] A female talker among two male talkers, standing still
 mix, target_alone, t, azimuths = render(0.0, talker=target_female)
-fig, playhead = show(mix, target_alone, t, azimuths, "A woman ahead, nobody moves", TALKING_FEMALE)
+fig, playhead = show(mix, target_alone, t, azimuths, "A female talker ahead, nobody moves", TALKING_FEMALE)
 scene = scene_of(t, azimuths)
 sound = finish(mix)
 
 # %% [about]
-# The woman swings 10° to either side, as the man did above: both cues at once.
+# The female talker swings 10° to either side, as the male talker did above: both cues at once.
 
-# %% [demo m9] A woman among two men, swinging 10 degrees
+# %% [demo m9] A female talker among two male talkers, swinging 10 degrees
 mix, target_alone, t, azimuths = render(10.0, talker=target_female)
 fig, playhead = show(
-    mix, target_alone, t, azimuths, "A woman ahead swings 10° to either side", TALKING_FEMALE
+    mix, target_alone, t, azimuths, "A female talker ahead swings 10° to either side", TALKING_FEMALE
 )
 scene = scene_of(t, azimuths)
 sound = finish(mix)

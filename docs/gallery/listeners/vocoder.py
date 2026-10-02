@@ -27,7 +27,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Noise or tones](#h-noise-or-tones): what carries the envelopes.
 # - [Pitch from the envelope](#h-pitch-from-the-envelope): the weak temporal pitch cue an implant
 #   leaves.
-# - [A higher voice](#h-a-higher-voice): the sentence read by a woman, through the same
+# - [A higher voice](#h-a-higher-voice): the sentence read by a female talker, through the same
 #   vocoders.
 # - [A melody](#h-a-melody): music, which cannot do without pitch.
 # - [What this simulation leaves out](#h-what-this-simulation-leaves-out): current spread,
@@ -220,8 +220,8 @@ sound = vocoded
 # %% [markdown]
 # ## A higher voice
 #
-# The same sentence read by a woman (slt). Her fundamental, about 150 to 230 Hz here by
-# `so.f0_track`, is higher than the man's, so a temporal cue has to follow faster pulses.
+# The same sentence read by a female talker (slt). Her fundamental, about 150 to 230 Hz here by
+# `so.f0_track`, is higher than the male talker's, so a temporal cue has to follow faster pulses.
 
 # %%
 sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))

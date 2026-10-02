@@ -33,8 +33,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   time stretch and resampling, for contrast.
 # - [Pitch range](#h-pitch-range): a monotone and a doubled range, around the same median.
 # - [The aperiodicity](#h-the-aperiodicity): kept in place or moved with the formants.
-# - [Toward another talker](#h-toward-another-talker): the man's sentence moved toward the
-#   woman's by one pitch ratio and one formant ratio, beside hers.
+# - [Toward another talker](#h-toward-another-talker): the male talker's sentence moved toward the
+#   female talker's by one pitch ratio and one formant ratio, beside hers.
 # - [Any pitch track, any envelope](#h-any-pitch-track-any-envelope): three trackers and four
 #   envelopes mixed, scored on resynthesis.
 # - [What this page leaves out](#h-what-this-page-leaves-out).
@@ -42,9 +42,9 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # ## The sentence, and code the examples share
 #
-# The sentence from [Seeing speech](speech.html), read by a man (CMU ARCTIC, speaker bdl), with
-# the F0 track WORLD's Harvest (Morise, 2017) measured, stored with it. CheapTrick's envelope and
-# D4C's aperiodicity are measured on that track. `so.world_synthesize` puts them back together,
+# The sentence from [Seeing speech](speech.html), read by a male talker (CMU ARCTIC, speaker bdl),
+# with the F0 track WORLD's Harvest (Morise, 2017) measured, stored with it. CheapTrick's envelope
+# and D4C's aperiodicity are measured on that track. `so.world_synthesize` puts them back together,
 # sample for sample as WORLD does.
 #
 # Each change below is checked by measurement on the output. The pitch: `so.f0_track` on the
@@ -295,25 +295,25 @@ fig, playhead = show(sound, "formants × 1.2, aperiodicity warped by 1.2", harve
 # %% [markdown]
 # ## Toward another talker
 #
-# The same sentence read by a woman (speaker slt). Women's voices are higher, and women's
+# The same sentence read by a female talker (speaker slt). Female voices are higher, and female
 # vocal tracts are on average shorter, so their formants are higher. Hillenbrand et al. (1995)
-# measured F1 to F3 of American English vowels for men and women; for the vowels of "heed",
-# "hod" and "who'd", the women's formants are 1.11 to 1.28 times the men's, a geometric mean of
+# measured F1 to F3 of American English vowels of male and female talkers; for the vowels of "heed",
+# "hod" and "who'd", the female formants are 1.11 to 1.28 times the male ones, a geometric mean of
 # 1.174. The pitch ratio is measured on the two recordings.
 
 # %%
-woman = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
-woman_track = so.f0_track(woman)
-pitch_ratio = median_f0(woman) / original_f0
-print(f"median voiced F0: {original_f0:.0f} Hz (bdl), {median_f0(woman):.0f} Hz (slt)")
+female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+female_track = so.f0_track(female)
+pitch_ratio = median_f0(female) / original_f0
+print(f"median voiced F0: {original_f0:.0f} Hz (bdl), {median_f0(female):.0f} Hz (slt)")
 print(f"pitch ratio: {pitch_ratio:.2f}")
 
 # %% [about]
 # Her sentence, for reference, with `so.f0_track`'s contour.
 
 # %% [demo vc13] Her sentence
-sound = woman
-fig, playhead = show(sound, "the sentence read by slt", (woman_track.t, woman_track.f0[0]))
+sound = female
+fig, playhead = show(sound, "the sentence read by slt", (female_track.t, female_track.f0[0]))
 
 # %% [about]
 # His sentence at her median pitch, the formants as they were.
@@ -337,18 +337,18 @@ fig, playhead = show(sound, f"bdl, F0 × {pitch_ratio:.2f}, formants × 1.174", 
 # line in dB over log frequency absorb the slope brings the ratio back near Hillenbrand et al.'s.
 
 # %%
-woman_db = mean_voiced_db(so.cheaptrick(woman, woman_track), woman_track.t, woman_track.voiced[0])
+female_db = mean_voiced_db(so.cheaptrick(female, female_track), female_track.t, female_track.voiced[0])
 for label, slope in [("level free", False), ("level and slope free", True)]:
-    ratio, residual = fitted_warp(woman_db, original_db, slope=slope)
+    ratio, residual = fitted_warp(female_db, original_db, slope=slope)
     print(f"fitted warp, {label}: {ratio:.3f} (residual {residual:.2f} dB)")
-print(f"residual at 1.174, level free: {misfit(woman_db, original_db, 1.174):.2f} dB")
+print(f"residual at 1.174, level free: {misfit(female_db, original_db, 1.174):.2f} dB")
 
 # %% [figure vc16] His average envelope, warped, and hers
 fig, ax = plt.subplots(figsize=(10, 3.2), layout="constrained")
 for curve, color, label in [
     (original_db, "k", "bdl"),
     (np.interp(envelope.f / 1.174, envelope.f, original_db), "C3", "bdl read at f / 1.174"),
-    (woman_db, "C0", "slt"),
+    (female_db, "C0", "slt"),
 ]:
     shift = np.mean(curve[scored] - original_db[scored])  # the same mean level over 100-5000 Hz
     ax.plot(envelope.f, curve - shift, color=color, label=label)
@@ -478,7 +478,7 @@ report(sound, so.scale_f0(f0_track, 1.5))
 #   28(4), 357–366. [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/mfcc.py#L127)
 # - Hillenbrand, Getty, Clark & Wheeler (1995). Acoustic characteristics of American English
 #   vowels. *J. Acoust. Soc. Am.* 97(5), 3099–3111.
-#   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872). Men's and women's formants.
+#   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872). Male and female formants.
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.

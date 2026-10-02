@@ -27,8 +27,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   cannot show.
 # - [Speech, babble and noise](#h-speech-babble-and-noise): the syllable rhythm, blurred by more
 #   talkers and gone in noise with the same spectrum.
-# - [A higher voice](#h-a-higher-voice): one sentence read by a man and by a woman, with the
-#   same rhythm.
+# - [A higher voice](#h-a-higher-voice): one sentence read by a male and by a female talker, with
+#   the same rhythm.
 # - [Three textures](#h-three-textures): crickets, applause and rain, each with its own rates.
 # - [Three cuts through the cube](#h-three-cuts-through-the-cube): one moment, one rate and the
 #   pooled view, side by side.
@@ -182,10 +182,10 @@ fig, playhead, live = show(sound, marks=marks, start=1.5)
 # %% [markdown]
 # ## A higher voice
 #
-# The first of those sentences read twice, by the man from the sentences above (bdl) and by a
-# woman (slt) whose voice is roughly an octave higher. A spectrogram of the two looks quite
-# different, with the woman's harmonics twice as far apart. Their modulation spectrograms
-# should not, if the modulation is set by the syllables rather than by the voice.
+# The first of those sentences read twice, by the male talker from the sentences above (bdl) and by
+# a female talker (slt) whose voice is roughly an octave higher. A spectrogram of the two looks
+# quite different, with the female talker's harmonics twice as far apart. Their modulation
+# spectrograms should not, if the modulation is set by the syllables rather than by the voice.
 
 # %%
 same_sentence = [so.load(f"docs/speech/{n}_arctic_a0131.flac").normalize(rms=0.1) for n in ("bdl", "slt")]
@@ -202,14 +202,14 @@ for speaker, during in (("bdl", msg.t < switch), ("slt", msg.t >= switch)):
     print(f"{speaker}, median depth [dB]: {shown}")
 
 # %% [about]
-# The dashed line marks where the woman begins; the bright patch around it is the pause between
-# the two readings, which every window that spans it reads as deep modulation. Away from the
+# The dashed line marks where the female talker begins; the bright patch around it is the pause
+# between the two readings, which every window that spans it reads as deep modulation. Away from the
 # line the pooled depth has the same shape in both halves, highest between about 2 and 8 Hz and
-# falling off above 10 Hz. The printout above gives the medians, which differ by 2 dB or less;
-# the man's are a little deeper at the slowest rates. Pitch does not show at all: the fastest
-# rate here, 64 Hz, is below either voice's F0, so the beating of harmonics within a band, at
-# the rate of F0, falls off the top. What does change is the cochleagram, whose low bands
-# resolve the woman's widely spaced harmonics into separate stripes.
+# falling off above 10 Hz. The printout above gives the medians, which differ by 2 dB or less; the
+# male talker's are a little deeper at the slowest rates. Pitch does not show at all: the fastest
+# rate here, 64 Hz, is below either voice's F0, so the beating of harmonics within a band, at the
+# rate of F0, falls off the top. What does change is the cochleagram, whose low bands resolve the
+# female talker's widely spaced harmonics into separate stripes.
 
 # %% [demo sv1] The same sentence, two voices
 sound = finish(two_voices)
