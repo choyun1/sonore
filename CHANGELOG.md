@@ -14,7 +14,8 @@ version (0.x.y) only fixes bugs.
   whatever measured them. A ratio of 1 returns the input itself.
   `so.GridEnvelope` holds any envelope as power on a grid of times and
   frequencies; `Cepstrum.envelope_view()` and `MFCC.envelope_view()`
-  return one. See `docs/design/voice-change.md`.
+  return one. See `docs/design/voice-change.md` and the gallery page
+  "Changing a voice" (`docs/gallery/seeing/voice.py`).
 - `so.MFCC`: mel-frequency cepstral coefficients (Davis & Mermelstein,
   1980) of a sound, with the usual speech settings (25 ms Hamming window,
   10 ms hop, 26 HTK mel bands, 13 coefficients), or of any `STFT` or
