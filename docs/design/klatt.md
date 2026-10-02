@@ -172,8 +172,9 @@ interpretable controls:
   model with open quotient and spectral tilt for voice quality.
 - **LF model** (Fant, Liljencrants & Lin, 1985): the most widely used
   parametric glottal flow derivative; four parameters per period. Either
-  this or KLGLOTT88 could replace RGP (D4). Citation details to be checked
-  before it enters the README.
+  this or KLGLOTT88 could replace RGP (D4). Proposed in
+  `glottal-source.md`, which also records what of the citation could be
+  checked.
 - **KlattGrid** (Weenink, 2009): Praat's reimplementation, with each
   parameter a tier of time–value points rather than fixed 5 ms time windows. That
   form fits sonore, whose tracks are already functions of time (D3).

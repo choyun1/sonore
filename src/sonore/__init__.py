@@ -74,6 +74,7 @@ from sonore.signals.generators import (
     silence,
     square_wave,
 )
+from sonore.signals.glottal import glottal_source, lf_harmonics, lf_pulse
 from sonore.signals.processing import (
     amplitude_modulate,
     antiresonator,
@@ -181,6 +182,7 @@ __all__ = [
     "fft_workers",
     "freq_to_erb",
     "gaussian_noise",
+    "glottal_source",
     "harmonic_complex",
     "hcc_to_rect",
     "HRIRSet",
@@ -189,6 +191,8 @@ __all__ = [
     "interaural_cues",
     "InterauralCues",
     "iterated_ripple_noise",
+    "lf_harmonics",
+    "lf_pulse",
     "linear_chirp",
     "linear_trajectory",
     "load",
