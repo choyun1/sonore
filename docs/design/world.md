@@ -260,7 +260,7 @@ coefficients, so everything up to the smoothing is invertible.
 ### Aperiodicity is explained on a gallery page
 
 **Requirement (Cho, 2026-10-02): the aperiodicity measure is to be
-explained in a gallery page.** It is the least natural of the three
+explained in a gallery page.** It is the least familiar of the three
 parameters for someone thinking in first-order source-filter terms, where
 the source is either a buzz or a hiss (a voicing switch) and everything
 else is the filter. Aperiodicity is a third thing: per frequency, how
