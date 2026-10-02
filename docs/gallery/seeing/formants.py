@@ -38,7 +38,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # ## Code the examples share
 #
-# All the sounds are at 16 kHz, a little longer than a syllable. Each one is drawn as a waveform
+# All the sounds are at 16 kHz. Each one is drawn as a waveform
 # and a wideband spectrogram (Hann 6 ms), which shows formants as dark bands, with the formant
 # frequencies the synthesizer was given drawn over it.
 
@@ -88,7 +88,7 @@ def show(snd, title, formants=()):
 # put together by hand with `so.resonator`, the same resonator `so.klatt_synthesize` uses.
 
 # %%
-DUR = 0.6
+DUR = 1.0
 F0 = ([0, DUR], [130, 100])
 HOD = [(730, 60), (1090, 90), (2440, 150), (3500, 200), (4500, 250)]
 
@@ -311,19 +311,21 @@ fig, playhead = show(sound, "/ga/", tracks)
 # vocal folds is.
 
 # %% [about]
-# /sa/: 150 ms of frication through the parallel formants 5 and 6 (4500 and 5500 Hz), then the
-# vowel.
+# /sa/: frication through the parallel formants 5 and 6 (4500 and 5500 Hz), then the vowel. As
+# in speech, there is no silence between them: the voicing starts while the frication is still
+# fading, and the first two formants glide from where the tongue left them (F1 low, F2 near
+# 1700 Hz) to the vowel's values over the first 60 ms of voicing.
 
 # %% [demo fn1] The syllable sa
 dur = 0.6
-tracks = dict(F1=([0.19, 0.25], [300, 730]), F2=([0.19, 0.25], [1500, 1090]))
+tracks = dict(F1=([0.165, 0.225], [300, 730]), F2=([0.165, 0.225], [1700, 1090]))
 sound = finish(
     so.klatt_synthesize(
         dur,
         FS,
         F0=([0, dur], [125, 100]),
-        AV=([0, 0.17, 0.19, dur - 0.05, dur], [0, 0, 60, 60, 0]),
-        AF=([0, 0.03, 0.15, 0.19], [0, 74, 74, 0]),
+        AV=([0, 0.165, 0.17, 0.19, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
+        AF=([0, 0.03, 0.17, 0.185, 0.2], [0, 74, 74, 64, 0]),
         A5=60,
         A6=62,
         F6=5500,
@@ -337,7 +339,8 @@ fig, playhead = show(sound, "/sa/: frication, then voicing", [tracks["F1"], trac
 
 # %% [about]
 # /ha/: aspiration alone through the vowel's formants, then voicing. The formants of the vowel
-# are already there in the breath.
+# are already there in the breath, and the breath carries on into the first 50 ms or so of the
+# voicing, fading as it goes, so the vowel starts breathy.
 
 # %% [demo fn2] The syllable ha
 sound = finish(
@@ -345,8 +348,8 @@ sound = finish(
         dur,
         FS,
         F0=([0, dur], [125, 100]),
-        AV=([0, 0.17, 0.2, dur - 0.05, dur], [0, 0, 60, 60, 0]),
-        AH=([0, 0.03, 0.17, 0.21], [0, 62, 62, 0]),
+        AV=([0, 0.165, 0.17, 0.19, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
+        AH=([0, 0.03, 0.18, 0.21, 0.25], [0, 62, 62, 56, 0]),
         rng=0,
         **hod,
     )
