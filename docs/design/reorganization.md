@@ -8,13 +8,14 @@ the gallery- right now a ton falls under seeing sound category, but maybe
 most of the voice stuff should be in one category, another category for more
 premitive stimuli, one for spatial hearing, etc."
 
-Status: final draft. On 2026-10-02 Cho accepted D1 (a), D8 to D11, D12 (a)
-and D13 to D14. D2, D3 and D7 were then rewritten after Cho's point that
-"voice is not a signal different in kind": there is no `voice` subpackage,
-synthesizers go to `signals` and analyses of a voice to `views`. D2 to D7
-await Cho's word. Nothing has been moved. Every count below is printed by
-`python tools/count_reorganization_references.py`, run on 2026-10-02 at
-main `b08063c`; numbers that are not are labelled estimates.
+Status: accepted. On 2026-10-02 Cho accepted every decision with its
+recommended option: D1 (a), D2 (a), D3 (a), D4 (a), D5, D6 (a), D7 (a), D8
+to D11, D12 (a), D13 and D14. D2, D3 and D7 were rewritten before acceptance
+after Cho's point that "voice is not a signal different in kind": there is
+no `voice` subpackage, synthesizers go to `signals` and analyses of a voice
+to `views`. Nothing has been moved. Every count below is printed by `python
+tools/count_reorganization_references.py`, run on 2026-10-02 at main
+`b08063c`; numbers that are not are labelled estimates.
 
 ## What is wrong today
 
@@ -170,7 +171,7 @@ GaborFrame` change.
   files touched, but the synthesizers and voice analyses stay spread over
   three layers), and a flat package (Cho split it in PR #12 to see the
   dependencies).
-- **D2. The four vocoders.** Each is a procedure, so its parts go where
+- **D2. The four vocoders.** Accepted (a), 2026-10-02. Each is a procedure, so its parts go where
   their kinds go, and no file is called `vocoder.py`. (a) Recommended:
   - **WORLD's synthesis** to `signals/world.py`, with the helpers it shares
     with the analysis (WORLD's noise stream `world_randn`, `world_fft_size`,
@@ -193,7 +194,7 @@ GaborFrame` change.
   move with no code change, but the synthesizer then sits away from Klatt
   for a reason of imports only. (c) WORLD whole in `views/world.py`: the port
   stays in one file, but a synthesizer sits among the views, against D13.
-- **D3. No `voice` subpackage.** A voice is made and measured with the same
+- **D3. No `voice` subpackage.** Accepted (a), 2026-10-02. A voice is made and measured with the same
   tools as any other sound (Cho, 2026-10-02: "voice is not a signal
   different in kind"), so `analysis/voice.py` splits by kind:
   `GridEnvelope` and `warp_frequency` (which moves any envelope along
@@ -204,7 +205,7 @@ GaborFrame` change.
   branch (this proposal's earlier draft): voice code in one place, but it
   calls voice a different kind of sound, and the tracker and envelope would
   sit outside `views` though they are views.
-- **D4. The phase vocoder stays in `stimuli`.** It is neither a frame nor a
+- **D4. The phase vocoder stays in `stimuli`.** Accepted (a), 2026-10-02. It is neither a frame nor a
   view: its analysis is an STFT with an instantaneous frequency per bin, and
   what it is for is changing a sound (duration, pitch, partials), with a
   resynthesis that is not exact after a change. (a) Leave it in
@@ -214,11 +215,11 @@ GaborFrame` change.
   SciPy's `ShortTimeFFT` directly); its analysis would then be a view, close
   kin to the reassigned spectrogram, and `time_stretch` and `pitch_shift`
   procedures on it. Not now: a change to working code with no new behaviour.
-- **D5. Where the cepstrum and MFCCs live.** In `views`, with the other
+- **D5. Where the cepstrum and MFCCs live.** Accepted, 2026-10-02. In `views`, with the other
   one-way analyses. Package and gallery need not mirror each other: the
   gallery groups by what one listens to (its Voices group holds the cepstrum
   page, D8), the package by what a thing is.
-- **D6. Old import paths.** (a) No compatibility modules; the release
+- **D6. Old import paths.** Accepted (a), 2026-10-02. (a) No compatibility modules; the release
   notes of the next version (0.4.0) list every moved path (recommended, and
   what PR #12 did). Of the moved modules, 10 shipped in 0.3.0
   (`analysis/cepstrum`, `envelopes`, `filterbank`, `frames`, `modulation`,
@@ -226,7 +227,7 @@ GaborFrame` change.
   `spatialization`), so only those deep paths can be in anyone's code; the
   other 8 were added after the release. (b) Thin modules at the old paths
   that re-export and warn, removed one version later.
-- **D7. The LF source and Klatt in `signals`.** `signals` becomes
+- **D7. The LF source and Klatt in `signals`.** Accepted (a), 2026-10-02. `signals` becomes
   everything that makes a sound from parameters.
   - **The LF source** into `signals/generators.py` beside `pulse_train`
     (Cho, 2026-10-02: "is it really inadvisable to put lf in generators
