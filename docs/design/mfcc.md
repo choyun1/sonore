@@ -454,8 +454,9 @@ The tests compare with Kaldi in two settings (plain, and Kaldi's window,
 bins, low frequency and lifter), to 1e-6 and 1e-5 of the largest value,
 which leaves about seven and four times C10's float32 differences. Kaldi's
 DC removal, in-window pre-emphasis and energy in place of c0 are not
-reproduced (D3, D6). If Cho wants Kaldi's defaults reproduced too, a
-`kaldi_front_end` option would add the three; it is not built.
+reproduced (D3, D6). A `kaldi_front_end` option that would add the three
+was offered; Cho declined it on 2026-10-02, so they stay a documented,
+measured difference.
 `tools/make_htk_fixtures.py` stays, for when HTK's site is back.
 
 ## API sketch
