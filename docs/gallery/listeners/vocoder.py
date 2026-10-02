@@ -27,6 +27,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Noise or tones](#h-noise-or-tones): what carries the envelopes.
 # - [Pitch from the envelope](#h-pitch-from-the-envelope): the weak temporal pitch cue an implant
 #   leaves.
+# - [A higher voice](#h-a-higher-voice): the sentence read by a woman, through the same
+#   vocoders.
 # - [A melody](#h-a-melody): music, which cannot do without pitch.
 # - [What this simulation leaves out](#h-what-this-simulation-leaves-out): current spread,
 #   insertion depth, and the rest.
@@ -216,6 +218,43 @@ fig, playhead = show(vocoded, bands(sentence, 8, env_lowpass=300), "eight bands,
 sound = vocoded
 
 # %% [markdown]
+# ## A higher voice
+#
+# The same sentence read by a woman (slt). Her fundamental, about 150 to 230 Hz here by
+# `so.f0_track`, is higher than the man's, so a temporal cue has to follow faster pulses.
+
+# %%
+sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+track_female = so.f0_track(sentence_female)
+print(f"her F0: {track_female}")
+
+# %% [about]
+# Her sentence as recorded.
+
+# %% [demo cf0] Her sentence
+fig, playhead = show(sentence_female)
+sound = sentence_female
+
+# %% [about]
+# Through eight noise bands with 50 Hz envelopes. As with his sentence, the words come through
+# and the intonation does not; with the pitch gone, the main difference left between the two
+# vocoded voices is where their formants sit.
+
+# %% [demo cf8] Her sentence, eight bands
+vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, rng=8))
+fig, playhead = show(vocoded, bands(sentence_female, 8), "eight bands")
+sound = vocoded
+
+# %% [about]
+# Eight bands with 300 Hz envelopes. Her fundamental is still below the cutoff, so the envelopes
+# pulse with it, as his do. Listen for the intonation, and compare it with his above.
+
+# %% [demo cf8p] Her sentence, eight bands, 300 Hz envelopes
+vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+fig, playhead = show(vocoded, bands(sentence_female, 8, env_lowpass=300), "eight bands, 300 Hz envelopes")
+sound = vocoded
+
+# %% [markdown]
 # ## A melody
 #
 # Speech can be understood without pitch; a melody cannot. The opening of "Twinkle, Twinkle,
@@ -283,7 +322,7 @@ sound = vocoded
 #   [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L473)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentence.
+#   The sentence, by speakers bdl and slt.
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).

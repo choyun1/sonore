@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html" aria-current="page">Source, filter and aperiodicity</a><ul><li><a href="#h-the-vowel-and-code-the-examples-share">The vowel, and code the examples share</a></li><li><a href="#h-buzz-hiss-and-both">Buzz, hiss, and both</a></li><li><a href="#h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the rest</a></li><li><a href="#h-what-world-reports">What WORLD reports</a></li><li><a href="#h-a-sentence">A sentence</a></li><li><a href="#h-listening">Listening</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="aperiodicity.html" aria-current="page">Source, filter and aperiodicity</a><ul><li><a href="#h-the-vowel-and-code-the-examples-share">The vowel, and code the examples share</a></li><li><a href="#h-buzz-hiss-and-both">Buzz, hiss, and both</a></li><li><a href="#h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the rest</a></li><li><a href="#h-what-world-reports">What WORLD reports</a></li><li><a href="#h-a-sentence">A sentence</a></li><li><a href="#h-listening">Listening</a></li><li><a href="#h-a-higher-voice">A higher voice</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -165,7 +165,7 @@ switch. At every frequency it says what share of the power is noise rather than 
 <p>with <span class="tex">N</span> the power of the noise and <span class="tex">P</span> that of the harmonics at <span class="tex">f</span>. The buzz is <span class="tex">A = 0</span>
 everywhere and the hiss is <span class="tex">A = 1</span>; a real voice is in between, and usually more so at high
 frequencies, so it can be clearly periodic at 500 Hz and mostly noise at 5 kHz.</p>
-<ul><li><a href="#h-buzz-hiss-and-both">Buzz, hiss, and both</a>: a breathy vowel whose aperiodicity is known, and why the filter does not change it.</li><li><a href="#h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the rest</a>: measuring the share of noise directly.</li><li><a href="#h-what-world-reports">What WORLD reports</a>: D4C, WORLD's measure, and why it differs.</li><li><a href="#h-a-sentence">A sentence</a>: both measures on recorded speech.</li><li><a href="#h-listening">Listening</a>: the sentence rebuilt by WORLD's synthesis with each aperiodicity, with none, and with nothing else.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
+<ul><li><a href="#h-buzz-hiss-and-both">Buzz, hiss, and both</a>: a breathy vowel whose aperiodicity is known, and why the filter does not change it.</li><li><a href="#h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the rest</a>: measuring the share of noise directly.</li><li><a href="#h-what-world-reports">What WORLD reports</a>: D4C, WORLD's measure, and why it differs.</li><li><a href="#h-a-sentence">A sentence</a>: both measures on recorded speech.</li><li><a href="#h-listening">Listening</a>: the sentence rebuilt by WORLD's synthesis with each aperiodicity, with none, and with nothing else.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the breathy vowel at twice the pitch, and the sentence read by a woman.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -592,13 +592,148 @@ sound = finish(so.world_synthesize(harvest, sentence_envelope, noise_only))
 fig, playhead = show(sound, &quot;so.world_synthesize with A = 1&quot;, fmax=8000)</code></pre></details>
 </article>
 </section>
+<section aria-labelledby="h-a-higher-voice">
+<h2 id="h-a-higher-voice">A higher voice</h2>
+<p>Women's voices sit about half an octave to an octave above men's, so their harmonics are
+further apart, and both measures have fewer of them to work with. The breathy vowel again,
+made the same way but at 230 Hz, twice the pitch, with a woman's formants for "hod" (average
+F1 to F3 from Hillenbrand et al., 1995). The noise is again as strong as the harmonics at 4 kHz,
+so the truth has the same shape as before.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">F0_HIGH = 230.0
+HOD_WOMEN = [(936, 60), (1551, 90), (2815, 150), (4100, 200), (4900, 250)]
+harmonic_numbers_high = np.arange(1, int(0.45 * FS / F0_HIGH) + 1)
+buzz_high = so.harmonic_complex(
+    DUR, FS, F0_HIGH, harmonics=harmonic_numbers_high, amplitudes=lambda t, f: source_gain(f)
+)
+scale_high = 1 / np.sqrt(np.sum(source_gain(harmonic_numbers_high * F0_HIGH) ** 2) / 2)
+
+
+def harmonic_density_high(f):
+    return (scale_high * source_gain(f)) ** 2 / 2 / F0_HIGH
+
+
+noise_density_high = harmonic_density_high(4000.0)
+hiss_high = so.gaussian_noise(DUR, FS, rng=1) * np.sqrt(noise_density_high * FS / 2)
+vowel_high = buzz_high + hiss_high
+for freq, bandwidth in HOD_WOMEN:
+    vowel_high = so.resonator(vowel_high, freq, bandwidth)
+track_high = (window_times, np.full(len(window_times), F0_HIGH))
+residual_high = so.harmonic_aperiodicity(vowel_high, track_high)
+d4c_high = so.d4c(vowel_high, track_high)
+n_low, n_high = len(harmonic_numbers), len(harmonic_numbers_high)
+print(f&quot;harmonics below 7.2 kHz: {n_low} at {F0:.0f} Hz, {n_high} at {F0_HIGH:.0f} Hz&quot;)</code></pre></details><pre class="out">harmonics below 7.2 kHz: 62 at 115 Hz, 31 at 230 Hz</pre></div>
+
+<article class="still" id="d-ap14">
+  <div class="about">
+    <h3>Both measures at twice the pitch</h3>
+    <div class="desc"><p>Both measures at 115 Hz (thin lines, as above) and at 230 Hz (thick lines), against the truth,
+which is the same at both pitches. The harmonic residual fits half as many harmonics at the
+higher pitch, in a window four of its shorter periods long; D4C's single band at 3 kHz gets a
+different F0 correction.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap14_both_measures_at_twice_the_pitch.png" width="1000" height="340" alt="Both measures at twice the pitch" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color=&quot;k&quot;, lw=2.5, alpha=0.35, label=&quot;truth&quot;)
+for share, color in [(residual_share, &quot;C3&quot;), (d4c_share, &quot;C0&quot;)]:
+    ax.plot(share.f, 10 * np.log10(share.share[0][:, inside].mean(axis=1)), color=color, lw=0.8, alpha=0.6)
+for share, color, label in [
+    (residual_high, &quot;C3&quot;, &quot;so.harmonic_aperiodicity&quot;),
+    (d4c_high, &quot;C0&quot;, &quot;so.d4c (WORLD)&quot;),
+]:
+    mean_share = share.share[0][:, inside].mean(axis=1)
+    ax.plot(share.f, 10 * np.log10(mean_share), color=color, lw=2, label=f&quot;{label}, {F0_HIGH:.0f} Hz&quot;)
+ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Share of noise (dB)&quot;, xlim=(0, 7200), ylim=(-62, 3))
+ax.set_title(f&quot;The breathy vowel at {F0:.0f} Hz (thin) and {F0_HIGH:.0f} Hz (thick)&quot;)
+ax.legend(loc=&quot;lower right&quot;, fontsize=8)</code></pre></details>
+</article>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">truth_high_db = []
+envelope_high = so.cheaptrick(vowel_high, track_high)
+weights_high = envelope_high.data[0][:, inside].mean(axis=1)
+for low, high in zip(band_edges[:-1], band_edges[1:], strict=True):
+    in_band = (envelope_high.f &gt;= low) &amp; (envelope_high.f &lt; high)
+    share = np.sum(true_aperiodicity(envelope_high.f[in_band]) * weights_high[in_band]) / np.sum(
+        weights_high[in_band]
+    )
+    truth_high_db.append(10 * np.log10(share))
+print(f&quot;{&#x27;Share of noise [dB], band [Hz]&#x27;:&lt;34}{bands}&quot;)
+print(f&quot;{&#x27;truth&#x27;:&lt;34}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in truth_high_db))
+for name, measure in [(&quot;harmonic residual&quot;, so.harmonic_aperiodicity), (&quot;D4C&quot;, so.d4c)]:
+    shares = measure(vowel_high, track_high).bands(band_edges, envelope_high)[0][:, inside].mean(axis=1)
+    print(
+        f&quot;{name + f&#x27;, {F0_HIGH:.0f} Hz&#x27;:&lt;34}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in 10 * np.log10(shares))
+    )</code></pre></details><pre class="out">Share of noise [dB], band [Hz]         0-1000  1000-2000  2000-4000  4000-7000
+truth                                   -12.3       -9.7       -4.7       -2.8
+harmonic residual, 230 Hz               -18.6      -11.5       -5.4       -3.5
+D4C, 230 Hz                             -44.2      -35.5      -10.8       -5.3</pre></div>
+<p>The same sentence read by a woman (CMU ARCTIC, speaker slt). There is no stored Harvest track
+for this recording, so the pitch comes from <code>so.f0_track</code>; the analysis is still WORLD's.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+track_female = so.f0_track(sentence_female)
+envelope_female = so.cheaptrick(sentence_female, track_female)
+d4c_female = so.d4c(sentence_female, track_female)
+residual_female = so.harmonic_aperiodicity(sentence_female, track_female)</code></pre></details></div>
+
+<article class="still" id="d-ap15">
+  <div class="about">
+    <h3>Envelope and aperiodicities of a higher voice</h3>
+    <div class="desc"><p>Her envelope and the two aperiodicities, drawn as for the man's sentence above.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap15_envelope_and_aperiodicities_of_a_higher_voice.png" width="1000" height="720" alt="Envelope and aperiodicities of a higher voice" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, axes = plt.subplots(3, 1, figsize=(10, 7.2), sharex=True, layout=&quot;constrained&quot;)
+envelope_female.plot(axes[0], db_range=70)
+axes[0].set_title(&quot;Spectral envelope (CheapTrick), slt&quot;)
+for ax, aperiodicity, title in [
+    (axes[1], d4c_female, &quot;Aperiodicity: so.d4c (WORLD), slt&quot;),
+    (axes[2], residual_female, &quot;Aperiodicity: so.harmonic_aperiodicity, slt&quot;),
+]:
+    aperiodicity.plot(ax, db_range=40)
+    ax.set_title(title)
+for ax in axes:
+    ax.set_xlim(0, sentence_female.duration)
+axes[2].set_xlabel(&quot;Time (s)&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-ap16" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+  <div class="about">
+    <h3>The sentence, a higher voice</h3>
+    <div class="desc"><p>Her sentence, for reference.</p></div>
+    <audio controls preload="metadata" src="audio/ap16_the_sentence_a_higher_voice.flac"></audio>
+    <p class="file">ap16_the_sentence_a_higher_voice.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap16_the_sentence_a_higher_voice.png" width="1000" height="420" alt="Plots of the the sentence, a higher voice sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = sentence_female
+fig, playhead = show(sound, &quot;the sentence read by slt&quot;, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-ap17" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]">
+  <div class="about">
+    <h3>Resynthesis with D4C, a higher voice</h3>
+    <div class="desc"><p>WORLD's resynthesis of her sentence with D4C's aperiodicity, on <code>so.f0_track</code>'s pitch.</p></div>
+    <audio controls preload="metadata" src="audio/ap17_resynthesis_with_d4c_a_higher_voice.flac"></audio>
+    <p class="file">ap17_resynthesis_with_d4c_a_higher_voice.flac, 2.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap17_resynthesis_with_d4c_a_higher_voice.png" width="1000" height="420" alt="Plots of the resynthesis with d4c, a higher voice sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(track_female, envelope_female, d4c_female))
+fig, playhead = show(sound, &quot;so.world_synthesize with so.d4c, slt&quot;, fmax=8000)</code></pre></details>
+</article>
+</section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
 <ul><li><strong>WORLD's pitch tracker.</strong> Harvest is not part of sonore; its track is stored with the sentence. With <code>so.f0_track</code> instead, the analysis is still WORLD's but the numbers are not the ones WORLD would give, which <code>so.DIFFERENCES_FROM_WORLD</code> notes.</li><li><strong>Phase.</strong> WORLD's synthesis gives every pulse a minimum phase, so the waveform within each period is not the original's. Its authors call minimum phase inappropriate for low-pitched speech, where differences of phase are easier to hear.</li><li><strong>Jitter and shimmer.</strong> A pitch track smoothed over 5 ms time windows cannot follow cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis can only carry it as noise.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L398"><code>vocoder.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L457"><code>vocoder.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68">doi:10.21437/Interspeech.2017-68</a>. The stored F0 track.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/vocoder.py#L34"><code>vocoder.world_synthesize</code></a></li></ul>
+<ul><li>Hillenbrand, Getty, Clark &amp; Wheeler (1995). Acoustic characteristics of American English vowels. <em>J. Acoust. Soc. Am.</em> 97(5), 3099–3111. <a href="https://doi.org/10.1121/1.411872">doi:10.1121/1.411872</a>. Women's formants for "hod".</li><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L398"><code>vocoder.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/vocoder.py#L457"><code>vocoder.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68">doi:10.21437/Interspeech.2017-68</a>. The stored F0 track.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/vocoder.py#L34"><code>vocoder.world_synthesize</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/seeing/aperiodicity.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/aperiodicity.py</code>, or a cell at a time.</footer>
 </main>

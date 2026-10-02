@@ -26,6 +26,7 @@ from sonore.analysis.filterbank import (
     subbands,
 )
 from sonore.analysis.frames import Filterbank, Frame, GaborFrame, TVGaborFrame
+from sonore.analysis.mfcc import MFCC
 from sonore.analysis.modspectrogram import ModulationSpectrogram
 from sonore.analysis.modulation import (
     ConstantQModulationFilterbank,
@@ -104,10 +105,12 @@ from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, tim
 from sonore.stimuli.reverb import band_rt60s, measure_rt60, synth_ir
 from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
 from sonore.stimuli.spatialization import (
+    SPEED_OF_SOUND,
     HRIRSet,
     circular_trajectory,
     distance_gain_db,
     hcc_to_rect,
+    hcc_trajectory,
     linear_trajectory,
     move_sound,
     rect_to_hcc,
@@ -118,6 +121,7 @@ from sonore.stimuli.vocoder import world_synthesize
 __version__ = "0.3.1"
 
 __all__ = [
+    "SPEED_OF_SOUND",
     "texture",
     "ConstantQModulationFilterbank",
     "HannModulationFilterbank",
@@ -135,6 +139,7 @@ __all__ = [
     "TVGaborFrame",
     "TVSTFT",
     "Cepstrum",
+    "MFCC",
     "F0Track",
     "f0_track",
     "Aperiodicity",
@@ -194,6 +199,7 @@ __all__ = [
     "lf_harmonics",
     "lf_pulse",
     "linear_chirp",
+    "hcc_trajectory",
     "linear_trajectory",
     "load",
     "load_hrirs",
