@@ -1,7 +1,7 @@
 stimuli
 =======
 
-Stimuli built from the analysis tools: spatial hearing, binaural cues, reverberation, ripples, the phase vocoder and Klatt-style formant synthesis.
+Stimuli built from the analysis tools: spatial hearing, binaural cues, reverberation, ripples, the phase vocoder, Klatt-style formant synthesis and WORLD's synthesis.
 
 ``sonore.stimuli.spatialization``
 ---------------------------------
@@ -37,3 +37,8 @@ Stimuli built from the analysis tools: spatial hearing, binaural cues, reverbera
 ------------------------
 
 .. automodule:: sonore.stimuli.klatt
+
+``sonore.stimuli.vocoder``
+--------------------------
+
+.. automodule:: sonore.stimuli.vocoder
