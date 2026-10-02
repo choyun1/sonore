@@ -229,19 +229,12 @@ glide_times = np.linspace(0, glide_dur, 401)
 glide_f0 = 110 * 2 ** (4 * glide_times / glide_dur)  # four octaves, equal steps per second
 
 
-def glide_plot(snd, title):
-    fig, ax = plt.subplots(figsize=(10, 3.2), layout="constrained")
-    so.STFT(snd, win_dur=0.025, hop_dur=0.005).plot(ax, db_range=60, colorbar=False)
-    ax.set(xlim=(0, glide_dur), title=f"{title} (Hann 25 ms spectrogram)")
-    return fig, [ax]
-
-
 # %% [about]
 # Band-limited: `so.sawtooth_wave` on the F0 contour, given as (times, values).
 
 # %% [demo bw1] A band-limited glide
 sound = finish(so.sawtooth_wave(glide_dur, glide_fs, (glide_times, glide_f0)))
-fig, playhead = glide_plot(sound, "so.sawtooth_wave, 110 to 1760 Hz")
+fig, playhead = show(sound, fmax=8000, win_dur=25e-3)
 
 # %% [about]
 # Naive: `scipy.signal.sawtooth` of the running phase. The aliases are the lines that slope
@@ -252,7 +245,7 @@ n_samples = int(round(glide_dur * glide_fs))
 f0_per_sample = np.interp(np.arange(n_samples) / glide_fs, glide_times, glide_f0)
 running_phase = 2 * np.pi * np.cumsum(f0_per_sample) / glide_fs
 sound = finish(so.Sound(sawtooth(running_phase), glide_fs))
-fig, playhead = glide_plot(sound, "scipy.signal.sawtooth of the phase, 110 to 1760 Hz")
+fig, playhead = show(sound, fmax=8000, win_dur=25e-3)
 
 # %% [markdown]
 # ## References
