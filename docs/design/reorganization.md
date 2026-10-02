@@ -311,6 +311,43 @@ GaborFrame` change.
   (`sonore.analysis.frames.gabor`). (c) Keep `analysis` as one subpackage
   and only regroup its files along the same line: no new rule for the test
   to hold.
+- **D13. Only frames synthesize.** `Frame.synthesize` is already abstract
+  in the frame base class (`analysis/frames.py:86`), so every frame has it.
+  Views get a base class of their own, `View`, with a class attribute
+  `discards` (one sentence, the mathematical reason the view cannot be
+  inverted) and a `synthesize` that raises `NotInvertibleError`, a subclass
+  of `NotImplementedError`, with that sentence as its message (Cho,
+  2026-10-02: views should refuse "with the mathematical reason when you try
+  to use synthesize"). It raises rather than returns `NotImplemented`:
+  Python reserves that return value for operators such as `*`, where it
+  means "try the other operand", and a method returning it would hand the
+  caller a sentinel instead of an error. A test checks that every `View`
+  subclass has a non-empty `discards` and that its `synthesize` raises.
+  Proposed sentences (to be checked against each docstring when built):
+
+  | View | Discards |
+  |---|---|
+  | `Spectrum` | the phase, and all timing: it is a time average |
+  | `TFPower` | the phase of every coefficient |
+  | `ReassignedSpectrogram` | the phase, and moves energy to new positions many-to-one, so different signals give the same picture |
+  | `Envelope`, `Envelopes` | the fine structure: only the Hilbert magnitude of each band is kept |
+  | `ModulationSpectrum` | the phase of the modulations and the fine structure under them |
+  | `ModulationSpectrogram` | the same, per time window |
+  | `Cepstrum` | the phase: the real cepstrum is the transform of the log magnitude |
+  | `MFCC` | the phase, the detail inside each mel band, and every coefficient past the last kept |
+  | `GridEnvelope` | the harmonics and everything finer than the envelope's smoothing |
+
+  Views that already make a sound keep doing so under names that say what
+  they assume, never `synthesize`: `Cepstrum.to_sound` borrows the phase of
+  the STFT the cepstrum was computed from (exact only for an unliftered
+  cepstrum with `phase="original"`, as its docstring says), `Spectrum.to_noise`
+  draws a new noise with that spectrum, and `Envelopes * Subbands` imposes
+  envelopes on a carrier. Each docstring says it is not an inverse.
+  The modulation filterbanks are tools that make views, not views
+  themselves, so they get no `synthesize` at all. (a) As above
+  (recommended). (b) No `View` base class; views simply have no
+  `synthesize`, and calling it fails with Python's plain `AttributeError`,
+  which gives no reason.
 
 ## Order
 
@@ -318,7 +355,7 @@ The reverb speech examples (PR #78) and the Changing a voice page (PR #77)
 merged before this proposal was last measured, so they are counted above.
 A folder move and an edit to the same script in two open PRs conflict, so:
 
-1. Cho decides D1 to D12.
+1. Cho decides D1 to D13.
 2. Any gallery PR still open then merges first.
 3. **Gallery PR** (small, what readers see): `git mv` the nine scripts,
    rewrite TOPICS and the comment above it, patch the menus and sidebar of
@@ -331,7 +368,9 @@ A folder move and an edit to the same script in two open PRs conflict, so:
    API reference pages, layout.md and its diagram, the layer test, the
    README module table and References tags
    (`tools/update_readme_source_links.py` rewrites line anchors but not file
-   paths, so the paths are edited first). Checks: the full test suite, the
+   paths, so the paths are edited first). D13's `View` base class and error
+   come in a separate PR after this one, since they add behaviour and the
+   move should add none. Checks: the full test suite, the
    texture bit-for-bit hash against the previous commit, every gallery
    script run to its last cell without writing media, and a grep for each
    old dotted path returning nothing outside the release notes and design
