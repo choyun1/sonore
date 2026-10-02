@@ -19,9 +19,14 @@ Together they are the two numbers of the classic "change gender" manipulation
 (Praat's command of that name takes a formant shift ratio and a new pitch
 median, among others). The question the design has to settle beyond the
 two operations is what happens to the aperiodicity when the envelope moves.
+Because the operations do not care where their inputs came from, the same
+harness also compares the methods: which F0 tracker and which envelope
+resynthesize a voice best, unchanged and changed ("Comparing methods").
 
 Status: proposal, 2026-10-02. No library code until Cho answers the
-decisions below. Every number is printed by `tools/check_voice_change_claims.py`.
+decisions below. Every number is printed by
+`tools/check_voice_change_claims.py` (C1–C7) or
+`tools/compare_voice_methods.py` (C8–C11).
 The checker measures what the library's own analyses see; whether the
 changed voices sound right is for Cho to judge by listening, and nothing
 here claims it.
@@ -53,10 +58,11 @@ here claims it.
   `amplitudes(t, f)` point by point (one amplitude per sample and
   harmonic, `t` and `f` the same shape), not on a grid. So sonore has two
   envelope conventions, and the cepstral envelope has neither.
-- **MFCCs are not in sonore.** An envelope from MFCCs would be a
-  reconstruction (mel bands and a truncated cosine transform discard
-  detail), so it would enter as one more envelope source once someone
-  designs that view; nothing here depends on it.
+- **MFCCs are being designed in PR #73.** Its `mfcc.envelope(f)` is the
+  smoothed envelope the kept coefficients imply (mel bands and a
+  truncated cosine transform discard detail), offered for display. It
+  enters here as one more envelope source (D3); "Comparing methods"
+  prototypes it until `so.MFCC` exists.
 
 ## How the claims are verified
 
@@ -91,6 +97,12 @@ sampled at WORLD's time windows and frequencies) or `harmonic_complex`
 (the envelope sampled once on a 5 ms by 10 Hz grid and read point by
 point, as the Voices from harmonics gallery page does). Each changed output
 is compared with the same sources synthesized unchanged.
+
+A second script, `tools/compare_voice_methods.py`, compares the methods
+against each other ("Comparing methods" below); it also runs in about a
+minute, and uses pyworld 0.3.5 (development only, as in
+`crosscheck_world_vocoder.py`) for Harvest, which it skips if pyworld is
+missing.
 
 The checker runs in about a minute (NumPy 2.4.6, SciPy 1.17.1).
 
@@ -211,6 +223,102 @@ interface: a warped envelope is any envelope read at `f / ratio`, and the
 synthesizers see an envelope like any other. Sources differ in what the
 output sounds like, which these numbers do not judge. [check]
 
+## Comparing methods
+
+Because the operations take any F0 contour and any envelope, the same
+harness can ask which tracker and which envelope resynthesize a voice
+best, unchanged and changed (Cho, 2026-10-02: "mixing and matching F0 and
+envelope methods, see how well each one works at resynthesizing or voice
+warping"). `tools/compare_voice_methods.py` does this. The claims below
+are tagged [compare].
+
+**Sources.** F0: the truth (synthetic vowels only), `so.f0_track`,
+Harvest, `Cepstrum.f0`. Envelope: the truth (synthetic only), CheapTrick,
+the cepstral lifter, and a 13-coefficient MFCC envelope. MFCCs are being
+designed in PR #73; until `so.MFCC` exists, the script prototypes the
+smoothed envelope that PR describes (26 HTK bands on a 25 ms Hamming STFT,
+10 ms hop, 13 coefficients, inverse DCT, linear in mel between band
+centres), from its text, not its code. Synthesis: `world_synthesize` (with
+D4C measured on the same F0) and `harmonic_complex` (no noise).
+
+**Scores.** On synthetic vowels the truth is exact, so the score uses none
+of the methods compared: the output's harmonics are measured by least
+squares at their known frequencies over 0.2–0.6 s and compared, level
+removed, with the true envelope over 100–5000 Hz (after a change, with the
+true envelope read at `f / 1.2` at harmonics of 1.5 F0). Twelve vowels:
+heed, hod and who'd with men's formants at F0 110 and 150 Hz and with
+women's at 200 and 250 Hz. On recordings there is no truth; the score is
+the level-free distance between the original's and the output's 40-band
+log mel spectra (median over voiced time windows), which smooths the way
+the MFCC envelope does and so favours it. It is a sanity check, not a
+ranking.
+
+**C8. The envelope decides the result; the F0 source and the synthesizer
+barely matter on steady vowels.** [compare] Median (worst) error over the
+twelve vowels, true F0, `world_synthesize`:
+
+| envelope | resynthesis | pitch × 1.5, formants × 1.2 |
+|---|---|---|
+| CheapTrick | 0.66 dB (0.86) | 1.11 dB (2.18) |
+| cepstral | 2.62 dB (3.37) | 2.18 dB (3.32) |
+| MFCC (13) | 5.12 dB (8.88) | 4.39 dB (6.31) |
+
+With `harmonic_complex` the same envelopes give 0.66, 2.73 and 5.14 dB
+(within 0.11 dB of WORLD's), and the truth gives 0.00 dB, so the score
+itself adds nothing. Swapping the true F0 for Harvest or `Cepstrum.f0`
+changes the CheapTrick row by at most 0.02 dB; their F0 errors are 0.02%
+and 0.04% (median). By voice, CheapTrick's resynthesis error is 0.51 dB on
+the men's vowels and 0.80 dB on the women's; the cepstral envelope's 1.56
+and 3.20 dB; the MFCC envelope's 5.85 and 4.34 dB.
+
+**C9. A wobbling F0 costs more than its median error suggests.** [compare]
+`so.f0_track` has a median F0 error of 0.08%, but on women's heed at 250
+Hz its estimate wanders between 247 and 252 Hz, and the resynthesis error
+with CheapTrick rises to 3.76 dB (Harvest: 0.86 dB). The output's upper
+harmonics wander with it, up to 50 Hz at 5 kHz, which the fixed-frequency
+score reads as a loss; a listener might hear it as roughness or not at
+all, which only listening can say. On these steady vowels the trackers
+differ in nothing else; their voicing errors on real speech are in
+`f0.md` and `female-voices.md`.
+
+**C10. WORLD's synthesis needs a smooth envelope: given the exact one it
+does worse than given CheapTrick's estimate.** [compare] With the true
+envelope, `world_synthesize`'s resynthesis error is 2.01 dB median and
+7.03 dB worst (men's who'd at 150 Hz), against 0.66 and 0.86 dB with
+CheapTrick. For that vowel, whose envelope spans 95 dB over 50–5000 Hz,
+the error is 7.04 dB at WORLD's FFT size (1024 at 16 kHz), 2.08 dB at 4096
+and 1.86 dB at 16384, so most of it comes from computing the
+minimum-phase response of a deep-valleyed envelope on too few points.
+CheapTrick's estimate is within 0.74 dB of the truth at the harmonics and
+much smoother between them. This matters for method-agnostic synthesis: an
+envelope from another source (a formant model, a hand-drawn one) may need
+a larger FFT or smoothing before WORLD's synthesis, which D4 has to
+handle.
+
+**C11. On the recordings CheapTrick still resynthesizes best, even under a
+score that favours the MFCC envelope.** [compare] Level-free log mel
+distance, median over voiced time windows:
+
+| speaker | F0 from | CheapTrick | cepstral | MFCC (13) |
+|---|---|---|---|---|
+| bdl | `so.f0_track` | 1.70 dB | 3.02 dB | 4.61 dB |
+| bdl | Harvest | 1.58 dB | 2.95 dB | 4.61 dB |
+| bdl | `Cepstrum.f0` | 1.79 dB | 3.18 dB | 4.67 dB |
+| slt | `so.f0_track` | 1.97 dB | 5.09 dB | 5.10 dB |
+| slt | Harvest | 1.97 dB | 5.16 dB | 5.06 dB |
+| slt | `Cepstrum.f0` | 2.27 dB | 5.19 dB | 5.18 dB |
+
+The cepstral envelope loses most on the higher voice (slt), as
+`female-voices.md` found on synthetic vowels. There is no ground truth for
+a voice change on a recording, so changes are compared on the synthetic
+vowels only.
+
+**What this does not say.** Every score is a spectral distance. None says
+how natural, or how much like the target, a voice sounds; that is Cho's
+listening, and a gallery page (D11) would put the mixes side by side to
+hear. Steady synthetic vowels have no consonants, onsets or voicing
+changes, where the F0 trackers differ most.
+
 ## Proposed design
 
 Two functions on two interfaces, both of which sonore already half has:
@@ -308,8 +416,10 @@ large part of what separates bdl from slt.
   time and frequency grid, read as `env(t, f)` with the same interpolation
   as `SpectralEnvelope`, which becomes the case whose grid is WORLD's.
   `Cepstrum` returns one from `envelope_view()` (squared magnitude, its own
-  time windows and frequencies), and any future source (LPC, MFCC
-  reconstruction, a hand-drawn envelope) can too. C7's prototype is this
+  time windows and frequencies), and any future source (LPC, a
+  hand-drawn envelope) can too. PR #73's `mfcc.envelope(f)` takes
+  frequencies only; it would join as `so.GridEnvelope(mfcc.envelope(f),
+  mfcc.t, f)`, or by taking times as well, which is that thread's call. C7's prototype is this
   class.
 - *Leave it to the reader*: wrap the array in a function by hand, as the
   checker does. No new name, but every source needs its own wrapper, and
@@ -322,7 +432,11 @@ large part of what separates bdl from slt.
   sampled at its time windows and frequencies) and reads off-grid F0
   contours onto its time windows; `harmonic_complex` dispatches on
   `amplitudes` (an array, a point-by-point function, or a grid envelope
-  it reads point by point as amplitude). The adaptations are listed in
+  it reads point by point as amplitude). Because WORLD's synthesis
+  distorts a deep-valleyed envelope at its own FFT size (C10), the
+  sampling step either uses a larger FFT when the envelope is not
+  WORLD's own, or says in the docstring that a smooth envelope is
+  expected; which one is part of this decision. The adaptations are listed in
   `DIFFERENCES_FROM_WORLD` only if they change an output WORLD could give,
   which they do not.
 - *An explicit conversion*, `so.to_world_grid(env, aperiodicity)` and
@@ -388,11 +502,25 @@ sample for sample and a test can say so; or accept 1e−16 and test with a
 tolerance.
 
 **D11. A listening gallery page, later.** Proposed, not part of this step:
-"Changing a voice", with the bdl sentence at F0 × 1.5 (formants kept),
+"Changing a voice", with the method comparison of C8–C11 as sounds to
+hear side by side, the bdl sentence at F0 × 1.5 (formants kept),
 formants × 1.2 (pitch kept), both, the bdl-to-slt numbers of C6 beside the
 real slt, the phase vocoder's pitch shift for contrast, and the
 aperiodicity kept and warped. Descriptions would say what the analyses
 measure, and nothing about how it sounds until Cho has listened.
+
+**D12. Where the comparison lives.**
+- *A script in `tools/`* (recommended): `compare_voice_methods.py` as
+  here, rerun when a method is added (the MFCC envelope from PR #73 once
+  `so.MFCC` exists). The scores are choices (which range, which smoothing),
+  and a script states them where they are made.
+- *A library function* (`so.compare_resynthesis(sources, ...)`): reusable
+  on a reader's own recordings; but it would make one scoring rule look
+  official, and the sources are already one line each with the proposed
+  interfaces.
+- *Part of the gallery page* (D11): tables and the sounds side by side,
+  regenerated with the page. The script would still be where the numbers
+  come from.
 
 ## Order
 
@@ -401,7 +529,9 @@ measure, and nothing about how it sounds until Cho has listened.
    synthesizers' dispatch, tests (identity is exact; the
    measured F0 ratio and fitted warp of C2–C4 on a short synthetic vowel),
    README row, CHANGELOG.
-3. The gallery page (D11), as its own PR.
+3. Rerun `tools/compare_voice_methods.py` with `so.MFCC` in place of the
+   prototype once PR #73 lands.
+4. The gallery page (D11), as its own PR.
 
 ## References
 
