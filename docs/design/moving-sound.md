@@ -9,7 +9,12 @@ functions of time such as the sinusoidal azimuth swing of Cho & Kidd
 current method gets right and wrong (measured), a proposed renderer, and
 the decisions for Cho.
 
-Status: proposal. No library code until the decisions below are answered.
+Status: D1–D8 accepted by Cho 2026-10-02, all as recommended. Built as
+`so.move_sound` and `so.hcc_trajectory` (see "As built" below); the
+gallery section is still to come.
+
+"What `move_sound` does today" below describes the renderer before this
+work.
 
 ## Why
 
@@ -409,13 +414,57 @@ and should sound the same (C5).
   at 5 ms against the same shapes switched at 0.5 ms, to show the
   switching left in stage 3 is inaudible.
 
+## As built
+
+- `so.move_sound(sound, trajectory, hrirs, *, room=None, drr_db=0.0,
+  hop=5e-3, speed_of_sound=343.0)` and `so.hcc_trajectory(dist, elev,
+  azim)`, with `spatialize` still the exact path for a still source.
+- Each ear's delay is the interpolated HRIR onset (less the few samples
+  the aligned shapes keep before their onset), looked up every 1 ms and
+  smoothed with a cubic spline. Each output sample's emission time is
+  found by fixed-point iteration to 1e-12 s, and the sound is read there
+  with the 32-tap Kaiser sinc. Measured on tones at 48 kHz, its error is
+  about −90 dB up to 16 kHz and −78 dB at 20 kHz, rolling off above that,
+  so C3's "flat −97 dB" holds only to about a third of the sampling rate.
+- Shapes are interpolated every `hop` along the path and cross-faded with
+  raised cosines in each ear's own emission time, so the cross-fades
+  follow the sound as it arrives at that ear.
+- Interpolation between measured distances changed from a 3-D Delaunay
+  triangulation to interpolating by direction on the two measured
+  distances around the point, then linearly in distance. A Delaunay
+  triangulation of points on spheres covers only the polyhedron inside
+  the outermost sphere, so a point at exactly the outermost distance
+  between two measured directions fell outside it and failed. `HRIRSet.at`
+  uses the same interpolation, and `HRIRSet.distances` lists the measured
+  distances.
+- Beyond the measured distances (and, for a set with one distance, on
+  either side of it), `spatialize` and `move_sound` use the HRIR of the
+  nearest measured distance in the same direction, delayed by the extra
+  distance over the speed of sound and scaled by the ratio of distances.
+- The room tail is scaled so that the direct-to-reverberant ratio at 1 m,
+  averaged over directions and ears, is `drr_db`. It is driven by the
+  sound read at the average of the two ears' emission times.
+- Tests (`tests/stimuli/test_spatialization.py`): a 1 kHz tone passing at
+  15 m/s through impulse HRIRs matches the closed form to better than
+  −80 dB; the three trajectory forms agree to 1e-12; a still source
+  matches `spatialize` to better than −90 dB; past the measured distance,
+  doubling the distance gives −6.02 dB and 2 m / 343 m/s more delay; and
+  the room tail's level stays put while the direct sound falls 6 dB.
+- On Cho's PKU-IOA files (all eight distances), noise approaching from
+  3 m to 30 cm straight ahead over 4 s follows 1/r to within 1.4 dB,
+  measured in 0.1 s time windows. Crossing the outermost distance, 1.6 m,
+  the level rises 0.38 dB in a 0.1 s time window where 1/r predicts 0.37.
+  The largest departures, near 1.3 m, are in the data: straight ahead,
+  the measured HRIR energy with 1/r removed is −5.2, −4.7 and −5.5 dB at
+  1, 1.3 and 1.6 m, and the renderer passes that through.
+
 ## Order
 
-1. Answer D1–D8.
-2. Trajectory forms and `hcc_trajectory`.
-3. Propagation stage, with the claim tests.
-4. Extension beyond the outermost shell (D4).
-5. Room tail.
+1. Answer D1–D8 (done).
+2. Trajectory forms and `hcc_trajectory` (done).
+3. Propagation stage, with the claim tests (done).
+4. Extension beyond the outermost shell (D4) (done).
+5. Room tail (done).
 6. Gallery section, built locally; README roadmap and Done.
 
 ## Out of scope
