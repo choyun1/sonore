@@ -8,8 +8,11 @@ the gallery- right now a ton falls under seeing sound category, but maybe
 most of the voice stuff should be in one category, another category for more
 premitive stimuli, one for spatial hearing, etc."
 
-Status: partly accepted. On 2026-10-02 Cho accepted D1 (a), D8 to D11,
-D12 (a) and D13 to D14; D2 to D7 are open. Nothing has been moved. Every count below is printed by
+Status: final draft. On 2026-10-02 Cho accepted D1 (a), D8 to D11, D12 (a)
+and D13 to D14. D2, D3 and D7 were then rewritten after Cho's point that
+"voice is not a signal different in kind": there is no `voice` subpackage,
+synthesizers go to `signals` and analyses of a voice to `views`. D2 to D7
+await Cho's word. Nothing has been moved. Every count below is printed by
 `python tools/count_reorganization_references.py`, run on 2026-10-02 at
 main `b08063c`; numbers that are not are labelled estimates.
 
@@ -24,16 +27,20 @@ main `b08063c`; numbers that are not are labelled estimates.
 | `stimuli/phasevocoder.py` | the phase vocoder: `pv_analyze`, `time_stretch`, `pitch_shift` |
 | `analysis/filterbank.py`, `noise_vocode` | the channel vocoder of the cochlear-implant page |
 
-WORLD is split across two layers only because the layer names say what a
-module is *for* (analysis, stimuli) as well as what it may import. Nothing
-in the layer rule forces the split: `world_synthesize` imports only
-`analysis.vocoder`, `analysis.voice` and `core.sound`, all of which an
-`analysis` module may import.
+Each is a procedure (take a sound apart, change it, put a sound together)
+rather than one kind of object, so they need no shared home: each part goes
+where its kind goes (D2).
 
-**Voice code is spread over three layers.** The LF glottal pulse is in
-`signals`, the F0 tracker, WORLD's analysis and the pitch and formant changes
-are in `analysis`, and the Klatt synthesizer and WORLD's synthesis are in
-`stimuli`. A reader looking for "voice" has to know the layer rule first.
+**Synthesizers are spread over two layers.** `glottal_source` is in
+`signals`, but the Klatt synthesizer and WORLD's synthesis are in `stimuli`,
+though all three make a sound from parameters. The LF source is already a
+`harmonic_complex` with closed-form coefficients (`signals/glottal.py:277`),
+like `square_wave`, `sawtooth_wave` and `pulse_train`.
+
+**Analyses of a voice sit apart from the other analyses.** The F0 tracker,
+CheapTrick and D4C describe any periodic or harmonic sound, and the pitch
+and formant changes act on any F0 contour and any envelope, yet they read as
+a separate topic (`analysis/vocoder.py`, `analysis/voice.py`).
 
 **Some modules sit in a layer they don't need.** The channel vocoder is a
 stimulus but lives in `analysis/filterbank.py`. The phase vocoder is in
@@ -61,45 +68,48 @@ stimuli < texture, and fails when a module imports from a layer above its
 own. Cho chose that in PR #12 so the direction of dependencies shows in the
 file tree. The proposal keeps that guarantee and changes only its shape:
 a trunk that everything builds on, with `analysis` divided into `frames` and
-`views` (D12), and branches by topic that build on the trunk and never on
-each other.
+`views` (D12), and three branches by topic that build on the trunk and never
+on each other.
 
 ```
-            voice    spatial    stimuli    texture       (branches: do not import each other)
-               \        |          |          /
-                ----------- views ------------           (one-way analyses)
-                            |
-                          frames                          (invertible analyses)
-                            |
-                         signals
-                            |
-                          core
+              spatial        stimuli        texture      (branches: do not import each other)
+                   \            |            /
+                    --------- views ---------            (one-way analyses)
+                                |
+                             frames                      (invertible analyses)
+                                |
+                             signals                     (sounds from parameters: generators,
+                                |                         processing, Klatt, WORLD's synthesis)
+                              core
 ```
 
 The measured imports allow it. Resolved name by name to where each name
 would go, every import between subpackages points down the trunk or from a
-branch to the trunk (views to frames 10, signals 1, core 10; frames to core
-9; voice to signals 11, core 8; spatial to views 1, frames 2, signals 4,
-core 7; stimuli to views 1, frames 2, signals 2, core 5; texture to views 2,
-frames 2, core 5). No branch imports another. Two point up, both inside a
-method so that calls chain in a notebook: `Sound.envelope()`, which the test
-already allows by name, and `Subbands.envelopes()`, which would be added
-beside it (frames to views). Not counted, because it is inside today's
-`analysis/vocoder.py`: WORLD's `SpectralEnvelope` and `Aperiodicity`
-subclass the helper `_FrequencyView`, which D3 moves to `views`, so voice
-would also import from views.
+branch to the trunk (signals to core 13; frames to core 9; views to frames
+10, signals 1, core 12; spatial to views 1, frames 2, signals 4, core 7;
+stimuli to views 1, frames 2, signals 2, core 5; texture to views 2, frames
+2, core 5). No branch imports another. Two point up, both inside a method so
+that calls chain in a notebook: `Sound.envelope()`, which the test already
+allows by name, and `Subbands.envelopes()`, which would be added beside it
+(frames to views). Three more would point up and are removed instead (D2):
+WORLD's synthesis checks the types `SpectralEnvelope` and `Aperiodicity`,
+and its F0 reader checks `F0Track`; in `signals` it accepts them by what
+they provide, as `harmonic_complex` and `klatt_synthesize` already accept
+an `F0Track` without importing it. Not counted, because today they are
+calls inside one module: CheapTrick and D4C would import WORLD's shared
+helpers (noise stream, FFT size, MATLAB rounding) from `signals/world.py`,
+which points down.
 
 ## Proposed layout
 
 | Subpackage | Modules | What it is | Imports from |
 |---|---|---|---|
-| `core` | `sound`, `units`, `utils`, `fft` | unchanged | nothing in sonore |
-| `signals` | `generators`, `processing` | making and editing sounds | core |
+| `core` | `sound`, `units`, `utils`, `fft` | unchanged, plus the mel scale (D14) | nothing in sonore |
+| `signals` | `generators`, `processing`, `klatt`, `world` | sounds from parameters: waveforms (the LF source among them), filters, and two synthesizers | core |
 | `frames` | `frame`, `filterbank`, `gabor`, `mask` | invertible analyses, their coefficients, and changes to coefficients with exact least-squares resynthesis | core, signals |
-| `views` | `spectrum`, `reassigned`, `envelopes`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `spectral_envelope` | one-way analyses: each says what it drops | core, signals, frames |
-| `voice` | `glottal`, `klatt`, `f0`, `world`, `aperiodicity`, `change` | voices: made from parameters, measured, rebuilt and changed | the trunk |
+| `views` | `spectrum`, `reassigned`, `envelopes`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `f0`, `spectral_envelope`, `aperiodicity` | one-way analyses: each says what it drops | core, signals, frames |
 | `spatial` | `binaural`, `spatialization`, `hrir_data`, `reverb` | two ears, heads and rooms | the trunk |
-| `stimuli` | `ripples`, `channel_vocoder`, `phasevocoder` | sounds made by shaping or changing other sounds | the trunk |
+| `stimuli` | `ripples`, `channel_vocoder`, `phasevocoder` | sounds made by shaping or changing other sounds through an analysis | the trunk |
 | `texture` | `stats`, `grad`, `synth` | unchanged | the trunk |
 | `plotting.py` | | unchanged | imported only inside `.plot()` |
 
@@ -112,35 +122,37 @@ outside the module itself (each would need an edit):
 | `analysis/filterbank.py` | `frames/filterbank.py`; `noise_vocode` to `stimuli/channel_vocoder.py` | 22 |
 | `analysis/representations.py` | `frames/gabor.py` (`STFT`, `TVSTFT`), `frames/mask.py`, `views/spectrum.py`, `views/reassigned.py`, `views/modulation.py` (`ModulationSpectrum`) | 17 |
 | `analysis/cepstrum.py` | `views/cepstrum.py` | 12 |
-| `analysis/mfcc.py` | `views/mfcc.py` | 10 |
+| `analysis/mfcc.py` | `views/mfcc.py`; `freq_to_mel`, `mel_to_freq` to `core/utils.py` (D14) | 10 |
 | `analysis/envelopes.py` | `views/envelopes.py` | 11 |
 | `analysis/modulation.py` | `views/modulation.py` | 11 |
 | `analysis/modspectrogram.py` | `views/modspectrogram.py` | 7 |
-| `analysis/f0.py` | `voice/f0.py` | 13 |
-| `analysis/vocoder.py` | `voice/world.py`, `voice/aperiodicity.py`; helpers to `views/spectral_envelope.py` | 14 |
-| `stimuli/vocoder.py` | `voice/world.py` | 12 |
-| `analysis/voice.py` | `views/spectral_envelope.py` (`GridEnvelope`), `voice/change.py` | 8 |
-| `signals/glottal.py` | `voice/glottal.py` | 7 |
-| `stimuli/klatt.py` | `voice/klatt.py` | 6 |
+| `analysis/f0.py` | `views/f0.py` | 13 |
+| `analysis/vocoder.py` | `views/spectral_envelope.py` (CheapTrick), `views/aperiodicity.py` (D4C, harmonic residual), `signals/world.py` (WORLD's shared helpers) | 14 |
+| `stimuli/vocoder.py` | `signals/world.py` | 12 |
+| `analysis/voice.py` | `views/spectral_envelope.py` (`GridEnvelope`, `warp_frequency`), `views/f0.py` (`scale_f0`) | 8 |
+| `signals/glottal.py` | `signals/generators.py` | 7 |
+| `stimuli/klatt.py` | `signals/klatt.py` | 6 |
 | `stimuli/binaural.py` | `spatial/binaural.py` | 8 |
 | `stimuli/spatialization.py` | `spatial/spatialization.py` | 8 |
 | `stimuli/hrir_data.py` | `spatial/hrir_data.py` | 6 |
 | `stimuli/reverb.py` | `spatial/reverb.py` | 5 |
 
-78 distinct files are touched in all (moved modules included), 41 without
-the frames/views split. By kind they are the moved modules' importers in
-`src`, the API reference pages (`docs/api/source/*.rst`, one `automodule`
-line per module), the README module table and References tags, gallery
-scripts that import a module by its path, the gallery HTML pages whose
-References tags link to a source file, design docs, tools and tests. The
-tests mirror `src/`, so all 10 files in `tests/analysis` move, and 6 more
-(glottal, klatt and the four spatial ones).
+78 distinct files are touched in all (moved modules included). By kind they
+are the moved modules' importers in `src`, the API reference pages
+(`docs/api/source/*.rst`, one `automodule` line per module), the README
+module table and References tags, gallery scripts that import a module by
+its path, the gallery HTML pages whose References tags link to a source
+file, design docs, tools and tests. The tests mirror `src/`, so all 10 files
+in `tests/analysis` move, `test_glottal.py` joins `test_generators.py`, and
+5 more move (klatt and the four spatial ones).
 
 Estimates from today's line ranges (labelled, not measured as built):
-`frames/gabor.py` about 570 lines (`GaborFrame` and `TVGaborFrame`, 405,
-plus `STFT` and `TVSTFT`, 167), `frames/filterbank.py` about 640
-(`Filterbank`, 164, plus the banks and `Subbands`, 473), `frames/frame.py`
-about 110.
+`signals/generators.py` about 870 lines (589 plus glottal.py's 287, less
+its imports); `signals/world.py` about 460 (`world_synthesize`, 236, plus
+WORLD's shared helpers, about 220); `views/f0.py` about 420;
+`views/spectral_envelope.py` about 360; `views/aperiodicity.py` about 290;
+`frames/gabor.py` about 570; `frames/filterbank.py` about 640;
+`frames/frame.py` about 110. The longest module today is `frames.py`, 677.
 
 What does not change: every `so.name`. The top-level `__init__` re-exports
 the public names from every subpackage, and it would go on doing so, so code
@@ -150,59 +162,62 @@ GaborFrame` change.
 
 ## Decisions
 
-- **D1. Layers or topics.** (a) A trunk (core, signals, frames, views) and
-  sibling branches by topic (voice, spatial, stimuli, texture) that import
-  only from the trunk, as above (recommended: the subpackage names then say
-  what a module is about, the gallery groups can match them (D8), and
-  `tests/test_layers.py` still fails on any import that points the wrong
-  way; the rule changes from "below me in one list" to "below me in the
-  trunk, or inside my own subpackage"). (b) The same branches, but `analysis`
-  kept whole (D12 declined): 41 files instead of 78. (c) Keep the five layers
-  and fix only the vocoder names (D2), moving 2 modules and touching 18
-  files: the smallest change, but the voice code stays spread over three
-  layers. (d) Go back to a flat package: rejected, since Cho split it in
-  PR #12 to see the dependencies.
-- **D2. The four vocoders.** (a) Name each by its method: WORLD's analysis
-  and synthesis together in `voice/world.py`, the phase vocoder keeps
-  `phasevocoder.py`, and the channel vocoder gets `stimuli/channel_vocoder.py`
-  (recommended: no file is called plain `vocoder.py` any more, and each
-  name says which vocoder it is). `world.py` would hold WORLD's ports only;
-  `harmonic_aperiodicity`, sonore's own measure (world.md says anything
-  different from WORLD gets its own name), goes to `voice/aperiodicity.py`.
-  Estimate: `world.py` would be about 840 lines (705 + 236 less the 102 of
-  the harmonic residual), longer than any module today (`frames.py` is 677).
-  (b) Keep WORLD as two modules, `voice/world_analysis.py` and
-  `voice/world_synthesis.py`: shorter files, but the pair reads as one
-  thing split for no reason, which is the complaint. (c) Leave
-  `noise_vocode` in `filterbank.py`: it is 37 lines on top of
-  `Subbands`, but then the channel vocoder is the one stimulus among the
-  frames.
-- **D3. Split `analysis/voice.py`.** It holds two things. `GridEnvelope`,
-  an envelope on a time-frequency grid, is what `Cepstrum.envelope_view` and
-  `MFCC.envelope_view` return; with the interpolation helpers it shares with
-  WORLD's `SpectralEnvelope` (`_FrequencyView`, `_positions`, `_pointwise`,
-  now in `analysis/vocoder.py`) it moves to `views/spectral_envelope.py`.
-  `scale_f0` and `warp_frequency` need `F0Track` and go to `voice/change.py`.
-  (Recommended, and needed for D1(a): otherwise `cepstrum` and `mfcc` in the
-  trunk would import from `voice`.) The alternative is to move `cepstrum` and
-  `mfcc` into `voice` as well, see D5.
+- **D1. Layers or topics.** Accepted (a), 2026-10-02: a trunk (core,
+  signals, frames, views) and sibling branches by topic (spatial, stimuli,
+  texture) that import only from the trunk. The rule changes from "below me
+  in one list" to "below me in the trunk, or inside my own subpackage".
+  Rejected: keeping the five layers and renaming only the WORLD modules (18
+  files touched, but the synthesizers and voice analyses stay spread over
+  three layers), and a flat package (Cho split it in PR #12 to see the
+  dependencies).
+- **D2. The four vocoders.** Each is a procedure, so its parts go where
+  their kinds go, and no file is called `vocoder.py`. (a) Recommended:
+  - **WORLD's synthesis** to `signals/world.py`, with the helpers it shares
+    with the analysis (WORLD's noise stream `world_randn`, `world_fft_size`,
+    MATLAB rounding, `DIFFERENCES_FROM_WORLD`). It makes a sound from an F0
+    track, an envelope and an aperiodicity, as Klatt makes one from formant
+    tracks. To sit in `signals` it accepts its inputs by what they provide
+    (`.t` and `.f0`; an envelope read as `envelope(t, f)`; an aperiodicity's
+    grid `.t`, `.f`, `.data`) instead of checking their types: the one code
+    change in the source PR, checked by WORLD's stored pyworld comparison
+    (`tests/data/world_reference.npz`), which must still pass unchanged.
+  - **WORLD's analysis** to `views`: CheapTrick and `SpectralEnvelope` to
+    `views/spectral_envelope.py`, D4C, `Aperiodicity` and sonore's own
+    `harmonic_aperiodicity` to `views/aperiodicity.py`, importing the shared
+    helpers from `signals/world.py`. Only one file is named after WORLD.
+  - **The channel vocoder** to `stimuli/channel_vocoder.py` (37 lines today
+    inside `filterbank.py`: subbands, their envelopes, a carrier).
+  - **The phase vocoder** keeps `stimuli/phasevocoder.py` (D4).
+
+  (b) WORLD's synthesis to `stimuli/world_synthesis.py` instead: a pure
+  move with no code change, but the synthesizer then sits away from Klatt
+  for a reason of imports only. (c) WORLD whole in `views/world.py`: the port
+  stays in one file, but a synthesizer sits among the views, against D13.
+- **D3. No `voice` subpackage.** A voice is made and measured with the same
+  tools as any other sound (Cho, 2026-10-02: "voice is not a signal
+  different in kind"), so `analysis/voice.py` splits by kind:
+  `GridEnvelope` and `warp_frequency` (which moves any envelope along
+  frequency) go to `views/spectral_envelope.py` with `SpectralEnvelope` and
+  the interpolation helpers they share; `scale_f0` goes to `views/f0.py`
+  beside `F0Track`; the private `_contour_on_grid`, used by WORLD's
+  synthesis, goes to `signals/world.py`. (a) Recommended. (b) A `voice`
+  branch (this proposal's earlier draft): voice code in one place, but it
+  calls voice a different kind of sound, and the tracker and envelope would
+  sit outside `views` though they are views.
 - **D4. The phase vocoder stays in `stimuli`.** It is neither a frame nor a
-  view: its analysis is an STFT with instantaneous frequencies, but what it
-  is for is changing a sound (duration, pitch, partials), and its
-  resynthesis after a change is not exact. (a) Leave it in
+  view: its analysis is an STFT with an instantaneous frequency per bin, and
+  what it is for is changing a sound (duration, pitch, partials), with a
+  resynthesis that is not exact after a change. (a) Leave it in
   `stimuli/phasevocoder.py`, beside the channel vocoder and ripples, sounds
   made by changing or shaping other sounds (recommended, and it moves
-  nothing). (b) Rebuild `PVAnalysis` on `GaborFrame` (today it uses SciPy's
-  `ShortTimeFFT` directly), after which its analysis would be a frame's
-  coefficients: a change to working code with no new behaviour, so not now.
-  An earlier draft moved it to `analysis`; the exhaustive split leaves no
-  place for it there.
-- **D5. Where the cepstrum and MFCCs live.** (a) In `views` (recommended:
-  both are views of any sound built on the STFT, and the MFCC is used well
-  beyond voices). (b) In `voice`, since their gallery page is in the Voices
-  group (D8). Package and gallery need not mirror each other exactly: the
-  gallery groups by what one listens to, the package by what depends on
-  what.
+  nothing). (b) Later, rebuild `PVAnalysis` on `GaborFrame` (today it uses
+  SciPy's `ShortTimeFFT` directly); its analysis would then be a view, close
+  kin to the reassigned spectrogram, and `time_stretch` and `pitch_shift`
+  procedures on it. Not now: a change to working code with no new behaviour.
+- **D5. Where the cepstrum and MFCCs live.** In `views`, with the other
+  one-way analyses. Package and gallery need not mirror each other: the
+  gallery groups by what one listens to (its Voices group holds the cepstrum
+  page, D8), the package by what a thing is.
 - **D6. Old import paths.** (a) No compatibility modules; the release
   notes of the next version (0.4.0) list every moved path (recommended, and
   what PR #12 did). Of the moved modules, 10 shipped in 0.3.0
@@ -211,12 +226,28 @@ GaborFrame` change.
   `spatialization`), so only those deep paths can be in anyone's code; the
   other 8 were added after the release. (b) Thin modules at the old paths
   that re-export and warn, removed one version later.
-- **D7. Signals keeps the LF pulse?** (a) No: `glottal.py` moves to `voice`
-  (recommended: Rd, open quotient and the LF shape are voice parameters, and
-  its only user in sonore is the Klatt synthesizer). (b) Yes, as a generator beside
-  `harmonic_complex`. `resonator` and `antiresonator` stay in
-  `signals/processing.py` either way: they are general filters that Klatt
-  happens to use.
+- **D7. The LF source and Klatt in `signals`.** `signals` becomes
+  everything that makes a sound from parameters.
+  - **The LF source** into `signals/generators.py` beside `pulse_train`
+    (Cho, 2026-10-02: "is it really inadvisable to put lf in generators
+    also?"). It stays a function, as every generator is: `glottal_source`
+    carries the model in its docstring (the LF equations, Fant's Rd, why it
+    is built from harmonics so it does not alias), `lf_harmonics` and
+    `lf_pulse` sit beside it as public helpers, and the shape solving
+    (`_r_parameters`, `_LFShape`, two root solves) as private functions
+    below them, as `harmonic_complex` sits with `F0Contour` and its helpers.
+  - **Klatt** to `signals/klatt.py`: it takes parameters, not a sound, so it
+    is not processing; it is a third kind beside generators and processing,
+    a synthesizer built from both (a voiced source from `harmonic_complex`
+    or `glottal_source`, noise, `resonator` and `antiresonator`). It already
+    imports only core and signals.
+
+  (a) As above (recommended). (b) Keep the LF model in its own file
+  (`signals/glottal.py`, or `signals/lf.py`), with only `glottal_source` in
+  generators: about 200 of its 287 lines are the model rather than sound
+  generation. (c) Klatt into `generators.py` too: one file of everything
+  that makes sound, at about 1160 lines (estimate).
+
 - **D8. Gallery groups.** (a) Four, in this order (recommended):
 
   | Group (folder) | Pages, simple to elaborate |
@@ -283,8 +314,10 @@ GaborFrame` change.
   | | `modulation` | `ModulationFilterbank`, `ConstantQModulationFilterbank`, `OctaveModulationFilterbank`, `HannModulationFilterbank`, `ModulationSpectrum` |
   | | `modspectrogram` | `ModulationSpectrogram` |
   | | `cepstrum` | `Cepstrum` |
-  | | `mfcc` | `MFCC`, `freq_to_mel`, `mel_to_freq`, `mel_filterbank`, `symmetric_hamming`, `delta_features` |
-  | | `spectral_envelope` | `GridEnvelope` |
+  | | `mfcc` | `MFCC`, `mel_filterbank`, `symmetric_hamming`, `delta_features` (the mel scale goes to core, D14) |
+  | | `f0` | `F0Track`, `f0_track`, `scale_f0` |
+  | | `spectral_envelope` | `GridEnvelope`, `SpectralEnvelope`, `cheaptrick`, `warp_frequency` |
+  | | `aperiodicity` | `Aperiodicity`, `d4c`, `harmonic_aperiodicity` |
 
   The cases that need a word:
   - **A bare gammatone or Morlet bank** (`edges=False`) is still a
@@ -300,8 +333,10 @@ GaborFrame` change.
   - **`STFT.griffin_lim`** rebuilds a sound from magnitudes only; it is a
     method on frame coefficients and stays with `STFT`.
   - **Views of voices** (`F0Track`, `SpectralEnvelope`, `Aperiodicity`)
-    are views too, but live in the `voice` branch with the rest of WORLD and
-    the tracker (D1); the frames/views division is exhaustive for the trunk.
+    are views like any other (D3), so the division is exhaustive for every
+    analysis in sonore.
+  - **`scale_f0` and `warp_frequency`** change a view and return one, so
+    they sit with the views they change, as masks sit with frames.
   - **The phase vocoder** is neither (D4).
 
   (a) `frames` and `views` as two subpackages of the trunk, replacing
@@ -338,7 +373,9 @@ GaborFrame` change.
   | `ModulationSpectrogram` | the same, per time window |
   | `Cepstrum` | the phase: the real cepstrum is the transform of the log magnitude |
   | `MFCC` | the phase, the detail inside each mel band, and every coefficient past the last kept |
-  | `GridEnvelope` | the harmonics and everything finer than the envelope's smoothing |
+  | `GridEnvelope`, `SpectralEnvelope` | the harmonics, the phase, and everything finer than the envelope's smoothing |
+  | `Aperiodicity` | everything but the share of noise in each band |
+  | `F0Track` | everything but the pitch and the voicing |
 
   Views that already make a sound keep doing so under names that say what
   they assume, never `synthesize`: `Cepstrum.to_sound` borrows the phase of
@@ -437,14 +474,19 @@ A folder move and an edit to the same script in two open PRs conflict, so:
    suite, and every page's menu showing the four groups.
 4. **Source PR** (mechanical, one PR so the tree is never half-moved):
    `git mv` each module, split `analysis/frames.py`, `filterbank.py`,
-   `representations.py`, `voice.py` and `vocoder.py` (D12, D3, D2), update imports in `src`, tests, tools and gallery scripts, the
+   `representations.py`, `voice.py` and `vocoder.py` (D12, D3, D2), merge
+   `glottal.py` into `generators.py` (D7), move the mel scale (D14), let
+   WORLD's synthesis accept its inputs by what they provide (D2, the only
+   change to code rather than its place), update imports in `src`, tests,
+   tools and gallery scripts, the
    API reference pages, layout.md and its diagram, the layer test, the
    README module table and References tags
    (`tools/update_readme_source_links.py` rewrites line anchors but not file
    paths, so the paths are edited first). D13's `View` base class and error
    come in a separate PR after this one, since they add behaviour and the
    move should add none. Checks: the full test suite, the
-   texture bit-for-bit hash against the previous commit, every gallery
+   texture bit-for-bit hash against the previous commit, WORLD's stored
+   pyworld comparison and the Klatt and LF tests unchanged, every gallery
    script run to its last cell without writing media, and a grep for each
    old dotted path returning nothing outside the release notes and design
    history.

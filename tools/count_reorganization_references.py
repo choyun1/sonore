@@ -25,7 +25,8 @@ SRC = ROOT / "src" / "sonore"
 
 # Recommended option (A): current module -> proposed module. A split module has
 # several targets, separated by " + ". The trunk's analysis layer becomes two,
-# frames (invertible analyses and their coefficients) and views (one-way analyses).
+# frames (invertible analyses and their coefficients) and views (one-way analyses);
+# there is no voice branch: synthesizers go to signals, voice analyses to views.
 MOVES_A = {
     "analysis/frames": "frames/frame + frames/filterbank + frames/gabor",
     "analysis/filterbank": "frames/filterbank + stimuli/channel_vocoder",
@@ -37,20 +38,43 @@ MOVES_A = {
     "analysis/envelopes": "views/envelopes",
     "analysis/modulation": "views/modulation",
     "analysis/modspectrogram": "views/modspectrogram",
-    "analysis/f0": "voice/f0",
-    "analysis/vocoder": "voice/world + voice/aperiodicity + views/spectral_envelope",
-    "stimuli/vocoder": "voice/world",
-    "analysis/voice": "views/spectral_envelope + voice/change",
-    "signals/glottal": "voice/glottal",
-    "stimuli/klatt": "voice/klatt",
+    "analysis/f0": "views/f0",
+    "analysis/vocoder": "views/aperiodicity + views/spectral_envelope + signals/world",
+    "stimuli/vocoder": "signals/world",
+    "analysis/voice": "views/spectral_envelope + views/f0 + signals/world",
+    "signals/glottal": "signals/generators",
+    "stimuli/klatt": "signals/klatt",
     "stimuli/binaural": "spatial/binaural",
     "stimuli/spatialization": "spatial/spatialization",
     "stimuli/hrir_data": "spatial/hrir_data",
     "stimuli/reverb": "spatial/reverb",
 }
-# Modules that leave analysis for a branch; every other analysis module is part of the
-# frames/views split of the trunk.
-BRANCH_MOVES_FROM_ANALYSIS = {"analysis/f0", "analysis/vocoder", "analysis/voice"}
+_WORLD_SHARED = [
+    "world_randn",
+    "_Stream",
+    "_step_words",
+    "_to_bits",
+    "_lane_jump",
+    "_extend_stream",
+    "_matlab_round",
+    "world_fft_size",
+    "_interp1q",
+    "_windowed_waveform",
+    "_time_windows",
+    "_integer_fs",
+    "_DEFAULT_F0",
+    "_SAFEGUARD",
+    "DIFFERENCES_FROM_WORLD",
+]
+_ENVELOPE = [
+    "cheaptrick",
+    "SpectralEnvelope",
+    "_FrequencyView",
+    "_positions",
+    "_pointwise",
+    "_linear_smoothing",
+    "_dc_correction",
+]
 # Where each top-level name of a split module goes; names not listed go to the first target.
 SPLIT_NAMES = {
     "analysis/frames": {
@@ -84,40 +108,29 @@ SPLIT_NAMES = {
         "ModulationSpectrum": "views/modulation",
     },
     "analysis/vocoder": {
-        "harmonic_aperiodicity": "voice/aperiodicity",
-        "_residual_share": "voice/aperiodicity",
-        "_positions": "views/spectral_envelope",
-        "_pointwise": "views/spectral_envelope",
-        "_FrequencyView": "views/spectral_envelope",
+        **dict.fromkeys(_WORLD_SHARED, "signals/world"),
+        **dict.fromkeys(_ENVELOPE, "views/spectral_envelope"),
     },
     "analysis/voice": {
-        **dict.fromkeys(
-            [
-                "_scaled",
-                "scale_f0",
-                "_scaled_candidates",
-                "_is_grid_view",
-                "warp_frequency",
-                "_WarpedFunction",
-                "_contour_on_grid",
-            ],
-            "voice/change",
-        ),
+        **dict.fromkeys(["_scaled", "scale_f0", "_scaled_candidates"], "views/f0"),
+        "_contour_on_grid": "signals/world",
     },
 }
 # Module-level imports of a split module that belong to a part other than its first target.
-MODULE_LEVEL_OWNER = {("analysis/voice", "F0Track"): "voice/change"}  # used by scale_f0
-# The trunk is ranked; the branches share the rank above it and must not import each other.
-RANK = {
-    "core": 0,
-    "signals": 1,
-    "frames": 2,
-    "views": 3,
-    "voice": 4,
-    "spatial": 4,
-    "stimuli": 4,
-    "texture": 4,
+MODULE_LEVEL_OWNER = {
+    ("analysis/voice", "F0Track"): "views/f0",  # used by scale_f0
+    ("analysis/vocoder", "F0Track"): "signals/world",  # used by _time_windows
 }
+# Imports the source PR removes by accepting inputs by what they provide (.t and .f0,
+# env(t, f), a grid's .t, .f and .data) instead of checking their type, as
+# harmonic_complex and klatt_synthesize already do.
+DUCK_TYPED = {
+    ("signals/world", "F0Track"),
+    ("signals/world", "SpectralEnvelope"),
+    ("signals/world", "Aperiodicity"),
+}
+# The trunk is ranked; the branches share the rank above it and must not import each other.
+RANK = {"core": 0, "signals": 1, "frames": 2, "views": 3, "spatial": 4, "stimuli": 4, "texture": 4}
 # Option B, the smallest change: only the names that collide.
 MOVES_B = {
     "analysis/vocoder": "analysis/world",
@@ -249,14 +262,6 @@ def main():
         if module.replace("/", ".") in text or f"{module}.py" in text
     }
     print(f"distinct files touched by option A: {len(distinct_a)}")
-    trunk_split = {m for m in MOVES_A if m.startswith("analysis/") and m not in BRANCH_MOVES_FROM_ANALYSIS}
-    distinct_branches = {
-        str(path)
-        for path, text in files
-        for module in [m for m in MOVES_A if m not in trunk_split] + ["analysis/filterbank.noise_vocode"]
-        if module.replace("/", ".") in text or f"{module}.py" in text
-    }
-    print(f"distinct files touched by option A without the frames/views split: {len(distinct_branches)}")
     report("Option B: rename the WORLD modules only", MOVES_B, files)
     distinct_b = {
         str(path)
@@ -282,11 +287,15 @@ def main():
     print("== Imports between proposed subpackages (option A), resolved name by name")
     edges = Counter()
     wrong_way = []
+    duck = []
     for importer, top_name, imported, name, in_function in module_imports():
         a = MODULE_LEVEL_OWNER.get((importer, name)) if not top_name else None
         a, b = a or destination(importer, top_name), destination(imported, name)
         pa, pb = a.split("/")[0], b.split("/")[0]
         if pa == pb or "plotting" in (pa, pb) or pa == "__init__":
+            continue
+        if (a, name) in DUCK_TYPED:
+            duck.append(f"{a} imports {name} from {b} ({importer}.{top_name or 'module level'})")
             continue
         edges[(pa, pb)] += 1
         if RANK[pb] >= RANK[pa]:
@@ -296,6 +305,8 @@ def main():
         print(f"{a} -> {b}: {n}")
     for line in sorted(set(wrong_way)):
         print(f"  not downward: {line}")
+    for line in sorted(set(duck)):
+        print(f"  removed by duck typing: {line}")
 
     print("== Gallery pages by group (build.py TOPICS)")
     build = (ROOT / "docs" / "gallery" / "build.py").read_text()
