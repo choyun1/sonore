@@ -315,20 +315,43 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 .side { display: none; }
 @media (min-width: 75rem) {
   .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
-  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 3.5rem 1.25rem 2rem 1.75rem;
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 2.5rem 1.25rem 2rem 1.75rem;
     border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
-  nav.pages > a:first-child, nav.pages details { display: none; }
+  html:not(.side-closed) nav.pages > a:first-child, html:not(.side-closed) nav.pages details { display: none; }
+  .side-closed .layout { grid-template-columns: 3rem minmax(0, 1fr); }
+  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
+  .side-closed .side .home, .side-closed .side-body { display: none; }
+  .side-closed .side-top { justify-content: center; }
 }
 .side a { text-decoration: none; }
 .side a:hover { text-decoration: underline; }
 .side a[aria-current] { color: var(--ink); font-weight: 700; }
-.side .home { display: block; font-size: 1.05rem; margin: 0 0 1.5rem; }
-.side .group { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.4rem; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
 .side ul { list-style: none; margin: 0; padding: 0; }
 .side li a { display: block; padding: 0.2rem 0; }
 .side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
 .side ul ul a { color: var(--muted); font-size: 0.85rem; }
 .side ul ul a:hover { color: var(--ink); }
+.side-links { margin: 2rem 0 0; padding-top: 1rem; border-top: 1px solid var(--rule); }
+.side-links a { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
+.side-links a.repo { color: var(--muted); }
+.side-links a.repo:hover { color: var(--ink); }
+.side-links svg { width: 18px; height: 18px; }
 """
 
 JS = """
@@ -577,6 +600,31 @@ NAV_JS = """(() => { const menus = [...document.querySelectorAll("nav.pages deta
 })();"""
 
 
+# The sidebar folds to a narrow strip and each of its groups folds on its own; both are
+# remembered in the browser between pages. The group holding the page being read always
+# starts open. While the sidebar is folded, the menus at the top of the page come back.
+# SIDE_HEAD_JS runs in <head>, so a folded sidebar does not flash open as the page loads.
+SIDE_HEAD_JS = (
+    'try { if (localStorage.getItem("sonore-side") === "closed") '
+    'document.documentElement.classList.add("side-closed"); } catch (e) {}'
+)
+SIDE_JS = """(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed"); show(closed);
+    save("sonore-side", closed ? "closed" : "open"); });
+  let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
+  groups.forEach((group) => { const name = group.dataset.group;
+    if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
+    group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
+      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); }); });
+})();"""
+
+
 def nav(current: str) -> str:
     def link(href: str) -> str:
         here = ' aria-current="page"' if href == current else ""
@@ -598,7 +646,8 @@ def nav(current: str) -> str:
 
 def sidebar(current: str, sections_html: str) -> str:
     """The menu down the left of a wide screen: every page by group, and under the page
-    being read, its sections. Narrow screens keep only the menus at the top."""
+    being read, its sections, then the API reference and the repository. The menu and each
+    group fold away (SIDE_JS). Narrow screens keep only the menus at the top."""
 
     def link(href: str) -> str:
         here = ' aria-current="page"' if href == current else ""
@@ -614,12 +663,25 @@ def sidebar(current: str, sections_html: str) -> str:
         return f"<li>{item}</li>"
 
     here = ' aria-current="page"' if current == "index.html" else ""
-    parts = [f'<a class="home" href="index.html"{here}>{TITLES["index.html"]}</a>']
-    for group, _, pages in TOPICS:
-        parts.append(
-            f'<p class="group">{html.escape(group)}</p><ul>{"".join(link(href) for href, _ in pages)}</ul>'
+    top = (
+        f'<div class="side-top"><a class="home" href="index.html"{here}>{TITLES["index.html"]}</a>'
+        '<button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" '
+        'title="Hide the menu">&laquo;</button></div>'
+    )
+    groups = []
+    for group, folder, pages in TOPICS:
+        is_current_group = current in [href for href, _ in pages]
+        css_class = "group here" if is_current_group else "group"
+        groups.append(
+            f'<details class="{css_class}" data-group="{folder}" open><summary>{html.escape(group)}</summary>'
+            f"<ul>{''.join(link(href) for href, _ in pages)}</ul></details>"
         )
-    return f'<aside class="side" aria-label="All gallery pages">{"".join(parts)}</aside>'
+    links = (
+        '<div class="side-links"><a href="../api/">API reference</a>'
+        f'<a class="repo" href="https://github.com/choyun1/sonore">{GITHUB_MARK}sonore on GitHub</a></div>'
+    )
+    body = f'<div class="side-body">{"".join(groups)}{links}</div>'
+    return f'<aside class="side" aria-label="All gallery pages">{top}{body}<script>{SIDE_JS}</script></aside>'
 
 
 HOW = """<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
@@ -646,6 +708,7 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
 <title>{html.escape(title)}</title>
 {fonts}
 {head}
+<script>{SIDE_HEAD_JS}</script>
 <style>{CSS}</style>
 </head>
 <body>
