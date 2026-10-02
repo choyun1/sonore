@@ -168,7 +168,7 @@ spectrum once every <span class="tex">F_0</span> hertz, so they land at one peri
 The two parts of the voice that were tangled in the spectrum come apart, and can be measured
 or edited separately.</p>
 <p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>:</p>
-<ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same analysis on a woman's voice.</li><li><a href="#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</a>: the speech recogniser's version, how much pitch leaks into it, and what it cannot tell apart.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
+<ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same analysis on a female voice.</li><li><a href="#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</a>: the speech recogniser's version, how much pitch leaks into it, and what it cannot tell apart.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -431,14 +431,14 @@ sound = finish(whole)</code></pre></details>
 </section>
 <section aria-labelledby="h-a-higher-voice">
 <h2 id="h-a-higher-voice">A higher voice</h2>
-<p>The same sentence read by a woman (CMU ARCTIC, speaker slt), whose pitch sits around 180 to
-210 Hz, half as high again as the man's. Two things change in the cepstrum. The pitch peak moves
-down to about 5 ms, closer to the envelope's first couple of milliseconds, though still clear of
-them. And a lifter at half a period now keeps only the quefrencies below about 2.5 ms, against 4
-ms for the man, so the envelope it recovers is smoother and follows the formants less closely:
-with harmonics further apart, there is less of the envelope to recover. On a database of
-laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female voice's time
-windows and none on a male voice's
+<p>The same sentence read by a female talker (CMU ARCTIC, speaker slt), whose pitch sits around 180
+to 210 Hz, half as high again as the male talker's. Two things change in the cepstrum. The pitch
+peak moves down to about 5 ms, closer to the envelope's first couple of milliseconds, though still
+clear of them. And a lifter at half a period now keeps only the quefrencies below about 2.5 ms,
+against 4 ms for the male talker, so the envelope it recovers is smoother and follows the formants
+less closely: with harmonics further apart, there is less of the envelope to recover. On a
+database of laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female
+voice's time windows and none on a male voice's
 (<a href="https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md"><code>docs/design/female-voices.md</code></a>).
 There is no stored F0 track for this recording, so <code>so.f0_track</code> stands in for Harvest.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
@@ -450,9 +450,9 @@ track_female = so.f0_track(sentence_female)</code></pre></details></div>
 <article class="still" id="d-c6">
   <div class="about">
     <h3>One time window, a higher voice</h3>
-    <div class="desc"><p>One time window of her sentence, drawn as for the man's above. The harmonics are further apart,
-so the log spectrum ripples less often, and the cepstral peak sits at a shorter quefrency. The
-lifter cutoff, at half her period, is lower too.</p></div>
+    <div class="desc"><p>One time window of the female talker's sentence, drawn as for the male talker's above. The
+harmonics are further apart, so the log spectrum ripples less often, and the cepstral peak sits
+at a shorter quefrency. The lifter cutoff, at half the female period, is lower too.</p></div>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/c6_one_time_window_a_higher_voice.png" width="1000" height="560" alt="One time window, a higher voice" loading="lazy">
@@ -494,8 +494,8 @@ for ax in (ax0, ax1):
 <article class="sound" id="d-c7" data-regions="[{&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041165417286706196, &quot;bottom&quot;: 0.4514075730096726, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5094940809461805, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
   <div class="about">
     <h3>The cepstrogram of a higher voice</h3>
-    <div class="desc"><p>Top: her cepstrogram, with the tracker's pitch period drawn over it; the bright line runs lower
-than the man's. Bottom: cepstral F0 beside <code>so.f0_track</code>.</p></div>
+    <div class="desc"><p>Top: the female talker's cepstrogram, with the tracker's pitch period drawn over it; the bright
+line runs lower than the male talker's. Bottom: cepstral F0 beside <code>so.f0_track</code>.</p></div>
     <audio controls preload="metadata" src="audio/c7_the_cepstrogram_of_a_higher_voice.flac"></audio>
     <p class="file">c7_the_cepstrogram_of_a_higher_voice.flac, 2.6 s, mono</p>
   </div>

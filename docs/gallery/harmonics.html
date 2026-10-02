@@ -164,7 +164,7 @@ as well as a fixed F0: every harmonic follows <span class="tex">n</span> times t
 at every harmonic. A pitch track and an envelope are then enough to make a voice, and either one
 can be changed without touching the other, which is the idea behind vocoders such as WORLD
 (Morise et al., 2016).</p>
-<ul><li><a href="#h-three-pitch-tracks-heard">Three pitch tracks, heard</a>: a buzz that follows cepstral F0, <code>so.f0_track</code>, and Harvest.</li><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a>: harmonics shaped by the cepstral envelope, and the same pitch carried through a vocoder.</li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a>: silence or shaped noise where the voice is not voiced.</li><li><a href="#h-pitch-and-timbre-apart">Pitch and timbre apart</a>: the same envelope on other contours.</li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a>: cosine, Schroeder and random phase.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same resynthesis on a woman's voice.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: better envelopes, aperiodicity, and the glottal pulse.</li></ul>
+<ul><li><a href="#h-three-pitch-tracks-heard">Three pitch tracks, heard</a>: a buzz that follows cepstral F0, <code>so.f0_track</code>, and Harvest.</li><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a>: harmonics shaped by the cepstral envelope, and the same pitch carried through a vocoder.</li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a>: silence or shaped noise where the voice is not voiced.</li><li><a href="#h-pitch-and-timbre-apart">Pitch and timbre apart</a>: the same envelope on other contours.</li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a>: cosine, Schroeder and random phase.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same resynthesis on a female voice.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: better envelopes, aperiodicity, and the glottal pulse.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -613,12 +613,12 @@ sound = snd</code></pre></details>
 </section>
 <section aria-labelledby="h-a-higher-voice">
 <h2 id="h-a-higher-voice">A higher voice</h2>
-<p>The same recipe on the same sentence read by a woman (CMU ARCTIC, speaker slt), whose pitch is
-about half as high again as the man's. Two things are harder. Her harmonics are further apart,
-so they sample the formants more sparsely, and whatever lies between them is not in the
-spectrum to be measured. And the lifter at half a period keeps fewer quefrencies, so the
+<p>The same recipe on the same sentence read by a female talker (CMU ARCTIC, speaker slt), whose
+pitch is about half as high again as the male talker's. Two things are harder. The female harmonics
+are further apart, so they sample the formants more sparsely, and whatever lies between them is not in
+the spectrum to be measured. And the lifter at half a period keeps fewer quefrencies, so the
 envelope it recovers is smoother. Everything else, the tracker, the noise in the gaps and its
-balance, is done as above. Listen for whether her vowels come back as clearly as his.</p>
+balance, is done as above. Listen for whether the female vowels come back as clearly as the male ones.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def resynthesize(snd, seed=2):
     &quot;&quot;&quot;A pitch track and a cepstral envelope from snd, put back together as above:
     harmonics on so.f0_track shaped by the envelope, and envelope-shaped noise where unvoiced.&quot;&quot;&quot;
@@ -658,7 +658,7 @@ print(f&quot;median voiced F0: {np.median(f0_female[f0_female &gt; 0]):.0f} Hz (
 <article class="sound" id="d-hv1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
   <div class="about">
     <h3>The sentence, a higher voice</h3>
-    <div class="desc"><p>Her sentence, for reference, with <code>so.f0_track</code>'s contour over the narrowband spectrogram.</p></div>
+    <div class="desc"><p>The female talker's sentence, for reference, with <code>so.f0_track</code>'s contour over the narrowband spectrogram.</p></div>
     <audio controls preload="metadata" src="audio/hv1_the_sentence_a_higher_voice.flac"></audio>
     <p class="file">hv1_the_sentence_a_higher_voice.flac, 2.6 s, mono</p>
   </div>
@@ -675,9 +675,10 @@ sound = sentence_female</code></pre></details>
 <article class="sound" id="d-hv2" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
   <div class="about">
     <h3>Resynthesized from pitch and envelope, a higher voice</h3>
-    <div class="desc"><p>Her sentence from a pitch track and a cepstral envelope, as in
-<a href="#d-hu2">Shaped noise in the gaps</a> for his. Each harmonic carries the envelope's level at its
-own frequency, so with her harmonics further apart, the formants are drawn from fewer samples.</p></div>
+    <div class="desc"><p>The female talker's sentence from a pitch track and a cepstral envelope, as in
+<a href="#d-hu2">Shaped noise in the gaps</a> for the male talker's. Each harmonic carries the envelope's
+level at its own frequency, so with the female harmonics further apart, the formants are drawn
+from fewer samples.</p></div>
     <audio controls preload="metadata" src="audio/hv2_resynthesized_from_pitch_and_envelope_a_higher_voice.flac"></audio>
     <p class="file">hv2_resynthesized_from_pitch_and_envelope_a_higher_voice.flac, 2.6 s, mono</p>
   </div>

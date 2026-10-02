@@ -30,7 +30,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Unvoiced gaps](#h-unvoiced-gaps): silence or shaped noise where the voice is not voiced.
 # - [Pitch and timbre apart](#h-pitch-and-timbre-apart): the same envelope on other contours.
 # - [Phases on a moving pitch](#h-phases-on-a-moving-pitch): cosine, Schroeder and random phase.
-# - [A higher voice](#h-a-higher-voice): the same resynthesis on a woman's voice.
+# - [A higher voice](#h-a-higher-voice): the same resynthesis on a female voice.
 # - [What this page leaves out](#h-what-this-page-leaves-out): better envelopes, aperiodicity,
 #   and the glottal pulse.
 
@@ -366,12 +366,12 @@ sound = snd
 # %% [markdown]
 # ## A higher voice
 #
-# The same recipe on the same sentence read by a woman (CMU ARCTIC, speaker slt), whose pitch is
-# about half as high again as the man's. Two things are harder. Her harmonics are further apart,
-# so they sample the formants more sparsely, and whatever lies between them is not in the
-# spectrum to be measured. And the lifter at half a period keeps fewer quefrencies, so the
+# The same recipe on the same sentence read by a female talker (CMU ARCTIC, speaker slt), whose
+# pitch is about half as high again as the male talker's. Two things are harder. The female harmonics
+# are further apart, so they sample the formants more sparsely, and whatever lies between them is not in
+# the spectrum to be measured. And the lifter at half a period keeps fewer quefrencies, so the
 # envelope it recovers is smoother. Everything else, the tracker, the noise in the gaps and its
-# balance, is done as above. Listen for whether her vowels come back as clearly as his.
+# balance, is done as above. Listen for whether the female vowels come back as clearly as the male ones.
 
 
 # %%
@@ -412,7 +412,7 @@ f0_female = contour_female[1]
 print(f"median voiced F0: {np.median(f0_female[f0_female > 0]):.0f} Hz (slt), {median:.0f} Hz (bdl)")
 
 # %% [about]
-# Her sentence, for reference, with `so.f0_track`'s contour over the narrowband spectrogram.
+# The female talker's sentence, for reference, with `so.f0_track`'s contour over the narrowband spectrogram.
 
 # %% [demo hv1] The sentence, a higher voice
 fig, playhead = show(sentence_female, "the sentence read by slt", contour_female)
@@ -421,9 +421,10 @@ for ax in playhead:
 sound = sentence_female
 
 # %% [about]
-# Her sentence from a pitch track and a cepstral envelope, as in
-# [Shaped noise in the gaps](#d-hu2) for his. Each harmonic carries the envelope's level at its
-# own frequency, so with her harmonics further apart, the formants are drawn from fewer samples.
+# The female talker's sentence from a pitch track and a cepstral envelope, as in
+# [Shaped noise in the gaps](#d-hu2) for the male talker's. Each harmonic carries the envelope's
+# level at its own frequency, so with the female harmonics further apart, the formants are drawn
+# from fewer samples.
 
 # %% [demo hv2] Resynthesized from pitch and envelope, a higher voice
 fig, playhead = show(resynthesis_female, "harmonics and shaped noise, slt", contour_female)

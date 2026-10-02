@@ -36,8 +36,8 @@ FITTED_RANGE = (100.0, 5000.0)  # the warp is fitted to envelopes over this rang
 # Hillenbrand, Getty, Clark & Wheeler (1995), Table V, as quoted in
 # tools/check_female_voices.py: average F1-F3 [Hz] of heed, hod and who'd.
 HILLENBRAND = {
-    "men": {"i": (342, 2322, 3000), "a": (768, 1333, 2522), "u": (378, 997, 2343)},
-    "women": {"i": (437, 2761, 3372), "a": (936, 1551, 2815), "u": (459, 1105, 2735)},
+    "male": {"i": (342, 2322, 3000), "a": (768, 1333, 2522), "u": (378, 997, 2343)},
+    "female": {"i": (437, 2761, 3372), "a": (936, 1551, 2815), "u": (459, 1105, 2735)},
 }
 BANDWIDTHS = (60, 100, 120, 175, 250)
 
@@ -217,8 +217,8 @@ def c2_pitch(sentence, track, envelope, aperiodicity, reference_out):
 
 
 def c3_vowel_formants(rng):
-    print("C3. Formant shift on a synthetic vowel (men's 'hod', F0 120 Hz): peaks and fitted warp")
-    formants = (*HILLENBRAND["men"]["a"], 3500, 4500)
+    print("C3. Formant shift on a synthetic vowel (male 'hod', F0 120 Hz): peaks and fitted warp")
+    formants = (*HILLENBRAND["male"]["a"], 3500, 4500)
     snd = vowel(120.0, formants, rng)
     times = np.arange(int(snd.duration / HOP)) * HOP
     track = (times, np.full(len(times), 120.0))
@@ -291,7 +291,7 @@ def c5_aperiodicity(sentence, track, envelope, rng):
         )
     # A vowel whose noise share is a source property: shift by 1.2 and ask
     # which choice gives the output the noise share of the shifted vowel.
-    formants = (*HILLENBRAND["men"]["a"], 3500, 4500)
+    formants = (*HILLENBRAND["male"]["a"], 3500, 4500)
     snd = vowel(120.0, formants, rng)
     times = np.arange(int(snd.duration / HOP)) * HOP
     vowel_track = (times, np.full(len(times), 120.0))
@@ -340,13 +340,13 @@ def c6_bdl_to_slt(bdl, bdl_track, bdl_env, bdl_ap):
         f" {level_free_rms(bdl_db, slt_db, bdl_env.f):.2f} dB unwarped);"
         f" allowing a spectral slope too: {tilt_warp:.3f} (residual {tilt_residual:.2f} dB)"
     )
-    women_over_men = [
-        np.array(HILLENBRAND["women"][v]) / np.array(HILLENBRAND["men"][v]) for v in ("i", "a", "u")
+    female_over_male = [
+        np.array(HILLENBRAND["female"][v]) / np.array(HILLENBRAND["male"][v]) for v in ("i", "a", "u")
     ]
     print(
-        f"  Hillenbrand et al. (1995) women/men, F1-F3 of three vowels:"
-        f" {np.round(np.ravel(women_over_men), 2)},"
-        f" geometric mean {np.exp(np.mean(np.log(women_over_men))):.3f}"
+        f"  Hillenbrand et al. (1995) female/male, F1-F3 of three vowels:"
+        f" {np.round(np.ravel(female_over_male), 2)},"
+        f" geometric mean {np.exp(np.mean(np.log(female_over_male))):.3f}"
     )
     choices = {
         "F0 only": (f0_ratio, 1.0),

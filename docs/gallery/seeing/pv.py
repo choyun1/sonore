@@ -22,8 +22,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Changing duration](#h-changing-duration): time windows resynthesized further apart, and why their
 #   phases have to be locked.
 # - [Changing pitch](#h-changing-pitch): stretching, then resampling.
-# - [A higher voice](#h-a-higher-voice): a woman's sentence stretched, and lowered to the man's
-#   pitch.
+# - [A higher voice](#h-a-higher-voice): a female talker's sentence stretched, and lowered to the
+#   male talker's pitch.
 # - [Moving the partials](#h-moving-the-partials): an oscillator bank with every frequency remapped.
 
 # %% [markdown]
@@ -196,8 +196,8 @@ fig, playhead = show(sound, fmax=5000)
 # %% [markdown]
 # ## A higher voice
 #
-# The same sentence read by a woman (slt), whose voice is about a fifth higher than the man's,
-# so lowering it by a fifth brings her pitch to his.
+# The same sentence read by a female talker (slt), whose voice is about a fifth higher than the male
+# talker's, so lowering it by a fifth brings the female pitch to the male one.
 
 # %%
 sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
@@ -211,25 +211,26 @@ def median_f0(snd):
 
 lowered = so.pitch_shift(sentence_female, -7)
 print(
-    f"median F0: him {median_f0(sentence):.0f} Hz, her {median_f0(sentence_female):.0f} Hz, "
-    f"her down a fifth {median_f0(lowered):.0f} Hz"
+    f"median F0: male {median_f0(sentence):.0f} Hz, female {median_f0(sentence_female):.0f} Hz, "
+    f"female down a fifth {median_f0(lowered):.0f} Hz"
 )
 
 # %% [about]
-# Her sentence twice as long, with phase locking.
+# The female talker's sentence twice as long, with phase locking.
 
-# %% [demo p4] Her sentence, twice as long
+# %% [demo p4] Female talker, twice as long
 sound = finish(so.time_stretch(sentence_female, 2))
 fig, playhead = show(sound, fmax=5000)
 
 # %% [about]
-# Her sentence down a fifth, the reverse of the man's sentence up a fifth above. Her pitch now
-# sits at his, as the printout shows, but her formants have moved down by a third as well. In
-# the averages of Hillenbrand et al. (1995), women's first three formants are 11 to 28% higher
-# than men's in the vowels of heed, hod and who'd, so lowering hers by a third puts them below
-# a typical man's: the voice belongs to a larger speaker than either.
+# The female talker's sentence down a fifth, the reverse of the male talker's sentence up a fifth
+# above. The female pitch now sits at the male one, as the printout shows, but the female formants
+# have moved down by a third as well. In
+# the averages of Hillenbrand et al. (1995), female first three formants are 11 to 28% higher than
+# male ones in the vowels of heed, hod and who'd, so lowering the female ones by a third puts them below a
+# typical male talker's: the voice belongs to a larger speaker than either.
 
-# %% [demo p5] Her sentence down a fifth
+# %% [demo p5] Female talker, down a fifth
 sound = finish(lowered)
 fig, playhead = show(sound, fmax=5000)
 

@@ -53,7 +53,7 @@ def test_steady_high_vowels_are_not_tracked_at_a_subharmonic(f0):
     # A perfectly periodic sound has a difference-function minimum at every
     # multiple of its period; the period itself must stay among the
     # candidates, and its multiples (F0/2, F0/3, ...) must not win.
-    gains = [(436, 60), (2761, 100), (3372, 120), (4100, 175)]  # women's heed (Hillenbrand et al. 1995)
+    gains = [(436, 60), (2761, 100), (3372, 120), (4100, 175)]  # female heed (Hillenbrand et al. 1995)
     phase = 2 * np.pi * f0 * TT
     y = np.zeros(N)
     for k in range(1, int(0.95 * FS / 2 / f0) + 1):

@@ -28,7 +28,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [A vowel, piece by piece](#h-a-vowel-piece-by-piece): the source, then one formant at a time.
 # - [Source times filter](#h-source-times-filter): the same vowel as a product of spectra.
 # - [Six vowels](#h-six-vowels): Peterson and Barney's averages, and a continuum between two.
-# - [A woman's vowels](#h-a-woman-s-vowels): the same six vowels with women's formants and
+# - [Female vowels](#h-female-vowels): the same six vowels with female formants and
 #   pitch.
 # - [Consonants from transitions](#h-consonants-from-transitions): /ba/, /da/ and /ga/ differ
 #   only in where the formants start.
@@ -87,7 +87,7 @@ def show(snd, title, formants=()):
 # %% [markdown]
 # ## A vowel, piece by piece
 #
-# The vowel of "hod", with Peterson and Barney's (1952) average formants for men: 730, 1090 and
+# The vowel of "hod", with Peterson and Barney's (1952) average male formants: 730, 1090 and
 # 2440 Hz. The pitch falls from 130 to 100 Hz, as at the end of a statement. Here the pieces are
 # put together by hand with `so.resonator`, the same resonator `so.klatt_synthesize` uses.
 
@@ -191,8 +191,8 @@ ax.legend(loc="upper right", fontsize=8)
 # %% [markdown]
 # ## Six vowels
 #
-# Peterson and Barney (1952) measured the formants of ten American English vowels, spoken in
-# words of the form h-vowel-d by men, women and children. Their averages for men, for six of
+# Peterson and Barney (1952) measured the formants of ten American English vowels, spoken in words
+# of the form h-vowel-d by male and female adults and by children. Their male averages, for six of
 # the vowels, synthesized with everything else the same: the pitch, the higher formants and the
 # bandwidths.
 
@@ -258,15 +258,15 @@ for i, p in enumerate(steps):
         playhead[1].plot([step_start, step_start + STEP_DUR], [p[name] / 1000] * 2, color="c", lw=1, ls="--")
 
 # %% [markdown]
-# ## A woman's vowels
+# ## Female vowels
 #
-# Peterson and Barney's averages for women, for the same six vowels. Every formant is higher
-# than the men's, since women's vocal tracts are on average shorter, but not by one common
+# Peterson and Barney's female averages, for the same six vowels. Every formant is higher
+# than the male ones, since female vocal tracts are on average shorter, but not by one common
 # factor: the printout gives the ratios, from 1.04 to 1.30. The pitch is higher too, falling
-# from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above the women's F3.
+# from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above the female F3.
 
 # %%
-VOWELS_WOMEN = {
+VOWELS_FEMALE = {
     "heed": (310, 2790, 3310),
     "head": (610, 2330, 2990),
     "had": (860, 2050, 2850),
@@ -274,8 +274,8 @@ VOWELS_WOMEN = {
     "hawed": (590, 920, 2710),
     "who'd": (370, 950, 2670),
 }
-parts_women = []
-for f1, f2, f3 in VOWELS_WOMEN.values():
+parts_female = []
+for f1, f2, f3 in VOWELS_FEMALE.values():
     v = so.klatt_synthesize(
         VOWEL_DUR,
         FS,
@@ -287,48 +287,48 @@ for f1, f2, f3 in VOWELS_WOMEN.values():
         F4=4100,
         F5=4900,
     )
-    parts_women += [v, gap]
-for word, (f1, f2, f3) in VOWELS_WOMEN.items():
-    men = VOWELS[word]
-    ratios = ", ".join(f"{women / man:.2f}" for women, man in zip((f1, f2, f3), men, strict=True))
-    print(f"{word:6} women / men, F1 F2 F3: {ratios}")
+    parts_female += [v, gap]
+for word, (f1, f2, f3) in VOWELS_FEMALE.items():
+    male = VOWELS[word]
+    ratios = ", ".join(f"{f / m:.2f}" for f, m in zip((f1, f2, f3), male, strict=True))
+    print(f"{word:6} female / male, F1 F2 F3: {ratios}")
 
 # %% [about]
-# The six vowels with women's formants. The harmonics are now about 215 Hz apart, so each
-# formant peak is drawn by fewer of them than in the men's vowels above.
+# The six vowels with female formants. The harmonics are now about 215 Hz apart, so each
+# formant peak is drawn by fewer of them than in the male vowels above.
 
-# %% [demo fw4] Six vowels with the formants of women
-sound = finish(so.concat(parts_women))
+# %% [demo fw4] Six vowels with female formants
+sound = finish(so.concat(parts_female))
 tracks = [
-    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS_WOMEN.values()], 2))
+    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS_FEMALE.values()], 2))
     for i in range(3)
 ]
-fig, playhead = show(sound, "heed, head, had, hod, hawed, who'd, women's formants")
+fig, playhead = show(sound, "heed, head, had, hod, hawed, who'd, female formants")
 for tt, ff in tracks:
     for j in range(6):
         playhead[1].plot(tt[2 * j : 2 * j + 2], ff[2 * j : 2 * j + 2] / 1000, color="c", lw=1, ls="--")
 
 # %% [about]
-# Both sets of vowels by their first two formants, joined vowel by vowel. The women's vowel
+# Both sets of vowels by their first two formants, joined vowel by vowel. The female vowel
 # space is shifted up and outward, most of all in F2 for the front vowels.
 
-# %% [figure fw5] The vowels of men and women by their first two formants
+# %% [figure fw5] Male and female vowels by their first two formants
 fig, ax = plt.subplots(figsize=(5, 4), layout="constrained")
 for word in VOWELS:
-    (f1_men, f2_men, _), (f1_women, f2_women, _) = VOWELS[word], VOWELS_WOMEN[word]
-    ax.plot([f2_men, f2_women], [f1_men, f1_women], color="0.7", lw=0.8)
-    ax.annotate(word, (f2_women, f1_women), textcoords="offset points", xytext=(6, 4))
-ax.plot([v[1] for v in VOWELS.values()], [v[0] for v in VOWELS.values()], "o", color="C0", label="men")
+    (f1_male, f2_male, _), (f1_female, f2_female, _) = VOWELS[word], VOWELS_FEMALE[word]
+    ax.plot([f2_male, f2_female], [f1_male, f1_female], color="0.7", lw=0.8)
+    ax.annotate(word, (f2_female, f1_female), textcoords="offset points", xytext=(6, 4))
+ax.plot([v[1] for v in VOWELS.values()], [v[0] for v in VOWELS.values()], "o", color="C0", label="male")
 ax.plot(
-    [v[1] for v in VOWELS_WOMEN.values()],
-    [v[0] for v in VOWELS_WOMEN.values()],
+    [v[1] for v in VOWELS_FEMALE.values()],
+    [v[0] for v in VOWELS_FEMALE.values()],
     "o",
     color="C1",
-    label="women",
+    label="female",
 )
 ax.set(xlabel="F2 (Hz)", ylabel="F1 (Hz)", xlim=(3000, 600), ylim=(950, 200))
 ax.legend(loc="lower left", fontsize=8)
-ax.set_title("Peterson and Barney's averages, men and women")
+ax.set_title("Peterson and Barney's averages, male and female")
 
 # %% [markdown]
 # ## Consonants from transitions
@@ -507,7 +507,7 @@ print(f"  alternating signs {np.abs(db(alternating) - db(cascade))[inside].max()
 # $$R_d = \frac{U_0}{0.11\, E_e T_0},$$
 #
 # the peak flow $U_0$ against the strength of the closure, in a period $T_0$: about 0.3 for a
-# tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical men's
+# tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical male
 # voices. `so.glottal_source` makes LF pulses from their harmonics, which have an exact
 # formula, so nothing aliases, and `so.klatt_synthesize` uses them with `SS=3` (the source
 # switch of Klatt & Klatt's KLSYN88) and `RD`.
@@ -572,7 +572,7 @@ sound = finish(so.concat(parts[:-1]))
 fig, playhead = show(sound, "Rd 0.5, Rd 1, Rd 2.5", [730, 1090, 2440])
 
 # %% [about]
-# Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical men's voices.
+# Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical male voices.
 # The LF voice is darker: at 3 kHz its harmonics are about 12 dB weaker, relative to the first.
 
 # %% [demo fq4] The 1980 source, then LF at Rd 0.7

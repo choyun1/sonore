@@ -6,8 +6,8 @@ Every F0 source is mixed with every envelope source and put back together,
 unchanged and changed (pitch x 1.5, formants x 1.2), by the operations the
 design proposes (prototyped here, as in tools/check_voice_change_claims.py).
 
-Part 1, synthetic vowels, where the truth is exact. Three vowels with men's
-and with women's average formants (Hillenbrand et al. 1995), at two F0s each,
+Part 1, synthetic vowels, where the truth is exact. Three vowels with male
+and with female average formants (Hillenbrand et al. 1995), at two F0s each,
 built as tools/check_female_voices.py builds them (envelope and noise share
 known at every frequency). The score does not use any of the methods being
 compared: the output's harmonics are measured by least squares at their
@@ -57,11 +57,11 @@ HOP = 0.005
 SCORED = (100.0, 5000.0)
 PITCH, FORMANT = 1.5, 1.2
 HILLENBRAND = {
-    "men": {"i": (342, 2322, 3000), "a": (768, 1333, 2522), "u": (378, 997, 2343)},
-    "women": {"i": (437, 2761, 3372), "a": (936, 1551, 2815), "u": (459, 1105, 2735)},
+    "male": {"i": (342, 2322, 3000), "a": (768, 1333, 2522), "u": (378, 997, 2343)},
+    "female": {"i": (437, 2761, 3372), "a": (936, 1551, 2815), "u": (459, 1105, 2735)},
 }
-UPPER = {"men": (3500, 4500), "women": (4100, 4900)}
-F0S = {"men": (110.0, 150.0), "women": (200.0, 250.0)}
+UPPER = {"male": (3500, 4500), "female": (4100, 4900)}
+F0S = {"male": (110.0, 150.0), "female": (200.0, 250.0)}
 BANDWIDTHS = (60, 100, 120, 175, 250)
 
 
@@ -236,7 +236,7 @@ def synthesize(synth, sound, track, envelope, aperiodicity, grid):
 
 # ------------------------------------------------------------ part 1
 def part1():
-    print("Part 1: synthetic vowels (3 vowels x men's and women's formants x 2 F0s)")
+    print("Part 1: synthetic vowels (3 vowels x male and female formants x 2 F0s)")
     print("  envelope error: level-free RMS dB of the output's harmonics against the truth, 100-5000 Hz")
     print("  F0 error: median |F0 source / true F0 - 1| on the vowel's voiced time windows")
     rng = np.random.default_rng(1)
@@ -293,9 +293,9 @@ def part1():
         if f0_name == "truth" and synth == "world_synthesize":
             rows = np.array(rows)
             by_voice[env_name] = (np.median(rows[:6, 0]), np.median(rows[6:, 0]))
-    print("  with the true F0 and world_synthesize, resynthesis error by voice (men's / women's vowels):")
-    for env_name, (men, women) in by_voice.items():
-        print(f"    {env_name:11s} {men:5.2f} / {women:5.2f} dB")
+    print("  with the true F0 and world_synthesize, resynthesis error by voice (male / female vowels):")
+    for env_name, (male, female) in by_voice.items():
+        print(f"    {env_name:11s} {male:5.2f} / {female:5.2f} dB")
 
 
 # ------------------------------------------------------------ part 2
@@ -348,9 +348,9 @@ def part2():
 
 # ------------------------------------------------------------ part 3
 def part3():
-    print("Part 3: world_synthesize given the true envelope, by FFT size (men's who'd, F0 150 Hz, no noise)")
+    print("Part 3: world_synthesize given the true envelope, by FFT size (male who'd, F0 150 Hz, no noise)")
     rng = np.random.default_rng(1)
-    formants = (*HILLENBRAND["men"]["u"], *UPPER["men"])
+    formants = (*HILLENBRAND["male"]["u"], *UPPER["male"])
     sound = vowel(150.0, formants, rng)
     grid = np.arange(int(sound.duration / HOP)) * HOP
     track = (grid, np.full(len(grid), 150.0))

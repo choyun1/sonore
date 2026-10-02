@@ -33,7 +33,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Listening](#h-listening): the sentence rebuilt by WORLD's synthesis with each aperiodicity,
 #   with none, and with nothing else.
 # - [A higher voice](#h-a-higher-voice): the breathy vowel at twice the pitch, and the sentence
-#   read by a woman.
+#   read by a female talker.
 # - [What this page leaves out](#h-what-this-page-leaves-out).
 
 # %% [markdown]
@@ -380,9 +380,9 @@ fig, playhead = show(sound, "so.world_synthesize with A = 1", fmax=8000)
 # %% [markdown]
 # ## A higher voice
 #
-# Women's voices sit about half an octave to an octave above men's, so their harmonics are
+# Female voices sit about half an octave to an octave above male ones, so their harmonics are
 # further apart, and both measures have fewer of them to work with. The breathy vowel again,
-# made the same way but at 230 Hz, twice the pitch, with a woman's formants for "hod" (average
+# made the same way but at 230 Hz, twice the pitch, with female formants for "hod" (average
 # F1 to F3 from Hillenbrand et al., 1995). The noise is again as strong as the harmonics at 4 kHz,
 # so the truth has the same shape as before.
 
@@ -451,8 +451,8 @@ for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", s
     )
 
 # %% [markdown]
-# The same sentence read by a woman (CMU ARCTIC, speaker slt). There is no stored Harvest track
-# for this recording, so the pitch comes from `so.f0_track`; the analysis is still WORLD's.
+# The same sentence read by a female talker (CMU ARCTIC, speaker slt). There is no stored Harvest
+# track for this recording, so the pitch comes from `so.f0_track`; the analysis is still WORLD's.
 
 # %%
 sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
@@ -462,7 +462,7 @@ d4c_female = so.d4c(sentence_female, track_female)
 residual_female = so.harmonic_aperiodicity(sentence_female, track_female)
 
 # %% [about]
-# Her envelope and the two aperiodicities, drawn as for the man's sentence above.
+# The female talker's envelope and the two aperiodicities, drawn as for the male talker's sentence above.
 
 # %% [figure ap15] Envelope and aperiodicities of a higher voice
 fig, axes = plt.subplots(3, 1, figsize=(10, 7.2), sharex=True, layout="constrained")
@@ -479,14 +479,14 @@ for ax in axes:
 axes[2].set_xlabel("Time (s)")
 
 # %% [about]
-# Her sentence, for reference.
+# The female talker's sentence, for reference.
 
 # %% [demo ap16] The sentence, a higher voice
 sound = sentence_female
 fig, playhead = show(sound, "the sentence read by slt", fmax=8000)
 
 # %% [about]
-# WORLD's resynthesis of her sentence with D4C's aperiodicity, on `so.f0_track`'s pitch.
+# WORLD's resynthesis of the female talker's sentence with D4C's aperiodicity, on `so.f0_track`'s pitch.
 
 # %% [demo ap17] Resynthesis with D4C, a higher voice
 sound = finish(so.world_synthesize(track_female, envelope_female, d4c_female))
@@ -510,7 +510,7 @@ fig, playhead = show(sound, "so.world_synthesize with so.d4c, slt", fmax=8000)
 #
 # - Hillenbrand, Getty, Clark & Wheeler (1995). Acoustic characteristics of American English
 #   vowels. *J. Acoust. Soc. Am.* 97(5), 3099–3111.
-#   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872). Women's formants for "hod".
+#   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872). Female formants for "hod".
 # - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940). The glottal source.
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis

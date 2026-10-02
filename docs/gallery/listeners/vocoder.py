@@ -27,7 +27,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Noise or tones](#h-noise-or-tones): what carries the envelopes.
 # - [Pitch from the envelope](#h-pitch-from-the-envelope): the weak temporal pitch cue an implant
 #   leaves.
-# - [A higher voice](#h-a-higher-voice): the sentence read by a woman, through the same
+# - [A higher voice](#h-a-higher-voice): the sentence read by a female talker, through the same
 #   vocoders.
 # - [A melody](#h-a-melody): music, which cannot do without pitch.
 # - [What this simulation leaves out](#h-what-this-simulation-leaves-out): current spread,
@@ -220,36 +220,37 @@ sound = vocoded
 # %% [markdown]
 # ## A higher voice
 #
-# The same sentence read by a woman (slt). Her fundamental, about 150 to 230 Hz here by
-# `so.f0_track`, is higher than the man's, so a temporal cue has to follow faster pulses.
+# The same sentence read by a female talker (slt). The female fundamental, about 150 to 230 Hz here
+# by `so.f0_track`, is higher than the male talker's, so a temporal cue has to follow faster pulses.
 
 # %%
 sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
 track_female = so.f0_track(sentence_female)
-print(f"her F0: {track_female}")
+print(f"female F0: {track_female}")
 
 # %% [about]
-# Her sentence as recorded.
+# The female talker's sentence as recorded.
 
-# %% [demo cf0] Her sentence
+# %% [demo cf0] Female talker
 fig, playhead = show(sentence_female)
 sound = sentence_female
 
 # %% [about]
-# Through eight noise bands with 50 Hz envelopes. As with his sentence, the words come through
+# Through eight noise bands with 50 Hz envelopes. As with the male talker's sentence, the words come through
 # and the intonation does not; with the pitch gone, the main difference left between the two
 # vocoded voices is where their formants sit.
 
-# %% [demo cf8] Her sentence, eight bands
+# %% [demo cf8] Female talker, eight bands
 vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, rng=8))
 fig, playhead = show(vocoded, bands(sentence_female, 8), "eight bands")
 sound = vocoded
 
 # %% [about]
-# Eight bands with 300 Hz envelopes. Her fundamental is still below the cutoff, so the envelopes
-# pulse with it, as his do. Listen for the intonation, and compare it with his above.
+# Eight bands with 300 Hz envelopes. The female fundamental is still below the cutoff, so the
+# envelopes pulse with it, as the male talker's do. Listen for the intonation, and compare it with
+# the male talker's above.
 
-# %% [demo cf8p] Her sentence, eight bands, 300 Hz envelopes
+# %% [demo cf8p] Female talker, eight bands, 300 Hz envelopes
 vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, env_lowpass=300, rng=8))
 fig, playhead = show(vocoded, bands(sentence_female, 8, env_lowpass=300), "eight bands, 300 Hz envelopes")
 sound = vocoded
