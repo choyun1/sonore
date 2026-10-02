@@ -291,7 +291,23 @@ listed at the end.
 
 **Next, in order**
 
-1. **Texture modulation convergence.** Rebalance the objective so
+The first four carry out the accepted
+[reorganization](docs/design/reorganization.md), in the order it sets.
+
+1. **Gallery in four groups.** Stimuli; Seeing and changing sound; Voices;
+   Spatial hearing. The scripts move into one folder per group, page URLs
+   stay the same, and the README gallery list is regrouped to match.
+2. **Source in a trunk and branches.** `core`, `signals`, `frames`, `views`
+   as the trunk, with `spatial`, `stimuli` and `texture` as branches on it. `analysis` splits
+   into frames (invertible) and views (one-way), the two `vocoder.py` files
+   are taken apart by what each piece is, the LF source joins the
+   generators and the mel scale moves to `core`. One mechanical PR that
+   adds no behaviour; texture output stays bit for bit identical.
+3. **Only frames synthesize.** A `View` base class whose `synthesize`
+   raises `NotInvertibleError`, saying what the view discards and naming
+   the route back to sound where one exists.
+4. **Release 0.4.0**, with the moved import paths in its notes.
+5. **Texture modulation convergence.** Rebalance the objective so
    modulation power converges (see Texture synthesis below).
 
 **Texture synthesis**
@@ -306,9 +322,12 @@ listed at the end.
 
 **Architecture**
 
-- Model subpackages (`sonore.texture`, later `sonore.speech`) sit on top of
-  the layers below them and are never imported by them. Heavy dependencies
-  go in optional extras.
+- After the reorganization, branches (`spatial`, `stimuli`, `texture`) build on the
+  trunk and never on each other, and nothing in the trunk imports a branch;
+  `tests/test_layers.py` keeps enforcing it. A voice is not a separate kind
+  of signal, so there is no `voice` subpackage: synthesizers live in
+  `signals` and analyses of a voice in `views`. Heavy dependencies go in
+  optional extras.
 - Split a component into its own distribution only when it needs a heavy
   dependency, a different release cadence, or a separate audience.
 - Bayesian inference of sound sources will be a separate package built on
@@ -326,10 +345,6 @@ listed at the end.
 - On-demand download of other public HRIR databases.
 - A block-by-block (streaming) modulation spectrogram, as the reference for a
   live version on a phone: the modulation spectrum of everyday sounds as they happen.
-- An API reference built from the docstrings, and a test folder that mirrors
-  `src/sonore` (in review in [#49](https://github.com/choyun1/sonore/pull/49)).
-- Gallery build: draw each figure once rather than twice (about 75 s of a
-  6.5 min build).
 
 <details>
 <summary><b>Done</b>, oldest first</summary>
@@ -372,7 +387,7 @@ listed at the end.
   band's envelope is modulated at each rate, in every time window, with linked
   slices and an animation; see `docs/design/modulation-spectrogram.md` and
   the [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html) gallery page.
-- **Gallery pages.** Fifteen pages, listed under [Gallery](#gallery), each
+- **Gallery pages.** Seventeen pages, listed under [Gallery](#gallery), each
   a runnable script shown with its code. The Cepstral analysis page is
   cross-checked against SciPy, MATLAB's `rceps` and Praat by
   `tools/crosscheck_cepstrum.py`; the Moving talkers page follows Cho & Kidd
@@ -451,6 +466,14 @@ listed at the end.
   `tools/compare_voice_methods.py` compares the trackers and envelopes at
   resynthesis and voice change; see `docs/design/voice-change.md` and the
   [Changing a voice](https://choyun1.github.io/sonore/gallery/voice.html) gallery page.
+- **API reference and test layout.** An API reference built from the
+  docstrings in CI, and a test folder that mirrors `src/sonore`.
+- **Faster gallery build.** Each figure is drawn once rather than twice;
+  the images are byte for byte the same.
+- **More moving talkers and rooms.** Straight paths across the plane and a
+  path no real source could take on the Moving talkers page, and the
+  gallery sentence in each rule-breaking room on the
+  [Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html) page.
 
 </details>
 
