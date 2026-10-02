@@ -517,7 +517,7 @@ TOPICS = [
     (
         "Stimuli",
         [
-            ("classic.html", "speech-shaped noise, beats and roughness, binaural beats, tone sequences."),
+            ("classic.html", "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms."),
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
             ("binaural.html", "differences between the ears: timing, and correlation that changes."),

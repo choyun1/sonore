@@ -30,7 +30,6 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Unvoiced gaps](#h-unvoiced-gaps): silence or shaped noise where the voice is not voiced.
 # - [Pitch and timbre apart](#h-pitch-and-timbre-apart): the same envelope on other contours.
 # - [Phases on a moving pitch](#h-phases-on-a-moving-pitch): cosine, Schroeder and random phase.
-# - [A gliding sawtooth](#h-a-gliding-sawtooth): four octaves without aliasing.
 # - [What this page leaves out](#h-what-this-page-leaves-out): better envelopes, aperiodicity,
 #   and the glottal pulse.
 
@@ -47,7 +46,6 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
-from scipy.signal import sawtooth
 
 import sonore as so
 
@@ -363,48 +361,6 @@ sound = snd
 snd = finish(buzzes["random"])
 fig, playhead = show(snd, "equal harmonics, random phase", contours["so.f0_track"])
 sound = snd
-
-# %% [markdown]
-# ## A gliding sawtooth
-#
-# A contour need not come from speech. A sawtooth gliding up four octaves, from 110 to 1760 Hz at
-# a 16 kHz sampling rate, has 72 harmonics below Nyquist at the start and 4 at the end. Each
-# harmonic in `so.harmonic_complex` fades out as it nears `f_max` (by default 0.45 of the sampling
-# rate), so harmonics leave one by one as they rise, and none is folded back. A sawtooth computed
-# sample by sample from the running phase has every harmonic up to infinity, and those above
-# Nyquist fold back as tones that fall while the pitch rises.
-
-# %%
-fs_glide, glide_dur = 16000, 4.0
-t_glide = np.linspace(0, glide_dur, 401)
-f_glide = 110 * 2 ** (4 * t_glide / glide_dur)  # four octaves, equal steps per second
-
-
-def glide_plot(snd, title):
-    fig, ax = plt.subplots(figsize=(10, 3.2), layout="constrained")
-    so.STFT(snd, win_dur=0.025, hop_dur=0.005).plot(ax, db_range=60, colorbar=False)
-    ax.set(xlim=(0, glide_dur), title=f"{title} (Hann 25 ms spectrogram)")
-    return fig, [ax]
-
-
-# %% [about]
-# Band-limited: `so.sawtooth_wave` on the contour.
-
-# %% [demo hs1] A band-limited glide
-glide = finish(so.sawtooth_wave(glide_dur, fs_glide, (t_glide, f_glide)))
-fig, playhead = glide_plot(glide, "so.sawtooth_wave, 110 to 1760 Hz")
-sound = glide
-
-# %% [about]
-# Naive: `scipy.signal.sawtooth` of the running phase. The aliases are the lines that slope
-# down, heard as a whistle falling against the rising buzz.
-
-# %% [demo hs2] A naive glide, aliased
-n = int(round(glide_dur * fs_glide))
-f_samples = np.interp(np.arange(n) / fs_glide, t_glide, f_glide)
-naive = finish(so.Sound(sawtooth(2 * np.pi * np.cumsum(f_samples) / fs_glide), fs_glide))
-fig, playhead = glide_plot(naive, "scipy.signal.sawtooth of the phase, 110 to 1760 Hz")
-sound = naive
 
 # %% [markdown]
 # ## What this page leaves out
