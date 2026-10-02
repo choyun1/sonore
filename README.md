@@ -65,6 +65,10 @@ cepstrum, a phase vocoder, ripples and binaural cues.
   correlated noise, Oscor and Phasewarp, windowed ITD/ILD/coherence analysis
   (broadband or per band), and rendering of static or moving sources through
   measured HRIRs (PKU-IOA, downloaded on first use, or any SOFA file).
+- **Synthetic speech.** A Klatt-style cascade/parallel formant synthesizer
+  (Klatt, 1980) driven by named parameter tracks (F0, formant frequencies
+  and bandwidths, voicing, aspiration and frication levels), for vowels,
+  consonant continua and breathy voice with every acoustic cue set exactly.
 - **Speech in noise.** Speech-shaped noise from a long-term average spectrum,
   mixing at a target SNR, ideal binary and ratio masks with exact resynthesis.
 - **Cochlear-implant and envelope/TFS studies.** A perfect-reconstruction ERB
@@ -218,7 +222,7 @@ also at the top level as `so.name`; the texture ones are under
 | [`core.units`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/units.py) | `dB`, `Decibels` |
 | [`core.fft`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/fft.py) | `set_fft_workers`, `fft_workers` (threads for the large FFTs; default every available core; results identical for any setting) |
 | [`signals.generators`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py) | `silence`, `pure_tone`, `harmonic_complex`, `schroeder_complex`, `square_wave`, `sawtooth_wave`, `pulse_train`, `linear_chirp`, `exponential_chirp`, `gaussian_noise`, `correlated_noise`, `iterated_ripple_noise` |
-| [`signals.processing`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/processing.py) | `pad`, `truncate`, `concat`, `mix`, `normalize`, `match_fs`, `match_channels`, `relative_db`, `bandpass`, `butter_filter`, `amplitude_modulate` |
+| [`signals.processing`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/processing.py) | `pad`, `truncate`, `concat`, `mix`, `normalize`, `match_fs`, `match_channels`, `relative_db`, `bandpass`, `butter_filter`, `amplitude_modulate`, `resonator` and `antiresonator` (Klatt's formant and antiformant; frequency and bandwidth may glide, with no clicks) |
 | [`analysis.frames`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py) | `Frame` (invertible analyses: `analyze`, `synthesize` as least squares, `frame_bounds`, `energy`, `adjoint`), `Filterbank` (frequency-domain filters, any shape; canonical dual), `GaborFrame` (the STFT as a frame; any window, zero-padded FFTs), `TVGaborFrame` (a Gabor frame whose window changes over time, from an explicit schedule, `from_function`, or `pitch_adaptive` from an F0 track; exact inverse; coefficients are a `TVSTFT`) |
 | [`analysis.filterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py) | `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `GammatoneFilterbank` (exact 4th-order gammatone responses, causal or zero-phase; `envelope_peak_delay` gives each filter's latency), `MorletFilterbank` (log-spaced Morlet wavelets); both add edge filters by default so synthesis is exact on the whole band, and `edges=False` gives the bare bank for cochleagrams. `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`), `noise_vocode` |
 | [`analysis.representations`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py) | `Spectrum`, `long_term_spectrum`, `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis), `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`), `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible), `Mask`, `ideal_binary_mask`, `ideal_ratio_mask`, `ModulationSpectrum` (linear-frequency from an STFT, or `.octave()` in cycles/octave) |
@@ -229,6 +233,7 @@ also at the top level as `so.name`; the texture ones are under
 | [`analysis.modspectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modspectrogram.py) | `ModulationSpectrogram` (a modulation spectrum per frame: power, local mean and depth for every acoustic band and modulation rate, from any `Envelopes`, with a `valid` mask; `.plot()` as rate against time, one band, or band against time at one rate; `.at(t)`, `.slices(t)`, `.animate()`; not invertible) |
 | [`stimuli.ripples`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/ripples.py) | `Ripple`, `RippleSum`, `DynamicRipple`, `ripple_sound`; patterns can also be any function `f(t, x)` of time and octaves, and `pattern.render(filterbank, dur, fs)` gives their `Envelopes` |
 | [`stimuli.phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py) | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `resynthesize` with `time_scale` and `freq_map`) |
+| [`stimuli.klatt`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/klatt.py) | `klatt_synthesize` (a Klatt-style cascade/parallel formant synthesizer: harmonic voicing with Klatt's glottal spectrum, aspiration and frication noise modulated at F0, nasal pole and zero, formants 1-5 in cascade and 1-6 in parallel, radiation; every parameter a number or a `(times, values)` track), `klatt_continuum` (evenly spaced parameter sets between two endpoints), `KLATT_DEFAULTS` |
 | [`stimuli.binaural`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py) | `apply_itd_ild`, `simple_bir`, `interaural_cues`, `oscor`, `phasewarp` |
 | [`stimuli.spatialization`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py) | `HRIRSet` (PKU-IOA, SOFA; onset-aligned interpolation), `spatialize`, `move_sound`, trajectories, coordinate conversions, `distance_gain_db` |
 | [`stimuli.hrir_data`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py) | `load_hrirs`: public HRIR databases (PKU-IOA) downloaded on first use, checksum-verified and cached |
@@ -281,10 +286,9 @@ listed at the end.
    cepstrum and the pitch-adaptive frame: a CheapTrick-style spectral
    envelope (Morise, 2015), aperiodicity, and the noise half of
    pulse-plus-noise synthesis (the harmonic half, harmonic complexes on an
-   F0 contour, is done). Alongside it, a Klatt-style formant synthesizer
-   (Klatt, 1980; KLSYN88, Klatt & Klatt, 1990) built on the same harmonic
-   source: its design is drafted in
-   [#47](https://github.com/choyun1/sonore/pull/47) and waits on decisions.
+   F0 contour, is done). The Klatt-style formant synthesizer built on the
+   same harmonic source is done (see below); next for it is a gallery page,
+   and later the voice-quality controls of KLSYN88 (Klatt & Klatt, 1990).
 2. **Moving-sound renderer.** Revisit `move_sound`, since linear
    trajectories sound unconvincing: sources that change distance (level
    change, travel-time delay, Doppler shift and room reverberation), a
@@ -396,6 +400,14 @@ listed at the end.
   its own F0 track. The harmonic half of the pulse-plus-noise synthesis in
   item 1 of Next; see `docs/design/harmonic-source.md` and the
   [Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) gallery page.
+- **Klatt-style formant synthesizer.** `so.klatt_synthesize` after Klatt
+  (1980): harmonic voicing with Klatt's glottal spectrum, aspiration and
+  frication noise, formants in cascade and in parallel (alternating signs,
+  which match the cascade between peaks to 0.15 dB where equal signs miss
+  by 15 dB), radiation, and parameters as tracks interpolated to every
+  sample. `so.resonator` and `so.antiresonator` are its formants. A vowel's
+  harmonics equal source x formants x radiation to 1e-6 dB; see
+  `docs/design/klatt.md`.
 
 </details>
 
@@ -437,7 +449,7 @@ Works with no tag are not implemented yet.
 - Kawahara, Masuda-Katsuse & de Cheveigné (1999). Restructuring speech representations using a pitch-adaptive time-frequency smoothing and an instantaneous-frequency-based F0 extraction. *Speech Communication* 27. [doi:10.1016/S0167-6393(98)00085-5](https://doi.org/10.1016/S0167-6393(98)00085-5). [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L504) · [Roadmap](#roadmap)
 - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis, modification and synthesis framework. *Sādhanā* 36(5). [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3). [`representations.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L287) · [▶ Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html)
 - Kingsbury, Morgan & Greenberg (1998). Robust speech recognition using the modulation spectrogram. *Speech Communication* 25(1–3), 117–132. [doi:10.1016/S0167-6393(98)00032-6](https://doi.org/10.1016/S0167-6393(98)00032-6). [`modspectrogram.ModulationSpectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modspectrogram.py#L27) · [▶ Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html)
-- Klatt (1980). Software for a cascade/parallel formant synthesizer. *JASA* 67(3). [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940). · [Roadmap](#roadmap)
+- Klatt (1980). Software for a cascade/parallel formant synthesizer. *JASA* 67(3). [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940). [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/klatt.py#L101) [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/processing.py#L188) · [Roadmap](#roadmap)
 - Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among female and male talkers. *JASA* 87. [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894). · [Roadmap](#roadmap)
 - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values. *IEEE Trans. ASSP* 26(1). [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047). [`representations.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L356) · [▶ Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html)
 - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html). The gallery's speech (speakers bdl and rms; see `docs/speech/SOURCES.md`). · [▶ Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html) [▶ Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html) [▶ Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html) [▶ Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) [▶ Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html) [▶ Phase vocoder](https://choyun1.github.io/sonore/gallery/pv.html) [▶ Classic stimuli](https://choyun1.github.io/sonore/gallery/classic.html) [▶ Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html) [▶ Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html)
