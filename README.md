@@ -1,15 +1,8 @@
 # sonore
 
-**Signals and stimuli for auditory research, built for Jupyter.**
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 
-**[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
-playable next to its plots, with a playhead that follows the sound.
-
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
-A first tour you can run in the browser, with nothing to install: stimuli, spectrograms, the
-cepstrum, a phase vocoder, ripples and binaural cues.
+**Signals and stimuli for auditory research, built for Jupyter.**
 
 sonore is a small Python library for making, manipulating, and analyzing sounds
 the way hearing scientists think about them. Its analysis and synthesis tools
@@ -29,6 +22,13 @@ The name comes from Pierre Schaeffer's *objet sonore*, the "sound object": a
 sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
+
+**[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
+playable next to its plots, with a playhead that follows the sound.
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
+A first tour you can run in the browser, with nothing to install: stimuli, spectrograms, the
+cepstrum, a phase vocoder, ripples and binaural cues.
 
 ## Contents
 
