@@ -7,6 +7,15 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.f0_track` and `F0Track`: an F0 tracker with a voiced/unvoiced
+  decision. Candidates from YIN's difference function, refinement by the
+  instantaneous frequency of six harmonics (after WORLD's StoneMask), a
+  periodicity score, and a Viterbi pass. Within 0.12% on synthetic glides
+  and vibrato, works without the fundamental, and gets the voicing of about
+  6% (male) and 1.5% (female) of frames wrong against laryngograph reference
+  F0. Its `t` and `f0` feed `TVGaborFrame.pitch_adaptive` and
+  `Cepstrum.lifter`; `.plot()` draws the track and, optionally, every
+  candidate. See `docs/design/f0.md`.
 - `so.set_fft_workers` and `so.fft_workers`: the large FFTs (filterbank
   analysis and synthesis, Hilbert envelopes, FFT resampling in texture
   synthesis, modulation filtering in `ModulationSpectrogram`) now use every
