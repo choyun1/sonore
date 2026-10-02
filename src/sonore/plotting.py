@@ -44,8 +44,8 @@ def plot_waveform(sound, ax=None, labels=None, **kwargs):
     if sound.n_channels == 2 and labels is None:
         labels = ["L", "R"]
     if labels:
-        for line, lab in zip(lines, labels, strict=False):
-            line.set_label(lab)
+        for line, label in zip(lines, labels, strict=False):
+            line.set_label(label)
         ax.legend(loc="upper right")
     ax.axhline(0, color="k", alpha=0.25, lw=0.8)
     ax.set(title="Waveform", xlabel="Time [s]", ylabel="Amplitude", xlim=(0, sound.duration))
@@ -55,15 +55,15 @@ def plot_waveform(sound, ax=None, labels=None, **kwargs):
 
 def plot_spectrum(spectrum, ax=None, fscale="log", relative=True, **kwargs):
     ax = _ax(ax)
-    s = spectrum.relative() if relative else spectrum
-    f, lev = (s.f[1:], s.level[1:]) if fscale == "log" else (s.f, s.level)
-    ax.plot(f, lev, **kwargs)
+    spec = spectrum.relative() if relative else spectrum
+    freqs, levels = (spec.f[1:], spec.level[1:]) if fscale == "log" else (spec.f, spec.level)
+    ax.plot(freqs, levels, **kwargs)
     ax.set_xscale(fscale)
     ax.set(
         title="Magnitude spectrum",
         xlabel="Frequency [Hz]",
         ylabel="Level re max [dB]" if relative else "Level [dB]",
-        xlim=(f[0], f[-1]),
+        xlim=(freqs[0], freqs[-1]),
     )
     ax.grid(ls=":", which="both")
     return ax
@@ -81,8 +81,8 @@ def _interior(stft):
     """Frames whose window lies entirely inside the signal (edge frames are
     zero-padded, which looks like a click)."""
     start = np.round(stft.t * stft.fs).astype(int) - stft.sft.m_num_mid
-    ok = np.flatnonzero((start >= 0) & (start + stft.sft.m_num <= stft.n_samples))
-    return slice(ok[0], ok[-1] + 1) if len(ok) else slice(None)
+    inside = np.flatnonzero((start >= 0) & (start + stft.sft.m_num <= stft.n_samples))
+    return slice(inside[0], inside[-1] + 1) if len(inside) else slice(None)
 
 
 def plot_stft(
@@ -90,9 +90,9 @@ def plot_stft(
 ):
     ax = _ax(ax)
     keep = _interior(stft) if trim_edges else slice(None)
-    d = stft.db[channel][:, keep]
-    vmax = d.max()
-    _tf_image(ax, d, stft.t[keep], stft.f, cmap, vmax - db_range, vmax, colorbar, "dB")
+    levels_db = stft.db[channel][:, keep]
+    vmax = levels_db.max()
+    _tf_image(ax, levels_db, stft.t[keep], stft.f, cmap, vmax - db_range, vmax, colorbar, "dB")
     ax.set_title("Spectrogram")
     ax.set_xlim(0, stft.n_samples / stft.fs)
     if fmax:
@@ -102,8 +102,8 @@ def plot_stft(
 
 def plot_mask(mask, ax=None, channel=0, cmap="Greys_r", colorbar=False):
     ax = _ax(ax)
-    v = mask.values[channel] if mask.values.ndim == 3 else mask.values
-    _tf_image(ax, v, mask.t, mask.f, cmap, 0, 1, colorbar, "")
+    values = mask.values[channel] if mask.values.ndim == 3 else mask.values
+    _tf_image(ax, values, mask.t, mask.f, cmap, 0, 1, colorbar, "")
     ax.set_title("Mask")
     return ax
 
@@ -156,13 +156,20 @@ def _modulation_view(msg, channel, band, rate):
     if band is not None and rate is not None:
         raise ValueError("give band or rate, not both")
     if rate is not None:
-        k = int(np.argmin(np.abs(np.log(msg.fm / rate))))
-        db = _depth_db(msg.depth[channel, :, k], msg.valid[:, k])
-        return db, msg.t, msg.f, "Frequency [Hz]", f"Modulation depth at {msg.fm[k]:.3g} Hz", True
+        rate_idx = int(np.argmin(np.abs(np.log(msg.fm / rate))))
+        db = _depth_db(msg.depth[channel, :, rate_idx], msg.valid[:, rate_idx])
+        return db, msg.t, msg.f, "Frequency [Hz]", f"Modulation depth at {msg.fm[rate_idx]:.3g} Hz", True
     if band is not None:
-        b = int(np.argmin(np.abs(msg.f - band)))
-        db = _depth_db(msg.depth[channel, b], msg.valid[b])
-        return db, msg.t, msg.fm, "Modulation rate [Hz]", f"Modulation depth, band at {msg.f[b]:.0f} Hz", True
+        band_idx = int(np.argmin(np.abs(msg.f - band)))
+        db = _depth_db(msg.depth[channel, band_idx], msg.valid[band_idx])
+        return (
+            db,
+            msg.t,
+            msg.fm,
+            "Modulation rate [Hz]",
+            f"Modulation depth, band at {msg.f[band_idx]:.0f} Hz",
+            True,
+        )
     db = _depth_db(msg.pooled_depth()[channel])
     return db, msg.t, msg.fm, "Modulation rate [Hz]", "Modulation spectrogram", True
 
@@ -206,16 +213,18 @@ def plot_modulation_slices(msg, t, rate=4.0, channel=0, db_range=30.0, cmap="mag
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 3, figsize=figsize, layout="constrained")
-    cm = _depth_cmap(cmap)
+    colormap = _depth_cmap(cmap)
     views = [_modulation_view(msg, channel, None, None), _modulation_view(msg, channel, None, rate)]
-    i = int(np.argmin(np.abs(msg.t - t)))
-    snap = _depth_db(msg.depth[channel, :, :, i], msg.valid[:, :, i])
-    vmin, vmax = _depth_limits(np.concatenate([v[0].ravel() for v in views] + [snap.ravel()]), db_range)
+    t_idx = int(np.argmin(np.abs(msg.t - t)))
+    band_rate_db = _depth_db(msg.depth[channel, :, :, t_idx], msg.valid[:, :, t_idx])
+    vmin, vmax = _depth_limits(
+        np.concatenate([view[0].ravel() for view in views] + [band_rate_db.ravel()]), db_range
+    )
     for ax, (db, x, y, ylabel, title, _) in zip(axes[:2], views, strict=True):
-        ax.pcolormesh(x, y, db, cmap=cm, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
+        ax.pcolormesh(x, y, db, cmap=colormap, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
         ax.set(yscale="log", xlabel="Time [s]", ylabel=ylabel, title=title)
-        ax.axvline(msg.t[i], color="w", lw=1.2)
-    im = _plot_band_rate(msg, axes[2], i, channel, vmin, vmax, cm)
+        ax.axvline(msg.t[t_idx], color="w", lw=1.2)
+    im = _plot_band_rate(msg, axes[2], t_idx, channel, vmin, vmax, colormap)
     fig.colorbar(im, ax=axes, label="Depth [dB]", shrink=0.9)
     return fig
 
@@ -231,16 +240,16 @@ def animate_modulation_spectrogram(
     from matplotlib.animation import FuncAnimation
 
     times = np.arange(0.0, msg.t[-1] + 1e-9, 1.0 / fps)
-    idx = np.clip(np.round(times / msg.hop).astype(int), 0, len(msg.t) - 1)
+    frame_idx = np.clip(np.round(times / msg.hop).astype(int), 0, len(msg.t) - 1)
     db = _depth_db(msg.depth[channel], msg.valid)
     vmin, vmax = _depth_limits(db, db_range)
-    cm = _depth_cmap(cmap)
+    colormap = _depth_cmap(cmap)
     fig, ax = plt.subplots(figsize=figsize, layout="constrained")
-    im = _plot_band_rate(msg, ax, idx[0], channel, vmin, vmax, cm)
+    im = _plot_band_rate(msg, ax, frame_idx[0], channel, vmin, vmax, colormap)
     fig.colorbar(im, ax=ax, label="Depth [dB]")
 
     def update(j):
-        im.set_array(db[:, :, idx[j]].ravel())
+        im.set_array(db[:, :, frame_idx[j]].ravel())
         ax.set_title(f"Band x rate at {times[j]:.2f} s")
         return (im,)
 
@@ -273,7 +282,7 @@ def _save_with_audio(anim, path, fps, dpi, sound):
 
 def _band_labels(cfs, edges=True):
     """CF labels; the first and last filters are the lowpass/highpass edges."""
-    labels = [f"{c:.0f}" for c in cfs]
+    labels = [f"{cf:.0f}" for cf in cfs]
     if edges:
         labels[0] = f"< {cfs[0]:.0f}"
         labels[-1] = f"> {cfs[-1]:.0f}"
@@ -292,24 +301,24 @@ def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None)
     """
     import matplotlib.pyplot as plt
 
-    n = sb.data.shape[0]
-    idx = np.arange(sb.data.shape[1]) if bands is None else np.asarray(list(bands))
-    B = len(idx)
-    t = np.arange(n) / sb.fs
-    data = sb.data[:, idx, channel]
-    labels = [_band_labels(sb.cfs)[i] for i in idx]
+    n_samples = sb.data.shape[0]
+    band_idx = np.arange(sb.data.shape[1]) if bands is None else np.asarray(list(bands))
+    n_shown = len(band_idx)
+    t = np.arange(n_samples) / sb.fs
+    data = sb.data[:, band_idx, channel]
+    labels = [_band_labels(sb.cfs)[i] for i in band_idx]
     if axes is None:
-        _, axes = plt.subplots(B, 1, figsize=(8, 0.5 * B + 0.6), sharex=True)
+        _, axes = plt.subplots(n_shown, 1, figsize=(8, 0.5 * n_shown + 0.6), sharex=True)
     axes = list(axes)
-    if len(axes) != B:
-        raise ValueError(f"need {B} axes (one per band shown), got {len(axes)}")
-    lim = 1.05 * np.max(np.abs(data)) or 1.0
+    if len(axes) != n_shown:
+        raise ValueError(f"need {n_shown} axes (one per band shown), got {len(axes)}")
+    ylim = 1.05 * np.max(np.abs(data)) or 1.0
     for i, ax in enumerate(axes[::-1]):
         ax.plot(t, data[:, i], lw=0.6, color=color)
         ax.set_yticks([])
-        ax.set_xlim(0, n / sb.fs)
+        ax.set_xlim(0, n_samples / sb.fs)
         if sharey:
-            ax.set_ylim(-lim, lim)
+            ax.set_ylim(-ylim, ylim)
         ax.set_ylabel(labels[i], rotation=0, ha="right", va="center", fontsize=8)
         for side in ("top", "right", "left"):
             ax.spines[side].set_visible(False)
@@ -412,12 +421,14 @@ def plot_cepstrum(cep, ax=None, channel=0, q_range=(1e-3, 15e-3), cmap="magma", 
     the color scale tops out at the 99.5th percentile, so that a few isolated
     peaks do not darken the rest."""
     ax = _ax(ax)
-    q = cep.q
-    sel = (q >= q_range[0]) & (q <= q_range[1])
-    values = np.maximum(cep.data[channel][sel], 0)
+    quefrency = cep.q
+    in_range = (quefrency >= q_range[0]) & (quefrency <= q_range[1])
+    values = np.maximum(cep.data[channel][in_range], 0)
     vmax = np.percentile(values, 99.5) or values.max() or 1.0
-    qm = q[sel] * 1e3
-    im = ax.pcolormesh(cep.t, qm, values, cmap=cmap, vmin=0, vmax=vmax, shading="auto", rasterized=True)
+    quefrency_ms = quefrency[in_range] * 1e3
+    im = ax.pcolormesh(
+        cep.t, quefrency_ms, values, cmap=cmap, vmin=0, vmax=vmax, shading="auto", rasterized=True
+    )
     ax.set(title="Cepstrum", xlabel="Time [s]", ylabel="Quefrency [ms]")
     if colorbar:
         ax.figure.colorbar(im, ax=ax, label="Cepstrum")
@@ -430,11 +441,21 @@ def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwa
     as a grey dot, darker for a higher periodicity score."""
     ax = _ax(ax)
     if candidates:
-        c, s = track.candidates[channel], track.candidate_scores[channel]
-        t = np.broadcast_to(track.t[:, None], c.shape)
-        ok = np.isfinite(c)
-        shade = np.clip(s[ok], 0, 1)
-        ax.scatter(t[ok], c[ok], s=4, c=1 - shade, cmap="gray", vmin=0, vmax=1.4, linewidths=0, zorder=1)
+        cand_f0, cand_score = track.candidates[channel], track.candidate_scores[channel]
+        t = np.broadcast_to(track.t[:, None], cand_f0.shape)
+        finite = np.isfinite(cand_f0)
+        gray_level = np.clip(cand_score[finite], 0, 1)
+        ax.scatter(
+            t[finite],
+            cand_f0[finite],
+            s=4,
+            c=1 - gray_level,
+            cmap="gray",
+            vmin=0,
+            vmax=1.4,
+            linewidths=0,
+            zorder=1,
+        )
     f0 = np.where(track.voiced[channel], track.f0[channel], np.nan)
     ax.plot(track.t, f0, color=color, zorder=2, **kwargs)
     ax.set(title="F0", xlabel="Time [s]", ylabel="F0 [Hz]")
@@ -448,41 +469,41 @@ def plot_interaural_cues(cues, ax=None, show_iac=True):
 
     if cues.itd.ndim == 2:
         ax = _ax(ax)
-        lim = np.nanmax(np.abs(cues.itd)) * 1e6 or 1
+        itd_lim = np.nanmax(np.abs(cues.itd)) * 1e6 or 1
         im = ax.pcolormesh(
             cues.t,
             np.arange(cues.itd.shape[1]),
             1e6 * cues.itd.T,
             cmap="RdBu_r",
-            vmin=-lim,
-            vmax=lim,
+            vmin=-itd_lim,
+            vmax=itd_lim,
             shading="auto",
         )
-        B, step = len(cues.cfs), max(1, len(cues.cfs) // 8)
-        ax.set_yticks(np.arange(B)[::step], _band_labels(cues.cfs)[::step])
+        n_bands, step = len(cues.cfs), max(1, len(cues.cfs) // 8)
+        ax.set_yticks(np.arange(n_bands)[::step], _band_labels(cues.cfs)[::step])
         ax.set(xlabel="Time [s]", ylabel="CF [Hz]", title="ITD per band (+ = right leads)")
         ax.figure.colorbar(im, ax=ax, label="ITD [µs]")
         return ax
 
     if ax is None:
         nrows = 2 if show_iac else 1
-        fig, axs = plt.subplots(nrows, 1, figsize=(8, 3 * nrows), sharex=True, squeeze=False)
-        ax, iac_ax = axs[0, 0], (axs[1, 0] if show_iac else None)
+        fig, axes_grid = plt.subplots(nrows, 1, figsize=(8, 3 * nrows), sharex=True, squeeze=False)
+        ax, iac_ax = axes_grid[0, 0], (axes_grid[1, 0] if show_iac else None)
     else:
         iac_ax = None
     ax.plot(cues.t, 1e6 * cues.itd, color="m", alpha=0.7, label="ITD")
     ax.axhline(0, color="k", alpha=0.25, lw=0.8)
     ax.set(title="Interaural cues (+ = right)", ylabel="ITD [µs]")
     ax.grid(ls=":")
-    tw = ax.twinx()
-    tw.plot(cues.t, cues.ild, color="g", alpha=0.7, label="ILD")
-    tw.set_ylabel("ILD [dB]")
-    lim = np.nanmax(np.abs(cues.ild)) * 1.1 or 1
-    tw.set_ylim(-lim, lim)
-    lim = np.nanmax(np.abs(cues.itd)) * 1.1e6 or 1
-    ax.set_ylim(-lim, lim)
+    ild_ax = ax.twinx()
+    ild_ax.plot(cues.t, cues.ild, color="g", alpha=0.7, label="ILD")
+    ild_ax.set_ylabel("ILD [dB]")
+    ild_lim = np.nanmax(np.abs(cues.ild)) * 1.1 or 1
+    ild_ax.set_ylim(-ild_lim, ild_lim)
+    itd_lim = np.nanmax(np.abs(cues.itd)) * 1.1e6 or 1
+    ax.set_ylim(-itd_lim, itd_lim)
     ax.legend(loc="upper left")
-    tw.legend(loc="upper right")
+    ild_ax.legend(loc="upper right")
     if iac_ax is not None:
         iac_ax.plot(cues.t, cues.iac, color="k", alpha=0.7, label="coherence (peak)")
         iac_ax.plot(cues.t, cues.corr0, color="tab:orange", alpha=0.7, label="correlation (lag 0)")
@@ -506,11 +527,13 @@ def plot_ripple_pattern(
     if n_t is None:  # resolve the fastest modulation with ~8 points per cycle
         n_t = int(max(400, np.ceil(duration * 8 * (_max_rate(pattern) or 0))))
     t = np.linspace(0, duration, n_t)
-    x = np.linspace(0, np.log2(f_hi / f_lo), n_x)
-    env = _evaluate(pattern, t, x)
+    octaves = np.linspace(0, np.log2(f_hi / f_lo), n_x)
+    env = _evaluate(pattern, t, octaves)
     db = 20 * np.log10(np.maximum(env, 1e-6) / np.mean(env))
-    lim = np.max(np.abs(db)) or 1.0
-    im = ax.pcolormesh(t, f_lo * 2**x, db, cmap=cmap, vmin=-lim, vmax=lim, shading="auto", rasterized=True)
+    db_lim = np.max(np.abs(db)) or 1.0
+    im = ax.pcolormesh(
+        t, f_lo * 2**octaves, db, cmap=cmap, vmin=-db_lim, vmax=db_lim, shading="auto", rasterized=True
+    )
     ax.set_yscale("log")
     ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Ripple pattern")
     if colorbar:
@@ -525,10 +548,10 @@ def overview(sound, win_dur=20e-3, figsize=(12, 8), fmax=None):
 
     from sonore.analysis.representations import STFT, ModulationSpectrum, long_term_spectrum
 
-    S = STFT(sound.mono(), win_dur)
+    stft = STFT(sound.mono(), win_dur)
     fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")
     plot_waveform(sound, axes[0, 0])
     plot_spectrum(long_term_spectrum(sound), axes[0, 1])
-    plot_stft(S, axes[1, 0], fmax=fmax)
-    plot_modulation_spectrum(ModulationSpectrum(S), axes[1, 1], wt_max=50, wf_max=10)
+    plot_stft(stft, axes[1, 0], fmax=fmax)
+    plot_modulation_spectrum(ModulationSpectrum(stft), axes[1, 1], wt_max=50, wf_max=10)
     return fig

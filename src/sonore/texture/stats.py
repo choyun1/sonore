@@ -113,23 +113,23 @@ class TextureModel:
 
     @property
     def decimation(self) -> int:
-        r = self.fs / self.env_fs
-        if abs(r - round(r)) > 1e-9:
+        ratio = self.fs / self.env_fs
+        if abs(ratio - round(ratio)) > 1e-9:
             raise ValueError("fs must be an integer multiple of env_fs")
-        return int(round(r))
+        return int(round(ratio))
 
     def prepare(self, sound: Sound) -> np.ndarray:
         """Mono, resampled to :attr:`fs`, truncated to a whole number of
         envelope samples, RMS-normalized. Returns a 1-D array."""
-        s = sound.mono() if sound.n_channels > 1 else sound
-        if s.fs != self.fs:
-            s = s.resample(self.fs)
-        x = s.data[:, 0]
-        x = x[: len(x) // self.decimation * self.decimation]
-        rms = np.sqrt(np.mean(x**2))
-        if rms == 0:
+        mono = sound.mono() if sound.n_channels > 1 else sound
+        if mono.fs != self.fs:
+            mono = mono.resample(self.fs)
+        signal = mono.data[:, 0]
+        signal = signal[: len(signal) // self.decimation * self.decimation]
+        signal_rms = np.sqrt(np.mean(signal**2))
+        if signal_rms == 0:
             raise ValueError("sound is silent")
-        return x * (self.rms / rms)
+        return signal * (self.rms / signal_rms)
 
     def subbands(self, x: np.ndarray) -> np.ndarray:
         """Circular cochlear subbands of a prepared signal, shape ``(n, n_bands + 2)``."""
@@ -148,18 +148,23 @@ def measurement_window(n: int, n_seconds: int) -> np.ndarray:
     """The toolbox's window for measuring an original: flat, with a
     raised-cosine ramp of ``n // (n_seconds + 1)`` samples at each end (so
     about ``duration / (seconds + 1)``). Normalized to sum to 1."""
-    r = n // (max(int(n_seconds), 1) + 1)
-    w = np.ones(n)
-    if r > 0:
-        ramp = 0.5 - 0.5 * np.cos(np.pi * np.arange(1, r + 1) / r)
-        w[:r] = np.minimum(w[:r], ramp)
-        w[n - r :] = np.minimum(w[n - r :], ramp[::-1])
-    return w / w.sum()
+    ramp_len = n // (max(int(n_seconds), 1) + 1)
+    window = np.ones(n)
+    if ramp_len > 0:
+        ramp = 0.5 - 0.5 * np.cos(np.pi * np.arange(1, ramp_len + 1) / ramp_len)
+        window[:ramp_len] = np.minimum(window[:ramp_len], ramp)
+        window[n - ramp_len :] = np.minimum(window[n - ramp_len :], ramp[::-1])
+    return window / window.sum()
 
 
-def _div(a, b):
-    b = np.asarray(b)
-    return np.divide(a, b, out=np.zeros(np.broadcast(a, b).shape), where=b > 1e-300)
+def _div(numerator, denominator):
+    denominator = np.asarray(denominator)
+    return np.divide(
+        numerator,
+        denominator,
+        out=np.zeros(np.broadcast(numerator, denominator).shape),
+        where=denominator > 1e-300,
+    )
 
 
 def _pair_corr(x: np.ndarray, w: np.ndarray, offsets, centered: bool) -> np.ndarray:
@@ -169,14 +174,14 @@ def _pair_corr(x: np.ndarray, w: np.ndarray, offsets, centered: bool) -> np.ndar
     if centered:
         x = x - np.tensordot(w, x, axes=(0, 0))[None]
     power = np.tensordot(w, x**2, axes=(0, 0))  # (B, ...)
-    B = x.shape[1]
-    out = np.full(x.shape[1:] + (len(offsets),), np.nan)
+    n_channels = x.shape[1]
+    corr = np.full(x.shape[1:] + (len(offsets),), np.nan)
     for i, d in enumerate(offsets):
-        if d >= B:
+        if d >= n_channels:
             continue
-        num = np.tensordot(w, x[:, : B - d] * x[:, d:], axes=(0, 0))
-        out[: B - d, ..., i] = _div(num, np.sqrt(power[: B - d] * power[d:]))
-    return out
+        cross = np.tensordot(w, x[:, : n_channels - d] * x[:, d:], axes=(0, 0))
+        corr[: n_channels - d, ..., i] = _div(cross, np.sqrt(power[: n_channels - d] * power[d:]))
+    return corr
 
 
 @dataclass(frozen=True, eq=False)
@@ -229,20 +234,21 @@ class TextureStats:
     def from_subbands(cls, sb: np.ndarray, model: TextureModel, window: str = "ramped") -> TextureStats:
         env = model.envelopes(sb)
         n_env = env.shape[0]
-        w = cls._window(model, n_env, window)
-        wf = np.repeat(w, model.decimation) / model.decimation  # the window at the full rate
-        sub_var = wf @ (sb - wf @ sb) ** 2
-        return cls.from_envelopes(env, sub_var, model, window)
+        env_weights = cls._window(model, n_env, window)
+        # the window at the full rate
+        full_rate_weights = np.repeat(env_weights, model.decimation) / model.decimation
+        subband_variance = full_rate_weights @ (sb - full_rate_weights @ sb) ** 2
+        return cls.from_envelopes(env, subband_variance, model, window)
 
     @staticmethod
     def _window(model: TextureModel, n_env: int, window: str) -> np.ndarray:
         if window == "ramped":
-            w = measurement_window(n_env, int(round(n_env / model.env_fs)))
+            weights = measurement_window(n_env, int(round(n_env / model.env_fs)))
         elif window == "uniform":
-            w = np.full(n_env, 1.0 / n_env)
+            weights = np.full(n_env, 1.0 / n_env)
         else:
             raise ValueError("window must be 'ramped' or 'uniform'")
-        return w
+        return weights
 
     @classmethod
     def from_envelopes(
@@ -251,33 +257,48 @@ class TextureStats:
         """Statistics of compressed, downsampled envelopes ``(n_env, B)``
         (subband variances are passed through). Used during synthesis."""
         n_env = env.shape[0]
-        w = cls._window(model, n_env, window)
-        n = n_env * model.decimation
+        weights = cls._window(model, n_env, window)
+        n_samples = n_env * model.decimation
 
-        mu = w @ env
-        dev = env - mu
-        m2 = w @ dev**2
-        env_var = _div(m2, mu**2)
-        skew = _div(w @ dev**3, m2**1.5)
-        kurt = _div(w @ dev**4, m2**2)
-        corr = _pair_corr(env, w, model.corr_offsets, centered=True)
+        mean = weights @ env
+        deviation = env - mean
+        variance = weights @ deviation**2
+        env_var = _div(variance, mean**2)
+        skewness = _div(weights @ deviation**3, variance**1.5)
+        kurtosis = _div(weights @ deviation**4, variance**2)
+        corr = _pair_corr(env, weights, model.corr_offsets, centered=True)
 
-        mb = model.mod_bank.filter(env, model.env_fs)  # (n_env, B, M)
-        mod_power = _div(np.tensordot(w, mb**2, axes=(0, 0)), m2[:, None])
+        mod_bands = model.mod_bank.filter(env, model.env_fs)  # (n_env, B, M)
+        mod_power = _div(np.tensordot(weights, mod_bands**2, axes=(0, 0)), variance[:, None])
 
-        a = model.oct_bank.filter(env, model.env_fs, analytic=True)  # (n_env, B, K)
-        re = a.real
-        c1 = _pair_corr(re[:, :, list(model.c1_bands)], w, model.c1_offsets, centered=False)
-        mag = np.abs(a[:, :, :-1])
-        doubled = np.real(_div_complex(a[:, :, :-1] ** 2, mag))
-        hi = a[:, :, 1:]
-        den = np.sqrt(np.tensordot(w, doubled**2, axes=(0, 0)) * np.tensordot(w, hi.real**2, axes=(0, 0)))
-        c2 = _div(np.tensordot(w, doubled * hi.real, axes=(0, 0)), den) + 1j * _div(
-            np.tensordot(w, doubled * hi.imag, axes=(0, 0)), den
+        oct_analytic = model.oct_bank.filter(env, model.env_fs, analytic=True)  # (n_env, B, K)
+        oct_real = oct_analytic.real
+        c1 = _pair_corr(oct_real[:, :, list(model.c1_bands)], weights, model.c1_offsets, centered=False)
+        lower_magnitude = np.abs(oct_analytic[:, :, :-1])
+        doubled = np.real(_div_complex(oct_analytic[:, :, :-1] ** 2, lower_magnitude))
+        upper_band = oct_analytic[:, :, 1:]
+        norm = np.sqrt(
+            np.tensordot(weights, doubled**2, axes=(0, 0))
+            * np.tensordot(weights, upper_band.real**2, axes=(0, 0))
+        )
+        c2 = _div(np.tensordot(weights, doubled * upper_band.real, axes=(0, 0)), norm) + 1j * _div(
+            np.tensordot(weights, doubled * upper_band.imag, axes=(0, 0)), norm
         )
 
-        sub_var = np.asarray(subband_var)
-        return cls(model, mu, env_var, skew, kurt, corr, mod_power, c1, c2, sub_var, n / model.fs)
+        subband_var_array = np.asarray(subband_var)
+        return cls(
+            model,
+            mean,
+            env_var,
+            skewness,
+            kurtosis,
+            corr,
+            mod_power,
+            c1,
+            c2,
+            subband_var_array,
+            n_samples / model.fs,
+        )
 
     # -- bookkeeping -------------------------------------------------------
 
@@ -304,8 +325,8 @@ class TextureStats:
         """Channels whose subband variance is within ``range_db`` of the
         loudest. Quieter channels are ignored by :meth:`snr` (as in the
         toolbox): their statistics are dominated by noise and inaudible."""
-        v = np.maximum(self.subband_var, 1e-300)
-        return 10 * np.log10(v / v.max()) > -range_db
+        floored_var = np.maximum(self.subband_var, 1e-300)
+        return 10 * np.log10(floored_var / floored_var.max()) > -range_db
 
     def snr(self, other: TextureStats, classes=PAPER_CLASSES, range_db: float = 30.0) -> dict[str, float]:
         """How well ``other`` matches these (target) statistics, per class:
@@ -319,40 +340,57 @@ class TextureStats:
         fluctuation dominates the ratio."""
         if isinstance(classes, str):
             classes = (classes,)
-        ok = self.channel_mask(range_db)
-        B = len(ok)
+        loud = self.channel_mask(range_db)
+        n_channels = len(loud)
         out = {}
-        for c in classes:
-            t, o = self.get(c), other.get(c)
-            if c in ("env_corr", "c1"):
-                offsets = self.model.corr_offsets if c == "env_corr" else self.model.c1_offsets
-                pair = np.array([[ok[j] and j + d < B and ok[j + d] for d in offsets] for j in range(B)])
-                sel = pair[:, None, :] if c == "c1" else pair
-                sel = np.broadcast_to(sel, t.shape)
+        for stat_class in classes:
+            target_vals, other_vals = self.get(stat_class), other.get(stat_class)
+            if stat_class in ("env_corr", "c1"):
+                offsets = self.model.corr_offsets if stat_class == "env_corr" else self.model.c1_offsets
+                pair_loud = np.array(
+                    [
+                        [loud[j] and j + d < n_channels and loud[j + d] for d in offsets]
+                        for j in range(n_channels)
+                    ]
+                )
+                selected = pair_loud[:, None, :] if stat_class == "c1" else pair_loud
+                selected = np.broadcast_to(selected, target_vals.shape)
             else:
-                sel = np.broadcast_to(ok.reshape((B,) + (1,) * (t.ndim - 1)), t.shape)
-            tv, ov = t[sel], o[sel]
-            err = np.sum(np.abs(tv - ov) ** 2)
-            out[c] = float("inf") if err == 0 else float(10 * np.log10(np.sum(np.abs(tv) ** 2) / err))
+                selected = np.broadcast_to(
+                    loud.reshape((n_channels,) + (1,) * (target_vals.ndim - 1)), target_vals.shape
+                )
+            target_sel, other_sel = target_vals[selected], other_vals[selected]
+            error_energy = np.sum(np.abs(target_sel - other_sel) ** 2)
+            out[stat_class] = (
+                float("inf")
+                if error_energy == 0
+                else float(10 * np.log10(np.sum(np.abs(target_sel) ** 2) / error_energy))
+            )
         return out
 
     def save(self, path) -> None:
-        arrays = {c: getattr(self, c) for c in STAT_CLASSES}
+        arrays = {name: getattr(self, name) for name in STAT_CLASSES}
         meta = {"model": asdict(self.model), "duration": self.duration, "version": 1}
         np.savez_compressed(path, meta=np.array(json.dumps(meta)), **arrays)
 
     @classmethod
     def load(cls, path) -> TextureStats:
-        with np.load(path) as f:
-            meta = json.loads(str(f["meta"]))
-            arrays = {c: f[c] for c in STAT_CLASSES}
-        types = {fl.name: fl for fl in fields(TextureModel)}
-        m = {k: tuple(v) if isinstance(v, list) else v for k, v in meta["model"].items() if k in types}
-        return cls(TextureModel(**m), duration=meta["duration"], **arrays)
+        with np.load(path) as npz:
+            meta = json.loads(str(npz["meta"]))
+            arrays = {name: npz[name] for name in STAT_CLASSES}
+        model_fields = {model_field.name: model_field for model_field in fields(TextureModel)}
+        model_kwargs = {
+            key: tuple(value) if isinstance(value, list) else value
+            for key, value in meta["model"].items()
+            if key in model_fields
+        }
+        return cls(TextureModel(**model_kwargs), duration=meta["duration"], **arrays)
 
     def __repr__(self) -> str:
         return f"TextureStats({self.count()} stats, {self.env_mean.shape[0]} channels, {self.duration:.2f} s)"
 
 
-def _div_complex(a, b):
-    return np.divide(a, b, out=np.zeros(a.shape, complex), where=b > 1e-300)
+def _div_complex(numerator, denominator):
+    return np.divide(
+        numerator, denominator, out=np.zeros(numerator.shape, complex), where=denominator > 1e-300
+    )

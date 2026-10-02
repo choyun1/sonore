@@ -80,15 +80,15 @@ def _gain(level_db):
 def _resonator_gain(f_res, bw, f, fs: float):
     """|H(f)| of Klatt's resonator at ``f_res`` with bandwidth ``bw``."""
     a, b, c = _resonator_coefs(f_res, bw, fs)
-    z = np.exp(-2j * np.pi * np.asarray(f, float) / fs)
-    return np.abs(a / (1 - b * z - c * z**2))
+    z_inv = np.exp(-2j * np.pi * np.asarray(f, float) / fs)
+    return np.abs(a / (1 - b * z_inv - c * z_inv**2))
 
 
 def _peak_gain(f, bw, fs: float, difference: bool):
     """A resonator's gain at its own frequency, times the first difference's
     gain there when its input is differenced."""
-    g = _resonator_gain(f, bw, f, fs)
-    return g * np.abs(1 - np.exp(-2j * np.pi * np.asarray(f, float) / fs)) if difference else g
+    gain = _resonator_gain(f, bw, f, fs)
+    return gain * np.abs(1 - np.exp(-2j * np.pi * np.asarray(f, float) / fs)) if difference else gain
 
 
 def _rgp(f, fs: float):
@@ -148,76 +148,76 @@ def klatt_synthesize(
 
     ``rng`` seeds the noise, so a call can be repeated exactly.
     """
-    p = dict(KLATT_DEFAULTS)
+    settings = dict(KLATT_DEFAULTS)
     given = dict(params or {}) | kwargs
-    unknown = sorted(set(given) - set(p))
+    unknown = sorted(set(given) - set(settings))
     if unknown:
-        raise ValueError(f"unknown Klatt parameter(s) {unknown}; the names are {sorted(p)}")
-    p.update(given)
-    if hasattr(p["F0"], "f0"):  # an F0Track or any F0 contour object
-        p["F0"] = (np.asarray(p["F0"].t, float), np.ravel(p["F0"].f0))
-    n = n_samples(duration, fs)
-    t = time_axis(n, fs)
+        raise ValueError(f"unknown Klatt parameter(s) {unknown}; the names are {sorted(settings)}")
+    settings.update(given)
+    if hasattr(settings["F0"], "f0"):  # an F0Track or any F0 contour object
+        settings["F0"] = (np.asarray(settings["F0"].t, float), np.ravel(settings["F0"].f0))
+    length = n_samples(duration, fs)
+    t = time_axis(length, fs)
     rng = as_rng(rng)
 
     def track(name):
-        return np.broadcast_to(_track(p[name], t, name), t.shape)
+        return np.broadcast_to(_track(settings[name], t, name), t.shape)
 
     def formant(k):
-        f, bw = _track(p[f"F{k}"], t, f"F{k}"), _track(p[f"B{k}"], t, f"B{k}")
+        f, bw = _track(settings[f"F{k}"], t, f"F{k}"), _track(settings[f"B{k}"], t, f"B{k}")
         if f"F{k}" not in given and np.any(np.asarray(f) >= fs / 2):
             return None  # a default formant that doesn't fit at this rate
         _check_resonance(f, bw, fs)
-        return p[f"F{k}"], p[f"B{k}"]
+        return settings[f"F{k}"], settings[f"B{k}"]
 
     # --- sources
     f0 = track("F0")
     if np.any(f0 < 0):
         raise ValueError("F0 must be >= 0 (0 where unvoiced)")
     av = _gain(track("AV"))
-    contour = ([0.0], [p["F0"]]) if isinstance(p["F0"], numbers.Real) else p["F0"]
-    voice = np.zeros(n)
+    contour = ([0.0], [settings["F0"]]) if isinstance(settings["F0"], numbers.Real) else settings["F0"]
+    voice = np.zeros(length)
     if np.any(av > 0) and np.any(f0 > 0):
-        h = harmonic_complex(duration, fs, contour, amplitudes=lambda _, f: _rgp(f, fs)).data[:, 0]
+        glottal = harmonic_complex(duration, fs, contour, amplitudes=lambda _, f: _rgp(f, fs)).data[:, 0]
         # Radiation from the lips, a first difference; then RMS 1 where voiced.
-        lips = np.diff(h, prepend=0.0)
-        voice = av * lips / np.sqrt(np.mean(lips[h != 0] ** 2))
+        lips = np.diff(glottal, prepend=0.0)
+        voice = av * lips / np.sqrt(np.mean(lips[glottal != 0] ** 2))
     # Noise modulated at F0 while voiced: full level in the first half of
     # each period, half in the second.
     phase = np.concatenate([[0.0], np.cumsum((f0[1:] + f0[:-1]) / 2)]) / fs
     voiced = (f0 > 0) & (av > 0)
     modulation = np.where(voiced & (np.mod(phase, 1.0) >= 0.5), 0.5, 1.0)
-    noise = rng.standard_normal(n) * modulation
+    noise = rng.standard_normal(length) * modulation
 
     # --- cascade: voicing and aspiration
-    x = Sound(voice + _gain(track("AH")) * noise, fs)
-    x = resonator(x, p["FNP"], p["BNP"])
-    x = antiresonator(x, p["FNZ"], p["BNZ"])
+    cascade = Sound(voice + _gain(track("AH")) * noise, fs)
+    cascade = resonator(cascade, settings["FNP"], settings["BNP"])
+    cascade = antiresonator(cascade, settings["FNZ"], settings["BNZ"])
     for k in _CASCADE:
-        fb = formant(k)
-        if fb is not None:
-            x = resonator(x, *fb)
-    out = x.data[:, 0]
+        formant_pair = formant(k)
+        if formant_pair is not None:
+            cascade = resonator(cascade, *formant_pair)
+    out = cascade.data[:, 0]
 
     # --- parallel: frication
-    fric = _gain(track("AF")) * noise
-    if np.any(fric):
-        differenced = np.diff(fric, prepend=0.0)
+    frication = _gain(track("AF")) * noise
+    if np.any(frication):
+        differenced = np.diff(frication, prepend=0.0)
         for k in _PARALLEL:
             a_k = _gain(track(f"A{k}"))
             if not np.any(a_k > 0):
                 continue
-            fb = formant(k)
-            if fb is None:
+            formant_pair = formant(k)
+            if formant_pair is None:
                 raise ValueError(f"A{k} is on, but F{k} is at or above Nyquist ({fs / 2:g} Hz)")
-            src = fric if k == 1 else differenced
-            y = resonator(Sound(src, fs), *fb).data[:, 0]
+            source = frication if k == 1 else differenced
+            formant_out = resonator(Sound(source, fs), *formant_pair).data[:, 0]
             peak = _peak_gain(track(f"F{k}"), track(f"B{k}"), fs, difference=k > 1)
-            out = out + (-1) ** (k + 1) * a_k / peak * y
-        out = out + _gain(track("AB")) * fric
+            out = out + (-1) ** (k + 1) * a_k / peak * formant_out
+        out = out + _gain(track("AB")) * frication
 
-    s = Sound(out, fs)
-    return s.normalize() if s.rms > 0 else s
+    result = Sound(out, fs)
+    return result.normalize() if result.rms > 0 else result
 
 
 def klatt_continuum(
@@ -237,20 +237,23 @@ def klatt_continuum(
     for name in sorted(set(start) | set(end)):
         if name not in KLATT_DEFAULTS:
             raise ValueError(f"unknown Klatt parameter {name!r}")
-        a = start.get(name, KLATT_DEFAULTS[name])
-        b = end.get(name, KLATT_DEFAULTS[name])
-        ta, va = _as_points(a)
-        tb, vb = _as_points(b)
-        if ta is None and tb is None:
-            for i, w in enumerate(np.linspace(0, 1, steps)):
-                out[i][name] = float((1 - w) * va + w * vb)
+        start_value = start.get(name, KLATT_DEFAULTS[name])
+        end_value = end.get(name, KLATT_DEFAULTS[name])
+        start_times, start_values = _as_points(start_value)
+        end_times, end_values = _as_points(end_value)
+        if start_times is None and end_times is None:
+            for i, weight in enumerate(np.linspace(0, 1, steps)):
+                out[i][name] = float((1 - weight) * start_values + weight * end_values)
             continue
-        times = ta if ta is not None else tb
-        if ta is not None and tb is not None and not np.array_equal(ta, tb):
+        times = start_times if start_times is not None else end_times
+        if start_times is not None and end_times is not None and not np.array_equal(start_times, end_times):
             raise ValueError(f"{name}: the two tracks must share their times to be interpolated")
-        va, vb = np.broadcast_to(va, times.shape), np.broadcast_to(vb, times.shape)
-        for i, w in enumerate(np.linspace(0, 1, steps)):
-            out[i][name] = (times.copy(), (1 - w) * va + w * vb)
+        start_values, end_values = (
+            np.broadcast_to(start_values, times.shape),
+            np.broadcast_to(end_values, times.shape),
+        )
+        for i, weight in enumerate(np.linspace(0, 1, steps)):
+            out[i][name] = (times.copy(), (1 - weight) * start_values + weight * end_values)
     return out
 
 

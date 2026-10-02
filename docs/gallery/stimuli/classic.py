@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/classic
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/classic.py
+    python docs/gallery/stimuli/classic.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
@@ -24,10 +24,13 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   head.
 # - [Random tone sequences](#h-random-tone-sequences): concurrent streams of tones at random
 #   frequencies.
+# - [Band-limited waveforms](#h-band-limited-waveforms): a sawtooth gliding up four octaves,
+#   with and without aliasing.
 
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.signal import sawtooth
 
 import sonore as so
 
@@ -208,12 +211,56 @@ sound = finish(sum(so.pad(streams)))
 fig, playhead = show(sound, fmax=5000, win_dur=20e-3)
 
 # %% [markdown]
+# ## Band-limited waveforms
+#
+# A square wave or a sawtooth has harmonics up to infinity. Sampled, those above the Nyquist
+# frequency (half the sampling rate) fold back to frequencies below it, where they are aliases
+# unrelated to the pitch. sonore's `so.square_wave`, `so.sawtooth_wave` and `so.pulse_train` are
+# band-limited unless asked otherwise: each is a sum of harmonics, and each harmonic fades out as
+# it nears `f_max` (by default 0.45 of the sampling rate). The difference is easiest to hear on a
+# glide. A sawtooth rising four octaves, from 110 to 1760 Hz at a 16 kHz sampling rate, has 72
+# harmonics below Nyquist at the start and 4 at the end. Band-limited, its harmonics leave one by
+# one as they rise. Computed sample by sample from the running phase, every harmonic that crosses
+# Nyquist folds back as a tone that falls while the pitch rises.
+
+# %%
+glide_fs, glide_dur = 16000, 4.0
+glide_times = np.linspace(0, glide_dur, 401)
+glide_f0 = 110 * 2 ** (4 * glide_times / glide_dur)  # four octaves, equal steps per second
+
+
+def glide_plot(snd, title):
+    fig, ax = plt.subplots(figsize=(10, 3.2), layout="constrained")
+    so.STFT(snd, win_dur=0.025, hop_dur=0.005).plot(ax, db_range=60, colorbar=False)
+    ax.set(xlim=(0, glide_dur), title=f"{title} (Hann 25 ms spectrogram)")
+    return fig, [ax]
+
+
+# %% [about]
+# Band-limited: `so.sawtooth_wave` on the F0 contour, given as (times, values).
+
+# %% [demo bw1] A band-limited glide
+sound = finish(so.sawtooth_wave(glide_dur, glide_fs, (glide_times, glide_f0)))
+fig, playhead = glide_plot(sound, "so.sawtooth_wave, 110 to 1760 Hz")
+
+# %% [about]
+# Naive: `scipy.signal.sawtooth` of the running phase. The aliases are the lines that slope
+# down, heard as a whistle falling against the rising buzz.
+
+# %% [demo bw2] A naive glide, aliased
+n_samples = int(round(glide_dur * glide_fs))
+f0_per_sample = np.interp(np.arange(n_samples) / glide_fs, glide_times, glide_f0)
+running_phase = 2 * np.pi * np.cumsum(f0_per_sample) / glide_fs
+sound = finish(so.Sound(sawtooth(running_phase), glide_fs))
+fig, playhead = glide_plot(sound, "scipy.signal.sawtooth of the phase, 110 to 1760 Hz")
+
+# %% [markdown]
 # ## References
 #
 # - Byrne et al. (1994). An international comparison of long-term average speech spectra.
 #   *J. Acoust. Soc. Am.* 96(4), 2108–2120.
 #   [doi:10.1121/1.410152](https://doi.org/10.1121/1.410152).
-#   [`representations.long_term_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L80)
+#   [`representations.long_term_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L82)
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data.
 #   *Hearing Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955(90)90170-T).

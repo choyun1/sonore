@@ -43,14 +43,14 @@ def _sft(n_win: int, hop: int, fs: float) -> ShortTimeFFT:
 def _inst_freq(phase: np.ndarray, n_win: int, hop: int) -> np.ndarray:
     """Instantaneous frequency [rad/sample] of each bin from successive phases."""
     omega = 2 * np.pi * np.arange(phase.shape[-2]) / n_win  # bin centers
-    dphi = _wrap(np.diff(phase, axis=-1) - omega[:, None] * hop)
-    inst = omega[:, None] + dphi / hop
-    return np.concatenate([inst[..., :1], inst], axis=-1)  # frame 0 borrows frame 1
+    phase_deviation = _wrap(np.diff(phase, axis=-1) - omega[:, None] * hop)
+    inst_freq = omega[:, None] + phase_deviation / hop
+    return np.concatenate([inst_freq[..., :1], inst_freq], axis=-1)  # frame 0 borrows frame 1
 
 
 def _win_len(win_dur: float, fs: float) -> int:
-    n = int(round(win_dur * fs))
-    return n + (n % 2)  # even, so the window has a single center sample
+    n_win = int(round(win_dur * fs))
+    return n_win + (n_win % 2)  # even, so the window has a single center sample
 
 
 @dataclass(frozen=True)
@@ -92,16 +92,16 @@ class PVAnalysis:
         :func:`time_stretch` for noisy material.
         """
         if freq_map is None:
-            fmap = None
+            map_freqs = None
         elif callable(freq_map):
-            fmap = freq_map
+            map_freqs = freq_map
         else:
             ratio = float(freq_map)
-            fmap = lambda f: ratio * f  # noqa: E731
+            map_freqs = lambda freqs: ratio * freqs  # noqa: E731
 
         n_out = int(round(self.n_samples * time_scale))
-        ts = np.arange(n_out) / self.fs
-        tf = self.t * time_scale
+        sample_times = np.arange(n_out) / self.fs
+        frame_times = self.t * time_scale
         # filterbank-summation gain: sum over bins of |X| equals N*w(center)*amplitude
         gain = np.full(self.magnitude.shape[1], 2.0)
         gain[0] = 1.0
@@ -113,23 +113,28 @@ class PVAnalysis:
         # the phase relationship between neighbouring bins.
         half = self.n_win / 2 / self.fs
         interior = np.flatnonzero((self.t - half >= 0) & (self.t + half <= self.n_samples / self.fs))
-        i0 = int(interior[0]) if len(interior) else int(np.argmin(np.abs(self.t)))
-        n0 = min(int(round(tf[i0] * self.fs)), n_out - 1)
+        anchor_frame = int(interior[0]) if len(interior) else int(np.argmin(np.abs(self.t)))
+        anchor_sample = min(int(round(frame_times[anchor_frame] * self.fs)), n_out - 1)
 
         out = np.zeros((n_out, self.magnitude.shape[0]))
-        for c in range(self.magnitude.shape[0]):
-            mag = self.magnitude[c]
-            active = np.flatnonzero(mag.max(axis=1) > mag.max() * 10 ** (floor_db / 20))
+        for channel in range(self.magnitude.shape[0]):
+            magnitude = self.magnitude[channel]
+            active = np.flatnonzero(magnitude.max(axis=1) > magnitude.max() * 10 ** (floor_db / 20))
             for start in range(0, len(active), chunk):
                 bins = active[start : start + chunk]
-                amp = np.array([np.interp(ts, tf, mag[k]) for k in bins]) * gain[bins, None]
-                f = np.array([np.interp(ts, tf, self.freq[c, k]) for k in bins])
-                if fmap is not None:
-                    f = fmap(f)
-                    amp = np.where((f > 0) & (f < self.fs / 2), amp, 0.0)
-                cum = np.cumsum(f, axis=1) / self.fs
-                theta = self.phase[c, bins, i0][:, None] + 2 * np.pi * (cum - cum[:, n0 : n0 + 1])
-                out[:, c] += np.sum(amp * np.cos(theta), axis=0)
+                amplitude = (
+                    np.array([np.interp(sample_times, frame_times, magnitude[k]) for k in bins])
+                    * gain[bins, None]
+                )
+                freqs = np.array([np.interp(sample_times, frame_times, self.freq[channel, k]) for k in bins])
+                if map_freqs is not None:
+                    freqs = map_freqs(freqs)
+                    amplitude = np.where((freqs > 0) & (freqs < self.fs / 2), amplitude, 0.0)
+                cycles = np.cumsum(freqs, axis=1) / self.fs
+                osc_phase = self.phase[channel, bins, anchor_frame][:, None] + 2 * np.pi * (
+                    cycles - cycles[:, anchor_sample : anchor_sample + 1]
+                )
+                out[:, channel] += np.sum(amplitude * np.cos(osc_phase), axis=0)
         return Sound(out, self.fs)
 
 
@@ -140,18 +145,20 @@ def pv_analyze(sound: Sound, win_dur: float = 46e-3, hop_dur: float | None = Non
     n_win = _win_len(win_dur, sound.fs)
     hop = max(1, int(round(hop_dur * sound.fs))) if hop_dur else n_win // 4
     sft = _sft(n_win, hop, sound.fs)
-    X = sft.stft(sound.data.T, axis=-1)
-    phase = np.angle(X)
+    spectrum = sft.stft(sound.data.T, axis=-1)
+    phase = np.angle(spectrum)
     freq = _inst_freq(phase, n_win, hop) * sound.fs / (2 * np.pi)
-    return PVAnalysis(np.abs(X), phase, freq, sft.t(len(sound)), sound.fs, n_win, hop, len(sound))
+    return PVAnalysis(np.abs(spectrum), phase, freq, sft.t(len(sound)), sound.fs, n_win, hop, len(sound))
 
 
-def _lock_phases(mag: np.ndarray, phi: np.ndarray, psi_peaks: np.ndarray, peaks: np.ndarray) -> np.ndarray:
+def _lock_phases(
+    magnitude: np.ndarray, analysis_phase: np.ndarray, peak_synthesis_phase: np.ndarray, peaks: np.ndarray
+) -> np.ndarray:
     """Identity phase locking: every bin inherits its nearest peak's synthesis
     phase plus its original offset from that peak."""
     bounds = (peaks[:-1] + peaks[1:]) / 2
-    owner = np.searchsorted(bounds, np.arange(len(mag)), side="right")
-    return psi_peaks[owner] + (phi - phi[peaks[owner]])
+    owner = np.searchsorted(bounds, np.arange(len(magnitude)), side="right")
+    return peak_synthesis_phase[owner] + (analysis_phase - analysis_phase[peaks[owner]])
 
 
 def time_stretch(sound: Sound, factor: float, win_dur: float = 46e-3, phase_lock: bool = True) -> Sound:
@@ -166,49 +173,56 @@ def time_stretch(sound: Sound, factor: float, win_dur: float = 46e-3, phase_lock
         raise ValueError("factor must be positive")
     fs = sound.fs
     n_win = _win_len(win_dur, fs)
-    hop_s = n_win // 4
-    hop_a = max(1, int(round(hop_s / factor)))
-    sft_a, sft_s = _sft(n_win, hop_a, fs), _sft(n_win, hop_s, fs)
+    synthesis_hop = n_win // 4
+    analysis_hop = max(1, int(round(synthesis_hop / factor)))
+    analysis_sft, synthesis_sft = _sft(n_win, analysis_hop, fs), _sft(n_win, synthesis_hop, fs)
 
-    X = sft_a.stft(sound.data.T, axis=-1)  # (C, F, T)
-    mag, phi = np.abs(X), np.angle(X)
-    inst = _inst_freq(phi, n_win, hop_a)
+    spectrum = analysis_sft.stft(sound.data.T, axis=-1)  # (C, F, T)
+    magnitude, analysis_phase = np.abs(spectrum), np.angle(spectrum)
+    inst_freq = _inst_freq(analysis_phase, n_win, analysis_hop)
 
     # Seed synthesis phases from the first frame whose window lies fully inside
     # the signal. Earlier (zero-padded) frames have distorted phases, and any
     # error in the seed persists as lost phase coherence between partials.
-    starts = np.round(sft_a.t(len(sound)) * fs).astype(int) - sft_a.m_num_mid
+    starts = np.round(analysis_sft.t(len(sound)) * fs).astype(int) - analysis_sft.m_num_mid
     interior = np.flatnonzero((starts >= 0) & (starts + n_win <= len(sound)))
-    m0 = int(interior[0]) if len(interior) else 0
-    psi = np.empty_like(phi)
-    psi[..., : m0 + 1] = phi[..., : m0 + 1]
-    for m in range(m0 + 1, phi.shape[-1]):
-        advanced = psi[..., m - 1] + inst[..., m] * hop_s
+    first_frame = int(interior[0]) if len(interior) else 0
+    synthesis_phase = np.empty_like(analysis_phase)
+    synthesis_phase[..., : first_frame + 1] = analysis_phase[..., : first_frame + 1]
+    for frame in range(first_frame + 1, analysis_phase.shape[-1]):
+        advanced = synthesis_phase[..., frame - 1] + inst_freq[..., frame] * synthesis_hop
         if not phase_lock:
-            psi[..., m] = advanced
+            synthesis_phase[..., frame] = advanced
             continue
-        for c in range(phi.shape[0]):
-            a = mag[c, :, m]
-            is_peak = np.zeros(len(a), bool)
-            is_peak[1:-1] = (a[1:-1] > a[:-2]) & (a[1:-1] >= a[2:]) & (a[1:-1] > 1e-6 * a.max())
+        for channel in range(analysis_phase.shape[0]):
+            frame_magnitude = magnitude[channel, :, frame]
+            is_peak = np.zeros(len(frame_magnitude), bool)
+            is_peak[1:-1] = (
+                (frame_magnitude[1:-1] > frame_magnitude[:-2])
+                & (frame_magnitude[1:-1] >= frame_magnitude[2:])
+                & (frame_magnitude[1:-1] > 1e-6 * frame_magnitude.max())
+            )
             peaks = np.flatnonzero(is_peak)
             if len(peaks) == 0:
-                psi[c, :, m] = advanced[c]
+                synthesis_phase[channel, :, frame] = advanced[channel]
             else:
-                psi[c, :, m] = _lock_phases(a, phi[c, :, m], advanced[c, peaks], peaks)
-    Y = mag * np.exp(1j * psi)
+                synthesis_phase[channel, :, frame] = _lock_phases(
+                    frame_magnitude, analysis_phase[channel, :, frame], advanced[channel, peaks], peaks
+                )
+    stretched = magnitude * np.exp(1j * synthesis_phase)
 
-    # place analysis frame m (time (p_min_a + m)*hop_a) at synthesis slot p_min_a + m
+    # place analysis frame m (time (analysis_sft.p_min + m)*analysis_hop) at synthesis
+    # slot analysis_sft.p_min + m
     n_out = int(round(len(sound) * factor))
-    n_slots = sft_s.p_max(n_out) - sft_s.p_min
-    offset = sft_a.p_min - sft_s.p_min
-    Z = np.zeros(Y.shape[:-1] + (n_slots,), complex)
-    src = np.arange(Y.shape[-1])
-    dst = src + offset
-    ok = (dst >= 0) & (dst < n_slots)
-    Z[..., dst[ok]] = Y[..., src[ok]]
-    y = sft_s.istft(Z, k1=n_out)
-    return Sound(np.real(y).T, fs)
+    n_slots = synthesis_sft.p_max(n_out) - synthesis_sft.p_min
+    offset = analysis_sft.p_min - synthesis_sft.p_min
+    slotted = np.zeros(stretched.shape[:-1] + (n_slots,), complex)
+    source_frames = np.arange(stretched.shape[-1])
+    target_slots = source_frames + offset
+    in_range = (target_slots >= 0) & (target_slots < n_slots)
+    slotted[..., target_slots[in_range]] = stretched[..., source_frames[in_range]]
+    signal = synthesis_sft.istft(slotted, k1=n_out)
+    return Sound(np.real(signal).T, fs)
 
 
 def pitch_shift(sound: Sound, semitones: float, win_dur: float = 46e-3, phase_lock: bool = True) -> Sound:
@@ -216,7 +230,11 @@ def pitch_shift(sound: Sound, semitones: float, win_dur: float = 46e-3, phase_lo
     then resample). Formants shift along with the pitch."""
     ratio = Fraction(2 ** (semitones / 12)).limit_denominator(1000)
     stretched = time_stretch(sound, float(ratio), win_dur, phase_lock)
-    y = resample_poly(stretched.data, ratio.denominator, ratio.numerator, axis=0)
-    n = len(sound)
-    y = y[:n] if len(y) >= n else np.pad(y, ((0, n - len(y)), (0, 0)))
-    return Sound(y, sound.fs)
+    resampled = resample_poly(stretched.data, ratio.denominator, ratio.numerator, axis=0)
+    length = len(sound)
+    resampled = (
+        resampled[:length]
+        if len(resampled) >= length
+        else np.pad(resampled, ((0, length - len(resampled)), (0, 0)))
+    )
+    return Sound(resampled, sound.fs)

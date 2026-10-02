@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/resynth
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/resynthesis.py
+    python docs/gallery/seeing/resynthesis.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
@@ -148,4 +148,4 @@ fig, playhead = show_mask(sound, target, mask)
 # - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In
 #   *Speech Separation by Humans and Machines*, 181–197. Springer.
 #   [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12).
-#   [`representations.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L443)
+#   [`representations.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/representations.py#L452)

@@ -7,13 +7,16 @@ and nothing imports it at module level. Inside a layer any import is fine.
 A few methods import upward inside the method body, so that the call reads
 naturally in a notebook: ``Sound.envelope()`` returns an ``Envelope`` from the
 analysis layer. Those are listed in ``UPWARD_INSIDE_FUNCTIONS``, so a new one
-has to be added there on purpose. docs/design/layout.md has the diagram.
+has to be added there on purpose. docs/design/layout.md has the diagram, drawn
+from the source by tools/draw_layout.py.
 """
 
 from __future__ import annotations
 
 import ast
 from pathlib import Path
+
+import pytest
 
 PACKAGE = Path(__file__).resolve().parent.parent / "src" / "sonore"
 
@@ -87,3 +90,17 @@ def test_imports_point_down():
                 wrong.append(f"{name} imports {target} inside a function")
     assert not wrong, "imports pointing up a layer:\n" + "\n".join(wrong)
     assert upward_used == UPWARD_INSIDE_FUNCTIONS, "stale entries in UPWARD_INSIDE_FUNCTIONS"
+
+
+def test_layout_diagram_is_current():
+    """docs/design/layout.svg is what tools/draw_layout.py draws from the source today."""
+    import importlib.util
+
+    root = PACKAGE.parent.parent
+    diagram = root / "docs" / "design" / "layout.svg"
+    if not diagram.exists():
+        pytest.skip("docs are not in the sdist")
+    spec = importlib.util.spec_from_file_location("draw_layout", root / "tools" / "draw_layout.py")
+    draw_layout = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(draw_layout)
+    assert diagram.read_text() == draw_layout.render(), "run python tools/draw_layout.py"

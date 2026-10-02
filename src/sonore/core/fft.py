@@ -67,9 +67,9 @@ def threads():
 
 
 def _is_fast(n: int) -> bool:
-    for p in (2, 3, 5, 7, 11):
-        while n % p == 0:
-            n //= p
+    for prime in (2, 3, 5, 7, 11):
+        while n % prime == 0:
+            n //= prime
     return n == 1
 
 

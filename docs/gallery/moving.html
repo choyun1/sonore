@@ -43,6 +43,8 @@ nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem)
   padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
 nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.ref { margin-left: auto; }
+nav.pages a.ref + a.repo { margin-left: 0; }
 nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
 nav.pages a.repo:hover { color: var(--ink); }
 @media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
@@ -87,11 +89,30 @@ details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(-
 .tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
 footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
 @media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 3.5rem 1.25rem 2rem 1.75rem;
+    border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a:first-child, nav.pages details { display: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side .home { display: block; font-size: 1.05rem; margin: 0 0 1.5rem; }
+.side .group { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.4rem; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
 </style>
 </head>
 <body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><a class="home" href="index.html">Listening gallery</a><p class="group">Stimuli</p><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul><p class="group">Seeing and changing sounds</p><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul><p class="group">Listeners in the world</p><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html" aria-current="page">Moving talkers</a><ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a></li><li><a href="#h-one-talker-moving">One talker, moving</a></li><li><a href="#h-three-talkers">Three talkers</a></li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a></li><li><a href="#h-references">References</a></li></ul></li></ul></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul></details><details class="here"><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html" aria-current="page">Moving talkers</a></li></ul></details><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul></details><details class="here"><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html" aria-current="page">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -126,7 +147,7 @@ center azimuth <span class="tex">\theta_0</span> that oscillates with amplitude 
 <p>so it swings <span class="tex">A</span> to either side of <span class="tex">\theta_0</span>, <span class="tex">2A</span> from one end to the other. Here
 <span class="tex">f = 2</span> Hz, the rate in the experiment, and the start phase <span class="tex">\phi</span> decides whether it first
 moves right (<span class="tex">\phi = 0</span>) or left (<span class="tex">\phi = 1/2</span>).</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -216,7 +237,7 @@ def show(mix, target_alone, t, azimuths, title):
     for ax in axes[1:]:
         ax.legend(loc=&quot;upper right&quot;, fontsize=8, ncols=2, markerscale=3)
     axes[-1].set_xlabel(&quot;Time [s]&quot;)
-    return fig, list(axes)</code></pre><pre class="out">HRIRSet(793 positions, 1024 taps, 65536 Hz)</pre></div>
+    return fig, list(axes)</code></pre></details><pre class="out">HRIRSet(793 positions, 1024 taps, 65536 Hz)</pre></div>
 </section>
 <section aria-labelledby="h-one-talker-moving">
 <h2 id="h-one-talker-moving">One talker, moving</h2>
@@ -239,7 +260,7 @@ Time differences are drawn only where the two ears are well correlated.</p></div
     <img src="img/m1_one_talker_moving.png" width="1000" height="600" alt="Plots of the one talker, moving sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, alone=True)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, alone=True)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target alone, swinging 30° to either side&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>
@@ -265,7 +286,7 @@ motion shows only in the stretches it dominates.</p>
     <img src="img/m2_three_talkers_standing_still.png" width="1000" height="600" alt="Plots of the three talkers, standing still sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(0.0)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(0.0)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;Nobody moves&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>
@@ -283,7 +304,7 @@ sound = finish(mix)</code></pre></details>
     <img src="img/m3_the_target_swings_10_degrees.png" width="1000" height="600" alt="Plots of the the target swings 10 degrees sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(10.0)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(10.0)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target swings 10° to either side&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>
@@ -302,7 +323,7 @@ the left this time.</p></div>
     <img src="img/m4_the_target_swings_30_degrees.png" width="1000" height="600" alt="Plots of the the target swings 30 degrees sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, phase=0.5)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, phase=0.5)
 fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target swings 30° to either side&quot;)
 scene = scene_of(t, azimuths)
 sound = finish(mix)</code></pre></details>
@@ -327,10 +348,11 @@ interaural delay before interpolating and puts it back afterwards (Cuevas-Rodrí
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Brandtsegg, Saue &amp; Lazzarini (2018). Live convolution with time-varying filters. <em>Applied Sciences</em> 8(1), 103. <a href="https://www.mdpi.com/2076-3417/8/1/103">MDPI</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L273"><code>spatialization.move_sound</code></a></li><li>Cho &amp; Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail party" listening environment. <em>J. Acoust. Soc. Am.</em> 152(3), 1684–1694. <a href="https://doi.org/10.1121/10.0013990">doi:10.1121/10.0013990</a>. Experiment code: <a href="https://github.com/choyun1/MSM">choyun1/MSM</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L273"><code>spatialization.move_sound</code></a> <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L95"><code>binaural.interaural_cues</code></a></li><li>Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source library for real-time binaural spatialisation. <em>PLOS ONE</em> 14(3), e0211899. <a href="https://doi.org/10.1371/journal.pone.0211899">doi:10.1371/journal.pone.0211899</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L93"><code>spatialization.HRIRSet</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences.</li><li>Qu, Xiao, Gong, Huang, Li &amp; Wu (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. <em>IEEE Trans. Audio, Speech, Lang. Process.</em> 17(6), 1124–1132. <a href="http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial">PKU Scholar</a>. The HRIRs. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py#L122"><code>hrir_data.load_hrirs</code></a></li></ul>
+<ul><li>Brandtsegg, Saue &amp; Lazzarini (2018). Live convolution with time-varying filters. <em>Applied Sciences</em> 8(1), 103. <a href="https://www.mdpi.com/2076-3417/8/1/103">MDPI</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L274"><code>spatialization.move_sound</code></a></li><li>Cho &amp; Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail party" listening environment. <em>J. Acoust. Soc. Am.</em> 152(3), 1684–1694. <a href="https://doi.org/10.1121/10.0013990">doi:10.1121/10.0013990</a>. Experiment code: <a href="https://github.com/choyun1/MSM">choyun1/MSM</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L274"><code>spatialization.move_sound</code></a> <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L98"><code>binaural.interaural_cues</code></a></li><li>Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source library for real-time binaural spatialisation. <em>PLOS ONE</em> 14(3), e0211899. <a href="https://doi.org/10.1371/journal.pone.0211899">doi:10.1371/journal.pone.0211899</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L93"><code>spatialization.HRIRSet</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences.</li><li>Qu, Xiao, Gong, Huang, Li &amp; Wu (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. <em>IEEE Trans. Audio, Speech, Lang. Process.</em> 17(6), 1124–1132. <a href="http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial">PKU Scholar</a>. The HRIRs. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/hrir_data.py#L122"><code>hrir_data.load_hrirs</code></a></li></ul>
 </section>
-<footer>This page is the script <code>docs/gallery/moving.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/moving.py</code>, or a cell at a time.</footer>
+<footer>This page is the script <code>docs/gallery/listeners/moving.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/listeners/moving.py</code>, or a cell at a time.</footer>
 </main>
+</div>
 <script>
 (() => {
   const items = [...document.querySelectorAll(".sound")].map((el) => {

@@ -60,8 +60,11 @@ class Cepstrum:
         return new
 
     def __repr__(self) -> str:
-        c, q, t = self.data.shape
-        return f"Cepstrum({q} quefrencies x {t} frames, {c} ch, up to {self.q[-1] * 1e3:.1f} ms)"
+        n_channels, n_quefrencies, n_frames = self.data.shape
+        return (
+            f"Cepstrum({n_quefrencies} quefrencies x {n_frames} frames, {n_channels} ch, "
+            f"up to {self.q[-1] * 1e3:.1f} ms)"
+        )
 
     @property
     def q(self) -> np.ndarray:
@@ -85,11 +88,11 @@ class Cepstrum:
         rest, the fine structure such as the harmonics. ``cutoff`` is one
         value or one per frame, so it can follow an F0 track (half a period
         separates the envelope from the harmonics)."""
-        cut = np.asarray(cutoff, dtype=float)
+        cutoffs = np.asarray(cutoff, dtype=float)
         n_frames = self.data.shape[2]
-        if cut.ndim > 1 or (cut.ndim == 1 and len(cut) != n_frames):
+        if cutoffs.ndim > 1 or (cutoffs.ndim == 1 and len(cutoffs) != n_frames):
             raise ValueError(f"cutoff must be a scalar or have one value per frame ({n_frames})")
-        below = self.q[:, None] < np.broadcast_to(cut, (n_frames,))[None, :]
+        below = self.q[:, None] < np.broadcast_to(cutoffs, (n_frames,))[None, :]
         if keep == "low":
             mask = below
         elif keep == "high":
@@ -169,13 +172,15 @@ class Cepstrum:
             )
         q_lo, q_hi = max(int(np.floor(self.fs / f_hi)), 1), int(np.ceil(self.fs / f_lo))
         q_hi = min(q_hi, self.data.shape[1] - 2)
-        k = q_lo + np.argmax(self.data[:, q_lo : q_hi + 1], axis=1)[:, None, :]
-        y0, y1, y2 = (np.take_along_axis(self.data, k + d, axis=1)[:, 0] for d in (-1, 0, 1))
-        denom = y0 - 2 * y1 + y2
+        peak_index = q_lo + np.argmax(self.data[:, q_lo : q_hi + 1], axis=1)[:, None, :]
+        left, peak, right = (
+            np.take_along_axis(self.data, peak_index + offset, axis=1)[:, 0] for offset in (-1, 0, 1)
+        )
+        curvature = left - 2 * peak + right
         with np.errstate(divide="ignore", invalid="ignore"):
-            shift = np.where(denom != 0, 0.5 * (y0 - y2) / denom, 0.0)
-        f0 = self.fs / (k[:, 0] + shift)
-        return self.t, np.where(y1 >= threshold, f0, 0.0), y1
+            shift = np.where(curvature != 0, 0.5 * (left - right) / curvature, 0.0)
+        f0 = self.fs / (peak_index[:, 0] + shift)
+        return self.t, np.where(peak >= threshold, f0, 0.0), peak
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
         """Cepstrum against time and quefrency in ms (see

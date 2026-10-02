@@ -47,6 +47,16 @@ version (0.x.y) only fixes bugs.
   available core by default. Results are bit-identical for any number of
   threads. Use `so.set_fft_workers(1)`, or the same in a `with` block, when
   running several jobs in parallel.
+- An API reference generated from the docstrings (source in `docs/api/source`),
+  built by a new pages workflow and served next to the gallery, with a `docs`
+  extra for building it locally. A test keeps every public
+  name documented; the names still waiting are listed in
+  `tests/undocumented.txt`.
+
+### Changed (development)
+- Tests are in folders that mirror `src/sonore` (`tests/core/`,
+  `tests/analysis/`, ...). The dB tests moved to `tests/core/test_units.py` and
+  the HRIR download tests to `tests/stimuli/test_hrir_data.py`.
 
 ### Changed
 - The band-limited `square_wave`, `sawtooth_wave` and `pulse_train` are

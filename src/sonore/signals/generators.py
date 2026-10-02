@@ -38,8 +38,8 @@ RNG = int | np.random.Generator | None
 
 
 def _finish(data: np.ndarray, fs: float) -> Sound:
-    s = Sound(data, fs)
-    return s.normalize() if s.rms > 0 else s
+    sound = Sound(data, fs)
+    return sound.normalize() if sound.rms > 0 else sound
 
 
 def silence(duration: float, fs: float, n_channels: int = 1) -> Sound:
@@ -77,20 +77,19 @@ def _harmonic_phases(harmonics: np.ndarray, phases, rng: RNG) -> np.ndarray:
                 "and needs one starting phase for each"
             )
         return np.broadcast_to(phases, harmonics.shape)
-    n = harmonics
-    N = len(harmonics)
+    n_harmonics = len(harmonics)
     match phases:
         case "cosine":
-            return np.zeros(N)
+            return np.zeros(n_harmonics)
         case "sine":
-            return np.full(N, -np.pi / 2)
+            return np.full(n_harmonics, -np.pi / 2)
         case "alternating":
-            return np.where(n % 2 == 1, 0.0, -np.pi / 2)
+            return np.where(harmonics % 2 == 1, 0.0, -np.pi / 2)
         case "random":
-            return as_rng(rng).uniform(-np.pi, np.pi, N)
+            return as_rng(rng).uniform(-np.pi, np.pi, n_harmonics)
         case "schroeder+" | "schroeder-":
             sign = 1 if phases.endswith("+") else -1
-            return sign * np.pi * n * (n + 1) / N
+            return sign * np.pi * harmonics * (harmonics + 1) / n_harmonics
     raise ValueError(f"phases must be an array or one of {_PHASE_PRESETS}")
 
 
@@ -138,9 +137,9 @@ def _n_max(f0, fs: float, f_max: float | None) -> int:
 
 def _taper(freq: np.ndarray, f_max: float) -> np.ndarray:
     """1 below 0.9 f_max, falling as cos^2 to 0 at f_max and above."""
-    lo = 0.9 * f_max
-    u = np.clip((freq - lo) / (f_max - lo), 0.0, 1.0)
-    return np.cos(np.pi / 2 * u) ** 2
+    fade_start = 0.9 * f_max
+    fade_position = np.clip((freq - fade_start) / (f_max - fade_start), 0.0, 1.0)
+    return np.cos(np.pi / 2 * fade_position) ** 2
 
 
 def _voicing_gate(
@@ -149,12 +148,12 @@ def _voicing_gate(
     """1 where the nearest frame is voiced, 0 elsewhere, every step smoothed by
     a Hann window ``ramp`` seconds long. The ends are extended, not faded."""
     gate = (np.interp(t, t_frames, voiced.astype(float)) >= 0.5).astype(float)
-    m = int(round(ramp * fs))
-    if m < 2:
+    n_ramp = int(round(ramp * fs))
+    if n_ramp < 2:
         return gate
-    w = np.hanning(m + 2)[1:-1]
-    padded = np.pad(gate, m, mode="edge")
-    return np.convolve(padded, w / w.sum(), mode="same")[m:-m]
+    window = np.hanning(n_ramp + 2)[1:-1]
+    padded = np.pad(gate, n_ramp, mode="edge")
+    return np.convolve(padded, window / window.sum(), mode="same")[n_ramp:-n_ramp]
 
 
 def _gains(amplitudes: Amplitudes, harmonics: np.ndarray) -> np.ndarray | None:
@@ -251,7 +250,7 @@ def harmonic_complex(
         harmonics = np.arange(1, int(np.ceil(fs / 2 / f0)))
     harmonics = np.atleast_1d(np.asarray(harmonics))
     gains = _gains(amplitudes, harmonics)
-    phi = _harmonic_phases(harmonics, phases, rng)
+    start_phases = _harmonic_phases(harmonics, phases, rng)
 
     keep = harmonics * f0 < fs / 2
     if not keep.all():
@@ -259,11 +258,11 @@ def harmonic_complex(
     t = time_axis(n_samples(duration, fs), fs)
     data = np.zeros_like(t)
     if gains is None:
-        gains = [amplitudes(t, np.full_like(t, n * f0)) for n in harmonics[keep]]
+        gains = [amplitudes(t, np.full_like(t, number * f0)) for number in harmonics[keep]]
     else:
         gains = gains[keep]
-    for n, a, p in zip(harmonics[keep], gains, phi[keep], strict=True):
-        data += a * np.cos(2 * np.pi * n * f0 * t + p)
+    for number, amplitude, start_phase in zip(harmonics[keep], gains, start_phases[keep], strict=True):
+        data += amplitude * np.cos(2 * np.pi * number * f0 * t + start_phase)
     return _finish(data, fs)
 
 
@@ -280,30 +279,33 @@ def _contour_complex(
         harmonics = np.arange(1, _max_harmonic(values, f_max) + 1)
     harmonics = np.atleast_1d(np.asarray(harmonics))
     gains = _gains(amplitudes, harmonics)
-    phi = _harmonic_phases(harmonics, phases, rng)
+    start_phases = _harmonic_phases(harmonics, phases, rng)
 
-    n = n_samples(duration, fs)
-    t = time_axis(n, fs)
-    data = np.zeros((n, len(values)))
-    for c, v in enumerate(values):
-        voiced = v > 0
-        harm = np.zeros(n)
-        gate = np.zeros(n)
+    length = n_samples(duration, fs)
+    t = time_axis(length, fs)
+    data = np.zeros((length, len(values)))
+    for channel, channel_f0 in enumerate(values):
+        voiced = channel_f0 > 0
+        harmonic_sum = np.zeros(length)
+        gate = np.zeros(length)
         if voiced.any():
-            i = np.arange(len(v))
-            f = np.interp(t, t_frames, np.interp(i, i[voiced], v[voiced]))
-            # the trapezoid rule: exact for f linear between samples
-            phase = 2 * np.pi / fs * np.concatenate([[0.0], np.cumsum((f[1:] + f[:-1]) / 2)])
-            for k, (n_k, p) in enumerate(zip(harmonics, phi, strict=True)):
-                freq = n_k * f
-                a = amplitudes(t, freq) if gains is None else gains[k]
-                harm += a * _taper(freq, f_max) * np.cos(n_k * phase + p)
+            frame_index = np.arange(len(channel_f0))
+            f0_at_sample = np.interp(
+                t, t_frames, np.interp(frame_index, frame_index[voiced], channel_f0[voiced])
+            )
+            # the trapezoid rule: exact for an F0 linear between samples
+            cumulative_f0 = np.concatenate([[0.0], np.cumsum((f0_at_sample[1:] + f0_at_sample[:-1]) / 2)])
+            phase = 2 * np.pi / fs * cumulative_f0
+            for index, (number, start_phase) in enumerate(zip(harmonics, start_phases, strict=True)):
+                freq = number * f0_at_sample
+                amplitude = amplitudes(t, freq) if gains is None else gains[index]
+                harmonic_sum += amplitude * _taper(freq, f_max) * np.cos(number * phase + start_phase)
             gate = _voicing_gate(t, t_frames, voiced, ramp, fs)
-        data[:, c] = gate * harm
+        data[:, channel] = gate * harmonic_sum
         if unvoiced == "noise":
             weight = gate.sum()
-            power = np.sum(gate * harm**2) / weight if weight > 0 else 1.0
-            data[:, c] += (1 - gate) * np.sqrt(power) * rng.standard_normal(n)
+            power = np.sum(gate * harmonic_sum**2) / weight if weight > 0 else 1.0
+            data[:, channel] += (1 - gate) * np.sqrt(power) * rng.standard_normal(length)
     return _finish(data, fs)
 
 
@@ -320,9 +322,14 @@ def schroeder_complex(
     (or below ``f_max`` for an F0 contour). ``f0`` and the keyword arguments
     for a contour are as in :func:`harmonic_complex`."""
     n_max = _n_max(f0, fs, contour.get("f_max"))
-    N = n_max if n_harmonics is None else min(n_harmonics, n_max)
+    count = n_max if n_harmonics is None else min(n_harmonics, n_max)
     return harmonic_complex(
-        duration, fs, f0, np.arange(1, N + 1), phases="schroeder+" if sign > 0 else "schroeder-", **contour
+        duration,
+        fs,
+        f0,
+        np.arange(1, count + 1),
+        phases="schroeder+" if sign > 0 else "schroeder-",
+        **contour,
     )
 
 
@@ -355,8 +362,8 @@ def square_wave(
         _fixed_only(f0, "square wave")
         t = time_axis(n_samples(duration, fs), fs)
         return _finish(np.sign(np.sin(2 * np.pi * f0 * t + phase)), fs)
-    n = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1, 2)
-    return _waveform(duration, fs, f0, phase, n, 1 / n, "sin", contour)
+    numbers = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1, 2)
+    return _waveform(duration, fs, f0, phase, numbers, 1 / numbers, "sin", contour)
 
 
 def sawtooth_wave(
@@ -376,8 +383,8 @@ def sawtooth_wave(
         _fixed_only(f0, "sawtooth")
         t = time_axis(n_samples(duration, fs), fs)
         return _finish(sawtooth(2 * np.pi * f0 * t + phase + np.pi), fs)
-    n = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1)
-    return _waveform(duration, fs, f0, phase, n, (-1.0) ** (n + 1) / n, "sin", contour)
+    numbers = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1)
+    return _waveform(duration, fs, f0, phase, numbers, (-1.0) ** (numbers + 1) / numbers, "sin", contour)
 
 
 def pulse_train(
@@ -396,14 +403,14 @@ def pulse_train(
     ``phase`` (radians of the fundamental) shifts the pulses in time.
     """
     if bandlimited:
-        n = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1)
-        return _waveform(duration, fs, f0, phase, n, np.ones(len(n)), "cos", contour)
+        numbers = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1)
+        return _waveform(duration, fs, f0, phase, numbers, np.ones(len(numbers)), "cos", contour)
     _fixed_only(f0, "pulse train")
-    N = n_samples(duration, fs)
+    length = n_samples(duration, fs)
     times = (np.arange(0, duration * f0 + 1) - phase / (2 * np.pi)) / f0
-    idx = np.round(times * fs).astype(int)
-    data = np.zeros(N)
-    data[idx[(idx >= 0) & (idx < N)]] = 1.0
+    pulse_samples = np.round(times * fs).astype(int)
+    data = np.zeros(length)
+    data[pulse_samples[(pulse_samples >= 0) & (pulse_samples < length)]] = 1.0
     return _finish(data, fs)
 
 
@@ -424,28 +431,28 @@ SpectrumLike = Callable[[np.ndarray], np.ndarray] | tuple[ArrayLike, ArrayLike]
 
 
 def _spectral_gain(
-    f: np.ndarray,
+    freqs: np.ndarray,
     band: tuple[float, float] | None,
     tilt: float,
     spectrum,
     tilt_ref: float,
 ) -> np.ndarray:
-    gain = np.ones_like(f)
+    gain = np.ones_like(freqs)
     if band is not None:
-        lo, hi = band
-        gain[(f < lo) | (f > hi)] = 0.0
+        f_lo, f_hi = band
+        gain[(freqs < f_lo) | (freqs > f_hi)] = 0.0
     if tilt:
         with np.errstate(divide="ignore"):
-            gain *= np.where(f > 0, (f / tilt_ref) ** (tilt / (20 * np.log10(2))), 0.0)
+            gain *= np.where(freqs > 0, (freqs / tilt_ref) ** (tilt / (20 * np.log10(2))), 0.0)
     if spectrum is not None:
         if hasattr(spectrum, "level_at"):  # a sonore Spectrum
-            db = spectrum.level_at(f)
+            level_db = spectrum.level_at(freqs)
         elif callable(spectrum):
-            db = spectrum(f)
+            level_db = spectrum(freqs)
         else:
-            sf, sdb = map(np.asarray, spectrum)
-            db = np.interp(f, sf, sdb)
-        gain *= 10 ** (np.asarray(db) / 20)
+            table_freqs, table_db = map(np.asarray, spectrum)
+            level_db = np.interp(freqs, table_freqs, table_db)
+        gain *= 10 ** (np.asarray(level_db) / 20)
     return gain
 
 
@@ -474,11 +481,11 @@ def gaussian_noise(
         Independent noise in each channel.
     """
     rng = as_rng(rng)
-    N = n_samples(duration, fs)
-    f = np.fft.rfftfreq(N, 1 / fs)
-    gain = _spectral_gain(f, band, tilt, spectrum, tilt_ref)
-    spec = np.fft.rfft(rng.standard_normal((N, n_channels)), axis=0) * gain[:, None]
-    data = np.fft.irfft(spec, n=N, axis=0)
+    length = n_samples(duration, fs)
+    freqs = np.fft.rfftfreq(length, 1 / fs)
+    gain = _spectral_gain(freqs, band, tilt, spectrum, tilt_ref)
+    noise_spectrum = np.fft.rfft(rng.standard_normal((length, n_channels)), axis=0) * gain[:, None]
+    data = np.fft.irfft(noise_spectrum, n=length, axis=0)
     data -= data.mean(axis=0)
     return _finish(data, fs)
 
@@ -488,9 +495,11 @@ def correlated_noise(duration: float, fs: float, corr: float = 1.0, rng: RNG = N
     Extra keyword arguments go to :func:`gaussian_noise`."""
     if not -1 <= corr <= 1:
         raise ValueError("corr must be in [-1, 1]")
-    n = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
-    a, b = np.sqrt((1 + corr) / 2), np.sqrt((1 - corr) / 2)
-    return Sound(np.column_stack([a * n[:, 0] + b * n[:, 1], a * n[:, 0] - b * n[:, 1]]), fs)
+    noise = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
+    shared_weight, difference_weight = np.sqrt((1 + corr) / 2), np.sqrt((1 - corr) / 2)
+    left = shared_weight * noise[:, 0] + difference_weight * noise[:, 1]
+    right = shared_weight * noise[:, 0] - difference_weight * noise[:, 1]
+    return Sound(np.column_stack([left, right]), fs)
 
 
 def iterated_ripple_noise(
@@ -511,15 +520,15 @@ def iterated_ripple_noise(
     warm-up segment discarded so the output is stationary.
     """
     warmup = int(np.ceil(iterations * delay * fs))
-    N = n_samples(duration, fs)
-    x = gaussian_noise((N + warmup) / fs, fs, rng=rng, **noise_kwargs).data[:, 0]
-    f = np.fft.rfftfreq(len(x), 1 / fs)
-    z = gain * np.exp(-2j * np.pi * f * delay)
+    length = n_samples(duration, fs)
+    noise = gaussian_noise((length + warmup) / fs, fs, rng=rng, **noise_kwargs).data[:, 0]
+    freqs = np.fft.rfftfreq(len(noise), 1 / fs)
+    one_pass = gain * np.exp(-2j * np.pi * freqs * delay)
     if network == "add-same":
-        H = (1 + z) ** iterations
+        transfer = (1 + one_pass) ** iterations
     elif network == "add-original":
-        H = sum(z**i for i in range(iterations + 1))
+        transfer = sum(one_pass**i for i in range(iterations + 1))
     else:
         raise ValueError("network must be 'add-same' or 'add-original'")
-    y = np.fft.irfft(np.fft.rfft(x) * H, n=len(x))[warmup:]
-    return _finish(y, fs)
+    output = np.fft.irfft(np.fft.rfft(noise) * transfer, n=len(noise))[warmup:]
+    return _finish(output, fs)

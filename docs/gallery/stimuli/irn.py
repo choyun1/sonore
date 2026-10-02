@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/irn.htm
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/irn.py
+    python docs/gallery/stimuli/irn.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
@@ -142,4 +142,4 @@ fig, playhead = show(sound)
 #
 # - Yost (1996). Pitch of iterated rippled noise. *J. Acoust. Soc. Am.* 100(1), 511–518.
 #   [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf).
-#   [`generators.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L496)
+#   [`generators.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L505)

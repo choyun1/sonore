@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/texture
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/textures.py
+    python docs/gallery/stimuli/textures.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """

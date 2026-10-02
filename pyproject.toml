@@ -44,6 +44,7 @@ Changelog = "https://github.com/choyun1/sonore/blob/main/CHANGELOG.md"
 play = ["sounddevice>=0.4"]
 sofa = ["h5py>=3.8"]
 notebook = ["ipykernel", "ipython", "ipywidgets", "tqdm"]
+docs = ["sphinx>=7", "furo"]
 dev = ["pytest>=8", "ruff>=0.5", "h5py>=3.8"]
 
 [tool.hatch.version]
@@ -59,6 +60,7 @@ packages = ["src/sonore"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]  # so tests in subfolders can import tests/helpers.py
 filterwarnings = ["error::RuntimeWarning"]
 
 [tool.ruff]
@@ -67,6 +69,7 @@ src = ["src"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/gallery/build.py" = ["E501"]  # prose in string literals
+"tools/draw_layout.py" = ["E501"]  # SVG in string literals
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "NPY"]

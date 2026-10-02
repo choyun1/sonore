@@ -11,7 +11,7 @@ set of band envelopes be put back together and listened to.
 Status: accepted 2026-10-02, with D2–D6 as recommended, D1 as the
 pattern-matching form of `harmonic_complex` below, D7 with arbitrary
 starting phases, D8 (after the F0 tracker) and D9. Implemented in
-`src/sonore/signals/generators.py`, tested in `tests/test_generators.py`.
+`src/sonore/signals/generators.py`, tested in `tests/signals/test_generators.py`.
 
 ## Why
 
