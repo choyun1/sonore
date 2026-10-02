@@ -34,10 +34,20 @@ class Decibels:
     def __float__(self) -> float:
         return float(self.value)
 
-    # scaling: 6*dB, dB*6, -3*dB, (6*dB)/2
-    def __mul__(self, other):
+    # scaling: 6*dB, -3*dB, 2*(6*dB), (6*dB)/2. The number comes first, as it is
+    # written and read; dB*6 is refused rather than quietly meaning the same.
+    def __rmul__(self, other):
         if isinstance(other, numbers.Real) and not isinstance(other, bool):
             return Decibels(self.value * float(other))
+        return self._refuse(other)
+
+    def __mul__(self, other):
+        if isinstance(other, numbers.Real) and not isinstance(other, bool):
+            level = "dB" if self.value == 1 else f"({self!r})".replace(" dB", "*dB")
+            raise TypeError(f"write the number first: did you mean {other:g}*{level}?")
+        return self._refuse(other)
+
+    def _refuse(self, other):
         from sonore.core.sound import Sound
 
         if isinstance(other, Sound):
@@ -46,8 +56,6 @@ class Decibels:
                 "(note that snd * 6*dB parses as (snd * 6) * dB)"
             )
         return NotImplemented
-
-    __rmul__ = __mul__
 
     def __truediv__(self, other):
         if isinstance(other, numbers.Real) and not isinstance(other, bool):
