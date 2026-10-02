@@ -28,6 +28,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [A vowel, piece by piece](#h-a-vowel-piece-by-piece): the source, then one formant at a time.
 # - [Source times filter](#h-source-times-filter): the same vowel as a product of spectra.
 # - [Six vowels](#h-six-vowels): Peterson and Barney's averages, and a continuum between two.
+# - [A woman's vowels](#h-a-woman-s-vowels): the same six vowels with women's formants and
+#   pitch.
 # - [Consonants from transitions](#h-consonants-from-transitions): /ba/, /da/ and /ga/ differ
 #   only in where the formants start.
 # - [Noise](#h-noise): frication, aspiration and breathy voice.
@@ -254,6 +256,79 @@ for i, p in enumerate(steps):
     for name in ("F1", "F2", "F3"):
         step_start = (STEP_DUR + 0.15) * i
         playhead[1].plot([step_start, step_start + STEP_DUR], [p[name] / 1000] * 2, color="c", lw=1, ls="--")
+
+# %% [markdown]
+# ## A woman's vowels
+#
+# Peterson and Barney's averages for women, for the same six vowels. Every formant is higher
+# than the men's, since women's vocal tracts are on average shorter, but not by one common
+# factor: the printout gives the ratios, from 1.04 to 1.30. The pitch is higher too, falling
+# from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above the women's F3.
+
+# %%
+VOWELS_WOMEN = {
+    "heed": (310, 2790, 3310),
+    "head": (610, 2330, 2990),
+    "had": (860, 2050, 2850),
+    "hod": (850, 1220, 2810),
+    "hawed": (590, 920, 2710),
+    "who'd": (370, 950, 2670),
+}
+parts_women = []
+for f1, f2, f3 in VOWELS_WOMEN.values():
+    v = so.klatt_synthesize(
+        VOWEL_DUR,
+        FS,
+        F0=([0, VOWEL_DUR], [230, 200]),
+        AV=onoff(VOWEL_DUR),
+        F1=f1,
+        F2=f2,
+        F3=f3,
+        F4=4100,
+        F5=4900,
+    )
+    parts_women += [v, gap]
+for word, (f1, f2, f3) in VOWELS_WOMEN.items():
+    men = VOWELS[word]
+    ratios = ", ".join(f"{women / man:.2f}" for women, man in zip((f1, f2, f3), men, strict=True))
+    print(f"{word:6} women / men, F1 F2 F3: {ratios}")
+
+# %% [about]
+# The six vowels with women's formants. The harmonics are now about 215 Hz apart, so each
+# formant peak is drawn by fewer of them than in the men's vowels above.
+
+# %% [demo fw4] Six vowels with the formants of women
+sound = finish(so.concat(parts_women))
+tracks = [
+    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS_WOMEN.values()], 2))
+    for i in range(3)
+]
+fig, playhead = show(sound, "heed, head, had, hod, hawed, who'd, women's formants")
+for tt, ff in tracks:
+    for j in range(6):
+        playhead[1].plot(tt[2 * j : 2 * j + 2], ff[2 * j : 2 * j + 2] / 1000, color="c", lw=1, ls="--")
+
+# %% [about]
+# Both sets of vowels by their first two formants, joined vowel by vowel. The women's vowel
+# space is shifted up and outward, most of all in F2 for the front vowels.
+
+# %% [figure fw5] The vowels of men and women by their first two formants
+fig, ax = plt.subplots(figsize=(5, 4), layout="constrained")
+for word in VOWELS:
+    (f1_men, f2_men, _), (f1_women, f2_women, _) = VOWELS[word], VOWELS_WOMEN[word]
+    ax.plot([f2_men, f2_women], [f1_men, f1_women], color="0.7", lw=0.8)
+    ax.annotate(word, (f2_women, f1_women), textcoords="offset points", xytext=(6, 4))
+ax.plot([v[1] for v in VOWELS.values()], [v[0] for v in VOWELS.values()], "o", color="C0", label="men")
+ax.plot(
+    [v[1] for v in VOWELS_WOMEN.values()],
+    [v[0] for v in VOWELS_WOMEN.values()],
+    "o",
+    color="C1",
+    label="women",
+)
+ax.set(xlabel="F2 (Hz)", ylabel="F1 (Hz)", xlim=(3000, 600), ylim=(950, 200))
+ax.legend(loc="lower left", fontsize=8)
+ax.set_title("Peterson and Barney's averages, men and women")
 
 # %% [markdown]
 # ## Consonants from transitions
