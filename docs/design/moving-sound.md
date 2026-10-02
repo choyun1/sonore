@@ -414,7 +414,8 @@ about 30 m/s, sources inside 20 cm, and listener models.
   & Wang (1999), Neuhoff (1998) and Seifritz et al. (2002), which were not
   read themselves.
 - Ghazanfar & Maier (2009). Rhesus monkeys (*Macaca mulatta*) hear rising
-  frequency sounds as looming. *Behavioral Neuroscience* 123(4), 822–827.
+  frequency sounds as looming. *Behavioral Neuroscience* (volume and pages
+  not checked).
   Read from the authors' PDF, in summary.
 - Neuhoff & McBeath (1996). The Doppler illusion: the influence of dynamic
   intensity change on perceived pitch. *J. Exp. Psychol. Hum. Percept.
