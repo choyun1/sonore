@@ -34,14 +34,22 @@ in the layer rule forces the split: `world_synthesize` imports only
 are in `analysis`, and the Klatt synthesizer and WORLD's synthesis are in
 `stimuli`. A reader looking for "voice" has to know the layer rule first.
 
-**Some modules sit in a layer they don't need.** The phase vocoder is in
-`stimuli` but imports only `core.sound`; it is an analysis and resynthesis,
-like the STFT it is built on. The channel vocoder is a stimulus but lives in
-`analysis/filterbank.py`.
+**Some modules sit in a layer they don't need.** The channel vocoder is a
+stimulus but lives in `analysis/filterbank.py`. The phase vocoder is in
+`stimuli` but imports only `core.sound`.
+
+**Inside `analysis`, the files don't follow the concepts.** The `Filterbank`
+base class is in `frames.py` while the banks built on it are in
+`filterbank.py`; the STFT's coefficient types (`STFT`, `TVSTFT`) sit in
+`representations.py` beside one-way views (`Spectrum`,
+`ReassignedSpectrogram`, `ModulationSpectrum`). Yet philosophy.md already
+draws the line the files should follow: every frame inverts exactly, and
+views may discard information (Cho, 2026-10-02: "i like the idea of analysis
+dividing into frames and non-frames/views, that should be exhaustive").
 
 **The gallery's middle group is half of it.** Of 17 pages, 9 are under
 "Seeing and changing sounds", 5 under "Stimuli" and 3 under "Listeners in
-the world". The middle group holds both the time-frequency course and four
+the world". The middle group holds both the time-frequency course and five
 voice pages, and the binaural page sits under "Stimuli" while the other
 spatial pages sit under "Listeners".
 
@@ -51,28 +59,34 @@ spatial pages sit under "Listeners".
 stimuli < texture, and fails when a module imports from a layer above its
 own. Cho chose that in PR #12 so the direction of dependencies shows in the
 file tree. The proposal keeps that guarantee and changes only its shape:
-a trunk of three layers that everything builds on, and branches by topic that
-build on the trunk and never on each other.
+a trunk that everything builds on, with `analysis` divided into `frames` and
+`views` (D12), and branches by topic that build on the trunk and never on
+each other.
 
 ```
-                 voice   spatial   stimuli   texture      (branches: do not import each other)
-                    \       |         |        /
-                     -------- analysis --------
-                                 |
-                              signals
-                                 |
-                               core
+            voice    spatial    stimuli    texture       (branches: do not import each other)
+               \        |          |          /
+                ----------- views ------------           (one-way analyses)
+                            |
+                          frames                          (invertible analyses)
+                            |
+                         signals
+                            |
+                          core
 ```
 
-The measured imports allow it: under the proposed layout, every import
-between subpackages points from a branch to the trunk or down the trunk
-(voice to analysis 1, signals 3, core 6; spatial to analysis 3, signals 4,
-core 6; stimuli to analysis 2, signals 1, core 2; texture to analysis 3,
-core 5). No branch imports another. The one import that points up is the one
-the test already allows by name, `Sound.envelope()`. The tool also reports
-two imports from `analysis` to `voice`; both come from `analysis/voice.py`,
-which D3 splits so that the part left in `analysis` imports nothing from
-`voice` (see D3).
+The measured imports allow it. Resolved name by name to where each name
+would go, every import between subpackages points down the trunk or from a
+branch to the trunk (views to frames 10, signals 1, core 10; frames to core
+9; voice to signals 11, core 8; spatial to views 1, frames 2, signals 4,
+core 7; stimuli to views 1, frames 2, signals 2, core 5; texture to views 2,
+frames 2, core 5). No branch imports another. Two point up, both inside a
+method so that calls chain in a notebook: `Sound.envelope()`, which the test
+already allows by name, and `Subbands.envelopes()`, which would be added
+beside it (frames to views). Not counted, because it is inside today's
+`analysis/vocoder.py`: WORLD's `SpectralEnvelope` and `Aperiodicity`
+subclass the helper `_FrequencyView`, which D3 moves to `views`, so voice
+would also import from views.
 
 ## Proposed layout
 
@@ -80,11 +94,12 @@ which D3 splits so that the part left in `analysis` imports nothing from
 |---|---|---|---|
 | `core` | `sound`, `units`, `utils`, `fft` | unchanged | nothing in sonore |
 | `signals` | `generators`, `processing` | making and editing sounds | core |
-| `analysis` | `frames`, `filterbank`, `representations`, `spectral_envelope`, `cepstrum`, `mfcc`, `envelopes`, `modulation`, `modspectrogram`, `phasevocoder` | taking sounds apart and putting them back | core, signals |
-| `voice` | `glottal`, `klatt`, `f0`, `world`, `aperiodicity`, `change` | voices: made from parameters, measured, rebuilt and changed | core, signals, analysis |
-| `spatial` | `binaural`, `spatialization`, `hrir_data`, `reverb` | two ears, heads and rooms | core, signals, analysis |
-| `stimuli` | `ripples`, `channel_vocoder` | stimuli built from the analysis tools | core, signals, analysis |
-| `texture` | `stats`, `grad`, `synth` | unchanged | core, analysis |
+| `frames` | `frame`, `filterbank`, `gabor`, `mask` | invertible analyses, their coefficients, and changes to coefficients with exact least-squares resynthesis | core, signals |
+| `views` | `spectrum`, `reassigned`, `envelopes`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `spectral_envelope` | one-way analyses: each says what it drops | core, signals, frames |
+| `voice` | `glottal`, `klatt`, `f0`, `world`, `aperiodicity`, `change` | voices: made from parameters, measured, rebuilt and changed | the trunk |
+| `spatial` | `binaural`, `spatialization`, `hrir_data`, `reverb` | two ears, heads and rooms | the trunk |
+| `stimuli` | `ripples`, `channel_vocoder`, `phasevocoder` | sounds made by shaping or changing other sounds | the trunk |
+| `texture` | `stats`, `grad`, `synth` | unchanged | the trunk |
 | `plotting.py` | | unchanged | imported only inside `.plot()` |
 
 Every move, with the number of files that name the module's current path
@@ -92,44 +107,59 @@ outside the module itself (each would need an edit):
 
 | Now | Proposed | Files naming it |
 |---|---|---|
+| `analysis/frames.py` | `frames/frame.py`, `frames/filterbank.py` (`Filterbank`), `frames/gabor.py` (`GaborFrame`, `TVGaborFrame`) | 17 |
+| `analysis/filterbank.py` | `frames/filterbank.py`; `noise_vocode` to `stimuli/channel_vocoder.py` | 22 |
+| `analysis/representations.py` | `frames/gabor.py` (`STFT`, `TVSTFT`), `frames/mask.py`, `views/spectrum.py`, `views/reassigned.py`, `views/modulation.py` (`ModulationSpectrum`) | 17 |
+| `analysis/cepstrum.py` | `views/cepstrum.py` | 12 |
+| `analysis/mfcc.py` | `views/mfcc.py` | 10 |
+| `analysis/envelopes.py` | `views/envelopes.py` | 11 |
+| `analysis/modulation.py` | `views/modulation.py` | 11 |
+| `analysis/modspectrogram.py` | `views/modspectrogram.py` | 7 |
 | `analysis/f0.py` | `voice/f0.py` | 13 |
-| `analysis/vocoder.py` | `voice/world.py` and `voice/aperiodicity.py` | 14 |
+| `analysis/vocoder.py` | `voice/world.py`, `voice/aperiodicity.py`; helpers to `views/spectral_envelope.py` | 14 |
 | `stimuli/vocoder.py` | `voice/world.py` | 12 |
-| `analysis/voice.py` | `analysis/spectral_envelope.py` and `voice/change.py` | 8 |
+| `analysis/voice.py` | `views/spectral_envelope.py` (`GridEnvelope`), `voice/change.py` | 8 |
 | `signals/glottal.py` | `voice/glottal.py` | 7 |
 | `stimuli/klatt.py` | `voice/klatt.py` | 6 |
 | `stimuli/binaural.py` | `spatial/binaural.py` | 8 |
 | `stimuli/spatialization.py` | `spatial/spatialization.py` | 8 |
 | `stimuli/hrir_data.py` | `spatial/hrir_data.py` | 6 |
 | `stimuli/reverb.py` | `spatial/reverb.py` | 5 |
-| `stimuli/phasevocoder.py` | `analysis/phasevocoder.py` | 6 |
-| `noise_vocode` in `analysis/filterbank.py` | `stimuli/channel_vocoder.py` | 6 |
 
-43 distinct files are touched in all. By kind they are the moved modules'
-importers in `src`, the API reference pages (`docs/api/source/*.rst`, one
-`automodule` line per module), the README module table and References tags,
-gallery scripts that import a module by its path, the gallery HTML pages
-whose References tags link to a source file, design docs, tools and tests.
-Ten test files move with their modules, since `tests/` mirrors `src/`.
+78 distinct files are touched in all (moved modules included), 41 without
+the frames/views split. By kind they are the moved modules' importers in
+`src`, the API reference pages (`docs/api/source/*.rst`, one `automodule`
+line per module), the README module table and References tags, gallery
+scripts that import a module by its path, the gallery HTML pages whose
+References tags link to a source file, design docs, tools and tests. The
+tests mirror `src/`, so all 10 files in `tests/analysis` move, and 6 more
+(glottal, klatt and the four spatial ones).
+
+Estimates from today's line ranges (labelled, not measured as built):
+`frames/gabor.py` about 570 lines (`GaborFrame` and `TVGaborFrame`, 405,
+plus `STFT` and `TVSTFT`, 167), `frames/filterbank.py` about 640
+(`Filterbank`, 164, plus the banks and `Subbands`, 473), `frames/frame.py`
+about 110.
 
 What does not change: every `so.name`. The top-level `__init__` re-exports
 the public names from every subpackage, and it would go on doing so, so code
-written as `so.world_synthesize(...)` or `so.klatt_synthesize(...)` runs
-unchanged. Only deep imports such as `from sonore.stimuli.reverb import
-synth_ir` change.
+written as `so.world_synthesize(...)` or `so.GaborFrame(...)` runs
+unchanged. Only deep imports such as `from sonore.analysis.frames import
+GaborFrame` change.
 
 ## Decisions
 
-- **D1. Layers or topics.** (a) A trunk (core, signals, analysis) and
+- **D1. Layers or topics.** (a) A trunk (core, signals, frames, views) and
   sibling branches by topic (voice, spatial, stimuli, texture) that import
   only from the trunk, as above (recommended: the subpackage names then say
   what a module is about, the gallery groups can match them (D8), and
   `tests/test_layers.py` still fails on any import that points the wrong
   way; the rule changes from "below me in one list" to "below me in the
-  trunk, or inside my own subpackage"). (b) Keep the five layers and fix only
-  the vocoder names (D2), moving 2 modules and touching 18 files instead of
-  43: the smallest change, but the voice code stays spread over three
-  layers. (c) Go back to a flat package: rejected, since Cho split it in
+  trunk, or inside my own subpackage"). (b) The same branches, but `analysis`
+  kept whole (D12 declined): 41 files instead of 78. (c) Keep the five layers
+  and fix only the vocoder names (D2), moving 2 modules and touching 18
+  files: the smallest change, but the voice code stays spread over three
+  layers. (d) Go back to a flat package: rejected, since Cho split it in
   PR #12 to see the dependencies.
 - **D2. The four vocoders.** (a) Name each by its method: WORLD's analysis
   and synthesis together in `voice/world.py`, the phase vocoder keeps
@@ -144,24 +174,29 @@ synth_ir` change.
   `voice/world_synthesis.py`: shorter files, but the pair reads as one
   thing split for no reason, which is the complaint. (c) Leave
   `noise_vocode` in `filterbank.py`: it is 37 lines on top of
-  `Subbands`, but then the channel vocoder is the one stimulus in
-  `analysis`.
+  `Subbands`, but then the channel vocoder is the one stimulus among the
+  frames.
 - **D3. Split `analysis/voice.py`.** It holds two things. `GridEnvelope`,
   an envelope on a time-frequency grid, is what `Cepstrum.envelope_view` and
   `MFCC.envelope_view` return; with the interpolation helpers it shares with
   WORLD's `SpectralEnvelope` (`_FrequencyView`, `_positions`, `_pointwise`,
-  now in `analysis/vocoder.py`) it moves down to
-  `analysis/spectral_envelope.py`. `scale_f0` and `warp_frequency` need
-  `F0Track` and go to `voice/change.py`. (Recommended, and needed for D1(a):
-  otherwise `cepstrum` and `mfcc` in the trunk would import from `voice`.)
-  The alternative is to move `cepstrum` and `mfcc` into `voice` as well, see
-  D5.
-- **D4. The phase vocoder moves to `analysis`.** It imports only
-  `core.sound`, and on the gallery it is a way of changing a sound through
-  its STFT, beside analysis and resynthesis. (a) `analysis/phasevocoder.py`
-  (recommended). (b) Leave it in `stimuli`, which then holds ripples, the
-  channel vocoder and the phase vocoder.
-- **D5. Where the cepstrum and MFCCs live.** (a) In `analysis` (recommended:
+  now in `analysis/vocoder.py`) it moves to `views/spectral_envelope.py`.
+  `scale_f0` and `warp_frequency` need `F0Track` and go to `voice/change.py`.
+  (Recommended, and needed for D1(a): otherwise `cepstrum` and `mfcc` in the
+  trunk would import from `voice`.) The alternative is to move `cepstrum` and
+  `mfcc` into `voice` as well, see D5.
+- **D4. The phase vocoder stays in `stimuli`.** It is neither a frame nor a
+  view: its analysis is an STFT with instantaneous frequencies, but what it
+  is for is changing a sound (duration, pitch, partials), and its
+  resynthesis after a change is not exact. (a) Leave it in
+  `stimuli/phasevocoder.py`, beside the channel vocoder and ripples, sounds
+  made by changing or shaping other sounds (recommended, and it moves
+  nothing). (b) Rebuild `PVAnalysis` on `GaborFrame` (today it uses SciPy's
+  `ShortTimeFFT` directly), after which its analysis would be a frame's
+  coefficients: a change to working code with no new behaviour, so not now.
+  An earlier draft moved it to `analysis`; the exhaustive split leaves no
+  place for it there.
+- **D5. Where the cepstrum and MFCCs live.** (a) In `views` (recommended:
   both are views of any sound built on the STFT, and the MFCC is used well
   beyond voices). (b) In `voice`, since their gallery page is in the Voices
   group (D8). Package and gallery need not mirror each other exactly: the
@@ -169,10 +204,11 @@ synth_ir` change.
   what.
 - **D6. Old import paths.** (a) No compatibility modules; the release
   notes of the next version (0.4.0) list every moved path (recommended, and
-  what PR #12 did). Of the moved modules, 5 shipped in 0.3.0
-  (`stimuli/binaural`, `hrir_data`, `phasevocoder`, `reverb`,
+  what PR #12 did). Of the moved modules, 10 shipped in 0.3.0
+  (`analysis/cepstrum`, `envelopes`, `filterbank`, `frames`, `modulation`,
+  `representations`, and `stimuli/binaural`, `hrir_data`, `reverb`,
   `spatialization`), so only those deep paths can be in anyone's code; the
-  other 6 were added after the release. (b) Thin modules at the old paths
+  other 8 were added after the release. (b) Thin modules at the old paths
   that re-export and warn, removed one version later.
 - **D7. Signals keeps the LF pulse?** (a) No: `glottal.py` moves to `voice`
   (recommended: Rd, open quotient and the LF shape are voice parameters, and
@@ -226,6 +262,55 @@ synth_ir` change.
   `tools/draw_layout.py` draws the trunk as stacked bands with the branches
   side by side above it, so the diagram shows that branches do not depend on
   each other.
+- **D12. Frames and views.** `analysis` divides into two subpackages, and
+  every class and function in it lands in exactly one. The test for
+  `frames`: it is a `Frame`, the coefficients of one (they synthesize back
+  exactly), or a change to coefficients whose resynthesis is the frame's
+  least-squares inverse. Everything else that takes a sound apart is a view,
+  and its docstring says what it drops (philosophy.md, "Views may discard
+  information").
+
+  | Subpackage | Module | Names |
+  |---|---|---|
+  | `frames` | `frame` | `Frame` |
+  | | `filterbank` | `Filterbank`, `CosineFilterbank`, `ERBFilterbank`, `OctaveFilterbank`, `BandpassFilterbank`, `GammatoneFilterbank`, `MorletFilterbank`, `subbands`, `Subbands` |
+  | | `gabor` | `GaborFrame`, `TVGaborFrame`, `STFT`, `TVSTFT` |
+  | | `mask` | `Mask`, `ideal_binary_mask`, `ideal_ratio_mask` |
+  | `views` | `spectrum` | `Spectrum`, `long_term_spectrum`, `TFPower`, `tandem_power` |
+  | | `reassigned` | `ReassignedSpectrogram`, `reassigned_spectrogram` |
+  | | `envelopes` | `Envelope`, `Envelopes` |
+  | | `modulation` | `ModulationFilterbank`, `ConstantQModulationFilterbank`, `OctaveModulationFilterbank`, `HannModulationFilterbank`, `ModulationSpectrum` |
+  | | `modspectrogram` | `ModulationSpectrogram` |
+  | | `cepstrum` | `Cepstrum` |
+  | | `mfcc` | `MFCC`, `freq_to_mel`, `mel_to_freq`, `mel_filterbank`, `symmetric_hamming`, `delta_features` |
+  | | `spectral_envelope` | `GridEnvelope` |
+
+  The cases that need a word:
+  - **A bare gammatone or Morlet bank** (`edges=False`) is still a
+    `Filterbank` and stays in `frames`, though numerically it may not be a
+    frame: `frame_bounds` reports it and `synthesize` refuses when the lower
+    bound is 0. The class is a frame; a particular bank may be a poor one.
+  - **The modulation filterbanks** carry the word "filterbank" but are not
+    `Filterbank`s: they filter envelopes and have no synthesis. They are
+    views. Renaming them is not proposed, but the docstring should say so.
+  - **Envelopes** discard the fine structure, so they are a view, though
+    `Subbands.envelopes()` returns them: that is the one new upward import
+    (frames to views, inside the method), allowed by name in the layer test.
+  - **`STFT.griffin_lim`** rebuilds a sound from magnitudes only; it is a
+    method on frame coefficients and stays with `STFT`.
+  - **Views of voices** (`F0Track`, `SpectralEnvelope`, `Aperiodicity`)
+    are views too, but live in the `voice` branch with the rest of WORLD and
+    the tracker (D1); the frames/views division is exhaustive for the trunk.
+  - **The phase vocoder** is neither (D4).
+
+  (a) `frames` and `views` as two subpackages of the trunk, replacing
+  `analysis` (recommended: the trunk reads core < signals < frames < views,
+  and the layer test then also fails if a frame starts depending on a view).
+  (b) Nested, `analysis/frames/` and `analysis/views/`: keeps the word
+  "analysis" in every path, at the cost of one more level
+  (`sonore.analysis.frames.gabor`). (c) Keep `analysis` as one subpackage
+  and only regroup its files along the same line: no new rule for the test
+  to hold.
 
 ## Order
 
@@ -233,7 +318,7 @@ The reverb speech examples (PR #78) and the Changing a voice page (PR #77)
 merged before this proposal was last measured, so they are counted above.
 A folder move and an edit to the same script in two open PRs conflict, so:
 
-1. Cho decides D1 to D11.
+1. Cho decides D1 to D12.
 2. Any gallery PR still open then merges first.
 3. **Gallery PR** (small, what readers see): `git mv` the nine scripts,
    rewrite TOPICS and the comment above it, patch the menus and sidebar of
@@ -241,8 +326,8 @@ A folder move and an edit to the same script in two open PRs conflict, so:
    container), regroup the README gallery list (D10). Checks: the test
    suite, and every page's menu showing the four groups.
 4. **Source PR** (mechanical, one PR so the tree is never half-moved):
-   `git mv` each module, split `analysis/voice.py` and `analysis/vocoder.py`
-   (D3, D2), update imports in `src`, tests, tools and gallery scripts, the
+   `git mv` each module, split `analysis/frames.py`, `filterbank.py`,
+   `representations.py`, `voice.py` and `vocoder.py` (D12, D3, D2), update imports in `src`, tests, tools and gallery scripts, the
    API reference pages, layout.md and its diagram, the layer test, the
    README module table and References tags
    (`tools/update_readme_source_links.py` rewrites line anchors but not file
@@ -262,9 +347,8 @@ file references are updated in step 4.
 
 ## Out of scope
 
-- Splitting large mixed modules: `representations.py` (550 lines: spectra,
-  STFTs, masks, reassignment, modulation spectra) and `plotting.py` (609
-  lines). Possible later, independent of this.
+- Splitting `plotting.py` (609 lines). Possible later, independent of this.
+  (`representations.py` is split by D12.)
 - Renaming public functions or classes. Everything keeps its `so.` name.
 - Gallery page titles. "Seeing speech" keeps its title in the Seeing group:
   it is a course in time-frequency analysis that happens to use a sentence.

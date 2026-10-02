@@ -24,19 +24,99 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "src" / "sonore"
 
 # Recommended option (A): current module -> proposed module. A split module has
-# several targets, separated by " + ".
+# several targets, separated by " + ". The trunk's analysis layer becomes two,
+# frames (invertible analyses and their coefficients) and views (one-way analyses).
 MOVES_A = {
+    "analysis/frames": "frames/frame + frames/filterbank + frames/gabor",
+    "analysis/filterbank": "frames/filterbank + stimuli/channel_vocoder",
+    "analysis/representations": (
+        "views/spectrum + frames/gabor + frames/mask + views/reassigned + views/modulation"
+    ),
+    "analysis/cepstrum": "views/cepstrum",
+    "analysis/mfcc": "views/mfcc",
+    "analysis/envelopes": "views/envelopes",
+    "analysis/modulation": "views/modulation",
+    "analysis/modspectrogram": "views/modspectrogram",
     "analysis/f0": "voice/f0",
-    "analysis/vocoder": "voice/world + voice/aperiodicity",
+    "analysis/vocoder": "voice/world + voice/aperiodicity + views/spectral_envelope",
     "stimuli/vocoder": "voice/world",
-    "analysis/voice": "analysis/spectral_envelope + voice/change",
+    "analysis/voice": "views/spectral_envelope + voice/change",
     "signals/glottal": "voice/glottal",
     "stimuli/klatt": "voice/klatt",
     "stimuli/binaural": "spatial/binaural",
     "stimuli/spatialization": "spatial/spatialization",
     "stimuli/hrir_data": "spatial/hrir_data",
     "stimuli/reverb": "spatial/reverb",
-    "stimuli/phasevocoder": "analysis/phasevocoder",
+}
+# Modules that leave analysis for a branch; every other analysis module is part of the
+# frames/views split of the trunk.
+BRANCH_MOVES_FROM_ANALYSIS = {"analysis/f0", "analysis/vocoder", "analysis/voice"}
+# Where each top-level name of a split module goes; names not listed go to the first target.
+SPLIT_NAMES = {
+    "analysis/frames": {
+        "Filterbank": "frames/filterbank",
+        "_ringing_samples": "frames/filterbank",
+        **dict.fromkeys(
+            [
+                "GaborFrame",
+                "_gabor_sft",
+                "_gabor_adjoint_sft",
+                "_window",
+                "TVGaborFrame",
+                "_bridged_f0",
+                "_TVLayout",
+                "_tv_layout",
+            ],
+            "frames/gabor",
+        ),
+    },
+    "analysis/filterbank": {"noise_vocode": "stimuli/channel_vocoder"},
+    "analysis/representations": {
+        "STFT": "frames/gabor",
+        "TVSTFT": "frames/gabor",
+        "Mask": "frames/mask",
+        "ideal_binary_mask": "frames/mask",
+        "ideal_ratio_mask": "frames/mask",
+        "ReassignedSpectrogram": "views/reassigned",
+        "reassigned_spectrogram": "views/reassigned",
+        "_window_from_formula": "views/reassigned",
+        "_window_tau_and_derivative": "views/reassigned",
+        "ModulationSpectrum": "views/modulation",
+    },
+    "analysis/vocoder": {
+        "harmonic_aperiodicity": "voice/aperiodicity",
+        "_residual_share": "voice/aperiodicity",
+        "_positions": "views/spectral_envelope",
+        "_pointwise": "views/spectral_envelope",
+        "_FrequencyView": "views/spectral_envelope",
+    },
+    "analysis/voice": {
+        **dict.fromkeys(
+            [
+                "_scaled",
+                "scale_f0",
+                "_scaled_candidates",
+                "_is_grid_view",
+                "warp_frequency",
+                "_WarpedFunction",
+                "_contour_on_grid",
+            ],
+            "voice/change",
+        ),
+    },
+}
+# Module-level imports of a split module that belong to a part other than its first target.
+MODULE_LEVEL_OWNER = {("analysis/voice", "F0Track"): "voice/change"}  # used by scale_f0
+# The trunk is ranked; the branches share the rank above it and must not import each other.
+RANK = {
+    "core": 0,
+    "signals": 1,
+    "frames": 2,
+    "views": 3,
+    "voice": 4,
+    "spatial": 4,
+    "stimuli": 4,
+    "texture": 4,
 }
 # Option B, the smallest change: only the names that collide.
 MOVES_B = {
@@ -112,14 +192,32 @@ def noise_vocode_references(files) -> Counter:
 
 
 def module_imports():
-    """Module-level and in-function imports between sonore modules, as (importer, imported)."""
-    edges = set()
+    """Every import of a sonore name, as (importer module, the importer's top-level
+    definition or "" at module level, imported module, imported name, inside a function)."""
+    rows = []
     for path in SRC.rglob("*.py"):
-        name = ".".join(path.relative_to(SRC.parent).with_suffix("").parts)
-        for node in ast.walk(ast.parse(path.read_text())):
-            if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("sonore."):
-                edges.add((name, node.module))
-    return edges
+        module = "/".join(path.relative_to(SRC).with_suffix("").parts)
+        tree = ast.parse(path.read_text())
+        for top in tree.body:
+            top_name = getattr(top, "name", "")
+            for node in ast.walk(top):
+                if isinstance(node, ast.ImportFrom) and node.module and node.module.startswith("sonore."):
+                    imported = node.module.removeprefix("sonore.").replace(".", "/")
+                    in_function = node is not top and top_name != ""
+                    if isinstance(top, ast.If):  # TYPE_CHECKING blocks
+                        in_function = True
+                    for alias in node.names:
+                        rows.append((module, top_name, imported, alias.name, in_function))
+    return rows
+
+
+def destination(module: str, name: str) -> str:
+    """Where ``name`` of ``module`` goes under option A."""
+    if module in SPLIT_NAMES and name in SPLIT_NAMES[module]:
+        return SPLIT_NAMES[module][name]
+    if module in MOVES_A:
+        return MOVES_A[module].split(" + ")[0]
+    return module
 
 
 def report(title, moves, files):
@@ -151,6 +249,14 @@ def main():
         if module.replace("/", ".") in text or f"{module}.py" in text
     }
     print(f"distinct files touched by option A: {len(distinct_a)}")
+    trunk_split = {m for m in MOVES_A if m.startswith("analysis/") and m not in BRANCH_MOVES_FROM_ANALYSIS}
+    distinct_branches = {
+        str(path)
+        for path, text in files
+        for module in [m for m in MOVES_A if m not in trunk_split] + ["analysis/filterbank.noise_vocode"]
+        if module.replace("/", ".") in text or f"{module}.py" in text
+    }
+    print(f"distinct files touched by option A without the frames/views split: {len(distinct_branches)}")
     report("Option B: rename the WORLD modules only", MOVES_B, files)
     distinct_b = {
         str(path)
@@ -173,29 +279,23 @@ def main():
     print(f"moved by option A and already released: {', '.join(moved)}")
     print(f"moved by option A and unreleased: {', '.join(sorted(m for m in MOVES_A if m not in shipped))}")
 
-    print("== Imports between proposed subpackages (option A)")
-    rename = {m.replace("/", "."): t.split(" + ")[0].replace("/", ".") for m, t in MOVES_A.items()}
-    rename["analysis.voice"] = "analysis.spectral_envelope"  # what cepstrum and mfcc import (GridEnvelope)
-
-    def package(module):
-        module = module.removeprefix("sonore.")
-        module = rename.get(module, module)
-        return module.split(".")[0]
-
-    crossing = Counter()
-    upward = []
-    for importer, imported in sorted(module_imports()):
-        a, b = package(importer), package(imported)
-        if a != b and "plotting" not in (a, b):
-            crossing[(a, b)] += 1
-            if (a, b) in {("analysis", "voice"), ("core", "analysis")}:
-                upward.append(f"{importer} imports {imported}")
-    for (a, b), n in sorted(crossing.items()):
+    print("== Imports between proposed subpackages (option A), resolved name by name")
+    edges = Counter()
+    wrong_way = []
+    for importer, top_name, imported, name, in_function in module_imports():
+        a = MODULE_LEVEL_OWNER.get((importer, name)) if not top_name else None
+        a, b = a or destination(importer, top_name), destination(imported, name)
+        pa, pb = a.split("/")[0], b.split("/")[0]
+        if pa == pb or "plotting" in (pa, pb) or pa == "__init__":
+            continue
+        edges[(pa, pb)] += 1
+        if RANK[pb] >= RANK[pa]:
+            where = "inside a function" if in_function else "at module level"
+            wrong_way.append(f"{a} imports {name} from {b}, {where} ({importer}.{top_name})")
+    for (a, b), n in sorted(edges.items()):
         print(f"{a} -> {b}: {n}")
-    # analysis/voice.py is split, and this count treats the whole file as its first part;
-    # these are the imports to look at by hand.
-    for line in upward:
-        print(f"  upward: {line}")
+    for line in sorted(set(wrong_way)):
+        print(f"  not downward: {line}")
 
     print("== Gallery pages by group (build.py TOPICS)")
     build = (ROOT / "docs" / "gallery" / "build.py").read_text()
