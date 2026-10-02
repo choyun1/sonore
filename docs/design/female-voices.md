@@ -8,8 +8,9 @@ read missing harmonics as noise. This note records how sonore's speech
 analyses do on female voices, with each analysis run at its defaults. Nothing
 was tuned to improve the numbers.
 
-Status: findings only, 2026-10-02. No library code changed. The proposed
-follow-ups at the end await Cho.
+Status: 2026-10-02. The one library fix the findings called for, in
+`so.f0_track`, was accepted by Cho and is made here (see "F0"); the
+numbers below are with it.
 
 ## How the numbers are made
 
@@ -47,8 +48,8 @@ SciPy 1.17.1 and pyworld 0.3.5.
 
 | | Voicing error | Gross error (>20%) where both voice | Within 5% | Octave down |
 |---|---|---|---|---|
-| `so.f0_track`, rl (male) | 5.5% | 0.1% | 98.1% | 0.0% |
-| `so.f0_track`, sb (female) | 1.6% | 0.5% | 95.2% | 0.1% |
+| `so.f0_track`, rl (male) | 5.6% | 0.1% | 98.1% | 0.0% |
+| `so.f0_track`, sb (female) | 1.5% | 0.5% | 95.2% | 0.1% |
 | `Cepstrum.f0`, rl (male) | 11.7% | 1.2% | 95.1% | 0.0% |
 | `Cepstrum.f0`, sb (female) | 6.6% | 2.3% | 91.5% | 1.5% |
 
@@ -56,9 +57,9 @@ The female voice is easier to voice, since its periodicity is strong and
 regular. But fewer of its time windows land within 5% (95.2% against
 98.1%), and the cepstrum, which judges each 40 ms time window alone, makes
 octave-down errors on it that it doesn't make on the male voice. On sb the
-tracker's gross errors at 200 to 300 Hz and above 300 Hz are 0.2% to 0.4%.
-Where sb's reference F0 drops below 200 Hz (87 time windows, mostly at
-voicing edges and in creak) the errors are 21% to 56%, but there are too
+tracker's gross errors at 200 to 300 Hz and above 300 Hz are 0.1% to 0.4%.
+Where sb's reference F0 drops below 200 Hz (90 time windows, mostly at
+voicing edges and in creak) a quarter or more are off, but there are too
 few of those windows to support a conclusion.
 
 On ARCTIC `slt` (Harvest median 176 Hz, so lower than sb), the tracker
@@ -68,16 +69,24 @@ voice. On `bdl` it is 99.3%. Both voices disagree with Harvest on voicing in abo
 (`f0.md`, C9). The cepstrum disagrees with Harvest by more
 than 20% on 53% of the 15 `slt` time windows Harvest puts at 250 to 300 Hz.
 
-**On steady synthetic vowels from 250 Hz up the tracker can lock onto a third
-of F0.** At 300 Hz on all six vowels, at 350 Hz on four and at 250 Hz on two, `so.f0_track`
-returns F0/3 (99 Hz for a 300 Hz vowel) on nearly every time window. With
-`f_lo` raised to F0/2.5 it returns the right F0. The subharmonic rule (C10
-in `f0.md`) checks only the octave above a candidate, so a candidate at a
-third of F0, whose own octave (2F0/3) is not a period of the sound, gets
-through. A perfectly periodic sound makes the periodicity score equal at
-every multiple of the period, which hides the true period. Real voices
-have jitter, so this didn't show on sb. But a steady synthetic source,
-such as the gallery's Klatt vowels at a female F0, would hit it.
+**On steady synthetic vowels from 250 Hz up the tracker locked onto a
+third of F0, and this is now fixed.** Before the fix, `so.f0_track`
+returned F0/3 (99 Hz for a 300 Hz vowel) on nearly every time window at
+300 Hz on all six vowels, at 350 Hz on four and at 250 Hz on two. A
+perfectly periodic sound has a difference-function minimum at every
+multiple of its period, all about equally deep. The tracker kept only the
+four deepest, which could all be multiples, and its subharmonic rule (C10
+in `f0.md`) checked only the octave above a candidate, which says nothing
+against F0/3. Real voices have jitter, so this didn't show on sb, but a
+steady synthetic source such as the gallery's Klatt vowels at a female F0
+would hit it. Extending the rule to thirds alone moved the error to F0/5,
+because the true period was often not among the four. The tracker now
+keeps eight candidates and applies the rule to every whole multiple. On all
+36 synthetic vowels from 100 to 350 Hz the median error is now under 0.4%,
+and the twelve at 400 and 450 Hz are tracked at the right F0 too. On FDA the numbers above barely moved (voicing
+error 5.5% to 5.6% male, 1.6% to 1.5% female), and tracking takes about
+twice as long. `tests/analysis/test_f0.py` holds a regression test that
+fails on the old code.
 
 ## Spectral envelope
 
@@ -101,7 +110,7 @@ vocal tract.
 
 On real speech CheapTrick barely depends on small F0 errors: swapping the
 laryngograph F0 for the tracker's changes the envelope by a median of
-0.03 dB (male) and 0.05 dB (female), and 0.21 and 0.33 dB at the 95th
+0.03 dB (male) and 0.05 dB (female), and 0.21 and 0.32 dB at the 95th
 percentile.
 
 ## Aperiodicity
@@ -137,13 +146,9 @@ reads the female voice as clearly noisier. Female voices are often described
 as breathier (Klatt & Klatt 1990), and with no reference it can't be said
 whether these numbers are right.
 
-## Proposed follow-ups (not done)
+## Follow-ups
 
-1. **Extend the subharmonic rule to thirds.** A candidate would also be
-   rejected when one near three times its frequency scores as well. This
-   changes `so.f0_track`'s output, so it needs Cho's decision and its own
-   PR with the FDA check rerun.
-2. **Gallery pages.** Add female examples next to the male ones on every
+1. **Gallery pages.** Add female examples next to the male ones on every
    speech page, as planned in the project thread, and say on the
    Cepstral analysis and Aperiodicity pages what the tables above show.
 

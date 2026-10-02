@@ -298,7 +298,7 @@ def part2(root):
                 f"    {name:17s} noise share given reference F0, median dB in "
                 + ", ".join(
                     f"{lo / 1000:g}-{hi / 1000:g} kHz {m:+.1f}"
-                    for lo, hi, m in zip(AP_BANDS, AP_BANDS[1:], medians, strict=True)
+                    for lo, hi, m in zip(AP_BANDS[:-1], AP_BANDS[1:], medians, strict=True)
                 )
             )
 

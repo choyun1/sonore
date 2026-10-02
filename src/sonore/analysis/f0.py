@@ -12,7 +12,7 @@ from sonore.core.sound import Sound
 
 __all__ = ["F0Track", "f0_track"]
 
-MAX_CANDIDATES = 4
+MAX_CANDIDATES = 8
 N_HARMONICS = 6
 PERIODS = 3.0  # window length for refinement and scoring, in periods of the candidate
 SINC_HALF = 32  # half-length of the fractional-delay kernel [samples]
@@ -74,13 +74,15 @@ def f0_track(
 
     Four stages, every ``hop`` seconds from time 0:
 
-    1. **Candidates.** Up to four local minima of the cumulative-mean-normalized
+    1. **Candidates.** Up to eight local minima of the cumulative-mean-normalized
        difference function (de Cheveigné & Kawahara, 2002) over a 25 ms window,
        at lags between ``1/f_hi`` and ``1/f_lo``, each refined by a parabola.
        This is the autocorrelation idea with YIN's corrections: it finds the
        period from all the harmonics, so it works when the fundamental is weak
        or filtered out. Every minimum below 1 is offered, so that the score
-       alone decides voicing.
+       alone decides voicing. A very regular voice has a minimum at every
+       multiple of its period, so eight leave room for the period itself
+       (with four, a steady 300 Hz vowel could lose it).
     2. **Refinement.** For a candidate f, a Blackman window three periods long;
        the instantaneous frequency of each of the first six harmonics is its
        phase advance over one sample, and the new F0 is the power-weighted
@@ -96,16 +98,18 @@ def f0_track(
        so a time window leans voiced when its best score exceeds ``threshold``;
        moving between candidates costs ``octave_cost`` per octave, and a
        voicing change costs ``switch_cost``. A candidate is never chosen if
-       another one an octave above scores at least as well, less
-       ``subharmonic_margin``: anything periodic
-       with period T is also periodic with period 2T, and without this rule
-       a female voice is tracked an octave low on about 1% of time windows. No
+       another one at a whole multiple of its frequency (an octave, a
+       twelfth, ...) scores at least as well, less ``subharmonic_margin``:
+       anything periodic with period T is also periodic with period 2T, 3T,
+       ..., and without this rule a female voice is tracked an octave low on
+       about 1% of time windows, and a steady synthetic vowel at 300 Hz at a
+       third of its F0. No
        smoothing follows.
 
     On synthetic vowels the refined F0 is within 0.12% of the truth on a one
     octave per second glide and a 5.5 Hz vibrato. Against laryngograph
-    reference F0 (a male and a female speaker), it gets the voicing of 5.5%
-    and 1.6% of time windows wrong, where WORLD's Harvest, which leans towards
+    reference F0 (a male and a female speaker), it gets the voicing of 5.6%
+    and 1.5% of time windows wrong, where WORLD's Harvest, which leans towards
     calling time windows voiced, gets about 21% wrong; where both it and the
     reference say voiced, 98% and 95% of time windows are within 5%. Lower ``threshold`` to voice
     more weak or creaky stretches, for example before resynthesis.
@@ -124,8 +128,8 @@ def f0_track(
     octave_cost, switch_cost
         Tracking costs, as above.
     subharmonic_margin
-        How much lower the octave above may score and still rule out a
-        candidate. ``None`` turns the rule off, to see the raw choice.
+        How much lower a candidate at a whole multiple may score and still
+        rule out a candidate. ``None`` turns the rule off, to see the raw choice.
     """
     fs = float(sound.fs)
     if not 0 < f_lo < f_hi < fs / 2:
@@ -321,19 +325,19 @@ def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margi
         [np.full((n_windows, 1), 1 - threshold), 1 - np.nan_to_num(score, nan=0.0)], axis=1
     )
     if subharmonic_margin is not None:
-        # A candidate whose octave above is also a candidate, scoring nearly
-        # as well, is a subharmonic (anything periodic at T is periodic at
-        # 2T), so it is never chosen.
+        # A candidate with another at a whole multiple of its frequency (2, 3,
+        # ...), scoring nearly as well, is a subharmonic (anything periodic
+        # at T is periodic at 2T, 3T, ...), so it is never chosen. Octaves
+        # alone are not enough for very regular voices: on a steady 300 Hz
+        # vowel the candidates at 100 and 60 Hz have none an octave above.
         cand_f0 = np.nan_to_num(cand, nan=-1.0)
         cand_score = np.nan_to_num(score, nan=-np.inf)
         with np.errstate(invalid="ignore", divide="ignore"):
-            octave_above = (
-                np.abs(cand_f0[:, None, :] / (2 * np.where(cand_f0 > 0, cand_f0, np.nan))[:, :, None] - 1)
-                < 0.05
-            )
-        is_subharmonic = np.any(
-            octave_above & (cand_score[:, None, :] >= cand_score[:, :, None] - subharmonic_margin), axis=2
-        )
+            ratio = cand_f0[:, None, :] / np.where(cand_f0 > 0, cand_f0, np.nan)[:, :, None]
+            multiple = np.round(ratio)
+            at_multiple = (multiple >= 2) & (np.abs(ratio / multiple - 1) < 0.05)
+        scores_nearly_as_well = cand_score[:, None, :] >= cand_score[:, :, None] - subharmonic_margin
+        is_subharmonic = np.any(at_multiple & scores_nearly_as_well, axis=2)
         local_cost[:, 1:] = np.where(is_subharmonic, np.inf, local_cost[:, 1:])
     local_cost[f_states < 0] = np.inf  # missing candidates
     backpointer = np.zeros(f_states.shape, int)
