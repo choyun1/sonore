@@ -49,8 +49,7 @@ article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; 
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
 .desc p { margin: 0 0 0.75rem; }
-.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
-  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
@@ -208,7 +207,7 @@ talkers as the sound plays.</p>
 
 <article class="sound" id="d-m1" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6659232262731481, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
   <div class="about">
-    <h3>One talker, moving</h3>
+    <h3>One talker, moving <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The target alone, swinging 30° to either side of straight ahead at 2 Hz. Its interaural time
 and level differences, measured from the rendered sound in 20 ms windows, follow the azimuth.
 Time differences are drawn only where the two ears are well correlated.</p></div>
@@ -236,7 +235,7 @@ motion shows only in the stretches it dominates.</p>
 
 <article class="sound" id="d-m2" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6659232262731481, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
   <div class="about">
-    <h3>Three talkers, standing still</h3>
+    <h3>Three talkers, standing still <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>All three still: the target straight ahead, the maskers 40° to the left and right.</p></div>
     <audio controls preload="metadata" src="audio/m2_three_talkers_standing_still.flac"></audio>
     <p class="file">m2_three_talkers_standing_still.flac, 4.8 s, stereo</p>
@@ -254,7 +253,7 @@ sound = finish(mix)</code></pre></details>
 
 <article class="sound" id="d-m3" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6659232262731481, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
   <div class="about">
-    <h3>The target swings 10 degrees</h3>
+    <h3>The target swings 10 degrees <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The target swings 10° to either side of straight ahead.</p></div>
     <audio controls preload="metadata" src="audio/m3_the_target_swings_10_degrees.flac"></audio>
     <p class="file">m3_the_target_swings_10_degrees.flac, 4.8 s, stereo</p>
@@ -272,7 +271,7 @@ sound = finish(mix)</code></pre></details>
 
 <article class="sound" id="d-m4" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6659232262731481, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
   <div class="about">
-    <h3>The target swings 30 degrees</h3>
+    <h3>The target swings 30 degrees <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The target swings 30° to either side, three quarters of the way to the maskers, starting to
 the left this time.</p></div>
     <audio controls preload="metadata" src="audio/m4_the_target_swings_30_degrees.flac"></audio>

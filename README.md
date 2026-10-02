@@ -32,19 +32,12 @@ meant in the same spirit.
 
 ## Contents
 
-- [What it's for](#what-its-for)
-- [Install](#install)
-- [A short tour](#a-short-tour)
-- [Gallery](#gallery)
-- [Conventions](#conventions)
-- [What's in it](#whats-in-it)
-- [Related projects](#related-projects)
-- [Roadmap](#roadmap)
-- [References](#references)
-- [Migrating from sigtools](#migrating-from-sigtools)
-- [Development](#development)
-- [How sonore was developed](#how-sonore-was-developed)
-- [License and citation](#license-and-citation)
+| Using it | The library | Background | The project |
+|---|---|---|---|
+| 1. [What it's for](#what-its-for) | 5. [Conventions](#conventions) | 8. [Roadmap](#roadmap) | 11. [Development](#development) |
+| 2. [Install](#install) | 6. [What's in it](#whats-in-it) | 9. [References](#references) | 12. [How sonore was developed](#how-sonore-was-developed) |
+| 3. [A short tour](#a-short-tour) | 7. [Related projects](#related-projects) | 10. [Migrating from sigtools](#migrating-from-sigtools) | 13. [License and citation](#license-and-citation) |
+| 4. [Gallery](#gallery) |  |  |  |
 
 ## What it's for
 
@@ -170,16 +163,16 @@ More in the gallery:
 - [Analysis and resynthesis](https://choyun1.github.io/sonore/gallery/resynthesis.html): a filterbank's [▶ perfect reconstruction](https://choyun1.github.io/sonore/gallery/resynthesis.html#d-26), and the [▶ ideal binary mask](https://choyun1.github.io/sonore/gallery/resynthesis.html#d-25).
 - [Phase vocoder](https://choyun1.github.io/sonore/gallery/pv.html): how it works, and duration, pitch and partials changed independently, such as [▶ up a fifth](https://choyun1.github.io/sonore/gallery/pv.html#d-13).
 - [Spectrotemporal ripples](https://choyun1.github.io/sonore/gallery/ripples.html): moving ripples on different carriers, and a [▶ dynamic moving ripple](https://choyun1.github.io/sonore/gallery/ripples.html#d-06).
-- [Binaural cues](https://choyun1.github.io/sonore/gallery/binaural.html): [▶ timing alone](https://choyun1.github.io/sonore/gallery/binaural.html#d-10), and correlation that changes, such as [▶ Oscor](https://choyun1.github.io/sonore/gallery/binaural.html#d-07).
+- [Binaural cues](https://choyun1.github.io/sonore/gallery/binaural.html) [🎧](https://choyun1.github.io/sonore/gallery/binaural.html "Headphones required for binaural sounds"): [▶ timing alone](https://choyun1.github.io/sonore/gallery/binaural.html#d-10), and correlation that changes, such as [▶ Oscor](https://choyun1.github.io/sonore/gallery/binaural.html#d-07).
 - [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html): a short course in time-frequency analysis on one sentence, from [▶ window length](https://choyun1.github.io/sonore/gallery/speech.html#d-w1) to [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30).
 - [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): recordings and their syntheses from statistics (McDermott & Simoncelli, 2011), such as a [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b).
-- [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html): three talkers rendered through measured HRIRs, [▶ one of them moving](https://choyun1.github.io/sonore/gallery/moving.html#d-m1).
+- [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html) [🎧](https://choyun1.github.io/sonore/gallery/moving.html "Headphones required for binaural sounds"): three talkers rendered through measured HRIRs, [▶ one of them moving](https://choyun1.github.io/sonore/gallery/moving.html#d-m1).
 - [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html): cochlear-implant simulation, from [▶ one band](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci1) to [▶ sixteen](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci16).
 - [Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html): separating a voice's pitch from its timbre, [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3) and [▶ harmonics only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c4).
 - [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html): how fast and how deeply each band's envelope moves, moment by moment, from a [▶ gliding modulation rate](https://choyun1.github.io/sonore/gallery/modspectrogram.html#d-g1) to [▶ speech, babble and noise](https://choyun1.github.io/sonore/gallery/modspectrogram.html#d-s1).
 - [Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html): rooms built from the statistics of real ones (Traer & McDermott, 2016), from a [▶ natural room](https://choyun1.github.io/sonore/gallery/reverb.html#d-17) to ones that break the rules, such as a [▶ time-reversed decay](https://choyun1.github.io/sonore/gallery/reverb.html#d-18).
 - [Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html): a pitch made from noise and a delay (Yost, 1996), from [▶ one iteration](https://choyun1.github.io/sonore/gallery/irn.html#d-i1) to [▶ sixteen](https://choyun1.github.io/sonore/gallery/irn.html#d-09).
-- [Classic stimuli](https://choyun1.github.io/sonore/gallery/classic.html): [▶ speech-shaped noise](https://choyun1.github.io/sonore/gallery/classic.html#d-k1), beats and roughness, and [▶ binaural beats](https://choyun1.github.io/sonore/gallery/classic.html#d-b4).
+- [Classic stimuli](https://choyun1.github.io/sonore/gallery/classic.html): [▶ speech-shaped noise](https://choyun1.github.io/sonore/gallery/classic.html#d-k1), beats and roughness, and [▶ binaural beats](https://choyun1.github.io/sonore/gallery/classic.html#d-b4) [🎧](https://choyun1.github.io/sonore/gallery/classic.html#d-b4 "Headphones required for binaural sounds").
 
 ## Conventions
 
