@@ -8,11 +8,12 @@ and put back together as a sound. It is roadmap item "Next 1". It builds on
 (`TVGaborFrame.pitch_adaptive`, `frames.md`), `so.Cepstrum`
 (`cepstrum.md`) and the Klatt synthesizer (`klatt.md`).
 
-Status: proposal. No library code until Cho answers D1–D9. The first
-draft proposed several departures from WORLD to fit sonore's own pieces;
-Cho asked on 2026-10-02 how to square that with reproducibility, and
-decided: reproduce WORLD, with no pyworld dependency ("Reproducing WORLD"
-below). The decisions were rewritten to that rule.
+Status: accepted. Cho accepted every recommendation on 2026-10-02. The
+first draft proposed several departures from WORLD to fit sonore's own
+pieces; Cho asked how to square that with reproducibility and decided:
+reproduce WORLD, with no pyworld dependency ("Reproducing WORLD" below).
+Steps 1–5 of "Order" are built (`sonore.analysis.vocoder`,
+`sonore.stimuli.vocoder`); the gallery page is next.
 
 ## Why
 
@@ -110,6 +111,9 @@ most of the D4C port's time (4.3 s for the 2.5 s gallery sentence,
 against 0.14 s in pyworld). Because WORLD restarts the generator on every
 call, the stream is the same each time, so the library can compute it
 once and keep it (about 0.8 million values, 6.5 MB, for that sentence).
+It does, many lanes of the generator at a time, so the library's D4C
+takes about 0.8 s on that sentence, including the first computation of
+the stream.
 
 ## What WORLD's code does [source]
 
@@ -320,7 +324,10 @@ sample, which is rounding. The D4C and synthesis ports needed WORLD's own
 noise generator, drawn in WORLD's order, and two details of the code not
 in any paper: the DC removal overwrites the first half of each periodic
 response, and the safety noise is added to the windowed segment before
-its weighted mean is removed.
+its weighted mean is removed. The checker's CheapTrick port leaves out
+the safety noise CheapTrick also draws from that generator, which is
+where its 0.00003 dB comes from; the library's port includes it and gets
+within 4e-9 dB on the whole sentence.
 
 **C11. WORLD's own round trip is not tight on real speech.** [crosscheck]
 The gallery sentence analysed with its stored Harvest track, synthesized,
@@ -335,34 +342,49 @@ tolerance sonore can tighten without departing from it.
 
 Layers follow `layout.md`.
 
-**analysis/vocoder.py** (name open, D6):
+**analysis/vocoder.py**:
 
-- `so.cheaptrick(sound, f0, times, *, q1=-0.15)`: the port, returning a
-  `SpectralEnvelope`. Data are WORLD's power spectra, shape `(n_frames,
-  n_freqs)` per channel as pyworld returns them, with `.t`, `.f`, `.db`,
-  `.plot()`. It is callable, `env(t, f)`, interpolating linearly in time
-  and in dB over frequency. (`Envelope` is already the Hilbert envelope
-  class.)
-- `so.d4c(sound, f0, times, *, threshold=0.85)`: the port, returning an
-  `Aperiodicity` in WORLD's storage (amplitude ratio per frequency).
-  Callable, `ap(t, f)`, with `.bands(edges)` to average the power share
-  over bands for display and tests, and a record of which measure made
-  it.
-- `so.harmonic_aperiodicity(sound, f0, times)`: the harmonic-residual
-  measure (C4), in the same storage, so either can be passed to the
-  synthesis; its documentation says it is not D4C and when they differ
-  (C5, C6).
-- `DIFFERENCES_FROM_WORLD`, as above.
+- `so.cheaptrick(sound, f0, *, q1=-0.15, f0_floor=71.0)`: the port,
+  returning a `SpectralEnvelope`. Data are WORLD's power spectra, stored
+  as sonore stores spectra, shape `(n_channels, n_freqs, n_frames)`, with
+  `.t`, `.f`, `.db`, `.plot()`; `.to_world()` gives one channel in
+  WORLD's `(n_frames, n_freqs)` layout. It is callable, `env(t, f)`,
+  interpolating linearly in time and in dB over frequency. (`Envelope` is
+  already the Hilbert envelope class.)
+- `so.d4c(sound, f0, *, threshold=0.85, f0_floor=71.0)`: the port,
+  returning an `Aperiodicity` in WORLD's storage (amplitude ratio per
+  frequency). Callable, `ap(t, f)`, with `.share`, `.db`,
+  `.bands(edges, envelope)` to average the power share over bands for
+  display and tests, and `.method`, the measure that made it.
+- `so.harmonic_aperiodicity(sound, f0)`: the harmonic-residual measure
+  (C4), in the same storage, so either can be passed to the synthesis;
+  its documentation says it is not D4C and when they differ (C5, C6). It
+  is the slow one: a dense least-squares fit per frame, about 13 s for
+  the 2.5 s gallery sentence.
+- `world_randn(n)` and `world_fft_size(fs)`: WORLD's noise stream and
+  CheapTrick's FFT size, public so that tests and readers can check them.
+  The stream is computed many lanes at a time (the generator is linear
+  over GF(2), so a jump ahead is one 128 × 128 binary matrix) and kept;
+  the gallery sentence's analysis takes about 0.7 s per step.
+- `so.DIFFERENCES_FROM_WORLD`, as above.
 
 **stimuli/vocoder.py**: `so.world_synthesize(f0, envelope, aperiodicity,
-frame_period=5.0, *, rng=None)`, the port of WORLD's synthesis (D5).
-With `rng=None` it uses WORLD's generator and gives WORLD's samples
-(D8).
+*, rng=None)`, the port of WORLD's synthesis (D5). The frame period is
+the F0 track's spacing, whose frames must start at 0. With `rng=None` it
+uses WORLD's generator and gives WORLD's samples (D8).
 
-The F0 track is an argument everywhere (D7). The windows, the 1024-point
-spectra at 16 kHz and the 5 ms frames are WORLD's; the envelope is a view
-of the sound computed the way WORLD computes it, not a view of a sonore
-frame (D2).
+The F0 track (an `F0Track` or a `(times, f0)` pair) is an argument
+everywhere (D7). The windows, the 1024-point spectra at 16 kHz and the
+frames are WORLD's; the envelope is a view of the sound computed the way
+WORLD computes it, not a view of a sonore frame (D2).
+
+**Tests.** `tools/make_world_fixtures.py` (pyworld, development only)
+stores WORLD's envelope (with both q̃₁), aperiodicity and synthesis for a
+breathy vowel with vibrato and 0.3 s of the gallery sentence, every 8th
+frequency bin, in `tests/data/world_reference.npz` (277 kB).
+`tests/analysis/test_vocoder.py` holds sonore to within 1e-6 dB (envelope),
+1e-8 dB (aperiodicity) and 1e-9 of the peak (synthesis); the measured
+differences are about 4e-9 dB, 7e-12 dB and 1e-13.
 
 ### Views, and what this one drops
 

@@ -47,6 +47,14 @@ from sonore.analysis.representations import (
     reassigned_spectrogram,
     tandem_power,
 )
+from sonore.analysis.vocoder import (
+    DIFFERENCES_FROM_WORLD,
+    Aperiodicity,
+    SpectralEnvelope,
+    cheaptrick,
+    d4c,
+    harmonic_aperiodicity,
+)
 from sonore.core.fft import fft_workers, set_fft_workers
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
@@ -104,6 +112,7 @@ from sonore.stimuli.spatialization import (
     rect_to_hcc,
     spatialize,
 )
+from sonore.stimuli.vocoder import world_synthesize
 
 __version__ = "0.3.1"
 
@@ -127,6 +136,13 @@ __all__ = [
     "Cepstrum",
     "F0Track",
     "f0_track",
+    "Aperiodicity",
+    "DIFFERENCES_FROM_WORLD",
+    "SpectralEnvelope",
+    "cheaptrick",
+    "d4c",
+    "harmonic_aperiodicity",
+    "world_synthesize",
     "TFPower",
     "tandem_power",
     "ReassignedSpectrogram",
