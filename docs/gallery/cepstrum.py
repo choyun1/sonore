@@ -31,12 +31,14 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [One frame](#h-one-frame): a log spectrum, its cepstrum, and the envelope a lifter recovers.
 # - [Pitch from the cepstrum](#h-pitch-from-the-cepstrum): the cepstrogram, and the pitch read off
 #   its peaks.
+# - [A tracker beside the cepstrum](#h-a-tracker-beside-the-cepstrum): `so.f0_track` and Harvest
+#   on the same sentence.
 # - [Splitting the voice in two](#h-splitting-the-voice-in-two): the vocal tract and the source,
 #   heard separately.
 # - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
 #   and Praat.
-# - [What this page leaves out](#h-what-this-page-leaves-out): tracking, better envelopes, and the
-#   complex cepstrum.
+# - [What this page leaves out](#h-what-this-page-leaves-out): tracking from the cepstrum, better
+#   envelopes, and the complex cepstrum.
 
 # %% [markdown]
 # ## The sentence, and code the examples share
@@ -150,6 +152,60 @@ agree = np.mean(np.abs(f0_cep[0][both] / harvest_at[both] - 1) < 0.05)
 print(f"frames both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}")
 
 # %% [markdown]
+# ## A tracker beside the cepstrum
+#
+# `so.f0_track` works the other way round. It looks for the period in the waveform rather than
+# the log spectrum, with YIN's difference function (de Cheveigné & Kawahara, 2002): up to four
+# candidate periods per frame, each sharpened from the instantaneous frequencies of the first six
+# harmonics, as WORLD does. Each candidate is scored by how well the waveform repeats one period
+# later, and a single pass picks the cheapest path through the candidates, so that the pitch
+# rarely jumps and a frame is voiced only when some candidate repeats well (a score above 0.5).
+
+# %% [about]
+# Top: the tracker's candidates in grey, darker for a higher score, and the path it chose. The
+# darkest row, an octave below the path, is the subharmonic: anything that repeats every period
+# also repeats every two, so it scores as well, and the tracker never chooses a candidate whose
+# octave above scores about as well (`subharmonic_margin`). Bottom: the three pitch tracks
+# together. Where the tracker and Harvest both call a frame voiced they agree; Harvest voices
+# more frames, stretches where the tracker's best score falls below 0.5.
+# Against laryngograph recordings Harvest calls about a third of the unvoiced frames voiced, which
+# is why the tracker is stricter by default (see `docs/design/f0.md`).
+
+# %% [demo f1] Cepstral F0, a tracker, and Harvest
+track = so.f0_track(sentence)
+fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout="constrained")
+track.plot(ax0, candidates=True, color="tab:orange")
+ax0.set(ylim=(50, 500), yscale="log", xlabel="", title="so.f0_track: candidates and chosen path")
+ax0.set_yticks([60, 100, 150, 200, 300, 400], labels=["60", "100", "150", "200", "300", "400"])
+ax0.minorticks_off()
+ax1.plot(f0_times[voiced], f0_harvest[voiced], ".", ms=3, color="0.6", label="Harvest")
+ax1.plot(t[f0_cep[0] > 0], f0_cep[0][f0_cep[0] > 0], ".", ms=3, color="tab:blue", label="cepstral")
+tracked = np.where(track.voiced[0], track.f0[0], np.nan)
+ax1.plot(track.t, tracked, color="tab:orange", lw=1.5, label="so.f0_track")
+ax1.set(ylim=(60, 260), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
+ax1.legend(loc="upper right", fontsize=8, markerscale=2)
+ax1.grid(ls=":")
+for ax in (ax0, ax1):
+    ax.set_xlim(0, sentence.duration)
+playhead = [ax0, ax1]
+sound = sentence
+
+# %%
+# Compare frame by frame on the tracker's frames, which the cepstrogram's frames include.
+at = np.searchsorted(np.round(t, 6), np.round(track.t, 6))
+pitch = {
+    "Harvest": np.interp(track.t, f0_times, f0_harvest),
+    "cepstral": f0_cep[0][at],
+    "so.f0_track": np.where(track.voiced[0], track.f0[0], 0.0),
+}
+for name, f in pitch.items():
+    print(f"{name:12s} voiced on {np.mean(f > 0):.0%} of frames")
+for a, b in [("cepstral", "Harvest"), ("so.f0_track", "Harvest"), ("cepstral", "so.f0_track")]:
+    both = (pitch[a] > 0) & (pitch[b] > 0)
+    agree = np.mean(np.abs(pitch[a][both] / pitch[b][both] - 1) < 0.05)
+    print(f"{a} and {b}: both voiced on {both.sum()} frames, within 5% on {agree:.0%}")
+
+# %% [markdown]
 # ## Splitting the voice in two
 #
 # Lifter the other way and the two parts can be heard separately. Each frame keeps its own
@@ -224,9 +280,9 @@ sound = finish(whole)
 # %% [markdown]
 # ## What this page leaves out
 #
-# - **Tracking.** Cepstral F0 judges each frame alone. Real pitch trackers, such as WORLD's
-#   Harvest used above, generate several candidates per frame and choose a smooth path through
-#   them, which removes the octave jumps.
+# - **Tracking from the cepstrum.** Cepstral F0 judges each frame alone. The tracker above
+#   chooses a path through candidates from the waveform; the same could be done with cepstral
+#   peaks as the candidates.
 # - **Better envelopes.** A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick
 #   smooths the spectrum over one $F_0$ first and corrects the lifter. Mel-cepstra, the basis of
 #   MFCCs, warp the frequency axis first.
@@ -242,6 +298,9 @@ sound = finish(whole)
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
 #   Analysis*. Wiley. [Semantic Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
 #   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L16)
+# - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
+#   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
+#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/f0.py#L62)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence.

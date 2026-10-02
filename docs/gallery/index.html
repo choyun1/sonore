@@ -27,10 +27,21 @@ header p { margin: 0 0 0.9rem; }
 header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
 header li { margin: 0 0 0.35rem; }
 header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
-nav.pages { display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
 nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
-nav.pages a.repo { margin-left: auto; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
+nav.pages a.repo:hover { color: var(--ink); }
+@media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
 a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
 h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
@@ -45,10 +56,10 @@ article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; 
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
 .desc p { margin: 0 0 0.75rem; }
-.headphones { display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 0 0.6rem; font-family: var(--sans);
-  font-size: 0.9rem; font-weight: 700; color: var(--accent); }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
@@ -76,23 +87,31 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><a href="speech.html">Seeing speech</a><a href="cepstrum.html">Cepstral analysis</a><a href="modspectrogram.html">Modulation spectrogram</a><a href="resynthesis.html">Analysis and resynthesis</a><a href="pv.html">Phase vocoder</a><a href="ripples.html">Spectrotemporal ripples</a><a href="irn.html">Iterated rippled noise</a><a href="binaural.html">Binaural cues</a><a href="classic.html">Classic stimuli</a><a href="textures.html">Sound textures</a><a href="moving.html">Moving talkers</a><a href="reverb.html">Synthetic reverberation</a><a href="vocoder.html">Hearing through a vocoder</a><a class="repo" href="https://github.com/choyun1/sonore">sonore on GitHub</a></nav>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html" aria-current="page">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li></ul></details><details><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
 <header>
   <h1>Listening to sonore</h1>
   <p>Sounds made with <a href="https://github.com/choyun1/sonore">sonore</a>, each beside plots of the
   same audio you hear and the code that made it. Every topic has a page of its own.</p>
 </header>
-<section aria-labelledby="h-seeing-and-changing-sounds">
-<h2 id="h-seeing-and-changing-sounds">Seeing and changing sounds</h2>
-<ul><li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li><li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice&#x27;s pitch from its timbre.</li><li><a href="modspectrogram.html">Modulation spectrogram</a>: how fast and how deeply each band&#x27;s envelope moves, moment by moment.</li><li><a href="resynthesis.html">Analysis and resynthesis</a>: a filterbank that reconstructs exactly, and spectrogram masking.</li><li><a href="pv.html">Phase vocoder</a>: how it works, and duration, pitch and partials changed independently.</li></ul>
-</section>
 <section aria-labelledby="h-stimuli">
 <h2 id="h-stimuli">Stimuli</h2>
-<ul><li><a href="ripples.html">Spectrotemporal ripples</a>: sounds defined by a moving pattern of modulation.</li><li><a href="irn.html">Iterated rippled noise</a>: a pitch made from noise and a delay.</li><li><a href="binaural.html">Binaural cues</a>: differences between the ears: timing, and correlation that changes.</li><li><a href="classic.html">Classic stimuli</a>: speech-shaped noise, beats and roughness, binaural beats, tone sequences.</li><li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li></ul>
+<ul><li><a href="classic.html">Classic stimuli</a>: speech-shaped noise, beats and roughness, binaural beats, tone sequences.</li><li><a href="irn.html">Iterated rippled noise</a>: a pitch made from noise and a delay.</li><li><a href="ripples.html">Spectrotemporal ripples</a>: sounds defined by a moving pattern of modulation.</li><li><a href="binaural.html">Binaural cues</a>: differences between the ears: timing, and correlation that changes.</li><li><a href="textures.html">Sound textures</a>: recordings and their syntheses from statistics.</li></ul>
+</section>
+<section aria-labelledby="h-seeing-and-changing-sounds">
+<h2 id="h-seeing-and-changing-sounds">Seeing and changing sounds</h2>
+<ul><li><a href="speech.html">Seeing speech</a>: a short course in time-frequency analysis on one spoken sentence.</li><li><a href="resynthesis.html">Analysis and resynthesis</a>: a filterbank that reconstructs exactly, and spectrogram masking.</li><li><a href="cepstrum.html">Cepstral analysis</a>: separating a voice&#x27;s pitch from its timbre.</li><li><a href="modspectrogram.html">Modulation spectrogram</a>: how fast and how deeply each band&#x27;s envelope moves, moment by moment.</li><li><a href="pv.html">Phase vocoder</a>: how it works, and duration, pitch and partials changed independently.</li><li><a href="harmonics.html">Voices from harmonics</a>: a voice rebuilt from its pitch track and spectral envelope, and changed.</li></ul>
 </section>
 <section aria-labelledby="h-listeners-in-the-world">
 <h2 id="h-listeners-in-the-world">Listeners in the world</h2>
-<ul><li><a href="moving.html">Moving talkers</a>: three talkers rendered through measured HRIRs, one of them moving.</li><li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms that break them.</li><li><a href="vocoder.html">Hearing through a vocoder</a>: a simulation of cochlear-implant hearing.</li></ul>
+<ul><li><a href="vocoder.html">Hearing through a vocoder</a>: a simulation of cochlear-implant hearing.</li><li><a href="reverb.html">Synthetic reverberation</a>: rooms built from the statistics of real ones, and rooms that break them.</li><li><a href="moving.html">Moving talkers</a>: three talkers rendered through measured HRIRs, one of them moving.</li></ul>
 </section>
 <footer>Each page is a script in <code>docs/gallery</code> of the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run by <code>docs/gallery/build.py</code>.</footer>
 </main>
@@ -111,7 +130,15 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
     });
     const canvas = el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
+    const liveCanvas = el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live };
   });
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
@@ -152,8 +179,47 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
   }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the colour bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
   function draw(item) {
     drawScene(item);
+    drawLive(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -166,12 +232,18 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
   items.forEach((item) => {
     drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      if (item.live) item.live.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));

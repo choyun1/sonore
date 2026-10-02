@@ -424,6 +424,23 @@ def plot_cepstrum(cep, ax=None, channel=0, q_range=(1e-3, 15e-3), cmap="magma", 
     return ax
 
 
+def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwargs):
+    """An F0 track: F0 [Hz] against time [s], broken where unvoiced. With
+    ``candidates=True``, every refined candidate the tracker weighed is drawn
+    as a grey dot, darker for a higher periodicity score."""
+    ax = _ax(ax)
+    if candidates:
+        c, s = track.candidates[channel], track.candidate_scores[channel]
+        t = np.broadcast_to(track.t[:, None], c.shape)
+        ok = np.isfinite(c)
+        shade = np.clip(s[ok], 0, 1)
+        ax.scatter(t[ok], c[ok], s=4, c=1 - shade, cmap="gray", vmin=0, vmax=1.4, linewidths=0, zorder=1)
+    f0 = np.where(track.voiced[channel], track.f0[channel], np.nan)
+    ax.plot(track.t, f0, color=color, zorder=2, **kwargs)
+    ax.set(title="F0", xlabel="Time [s]", ylabel="F0 [Hz]")
+    return ax
+
+
 def plot_interaural_cues(cues, ax=None, show_iac=True):
     """Broadband cues: ITD and ILD on twin axes (plus IAC underneath).
     Per-band cues: ITD as an image."""
