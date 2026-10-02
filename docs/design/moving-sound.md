@@ -338,9 +338,19 @@ so.move_sound(talker, so.circular_trajectory((100, 0, 90), (100, 0, -90), 200), 
   shapes to switching). (b) Today's switching of whole HRIRs, extended
   with r/c and 1/r per point: fails for distance (C4). (c) A truly
   time-varying convolution, a fresh interpolated HRIR at every sample:
-  the textbook definition, but about 750 taps × 2 ears per sample, two
-  orders of magnitude more work than (a) for no audible gain once the
-  delays are continuous. For the read, the 32-tap windowed sinc
+  the textbook definition. With onset-aligned interpolation it handles
+  distance too, since each sample's HRIR carries its own delay. Measured
+  with `tools/moving_sound_benchmark.py` (sonore, MIT KEMAR set, 3 s at
+  48 kHz, the 30° swing): 37 s, against 0.4 s for today's switching. Of
+  the 37 s, 36.6 s go to interpolating and resampling 144,000 HRIRs, and
+  only 0.3 s to the filtering itself. (a) is (c) factored: delay
+  continuous, shape at the hop rate. Its cost is not measured yet; its
+  parts are about 0.4 s of switching plus 1.8 s for the unoptimized read
+  in C3, so roughly 15 times faster than (c) as prototyped, not the two
+  orders of magnitude this document first claimed. (c) could get close
+  to (a) by interpolating shapes per sample between hop points, but the
+  delay inside each HRIR then has to be applied by a per-sample
+  fractional-delay kernel, which is (a)'s read again. For the read, the 32-tap windowed sinc
   (recommended, flat −97 dB) or cubic Lagrange (cheaper, −35 dB at
   8 kHz).
 - **D6. The room.** (a) `room=` a two-channel tail Sound plus `drr_db`
