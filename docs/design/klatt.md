@@ -6,8 +6,9 @@ cascade and parallel, radiation, and parameter tracks. It sets out what
 sonore already has, what is missing, how it relates to the WORLD-style
 synthesis in roadmap item 2, and an order for doing it.
 
-Status: proposed 2026-10-01. D1–D6 await Cho's answers; no library code
-yet.
+Status: D1–D6 accepted by Cho 2026-10-02, all as recommended. Built as
+`so.resonator`, `so.antiresonator` and `so.klatt_synthesize` (see "As
+built" below); the gallery page is next.
 
 ## Why
 
@@ -72,14 +73,14 @@ re-read for this document.
 
 | Klatt piece | sonore today | Missing |
 |---|---|---|
-| Voiced source, F0 track | `so.harmonic_source` (draft, PR #45), F0 tracks (`f0.md`) | Klatt's glottal spectrum as amplitudes: a one-line callable (C4) |
+| Voiced source, F0 track | `so.harmonic_complex` on an F0 contour (landed as PR #45 in place of the proposed `harmonic_source`), `so.f0_track` | Klatt's glottal spectrum as amplitudes: a one-line callable (C4) |
 | Glottal pulse shape, voice quality | nothing | KLGLOTT88 or LF; later (D4) |
 | Aspiration and frication noise | `so.gaussian_noise` (fixed level, optional tilt) | Noise with an amplitude track, F0-synchronous modulation when voiced (C5) |
 | Formant resonators | Fixed filters only (`butter_filter`, `bandpass`); the cepstrum checker builds a fixed all-pole /a/ by hand | A resonator and antiresonator whose F and BW follow tracks (C1, C3) |
 | Cascade and parallel branches | nothing | Assembly; alternating signs in the parallel branch (C2) |
 | Radiation | nothing named | A first difference (C5, C6) |
 | Parameter tracks | `F0Track` (proposed) | A table of named tracks at 5 ms frames |
-| Voicing gate | in `harmonic_source` (5 ms Hann ramps) | Reused for AV |
+| Voicing gate | in `harmonic_complex` (5 ms Hann ramps) | Reused for AV |
 
 ## Claims
 
@@ -134,11 +135,11 @@ would teach.
 
 Layers follow `layout.md`:
 
-- **signals**: `resonator(x, f, bw, fs)` and `antiresonator(...)`, Klatt's
+- **signals**: `resonator(sound, f, bw)` and `antiresonator(...)`, Klatt's
   difference equations with F and BW given as a number, a per-sample array,
   or a 5 ms track (held or interpolated, D2). Plain arrays in and out. A
   noise source with an amplitude track and optional F0-synchronous
-  modulation, beside `harmonic_source`.
+  modulation, beside `harmonic_complex`.
 - **stimuli**: `klatt_synthesize(params, fs)` assembling the cascade
   (voicing and aspiration), the parallel branch (frication, alternating
   signs, first difference for the upper formants, bypass) and radiation,
@@ -187,7 +188,7 @@ Sample-by-sample neural vocoders have no such controls and stay out.
 
 ## Order
 
-1. Land `harmonic_source` (PR #45), which already waits for the F0 tracker.
+1. Land the harmonic source (PR #45, done: `harmonic_complex` on a contour).
 2. `resonator` and `antiresonator` in signals, with tests against C1 and C3.
 3. The noise source with amplitude tracks and F0-synchronous modulation.
 4. `klatt_synthesize` with the parameter table, cascade and parallel.
@@ -198,7 +199,9 @@ Sample-by-sample neural vocoders have no such controls and stay out.
 Steps 2–5 do not depend on the F0 tracker (Klatt's F0 is a parameter set
 by hand), only on the harmonic source.
 
-## Decisions for Cho
+## Decisions
+
+All six were accepted as recommended (Cho, 2026-10-02).
 
 - **D1.** Do it, as a part of roadmap item 2 placed before the WORLD
   envelope work (recommended), or after it?
@@ -215,6 +218,38 @@ by hand), only on the harmonic source.
   descriptive names?
 - **D6.** Leave formant tracking (copy synthesis) out for now
   (recommended)?
+
+## As built
+
+What changed from the proposal above while writing the code:
+
+- `resonator` and `antiresonator` live in `signals.processing` and take a
+  `Sound`, like the other filters there. A track is a `(times, values)`
+  pair, interpolated to every sample (D2, D3); constant values run through
+  `scipy.signal.lfilter`, changing ones through a per-sample loop (about
+  0.06 s per second of sound at 44.1 kHz).
+- The noise source is not a public function: it is three lines inside
+  `klatt_synthesize` (white Gaussian noise, the F0-synchronous modulation),
+  and can move to `signals` when the WORLD work needs it.
+- Radiation is applied to the voiced source before the cascade, and the
+  noises are left white, instead of integrating the noise and differencing
+  everything at the end. With fixed formants the two are the same filter
+  (the difference commutes with them, C6); this way no integrator can
+  drift.
+- Levels: at 60 dB every source has RMS 1 as it leaves the lips, before
+  the formants, so equal values mean equal source levels (aspiration and
+  voicing at 60 dB come out within 3 dB of each other through an /a/).
+  Each parallel formant is scaled to unit gain at its own frequency, so
+  `A1`–`A6` are peak levels. The output is normalized to RMS 1, like the
+  generators.
+- A default formant at or above Nyquist is dropped (F5 below 9 kHz); one
+  given explicitly raises an error.
+- Klatt's quasi-sinusoidal voicing (AVS, RGS) and RGZ are left out (D4).
+
+`tests/test_klatt.py` checks the vowel against source × formants ×
+radiation (C6, to 1e-6 dB), the parallel levels, the source calibration,
+and the continuum; `tests/test_processing.py` checks C1 and C3 on the
+library resonator.
 
 ## Listening examples
 

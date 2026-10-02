@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import numbers
 from collections.abc import Sequence
 
 import numpy as np
-from scipy.signal import butter, sosfilt, sosfiltfilt
+from numpy.typing import ArrayLike
+from scipy.signal import butter, lfilter, sosfilt, sosfiltfilt
 
 from sonore.core.sound import Sound
 from sonore.core.utils import amp_to_db, time_axis
@@ -22,7 +24,12 @@ __all__ = [
     "butter_filter",
     "bandpass",
     "amplitude_modulate",
+    "resonator",
+    "antiresonator",
 ]
+
+# A value that may change over time: a number, or a ``(times, values)`` pair.
+Track = float | tuple[ArrayLike, ArrayLike]
 
 
 def match_fs(sounds: Sequence[Sound], fs: float | None = None, mode: str = "down") -> list[Sound]:
@@ -107,3 +114,98 @@ def amplitude_modulate(sound: Sound, f_mod: float, depth: float = 1.0, phase: fl
     """Multiply by ``1 + depth*sin(2*pi*f_mod*t + phase)``."""
     t = time_axis(len(sound), sound.fs)
     return sound * (1 + depth * np.sin(2 * np.pi * f_mod * t + phase))
+
+
+# ------------------------------------------------------------ resonators
+def _track(value: Track, t: np.ndarray, name: str = "value") -> np.ndarray | float:
+    """A number as it is, or a ``(times, values)`` pair interpolated linearly
+    to the times ``t`` (values held before the first and after the last)."""
+    if isinstance(value, numbers.Real):
+        return float(value)
+    try:
+        times, values = value
+    except (TypeError, ValueError):
+        raise TypeError(f"{name} must be a number or a (times, values) pair") from None
+    times = np.asarray(times, float)
+    values = np.asarray(values, float)
+    if times.ndim != 1 or values.shape != times.shape or len(times) == 0:
+        raise ValueError(f"{name} needs one value per time: got {times.shape} times, {values.shape} values")
+    if np.any(np.diff(times) <= 0):
+        raise ValueError(f"{name}'s times must increase")
+    return np.interp(t, times, values)
+
+
+def _resonator_coefs(f, bw, fs: float):
+    """Klatt's (1980) coefficients: y[n] = A x[n] + B y[n-1] + C y[n-2]."""
+    c = -np.exp(-2 * np.pi * bw / fs)
+    b = 2 * np.exp(-np.pi * bw / fs) * np.cos(2 * np.pi * f / fs)
+    return 1 - b - c, b, c
+
+
+def _check_resonance(f, bw, fs: float) -> None:
+    if np.any(np.asarray(f) < 0) or np.any(np.asarray(f) >= fs / 2):
+        raise ValueError(f"resonance frequencies must be in [0, fs/2) = [0, {fs / 2:g}) Hz")
+    if np.any(np.asarray(bw) <= 0):
+        raise ValueError("bandwidths must be positive")
+
+
+def _two_pole(x: np.ndarray, a, b, c) -> np.ndarray:
+    """y[n] = a x[n] + b y[n-1] + c y[n-2] with per-sample coefficients."""
+    y = np.empty_like(x)
+    y1 = y2 = 0.0
+    for n, (xn, an, bn, cn) in enumerate(zip(x.tolist(), a.tolist(), b.tolist(), c.tolist(), strict=True)):
+        y0 = an * xn + bn * y1 + cn * y2
+        y[n] = y0
+        y2, y1 = y1, y0
+    return y
+
+
+def _two_zero(x: np.ndarray, a, b, c) -> np.ndarray:
+    """y[n] = a x[n] + b x[n-1] + c x[n-2] with per-sample coefficients."""
+    x1 = np.concatenate([[0.0], x[:-1]])
+    x2 = np.concatenate([[0.0, 0.0], x[:-2]])[: len(x)]
+    return a * x + b * x1 + c * x2
+
+
+def _filter(sound: Sound, f: Track, bw: Track, inverse: bool) -> Sound:
+    fs = sound.fs
+    t = time_axis(len(sound), fs)
+    f, bw = _track(f, t, "f"), _track(bw, t, "bw")
+    _check_resonance(f, bw, fs)
+    a, b, c = _resonator_coefs(f, bw, fs)
+    data = sound.data
+    if np.ndim(a) == 0:
+        num, den = ([1 / a, -b / a, -c / a], [1.0]) if inverse else ([a], [1.0, -b, -c])
+        return Sound(lfilter(num, den, data, axis=0), fs)
+    a, b, c = (np.broadcast_to(v, t.shape) for v in (a, b, c))
+    out = np.empty_like(data)
+    for ch in range(data.shape[1]):
+        x = data[:, ch]
+        out[:, ch] = _two_zero(x, 1 / a, -b / a, -c / a) if inverse else _two_pole(x, a, b, c)
+    return Sound(out, fs)
+
+
+def resonator(sound: Sound, f: Track, bw: Track) -> Sound:
+    """A formant: Klatt's (1980) second-order digital resonator.
+
+    ``y[n] = A x[n] + B y[n-1] + C y[n-2]`` with ``C = -exp(-2 pi bw / fs)``,
+    ``B = 2 exp(-pi bw / fs) cos(2 pi f / fs)`` and ``A = 1 - B - C``: a
+    resonance at ``f`` Hz with a -3 dB bandwidth of ``bw`` Hz, and a gain of
+    exactly 1 at 0 Hz (so ``f = 0`` gives a low-pass filter).
+
+    ``f`` and ``bw`` are numbers, or ``(times, values)`` pairs that are
+    interpolated linearly to every sample (held beyond their ends), so a
+    formant can glide. The filter keeps its state while its coefficients
+    change, which is what keeps a moving formant free of clicks.
+    """
+    return _filter(sound, f, bw, inverse=False)
+
+
+def antiresonator(sound: Sound, f: Track, bw: Track) -> Sound:
+    """An antiformant: the exact inverse of :func:`resonator` with the same
+    ``f`` and ``bw``, a spectral zero (Klatt, 1980). Its gain at 0 Hz is 1.
+
+    ``y[n] = (x[n] - B x[n-1] - C x[n-2]) / A``; ``f`` and ``bw`` may change
+    over time as in :func:`resonator`.
+    """
+    return _filter(sound, f, bw, inverse=True)
