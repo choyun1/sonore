@@ -9,10 +9,13 @@ mention is `cepstrum.md`, which put "Mel-cepstra and MFCCs" out of scope,
 and a sentence on the cepstrum gallery page).
 
 Status: proposed, not built. No library code is written until Cho answers
-the decisions (D1–D8). The claims are checked by
+the decisions (D1–D9). The claims are checked by
 `tools/check_mfcc_claims.py`; `tools/crosscheck_mfcc.py` compares the
 recipes with librosa and python_speech_features and with sonore's
-CheapTrick envelope.
+CheapTrick envelope. Cho asked on 2026-10-02 that the tests match
+librosa: `tools/make_mfcc_fixtures.py` stores librosa's output in
+`tests/data/librosa_mfcc_reference.npz`, and C9 and D9 say how the tests
+use it.
 
 ## Why
 
@@ -189,6 +192,25 @@ its defaults exactly (0). python_speech_features rounds the triangle feet
 to FFT bins; with exact triangles instead, c1..c12 on the sentence change
 by 13% rms (weights differ by up to 0.25).
 
+**C9. sonore's STFT has librosa's time windows, so the whole pipeline
+can be tested against librosa's output, deltas included.** [cross] A
+`GaborFrame` with a Hann window of librosa's `win_length`, its hop and its
+`n_fft` gives the same power spectra as `librosa.stft` (centred, zero
+padding) with a difference of exactly 0, for all three stored settings.
+sonore's grid has one more time window, centred one hop before the first
+sample, and one or two more at the end; dropping those leaves librosa's
+grid. On that grid the checker's formulas reproduce the stored mel power
+to 2.3e-8 of its maximum (librosa's float32 filter weights) and the stored
+MFCCs to 1.3e-9 of the largest coefficient. `librosa.feature.delta` is
+SciPy's `savgol_filter` with `deriv=order`, `polyorder=order` and
+`mode="interp"`; called that way it reproduces the stored deltas exactly
+(0) for widths 5 and 9 and orders 1 and 2. Its order-1 width-5 deltas
+equal HTK's regression over ±2 (C6) in the interior (2.8e-14) but not in
+the first and last two time windows (up to 8.5), where librosa uses the
+slope of a line fitted to the first or last five, and HTK repeats the
+edge values. Its order 2 is the second derivative of a local quadratic,
+not the delta of the delta.
+
 ## Views, and what this one drops
 
 By `philosophy.md` ("Views may discard information"), MFCCs are a view
@@ -297,10 +319,13 @@ option.
 - `lifter=0` by default; `lifter=22` applies HTK's
   1 + (L/2) sin(π n / L). It is a fixed gain per coefficient, so it
   changes Euclidean distances and nothing else.
-- `mfcc.deltas(order=1, width=2)` returns the regression slopes (C6),
-  edges repeated, as HTK and python_speech_features; `order=2` applies it
-  twice. The alternative, librosa's Savitzky–Golay filter, has no
-  advantage for a 13-row array and a different response.
+- `mfcc.deltas(order=1, width=5)` computes deltas exactly as librosa
+  does (Savitzky–Golay, `mode="interp"` at the edges), so they match it
+  (C9). With width 5 and order 1 this is HTK's regression over ±2 (C6)
+  except in the first and last two time windows; `width=9` gives
+  librosa's default. Alternative: HTK's regression with edges repeated,
+  as python_speech_features does. It differs from librosa only at the
+  edges, and matching librosa, which Cho asked for, decides it.
 - No `to_sound` (see "Views"). `mfcc.envelope(f)` returns the smoothed
   power implied by the kept coefficients (inverse DCT, then linear in mel
   between band centres) at frequencies `f`, for plotting next to an
@@ -324,6 +349,26 @@ cepstrum on the mel scale" on the cepstral analysis page
 3. Optionally, C4's two spectra that differ by several dB in 43% of their
    bins and give identical MFCCs.
 
+**D9. Tests match librosa (Cho, 2026-10-02).** The tests compare
+`so.MFCC` with librosa's own output, stored by
+`tools/make_mfcc_fixtures.py` in `tests/data/librosa_mfcc_reference.npz`
+(362 KiB) for three settings on the gallery sentence: librosa's
+defaults, the speech recipe's sizes with HTK mel and height-1 triangles,
+and the same sizes with Slaney mel and 40 bands. It holds the mel power
+and the MFCCs, and for the HTK setting the deltas of width 5 and 9,
+orders 1 and 2. The tests run `so.MFCC` on a Hann STFT with librosa's
+sizes, drop the extra edge time windows (C9), and compare: mel power to
+1e-7 of its maximum, `mfcc.db` with `floor_db=-80` to 1e-8 of the
+largest coefficient, deltas to 1e-12. The tolerances leave about ten
+times C9's measured differences. This follows the WORLD tests, which
+compare against stored pyworld output (`tools/make_world_fixtures.py`),
+so the test suite needs no librosa. Alternative: call librosa in the
+tests, skipped when it is not installed (`pytest.importorskip`). That
+always tests the installed version, but CI would have to install
+librosa (and its numba dependency) to run the tests at all, and a test
+that is usually skipped protects nothing. The fixture records which
+librosa version it came from, and regenerating it is one command.
+
 ## API sketch
 
 ```python
@@ -343,16 +388,19 @@ mfcc.envelope(env.f)                       # for plotting against env
 
 ## Tests (target: under 1 s added)
 
+- Against librosa's stored output (D9): mel power, MFCCs and deltas for
+  three settings.
 - The mel weights, log and DCT against the checker's formulas for both
   scales and both triangle normalisations (C3, C8).
 - `MFCC(snd)` equals the formula pipeline on the same power spectra.
 - Scaling a sound moves only c0 (D4); a silent channel is finite.
 - Area against height triangles: a constant shift, identical deltas (C3).
-- Deltas equal the least-squares slope (C6).
+- Deltas equal the least-squares slope in the interior (C6).
 
 ## Patch plan
 
-1. This document, `tools/check_mfcc_claims.py`, `tools/crosscheck_mfcc.py`.
+1. This document, `tools/check_mfcc_claims.py`, `tools/crosscheck_mfcc.py`,
+   `tools/make_mfcc_fixtures.py` and the librosa fixture.
 2. After Cho's answers: `MFCC`, `deltas`, `envelope`, `plot`, tests,
    README row and recipe, CHANGELOG.
 3. Separately, if wanted: the gallery section (D8).

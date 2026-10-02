@@ -28,6 +28,7 @@ import numpy as np
 import python_speech_features as psf
 import soundfile as sf
 from scipy.fft import dct
+from scipy.signal import savgol_filter
 
 import sonore as so
 
@@ -168,3 +169,69 @@ for name, shapes in (("power spectrum", raw), ("CheapTrick envelope", smooth)):
     report(f"MFCCs from the {name}: same vowel, two F0s, largest distance [dB]", max(same_vowel))
     report("  median [dB]", np.median(same_vowel))
     report("  /a/ vs /i/ at the same F0, smallest distance [dB]", min(across))
+
+# ------------------------------------------------------------ sonore's STFT on librosa's time grid
+# The tests compare so.MFCC with tests/data/librosa_mfcc_reference.npz
+# (tools/make_mfcc_fixtures.py). This section shows the comparison can be
+# exact: sonore's Hann STFT has librosa's time windows (plus one before and
+# two after), and the formulas on its power reproduce the stored output.
+reference = np.load(Path(__file__).resolve().parents[1] / "tests" / "data" / "librosa_mfcc_reference.npz")
+sentence = so.load(SPEECH)
+settings = {
+    "defaults": (2048, 512, 2048, 128, 20, "slaney"),
+    "speech_htk": (400, 160, 512, 26, 13, "htk"),
+    "speech_slaney": (400, 160, 512, 40, 13, "slaney"),
+}
+for name, (win_len, hop_len, n_fft, n_mels, n_mfcc, scale) in settings.items():
+    frame = so.GaborFrame(win_len / fs, hop_len / fs, window="hann", n_fft=n_fft)
+    sonore_power = np.abs(so.STFT(sentence, frame=frame).data[0]) ** 2
+    librosa_power = np.abs(librosa.stft(speech, n_fft=n_fft, hop_length=hop_len, win_length=win_len)) ** 2
+    n_windows = librosa_power.shape[1]
+    sonore_power = sonore_power[:, 1 : 1 + n_windows]  # drop the time window centred before the first sample
+    report(
+        f"{name}: sonore STFT power vs librosa.stft, max abs diff / max",
+        np.abs(sonore_power - librosa_power).max() / librosa_power.max(),
+    )
+    weights, _ = mel_matrix(n_mels, n_fft, fs, scale=scale, area_normalized=scale == "slaney")
+    mel_power = weights @ sonore_power
+    mel_db = 10 * np.log10(np.maximum(mel_power, 1e-10))
+    mel_db = np.maximum(mel_db, mel_db.max() - 80)
+    coefficients = dct(mel_db, type=2, norm="ortho", axis=0)[:n_mfcc]
+    stored_mel, stored_mfcc = reference[f"{name}_mel_power"], reference[f"{name}_mfcc"]
+    report(
+        "  mel power from sonore's STFT vs stored librosa, max abs diff / max",
+        np.abs(mel_power - stored_mel).max() / stored_mel.max(),
+    )
+    report(
+        "  MFCCs vs stored librosa, max abs diff / max abs value",
+        np.abs(coefficients - stored_mfcc).max() / np.abs(stored_mfcc).max(),
+    )
+
+for width in (5, 9):
+    for order in (1, 2):
+        key = f"speech_htk_delta{width}" + ("_order2" if order == 2 else "")
+        ours = savgol_filter(
+            reference["speech_htk_mfcc"], width, polyorder=order, deriv=order, axis=-1, mode="interp"
+        )
+        report(
+            f"deltas, width {width}, order {order}: Savitzky-Golay vs stored librosa, max abs diff",
+            np.abs(ours - reference[key]).max(),
+        )
+half_width = 2
+offsets = np.arange(-half_width, half_width + 1)
+regression = np.apply_along_axis(
+    lambda row: np.convolve(
+        np.pad(row, half_width, mode="edge"), offsets[::-1] / np.sum(offsets**2), mode="valid"
+    ),
+    -1,
+    reference["speech_htk_mfcc"],
+)
+stored = reference["speech_htk_delta5"]
+report(
+    "HTK regression (+-2, edges repeated) vs librosa width 5: interior max abs diff",
+    np.abs(regression - stored)[:, half_width:-half_width].max(),
+)
+report(
+    "  first and last two time windows: max abs diff",
+    np.abs(regression - stored)[:, np.r_[:half_width, -half_width:0]].max(),
+)
