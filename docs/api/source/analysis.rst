@@ -1,7 +1,7 @@
 analysis
 ========
 
-Taking sounds apart: frames, filterbanks, spectral representations, envelopes, modulation and the cepstrum. Builds on core and signals.
+Taking sounds apart: frames, filterbanks, spectral representations, envelopes, modulation, the cepstrum and F0 tracking. Builds on core and signals.
 
 ``sonore.analysis.frames``
 --------------------------
@@ -37,3 +37,8 @@ Taking sounds apart: frames, filterbanks, spectral representations, envelopes, m
 ----------------------------
 
 .. automodule:: sonore.analysis.cepstrum
+
+``sonore.analysis.f0``
+----------------------
+
+.. automodule:: sonore.analysis.f0
