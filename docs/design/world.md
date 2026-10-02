@@ -14,7 +14,7 @@ pieces; Cho asked how to square that with reproducibility and decided:
 reproduce WORLD, with no pyworld dependency ("Reproducing WORLD" below).
 Steps 1–5 of "Order" are built (`sonore.analysis.vocoder`,
 `sonore.stimuli.vocoder`), and the gallery page explains aperiodicity
-(`docs/gallery/seeing/aperiodicity.py`).
+(`docs/gallery/voice/aperiodicity.py`).
 
 ## Why
 

@@ -366,7 +366,7 @@ a short recipe, Davis & Mermelstein (1980) in the references.
 
 **D8. Gallery. (accepted 2026-10-02; built 2026-10-02, all three parts)** A section "MFCCs: a
 cepstrum on the mel scale" on the cepstral analysis page
-(`docs/gallery/seeing/cepstrum.py`, which already mentions mel-cepstra):
+(`docs/gallery/voice/cepstrum.py`, which already mentions mel-cepstra):
 
 1. The synthetic /a/ at F0 100, 200 and 300 Hz: the 13-MFCC envelope and
    the CheapTrick envelope over the true filter response, showing the
