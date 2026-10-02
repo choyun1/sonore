@@ -312,6 +312,23 @@ details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(-
 .tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
 footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
 @media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 3.5rem 1.25rem 2rem 1.75rem;
+    border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a:first-child, nav.pages details { display: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side .home { display: block; font-size: 1.05rem; margin: 0 0 1.5rem; }
+.side .group { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.4rem; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
 """
 
 JS = """
@@ -572,6 +589,26 @@ def nav(current: str) -> str:
     return f'<nav class="pages" aria-label="Gallery pages">{"".join(parts)}<script>{NAV_JS}</script></nav>'
 
 
+def sidebar(current: str, sections_html: str) -> str:
+    """The menu down the left of a wide screen: every page by group, and under the page
+    being read, its sections. Narrow screens keep only the menus at the top."""
+
+    def link(href: str) -> str:
+        here = ' aria-current="page"' if href == current else ""
+        item = f'<a href="{href}"{here}>{TITLES[href]}</a>'
+        if href == current:
+            sections = re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', sections_html)
+            if sections:
+                item += "<ul>" + "".join(f'<li><a href="#{slug}">{title}</a></li>' for slug, title in sections) + "</ul>"
+        return f"<li>{item}</li>"
+
+    here = ' aria-current="page"' if current == "index.html" else ""
+    parts = [f'<a class="home" href="index.html"{here}>{TITLES["index.html"]}</a>']
+    for group, pages in TOPICS:
+        parts.append(f'<p class="group">{html.escape(group)}</p><ul>{"".join(link(href) for href, _ in pages)}</ul>')
+    return f'<aside class="side" aria-label="All gallery pages">{"".join(parts)}</aside>'
+
+
 HOW = """<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>"""
@@ -599,6 +636,8 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
 <style>{CSS}</style>
 </head>
 <body>
+<div class="layout">
+{sidebar(current, sections_html)}
 <main>
 {nav(current)}
 <header>
@@ -608,6 +647,7 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
 {sections_html}
 <footer>{footer}</footer>
 </main>
+</div>
 <script>{JS}</script>
 </body>
 </html>
