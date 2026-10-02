@@ -4,11 +4,12 @@ The design of a harmonic source whose fundamental follows a contour: a
 sum of phase-locked harmonics driven by an F0 track, with the harmonics
 switched off where the track is unvoiced, faded out before they reach
 Nyquist, and optionally weighted by a spectral envelope. It is the
-harmonic half of the "pulse-plus-noise synthesis" in roadmap item 2
+harmonic half of the "pulse-plus-noise synthesis" in roadmap item 1
 (speech analysis and synthesis), and the piece that lets an F0 track and a
 set of band envelopes be put back together and listened to.
 
-Status: proposed 2026-10-01. D8 decided (after the F0 tracker); D1–D7
+Status: proposed 2026-10-01. D8 decided (after the F0 tracker, which has
+now landed as `so.f0_track`); D1–D7
 await Cho's answers; no library code yet.
 
 ## Why
@@ -17,12 +18,13 @@ Cho's question: with an F0 extraction and an envelope extraction, can
 sonore impose the envelopes on harmonics built from the F0 contour, to hear
 what the two carry between them? Most of that already exists:
 
-- `so.noise_vocode(sound, n_bands, carrier=...)` takes any `Sound` as the
+- `so.noise_vocode(sound, n_bands, carrier=...)`, a channel vocoder
+  (Shannon et al., 1995), takes any `Sound` as the
   carrier, splits it with the same ERB filterbank as the sound, and
   multiplies each band's fine structure by the sound's band envelope
   (`src/sonore/analysis/filterbank.py`). The envelope half is done.
-- `docs/speech/bdl_arctic_a0131_f0.csv` holds a Harvest track of the
-  gallery sentence, and `so.f0_track` is being designed (`f0.md`).
+- `docs/speech/bdl_arctic_a0131_f0.csv` holds a Harvest track (Morise,
+  2017) of the gallery sentence (CMU ARCTIC `bdl`; Kominek & Black, 2004), and `so.f0_track` (`f0.md`) now tracks any sound.
 
 What is missing is the carrier. `so.harmonic_complex` takes one fixed F0.
 The gallery pages that need a moving F0 (`pv.py`, `resynthesis.py`) each
@@ -48,7 +50,7 @@ The listening examples (below) are not claims; they are for Cho's ears.
 ## The design
 
 Given F0 values f0[j] at frame times t[j] (0 meaning unvoiced, the form of
-the stored Harvest track and of the proposed `F0Track`):
+the stored Harvest track and of `F0Track`):
 
 1. **Fill the gaps.** Unvoiced frames take F0 values interpolated linearly
    between the voiced frames on either side; leading and trailing ones hold
@@ -132,7 +134,7 @@ batch harmonics if it ever is not.
 
 `/mnt/project-files/notes/harmonic-source/make_examples.py` (project
 files, not the repository) runs the prototype on the stored Harvest track
-of the gallery sentence and writes eight short files beside itself:
+of the gallery sentence and writes short files beside itself, first:
 
 1. the original sentence;
 2. the source alone on the track (the track made audible);
@@ -150,6 +152,15 @@ As a rough check that the imposed pitch survives the vocoder, cepstral F0
 imposed track on 89% (16 bands), 91% (32 bands) and 89% (raised a fifth)
 of the voiced frames, against 69% for the original recording and 0% for
 the noise vocoder.
+
+Six more files drive the same source from the two F0 estimators sonore
+has, instead of the stored Harvest track: 9–11 from cepstral F0
+(`so.Cepstrum.f0`, 40 ms Hann frames, its defaults), the buzz alone and
+the 16- and 32-band vocoders; 12–14 the same from `so.f0_track` at its
+defaults. On this sentence the cepstral track voices 64% of the frames
+and agrees with Harvest within 5% on 96% of the frames both voice;
+`so.f0_track` voices 68% and agrees on 100%. Harvest voices 85–86%, so
+both put noise where Harvest has harmonics in weak voiced stretches.
 
 ## Decisions
 
@@ -178,7 +189,7 @@ parameter, `ramp=0.005`; 0 gives a hard gate.
 (default) or `"noise"`: white Gaussian noise in the unvoiced stretches at
 the same power as the harmonics, crossfaded with the same gate, from a
 seeded `rng`. That is enough for the vocoder recipe, where the envelopes
-set every band's level anyway. Graded aperiodicity per band (WORLD's D4C)
+set every band's level anyway. Graded aperiodicity per band (WORLD's D4C; Morise, Yokomori & Ozawa, 2016)
 belongs to the later synthesis step and is out of scope.
 
 **D5. Band-limiting by a taper (recommended).** Harmonic k is weighted by
@@ -195,7 +206,7 @@ aliases on any upward glide (C6).
 harmonic (a fixed spectrum, as in `harmonic_complex`), or a function
 `amplitudes(t, f)` returning the gain at time t and frequency f, sampled
 at every harmonic's frequency k f(t). The second form keeps formants in
-place while the pitch moves, and is how a CheapTrick-style envelope will
+place while the pitch moves, and is how a CheapTrick-style envelope (Morise, 2015) will
 drive the source in the WORLD step. Time-varying per-harmonic arrays
 (frames × harmonics) are left out until something needs them.
 
@@ -205,19 +216,18 @@ array also work, as starting values). A 2-D `f0` (one row per channel,
 as `F0Track.f0` is) gives a multichannel Sound.
 
 **D8. Where it goes on the roadmap.** Cho, 2026-10-01: wait for the F0
-tracker's library code, then land this after it. The recommendation had
-been to land it now, as the first piece of roadmap item 2 and ahead of the F0 tracker's
-library code, since it depends on nothing new. The tracker's gallery page
-can then play its tracks, and the Vocoder page can gain a short section
-on putting the pitch back (examples 4, 6 and 7 above, on the stored
-Harvest track until `so.f0_track` lands). Alternative: wait and add it
-with the rest of the WORLD-style synthesis.
+tracker's library code, then land this after it. The tracker has now
+landed (`so.f0_track`, PRs #46 and #50), so this is unblocked. It is the
+first piece of the speech analysis and synthesis item (now item 1 of the
+README roadmap). Once it lands, the Vocoder page can gain a short section
+on putting the pitch back (examples 4, 6 and 7 above, on the tracker's
+own track).
 
 ## API sketch
 
 ```python
 snd = so.load("docs/speech/bdl_arctic_a0131.flac")
-trk = so.f0_track(snd)                                   # f0.md, once it lands
+trk = so.f0_track(snd)                                   # f0.md
 src = so.harmonic_source(trk.t, trk.f0[0], snd.fs, duration=snd.duration,
                          unvoiced="noise", rng=0)
 so.noise_vocode(snd, 16, carrier=src)                    # its envelopes, this pitch
@@ -253,8 +263,34 @@ vowel = so.harmonic_source(t, 110 + 10 * np.sin(2 * np.pi * 5 * t), 16000,
 
 ## Out of scope
 
-- Glottal pulse shapes (Rosenberg, LF) and formant filters: the
-  source-filter vowels and Klatt synthesizer listed under roadmap item 2.
+- Glottal pulse shapes (such as KLGLOTT88, Klatt & Klatt, 1990) and
+  formant filters: the source-filter vowels and Klatt synthesizer (Klatt,
+  1980) listed under roadmap item 1.
 - Per-band aperiodicity (WORLD's D4C) and minimum-phase pulse synthesis.
 - Jitter and shimmer: easy to add to a contour before it goes in, so not
   parameters of the source.
+
+## References
+
+Taken from the README's References, where each was checked by lookup
+(`/mnt/project-files/citations/readme-citations.md` in the project files).
+
+- Klatt, D. H. (1980). Software for a cascade/parallel formant
+  synthesizer. *J. Acoust. Soc. Am.* 67(3). doi:10.1121/1.383940.
+- Klatt, D. H. & Klatt, L. C. (1990). Analysis, synthesis, and perception
+  of voice quality variations among female and male talkers. *J. Acoust.
+  Soc. Am.* 87. doi:10.1121/1.398894.
+- Kominek, J. & Black, A. W. (2004). The CMU Arctic speech databases.
+  *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224.
+- Morise, M. (2015). CheapTrick, a spectral envelope estimator for
+  high-quality speech synthesis. *Speech Communication* 67.
+  doi:10.1016/j.specom.2014.09.003.
+- Morise, M. (2017). Harvest: a high-performance fundamental frequency
+  estimator from speech signals. *Proc. Interspeech 2017*.
+  doi:10.21437/Interspeech.2017-68.
+- Morise, M., Yokomori, F. & Ozawa, K. (2016). WORLD: a vocoder-based
+  high-quality speech synthesis system for real-time applications. *IEICE
+  Trans. Inf. & Syst.* E99-D(7). doi:10.1587/transinf.2015EDP7457.
+- Shannon, R. V., Zeng, F.-G., Kamath, V., Wygonski, J. & Ekelid, M.
+  (1995). Speech recognition with primarily temporal cues. *Science* 270.
+  doi:10.1126/science.270.5234.303.
