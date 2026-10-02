@@ -29,3 +29,9 @@ these objects at work.
    stimuli
    texture
    plotting
+
+.. toctree::
+   :caption: Elsewhere
+
+   Listening gallery <https://choyun1.github.io/sonore/gallery/>
+   sonore on GitHub <https://github.com/choyun1/sonore>

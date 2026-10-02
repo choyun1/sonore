@@ -265,6 +265,8 @@ nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem)
   padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
 nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.ref { margin-left: auto; }
+nav.pages a.ref + a.repo { margin-left: 0; }
 nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
 nav.pages a.repo:hover { color: var(--ink); }
 @media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
@@ -561,6 +563,7 @@ def nav(current: str) -> str:
         here = ' class="here"' if current in hrefs else ""
         items = "".join(f"<li>{link(href)}</li>" for href in hrefs)
         parts.append(f"<details{here}><summary>{html.escape(group)}</summary><ul>{items}</ul></details>")
+    parts.append('<a class="ref" href="../api/">API reference</a>')
     parts.append(
         '<a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" '
         f'aria-label="sonore on GitHub">{GITHUB_MARK}</a>'
