@@ -272,7 +272,7 @@ def glottal_source(
     harmonic_numbers = np.arange(1, _n_max(f0, fs, f_max) + 1)
     if harmonic_numbers.size == 0:
         raise ValueError("no harmonic of this F0 fits below f_max")
-    contour_options = {} if isinstance(f0, numbers.Real) else {"f_max": f_max, "ramp": ramp}
+    contour_options = {"f_max": f_max} if isinstance(f0, numbers.Real) else {"f_max": f_max, "ramp": ramp}
     if isinstance(rd, numbers.Real):
         coefficients = lf_harmonics(harmonic_numbers, rd, flow=flow)
         amplitudes, phases = 2 * np.abs(coefficients), np.angle(coefficients)

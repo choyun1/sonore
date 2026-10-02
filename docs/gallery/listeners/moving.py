@@ -28,6 +28,10 @@ time it runs.
 # - [Coming closer](#h-coming-closer): the target walking up to the listener, without and with
 #   a room.
 # - [Passing by](#h-passing-by): a buzz going past at 15 m/s, and the Doppler glide of its pitch.
+# - [Straight paths across the plane](#h-straight-paths-across-the-plane): the buzz in front,
+#   close by, down the side, behind, crossing at an angle and coming straight at the listener.
+# - [A path no source could take](#h-a-path-no-source-could-take): the buzz jumping around the
+#   head far faster than anything can move, and what the renderer makes of it.
 # - [How the motion is rendered](#h-how-the-motion-is-rendered): filtering with HRIRs that change
 #   over time, without clicks or comb filtering.
 #
@@ -410,6 +414,287 @@ scene = [
 sound = finish(rendered)
 
 # %% [markdown]
+# ## Straight paths across the plane
+#
+# The same buzz, at the same 15 m/s, now along six straight lines through different parts of the
+# horizontal plane. The Doppler shift depends only on how fast the distance changes, so every
+# path that passes the listener starts 65 to 77 cents sharp and ends about as flat. What differs
+# is how quickly the change comes and what the ears hear meanwhile. The glide takes longer the
+# farther away the path passes, in proportion at this speed: from 95% to 5% of its range, 0.14 s
+# at 50 cm, 0.27 s at 1 m and 0.53 s at 2 m. The level rises and falls as 1/r, by 6.5 dB on the
+# path 10 m away and 31 dB on the one 50 cm away.
+#
+# The buzz stops at 5 kHz (`f_max`), so that a shift of several semitones up still keeps every
+# harmonic below 8 kHz, half the sampling rate (see [A path no source could
+# take](#h-a-path-no-source-could-take)).
+
+# %%
+TOWARD_30 = np.array([np.sin(np.radians(30)), np.cos(np.radians(30))])  # 30° to the right
+
+
+def straight(point, heading, at=None):
+    """A source at ``point`` (x right, y ahead) [m] at time ``at`` (by default the middle of the
+    sound), moving along ``heading`` at SPEED: a path as a function of the time it emits."""
+    point = np.array([*point, 0.0])
+    velocity = SPEED * np.array([*heading, 0.0]) / np.hypot(*heading)
+    at = emitted / 2 if at is None else at
+    return lambda t: point + np.outer(np.atleast_1d(t) - at, velocity)
+
+
+PATHS = {
+    "Far in front": straight((0, 10), (1, 0)),
+    "Close in front": straight((0, 0.5), (1, 0)),
+    "Down the right side": straight((1, 0), (0, -1)),
+    "Behind": straight((0, -2), (-1, 0)),
+    "Crossing at an angle": straight((np.sqrt(0.5), np.sqrt(0.5)), (1, -1)),
+    "Straight at the listener": straight(tuple(0.4 * TOWARD_30), tuple(-TOWARD_30), at=emitted),
+}
+PATH_COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#ff7f0e", "#8c564b"]
+
+
+def as_heard(path, n_points=1000):
+    """When each point of the path is heard at the head's center [s], and the source's
+    distance [m], azimuth [deg, unwrapped] and Doppler shift [cents] then."""
+    t = np.linspace(0, emitted, n_points)
+    position = path(t)
+    distance = np.linalg.norm(position, axis=1)
+    azimuth = np.degrees(np.unwrap(np.arctan2(position[:, 0], position[:, 1])))
+    cents = -1200 * np.log2(1 + np.gradient(distance, t) / so.SPEED_OF_SOUND)
+    return t + distance / so.SPEED_OF_SOUND, distance, azimuth, cents
+
+
+def show_path(rendered, path, title, color, f0_range=(80, 200), cents_limit=120):
+    """Azimuth, the level at each ear with 1/r, and the pitch at the ears against the Doppler
+    shift computed from the path, all on the time the sound is heard."""
+    arrival, distance, azimuth, cents = as_heard(path)
+    fig = plt.figure(figsize=(10, 6.0), layout="constrained")
+    axes = fig.subplots(3, 1, sharex=True)
+    wrapped = np.mod(azimuth + 180, 360) - 180
+    wrapped[1:][np.abs(np.diff(wrapped)) > 180] = np.nan  # no line across ±180°
+    axes[0].plot(arrival, wrapped, color=color, lw=1.5)
+    axes[0].set(ylim=(-180, 180), yticks=[-180, -90, 0, 90, 180], ylabel="Azimuth [deg]", title=title)
+    t_level, ear_db = levels_db(rendered.data, window=0.05)
+    for ear, (label, ear_color) in enumerate([("left ear", "#7f7f7f"), ("right ear", "k")]):
+        axes[1].plot(t_level, ear_db[:, ear], ".-", color=ear_color, ms=3, lw=0.8, label=label)
+    one_over_r = -20 * np.log10(np.interp(t_level, arrival, distance))
+    sounding = (t_level > arrival[0] + 0.05) & (t_level < arrival[-1] - 0.05)
+    offset = np.median(np.max(ear_db, axis=1)[sounding] - one_over_r[sounding])
+    axes[1].plot(
+        t_level, np.where(sounding, one_over_r + offset, np.nan), "--", color=color, lw=1.2, label="1/r"
+    )
+    peak = np.max(ear_db)
+    axes[1].set(ylim=(peak - 45, peak + 5), ylabel="Level [dB]", title="Level at each ear, in 50 ms windows")
+    axes[1].legend(loc="upper left", fontsize=8, ncols=3)
+    for ear, (channel, marker_color) in enumerate([(rendered.left, "#7f7f7f"), (rendered.right, "k")]):
+        track = so.f0_track(channel, f_lo=f0_range[0], f_hi=f0_range[1])
+        f0_ear = track.f0[0]
+        voiced = f0_ear > 0
+        axes[2].plot(
+            track.t[voiced],
+            1200 * np.log2(f0_ear[voiced] / BUZZ_F0),
+            ".",
+            color=marker_color,
+            ms=2.5,
+            label=["measured, left ear", "measured, right ear"][ear],
+        )
+    axes[2].plot(arrival, cents, color=color, lw=1.2, label="Doppler shift from the path")
+    axes[2].set(ylim=(-cents_limit, cents_limit), ylabel="Pitch re 120 Hz [cents]", title="Pitch at the ears")
+    axes[2].legend(loc="upper right", fontsize=8, ncols=3, markerscale=3)
+    for ax in axes:
+        ax.grid(ls=":")
+        ax.set_xlim(0, rendered.duration)
+    axes[-1].set_xlabel("Time [s]")
+    return fig, list(axes)
+
+
+def path_scene(path, label, color):
+    arrival, distance, azimuth, _ = as_heard(path, 250)
+    return [{"label": label, "color": color, "t": arrival, "azimuth": azimuth, "distance": distance}]
+
+
+def render_path(number):
+    title = list(PATHS)[number]
+    path = PATHS[title]
+    rendered = so.move_sound(buzz, path, hrirs)
+    fig, playhead = show_path(rendered, path, f"{title}, at 15 m/s", PATH_COLORS[number])
+    return fig, playhead, path_scene(path, "buzz", PATH_COLORS[number]), finish(rendered)
+
+
+# %% [about]
+# The six paths seen from above, the listener at the center facing up. Each covers 37.5 m in
+# 2.5 s; the dot marks where it starts.
+
+# %% [figure ml0] Six straight paths
+fig = plt.figure(figsize=(10, 5.0), layout="constrained")
+axes = fig.subplots(1, 2)
+for ax, half_width in zip(axes, (20, 3), strict=True):
+    for (title, path), color in zip(PATHS.items(), PATH_COLORS, strict=True):
+        position = path(np.linspace(0, emitted, 500))
+        ax.plot(position[:, 0], position[:, 1], color=color, lw=2, label=title)
+        ax.plot(*position[0, :2], "o", color=color, ms=5)
+        middle = len(position) // 2 if title != "Straight at the listener" else -60
+        ax.annotate(
+            "",
+            xy=position[middle + 10, :2],
+            xytext=position[middle, :2],
+            arrowprops={"arrowstyle": "->", "color": color, "lw": 2},
+        )
+    ax.add_patch(plt.Circle((0, 0), 0.0875, fill=False, color="k"))
+    for radius in (1, 1.6, 10):
+        ax.add_patch(plt.Circle((0, 0), radius, fill=False, color="0.7", ls=":"))
+    ax.set(
+        xlim=(-half_width, half_width), ylim=(-half_width, half_width), aspect="equal", xlabel="x, right [m]"
+    )
+    ax.grid(ls=":", alpha=0.5)
+axes[0].set(ylabel="y, ahead [m]", title="From above, 40 m across (circles at 1, 1.6 and 10 m)")
+axes[1].set(title="The middle 6 m (the head drawn to scale)")
+axes[0].legend(loc="lower left", fontsize=8)
+
+# %% [about]
+# 10 m in front, left to right. Far away, the direction changes slowly and the level only by
+# 6.5 dB, and the pitch glides gently over most of two seconds.
+
+# %% [demo ml1] Far in front
+fig, playhead, scene, sound = render_path(0)
+
+# %% [about]
+# 50 cm in front, left to right, inside the measured distances. The level jumps by about 30 dB,
+# the azimuth swings from one side to the other in about 0.1 s, and the pitch drops almost at once.
+
+# %% [demo ml2] Close in front
+fig, playhead, scene, sound = render_path(1)
+
+# %% [about]
+# 1 m to the right, from front to back. The interaural differences grow as the buzz comes
+# alongside and shrink as it goes behind, just as they would if it turned back the way it came;
+# front and back differ only in the spectral cues of the outer ear, here a KEMAR's, not yours.
+# Once behind, both ears fall a few dB below 1/r, in the shadow of the outer ear.
+
+# %% [demo ml3] Down the right side
+fig, playhead, scene, sound = render_path(2)
+
+# %% [about]
+# 2 m behind, right to left: the front pass in a mirror. Interaural time and level differences
+# are almost the same for a source in front and behind, so with someone else's ears it may well
+# sound in front.
+
+# %% [demo ml4] Behind
+fig, playhead, scene, sound = render_path(3)
+
+# %% [about]
+# From ahead on the left to behind on the right, passing 1 m away 45° to the front right. It
+# crosses the line through the ears 0.07 s after it passes closest.
+
+# %% [demo ml5] Crossing at an angle
+fig, playhead, scene, sound = render_path(4)
+
+# %% [about]
+# Straight at the listener along 30° to the right, from 38 m to 40 cm, where it stops with the
+# sound. The distance shrinks at a steady 15 m/s, so the pitch stays put, 77 cents sharp
+# throughout, while the level climbs by 40 dB. If the pitch seems to rise, that comes from the
+# loudness, as described under Passing by.
+
+# %% [demo ml6] Straight at the listener
+fig, playhead, scene, sound = render_path(5)
+
+# %% [markdown]
+# ## A path no source could take
+#
+# Last, a path that is continuous but that nothing in the world could follow. The buzz stays put
+# for 0.1 s, then jumps 60° to 150° around the head and to a new distance between 40 cm and 4 m,
+# in 50 ms, sixteen times over. Each jump follows a quintic "smoothstep" in azimuth and log
+# distance, so position, velocity and acceleration all change without a break; the path is
+# smooth, only absurdly fast.
+
+# %%
+HOLD, MOVE = 0.10, 0.05  # s: still, then a jump
+rng = np.random.default_rng(7)
+n_jumps = int(np.ceil(PASS_DURATION / (HOLD + MOVE))) + 1
+stops_azimuth, stops_distance = [0.0], [1.0]  # deg, m
+for _ in range(n_jumps):
+    stops_azimuth.append(stops_azimuth[-1] + rng.choice([-1, 1]) * rng.uniform(60, 150))
+    stops_distance.append(np.exp(rng.uniform(np.log(0.4), np.log(4.0))))
+stops_azimuth, stops_distance = np.array(stops_azimuth), np.array(stops_distance)
+
+
+def jumping(t):
+    """Distance [m] and azimuth [deg, unwrapped] at times ``t`` [s]."""
+    t = np.atleast_1d(np.asarray(t, float))
+    jump = np.clip(np.floor(t / (HOLD + MOVE)).astype(int), 0, n_jumps - 1)
+    progress = np.clip((t - jump * (HOLD + MOVE) - HOLD) / MOVE, 0, 1)
+    weight = progress**3 * (10 - 15 * progress + 6 * progress**2)  # quintic smoothstep
+    distance = np.exp(np.log(stops_distance[jump]) * (1 - weight) + np.log(stops_distance[jump + 1]) * weight)
+    return distance, stops_azimuth[jump] * (1 - weight) + stops_azimuth[jump + 1] * weight
+
+
+jumping_path = so.hcc_trajectory(lambda t: 100 * jumping(t)[0], 0.0, lambda t: jumping(t)[1])
+t_fine = np.linspace(0, PASS_DURATION, 250001)
+velocity = np.gradient(jumping_path(t_fine), t_fine, axis=0)
+top_speed = np.linalg.norm(velocity, axis=1).max()
+top_acceleration = np.linalg.norm(np.gradient(velocity, t_fine, axis=0), axis=1).max()
+jump_starts = np.arange(HOLD, PASS_DURATION, HOLD + MOVE)
+longest_jump = np.linalg.norm(jumping_path(jump_starts + MOVE) - jumping_path(jump_starts), axis=1).max()
+fastest_turn = np.abs(np.gradient(jumping(t_fine)[1], t_fine)).max() * 5e-3
+doppler_range = np.percentile(as_heard(jumping_path, 250001)[3], [0, 100])
+
+
+# %% [markdown]
+# Measured on the path:
+#
+# - its top speed is {{ f"{top_speed:.0f}" }} m/s, {{ f"{top_speed / so.SPEED_OF_SOUND:.2f}" }}
+#   of the speed of sound, reached from rest within 25 ms (the buzz passing by above moves at a
+#   steady 15 m/s);
+# - its acceleration peaks at {{ f"{top_acceleration / 9.81:.0f}" }} g;
+# - the longest jump covers {{ f"{longest_jump:.1f}" }} m in 50 ms, and the fastest turns sweep
+#   {{ f"{fastest_turn:.0f}" }}° of azimuth in 5 ms.
+#
+# The Doppler shift follows the path as faithfully as before: {{ f"{doppler_range[1]:+.0f}" }}
+# cents (more than four semitones) as the buzz dives in, {{ f"{doppler_range[0]:+.0f}" }} cents
+# as it leaps out, so here the pitch jumps around as much as the place.
+
+# %% [about]
+# The buzz jumping around the head. HRIR shapes are switched every 0.5 ms instead of the usual
+# 5 ms, since a turn of 28° in 5 ms is too coarse a step. The pitch tracker finds the pitch only
+# while the buzz holds still; during the jumps it changes too fast for the tracker's time windows,
+# and the dots stop.
+
+# %% [demo mw1] A path no source could take
+rendered = so.move_sound(buzz, jumping_path, hrirs, hop=0.5e-3)
+fig, playhead = show_path(
+    rendered,
+    jumping_path,
+    "Still for 0.1 s, then a jump in 50 ms",
+    "#d62728",
+    f0_range=(60, 250),
+    cents_limit=700,
+)
+scene = path_scene(jumping_path, "buzz", "#d62728")
+sound = finish(rendered)
+
+# %% [markdown]
+# What the renderer does with this, measured by `tools/check_moving_trajectories.py` (nobody has
+# listened for these artifacts yet):
+#
+# - While the buzz holds still, the pitch the tracker finds is the buzz's own, to within 3 cents
+#   (95th percentile). During the jumps, where the tracker finds none, the shift was checked on a
+#   1 kHz tone instead: its frequency at each ear follows the shift computed from the distance to
+#   that ear to within 9 cents (median) and 48 cents (95th percentile), while the shift itself
+#   spans more than ±500 cents. The rest of the difference is not yet explained; the HRIRs'
+#   phase, changing with direction, is one candidate.
+# - Switching HRIR shapes at the usual 5 ms leaves an error 13 dB below the signal in the worst
+#   20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 29 dB below.
+# - Nothing aliases, by design: the largest upward shift, a factor of 1.35, takes the top harmonic
+#   to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, which is what
+#   `so.harmonic_complex` makes without `f_max`, does alias: coming straight at the listener at
+#   15 m/s, its top three harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB
+#   below the harmonics.
+# - The source comes toward the head at up to 130 m/s here. `so.move_sound` refuses a source
+#   coming at the head faster than sound, whose sound would arrive in reverse order. It also
+#   refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances
+#   the HRIR onsets change a little faster than the travel time does.
+# - Not modelled at all is the noise a body moving through air that fast would make itself.
+
+# %% [markdown]
 # ## How the motion is rendered
 #
 # A sample the source emits reaches each ear after a delay: the onset of the head-related impulse
@@ -437,7 +722,7 @@ sound = finish(rendered)
 #
 # - Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying filters. *Applied
 #   Sciences* 8(1), 103. [MDPI](https://www.mdpi.com/2076-3417/8/1/103).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L500)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L518)
 # - Brungart (2001). Informational and energetic masking effects in the perception of two
 #   simultaneous talkers. *J. Acoust. Soc. Am.* 109(3), 1101–1109.
 #   [doi:10.1121/1.1345696](https://doi.org/10.1121/1.1345696).
@@ -447,7 +732,7 @@ sound = finish(rendered)
 #   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
 #   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Experiment code:
 #   [choyun1/MSM](https://github.com/choyun1/MSM).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L500)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L518)
 #   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L98)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
 #   library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899.

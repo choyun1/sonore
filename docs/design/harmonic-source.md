@@ -183,8 +183,8 @@ The signature stays `harmonic_complex(duration, fs, f0, harmonics=None,
 ...)`: a contour carries its own times and voicing, so nothing else needs
 to change shape. `harmonics` becomes optional (all below Nyquist for a
 number, all below `f_max` for a contour). The contour-only arguments
-(`f_max`, `ramp`, `unvoiced`) do nothing for a number, which has no gaps
-and does not move. `typing.overload` stubs show the two call shapes
+(`ramp`, `unvoiced`) do nothing for a number, which has no gaps and does
+not move; `f_max` band-limits a number as it does a contour (D5). `typing.overload` stubs show the two call shapes
 separately. `noise_vocode`'s `carrier` (`"noise"`, `"tone"` or a Sound)
 is the precedent for one argument taking several shapes.
 
@@ -220,7 +220,10 @@ out as the pitch moves instead of switching. `f_max` defaults to
 harmonic numbers to include (all by default; `[1]` for a sinusoid,
 `range(10, 20)` for an unresolved complex), and the taper still applies to
 them, so nothing ever aliases. A fixed F0 keeps its present rule (drop
-what is at or above Nyquist, with a warning) and has no taper. Alternative: a fixed harmonic count, which
+what is at or above Nyquist, with a warning) and has no taper unless
+`f_max` is given; then it takes the same taper (added 2026-10-02, after a
+fixed-F0 buzz with `f_max=5000` on the Moving talkers page turned out to
+have harmonics up to Nyquist). Alternative: a fixed harmonic count, which
 aliases on any upward glide (C6).
 
 **D6. Amplitudes: a per-harmonic array or a spectral envelope

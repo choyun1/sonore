@@ -482,19 +482,37 @@ def _read_between_samples(signal: np.ndarray, positions: np.ndarray, chunk: int 
     return out
 
 
-def _emission_times(arrival_times: np.ndarray, delay: CubicSpline, duration: float) -> np.ndarray:
-    """Solve t = t_e + delay(t_e) for t_e at every arrival time t by fixed-point
-    iteration. It converges when the delay changes by less than a second per
-    second, that is, for sources slower than sound."""
-    clipped = lambda emission: np.clip(emission, 0.0, duration)  # noqa: E731
-    emission = arrival_times - delay(clipped(arrival_times))
-    for _ in range(100):
-        updated = arrival_times - delay(clipped(emission))
+def _emission_times(
+    arrival_times: np.ndarray, delay: CubicSpline, duration: float, lookup_times: np.ndarray
+) -> np.ndarray:
+    """Solve t = t_e + delay(t_e) for t_e at every arrival time t. There is one
+    solution for every t only while the delay shrinks by less than a second per
+    second, that is, while the source comes toward the ear slower than sound;
+    otherwise this raises. Outside the sound the delay is held, so there t_e
+    moves one for one with t. The solution is found by inverting t(t_e) on a
+    fine grid, then refined by Newton's method."""
+    rate = delay.derivative()
+    grid = np.linspace(0.0, duration, 8 * len(lookup_times))  # between lookup times too
+    arrival_on_grid = grid + delay(grid)
+    if np.min(rate(grid)) <= -1 or np.any(np.diff(arrival_on_grid) <= 0):
+        raise ValueError(
+            "an ear's delay shrinks faster than time passes: the source comes toward it faster than "
+            "sound, or nearly as fast where the measured HRIR onsets step between distances"
+        )
+    emission = np.interp(arrival_times, arrival_on_grid, grid)
+    before, after = arrival_times < arrival_on_grid[0], arrival_times > arrival_on_grid[-1]
+    emission[before] = arrival_times[before] - delay(0.0)
+    emission[after] = arrival_times[after] - delay(duration)
+    for _ in range(50):
+        clipped = np.clip(emission, 0.0, duration)
+        inside = (emission > 0) & (emission < duration)
+        slope = 1 + np.where(inside, rate(clipped), 0.0)
+        updated = emission - (emission + delay(clipped) - arrival_times) / slope
         change = np.max(np.abs(updated - emission))
         emission = updated
         if change < 1e-12:
             return emission
-    raise ValueError("the ear delays change too fast to follow; is the source faster than sound?")
+    raise ValueError("the ear delays change too fast to follow")
 
 
 def move_sound(
@@ -574,7 +592,9 @@ def move_sound(
     out = np.zeros((n_out + shapes.shape[-1] - 1, 2))
     emission_by_ear = []
     for ear in range(2):
-        emission = _emission_times(arrival_times, CubicSpline(lookup_times, ear_delays[:, ear]), duration)
+        emission = _emission_times(
+            arrival_times, CubicSpline(lookup_times, ear_delays[:, ear]), duration, lookup_times
+        )
         emission_by_ear.append(emission)
         arriving = _read_between_samples(signal, emission * fs) * level(np.clip(emission, 0, duration))
         # raised-cosine cross-fades between shapes, in the emission time of each output sample
