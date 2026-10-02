@@ -165,7 +165,7 @@ band's envelope modulates a band of noise in its place (Shannon et al., 1995). I
 standard way to let a listener with normal hearing hear roughly what an implant passes on.</p>
 <p>Everything on this page is one function, <code>so.noise_vocode</code>, applied to the sentence from
 <a href="speech.html">Seeing speech</a> and to a short melody:</p>
-<ul><li><a href="#h-how-many-bands">How many bands</a>: from a coarse picture of the spectrum to a fine one.</li><li><a href="#h-noise-or-tones">Noise or tones</a>: what carries the envelopes.</li><li><a href="#h-pitch-from-the-envelope">Pitch from the envelope</a>: the weak temporal pitch cue an implant leaves.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the sentence read by a woman, through the same vocoders.</li><li><a href="#h-a-melody">A melody</a>: music, which cannot do without pitch.</li><li><a href="#h-what-this-simulation-leaves-out">What this simulation leaves out</a>: current spread, insertion depth, and the rest.</li></ul>
+<ul><li><a href="#h-how-many-bands">How many bands</a>: from a coarse picture of the spectrum to a fine one.</li><li><a href="#h-noise-or-tones">Noise or tones</a>: what carries the envelopes.</li><li><a href="#h-pitch-from-the-envelope">Pitch from the envelope</a>: the weak temporal pitch cue an implant leaves.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the sentence read by a female talker, through the same vocoders.</li><li><a href="#h-a-melody">A melody</a>: music, which cannot do without pitch.</li><li><a href="#h-what-this-simulation-leaves-out">What this simulation leaves out</a>: current spread, insertion depth, and the rest.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -399,21 +399,21 @@ sound = vocoded</code></pre></details>
 </section>
 <section aria-labelledby="h-a-higher-voice">
 <h2 id="h-a-higher-voice">A higher voice</h2>
-<p>The same sentence read by a woman (slt). Her fundamental, about 150 to 230 Hz here by
-<code>so.f0_track</code>, is higher than the man's, so a temporal cue has to follow faster pulses.</p>
+<p>The same sentence read by a female talker (slt). The female fundamental, about 150 to 230 Hz here
+by <code>so.f0_track</code>, is higher than the male talker's, so a temporal cue has to follow faster pulses.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
 track_female = so.f0_track(sentence_female)
-print(f&quot;her F0: {track_female}&quot;)</code></pre></details><pre class="out">her F0: F0Track(528 time windows, 1 ch, 68% voiced, F0 148-227 Hz)</pre></div>
+print(f&quot;female F0: {track_female}&quot;)</code></pre></details><pre class="out">female F0: F0Track(528 time windows, 1 ch, 68% voiced, F0 148-227 Hz)</pre></div>
 
 <article class="sound" id="d-cf0" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.3254814896820064, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.4029301669306835, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
   <div class="about">
-    <h3>Her sentence</h3>
-    <div class="desc"><p>Her sentence as recorded.</p></div>
-    <audio controls preload="metadata" src="audio/cf0_her_sentence.flac"></audio>
-    <p class="file">cf0_her_sentence.flac, 2.6 s, mono</p>
+    <h3>Female talker</h3>
+    <div class="desc"><p>The female talker's sentence as recorded.</p></div>
+    <audio controls preload="metadata" src="audio/cf0_female_talker.flac"></audio>
+    <p class="file">cf0_female_talker.flac, 2.6 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/cf0_her_sentence.png" width="1000" height="420" alt="Plots of the her sentence sound" loading="lazy">
+    <img src="img/cf0_female_talker.png" width="1000" height="420" alt="Plots of the female talker sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead = show(sentence_female)
@@ -422,15 +422,15 @@ sound = sentence_female</code></pre></details>
 
 <article class="sound" id="d-cf8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188944, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
   <div class="about">
-    <h3>Her sentence, eight bands</h3>
-    <div class="desc"><p>Through eight noise bands with 50 Hz envelopes. As with his sentence, the words come through
+    <h3>Female talker, eight bands</h3>
+    <div class="desc"><p>Through eight noise bands with 50 Hz envelopes. As with the male talker's sentence, the words come through
 and the intonation does not; with the pitch gone, the main difference left between the two
 vocoded voices is where their formants sit.</p></div>
-    <audio controls preload="metadata" src="audio/cf8_her_sentence_eight_bands.flac"></audio>
-    <p class="file">cf8_her_sentence_eight_bands.flac, 2.6 s, mono</p>
+    <audio controls preload="metadata" src="audio/cf8_female_talker_eight_bands.flac"></audio>
+    <p class="file">cf8_female_talker_eight_bands.flac, 2.6 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/cf8_her_sentence_eight_bands.png" width="1000" height="640" alt="Plots of the her sentence, eight bands sound" loading="lazy">
+    <img src="img/cf8_female_talker_eight_bands.png" width="1000" height="640" alt="Plots of the female talker, eight bands sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, rng=8))
@@ -440,14 +440,15 @@ sound = vocoded</code></pre></details>
 
 <article class="sound" id="d-cf8p" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03671927083333337, &quot;bottom&quot;: 0.20643899762188944, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.25726469206633373, &quot;bottom&quot;: 0.5658460135000725, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.621187885651765, &quot;bottom&quot;: 0.9297692070855035, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
   <div class="about">
-    <h3>Her sentence, eight bands, 300 Hz envelopes</h3>
-    <div class="desc"><p>Eight bands with 300 Hz envelopes. Her fundamental is still below the cutoff, so the envelopes
-pulse with it, as his do. Listen for the intonation, and compare it with his above.</p></div>
-    <audio controls preload="metadata" src="audio/cf8p_her_sentence_eight_bands_300_hz_envelopes.flac"></audio>
-    <p class="file">cf8p_her_sentence_eight_bands_300_hz_envelopes.flac, 2.6 s, mono</p>
+    <h3>Female talker, eight bands, 300 Hz envelopes</h3>
+    <div class="desc"><p>Eight bands with 300 Hz envelopes. The female fundamental is still below the cutoff, so the
+envelopes pulse with it, as the male talker's do. Listen for the intonation, and compare it with
+the male talker's above.</p></div>
+    <audio controls preload="metadata" src="audio/cf8p_female_talker_eight_bands_300_hz_envelopes.flac"></audio>
+    <p class="file">cf8p_female_talker_eight_bands_300_hz_envelopes.flac, 2.6 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/cf8p_her_sentence_eight_bands_300_hz_envelopes.png" width="1000" height="640" alt="Plots of the her sentence, eight bands, 300 hz envelopes sound" loading="lazy">
+    <img src="img/cf8p_female_talker_eight_bands_300_hz_envelopes.png" width="1000" height="640" alt="Plots of the female talker, eight bands, 300 hz envelopes sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, env_lowpass=300, rng=8))

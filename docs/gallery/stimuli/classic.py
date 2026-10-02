@@ -115,9 +115,9 @@ for speaker, spectrum in zip(("bdl", "slt"), pair_spectra, strict=True):
 
 # %% [about]
 # The two long-term spectra, smoothed to a third of an octave, each relative to its own peak. Below
-# 125 Hz the female talker's sentence has almost nothing, since her fundamental never goes that low,
-# and the octave from 125 to 250 Hz, where her fundamental lies, holds most of her power. In this
-# pair hers is also lower from 2 to 4 kHz and higher from 4 to 8 kHz.
+# 125 Hz the female talker's sentence has almost nothing, since the female fundamental never goes that
+# low, and the octave from 125 to 250 Hz, where the female fundamental lies, holds most of its power.
+# In this pair the female spectrum is also lower from 2 to 4 kHz and higher from 4 to 8 kHz.
 
 # %% [figure k2] Long-term spectra of a male and a female talker
 fig, ax = plt.subplots(figsize=(10, 3.6), layout="constrained")

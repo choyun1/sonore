@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html" aria-current="page">Formant synthesis</a><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a></li><li><a href="#h-source-times-filter">Source times filter</a></li><li><a href="#h-six-vowels">Six vowels</a></li><li><a href="#h-a-woman-s-vowels">A woman's vowels</a></li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a></li><li><a href="#h-noise">Noise</a></li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a></li><li><a href="#h-voice-quality">Voice quality</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html" aria-current="page">Formant synthesis</a><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a></li><li><a href="#h-source-times-filter">Source times filter</a></li><li><a href="#h-six-vowels">Six vowels</a></li><li><a href="#h-female-vowels">Female vowels</a></li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a></li><li><a href="#h-noise">Noise</a></li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a></li><li><a href="#h-voice-quality">Voice quality</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="listeners" open><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -166,7 +166,7 @@ formants are second-order resonators</p>
 formant at <span class="tex">F_k</span> Hz, <span class="tex">B_k</span> Hz wide, sampled every <span class="tex">T</span> seconds. Every parameter is a number or a
 track of <code>(times, values)</code>, so the sounds below are written down rather than recorded, and any
 cue can be changed while the others stay put.</p>
-<ul><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a>: the source, then one formant at a time.</li><li><a href="#h-source-times-filter">Source times filter</a>: the same vowel as a product of spectra.</li><li><a href="#h-six-vowels">Six vowels</a>: Peterson and Barney's averages, and a continuum between two.</li><li><a href="#h-a-woman-s-vowels">A woman's vowels</a>: the same six vowels with women's formants and pitch.</li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a>: /ba/, /da/ and /ga/ differ only in where the formants start.</li><li><a href="#h-noise">Noise</a>: frication, aspiration and breathy voice.</li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a>: why the parallel formants alternate in sign.</li><li><a href="#h-voice-quality">Voice quality</a>: the same vowel from a tense, a modal and a lax glottal pulse.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: the rest of voice quality, and copying a recording.</li></ul>
+<ul><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a>: the source, then one formant at a time.</li><li><a href="#h-source-times-filter">Source times filter</a>: the same vowel as a product of spectra.</li><li><a href="#h-six-vowels">Six vowels</a>: Peterson and Barney's averages, and a continuum between two.</li><li><a href="#h-female-vowels">Female vowels</a>: the same six vowels with female formants and pitch.</li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a>: /ba/, /da/ and /ga/ differ only in where the formants start.</li><li><a href="#h-noise">Noise</a>: frication, aspiration and breathy voice.</li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a>: why the parallel formants alternate in sign.</li><li><a href="#h-voice-quality">Voice quality</a>: the same vowel from a tense, a modal and a lax glottal pulse.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: the rest of voice quality, and copying a recording.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -214,7 +214,7 @@ def show(snd, title, formants=()):
 </section>
 <section aria-labelledby="h-a-vowel-piece-by-piece">
 <h2 id="h-a-vowel-piece-by-piece">A vowel, piece by piece</h2>
-<p>The vowel of "hod", with Peterson and Barney's (1952) average formants for men: 730, 1090 and
+<p>The vowel of "hod", with Peterson and Barney's (1952) average male formants: 730, 1090 and
 2440 Hz. The pitch falls from 130 to 100 Hz, as at the end of a statement. Here the pieces are
 put together by hand with <code>so.resonator</code>, the same resonator <code>so.klatt_synthesize</code> uses.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">DUR = 1.0
@@ -362,8 +362,8 @@ ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
 </section>
 <section aria-labelledby="h-six-vowels">
 <h2 id="h-six-vowels">Six vowels</h2>
-<p>Peterson and Barney (1952) measured the formants of ten American English vowels, spoken in
-words of the form h-vowel-d by men, women and children. Their averages for men, for six of
+<p>Peterson and Barney (1952) measured the formants of ten American English vowels, spoken in words
+of the form h-vowel-d by male and female adults and by children. Their male averages, for six of
 the vowels, synthesized with everything else the same: the pitch, the higher formants and the
 bandwidths.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {
@@ -450,13 +450,13 @@ for i, p in enumerate(steps):
         playhead[1].plot([step_start, step_start + STEP_DUR], [p[name] / 1000] * 2, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)</code></pre></details>
 </article>
 </section>
-<section aria-labelledby="h-a-woman-s-vowels">
-<h2 id="h-a-woman-s-vowels">A woman's vowels</h2>
-<p>Peterson and Barney's averages for women, for the same six vowels. Every formant is higher
-than the men's, since women's vocal tracts are on average shorter, but not by one common
+<section aria-labelledby="h-female-vowels">
+<h2 id="h-female-vowels">Female vowels</h2>
+<p>Peterson and Barney's female averages, for the same six vowels. Every formant is higher
+than the male ones, since female vocal tracts are on average shorter, but not by one common
 factor: the printout gives the ratios, from 1.04 to 1.30. The pitch is higher too, falling
-from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above the women's F3.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS_WOMEN = {
+from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above the female F3.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS_FEMALE = {
     &quot;heed&quot;: (310, 2790, 3310),
     &quot;head&quot;: (610, 2330, 2990),
     &quot;had&quot;: (860, 2050, 2850),
@@ -464,8 +464,8 @@ from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above t
     &quot;hawed&quot;: (590, 920, 2710),
     &quot;who&#x27;d&quot;: (370, 950, 2670),
 }
-parts_women = []
-for f1, f2, f3 in VOWELS_WOMEN.values():
+parts_female = []
+for f1, f2, f3 in VOWELS_FEMALE.values():
     v = so.klatt_synthesize(
         VOWEL_DUR,
         FS,
@@ -477,35 +477,35 @@ for f1, f2, f3 in VOWELS_WOMEN.values():
         F4=4100,
         F5=4900,
     )
-    parts_women += [v, gap]
-for word, (f1, f2, f3) in VOWELS_WOMEN.items():
-    men = VOWELS[word]
-    ratios = &quot;, &quot;.join(f&quot;{women / man:.2f}&quot; for women, man in zip((f1, f2, f3), men, strict=True))
-    print(f&quot;{word:6} women / men, F1 F2 F3: {ratios}&quot;)</code></pre></details><pre class="out">heed   women / men, F1 F2 F3: 1.15, 1.22, 1.10
-head   women / men, F1 F2 F3: 1.15, 1.27, 1.21
-had    women / men, F1 F2 F3: 1.30, 1.19, 1.18
-hod    women / men, F1 F2 F3: 1.16, 1.12, 1.15
-hawed  women / men, F1 F2 F3: 1.04, 1.10, 1.12
-who&#x27;d  women / men, F1 F2 F3: 1.23, 1.09, 1.19</pre></div>
+    parts_female += [v, gap]
+for word, (f1, f2, f3) in VOWELS_FEMALE.items():
+    male = VOWELS[word]
+    ratios = &quot;, &quot;.join(f&quot;{f / m:.2f}&quot; for f, m in zip((f1, f2, f3), male, strict=True))
+    print(f&quot;{word:6} female / male, F1 F2 F3: {ratios}&quot;)</code></pre></details><pre class="out">heed   female / male, F1 F2 F3: 1.15, 1.22, 1.10
+head   female / male, F1 F2 F3: 1.15, 1.27, 1.21
+had    female / male, F1 F2 F3: 1.30, 1.19, 1.18
+hod    female / male, F1 F2 F3: 1.16, 1.12, 1.15
+hawed  female / male, F1 F2 F3: 1.04, 1.10, 1.12
+who&#x27;d  female / male, F1 F2 F3: 1.23, 1.09, 1.19</pre></div>
 
 <article class="sound" id="d-fw4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}]">
   <div class="about">
-    <h3>Six vowels with the formants of women</h3>
-    <div class="desc"><p>The six vowels with women's formants. The harmonics are now about 215 Hz apart, so each
-formant peak is drawn by fewer of them than in the men's vowels above.</p></div>
-    <audio controls preload="metadata" src="audio/fw4_six_vowels_with_the_formants_of_women.flac"></audio>
-    <p class="file">fw4_six_vowels_with_the_formants_of_women.flac, 3.4 s, mono</p>
+    <h3>Six vowels with female formants</h3>
+    <div class="desc"><p>The six vowels with female formants. The harmonics are now about 215 Hz apart, so each
+formant peak is drawn by fewer of them than in the male vowels above.</p></div>
+    <audio controls preload="metadata" src="audio/fw4_six_vowels_with_female_formants.flac"></audio>
+    <p class="file">fw4_six_vowels_with_female_formants.flac, 3.4 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/fw4_six_vowels_with_the_formants_of_women.png" width="1000" height="420" alt="Plots of the six vowels with the formants of women sound" loading="lazy">
+    <img src="img/fw4_six_vowels_with_female_formants.png" width="1000" height="420" alt="Plots of the six vowels with female formants sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.concat(parts_women))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.concat(parts_female))
 tracks = [
-    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS_WOMEN.values()], 2))
+    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS_FEMALE.values()], 2))
     for i in range(3)
 ]
-fig, playhead = show(sound, &quot;heed, head, had, hod, hawed, who&#x27;d, women&#x27;s formants&quot;)
+fig, playhead = show(sound, &quot;heed, head, had, hod, hawed, who&#x27;d, female formants&quot;)
 for tt, ff in tracks:
     for j in range(6):
         playhead[1].plot(tt[2 * j : 2 * j + 2], ff[2 * j : 2 * j + 2] / 1000, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)</code></pre></details>
@@ -513,29 +513,29 @@ for tt, ff in tracks:
 
 <article class="still" id="d-fw5">
   <div class="about">
-    <h3>The vowels of men and women by their first two formants</h3>
-    <div class="desc"><p>Both sets of vowels by their first two formants, joined vowel by vowel. The women's vowel
+    <h3>Male and female vowels by their first two formants</h3>
+    <div class="desc"><p>Both sets of vowels by their first two formants, joined vowel by vowel. The female vowel
 space is shifted up and outward, most of all in F2 for the front vowels.</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/fw5_the_vowels_of_men_and_women_by_their_first_two_formants.png" width="500" height="400" alt="The vowels of men and women by their first two formants" loading="lazy">
+    <img src="img/fw5_male_and_female_vowels_by_their_first_two_formants.png" width="500" height="400" alt="Male and female vowels by their first two formants" loading="lazy">
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(5, 4), layout=&quot;constrained&quot;)
 for word in VOWELS:
-    (f1_men, f2_men, _), (f1_women, f2_women, _) = VOWELS[word], VOWELS_WOMEN[word]
-    ax.plot([f2_men, f2_women], [f1_men, f1_women], color=&quot;0.7&quot;, lw=0.8)
-    ax.annotate(word, (f2_women, f1_women), textcoords=&quot;offset points&quot;, xytext=(6, 4))
-ax.plot([v[1] for v in VOWELS.values()], [v[0] for v in VOWELS.values()], &quot;o&quot;, color=&quot;C0&quot;, label=&quot;men&quot;)
+    (f1_male, f2_male, _), (f1_female, f2_female, _) = VOWELS[word], VOWELS_FEMALE[word]
+    ax.plot([f2_male, f2_female], [f1_male, f1_female], color=&quot;0.7&quot;, lw=0.8)
+    ax.annotate(word, (f2_female, f1_female), textcoords=&quot;offset points&quot;, xytext=(6, 4))
+ax.plot([v[1] for v in VOWELS.values()], [v[0] for v in VOWELS.values()], &quot;o&quot;, color=&quot;C0&quot;, label=&quot;male&quot;)
 ax.plot(
-    [v[1] for v in VOWELS_WOMEN.values()],
-    [v[0] for v in VOWELS_WOMEN.values()],
+    [v[1] for v in VOWELS_FEMALE.values()],
+    [v[0] for v in VOWELS_FEMALE.values()],
     &quot;o&quot;,
     color=&quot;C1&quot;,
-    label=&quot;women&quot;,
+    label=&quot;female&quot;,
 )
 ax.set(xlabel=&quot;F2 (Hz)&quot;, ylabel=&quot;F1 (Hz)&quot;, xlim=(3000, 600), ylim=(950, 200))
 ax.legend(loc=&quot;lower left&quot;, fontsize=8)
-ax.set_title(&quot;Peterson and Barney&#x27;s averages, men and women&quot;)</code></pre></details>
+ax.set_title(&quot;Peterson and Barney&#x27;s averages, male and female&quot;)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-consonants-from-transitions">
@@ -760,7 +760,7 @@ glottal flow's derivative <span class="tex">E(t)</span>: an exponentially growin
 Fant (1995) set the whole shape with one number,</p>
 <div class="tex display">R_d = \frac{U_0}{0.11\, E_e T_0},</div>
 <p>the peak flow <span class="tex">U_0</span> against the strength of the closure, in a period <span class="tex">T_0</span>: about 0.3 for a
-tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical men's
+tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical male
 voices. <code>so.glottal_source</code> makes LF pulses from their harmonics, which have an exact
 formula, so nothing aliases, and <code>so.klatt_synthesize</code> uses them with <code>SS=3</code> (the source
 switch of Klatt &amp; Klatt's KLSYN88) and <code>RD</code>.</p>
@@ -845,7 +845,7 @@ fig, playhead = show(sound, &quot;Rd 0.5, Rd 1, Rd 2.5&quot;, [730, 1090, 2440])
 <article class="sound" id="d-fq4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}]">
   <div class="about">
     <h3>The 1980 source, then LF at Rd 0.7</h3>
-    <div class="desc"><p>Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical men's voices.
+    <div class="desc"><p>Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical male voices.
 The LF voice is darker: at 3 kHz its harmonics are about 12 dB weaker, relative to the first.</p></div>
     <audio controls preload="metadata" src="audio/fq4_the_1980_source_then_lf_at_rd_0.7.flac"></audio>
     <p class="file">fq4_the_1980_source_then_lf_at_rd_0.7.flac, 2.2 s, mono</p>

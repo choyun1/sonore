@@ -473,19 +473,20 @@ sound = sentence
 #
 # Everything above used one male voice. Female voices sit about half an octave to an octave higher,
 # and that changes which picture works. Here is the same sentence read by a female talker (CMU
-# ARCTIC, speaker slt). Her harmonics are about one and a half times as far apart as his, so:
+# ARCTIC, speaker slt). The female harmonics are about one and a half times as far apart as the male ones,
+# so:
 #
-# - The narrowband window resolves her harmonics even more clearly, since they are further apart
+# - The narrowband window resolves the female harmonics even more clearly, since they are further apart
 #   than its bandwidth by a wider margin.
-# - The wideband window, 5 ms, is now nearly one of her periods long, so it no longer sees one
-#   pulse at a time and her striations blur.
+# - The wideband window, 5 ms, is now nearly one female period long, so it no longer sees one
+#   pulse at a time and the female striations blur.
 # - Each formant is drawn by fewer harmonics, so the envelope between harmonics is a guess. This is
 #   why female voices have long been harder to analyze: at an $F_0$ of 200 Hz and above, a formant
 #   peak that falls between two harmonics is simply not in the spectrum.
 #   [`docs/design/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md)
 #   measures how much the envelope estimates suffer.
 #
-# The pitch-adaptive window adjusts by itself: three of her periods are about 16 ms. The F0 track
+# The pitch-adaptive window adjusts by itself: three female periods are about 16 ms. The F0 track
 # here is from `so.f0_track`, sonore's own tracker, since this recording has no stored track.
 
 # %%
@@ -503,10 +504,10 @@ print(f"pitch-adaptive windows for slt: {lengths_female.min():.1f} to {lengths_f
 
 # %% [about]
 # The female talker's sentence through the windows used above for the male talker's. Top: the
-# waveform. Then the wideband spectrogram, Hann 5 ms, where her pulses, about 5.5 ms apart, are
-# barely separate. Then the narrowband one, Hann 33.3 ms, with ten times her F0 (dashed), where her
-# harmonics stand well apart. Bottom: the pitch-adaptive frame, 3 of her periods long. Compare with
-# [Two classic spectrograms](#d-27) and [Following the pitch](#d-29).
+# waveform. Then the wideband spectrogram, Hann 5 ms, where the female pulses, about 5.5 ms apart, are
+# barely separate. Then the narrowband one, Hann 33.3 ms, with ten times the female F0 (dashed),
+# where the female harmonics stand well apart. Bottom: the pitch-adaptive frame, 3 female periods
+# long. Compare with [Two classic spectrograms](#d-27) and [Following the pitch](#d-29).
 
 # %% [demo f1] The same sentence, a higher voice
 fig, axes = panels(4, [0.55, 1, 1, 1], height=9.0)

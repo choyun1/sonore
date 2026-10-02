@@ -158,7 +158,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   <h1>Classic stimuli</h1>
 <p>A few stimuli that turn up again and again in hearing research, each built in a line or two
 from sonore's generators.</p>
-<ul><li><a href="#h-speech-shaped-noise">Speech-shaped noise</a>: noise with the long-term spectrum of speech, and none of its modulation, and the long-term spectra of a man and a woman.</li><li><a href="#h-beats-and-roughness">Beats and roughness</a>: two tones close in frequency, from a slow wobble to roughness to two separate tones, and amplitude modulation as the same thing seen another way.</li><li><a href="#h-binaural-beats">Binaural beats</a>: one tone in each ear, a beat that exists only in the head.</li><li><a href="#h-random-tone-sequences">Random tone sequences</a>: concurrent streams of tones at random frequencies.</li><li><a href="#h-band-limited-waveforms">Band-limited waveforms</a>: a sawtooth gliding up four octaves, with and without aliasing.</li></ul>
+<ul><li><a href="#h-speech-shaped-noise">Speech-shaped noise</a>: noise with the long-term spectrum of speech, and none of its modulation, and the long-term spectra of a male and a female talker.</li><li><a href="#h-beats-and-roughness">Beats and roughness</a>: two tones close in frequency, from a slow wobble to roughness to two separate tones, and amplitude modulation as the same thing seen another way.</li><li><a href="#h-binaural-beats">Binaural beats</a>: one tone in each ear, a beat that exists only in the head.</li><li><a href="#h-random-tone-sequences">Random tone sequences</a>: concurrent streams of tones at random frequencies.</li><li><a href="#h-band-limited-waveforms">Band-limited waveforms</a>: a sawtooth gliding up four octaves, with and without aliasing.</li></ul>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import sawtooth
@@ -235,11 +235,11 @@ would spread over the slow rates of syllables and words.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(ssn)
 fig, playhead = show(sound, fmax=8000, win_dur=20e-3)</code></pre></details>
 </article>
-<p>Those sentences are all by men. Averaged over many talkers, Byrne et al. (1994) found men's
-and women's long-term spectra nearly the same from 250 Hz to 5 kHz, with men's higher at
-160 Hz and below, where their fundamentals lie. Two single sentences, the same words read by
-one man (bdl) and one woman (slt), can differ by more. The cell prints how each sentence's
-power divides among octave bands.</p>
+<p>Those sentences are all by male talkers. Averaged over many talkers, Byrne et al. (1994) found
+male and female long-term spectra nearly the same from 250 Hz to 5 kHz, with male ones higher at
+160 Hz and below, where their fundamentals lie. Two single sentences, the same words read by one
+male talker (bdl) and one female talker (slt), can differ by more. The cell prints how each
+sentence's power divides among octave bands.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">pair = [so.load(f&quot;docs/speech/{name}_arctic_a0131.flac&quot;).normalize(rms=0.1) for name in (&quot;bdl&quot;, &quot;slt&quot;)]
 pair_spectra = [so.long_term_spectrum([sentence]) for sentence in pair]
 octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
@@ -256,17 +256,17 @@ slt, share [dB]       -41.1  -3.3  -7.9  -5.3 -13.0 -25.8 -18.7</pre></div>
 
 <article class="still" id="d-k2">
   <div class="about">
-    <h3>Long-term spectra of a man and a woman</h3>
-    <div class="desc"><p>The two long-term spectra, smoothed to a third of an octave, each relative to its own peak.
-Below 125 Hz the woman's sentence has almost nothing, since her fundamental never goes that
-low, and the octave from 125 to 250 Hz, where her fundamental lies, holds most of her power. In
-this pair hers is also lower from 2 to 4 kHz and higher from 4 to 8 kHz.</p></div>
+    <h3>Long-term spectra of a male and a female talker</h3>
+    <div class="desc"><p>The two long-term spectra, smoothed to a third of an octave, each relative to its own peak. Below
+125 Hz the female talker's sentence has almost nothing, since the female fundamental never goes that
+low, and the octave from 125 to 250 Hz, where the female fundamental lies, holds most of its power.
+In this pair the female spectrum is also lower from 2 to 4 kHz and higher from 4 to 8 kHz.</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/k2_long-term_spectra_of_a_man_and_a_woman.png" width="1000" height="360" alt="Long-term spectra of a man and a woman" loading="lazy">
+    <img src="img/k2_long-term_spectra_of_a_male_and_a_female_talker.png" width="1000" height="360" alt="Long-term spectra of a male and a female talker" loading="lazy">
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(10, 3.6), layout=&quot;constrained&quot;)
-for speaker, spectrum in zip((&quot;man (bdl)&quot;, &quot;woman (slt)&quot;), pair_spectra, strict=True):
+for speaker, spectrum in zip((&quot;male (bdl)&quot;, &quot;female (slt)&quot;), pair_spectra, strict=True):
     spectrum.smooth(1 / 3).plot(ax, label=speaker)
 ax.set_xlim(50, 8000)
 ax.legend()

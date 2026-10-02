@@ -179,7 +179,7 @@ fig, playhead = show(sound, ir)
 
 # %% [about]
 # The same sentence read by a female talker (slt), in the same room. The impulse response is the
-# room's, not the talker's, so it does to her voice what it did to his.
+# room's, not the talker's, so it does to the female voice what it did to the male one.
 
 # %% [demo r3] A higher voice in the same room
 sentence_female = so.load("docs/speech/slt_arctic_a0131.flac").resample(FS)

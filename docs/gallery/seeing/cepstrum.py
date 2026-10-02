@@ -285,9 +285,9 @@ t_female, f0_cep_female, peak_female = cep_female.f0(f_lo=75, f_hi=400)
 track_female = so.f0_track(sentence_female)
 
 # %% [about]
-# One time window of her sentence, drawn as for the male talker's above. The harmonics are further
-# apart, so the log spectrum ripples less often, and the cepstral peak sits at a shorter quefrency.
-# The lifter cutoff, at half her period, is lower too.
+# One time window of the female talker's sentence, drawn as for the male talker's above. The
+# harmonics are further apart, so the log spectrum ripples less often, and the cepstral peak sits
+# at a shorter quefrency. The lifter cutoff, at half the female period, is lower too.
 
 # %% [figure c6] One time window, a higher voice
 i_female = int(np.argmin(np.abs(t_female - 0.60)))
@@ -324,8 +324,8 @@ for ax in (ax0, ax1):
     ax.grid(ls=":")
 
 # %% [about]
-# Top: her cepstrogram, with the tracker's pitch period drawn over it; the bright line runs lower
-# than the male talker's. Bottom: cepstral F0 beside `so.f0_track`.
+# Top: the female talker's cepstrogram, with the tracker's pitch period drawn over it; the bright
+# line runs lower than the male talker's. Bottom: cepstral F0 beside `so.f0_track`.
 
 # %% [demo c7] The cepstrogram of a higher voice
 voiced_female = track_female.voiced[0]

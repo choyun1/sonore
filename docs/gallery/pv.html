@@ -160,7 +160,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 Golden, 1966) pulls the two apart: it measures the frequency of every partial in every short
 time window, precisely enough to rebuild the sound with its time windows spaced differently, or its
 partials moved, while everything else stays the same.</p>
-<ul><li><a href="#h-how-it-works">How it works</a>: the STFT, and the frequency hidden in how fast each bin's phase turns.</li><li><a href="#h-changing-duration">Changing duration</a>: time windows resynthesized further apart, and why their phases have to be locked.</li><li><a href="#h-changing-pitch">Changing pitch</a>: stretching, then resampling.</li><li><a href="#h-a-higher-voice">A higher voice</a>: a woman's sentence stretched, and lowered to the man's pitch.</li><li><a href="#h-moving-the-partials">Moving the partials</a>: an oscillator bank with every frequency remapped.</li></ul>
+<ul><li><a href="#h-how-it-works">How it works</a>: the STFT, and the frequency hidden in how fast each bin's phase turns.</li><li><a href="#h-changing-duration">Changing duration</a>: time windows resynthesized further apart, and why their phases have to be locked.</li><li><a href="#h-changing-pitch">Changing pitch</a>: stretching, then resampling.</li><li><a href="#h-a-higher-voice">A higher voice</a>: a female talker's sentence stretched, and lowered to the male talker's pitch.</li><li><a href="#h-moving-the-partials">Moving the partials</a>: an oscillator bank with every frequency remapped.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
@@ -377,8 +377,8 @@ fig, playhead = show(sound, fmax=5000)</code></pre></details>
 </section>
 <section aria-labelledby="h-a-higher-voice">
 <h2 id="h-a-higher-voice">A higher voice</h2>
-<p>The same sentence read by a woman (slt), whose voice is about a fifth higher than the man's,
-so lowering it by a fifth brings her pitch to his.</p>
+<p>The same sentence read by a female talker (slt), whose voice is about a fifth higher than the male
+talker's, so lowering it by a fifth brings the female pitch to the male one.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
 
 
@@ -390,19 +390,19 @@ def median_f0(snd):
 
 lowered = so.pitch_shift(sentence_female, -7)
 print(
-    f&quot;median F0: him {median_f0(sentence):.0f} Hz, her {median_f0(sentence_female):.0f} Hz, &quot;
-    f&quot;her down a fifth {median_f0(lowered):.0f} Hz&quot;
-)</code></pre></details><pre class="out">median F0: him 119 Hz, her 183 Hz, her down a fifth 122 Hz</pre></div>
+    f&quot;median F0: male {median_f0(sentence):.0f} Hz, female {median_f0(sentence_female):.0f} Hz, &quot;
+    f&quot;female down a fifth {median_f0(lowered):.0f} Hz&quot;
+)</code></pre></details><pre class="out">median F0: male 119 Hz, female 183 Hz, female down a fifth 122 Hz</pre></div>
 
 <article class="sound" id="d-p4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.979833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33787374982768104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.270125}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.5900505290464744, &quot;top&quot;: 0.4475517194177351, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.270125}]">
   <div class="about">
-    <h3>Her sentence, twice as long</h3>
-    <div class="desc"><p>Her sentence twice as long, with phase locking.</p></div>
-    <audio controls preload="metadata" src="audio/p4_her_sentence_twice_as_long.flac"></audio>
-    <p class="file">p4_her_sentence_twice_as_long.flac, 5.3 s, mono</p>
+    <h3>Female talker, twice as long</h3>
+    <div class="desc"><p>The female talker's sentence twice as long, with phase locking.</p></div>
+    <audio controls preload="metadata" src="audio/p4_female_talker_twice_as_long.flac"></audio>
+    <p class="file">p4_female_talker_twice_as_long.flac, 5.3 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/p4_her_sentence_twice_as_long.png" width="1000" height="620" alt="Plots of the her sentence, twice as long sound" loading="lazy">
+    <img src="img/p4_female_talker_twice_as_long.png" width="1000" height="620" alt="Plots of the female talker, twice as long sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.time_stretch(sentence_female, 2))
@@ -411,17 +411,18 @@ fig, playhead = show(sound, fmax=5000)</code></pre></details>
 
 <article class="sound" id="d-p5" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.979833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.33787374982768104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5869736059695514, &quot;top&quot;: 0.4475517194177351, &quot;bottom&quot;: 0.9275036976366487, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
   <div class="about">
-    <h3>Her sentence down a fifth</h3>
-    <div class="desc"><p>Her sentence down a fifth, the reverse of the man's sentence up a fifth above. Her pitch now
-sits at his, as the printout shows, but her formants have moved down by a third as well. In
-the averages of Hillenbrand et al. (1995), women's first three formants are 11 to 28% higher
-than men's in the vowels of heed, hod and who'd, so lowering hers by a third puts them below
-a typical man's: the voice belongs to a larger speaker than either.</p></div>
-    <audio controls preload="metadata" src="audio/p5_her_sentence_down_a_fifth.flac"></audio>
-    <p class="file">p5_her_sentence_down_a_fifth.flac, 2.6 s, mono</p>
+    <h3>Female talker, down a fifth</h3>
+    <div class="desc"><p>The female talker's sentence down a fifth, the reverse of the male talker's sentence up a fifth
+above. The female pitch now sits at the male one, as the printout shows, but the female formants
+have moved down by a third as well. In
+the averages of Hillenbrand et al. (1995), female first three formants are 11 to 28% higher than
+male ones in the vowels of heed, hod and who'd, so lowering the female ones by a third puts them below a
+typical male talker's: the voice belongs to a larger speaker than either.</p></div>
+    <audio controls preload="metadata" src="audio/p5_female_talker_down_a_fifth.flac"></audio>
+    <p class="file">p5_female_talker_down_a_fifth.flac, 2.6 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/p5_her_sentence_down_a_fifth.png" width="1000" height="620" alt="Plots of the her sentence down a fifth sound" loading="lazy">
+    <img src="img/p5_female_talker_down_a_fifth.png" width="1000" height="620" alt="Plots of the female talker, down a fifth sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(lowered)

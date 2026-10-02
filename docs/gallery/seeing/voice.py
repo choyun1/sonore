@@ -34,7 +34,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Pitch range](#h-pitch-range): a monotone and a doubled range, around the same median.
 # - [The aperiodicity](#h-the-aperiodicity): kept in place or moved with the formants.
 # - [Toward another talker](#h-toward-another-talker): the male talker's sentence moved toward the
-#   female talker's by one pitch ratio and one formant ratio, beside hers.
+#   female talker's by one pitch ratio and one formant ratio, beside the female talker's.
 # - [Any pitch track, any envelope](#h-any-pitch-track-any-envelope): three trackers and four
 #   envelopes mixed, scored on resynthesis.
 # - [What this page leaves out](#h-what-this-page-leaves-out).
@@ -309,30 +309,31 @@ print(f"median voiced F0: {original_f0:.0f} Hz (bdl), {median_f0(female):.0f} Hz
 print(f"pitch ratio: {pitch_ratio:.2f}")
 
 # %% [about]
-# Her sentence, for reference, with `so.f0_track`'s contour.
+# The female talker's sentence, for reference, with `so.f0_track`'s contour.
 
-# %% [demo vc13] Her sentence
+# %% [demo vc13] Female talker
 sound = female
 fig, playhead = show(sound, "the sentence read by slt", (female_track.t, female_track.f0[0]))
 
 # %% [about]
-# His sentence at her median pitch, the formants as they were.
+# The male talker's sentence at the female median pitch, the formants as they were.
 
-# %% [demo vc14] His sentence, her pitch
+# %% [demo vc14] Male talker, female pitch
 toward = so.scale_f0(harvest, pitch_ratio)
 sound = finish(so.world_synthesize(toward, envelope, aperiodicity))
 fig, playhead = show(sound, f"bdl, F0 × {pitch_ratio:.2f}", toward)
 
 # %% [about]
-# His sentence at her median pitch, with the formants times 1.174, Hillenbrand et al.'s ratio.
+# The male talker's sentence at the female median pitch, with the formants times 1.174,
+# Hillenbrand et al.'s ratio.
 
-# %% [demo vc15] His sentence, her pitch and formant ratio
+# %% [demo vc15] Male talker, female pitch and formant ratio
 sound = finish(so.world_synthesize(toward, so.warp_frequency(envelope, 1.174), aperiodicity))
 fig, playhead = show(sound, f"bdl, F0 × {pitch_ratio:.2f}, formants × 1.174", toward)
 
 # %% [markdown]
 # One ratio does not turn one talker's average envelope into another's. Fitting the ratio that
-# takes his average voiced envelope closest to hers gives a much larger number than the formant
+# takes the male average voiced envelope closest to the female one gives a much larger number than the formant
 # studies do. The two envelopes also differ in slope, which no warp can change; letting a straight
 # line in dB over log frequency absorb the slope brings the ratio back near Hillenbrand et al.'s.
 
@@ -343,7 +344,7 @@ for label, slope in [("level free", False), ("level and slope free", True)]:
     print(f"fitted warp, {label}: {ratio:.3f} (residual {residual:.2f} dB)")
 print(f"residual at 1.174, level free: {misfit(female_db, original_db, 1.174):.2f} dB")
 
-# %% [figure vc16] His average envelope, warped, and hers
+# %% [figure vc16] The male average envelope, warped, and the female one
 fig, ax = plt.subplots(figsize=(10, 3.2), layout="constrained")
 for curve, color, label in [
     (original_db, "k", "bdl"),

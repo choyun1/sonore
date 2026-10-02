@@ -462,7 +462,7 @@ d4c_female = so.d4c(sentence_female, track_female)
 residual_female = so.harmonic_aperiodicity(sentence_female, track_female)
 
 # %% [about]
-# Her envelope and the two aperiodicities, drawn as for the male talker's sentence above.
+# The female talker's envelope and the two aperiodicities, drawn as for the male talker's sentence above.
 
 # %% [figure ap15] Envelope and aperiodicities of a higher voice
 fig, axes = plt.subplots(3, 1, figsize=(10, 7.2), sharex=True, layout="constrained")
@@ -479,14 +479,14 @@ for ax in axes:
 axes[2].set_xlabel("Time (s)")
 
 # %% [about]
-# Her sentence, for reference.
+# The female talker's sentence, for reference.
 
 # %% [demo ap16] The sentence, a higher voice
 sound = sentence_female
 fig, playhead = show(sound, "the sentence read by slt", fmax=8000)
 
 # %% [about]
-# WORLD's resynthesis of her sentence with D4C's aperiodicity, on `so.f0_track`'s pitch.
+# WORLD's resynthesis of the female talker's sentence with D4C's aperiodicity, on `so.f0_track`'s pitch.
 
 # %% [demo ap17] Resynthesis with D4C, a higher voice
 sound = finish(so.world_synthesize(track_female, envelope_female, d4c_female))
