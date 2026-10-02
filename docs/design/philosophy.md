@@ -34,6 +34,14 @@ meant to be readable without them.
   refuses. `synthesize` raises when the frame bounds say there is no stable
   inverse, and the error reports the bounds. `frame_bounds` is exposed
   because it also says how much coefficient errors can be amplified.
+- **Views may discard information.** Not every analysis is a frame.
+  Magnitudes, cepstra, F0 tracks, modulation spectra and reassigned
+  spectrograms are built on a frame and drop something (phase, fine
+  structure, everything but a pitch). They are welcome as displays and
+  features, and each says what it drops and whether a sound can be
+  recovered from it: exactly, approximately (Griffin-Lim, texture synthesis,
+  which search for a sound whose view matches through the exact frame
+  underneath), or not at all.
 - **Keep the simplest representation that loses nothing.** Subbands stay
   real; the complex analytic signal is computed from them exactly when
   envelopes or phase are needed.
