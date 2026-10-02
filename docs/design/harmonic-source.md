@@ -8,9 +8,10 @@ harmonic half of the "pulse-plus-noise synthesis" in roadmap item 1
 (speech analysis and synthesis), and the piece that lets an F0 track and a
 set of band envelopes be put back together and listened to.
 
-Status: proposed 2026-10-01. D8 decided (after the F0 tracker, which has
-now landed as `so.f0_track`); D1–D7
-await Cho's answers; no library code yet.
+Status: accepted 2026-10-02, with D2–D6 as recommended, D1 as the
+pattern-matching form of `harmonic_complex` below, D7 with arbitrary
+starting phases, D8 (after the F0 tracker) and D9. Implemented in
+`src/sonore/signals/generators.py`, tested in `tests/test_generators.py`.
 
 ## Why
 
@@ -76,7 +77,7 @@ the stored Harvest track and of `F0Track`):
 A 220 Hz contour sampled every 5 ms, harmonics 1–10, matches
 Σ cos(2π k 220 t) to 6.5e-12 (max abs difference, unit-amplitude
 harmonics). So the new source is a generalization of `harmonic_complex`,
-not a different sound. `harmonic_complex` itself stays as it is.
+not a different sound. That is what lets `harmonic_complex` take both (D1).
 
 **C2. The phase is exact for a contour that is linear between samples.**
 [proof] If f is linear between t_{i-1} and t_i, its integral over the step
@@ -164,56 +165,87 @@ both put noise where Harvest has harmonics in weak voiced stretches.
 
 ## Decisions
 
-**D1. Add it, as a new generator (recommended).** A function
-`so.harmonic_source` in `sonore/signals/generators.py`, beside
-`harmonic_complex`. It takes plain arrays, so it sits in the signals
-layer and imports nothing above it (`tests/test_layers.py`); an
-`F0Track`'s `t` and `f0` pass straight in, and so does the stored Harvest
-track. Alternative: let `harmonic_complex` accept an array for `f0`. Its
-signature is built around a duration and one F0, and C1 already shows the
-two agree, so a separate function keeps both plain.
+**D1. One function, `harmonic_complex`, whose `f0` is a number or a
+contour (accepted, Cho 2026-10-02).** The pitch is one value that comes in
+two shapes, and a `match` statement (Python 3.10, sonore's minimum) picks
+the case:
+
+- **A number** runs the existing code unchanged, so every fixed-F0 output
+  stays bit-for-bit identical, and harmonics at or above Nyquist are still
+  dropped with a warning.
+- **A contour** runs the design above: a `(times, values)` pair, or any
+  object with `.t` and `.f0` attributes, such as an `F0Track`. The match
+  goes by shape, not by class, so the signals layer imports nothing from
+  analysis (`tests/test_layers.py`), and the stored Harvest track works as
+  a pair.
+
+The signature stays `harmonic_complex(duration, fs, f0, harmonics=None,
+...)`: a contour carries its own times and voicing, so nothing else needs
+to change shape. `harmonics` becomes optional (all below Nyquist for a
+number, all below `f_max` for a contour). The contour-only arguments
+(`f_max`, `ramp`, `unvoiced`) do nothing for a number, which has no gaps
+and does not move. `typing.overload` stubs show the two call shapes
+separately. `noise_vocode`'s `carrier` (`"noise"`, `"tone"` or a Sound)
+is the precedent for one argument taking several shapes.
+
+Alternatives considered: a separate `so.harmonic_source` beside an
+unchanged `harmonic_complex` (the earlier recommendation; two names for
+one idea), and rebuilding the fixed-F0 case on the contour path (one code
+path, but every existing output would shift at the 1e-11 level for no
+gain to users).
 
 **D2. The contour is frame times and F0 values, interpolated linearly in
-Hz (recommended).** `harmonic_source(t, f0, fs, duration=None, ...)`,
-`f0 = 0` meaning unvoiced; `duration` defaults to the last frame time and
-the last value is held beyond it. A per-sample contour is passed with
+Hz (accepted).** `harmonic_complex(duration, fs, (t, f0))`, `f0 = 0`
+meaning unvoiced; values are held beyond the first and last frames, so
+`duration` may run past the track. A per-sample contour is passed with
 `t = sound.t`. Alternatives: interpolation in log F0 (differs from linear
 by far less than C3's bound at 5 ms frames); band-limited (sinc)
 interpolation, which overshoots at the steps a real track has.
 
 **D3. Unvoiced frames: gaps filled, harmonics gated with 5 ms ramps
-(recommended).** C5 shows why the filling is needed. The ramp is a
+(accepted).** C5 shows why the filling is needed. The ramp is a
 parameter, `ramp=0.005`; 0 gives a hard gate.
 
-**D4. An unvoiced noise option (recommended).** `unvoiced="silence"`
+**D4. An unvoiced noise option (accepted).** `unvoiced="silence"`
 (default) or `"noise"`: white Gaussian noise in the unvoiced stretches at
 the same power as the harmonics, crossfaded with the same gate, from a
 seeded `rng`. That is enough for the vocoder recipe, where the envelopes
 set every band's level anyway. Graded aperiodicity per band (WORLD's D4C; Morise, Yokomori & Ozawa, 2016)
 belongs to the later synthesis step and is out of scope.
 
-**D5. Band-limiting by a taper (recommended).** Harmonic k is weighted by
+**D5. Band-limiting by a taper (accepted).** Harmonic k is weighted by
 cos² falling from 1 at 0.9 f_max to 0 at f_max, so harmonics fade in and
 out as the pitch moves instead of switching. `f_max` defaults to
 0.45 fs (7.2 kHz at 16 kHz). A `harmonics` argument selects which
 harmonic numbers to include (all by default; `[1]` for a sinusoid,
 `range(10, 20)` for an unresolved complex), and the taper still applies to
-them, so nothing ever aliases. Alternative: a fixed harmonic count, which
+them, so nothing ever aliases. A fixed F0 keeps its present rule (drop
+what is at or above Nyquist, with a warning) and has no taper. Alternative: a fixed harmonic count, which
 aliases on any upward glide (C6).
 
 **D6. Amplitudes: a per-harmonic array or a spectral envelope
-(recommended).** `amplitudes` is either a 1-D array, one value per
+(accepted).** `amplitudes` is either a 1-D array, one value per
 harmonic (a fixed spectrum, as in `harmonic_complex`), or a function
 `amplitudes(t, f)` returning the gain at time t and frequency f, sampled
-at every harmonic's frequency k f(t). The second form keeps formants in
+at every harmonic's frequency k f(t) (for a fixed F0, at k f0). The
+second form keeps formants in
 place while the pitch moves, and is how a CheapTrick-style envelope (Morise, 2015) will
 drive the source in the WORLD step. Time-varying per-harmonic arrays
 (frames × harmonics) are left out until something needs them.
 
-**D7. Phases and channels.** Starting phases use `harmonic_complex`'s
-presets (`"cosine"` by default; `"random"`, `"schroeder+"`, ... and an
-array also work, as starting values). A 2-D `f0` (one row per channel,
-as `F0Track.f0` is) gives a multichannel Sound.
+**D7. Phases and channels (accepted, with arbitrary starting phases).**
+Phases are cosine by default. `phases` also takes `harmonic_complex`'s
+presets (`"sine"`, `"alternating"`, `"random"`, `"schroeder+"`,
+`"schroeder-"`) or an array with one starting phase per harmonic: one per
+harmonic number up to the most the contour can ever hold
+(f_max / lowest voiced F0), or one per entry of `harmonics` when given. A
+wrong length raises an error naming the length expected. Because harmonic
+k's phase is k Φ(t) + φ_k, a starting pattern holds for the whole sound: a
+random-phase or Schroeder-phase complex stays one while the pitch glides,
+its waveform shape stretched with the period. That is what makes phase
+experiments with unresolved harmonics (Schroeder, 1970, and the work that
+followed) possible with a moving F0. A 2-D `f0` (one row per channel, as
+`F0Track.f0` is) gives a multichannel Sound; the phases are shared.
 
 **D8. Where it goes on the roadmap.** Cho, 2026-10-01: wait for the F0
 tracker's library code, then land this after it. The tracker has now
@@ -223,26 +255,41 @@ README roadmap). Once it lands, the Vocoder page can gain a short section
 on putting the pitch back (examples 4, 6 and 7 above, on the tracker's
 own track).
 
+**D9. The named harmonic waveforms go through `harmonic_complex`
+(accepted, Cho 2026-10-02).** `square_wave`, `sawtooth_wave` and
+band-limited `pulse_train` are harmonic complexes with fixed amplitudes
+(1/n on odd n, ±1/n, and 1) and sine or cosine phases; `schroeder_complex`
+already calls `harmonic_complex`. The first three used a separate helper;
+now they call `harmonic_complex` too, so all four accept a contour: a
+gliding sawtooth, a Schroeder complex that follows a voice. Their names
+stay, since they are what papers call them. The cost is that their
+fixed-F0 outputs change at the round-off level (at most 6e-11 for unit-RMS
+pulse trains, 5e-12 for the others), which does
+not touch texture synthesis, the one place outputs must stay bit-for-bit.
+The non-band-limited square, sawtooth and pulse train stay as they are and
+take only a number.
+
 ## API sketch
 
 ```python
 snd = so.load("docs/speech/bdl_arctic_a0131.flac")
 trk = so.f0_track(snd)                                   # f0.md
-src = so.harmonic_source(trk.t, trk.f0[0], snd.fs, duration=snd.duration,
-                         unvoiced="noise", rng=0)
+src = so.harmonic_complex(snd.duration, snd.fs, trk, unvoiced="noise", rng=0)
 so.noise_vocode(snd, 16, carrier=src)                    # its envelopes, this pitch
 
-# Anything that is an F0 contour:
+# A number is today's call; anything that is an F0 contour also works:
+so.harmonic_complex(1.0, 44100, 220, range(1, 11))
 t = np.arange(0, 2.005, 0.005)
-glide = so.harmonic_source(t, 100 * 2**t, 44100)         # two octaves, no aliasing
-monotone = so.harmonic_source(trk.t, np.where(trk.voiced[0], 120, 0), snd.fs)
-vowel = so.harmonic_source(t, 110 + 10 * np.sin(2 * np.pi * 5 * t), 16000,
-                           amplitudes=lambda t, f: formant_gain(f))
+glide = so.harmonic_complex(2.0, 44100, (t, 100 * 2**t))  # two octaves, no aliasing
+monotone = so.harmonic_complex(snd.duration, snd.fs, (trk.t, np.where(trk.voiced, 120, 0)))
+saw = so.sawtooth_wave(2.0, 44100, (t, 100 * 2**t))      # every named waveform too
+vowel = so.harmonic_complex(2.0, 16000, (t, 110 + 10 * np.sin(2 * np.pi * 5 * t)),
+                            amplitudes=lambda t, f: formant_gain(f))
 ```
 
 ## Tests (target: under 1 s added)
 
-- C1: a constant contour equals `harmonic_complex` with the same
+- C1: a constant contour equals the fixed-F0 call with the same
   harmonics and phases, within 1e-10.
 - C2: a linear glide matches the closed-form chirp within 1e-9.
 - C3: the vibrato's measured instantaneous frequency, harmonics 1 and 10,
@@ -252,12 +299,17 @@ vowel = so.harmonic_source(t, 110 + 10 * np.sin(2 * np.pi * 5 * t), 16000,
   f_max + 400 Hz at least 90 dB below the total).
 - `unvoiced="noise"` is reproducible from `rng`, and silent frames are
   silent with `unvoiced="silence"`; a 2-D `f0` gives one channel per row.
+- D1: an `F0Track`, a `(t, f0)` pair and a 2-D pair give the same sound;
+  a wrong-length phase array raises.
+- D9: the square, sawtooth and pulse train match their previous fixed-F0
+  output within 1e-10, and each accepts a contour without aliasing.
 
 ## Patch plan
 
 1. This document and `tools/check_harmonic_source_claims.py`.
-2. After Cho's answers: `harmonic_source` in `signals/generators.py`,
-   tests, the README "What it's for" line on harmonic sounds, CHANGELOG.
+2. `harmonic_complex` with contours and the D9 waveforms in
+   `signals/generators.py`, tests, the README "What it's for" line on
+   harmonic sounds and a roadmap note, CHANGELOG.
 3. The Vocoder page section, and `pv.py` and `resynthesis.py` switched
    from their hand-rolled running sums to the new source.
 
@@ -291,6 +343,9 @@ Taken from the README's References, where each was checked by lookup
 - Morise, M., Yokomori, F. & Ozawa, K. (2016). WORLD: a vocoder-based
   high-quality speech synthesis system for real-time applications. *IEICE
   Trans. Inf. & Syst.* E99-D(7). doi:10.1587/transinf.2015EDP7457.
+- Schroeder, M. R. (1970). Synthesis of low-peak-factor signals and binary
+  sequences with low autocorrelation. *IEEE Trans. Inf. Theory* 16.
+  doi:10.1109/TIT.1970.1054411.
 - Shannon, R. V., Zeng, F.-G., Kamath, V., Wygonski, J. & Ekelid, M.
   (1995). Speech recognition with primarily temporal cues. *Science* 270.
   doi:10.1126/science.270.5234.303.

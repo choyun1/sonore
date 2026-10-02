@@ -7,6 +7,17 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.harmonic_complex` takes an F0 contour for `f0` as well as a number:
+  an `F0Track`, or any `(times, values)` pair with 0 where unvoiced (one
+  row per channel). Every harmonic follows its multiple of the contour
+  with no phase jumps, unvoiced gaps are bridged and gated with Hann ramps
+  (`ramp`, or `unvoiced="noise"` to fill them with noise), and harmonics
+  fade out below `f_max` (default `0.45 * fs`), so nothing aliases.
+  `amplitudes` may also be a function of time and frequency (a spectral
+  envelope), `harmonics` is now optional, and a phase array of the wrong
+  length raises a clear error. `square_wave`, `sawtooth_wave`,
+  `pulse_train` and `schroeder_complex` take contours too. See
+  `docs/design/harmonic-source.md`.
 - `so.f0_track` and `F0Track`: an F0 tracker with a voiced/unvoiced
   decision. Candidates from YIN's difference function, refinement by the
   instantaneous frequency of six harmonics (after WORLD's StoneMask), a
@@ -24,6 +35,10 @@ version (0.x.y) only fixes bugs.
   running several jobs in parallel.
 
 ### Changed
+- The band-limited `square_wave`, `sawtooth_wave` and `pulse_train` are
+  now computed by `harmonic_complex`; their outputs differ from before by
+  less than 1e-10. Fixed-F0 `harmonic_complex` and `schroeder_complex`
+  output is unchanged bit for bit.
 - `Filterbank.analyze` with the default `pad="auto"` rounds the padding up
   so that the FFT length has no prime factor above 11 (typically 0.2% longer,
   at most a few percent). Subbands and envelopes are 3 to 4 times faster for
