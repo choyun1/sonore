@@ -7,6 +7,20 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.klatt_synthesize`: a Klatt-style cascade/parallel formant synthesizer
+  (Klatt, 1980). Voicing is `harmonic_complex` on F0 with Klatt's glottal
+  spectrum; aspiration and frication are white noise, modulated at F0 while
+  voiced; the nasal pole and zero and formants 1-5 run in cascade, formants
+  1-6 in parallel with alternating signs, and the voiced source gets the
+  radiation difference. Parameters use Klatt's names (`F0`, `AV`, `AH`,
+  `AF`, `AB`, `F1`-`F6`, `B1`-`B6`, `A1`-`A6`, `FNP`, `BNP`, `FNZ`, `BNZ`),
+  each a number or a `(times, values)` track interpolated to every sample;
+  defaults are in `so.KLATT_DEFAULTS`. `so.klatt_continuum` makes evenly
+  spaced parameter sets between two endpoints. See `docs/design/klatt.md`.
+- `so.resonator` and `so.antiresonator`: Klatt's second-order formant and
+  its exact inverse, with unit gain at 0 Hz and a frequency and bandwidth
+  that may follow a track; the filter state is carried through every change,
+  so gliding formants make no clicks.
 - `so.harmonic_complex` takes an F0 contour for `f0` as well as a number:
   an `F0Track`, or any `(times, values)` pair with 0 where unvoiced (one
   row per channel). Every harmonic follows its multiple of the contour

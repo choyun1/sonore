@@ -68,6 +68,7 @@ from sonore.signals.generators import (
 )
 from sonore.signals.processing import (
     amplitude_modulate,
+    antiresonator,
     bandpass,
     butter_filter,
     concat,
@@ -77,6 +78,7 @@ from sonore.signals.processing import (
     normalize,
     pad,
     relative_db,
+    resonator,
     truncate,
 )
 from sonore.stimuli.binaural import (
@@ -88,6 +90,7 @@ from sonore.stimuli.binaural import (
     simple_bir,
 )
 from sonore.stimuli.hrir_data import load_hrirs
+from sonore.stimuli.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
 from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
 from sonore.stimuli.reverb import band_rt60s, measure_rt60, synth_ir
 from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
@@ -138,9 +141,14 @@ __all__ = [
     "time_stretch",
     "pv_analyze",
     "pitch_shift",
+    "KLATT_DEFAULTS",
+    "klatt_continuum",
+    "klatt_synthesize",
     "PVAnalysis",
     "amp_to_db",
     "amplitude_modulate",
+    "antiresonator",
+    "resonator",
     "apply_itd_ild",
     "bandpass",
     "butter_filter",
