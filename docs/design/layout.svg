@@ -12,86 +12,92 @@
 <text x="20" y="342" font-weight="bold" fill="#444">stimuli/</text>
 <rect x="10" y="22" width="850" height="210" rx="8" fill="#efe6fb"/>
 <text x="20" y="132" font-weight="bold" fill="#444">texture/</text>
-<line x1="479" y1="494" x2="445" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="607" y1="564" x2="445" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="769" y1="564" x2="769" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="376" y1="494" x2="283" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="445" y1="564" x2="445" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="515" y1="844" x2="445" y2="880" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="515" y1="844" x2="607" y2="880" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="415" y1="389" x2="607" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="415" y1="389" x2="681" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="415" y1="389" x2="519" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="186" y1="319" x2="167" y2="355" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="540" y1="389" x2="681" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="540" y1="389" x2="519" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="664" y1="389" x2="607" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="664" y1="389" x2="607" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="664" y1="389" x2="681" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="788" y1="389" x2="607" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="788" y1="389" x2="607" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="788" y1="389" x2="681" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="641" y1="144" x2="655" y2="180" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="655" y1="214" x2="607" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="655" y1="214" x2="769" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="631" y1="74" x2="607" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="631" y1="74" x2="641" y2="110" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<path d="M601,74 Q541,127 625,180" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="615" y1="600" x2="615" y2="564" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="532" y1="617" x2="520" y2="617" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="615" y1="600" x2="453" y2="564" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="453" y1="600" x2="615" y2="564" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="607" y1="564" x2="607" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="283" y1="564" x2="445" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="769" y1="564" x2="769" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="470" y1="844" x2="314" y2="880" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="470" y1="844" x2="476" y2="880" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="158" y1="389" x2="445" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="158" y1="389" x2="504" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="158" y1="389" x2="342" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="690" y1="319" x2="690" y2="355" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="265" y1="389" x2="504" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="265" y1="389" x2="342" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="371" y1="389" x2="283" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="371" y1="389" x2="445" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="371" y1="389" x2="504" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="478" y1="389" x2="283" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="478" y1="389" x2="445" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="478" y1="389" x2="504" y2="705" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="797" y1="389" x2="769" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="523" y1="144" x2="533" y2="180" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="533" y1="214" x2="445" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="533" y1="214" x2="607" y2="600" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="514" y1="74" x2="445" y2="530" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="514" y1="74" x2="523" y2="110" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<path d="M484,74 Q424,127 503,180" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="291" y1="600" x2="453" y2="564" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="358" y1="617" x2="370" y2="617" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="291" y1="600" x2="291" y2="564" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
 <line x1="453" y1="600" x2="453" y2="564" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="520" y1="547" x2="532" y2="547" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="523" y1="810" x2="615" y2="634" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="453" y1="880" x2="523" y2="844" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<rect x="404.2" y="460" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="479.2" y="482" text-anchor="middle">cepstrum</text>
-<rect x="532.0" y="600" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="607.0" y="622" text-anchor="middle">envelopes</text>
+<line x1="453" y1="600" x2="291" y2="564" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="358" y1="547" x2="370" y2="547" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="478" y1="810" x2="291" y2="634" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="322" y1="880" x2="478" y2="844" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<rect x="301.4" y="460" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="376.4" y="482" text-anchor="middle">cepstrum</text>
 <rect x="208.0" y="600" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="283.0" y="622" text-anchor="middle">f0</text>
-<rect x="532.0" y="530" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="607.0" y="552" text-anchor="middle">filterbank</text>
+<text x="283.0" y="622" text-anchor="middle">envelopes</text>
+<rect x="694.0" y="600" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="769.0" y="622" text-anchor="middle">f0</text>
+<rect x="370.0" y="530" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="445.0" y="552" text-anchor="middle">filterbank</text>
 <rect x="370.0" y="600" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
 <text x="445.0" y="622" text-anchor="middle">frames</text>
+<rect x="532.0" y="530" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="607.0" y="552" text-anchor="middle">modspectrogram</text>
+<rect x="532.0" y="600" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="607.0" y="622" text-anchor="middle">modulation</text>
+<rect x="208.0" y="530" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="283.0" y="552" text-anchor="middle">representations</text>
 <rect x="694.0" y="530" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="769.0" y="552" text-anchor="middle">modspectrogram</text>
-<rect x="694.0" y="600" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="769.0" y="622" text-anchor="middle">modulation</text>
-<rect x="370.0" y="530" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="445.0" y="552" text-anchor="middle">representations</text>
-<rect x="694.0" y="880" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="769.0" y="902" text-anchor="middle">fft</text>
-<rect x="439.9" y="810" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="514.9" y="832" text-anchor="middle">sound</text>
-<rect x="370.0" y="880" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="445.0" y="902" text-anchor="middle">units</text>
-<rect x="532.0" y="880" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="607.0" y="902" text-anchor="middle">utils</text>
-<rect x="605.9" y="705" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="680.9" y="727" text-anchor="middle">generators</text>
-<rect x="443.9" y="705" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="518.9" y="727" text-anchor="middle">processing</text>
-<rect x="359.3" y="355" width="112.2" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="415.4" y="377" text-anchor="middle">binaural</text>
-<rect x="111.0" y="285" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="186.0" y="307" text-anchor="middle">hrir_data</text>
-<rect x="483.5" y="355" width="112.2" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="539.6" y="377" text-anchor="middle">klatt</text>
-<rect x="235.2" y="355" width="112.2" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="291.2" y="377" text-anchor="middle">phasevocoder</text>
-<rect x="607.7" y="355" width="112.2" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="663.8" y="377" text-anchor="middle">reverb</text>
-<rect x="731.8" y="355" width="112.2" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="787.9" y="377" text-anchor="middle">ripples</text>
-<rect x="111.0" y="355" width="112.2" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="167.1" y="377" text-anchor="middle">spatialization</text>
-<rect x="566.4" y="110" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="641.4" y="132" text-anchor="middle">grad</text>
-<rect x="580.1" y="180" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="655.1" y="202" text-anchor="middle">stats</text>
-<rect x="555.9" y="40" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="630.9" y="62" text-anchor="middle">synth</text>
+<text x="769.0" y="552" text-anchor="middle">vocoder</text>
+<rect x="563.0" y="880" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="638.0" y="902" text-anchor="middle">fft</text>
+<rect x="394.8" y="810" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="469.8" y="832" text-anchor="middle">sound</text>
+<rect x="239.0" y="880" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="314.0" y="902" text-anchor="middle">units</text>
+<rect x="401.0" y="880" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="476.0" y="902" text-anchor="middle">utils</text>
+<rect x="429.2" y="705" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="504.2" y="727" text-anchor="middle">generators</text>
+<rect x="267.2" y="705" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="342.2" y="727" text-anchor="middle">processing</text>
+<rect x="111.0" y="355" width="94.4" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="158.2" y="377" text-anchor="middle">binaural</text>
+<rect x="615.4" y="285" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="690.4" y="307" text-anchor="middle">hrir_data</text>
+<rect x="217.4" y="355" width="94.4" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="264.6" y="377" text-anchor="middle">klatt</text>
+<rect x="536.7" y="355" width="94.4" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="583.9" y="377" text-anchor="middle">phasevocoder</text>
+<rect x="323.9" y="355" width="94.4" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="371.1" y="377" text-anchor="middle">reverb</text>
+<rect x="430.3" y="355" width="94.4" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="477.5" y="377" text-anchor="middle">ripples</text>
+<rect x="643.1" y="355" width="94.4" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="690.4" y="377" text-anchor="middle">spatialization</text>
+<rect x="749.6" y="355" width="94.4" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="796.8" y="377" text-anchor="middle">vocoder</text>
+<rect x="448.5" y="110" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="523.5" y="132" text-anchor="middle">grad</text>
+<rect x="457.9" y="180" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="532.9" y="202" text-anchor="middle">stats</text>
+<rect x="439.1" y="40" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="514.1" y="62" text-anchor="middle">synth</text>
 <rect x="875" y="442" width="115" height="34" rx="5" fill="#fff" stroke="#d0451b"/>
 <text x="932" y="464" text-anchor="middle">plotting</text>
 <text x="932" y="498" text-anchor="middle" font-size="12" fill="#d0451b">called lazily by</text>
@@ -100,7 +106,8 @@
 <text x="932" y="549" text-anchor="middle" font-size="12" fill="#d0451b">filterbank,</text>
 <text x="932" y="566" text-anchor="middle" font-size="12" fill="#d0451b">modspectrogram,</text>
 <text x="932" y="583" text-anchor="middle" font-size="12" fill="#d0451b">representations,</text>
-<text x="932" y="600" text-anchor="middle" font-size="12" fill="#d0451b">ripples, sound (.plot)</text>
+<text x="932" y="600" text-anchor="middle" font-size="12" fill="#d0451b">ripples, sound,</text>
+<text x="932" y="617" text-anchor="middle" font-size="12" fill="#d0451b">vocoder (.plot)</text>
 <text x="20" y="972" font-size="12" fill="#444">grey arrow: module-level import (A uses B); arrows into core/ from layers above it are omitted, since nearly every module imports sound and utils.</text>
 <text x="20" y="990" font-size="12" fill="#d0451b">red dashed: import inside a function or TYPE_CHECKING block that points up or sideways; these close the cycles.</text>
 </svg>
