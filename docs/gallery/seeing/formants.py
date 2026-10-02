@@ -201,14 +201,17 @@ VOWELS = {
     "hawed": (570, 840, 2410),
     "who'd": (300, 870, 2240),
 }
+VOWEL_DUR = 0.42
 gap = so.silence(0.15, FS)
 parts, starts = [], []
 t = 0.0
 for f1, f2, f3 in VOWELS.values():
-    v = so.klatt_synthesize(0.35, FS, F0=([0, 0.35], [125, 105]), AV=onoff(0.35), F1=f1, F2=f2, F3=f3)
+    v = so.klatt_synthesize(
+        VOWEL_DUR, FS, F0=([0, VOWEL_DUR], [125, 105]), AV=onoff(VOWEL_DUR), F1=f1, F2=f2, F3=f3
+    )
     parts += [v, gap]
     starts.append(t)
-    t += 0.5
+    t += VOWEL_DUR + gap.duration
 
 # %% [about]
 # The six vowels in turn, from "heed" to "who'd". The dashed lines are each vowel's F1, F2 and F3.
@@ -216,7 +219,7 @@ for f1, f2, f3 in VOWELS.values():
 # %% [demo fw1] Six vowels
 sound = finish(so.concat(parts))
 tracks = [
-    (np.repeat(starts, 2) + np.tile([0, 0.35], 6), np.repeat([v[i] for v in VOWELS.values()], 2))
+    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS.values()], 2))
     for i in range(3)
 ]
 fig, playhead = show(sound, "heed, head, had, hod, hawed, who'd")
@@ -239,14 +242,16 @@ ax.set_title("F1 against F2, axes reversed as is usual:\nthe tongue's height and
 
 # %% [demo fw3] From heed to hod in seven steps
 steps = so.klatt_continuum(dict(F1=270, F2=2290, F3=3010), dict(F1=730, F2=1090, F3=2440), 7)
+STEP_DUR = 0.36
 parts = []
 for p in steps:
-    parts += [so.klatt_synthesize(0.3, FS, p, F0=110, AV=onoff(0.3)), so.silence(0.15, FS)]
+    parts += [so.klatt_synthesize(STEP_DUR, FS, p, F0=110, AV=onoff(STEP_DUR)), so.silence(0.15, FS)]
 sound = finish(so.concat(parts))
 fig, playhead = show(sound, "seven steps from heed to hod")
 for i, p in enumerate(steps):
     for name in ("F1", "F2", "F3"):
-        playhead[1].plot([0.45 * i, 0.45 * i + 0.3], [p[name] / 1000] * 2, color="c", lw=1, ls="--")
+        step_start = (STEP_DUR + 0.15) * i
+        playhead[1].plot([step_start, step_start + STEP_DUR], [p[name] / 1000] * 2, color="c", lw=1, ls="--")
 
 # %% [markdown]
 # ## Consonants from transitions
@@ -317,15 +322,15 @@ fig, playhead = show(sound, "/ga/", tracks)
 # 1700 Hz) to the vowel's values over the first 60 ms of voicing.
 
 # %% [demo fn1] The syllable sa
-dur = 0.6
-tracks = dict(F1=([0.165, 0.225], [300, 730]), F2=([0.165, 0.225], [1700, 1090]))
+dur = 0.515
+tracks = dict(F1=([0.08, 0.14], [300, 730]), F2=([0.08, 0.14], [1700, 1090]))
 sound = finish(
     so.klatt_synthesize(
         dur,
         FS,
         F0=([0, dur], [125, 100]),
-        AV=([0, 0.165, 0.17, 0.19, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
-        AF=([0, 0.03, 0.17, 0.185, 0.2], [0, 74, 74, 64, 0]),
+        AV=([0, 0.08, 0.085, 0.105, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
+        AF=([0, 0.015, 0.085, 0.1, 0.115], [0, 74, 74, 64, 0]),
         A5=60,
         A6=62,
         F6=5500,
@@ -348,8 +353,8 @@ sound = finish(
         dur,
         FS,
         F0=([0, dur], [125, 100]),
-        AV=([0, 0.165, 0.17, 0.19, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
-        AH=([0, 0.03, 0.18, 0.21, 0.25], [0, 62, 62, 56, 0]),
+        AV=([0, 0.08, 0.085, 0.105, dur - 0.05, dur], [0, 0, 48, 60, 60, 0]),
+        AH=([0, 0.015, 0.095, 0.125, 0.165], [0, 62, 62, 56, 0]),
         rng=0,
         **hod,
     )
