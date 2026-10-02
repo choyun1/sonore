@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/binaura
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/binaural.py
+    python docs/gallery/stimuli/binaural.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
@@ -120,5 +120,5 @@ fig, playhead = show(sound)
 # - Siveke, Ewert, Grothe & Wiegrebe (2008). Psychophysical and physiological evidence for fast
 #   binaural processing. *J. Neurosci.* 28(9), 2043–2052.
 #   [J. Neurosci.](https://www.jneurosci.org/content/28/9/2043).
-#   [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L170)
-#   [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L179)
+#   [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L173)
+#   [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L182)

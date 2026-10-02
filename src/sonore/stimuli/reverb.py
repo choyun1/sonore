@@ -19,8 +19,8 @@ __all__ = ["synth_ir", "band_rt60s", "measure_rt60", "DECAY_SHAPES", "RT60_PROFI
 
 @cache
 def _model() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    d = files("sonore") / "data"
-    load = lambda name: np.load(d / name)  # noqa: E731
+    data_root = files("sonore") / "data"
+    load = lambda name: np.load(data_root / name)  # noqa: E731
     return load("fit_DRR.npy"), load("fit_RT60.npy"), load("fit_freqs.npy")
 
 
@@ -40,16 +40,16 @@ def band_rt60s(rt60: float, freqs: np.ndarray, profile: str = "ecological") -> n
     down to this length (more sharply peaked than real rooms).
     ``"reduced"``: the profile of a room half as reverberant, scaled up (flatter).
     """
-    _, fit_rt60, fit_f = _model()
+    _, fit_rt60, fit_freqs = _model()
 
-    def eco(T):
-        return np.interp(freqs, fit_f, 10 ** (fit_rt60[:, 0] * np.log10(T) + fit_rt60[:, 1]))
+    def eco(median_rt60):
+        return np.interp(freqs, fit_freqs, 10 ** (fit_rt60[:, 0] * np.log10(median_rt60) + fit_rt60[:, 1]))
 
     if profile == "ecological":
         return eco(rt60)
     if profile == "inverted":
-        e = eco(rt60)
-        return e.max() + e.min() - e
+        eco_rt60s = eco(rt60)
+        return eco_rt60s.max() + eco_rt60s.min() - eco_rt60s
     if profile == "exaggerated":
         return eco(2 * rt60) / 2
     if profile == "reduced":
@@ -60,14 +60,14 @@ def band_rt60s(rt60: float, freqs: np.ndarray, profile: str = "ecological") -> n
 def _decay_envelopes(t, onset_db, taus, shape):
     """Amplitude envelopes (n, B). Linear variants keep each band's energy equal
     to that of the exponential decay they replace (Traer & McDermott, Eq. S14)."""
-    a = db_to_amp(onset_db)[None, :]
-    exp_env = a * 10 ** (-3 * t[:, None] / taus[None, :])  # -60 dB per RT60
+    onset_amp = db_to_amp(onset_db)[None, :]
+    exp_env = onset_amp * 10 ** (-3 * t[:, None] / taus[None, :])  # -60 dB per RT60
     if shape in ("exponential", "time_reversed"):
         return exp_env
-    energy = a**2 * taus[None, :] / (6 * np.log(10))  # integral of exp_env^2
+    energy = onset_amp**2 * taus[None, :] / (6 * np.log(10))  # integral of exp_env^2
     if shape == "linear_matched_start":
-        t0 = 3 * energy / a**2  # same starting level; linear energy is a^2 t0 / 3
-        return np.maximum(a * (1 - t[:, None] / t0), 0.0)
+        t0 = 3 * energy / onset_amp**2  # same starting level; linear energy is onset_amp^2 t0 / 3
+        return np.maximum(onset_amp * (1 - t[:, None] / t0), 0.0)
     if shape == "linear_matched_end":
         t0 = taus[None, :]  # reaches zero when the exponential is 60 dB down
         return np.maximum(np.sqrt(3 * energy / t0) * (1 - t[:, None] / t0), 0.0)
@@ -128,35 +128,35 @@ def synth_ir(
     drr_profile
         ``"ecological"`` onset levels per band, or ``"constant"`` (their mean).
     """
-    fit_drr, _, fit_f = _model()
+    fit_drr, _, fit_freqs = _model()
     rng = as_rng(rng)
     f_hi = min(f_hi, 0.95 * fs / 2)
-    fb = ERBFilterbank(n_bands, f_lo, f_hi)
-    cfs = fb.cfs
+    filterbank = ERBFilterbank(n_bands, f_lo, f_hi)
+    cfs = filterbank.cfs
 
     taus = band_rt60s(rt60, cfs, rt60_profile)
     if drr_profile == "ecological":
         onset_db = fit_drr[:, 0] * np.log10(rt60) + fit_drr[:, 1]
-        onset_db = np.interp(cfs, fit_f, onset_db - np.median(onset_db))
+        onset_db = np.interp(cfs, fit_freqs, onset_db - np.median(onset_db))
     elif drr_profile == "constant":
         onset_db = np.zeros(len(cfs))
     else:
         raise ValueError(f"drr_profile must be one of {DRR_PROFILES}")
 
     if decay_shape in ("exponential", "time_reversed"):
-        dur = decay_db * taus.max() / 60
+        duration = decay_db * taus.max() / 60
     elif decay_shape == "linear_matched_start":
-        dur = taus.max() / (2 * np.log(10))
+        duration = taus.max() / (2 * np.log(10))
     else:
-        dur = taus.max()
-    noise = gaussian_noise(dur, fs, n_channels=n_channels, rng=rng)
-    env = _decay_envelopes(noise.t, onset_db, taus, decay_shape)
+        duration = taus.max()
+    noise = gaussian_noise(duration, fs, n_channels=n_channels, rng=rng)
+    envelopes = _decay_envelopes(noise.t, onset_db, taus, decay_shape)
     if decay_shape == "time_reversed":
-        env = env[::-1]
-    decay = Envelopes(env, fs, fb)  # one decay envelope per band
+        envelopes = envelopes[::-1]
+    decay = Envelopes(envelopes, fs, filterbank)  # one decay envelope per band
     # analyze pads by default, so re-filtering the decaying bands can't wrap the
     # loud onset around to the end of the IR
-    tail = (decay * fb.analyze(noise)).synthesize().normalize()
+    tail = (decay * filterbank.analyze(noise)).synthesize().normalize()
 
     if drr_db is None:
         return tail
@@ -178,16 +178,16 @@ def measure_rt60(
     default measures T20 x 3). The direct sound, if any, should be removed
     first; bands that never decay through the fit range give NaN.
     """
-    fb = ERBFilterbank(n_bands, f_lo, min(f_hi, 0.95 * ir.fs / 2))
-    bands = fb.analyze(ir.mono()).data[:, 1:-1, 0]  # bandpass bands only
+    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, 0.95 * ir.fs / 2))
+    bands = filterbank.analyze(ir.mono()).data[:, 1:-1, 0]  # bandpass bands only
     energy = np.cumsum(bands[::-1] ** 2, axis=0)[::-1]
     t = np.arange(len(ir)) / ir.fs
     rt60s = np.full(bands.shape[1], np.nan)
     hi_db, lo_db = fit_range_db
     for k in range(bands.shape[1]):
         edc = 10 * np.log10(energy[:, k] / energy[0, k] + 1e-300)
-        sel = (edc <= hi_db) & (edc >= lo_db)
-        if sel.sum() > 10:
-            slope = np.polyfit(t[sel], edc[sel], 1)[0]
+        in_range = (edc <= hi_db) & (edc >= lo_db)
+        if in_range.sum() > 10:
+            slope = np.polyfit(t[in_range], edc[in_range], 1)[0]
             rt60s[k] = -60 / slope if slope < 0 else np.nan
-    return fb.cfs[1:-1], rt60s
+    return filterbank.cfs[1:-1], rt60s

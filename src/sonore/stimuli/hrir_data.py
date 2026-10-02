@@ -35,10 +35,10 @@ class _Database:
     azimuth_clockwise: bool = False
 
     def read(self, path: Path, **kwargs) -> HRIRSet:
-        hs = HRIRSet.from_sofa(path, **kwargs)
+        hrir_set = HRIRSet.from_sofa(path, **kwargs)
         if self.azimuth_clockwise:
-            hs = HRIRSet(hs.irs, hs.positions * [-1.0, 1.0, 1.0], hs.fs, **kwargs)
-        return hs
+            hrir_set = HRIRSet(hrir_set.irs, hrir_set.positions * [-1.0, 1.0, 1.0], hrir_set.fs, **kwargs)
+        return hrir_set
 
 
 HRIR_DATABASES: dict[str, _Database] = {
@@ -70,8 +70,8 @@ HRIR_DATABASES: dict[str, _Database] = {
 
 def data_dir() -> Path:
     """Where downloaded data is cached: ``$SONORE_DATA_DIR``, else the user cache directory."""
-    if env := os.environ.get("SONORE_DATA_DIR"):
-        return Path(env).expanduser()
+    if env_dir := os.environ.get("SONORE_DATA_DIR"):
+        return Path(env_dir).expanduser()
     if sys.platform == "win32":
         return Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")) / "sonore" / "Cache"
     if sys.platform == "darwin":
@@ -80,16 +80,16 @@ def data_dir() -> Path:
 
 
 def _sha256(path: Path) -> str:
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for block in iter(lambda: f.read(1 << 20), b""):
-            h.update(block)
-    return h.hexdigest()
+    hasher = hashlib.sha256()
+    with open(path, "rb") as file:
+        for block in iter(lambda: file.read(1 << 20), b""):
+            hasher.update(block)
+    return hasher.hexdigest()
 
 
 def _download(url: str, dest: Path) -> None:
-    with urllib.request.urlopen(url) as response, open(dest, "wb") as f:
-        shutil.copyfileobj(response, f)
+    with urllib.request.urlopen(url) as response, open(dest, "wb") as file:
+        shutil.copyfileobj(response, file)
 
 
 def _fetch(url: str, path: Path, sha256: str | None) -> Path:
@@ -103,19 +103,19 @@ def _fetch(url: str, path: Path, sha256: str | None) -> Path:
             return path
         path.unlink()  # stale or corrupted; fetch it again
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".part")
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".part")
     os.close(fd)
-    tmp = Path(tmp)
+    tmp_path = Path(tmp_path)
     try:
-        _download(url, tmp)
-        digest = _sha256(tmp)
+        _download(url, tmp_path)
+        digest = _sha256(tmp_path)
         if sha256 is None:
             warnings.warn(f"no pinned checksum for {path.name}; sha256 is {digest}", stacklevel=3)
         elif digest != sha256:
             raise OSError(f"checksum mismatch for {url}: expected {sha256}, got {digest}")
-        tmp.replace(path)
+        tmp_path.replace(path)
     finally:
-        tmp.unlink(missing_ok=True)
+        tmp_path.unlink(missing_ok=True)
     return path
 
 
@@ -143,22 +143,24 @@ def load_hrirs(
         Passed to :class:`HRIRSet`, e.g. ``align``.
     """
     try:
-        db = HRIR_DATABASES[name]
+        database = HRIR_DATABASES[name]
     except KeyError:
         raise ValueError(f"unknown HRIR database {name!r}; known: {sorted(HRIR_DATABASES)}") from None
     if distances is None:
-        distances = db.default
+        distances = database.default
     elif isinstance(distances, str) and distances == "all":
-        distances = tuple(db.files)
+        distances = tuple(database.files)
     else:
-        distances = tuple(float(d) for d in (distances if hasattr(distances, "__iter__") else [distances]))
-    missing = [d for d in distances if d not in db.files]
+        distances = tuple(
+            float(distance) for distance in (distances if hasattr(distances, "__iter__") else [distances])
+        )
+    missing = [distance for distance in distances if distance not in database.files]
     if missing:
-        raise ValueError(f"{name} has no distance {missing} cm; available: {sorted(db.files)}")
+        raise ValueError(f"{name} has no distance {missing} cm; available: {sorted(database.files)}")
     root = Path(cache_dir).expanduser() if cache_dir is not None else data_dir()
     sets = []
-    for d in distances:
-        fname, sha256 = db.files[d]
-        path = _fetch(db.base_url + fname, root / name / fname, sha256)
-        sets.append(db.read(path, **kwargs))
+    for distance in distances:
+        file_name, sha256 = database.files[distance]
+        path = _fetch(database.base_url + file_name, root / name / file_name, sha256)
+        sets.append(database.read(path, **kwargs))
     return HRIRSet.concat(sets, **kwargs)

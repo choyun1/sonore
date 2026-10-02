@@ -47,14 +47,14 @@ def apply_itd_ild(sound: Sound, itd: float = 0.0, ild: float = 0.0) -> Sound:
 
 def _fractional_impulse(delay: float, n: int, half_width: int = 32) -> np.ndarray:
     """Hann-windowed sinc centered at ``delay`` samples (exact impulse if integer)."""
-    h = np.zeros(n)
+    impulse = np.zeros(n)
     if abs(delay - round(delay)) < 1e-9:
-        h[int(round(delay))] = 1.0
-        return h
-    k = np.arange(n)
-    u = k - delay
-    win = np.where(np.abs(u) < half_width, 0.5 * (1 + np.cos(np.pi * u / half_width)), 0.0)
-    return np.sinc(u) * win
+        impulse[int(round(delay))] = 1.0
+        return impulse
+    samples = np.arange(n)
+    offset = samples - delay
+    window = np.where(np.abs(offset) < half_width, 0.5 * (1 + np.cos(np.pi * offset / half_width)), 0.0)
+    return np.sinc(offset) * window
 
 
 def simple_bir(fs: float, itd: float = 0.0, ild: float = 0.0, half_width: int = 32) -> Sound:
@@ -64,14 +64,17 @@ def simple_bir(fs: float, itd: float = 0.0, ild: float = 0.0, half_width: int = 
     ``±ild/2`` dB. Fractional delays use a windowed sinc, so the IR starts
     ``half_width`` samples late whenever the ITD isn't a whole number of samples.
     """
-    d = abs(itd) * fs
-    frac = abs(d - round(d)) > 1e-9
-    offset = half_width if frac else 0
-    n = int(np.ceil(d)) + 2 * offset + 1
-    lead, lag = _fractional_impulse(offset, n, half_width), _fractional_impulse(offset + d, n, half_width)
+    delay_samples = abs(itd) * fs
+    fractional = abs(delay_samples - round(delay_samples)) > 1e-9
+    offset = half_width if fractional else 0
+    length = int(np.ceil(delay_samples)) + 2 * offset + 1
+    lead, lag = (
+        _fractional_impulse(offset, length, half_width),
+        _fractional_impulse(offset + delay_samples, length, half_width),
+    )
     left, right = (lag, lead) if itd > 0 else (lead, lag)
-    g = 10 ** (ild / 40)
-    return Sound(np.column_stack([left / g, right * g]), fs)
+    ear_gain = 10 ** (ild / 40)
+    return Sound(np.column_stack([left / ear_gain, right * ear_gain]), fs)
 
 
 @dataclass(frozen=True)
@@ -112,56 +115,56 @@ def interaural_cues(
     if sound.n_channels != 2:
         raise ValueError("interaural_cues needs a 2-channel sound")
     fs = sound.fs
-    nwin = int(round(win_dur * fs))
+    n_win = int(round(win_dur * fs))
     hop = max(1, int(round((hop_dur if hop_dur is not None else win_dur / 2) * fs)))
     max_lag = int(np.ceil(max_itd * fs))
 
     if filterbank is None:
-        x = sound.data[:, None, :]  # (n, 1, 2)
+        bands = sound.data[:, None, :]  # (n, 1, 2)
         cfs = None
     else:
-        x = filterbank.analyze(sound).data  # (n, B, 2)
+        bands = filterbank.analyze(sound).data  # (n, B, 2)
         cfs = filterbank.cfs
 
-    w = hann(nwin, sym=False)
-    frames = sliding_window_view(x, nwin, axis=0)[::hop]  # (F, B, 2, nwin)
-    frames = frames * w
-    L, R = frames[:, :, 0, :], frames[:, :, 1, :]
-    nfft = 1 << int(np.ceil(np.log2(2 * nwin)))
-    cc = np.fft.irfft(np.fft.rfft(L, nfft) * np.conj(np.fft.rfft(R, nfft)), nfft)
+    window = hann(n_win, sym=False)
+    frames = sliding_window_view(bands, n_win, axis=0)[::hop]  # (F, B, 2, n_win)
+    frames = frames * window
+    left, right = frames[:, :, 0, :], frames[:, :, 1, :]
+    n_fft = 1 << int(np.ceil(np.log2(2 * n_win)))
+    xcorr = np.fft.irfft(np.fft.rfft(left, n_fft) * np.conj(np.fft.rfft(right, n_fft)), n_fft)
     lags = np.r_[0 : max_lag + 1, -max_lag:0]
-    cc = cc[..., lags]  # c[tau] = sum_n L[n+tau] R[n]; peak at tau>0 means L lags
-    eL, eR = np.sum(L**2, -1), np.sum(R**2, -1)
-    norm = np.sqrt(eL * eR)
-    # undo the taper of the windowed CCF: E[cc(tau)] = R_LR(tau) * (w*w)(tau)
-    ww = np.correlate(w, w, "full")[nwin - 1 :]
-    taper = ww[np.abs(lags)] / ww[0]
+    xcorr = xcorr[..., lags]  # xcorr[tau] = sum_n left[n+tau] right[n]; peak at tau>0 means left lags
+    left_energy, right_energy = np.sum(left**2, -1), np.sum(right**2, -1)
+    norm = np.sqrt(left_energy * right_energy)
+    # undo the taper of the windowed CCF: E[xcorr(tau)] = R_LR(tau) * (window*window)(tau)
+    window_acf = np.correlate(window, window, "full")[n_win - 1 :]
+    taper = window_acf[np.abs(lags)] / window_acf[0]
     with np.errstate(invalid="ignore", divide="ignore"):
-        ncc = cc / norm[..., None] / taper
-        ild = 10 * np.log10(eR / eL)
+        norm_xcorr = xcorr / norm[..., None] / taper
+        ild = 10 * np.log10(right_energy / left_energy)
 
-    k = np.argmax(ncc, axis=-1)
-    iac = np.take_along_axis(ncc, k[..., None], -1)[..., 0]
+    peak_idx = np.argmax(norm_xcorr, axis=-1)
+    iac = np.take_along_axis(norm_xcorr, peak_idx[..., None], -1)[..., 0]
     # parabolic interpolation around the peak (skip at the lag-range edges)
-    km, kp = (k - 1) % len(lags), (k + 1) % len(lags)
-    y0 = np.take_along_axis(ncc, km[..., None], -1)[..., 0]
-    y2 = np.take_along_axis(ncc, kp[..., None], -1)[..., 0]
+    before_idx, after_idx = (peak_idx - 1) % len(lags), (peak_idx + 1) % len(lags)
+    corr_before = np.take_along_axis(norm_xcorr, before_idx[..., None], -1)[..., 0]
+    corr_after = np.take_along_axis(norm_xcorr, after_idx[..., None], -1)[..., 0]
     with np.errstate(invalid="ignore", divide="ignore"):
-        delta = 0.5 * (y0 - y2) / (y0 - 2 * iac + y2)
-    lag = lags[k].astype(float)
-    ok = (np.abs(lags[k]) < max_lag) & np.isfinite(delta)
-    delta = np.where(ok, np.clip(delta, -0.5, 0.5), 0.0)
-    itd = (lag + delta) / fs
-    iac = np.minimum(iac - 0.25 * (y0 - y2) * delta, 1.0)
+        delta = 0.5 * (corr_before - corr_after) / (corr_before - 2 * iac + corr_after)
+    peak_lag = lags[peak_idx].astype(float)
+    refinable = (np.abs(lags[peak_idx]) < max_lag) & np.isfinite(delta)
+    delta = np.where(refinable, np.clip(delta, -0.5, 0.5), 0.0)
+    itd = (peak_lag + delta) / fs
+    iac = np.minimum(iac - 0.25 * (corr_before - corr_after) * delta, 1.0)
 
-    corr0 = ncc[..., 0]
-    energy = eL + eR
+    corr0 = norm_xcorr[..., 0]
+    energy = left_energy + right_energy
     with np.errstate(divide="ignore"):
-        e_db = 10 * np.log10(energy / np.max(energy, axis=0, keepdims=True))
-    silent = e_db < silence_db
-    itd, ild, iac, corr0 = (np.where(silent, np.nan, a) for a in (itd, ild, iac, corr0))
+        level_db = 10 * np.log10(energy / np.max(energy, axis=0, keepdims=True))
+    silent = level_db < silence_db
+    itd, ild, iac, corr0 = (np.where(silent, np.nan, cue) for cue in (itd, ild, iac, corr0))
 
-    t = (np.arange(frames.shape[0]) * hop + nwin / 2) / fs
+    t = (np.arange(frames.shape[0]) * hop + n_win / 2) / fs
     if filterbank is None:
         itd, ild, iac, corr0 = itd[:, 0], ild[:, 0], iac[:, 0], corr0[:, 0]
     return InterauralCues(t, itd, ild, iac, corr0, cfs)
@@ -170,10 +173,10 @@ def interaural_cues(
 def oscor(duration: float, fs: float, f_mod: float, rng=None, **noise_kwargs) -> Sound:
     """Oscillating-correlation noise (Siveke et al., 2008): the interaural
     correlation follows ``sin(2*pi*f_mod*t)``."""
-    n = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
-    t = time_axis(len(n), fs)
-    right = np.sin(2 * np.pi * f_mod * t) * n[:, 0] + np.cos(2 * np.pi * f_mod * t) * n[:, 1]
-    return Sound(np.column_stack([n[:, 0], right]), fs).normalize()
+    noise = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
+    t = time_axis(len(noise), fs)
+    right = np.sin(2 * np.pi * f_mod * t) * noise[:, 0] + np.cos(2 * np.pi * f_mod * t) * noise[:, 1]
+    return Sound(np.column_stack([noise[:, 0], right]), fs).normalize()
 
 
 def phasewarp(duration: float, fs: float, f_mod: float, rng=None, **noise_kwargs) -> Sound:

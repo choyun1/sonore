@@ -31,7 +31,7 @@ The principles behind these choices, in plain words, are in
 
 Status: accepted 2026-09-30, with decisions D1–D4 as recommended below. Step 1 is
 implemented (`Frame`, `Filterbank`, `GaborFrame`, the cosine-bank and STFT
-retrofits), with the dense-matrix oracle tests in tests/test_frames.py.
+retrofits), with the dense-matrix oracle tests in tests/analysis/test_frames.py.
 
 Step 1 adds no new filter shapes and no new user-visible transforms. Its job
 is to fix what `analyze`, `synthesize` and `frame_bounds` mean, precisely

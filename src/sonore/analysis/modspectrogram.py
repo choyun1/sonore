@@ -98,50 +98,50 @@ class ModulationSpectrogram:
             bank = HannModulationFilterbank(f_lo, f_hi, per_octave, cycles, window)
         fs = envelopes.fs
         bank.check_fs(fs)
-        step = int(round(hop * fs))
-        if step < 1:
+        hop_samples = int(round(hop * fs))
+        if hop_samples < 1:
             raise ValueError(f"hop {hop:g} s is shorter than one envelope sample at {fs:g} Hz")
 
-        fb = envelopes.filterbank
-        env = envelopes.data  # (n, B, C)
-        keep = slice(None) if getattr(fb, "edges", True) is False else slice(1, -1)
-        env = env[:, keep, :]
-        n = env.shape[0]
-        frames = np.arange(0, n, step)
+        filterbank = envelopes.filterbank
+        band_env = envelopes.data  # (n, B, C)
+        keep = slice(None) if getattr(filterbank, "edges", True) is False else slice(1, -1)
+        band_env = band_env[:, keep, :]
+        n_samples = band_env.shape[0]
+        frames = np.arange(0, n_samples, hop_samples)
 
-        y = np.empty((len(frames),) + env.shape[1:] + (bank.n_bands,), complex)
+        y = np.empty((len(frames),) + band_env.shape[1:] + (bank.n_bands,), complex)
         mean = np.empty(y.shape)
-        for k, (h, w) in enumerate(bank.kernels(fs)):
-            y[..., k] = _correlate(env, h, align)[frames]
-            mean[..., k] = _correlate(env, w, align)[frames].real
+        for k, (kernel, hann) in enumerate(bank.kernels(fs)):
+            y[..., k] = _correlate(band_env, kernel, align)[frames]
+            mean[..., k] = _correlate(band_env, hann, align)[frames].real
         # (F, B, C, K) -> (C, B, K, F)
         self.power = np.transpose(np.abs(2 * y) ** 2, (2, 1, 3, 0))
         self.mean = np.maximum(np.transpose(mean, (2, 1, 3, 0)), 0.0)
 
-        self.bank, self.filterbank, self.align = bank, fb, align
-        self.fs, self.hop = fs, step / fs
-        self.f = np.asarray(fb.cfs)[keep]
+        self.bank, self.filterbank, self.align = bank, filterbank, align
+        self.fs, self.hop = fs, hop_samples / fs
+        self.f = np.asarray(filterbank.cfs)[keep]
         self.fm = bank.cfs
         self.t = frames / fs
-        self.valid = self._valid(fb, keep, n, frames)
+        self.valid = self._valid(filterbank, keep, n_samples, frames)
 
     def _valid(self, fb, keep, n: int, frames: np.ndarray) -> np.ndarray:
-        width = _band_widths(fb)[keep]  # (B,)
-        rate_ok = self.fm[None, :] <= width[:, None]  # (B, K)
-        L = self.bank.lengths(self.fs)[:, None]  # (K, 1)
+        bandwidth = _band_widths(fb)[keep]  # (B,)
+        rate_ok = self.fm[None, :] <= bandwidth[:, None]  # (B, K)
+        lengths = self.bank.lengths(self.fs)[:, None]  # (K, 1)
         if self.align == "causal":
-            time_ok = frames[None, :] >= L - 1
+            time_ok = frames[None, :] >= lengths - 1
         else:
-            before = L - 1 - (L - 1) // 2  # samples before the frame's own
-            after = (L - 1) // 2
+            before = lengths - 1 - (lengths - 1) // 2  # samples before the frame's own
+            after = (lengths - 1) // 2
             time_ok = (frames[None, :] >= before) & (frames[None, :] + after <= n - 1)
         return rate_ok[:, :, None] & time_ok[None, :, :]
 
     def __repr__(self) -> str:
-        c, b, k, f = self.power.shape
+        n_channels, n_bands, n_mod, n_frames = self.power.shape
         return (
-            f"ModulationSpectrogram({b} bands x {k} rates ({self.fm[0]:.3g}-{self.fm[-1]:.3g} Hz), "
-            f"{f} frames every {1000 * self.hop:g} ms, {c} ch, {self.align})"
+            f"ModulationSpectrogram({n_bands} bands x {n_mod} rates ({self.fm[0]:.3g}-{self.fm[-1]:.3g} Hz), "
+            f"{n_frames} frames every {1000 * self.hop:g} ms, {n_channels} ch, {self.align})"
         )
 
     @property
@@ -157,8 +157,8 @@ class ModulationSpectrogram:
         ``t`` [s], shape ``(n_channels, n_bands, n_mod)``: Atlas and Shamma's
         joint acoustic and modulation frequency display at one moment.
         ``kind`` is ``"depth"`` or ``"power"``."""
-        i = int(np.argmin(np.abs(self.t - t)))
-        return self._kind(kind)[..., i]
+        frame_index = int(np.argmin(np.abs(self.t - t)))
+        return self._kind(kind)[..., frame_index]
 
     def average(self, kind: str = "power") -> np.ndarray:
         """Average over frames, shape ``(n_channels, n_bands, n_mod)``. The
@@ -171,12 +171,12 @@ class ModulationSpectrogram:
         n_frames)``: ``sqrt(sum_b power) / sqrt(sum_b mean**2)`` over the
         bands whose cell is :attr:`valid`, which weights bands by their level.
         NaN where no band is valid."""
-        v = self.valid[None]
-        p = np.sum(np.where(v, self.power, 0.0), axis=1)
-        m2 = np.sum(np.where(v, self.mean**2, 0.0), axis=1)
-        tiny = 1e-24 * m2.max(axis=(1, 2), keepdims=True)
+        valid = self.valid[None]
+        power_sum = np.sum(np.where(valid, self.power, 0.0), axis=1)
+        mean_sq_sum = np.sum(np.where(valid, self.mean**2, 0.0), axis=1)
+        tiny = 1e-24 * mean_sq_sum.max(axis=(1, 2), keepdims=True)
         with np.errstate(divide="ignore", invalid="ignore"):
-            return np.where(m2 > tiny, np.sqrt(p / m2), np.nan)
+            return np.where(mean_sq_sum > tiny, np.sqrt(power_sum / mean_sq_sum), np.nan)
 
     def plot(self, ax=None, band: float | None = None, rate: float | None = None, **kwargs):
         """Depth in dB as an image, invalid cells in grey. By default,
@@ -217,7 +217,7 @@ def _band_widths(fb) -> np.ndarray:
     """-3 dB width [Hz] of every filter of ``fb``, from its own responses."""
     cfs = np.asarray(fb.cfs, float)
     # a log-spaced grid: fine steps (0.03%) at every centre frequency
-    f = np.geomspace(max(cfs.min(), 1.0) / 4, 2.0 * cfs.max(), 20001)
-    df = np.gradient(f)
-    H = np.abs(np.asarray(fb.response(f)))  # (F, n_filters)
-    return np.sum((H >= H.max(axis=0) / np.sqrt(2)) * df[:, None], axis=0)
+    freqs = np.geomspace(max(cfs.min(), 1.0) / 4, 2.0 * cfs.max(), 20001)
+    freq_step = np.gradient(freqs)
+    magnitude = np.abs(np.asarray(fb.response(freqs)))  # (F, n_filters)
+    return np.sum((magnitude >= magnitude.max(axis=0) / np.sqrt(2)) * freq_step[:, None], axis=0)

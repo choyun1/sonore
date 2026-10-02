@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/harmoni
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/harmonics.py
+    python docs/gallery/seeing/harmonics.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
@@ -30,7 +30,6 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Unvoiced gaps](#h-unvoiced-gaps): silence or shaped noise where the voice is not voiced.
 # - [Pitch and timbre apart](#h-pitch-and-timbre-apart): the same envelope on other contours.
 # - [Phases on a moving pitch](#h-phases-on-a-moving-pitch): cosine, Schroeder and random phase.
-# - [A gliding sawtooth](#h-a-gliding-sawtooth): four octaves without aliasing.
 # - [What this page leaves out](#h-what-this-page-leaves-out): better envelopes, aperiodicity,
 #   and the glottal pulse.
 
@@ -47,7 +46,6 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
-from scipy.signal import sawtooth
 
 import sonore as so
 
@@ -365,48 +363,6 @@ fig, playhead = show(snd, "equal harmonics, random phase", contours["so.f0_track
 sound = snd
 
 # %% [markdown]
-# ## A gliding sawtooth
-#
-# A contour need not come from speech. A sawtooth gliding up four octaves, from 110 to 1760 Hz at
-# a 16 kHz sampling rate, has 72 harmonics below Nyquist at the start and 4 at the end. Each
-# harmonic in `so.harmonic_complex` fades out as it nears `f_max` (by default 0.45 of the sampling
-# rate), so harmonics leave one by one as they rise, and none is folded back. A sawtooth computed
-# sample by sample from the running phase has every harmonic up to infinity, and those above
-# Nyquist fold back as tones that fall while the pitch rises.
-
-# %%
-fs_glide, glide_dur = 16000, 4.0
-t_glide = np.linspace(0, glide_dur, 401)
-f_glide = 110 * 2 ** (4 * t_glide / glide_dur)  # four octaves, equal steps per second
-
-
-def glide_plot(snd, title):
-    fig, ax = plt.subplots(figsize=(10, 3.2), layout="constrained")
-    so.STFT(snd, win_dur=0.025, hop_dur=0.005).plot(ax, db_range=60, colorbar=False)
-    ax.set(xlim=(0, glide_dur), title=f"{title} (Hann 25 ms spectrogram)")
-    return fig, [ax]
-
-
-# %% [about]
-# Band-limited: `so.sawtooth_wave` on the contour.
-
-# %% [demo hs1] A band-limited glide
-glide = finish(so.sawtooth_wave(glide_dur, fs_glide, (t_glide, f_glide)))
-fig, playhead = glide_plot(glide, "so.sawtooth_wave, 110 to 1760 Hz")
-sound = glide
-
-# %% [about]
-# Naive: `scipy.signal.sawtooth` of the running phase. The aliases are the lines that slope
-# down, heard as a whistle falling against the rising buzz.
-
-# %% [demo hs2] A naive glide, aliased
-n = int(round(glide_dur * fs_glide))
-f_samples = np.interp(np.arange(n) / fs_glide, t_glide, f_glide)
-naive = finish(so.Sound(sawtooth(2 * np.pi * np.cumsum(f_samples) / fs_glide), fs_glide))
-fig, playhead = glide_plot(naive, "scipy.signal.sawtooth of the phase, 110 to 1760 Hz")
-sound = naive
-
-# %% [markdown]
 # ## What this page leaves out
 #
 # - **Better envelopes.** The liftered envelope sits a few dB below the harmonic peaks, and is
@@ -431,7 +387,7 @@ sound = naive
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L504)
+#   [`frames.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/frames.py#L508)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
@@ -441,12 +397,12 @@ sound = naive
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
-#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L142)
+#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/cepstrum.py#L145)
 # - Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low
 #   autocorrelation. *IEEE Trans. Inf. Theory* 16(1), 85–89.
 #   [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411).
-#   [`generators.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L310)
+#   [`generators.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/signals/generators.py#L312)
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
-#   [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L469)
+#   [`filterbank.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/filterbank.py#L473)

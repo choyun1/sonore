@@ -4,7 +4,7 @@ This script is the gallery page https://choyun1.github.io/sonore/gallery/moving.
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
 cell's code beside what it made. Run it yourself from the repository root,
 
-    python docs/gallery/moving.py
+    python docs/gallery/listeners/moving.py
 
 or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext). It downloads
 the PKU-IOA head-related impulse responses at 1 m (about 13 MB) the first time it runs.
@@ -222,13 +222,13 @@ sound = finish(mix)
 #
 # - Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying filters. *Applied
 #   Sciences* 8(1), 103. [MDPI](https://www.mdpi.com/2076-3417/8/1/103).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L273)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L274)
 # - Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail
 #   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
 #   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Experiment code:
 #   [choyun1/MSM](https://github.com/choyun1/MSM).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L273)
-#   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L95)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/spatialization.py#L274)
+#   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/binaural.py#L98)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
 #   library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899.
 #   [doi:10.1371/journal.pone.0211899](https://doi.org/10.1371/journal.pone.0211899).

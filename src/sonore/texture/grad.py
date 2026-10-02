@@ -53,11 +53,11 @@ class ChannelContext:
     def build(cls, model: TextureModel, n: int, w: np.ndarray | None = None) -> ChannelContext:
         w = np.full(n, 1.0 / n) if w is None else np.asarray(w, float) / np.sum(w)
         H_mod = model.mod_bank.response(np.fft.rfftfreq(n, 1 / model.env_fs))
-        f = np.fft.fftfreq(n, 1 / model.env_fs)
-        gain = np.where(f > 0, 2.0, np.where(f == 0, 1.0, 0.0))
+        freqs = np.fft.fftfreq(n, 1 / model.env_fs)
+        gain = np.where(freqs > 0, 2.0, np.where(freqs == 0, 1.0, 0.0))
         if n % 2 == 0:
             gain[n // 2] = 1.0
-        A_oct = model.oct_bank.response(np.abs(f)) * gain[:, None]
+        A_oct = model.oct_bank.response(np.abs(freqs)) * gain[:, None]
         return cls(model, w, H_mod, A_oct)
 
     @property
@@ -86,24 +86,24 @@ class ChannelContext:
         Since ``A`` is Hermitian, this is ``Re(A g_re) - Im(A g_im)``
         ``= Re(A (g_re + i g_im))``: one complex FFT, and the sum over bands
         is taken before the inverse transform."""
-        G = np.fft.fft(g_re + 1j * g_im, axis=0)
-        return np.fft.ifft((G * self.A_oct[:, list(bands)]).sum(axis=1)).real
+        g_spectrum = np.fft.fft(g_re + 1j * g_im, axis=0)
+        return np.fft.ifft((g_spectrum * self.A_oct[:, list(bands)]).sum(axis=1)).real
 
 
 def _central(s, w):
-    mu = w @ s
-    d = s - mu
-    return mu, d
+    mean = w @ s
+    d = s - mean
+    return mean, d
 
 
 def env_moments(s: np.ndarray, ctx: ChannelContext):
     """``[mean, var/mean**2, skew, kurtosis]`` of the envelope."""
     w = ctx.w
-    mu, d = _central(s, w)
-    d2 = d * d
-    d3 = d2 * d
-    m2, m3, m4 = w @ d2, w @ d3, w @ (d2 * d2)
-    val = np.array([mu, m2 / mu**2, m3 / m2**1.5, m4 / m2**2])
+    mean, d = _central(s, w)
+    d_squared = d * d
+    d_cubed = d_squared * d
+    m2, m3, m4 = w @ d_squared, w @ d_cubed, w @ (d_squared * d_squared)
+    value = np.array([mean, m2 / mean**2, m3 / m2**1.5, m4 / m2**2])
 
     def vjp(g):
         # Gradient w.r.t. s of g @ [mean, var/mean**2, skew, kurtosis].
@@ -112,27 +112,27 @@ def env_moments(s: np.ndarray, ctx: ChannelContext):
         # Collected as coefficients of w, w*d, w*d^2, w*d^3 to avoid n-length temporaries:
         # c_var, c_skew, c_kurt are g scaled by each statistic's normalizer, c_dm2 the
         # coefficient of dm2 (and so of 2 w d), c_w the coefficient of w.
-        c_var = g[1] / mu**2
+        c_var = g[1] / mean**2
         c_skew = g[2] / m2**1.5
         c_kurt = g[3] / m2**2
         c_dm2 = c_var - c_skew * 1.5 * m3 / m2 - c_kurt * 2 * m4 / m2
-        c_w = g[0] - g[1] * 2 * m2 / mu**3 - 3 * m2 * c_skew - 4 * m3 * c_kurt
-        return w * (c_w + 2 * c_dm2 * d + 3 * c_skew * d2 + 4 * c_kurt * d3)
+        c_w = g[0] - g[1] * 2 * m2 / mean**3 - 3 * m2 * c_skew - 4 * m3 * c_kurt
+        return w * (c_w + 2 * c_dm2 * d + 3 * c_skew * d_squared + 4 * c_kurt * d_cubed)
 
-    return val, vjp
+    return value, vjp
 
 
 def mod_power(s: np.ndarray, ctx: ChannelContext):
     """Modulation power in each constant-Q band, relative to envelope variance."""
     _, d = _central(s, ctx.w)
-    val, core_vjp = mod_power_core(ctx.mod_filter(s), d, ctx.w)
+    value, core_vjp = mod_power_core(ctx.mod_filter(s), d, ctx.w)
 
     def vjp(g):
         # Gradient w.r.t. s: back through the modulation filters, plus the variance term.
         g_filtered, direct = core_vjp(g)
         return ctx.mod_adjoint(g_filtered) + direct
 
-    return val, vjp
+    return value, vjp
 
 
 def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray):
@@ -141,13 +141,13 @@ def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray):
     of ``B`` (to be passed through the filter adjoint) and the gradient term
     that reaches ``s`` directly through the variance."""
     m2 = w @ d**2
-    val = (w @ B**2) / m2
+    value = (w @ B**2) / m2
 
     def vjp(g):
         # Gradients w.r.t. B and (through the variance m2) directly w.r.t. s.
-        return 2 * w[:, None] * B * g[None, :] / m2, -(g @ val) / m2 * (2 * w * d)
+        return 2 * w[:, None] * B * g[None, :] / m2, -(g @ value) / m2 * (2 * w * d)
 
-    return val, vjp
+    return value, vjp
 
 
 def env_corr(s: np.ndarray, others: np.ndarray, ctx: ChannelContext):
@@ -158,14 +158,14 @@ def env_corr(s: np.ndarray, others: np.ndarray, ctx: ChannelContext):
     others_c = others - (w @ others)[None, :]  # centered
     m2, var_others = w @ d**2, w @ others_c**2
     norm = np.sqrt(m2 * var_others)  # product of standard deviations
-    val = (w @ (d[:, None] * others_c)) / norm
+    value = (w @ (d[:, None] * others_c)) / norm
 
     def vjp(g):
         # Gradient w.r.t. s. w @ others_c = 0, so the mean-subtraction term in
         # d's derivative vanishes.
-        return w * (others_c @ (g / norm)) - (g @ val) / m2 * (w * d)
+        return w * (others_c @ (g / norm)) - (g @ value) / m2 * (w * d)
 
-    return val, vjp
+    return value, vjp
 
 
 def c1(s: np.ndarray, others: np.ndarray, ctx: ChannelContext, bands=None):
@@ -173,14 +173,14 @@ def c1(s: np.ndarray, others: np.ndarray, ctx: ChannelContext, bands=None):
     of each column of ``others`` ``(n, k)``. Shape ``(len(bands), k)``. No
     mean subtraction (paper Eq. 6)."""
     bands = ctx.model.c1_bands if bands is None else bands
-    val, core_vjp = c1_core(ctx.analytic(s, bands).real, ctx.analytic_many(others, bands).real, ctx.w)
+    value, core_vjp = c1_core(ctx.analytic(s, bands).real, ctx.analytic_many(others, bands).real, ctx.w)
 
     def vjp(g):
         # Gradient w.r.t. s: back through the real part of the analytic bands.
         g_bands = core_vjp(g)
         return ctx.analytic_adjoint(g_bands, np.zeros_like(g_bands), bands)
 
-    return val, vjp
+    return value, vjp
 
 
 def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray):
@@ -189,28 +189,30 @@ def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray):
     pow_s = w @ R**2  # (K,) weighted power of each band of s
     pow_o = np.einsum("t,tkj->kj", w, Ro**2)  # (K, k) same for the neighbors
     norm = np.sqrt(pow_s[:, None] * pow_o)
-    val = np.einsum("t,tk,tkj->kj", w, R, Ro) / norm
+    value = np.einsum("t,tk,tkj->kj", w, R, Ro) / norm
 
     def vjp(g):
         # Gradient w.r.t. R (the neighbors Ro are fixed).
-        return w[:, None] * (np.einsum("tkj,kj->tk", Ro, g / norm) - R * ((g * val).sum(1) / pow_s)[None, :])
+        return w[:, None] * (
+            np.einsum("tkj,kj->tk", Ro, g / norm) - R * ((g * value).sum(1) / pow_s)[None, :]
+        )
 
-    return val, vjp
+    return value, vjp
 
 
 def c2(s: np.ndarray, ctx: ChannelContext):
     """C2 within one channel: correlation of each octave band, frequency-doubled,
     with the next band up. Complex ``(n_oct - 1,)``: real part against the
     band's real part, imaginary part against its imaginary (quadrature) part."""
-    K = ctx.A_oct.shape[1]
-    val, core_vjp = c2_core(ctx.analytic(s, range(K)), ctx.w)
+    n_oct = ctx.A_oct.shape[1]
+    value, core_vjp = c2_core(ctx.analytic(s, range(n_oct)), ctx.w)
 
     def vjp(g):
         # Gradient w.r.t. s: back through the real and imaginary analytic bands.
         g_re, g_im = core_vjp(g)
-        return ctx.analytic_adjoint(g_re, g_im, range(K))
+        return ctx.analytic_adjoint(g_re, g_im, range(n_oct))
 
-    return val, vjp
+    return value, vjp
 
 
 def c2_core(A: np.ndarray, w: np.ndarray):
@@ -218,13 +220,13 @@ def c2_core(A: np.ndarray, w: np.ndarray):
     returns the cotangents ``(g_re, g_im)`` of ``A.real`` and ``A.imag``.
 
     Each band pair is a lower band (bands ``0..K-2``) and the band above it."""
-    K = A.shape[1]
-    re, im = A.real, A.imag
-    lower = slice(0, K - 1)
-    up_re, up_im = re[:, 1:], im[:, 1:]  # the upper band of each pair
+    n_oct = A.shape[1]
+    bands_re, bands_im = A.real, A.imag
+    lower = slice(0, n_oct - 1)
+    up_re, up_im = bands_re[:, 1:], bands_im[:, 1:]  # the upper band of each pair
     mag = np.maximum(np.abs(A[:, lower]), 1e-300)  # |lower band|, floored
     # Re(a**2 / |a|): the lower band at twice its frequency, same magnitude
-    doubled = (re[:, lower] ** 2 - im[:, lower] ** 2) / mag
+    doubled = (bands_re[:, lower] ** 2 - bands_im[:, lower] ** 2) / mag
     rms_doubled, rms_up = np.sqrt(w @ doubled**2), np.sqrt(w @ up_re**2)
     cross_re, cross_im = w @ (doubled * up_re), w @ (doubled * up_im)
     corr_re, corr_im = cross_re / (rms_doubled * rms_up), cross_im / (rms_doubled * rms_up)
@@ -243,10 +245,10 @@ def c2_core(A: np.ndarray, w: np.ndarray):
             - w_col * up_re * (g_corr_re * corr_re + g_corr_im * corr_im) / rms_up**2
         )
         g_up_im = w_col * doubled * g_corr_im / (rms_doubled * rms_up)
-        lo_re, lo_im = re[:, lower], im[:, lower]
+        lo_re, lo_im = bands_re[:, lower], bands_im[:, lower]
         g_lo_re = g_doubled * (2 * lo_re / mag - doubled * lo_re / mag**2)
         g_lo_im = g_doubled * (-2 * lo_im / mag - doubled * lo_im / mag**2)
-        g_re, g_im = np.zeros_like(re), np.zeros_like(im)
+        g_re, g_im = np.zeros_like(bands_re), np.zeros_like(bands_im)
         g_re[:, lower] += g_lo_re
         g_im[:, lower] += g_lo_im
         g_re[:, 1:] += g_up_re

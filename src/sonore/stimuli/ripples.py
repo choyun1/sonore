@@ -76,8 +76,8 @@ class _Pattern:
         return plot_ripple_pattern(self, duration, f_lo, f_hi, ax=ax, **kwargs)
 
 
-def _components(p) -> tuple[Ripple, ...]:
-    return (p,) if isinstance(p, Ripple) else p.components
+def _components(pattern) -> tuple[Ripple, ...]:
+    return (pattern,) if isinstance(pattern, Ripple) else pattern.components
 
 
 @dataclass(frozen=True)
@@ -133,14 +133,14 @@ class RippleSum(_Pattern):
     components: tuple[Ripple, ...]
 
     def __post_init__(self):
-        scales = {c.scale for c in self.components}
+        scales = {ripple.scale for ripple in self.components}
         if len(scales) > 1:
             raise ValueError("cannot add linear-scale and dB-scale ripples")
-        if scales == {"linear"} and sum(c.depth for c in self.components) > 1 + 1e-12:
+        if scales == {"linear"} and sum(ripple.depth for ripple in self.components) > 1 + 1e-12:
             raise ValueError("linear ripple depths sum to more than 1; the envelope would go negative")
 
     def __repr__(self) -> str:
-        return " + ".join(repr(c) for c in self.components)
+        return " + ".join(repr(ripple) for ripple in self.components)
 
     @property
     def scale(self) -> str:
@@ -149,9 +149,11 @@ class RippleSum(_Pattern):
     def envelope(self, t: np.ndarray, x: np.ndarray) -> np.ndarray:
         t, x = np.asarray(t, float), np.asarray(x, float)
         total = np.zeros((len(x), len(t)))
-        for c in self.components:
-            mod = np.sin(2 * np.pi * (c.rate * t[None, :] + c.density * x[:, None]) + c.phase)
-            total += (c.depth if self.scale == "linear" else c.depth / 2) * mod
+        for ripple in self.components:
+            modulation = np.sin(
+                2 * np.pi * (ripple.rate * t[None, :] + ripple.density * x[:, None]) + ripple.phase
+            )
+            total += (ripple.depth if self.scale == "linear" else ripple.depth / 2) * modulation
         return 1 + total if self.scale == "linear" else 10 ** (total / 20)
 
 
@@ -200,19 +202,19 @@ class DynamicRipple(_Pattern):
     def trajectories(self, t: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """``rate(t)`` [Hz] and ``density(t)`` [cycles/octave] at times ``t``."""
         t = np.asarray(t, float)
-        n = int(np.ceil(t[-1] * self.grid_fs)) + 2
-        grid = np.arange(n) / self.grid_fs
+        n_grid = int(np.ceil(t[-1] * self.grid_fs)) + 2
+        grid = np.arange(n_grid) / self.grid_fs
         rng = as_rng(self.seed)
         out = []
         for (lo, hi), cutoff in (
             (self.rate_range, self.rate_change),
             (self.density_range, self.density_change),
         ):
-            z = rng.standard_normal(n + 2 * int(self.grid_fs))  # extra samples avoid edge effects
+            noise = rng.standard_normal(n_grid + 2 * int(self.grid_fs))  # extra samples avoid edge effects
             sos = butter(4, cutoff, fs=self.grid_fs, output="sos")
-            z = sosfiltfilt(sos, z)[int(self.grid_fs) : int(self.grid_fs) + n]
-            u = ndtr((z - z.mean()) / z.std())  # Gaussian -> uniform on (0, 1)
-            out.append(np.interp(t, grid, lo + (hi - lo) * u))
+            noise = sosfiltfilt(sos, noise)[int(self.grid_fs) : int(self.grid_fs) + n_grid]
+            uniform = ndtr((noise - noise.mean()) / noise.std())  # Gaussian -> uniform on (0, 1)
+            out.append(np.interp(t, grid, lo + (hi - lo) * uniform))
         return out[0], out[1]
 
     def envelope(self, t: np.ndarray, x: np.ndarray) -> np.ndarray:
@@ -220,8 +222,8 @@ class DynamicRipple(_Pattern):
         rate, density = self.trajectories(t)
         dt = t[1] - t[0] if len(t) > 1 else 1.0
         phi = 2 * np.pi * np.cumsum(rate) * dt
-        s = (self.depth / 2) * np.sin(2 * np.pi * density[None, :] * x[:, None] + phi[None, :])
-        return 10 ** (s / 20)
+        level_db = (self.depth / 2) * np.sin(2 * np.pi * density[None, :] * x[:, None] + phi[None, :])
+        return 10 ** (level_db / 20)
 
 
 Pattern = Ripple | RippleSum | DynamicRipple | Callable[[np.ndarray, np.ndarray], np.ndarray]
@@ -230,27 +232,27 @@ Pattern = Ripple | RippleSum | DynamicRipple | Callable[[np.ndarray, np.ndarray]
 def _evaluate(pattern: Pattern, t: np.ndarray, x: np.ndarray) -> np.ndarray:
     """Envelope with shape ``(len(x), len(t))``."""
     if hasattr(pattern, "envelope"):
-        env = pattern.envelope(t, x)
+        envelope = pattern.envelope(t, x)
     else:
-        env = np.broadcast_to(pattern(t[None, :], x[:, None]), (len(x), len(t)))
-    if np.any(env < 0):
+        envelope = np.broadcast_to(pattern(t[None, :], x[:, None]), (len(x), len(t)))
+    if np.any(envelope < 0):
         raise ValueError("the envelope pattern must be non-negative")
-    return env
+    return envelope
 
 
 def _max_density(pattern: Pattern) -> float | None:
     if isinstance(pattern, Ripple | RippleSum):
-        return max(abs(c.density) for c in _components(pattern))
+        return max(abs(ripple.density) for ripple in _components(pattern))
     if isinstance(pattern, DynamicRipple):
-        return max(abs(d) for d in pattern.density_range)
+        return max(abs(bound) for bound in pattern.density_range)
     return None
 
 
 def _max_rate(pattern: Pattern) -> float | None:
     if isinstance(pattern, Ripple | RippleSum):
-        return max(abs(c.rate) for c in _components(pattern))
+        return max(abs(ripple.rate) for ripple in _components(pattern))
     if isinstance(pattern, DynamicRipple):
-        return max(abs(r) for r in pattern.rate_range)
+        return max(abs(bound) for bound in pattern.rate_range)
     return None
 
 
@@ -281,9 +283,9 @@ def _flat_noise_bands(noise: Sound, filterbank: OctaveFilterbank) -> Subbands:
     spectrum without re-filtering, so modulation sidebands survive intact
     (re-filtering with :meth:`Subbands.synthesize` would attenuate fast
     modulations in narrow low-frequency bands)."""
-    n = len(noise)
-    H = filterbank.rfft_response(n, noise.fs)
-    bands = np.fft.irfft(np.fft.rfft(noise.data[:, 0])[:, None] * H**2, n=n, axis=0)
+    length = len(noise)
+    response = filterbank.rfft_response(length, noise.fs)
+    bands = np.fft.irfft(np.fft.rfft(noise.data[:, 0])[:, None] * response**2, n=length, axis=0)
     bands /= np.sqrt(np.mean(bands**2, axis=0, keepdims=True)) + 1e-30
     return Subbands(bands[:, :, None], noise.fs, filterbank)
 
@@ -326,53 +328,55 @@ def ripple_sound(
     ``rng``.
     """
     rng = as_rng(rng)
-    N = n_samples(duration, fs)
-    t = time_axis(N, fs)
+    length = n_samples(duration, fs)
+    t = time_axis(length, fs)
     if f_hi >= fs / 2:
         raise ValueError("f_hi must be below Nyquist")
-    out = np.zeros(N)
+    out = np.zeros(length)
 
     if isinstance(carrier, str) and carrier in ("tones", "harmonic"):
         if carrier == "tones":
             _check_resolution(pattern, tones_per_octave, "tone carrier")
-            k = np.arange(int(np.floor(tones_per_octave * np.log2(f_hi / f_lo))) + 1)
-            freqs = f_lo * 2 ** (k / tones_per_octave)
+            tone_index = np.arange(int(np.floor(tones_per_octave * np.log2(f_hi / f_lo))) + 1)
+            freqs = f_lo * 2 ** (tone_index / tones_per_octave)
             weights = np.ones(len(freqs))
         else:
-            n = np.arange(int(np.ceil(f_lo / f0)), int(np.floor(f_hi / f0)) + 1)
-            if len(n) == 0:
+            harmonics = np.arange(int(np.ceil(f_lo / f0)), int(np.floor(f_hi / f0)) + 1)
+            if len(harmonics) == 0:
                 raise ValueError("no harmonics of f0 fall between f_lo and f_hi")
-            freqs = n * f0
-            weights = 1 / np.sqrt(n)  # equal energy per octave
+            freqs = harmonics * f0
+            weights = 1 / np.sqrt(harmonics)  # equal energy per octave
             _check_resolution(
                 pattern,
-                1 / np.log2((n[0] + 1) / n[0]),
-                f"harmonic carrier's lowest harmonics (f0={f0:g} Hz, near {n[0] * f0:g} Hz)",
+                1 / np.log2((harmonics[0] + 1) / harmonics[0]),
+                f"harmonic carrier's lowest harmonics (f0={f0:g} Hz, near {harmonics[0] * f0:g} Hz)",
             )
         x = np.log2(freqs / f_lo)
         phases = rng.uniform(0, 2 * np.pi, len(freqs))
-        for s in range(0, len(freqs), chunk):
-            sl = slice(s, s + chunk)
-            env = _evaluate(pattern, t, x[sl])
+        for start in range(0, len(freqs), chunk):
+            batch = slice(start, start + chunk)
+            envelope = _evaluate(pattern, t, x[batch])
             out += np.sum(
-                weights[sl, None] * env * np.sin(2 * np.pi * freqs[sl, None] * t[None, :] + phases[sl, None]),
+                weights[batch, None]
+                * envelope
+                * np.sin(2 * np.pi * freqs[batch, None] * t[None, :] + phases[batch, None]),
                 axis=0,
             )
         return Sound(out, fs).normalize()
 
     # channel carriers: pattern envelopes x the carrier's band fine structure
     _check_resolution(pattern, bands_per_octave, "channel carrier")
-    fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
+    filterbank = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
     if isinstance(carrier, Sound):
-        if carrier.fs != fs or len(carrier) < N:
+        if carrier.fs != fs or len(carrier) < length:
             raise ValueError("carrier sound must have the same fs and be at least as long")
-        fine = fb.analyze(Sound(carrier.mono().data[:N], fs)).tfs()
+        fine = filterbank.analyze(Sound(carrier.mono().data[:length], fs)).tfs()
     elif carrier == "low-noise":
         # our own noise is periodic, so circular analysis (pad=0) is exact here
-        fine = fb.analyze(gaussian_noise(duration, fs, rng=rng), pad=0).tfs()
+        fine = filterbank.analyze(gaussian_noise(duration, fs, rng=rng), pad=0).tfs()
     elif carrier == "noise":
-        fine = _flat_noise_bands(gaussian_noise(duration, fs, rng=rng), fb)
+        fine = _flat_noise_bands(gaussian_noise(duration, fs, rng=rng), filterbank)
     else:
         raise ValueError("carrier must be 'tones', 'harmonic', 'noise', 'low-noise', or a Sound")
-    envelopes = render(pattern, fb, duration, fs).without_edges()  # edges lie outside f_lo..f_hi
+    envelopes = render(pattern, filterbank, duration, fs).without_edges()  # edges lie outside f_lo..f_hi
     return (envelopes * fine).sum().normalize()

@@ -6,7 +6,7 @@ import pytest
 import sonore as so
 
 FS = 16000.0
-SPEECH = Path(__file__).resolve().parent.parent / "docs" / "speech"
+SPEECH = Path(__file__).resolve().parents[2] / "docs" / "speech"
 FORMANTS = [(730, 60), (1090, 100), (2440, 120), (3400, 175)]
 
 

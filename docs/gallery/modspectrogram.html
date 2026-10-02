@@ -43,6 +43,8 @@ nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem)
   padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
 nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.ref { margin-left: auto; }
+nav.pages a.ref + a.repo { margin-left: 0; }
 nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
 nav.pages a.repo:hover { color: var(--ink); }
 @media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
@@ -87,11 +89,30 @@ details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(-
 .tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
 footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
 @media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 3.5rem 1.25rem 2rem 1.75rem;
+    border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a:first-child, nav.pages details { display: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side .home { display: block; font-size: 1.05rem; margin: 0 0 1.5rem; }
+.side .group { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 1.5rem 0 0.4rem; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
 </style>
 </head>
 <body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><a class="home" href="index.html">Listening gallery</a><p class="group">Stimuli</p><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul><p class="group">Seeing and changing sounds</p><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html" aria-current="page">Modulation spectrogram</a><ul><li><a href="#h-how-it-is-computed">How it is computed</a></li><li><a href="#h-a-modulation-rate-that-glides">A modulation rate that glides</a></li><li><a href="#h-speech-babble-and-noise">Speech, babble and noise</a></li><li><a href="#h-three-textures">Three textures</a></li><li><a href="#h-three-cuts-through-the-cube">Three cuts through the cube</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul><p class="group">Listeners in the world</p><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="here"><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html" aria-current="page">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul></details><details><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="binaural.html">Binaural cues</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="here"><summary>Seeing and changing sounds</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="modspectrogram.html" aria-current="page">Modulation spectrogram</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="formants.html">Formant synthesis</a></li></ul></details><details><summary>Listeners in the world</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -142,7 +163,7 @@ so even steady noise has some depth at every rate, more at fast rates (about <sp
 moment; pooled over the 24 bands it scatters by less than 1 dB. Press play,
 or click a time axis, and it follows the sound; before that it shows a moment chosen for each
 example.</p>
-<div class="cell"><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -192,7 +213,7 @@ def show(snd, marks=(), start=None):
         &quot;title&quot;: &quot;Depth&quot;,
         &quot;start&quot;: snd.duration / 2 if start is None else start,
     }
-    return fig, list(axes), live</code></pre></div>
+    return fig, list(axes), live</code></pre></details></div>
 </section>
 <section aria-labelledby="h-a-modulation-rate-that-glides">
 <h2 id="h-a-modulation-rate-that-glides">A modulation rate that glides</h2>
@@ -216,7 +237,7 @@ common to all frequencies.</p></div>
     <img src="img/g1_a_gliding_modulation_rate.png" width="900" height="840" alt="Plots of the a gliding modulation rate sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">dur, r0, r1 = 8.0, 2.0, 32.0
+  <details class="code"><summary>Code</summary><pre><code class="language-python">dur, r0, r1 = 8.0, 2.0, 32.0
 t = np.arange(int(dur * fs)) / fs
 phase = 2 * np.pi * r0 * dur / np.log(r1 / r0) * ((r1 / r0) ** (t / dur) - 1)
 glide = (1 + 0.5 * np.sin(phase)) * rng.standard_normal(len(t))
@@ -231,7 +252,7 @@ overlapping at random, then 4 s of noise with the sentences' long-term spectrum.
 modulated most strongly between about 2 and 8 Hz, the rate of its syllables (Greenberg &amp; Kingsbury,
 1997). That rhythm is what babble partly hides and
 speech-shaped noise lacks entirely.</p>
-<div class="cell"><pre><code class="language-python">names = (&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;)
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">names = (&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;)
 sentences = [so.load(f&quot;docs/speech/{n}.flac&quot;).normalize(rms=0.1) for n in names]
 talk = so.concat(sentences)
 n = int(4 * fs)
@@ -243,7 +264,7 @@ for s in sentences * 2:
 ssn = so.long_term_spectrum(sentences).to_noise(4, fs, rng=0)
 mixed = so.concat([talk, so.Sound(babble, fs).normalize(rms=0.1), ssn.normalize(rms=0.1)])
 marks = [talk.duration, talk.duration + 4]
-print(f&quot;sentences {talk.duration:.2f} s, then babble and noise, {mixed.duration:.2f} s in all&quot;)</code></pre><pre class="out">sentences 10.14 s, then babble and noise, 18.14 s in all</pre></div>
+print(f&quot;sentences {talk.duration:.2f} s, then babble and noise, {mixed.duration:.2f} s in all&quot;)</code></pre></details><pre class="out">sentences 10.14 s, then babble and noise, 18.14 s in all</pre></div>
 
 <article class="sound" id="d-s1" data-regions="[{&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.027976587301587474, &quot;bottom&quot;: 0.3083317739335316, &quot;t0&quot;: -0.005, &quot;t1&quot;: 18.145000000000003}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.3470561125578703, &quot;bottom&quot;: 0.6274112991898149, &quot;t0&quot;: -0.005, &quot;t1&quot;: 18.145000000000003}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.6661356378141534, &quot;bottom&quot;: 0.9464908244460979, &quot;t0&quot;: -0.005, &quot;t1&quot;: 18.145000000000003}]">
   <div class="about">
@@ -261,7 +282,7 @@ more at rates near the band's width. Watch the image beside the player change at
     <img src="img/s1_speech_babble_and_noise.png" width="900" height="840" alt="Plots of the speech, babble and noise sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(mixed)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(mixed)
 fig, playhead, live = show(sound, marks=marks, start=1.5)</code></pre></details>
 </article>
 </section>
@@ -270,8 +291,8 @@ fig, playhead, live = show(sound, marks=marks, start=1.5)</code></pre></details>
 <p>Crickets, applause and rain, 3.5 s of each, from the recordings on the
 <a href="textures.html">Sound textures</a> page. A texture is a sound whose statistics stay put, so its
 modulation spectrogram should hold still while each texture lasts and change at the joins.</p>
-<div class="cell"><pre><code class="language-python">textures = [so.load(f&quot;docs/textures/{n}.flac&quot;).resample(fs) for n in (&quot;crickets&quot;, &quot;applause&quot;, &quot;rain&quot;)]
-three = so.concat([s[:3.5].normalize(rms=0.1) for s in textures])</code></pre></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">textures = [so.load(f&quot;docs/textures/{n}.flac&quot;).resample(fs) for n in (&quot;crickets&quot;, &quot;applause&quot;, &quot;rain&quot;)]
+three = so.concat([s[:3.5].normalize(rms=0.1) for s in textures])</code></pre></details></div>
 
 <article class="sound" id="d-x1" data-regions="[{&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.027976587301587474, &quot;bottom&quot;: 0.3083317739335316, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.3470561125578703, &quot;bottom&quot;: 0.6274112991898149, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.08469498360339507, &quot;x1&quot;: 0.8778740250743239, &quot;top&quot;: 0.6661356378141534, &quot;bottom&quot;: 0.9464908244460979, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}]">
   <div class="about">
@@ -289,7 +310,7 @@ changes quickly.</p></div>
     <img src="img/x1_crickets_applause_and_rain.png" width="900" height="840" alt="Plots of the crickets, applause and rain sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">sound = finish(three)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(three)
 fig, playhead, live = show(sound, marks=[3.5, 7.0], start=1.75)</code></pre></details>
 </article>
 </section>
@@ -312,7 +333,7 @@ is wide.</p></div>
   <figure class="plot"><div class="plate">
     <img src="img/s2_three_cuts_through_the_sentences.png" width="1300" height="380" alt="Three cuts through the sentences" loading="lazy">
   </div></figure>
-  <details class="code" open><summary>Code</summary><pre><code class="language-python">env, msg, fine = analyze(finish(talk))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">env, msg, fine = analyze(finish(talk))
 fig = msg.slices(2.0, rate=4.0)</code></pre></details>
 </article>
 </section>
@@ -324,8 +345,9 @@ fig = msg.slices(2.0, rate=4.0)</code></pre></details>
 <h2 id="h-references">References</h2>
 <ul><li>Atlas &amp; Shamma (2003). Joint acoustic and modulation frequency. <em>EURASIP J. Appl. Signal Processing</em> 2003(7). <a href="https://doi.org/10.1155/S1110865703305013">doi:10.1155/S1110865703305013</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modspectrogram.py#L155"><code>modspectrogram.ModulationSpectrogram.at</code></a></li><li>Dau, Kollmeier &amp; Kohlrausch (1997). Modeling auditory processing of amplitude modulation. I. Detection and masking with narrow-band carriers. <em>JASA</em> 102(5), 2892–2905. <a href="https://pubmed.ncbi.nlm.nih.gov/9373976/">PubMed</a>. Modulation filters a few cycles long. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modulation.py#L140"><code>modulation.HannModulationFilterbank</code></a></li><li>Greenberg &amp; Kingsbury (1997). The modulation spectrogram: in pursuit of an invariant representation of speech. <em>Proc. ICASSP 1997</em>, vol. 3, 1647–1650. <a href="https://www.semanticscholar.org/paper/71c0095d37084b6055a1abc8d4edcde3ef9f130b">Semantic Scholar</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/analysis/modspectrogram.py#L27"><code>modspectrogram.ModulationSpectrogram</code></a></li><li>Kingsbury, Morgan &amp; Greenberg (1998). Robust speech recognition using the modulation spectrogram. <em>Speech Communication</em> 25(1–3), 117–132. <a href="https://doi.org/10.1016/S0167-6393(98)00032-6">doi:10.1016/S0167-6393(98)00032-6</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences.</li></ul>
 </section>
-<footer>This page is the script <code>docs/gallery/modspectrogram.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/modspectrogram.py</code>, or a cell at a time.</footer>
+<footer>This page is the script <code>docs/gallery/seeing/modspectrogram.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/modspectrogram.py</code>, or a cell at a time.</footer>
 </main>
+</div>
 <script>
 (() => {
   const items = [...document.querySelectorAll(".sound")].map((el) => {

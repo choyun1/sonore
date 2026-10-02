@@ -59,22 +59,22 @@ class ModulationFilterbank:
         ordinary filtered output.
         """
         x = np.moveaxis(np.asarray(x, float), axis, 0)
-        n = x.shape[0]
-        extra = (None,) * (x.ndim - 1)
+        n_samples = x.shape[0]
+        trailing_axes = (None,) * (x.ndim - 1)
         if not analytic:
-            H = self.response(np.fft.rfftfreq(n, 1 / fs))  # (F, M)
-            X = np.fft.rfft(x, axis=0)[..., None]
-            out = np.fft.irfft(X * H[(slice(None),) + extra], n=n, axis=0)
+            transfer = self.response(np.fft.rfftfreq(n_samples, 1 / fs))  # (F, M)
+            spectrum = np.fft.rfft(x, axis=0)[..., None]
+            filtered = np.fft.irfft(spectrum * transfer[(slice(None),) + trailing_axes], n=n_samples, axis=0)
         else:
-            f = np.fft.fftfreq(n, 1 / fs)
-            H = self.response(np.abs(f))
-            gain = np.where(f > 0, 2.0, np.where(f == 0, 1.0, 0.0))
-            if n % 2 == 0:
-                gain[n // 2] = 1.0  # Nyquist bin is its own conjugate
-            H = H * gain[:, None]
-            X = np.fft.fft(x, axis=0)[..., None]
-            out = np.fft.ifft(X * H[(slice(None),) + extra], axis=0)
-        return np.moveaxis(out, 0, axis) if axis != 0 else out
+            freqs = np.fft.fftfreq(n_samples, 1 / fs)
+            transfer = self.response(np.abs(freqs))
+            gain = np.where(freqs > 0, 2.0, np.where(freqs == 0, 1.0, 0.0))
+            if n_samples % 2 == 0:
+                gain[n_samples // 2] = 1.0  # Nyquist bin is its own conjugate
+            transfer = transfer * gain[:, None]
+            spectrum = np.fft.fft(x, axis=0)[..., None]
+            filtered = np.fft.ifft(spectrum * transfer[(slice(None),) + trailing_axes], axis=0)
+        return np.moveaxis(filtered, 0, axis) if axis != 0 else filtered
 
 
 @dataclass(frozen=True)
@@ -100,15 +100,15 @@ class ConstantQModulationFilterbank(ModulationFilterbank):
     @property
     def scale(self) -> float:
         cfs = self.cfs
-        lo, hi = cfs[min(3, len(cfs) - 1)], cfs[max(len(cfs) - 4, 0)]
-        f = np.linspace(lo, hi, 4097) if hi > lo else np.array([lo])
-        return float(1 / np.sqrt(np.mean(np.sum(self._raw(f) ** 2, axis=1))))
+        cf_lo, cf_hi = cfs[min(3, len(cfs) - 1)], cfs[max(len(cfs) - 4, 0)]
+        freqs = np.linspace(cf_lo, cf_hi, 4097) if cf_hi > cf_lo else np.array([cf_lo])
+        return float(1 / np.sqrt(np.mean(np.sum(self._raw(freqs) ** 2, axis=1))))
 
     def _raw(self, freqs) -> np.ndarray:
-        f = np.asarray(freqs, float)[:, None]
-        cf = self.cfs[None, :]
-        u = (f - cf) / (2 * cf / self.Q)  # -1/2 .. 1/2 across the support
-        return np.where(np.abs(u) < 0.5, np.cos(np.pi * np.clip(u, -0.5, 0.5)), 0.0)
+        freq_col = np.asarray(freqs, float)[:, None]
+        cf_row = self.cfs[None, :]
+        position = (freq_col - cf_row) / (2 * cf_row / self.Q)  # -1/2 .. 1/2 across the support
+        return np.where(np.abs(position) < 0.5, np.cos(np.pi * np.clip(position, -0.5, 0.5)), 0.0)
 
     def response(self, freqs) -> np.ndarray:
         return self._raw(freqs) * self.scale
@@ -130,10 +130,10 @@ class OctaveModulationFilterbank(ModulationFilterbank):
         return self.f_hi / 2.0 ** np.arange(self.n_bands - 1, -1, -1)
 
     def response(self, freqs) -> np.ndarray:
-        f = np.asarray(freqs, float)[:, None]
+        freq_col = np.asarray(freqs, float)[:, None]
         with np.errstate(divide="ignore"):
-            u = (np.log2(f) - np.log2(self.cfs)[None, :]) / 2  # octaves / width
-        return np.where(np.abs(u) < 0.5, np.cos(np.pi * np.clip(u, -0.5, 0.5)), 0.0)
+            octave_offset = (np.log2(freq_col) - np.log2(self.cfs)[None, :]) / 2  # octaves / width
+        return np.where(np.abs(octave_offset) < 0.5, np.cos(np.pi * np.clip(octave_offset, -0.5, 0.5)), 0.0)
 
 
 @dataclass(frozen=True)
@@ -187,8 +187,8 @@ class HannModulationFilterbank(ModulationFilterbank):
     def cfs(self) -> np.ndarray:
         """Centre rates [Hz]."""
         if self.window is None:
-            n = int(np.floor(np.log2(self.f_hi / self.f_lo) * self.per_octave + 1e-9)) + 1
-            return self.f_lo * 2.0 ** (np.arange(n) / self.per_octave)
+            n_cfs = int(np.floor(np.log2(self.f_hi / self.f_lo) * self.per_octave + 1e-9)) + 1
+            return self.f_lo * 2.0 ** (np.arange(n_cfs) / self.per_octave)
         k_lo = max(2, int(np.ceil(self.f_lo * self.window - 1e-9)))
         k_hi = int(np.floor(self.f_hi * self.window + 1e-9))
         return np.arange(k_lo, k_hi + 1) / self.window
@@ -215,21 +215,21 @@ class HannModulationFilterbank(ModulationFilterbank):
     def kernels(self, fs: float) -> list[tuple[np.ndarray, np.ndarray]]:
         """``(h_k, w_k)`` for every band at ``fs``: the complex kernel and its
         normalized Hann window."""
-        out = []
-        for f, n in zip(self.cfs, self.lengths(fs), strict=True):
-            w = np.sin(np.pi * (np.arange(n) + 0.5) / n) ** 2
-            w = w / w.sum()
-            tc = (np.arange(n) - (n - 1) / 2) / fs
-            out.append((w * np.exp(2j * np.pi * f * tc), w))
-        return out
+        kernels = []
+        for rate, length in zip(self.cfs, self.lengths(fs), strict=True):
+            hann = np.sin(np.pi * (np.arange(length) + 0.5) / length) ** 2
+            hann = hann / hann.sum()
+            t_centred = (np.arange(length) - (length - 1) / 2) / fs
+            kernels.append((hann * np.exp(2j * np.pi * rate * t_centred), hann))
+        return kernels
 
     def response(self, freqs) -> np.ndarray:
         """Magnitude response of the real filter (the real part of
         :meth:`filter`'s analytic output), shape ``(len(freqs), n_bands)``,
         for continuous-time windows. Peak gain is about 1; zero at 0 Hz."""
-        f = np.asarray(freqs, float)[:, None]
-        T, fc = self.durations()[None, :], self.cfs[None, :]
-        return np.abs(_hann_ft((f - fc) * T) + _hann_ft((f + fc) * T))
+        freq_col = np.asarray(freqs, float)[:, None]
+        durations, rates = self.durations()[None, :], self.cfs[None, :]
+        return np.abs(_hann_ft((freq_col - rates) * durations) + _hann_ft((freq_col + rates) * durations))
 
     def filter(
         self, x, fs: float, axis: int = 0, analytic: bool = False, align: str = "center"
@@ -245,28 +245,28 @@ class HannModulationFilterbank(ModulationFilterbank):
             raise ValueError("align must be 'center' or 'causal'")
         self.check_fs(fs)
         x = np.moveaxis(np.asarray(x, float), axis, 0)
-        out = np.empty(x.shape + (self.n_bands,), complex)
-        for k, (h, _) in enumerate(self.kernels(fs)):
-            out[..., k] = 2 * _correlate(x, h, align)
-        out = out if analytic else out.real
-        return np.moveaxis(out, 0, axis) if axis != 0 else out
+        filtered = np.empty(x.shape + (self.n_bands,), complex)
+        for k, (kernel, _) in enumerate(self.kernels(fs)):
+            filtered[..., k] = 2 * _correlate(x, kernel, align)
+        filtered = filtered if analytic else filtered.real
+        return np.moveaxis(filtered, 0, axis) if axis != 0 else filtered
 
 
 def _hann_ft(u: np.ndarray) -> np.ndarray:
     """Fourier transform of a unit-area Hann window of length 1, at ``u``
     cycles per window length: sinc(u) / (1 - u^2), with its limit at |u| = 1."""
     with np.errstate(divide="ignore", invalid="ignore"):
-        v = np.sinc(u) / (1 - u * u)
-    return np.where(np.isclose(np.abs(u), 1.0), 0.5, v)
+        transform = np.sinc(u) / (1 - u * u)
+    return np.where(np.isclose(np.abs(u), 1.0), 0.5, transform)
 
 
 def _correlate(x: np.ndarray, h: np.ndarray, align: str) -> np.ndarray:
     """``y[n] = sum_j x[n + j - c] conj(h[j])`` along axis 0, with ``x`` zero
     outside its extent; ``c = L - 1`` (causal) or ``L - 1 - (L - 1) // 2``
     (centred)."""
-    n, L = x.shape[0], len(h)
-    g = np.conj(h)[::-1].reshape((L,) + (1,) * (x.ndim - 1))
+    n_samples, L = x.shape[0], len(h)
+    reversed_conj_kernel = np.conj(h)[::-1].reshape((L,) + (1,) * (x.ndim - 1))
     with threads():
-        full = fftconvolve(x, g, axes=0)  # full[m] = sum_j x[m - L + 1 + j] conj(h[j])
+        full = fftconvolve(x, reversed_conj_kernel, axes=0)  # full[m] = sum_j x[m - L + 1 + j] conj(h[j])
     start = 0 if align == "causal" else (L - 1) // 2
-    return full[start : start + n]
+    return full[start : start + n_samples]
