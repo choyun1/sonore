@@ -59,10 +59,10 @@ class TestGenerators:
         assert lag == pytest.approx(5e-3 * FS, abs=1)
 
 
-HOP = 0.005  # frame period of the contours below [s], as in so.f0_track
+HOP = 0.005  # hop of the contours below [s], as in so.f0_track
 
 
-def frames(f, dur):
+def time_windows(f, dur):
     t = np.arange(0, dur + HOP / 2, HOP)
     return t, f(t)
 
@@ -79,13 +79,13 @@ class TestHarmonicContours:
     """harmonic_complex with an F0 contour (docs/design/harmonic-source.md)."""
 
     def test_constant_contour_is_the_fixed_complex(self):
-        t, f = frames(lambda t: np.full_like(t, 220.0), 0.5)
+        t, f = time_windows(lambda t: np.full_like(t, 220.0), 0.5)
         a = so.harmonic_complex(0.5, FAST, (t, f), np.arange(1, 11), phases="random", rng=0)
         b = so.harmonic_complex(0.5, FAST, 220.0, np.arange(1, 11), phases="random", rng=0)
         np.testing.assert_allclose(a.data, b.data, atol=1e-10)
 
     def test_linear_glide_is_exact(self):
-        t, f = frames(lambda t: 100 + 200 * t, 1.0)
+        t, f = time_windows(lambda t: 100 + 200 * t, 1.0)
         x = so.harmonic_complex(1.0, FAST, (t, f), [1])
         ts = np.arange(len(x)) / FAST
         ref = np.cos(2 * np.pi * (100 * ts + 100 * ts**2))
@@ -98,7 +98,7 @@ class TestHarmonicContours:
             return 150 * (1 + 0.04 * np.sin(2 * np.pi * 5.5 * t))
 
         # 2 s: the analytic signal's own error at the ends of a shorter excerpt is larger than the bound
-        t, f = frames(vib, 2.0)
+        t, f = time_windows(vib, 2.0)
         mid = (np.arange(2 * FAST - 1) + 0.5) / FAST
         inner = (mid > 0.1) & (mid < 1.9)
         for k in (1, 10):
@@ -108,7 +108,7 @@ class TestHarmonicContours:
 
     def test_gaps_are_filled_and_silent(self):
         # voiced 0-0.2 s at 100 Hz, unvoiced 0.2-0.4 s, voiced 0.4-0.6 s at 200 Hz
-        t, f = frames(lambda t: np.where(t < 0.2, 100.0, np.where(t < 0.4, 0.0, 200.0)), 0.6)
+        t, f = time_windows(lambda t: np.where(t < 0.2, 100.0, np.where(t < 0.4, 0.0, 200.0)), 0.6)
         x = so.harmonic_complex(0.6, FAST, (t, f), [1]).data[:, 0]
         gap = slice(int(0.21 * FAST), int(0.39 * FAST))
         assert np.max(np.abs(x[gap])) == 0
@@ -117,7 +117,7 @@ class TestHarmonicContours:
         assert np.max(np.diff(crossings)) <= FAST / 100 / 2 + 2
 
     def test_rising_glide_does_not_alias(self):
-        t, f = frames(lambda t: 100 * 10**t, 1.0)
+        t, f = time_windows(lambda t: 100 * 10**t, 1.0)
         x = so.harmonic_complex(1.0, FAST, (t, f))
         assert power_above(x.data[:, 0], 0.45 * FAST + 400) < -90
 
@@ -131,21 +131,21 @@ class TestHarmonicContours:
         assert two.n_channels == 2
 
     def test_unvoiced_noise_is_reproducible(self):
-        t, f = frames(lambda t: np.where(t < 0.2, 0.0, 120.0), 0.4)
+        t, f = time_windows(lambda t: np.where(t < 0.2, 0.0, 120.0), 0.4)
         a = so.harmonic_complex(0.4, FAST, (t, f), unvoiced="noise", rng=3)
         b = so.harmonic_complex(0.4, FAST, (t, f), unvoiced="noise", rng=3)
         np.testing.assert_array_equal(a.data, b.data)
         assert np.std(a.data[: int(0.15 * FAST)]) > 0.1
 
     def test_phases_need_one_per_harmonic(self):
-        t, f = frames(lambda t: np.full_like(t, 1000.0), 0.1)
+        t, f = time_windows(lambda t: np.full_like(t, 1000.0), 0.1)
         n = int(0.45 * FAST // 1000)
         so.harmonic_complex(0.1, FAST, (t, f), phases=np.zeros(n))
         with pytest.raises(ValueError, match="needs one starting phase"):
             so.harmonic_complex(0.1, FAST, (t, f), phases=np.zeros(n + 1))
 
     def test_amplitudes_as_a_spectral_envelope(self):
-        t, f = frames(lambda t: np.full_like(t, 200.0), 0.2)
+        t, f = time_windows(lambda t: np.full_like(t, 200.0), 0.2)
         x = so.harmonic_complex(0.2, FAST, (t, f), [1, 2], amplitudes=lambda t, f: (f < 300).astype(float))
         y = so.harmonic_complex(0.2, FAST, 200.0, [1])
         np.testing.assert_allclose(x.data, y.data, atol=1e-10)
@@ -180,7 +180,7 @@ class TestNamedWaveforms:
                 )
 
     def test_contours_do_not_alias(self):
-        t, f = frames(lambda t: 100 * 10**t, 1.0)
+        t, f = time_windows(lambda t: 100 * 10**t, 1.0)
         for fn in (so.square_wave, so.sawtooth_wave, so.pulse_train, so.schroeder_complex):
             assert power_above(fn(1.0, FAST, (t, f)).data[:, 0], 0.45 * FAST + 400) < -90
 

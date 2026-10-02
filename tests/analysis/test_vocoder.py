@@ -119,10 +119,10 @@ def test_views(reference):
     aperiodicity = so.d4c(sound, track)
     assert np.allclose(envelope.f, np.arange(513) * FS / 1024)
     assert np.allclose(envelope.t, track[0])
-    # reading at frame times and bin frequencies gives the stored values
+    # reading at window times and bin frequencies gives the stored values
     assert np.allclose(envelope(envelope.t[3:6], envelope.f[10:20]), envelope.data[:, 10:20, 3:6])
     assert np.allclose(aperiodicity.share, aperiodicity.data**2)
-    # halfway between frames, halfway in dB
+    # halfway between time windows, halfway in dB
     middle = envelope([(envelope.t[3] + envelope.t[4]) / 2], [envelope.f[40]])[0, 0, 0]
     assert np.isclose(10 * np.log10(middle), (envelope.db[0, 40, 3] + envelope.db[0, 40, 4]) / 2)
     bands = aperiodicity.bands([0, 4000, 8001], envelope)
@@ -168,9 +168,9 @@ def vowel(noise_db, vibrato=0.0, duration=0.5, seed=3):
     spectrum *= np.sqrt(harmonic_density * 10 ** (noise_db / 10) * FS / 2)
     spectrum[freqs > 0.45 * FS] = 0
     noise = np.fft.irfft(spectrum, len(sample_times))
-    frame_times = np.arange(0, duration, 0.005)
-    frame_f0 = 120 * (1 + vibrato * np.sin(2 * np.pi * 5.5 * frame_times))
-    return so.Sound(harmonics + noise, FS), (frame_times, frame_f0)
+    window_times = np.arange(0, duration, 0.005)
+    window_f0 = 120 * (1 + vibrato * np.sin(2 * np.pi * 5.5 * window_times))
+    return so.Sound(harmonics + noise, FS), (window_times, window_f0)
 
 
 @pytest.mark.parametrize("vibrato", [0.0, 0.03])
@@ -193,7 +193,7 @@ def test_harmonic_aperiodicity_of_a_periodic_sound_is_low():
     assert aperiodicity.db[0][below][:, inside].max() < -60
 
 
-def test_unvoiced_frames_are_noise():
+def test_unvoiced_windows_are_noise():
     sound, (times, f0) = vowel(-20.0)
     f0 = f0.copy()
     f0[:20] = 0

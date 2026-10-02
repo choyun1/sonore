@@ -52,7 +52,7 @@ floating-point precision.
 _WORLD_SEED = (123456789, 362436069, 521288629, 88675123)
 _SAFEGUARD = 1e-12  # WORLD's kMySafeGuardMinimum
 _EPS = 2.2204460492503131e-16  # WORLD's kEps
-_DEFAULT_F0 = 500.0  # WORLD's kDefaultF0: unvoiced frames are analysed at this F0
+_DEFAULT_F0 = 500.0  # WORLD's kDefaultF0: unvoiced time windows are analysed at this F0
 _FLOOR_F0 = 71.0  # WORLD's kFloorF0, which sets CheapTrick's FFT size
 _FLOOR_F0_D4C = 47.0
 _D4C_BAND_SPACING = 3000.0
@@ -218,8 +218,8 @@ def _windowed_waveform(samples, fs, f0, time, window, periods, noise, noise_scal
 
 
 # ------------------------------------------------------------- F0 tracks
-def _frames(sound: Sound, f0) -> tuple[np.ndarray, np.ndarray]:
-    """Frame times ``(n_frames,)`` and F0 values ``(n_channels, n_frames)``
+def _time_windows(sound: Sound, f0) -> tuple[np.ndarray, np.ndarray]:
+    """Window times ``(n_windows,)`` and F0 values ``(n_channels, n_windows)``
     from an :class:`F0Track` or a ``(times, f0)`` pair."""
     if isinstance(f0, F0Track):
         times, values = f0.t, f0.f0
@@ -250,7 +250,7 @@ def _integer_fs(sound: Sound) -> int:
 # ------------------------------------------------------------ the views
 class _FrequencyView:
     """Shared by the envelope and the aperiodicity: data of shape
-    ``(n_channels, n_freqs, n_frames)`` on WORLD's grid."""
+    ``(n_channels, n_freqs, n_windows)`` on WORLD's grid."""
 
     data: np.ndarray
     t: np.ndarray
@@ -263,7 +263,7 @@ class _FrequencyView:
         return np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
 
     def to_world(self, channel: int = 0) -> np.ndarray:
-        """One channel as WORLD and pyworld hold it: shape ``(n_frames,
+        """One channel as WORLD and pyworld hold it: shape ``(n_windows,
         n_freqs)``, C-contiguous, ready for ``pyworld.synthesize``."""
         return np.ascontiguousarray(self.data[channel].T)
 
@@ -272,10 +272,10 @@ class _FrequencyView:
         and frequencies ``f``: shape ``(n_channels, len(f), len(t))``."""
         times = np.atleast_1d(np.asarray(t, dtype=float))
         freqs = np.atleast_1d(np.asarray(f, dtype=float))
-        frame_pos = np.interp(times, self.t, np.arange(len(self.t)))
-        lower = np.floor(frame_pos).astype(int)
+        window_position = np.interp(times, self.t, np.arange(len(self.t)))
+        lower = np.floor(window_position).astype(int)
         upper = np.minimum(lower + 1, len(self.t) - 1)
-        weight = frame_pos - lower
+        weight = window_position - lower
         bin_pos = np.clip(freqs * self.n_fft / self.fs, 0, self.n_fft // 2)
         bin_lower = np.floor(bin_pos).astype(int)
         bin_upper = np.minimum(bin_lower + 1, self.n_fft // 2)
@@ -286,8 +286,8 @@ class _FrequencyView:
 
 class SpectralEnvelope(_FrequencyView):
     """A spectral envelope from :func:`cheaptrick`: power on ``n_fft // 2 + 1``
-    frequencies :attr:`f` from 0 to ``fs / 2``, at the frame times :attr:`t`
-    of the F0 track. ``data`` has shape ``(n_channels, n_freqs, n_frames)``;
+    frequencies :attr:`f` from 0 to ``fs / 2``, at the window times :attr:`t`
+    of the F0 track. ``data`` has shape ``(n_channels, n_freqs, n_windows)``;
     :meth:`to_world` gives one channel in WORLD's layout.
 
     It is a view (it keeps the envelope, not the sound): calling it,
@@ -303,8 +303,10 @@ class SpectralEnvelope(_FrequencyView):
         self.q1 = q1
 
     def __repr__(self) -> str:
-        n_channels, n_freqs, n_frames = self.data.shape
-        return f"SpectralEnvelope({n_freqs} freqs x {n_frames} frames, {n_channels} ch, q1 {self.q1:g})"
+        n_channels, n_freqs, n_windows = self.data.shape
+        return (
+            f"SpectralEnvelope({n_freqs} freqs x {n_windows} time windows, {n_channels} ch, q1 {self.q1:g})"
+        )
 
     @property
     def db(self) -> np.ndarray:
@@ -313,7 +315,7 @@ class SpectralEnvelope(_FrequencyView):
 
     def __call__(self, t, f) -> np.ndarray:
         """Power at times ``t`` [s] and frequencies ``f`` [Hz], shape
-        ``(n_channels, len(f), len(t))``: linear in time between frames,
+        ``(n_channels, len(f), len(t))``: linear in time between time windows,
         linear in dB between bins."""
         return np.exp(self._interpolate(np.log(self.data), t, f))
 
@@ -328,9 +330,9 @@ class SpectralEnvelope(_FrequencyView):
 
 class Aperiodicity(_FrequencyView):
     """An aperiodicity, from :func:`d4c` or :func:`harmonic_aperiodicity`:
-    per frequency and frame, how much of the power is noise rather than
+    per frequency and time window, how much of the power is noise rather than
     harmonics. Stored as WORLD stores it, an amplitude ratio between 0 and
-    1 (``data``, shape ``(n_channels, n_freqs, n_frames)``): its square
+    1 (``data``, shape ``(n_channels, n_freqs, n_windows)``): its square
     :attr:`share` is the share of the power that is noise, which is what
     :func:`~sonore.stimuli.vocoder.world_synthesize` uses. ``method`` names
     the measure that made it ("D4C" or "harmonic residual").
@@ -344,8 +346,8 @@ class Aperiodicity(_FrequencyView):
         self.method = method
 
     def __repr__(self) -> str:
-        n_channels, n_freqs, n_frames = self.data.shape
-        return f"Aperiodicity({self.method}, {n_freqs} freqs x {n_frames} frames, {n_channels} ch)"
+        n_channels, n_freqs, n_windows = self.data.shape
+        return f"Aperiodicity({self.method}, {n_freqs} freqs x {n_windows} time windows, {n_channels} ch)"
 
     @property
     def share(self) -> np.ndarray:
@@ -359,13 +361,13 @@ class Aperiodicity(_FrequencyView):
 
     def __call__(self, t, f) -> np.ndarray:
         """The amplitude ratio at times ``t`` [s] and frequencies ``f`` [Hz],
-        shape ``(n_channels, len(f), len(t))``: linear in time between frames,
+        shape ``(n_channels, len(f), len(t))``: linear in time between time windows,
         linear in dB between bins."""
         return np.exp(self._interpolate(np.log(self.data), t, f))
 
     def bands(self, edges: Sequence[float], envelope: SpectralEnvelope | None = None) -> np.ndarray:
         """The noise share averaged over each band ``[edges[i], edges[i+1])``,
-        shape ``(n_channels, n_bands, n_frames)``. With an ``envelope``, the
+        shape ``(n_channels, n_bands, n_windows)``. With an ``envelope``, the
         average is weighted by its power, so the result is the band's noise
         power over its total power."""
         freqs = self.f
@@ -396,15 +398,15 @@ class Aperiodicity(_FrequencyView):
 def cheaptrick(sound: Sound, f0, *, q1: float = -0.15, f0_floor: float = _FLOOR_F0) -> SpectralEnvelope:
     """WORLD's CheapTrick spectral envelope (Morise, 2015), ported exactly.
 
-    At each frame of the F0 track: the sound under a Hann window three
+    At each time window of the F0 track: the sound under a Hann window three
     periods long, scaled to unit energy, less its weighted mean; its power
     spectrum on :func:`world_fft_size` bins; the power below F0 folded back
     about F0 / 2; a moving average over 2 F0 / 3; then the log, liftered by
     ``sinc(F0 q)`` (smoothing over F0) times the recovery lifter
     ``(1 - 2 q1) + 2 q1 cos(2 pi F0 q)``, and back. The result follows the
     shape of the harmonic peaks a few dB below them and, because of the
-    smoothing over 2 F0 / 3, barely changes with the frame's position
-    within a period. Frames with F0 at or below the floor
+    smoothing over 2 F0 / 3, barely changes with the time window's position
+    within a period. Time windows with F0 at or below the floor
     ``3 fs / (n_fft - 3)`` (unvoiced ones included) are analysed at 500 Hz.
 
     Parameters
@@ -413,7 +415,7 @@ def cheaptrick(sound: Sound, f0, *, q1: float = -0.15, f0_floor: float = _FLOOR_
         The sound. Its sampling rate must be a whole number of Hz.
     f0
         An :class:`~sonore.analysis.f0.F0Track` (one row per channel) or a
-        ``(times, f0)`` pair; 0 marks unvoiced frames. The envelope is
+        ``(times, f0)`` pair; 0 marks unvoiced time windows. The envelope is
         computed at these times.
     q1
         The recovery lifter's parameter. ``-0.15`` is WORLD's code; the
@@ -422,7 +424,7 @@ def cheaptrick(sound: Sound, f0, *, q1: float = -0.15, f0_floor: float = _FLOOR_
         The lowest F0 the FFT size must hold (WORLD's 71 Hz).
     """
     fs = _integer_fs(sound)
-    times, f0_values = _frames(sound, f0)
+    times, f0_values = _time_windows(sound, f0)
     n_fft = world_fft_size(fs, f0_floor)
     analysis_floor = 3.0 * fs / (n_fft - 3.0)
     quefrencies = np.arange(n_fft // 2 + 1) / fs
@@ -430,14 +432,14 @@ def cheaptrick(sound: Sound, f0, *, q1: float = -0.15, f0_floor: float = _FLOOR_
     for channel in range(sound.n_channels):
         samples = sound.data[:, channel]
         noise = _Stream()
-        for frame, (time, frame_f0) in enumerate(zip(times, f0_values[channel], strict=True)):
-            current_f0 = _DEFAULT_F0 if frame_f0 <= analysis_floor else frame_f0
+        for window_index, (time, window_f0) in enumerate(zip(times, f0_values[channel], strict=True)):
+            current_f0 = _DEFAULT_F0 if window_f0 <= analysis_floor else window_f0
             segment = _windowed_waveform(samples, fs, current_f0, time, "cheaptrick", 3.0, noise, _SAFEGUARD)
             power = np.abs(np.fft.rfft(segment, n_fft)) ** 2
             power = _dc_correction(power, current_f0, fs, n_fft)
             power = _linear_smoothing(power, current_f0 * 2.0 / 3.0, fs, n_fft)
             power = power + np.abs(noise.draw(n_fft // 2 + 1)) * _EPS
-            data[channel, :, frame] = _smooth_with_recovery(power, current_f0, q1, quefrencies, n_fft)
+            data[channel, :, window_index] = _smooth_with_recovery(power, current_f0, q1, quefrencies, n_fft)
     return SpectralEnvelope(data, times, fs, q1)
 
 
@@ -455,8 +457,8 @@ def _smooth_with_recovery(power, f0, q1, quefrencies, n_fft):
 def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F0) -> Aperiodicity:
     """WORLD's D4C aperiodicity (Morise, 2016), ported exactly.
 
-    At each voiced frame: a "static group delay" from two Blackman-windowed
-    spectra four periods long, a quarter period either side of the frame,
+    At each voiced time window: a "static group delay" from two Blackman-windowed
+    spectra four periods long, a quarter period either side of the window center,
     divided by a smoothed power spectrum, smoothed over F0 / 2, less itself
     smoothed over F0. Around each multiple of 3 kHz up to
     ``min(15 kHz, fs / 2 - 3 kHz)``, a Nuttall window over 3 kHz of that
@@ -464,12 +466,12 @@ def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F
     aperiodicity is the share outside the largest bins, in dB, plus
     ``(F0 - 100) / 50`` dB, capped at 0. The curve is then linear in dB
     from -60 dB at 0 Hz through those values to 0 dB at Nyquist. At
-    16 kHz that is one measured value per frame, at 3 kHz.
+    16 kHz that is one measured value per time window, at 3 kHz.
 
-    A frame is left fully aperiodic (amplitude ratio ``1 - 1e-12``) where
+    A time window is left fully aperiodic (amplitude ratio ``1 - 1e-12``) where
     F0 is 0, or where less than ``threshold`` of its power between 100 Hz
     and 7.9 kHz lies below 4 kHz (WORLD's "LoveTrain" test; ``threshold=0``
-    keeps every voiced frame voiced).
+    keeps every voiced time window voiced).
 
     D4C was tuned so that WORLD's resynthesis sounds natural; it is robust
     to F0 errors but does not report the share of noise below 3 kHz, which
@@ -487,7 +489,7 @@ def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F
         for synthesis (WORLD's 71 Hz, as :func:`cheaptrick`).
     """
     fs = _integer_fs(sound)
-    times, f0_values = _frames(sound, f0)
+    times, f0_values = _time_windows(sound, f0)
     n_fft_out = world_fft_size(fs, f0_floor)
     n_fft = int(2.0 ** (1 + int(np.log(4.0 * fs / _FLOOR_F0_D4C + 1) / np.log(2))))
     n_bands = int(min(_D4C_UPPER_LIMIT, fs / 2.0 - _D4C_BAND_SPACING) / _D4C_BAND_SPACING)
@@ -506,17 +508,17 @@ def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F
         samples = sound.data[:, channel]
         noise = _Stream()
         voiced = [
-            frame_f0 != 0 and _love_train(samples, fs, time, frame_f0, noise) > threshold
-            for time, frame_f0 in zip(times, f0_values[channel], strict=True)
+            window_f0 != 0 and _love_train(samples, fs, time, window_f0, noise) > threshold
+            for time, window_f0 in zip(times, f0_values[channel], strict=True)
         ]
-        for frame, (time, frame_f0) in enumerate(zip(times, f0_values[channel], strict=True)):
-            if not voiced[frame]:
+        for window_index, (time, window_f0) in enumerate(zip(times, f0_values[channel], strict=True)):
+            if not voiced[window_index]:
                 continue
             bands = _d4c_bands(
-                samples, fs, time, max(_FLOOR_F0_D4C, frame_f0), n_fft, n_bands, nuttall, noise
+                samples, fs, time, max(_FLOOR_F0_D4C, window_f0), n_fft, n_bands, nuttall, noise
             )
             coarse = np.concatenate([[-60.0], bands, [-_SAFEGUARD]])
-            data[channel, :, frame] = 10 ** (np.interp(freqs, coarse_freqs, coarse) / 20)
+            data[channel, :, window_index] = 10 ** (np.interp(freqs, coarse_freqs, coarse) / 20)
     return Aperiodicity(data, times, fs, "D4C")
 
 
@@ -576,7 +578,7 @@ def harmonic_aperiodicity(
     what is left. Not part of WORLD; :func:`d4c` is WORLD's measure.
 
     The F0 track is interpolated to every sample and integrated to a
-    running phase ``Phi(t)``. At each voiced frame, under a Hann window
+    running phase ``Phi(t)``. At each voiced time window, under a Hann window
     ``periods`` periods long, a weighted least-squares fit of the harmonics
     ``cos(k Phi)``, ``sin(k Phi)`` below Nyquist, each with a linear change
     of amplitude across the window, is subtracted. The residual's power,
@@ -585,7 +587,7 @@ def harmonic_aperiodicity(
     exactly from the fit (the share of white noise the residual keeps at
     each frequency), and is divided out. Both are summed over cells
     ``cell_harmonics`` harmonics wide, and the cells' shares are
-    interpolated in dB onto the grid of :func:`cheaptrick`. Unvoiced frames
+    interpolated in dB onto the grid of :func:`cheaptrick`. Unvoiced time windows
     are all noise.
 
     The measure is what the word means, so it reads a known share of noise
@@ -598,14 +600,14 @@ def harmonic_aperiodicity(
     sound, f0
         As :func:`cheaptrick`.
     periods
-        The window's length in periods of the frame's F0.
+        The window's length in periods of the time window's F0.
     f0_floor
         Sets the output's frequency grid, as :func:`cheaptrick`.
     cell_harmonics
         The width of the cells, in harmonics.
     """
     fs = _integer_fs(sound)
-    times, f0_values = _frames(sound, f0)
+    times, f0_values = _time_windows(sound, f0)
     n_fft_out = world_fft_size(fs, f0_floor)
     freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
     data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))
@@ -619,24 +621,24 @@ def harmonic_aperiodicity(
         longest = int(np.ceil(periods / 2 * fs / f0_values[channel, voiced].min())) + 1
         padded = np.pad(sound.data[:, channel], longest)
         padded_phase = np.pad(phase, longest, mode="edge")
-        for frame in np.flatnonzero(voiced):
+        for window_index in np.flatnonzero(voiced):
             share, cell_freqs = _residual_share(
                 padded,
                 padded_phase,
                 fs,
-                times[frame],
-                f0_values[channel, frame],
+                times[window_index],
+                f0_values[channel, window_index],
                 periods,
                 longest,
                 cell_harmonics,
             )
             share_db = np.interp(freqs_out, cell_freqs, 10 * np.log10(share))
-            data[channel, :, frame] = 10 ** (share_db / 20)
+            data[channel, :, window_index] = 10 ** (share_db / 20)
     return Aperiodicity(data, times, fs, "harmonic residual")
 
 
 def _residual_share(samples, phase, fs, time, f0, periods, padding, cell_harmonics):
-    """One frame: the noise share per cell and the cells' centre frequencies."""
+    """One time window: the noise share per cell and the cells' centre frequencies."""
     centre = int(np.round(time * fs)) + padding
     half_length = int(np.round(periods / 2 * fs / f0))
     offsets = np.arange(-half_length, half_length + 1)

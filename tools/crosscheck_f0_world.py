@@ -65,7 +65,9 @@ def main():
             report("W", f"{label} | {method}: median fine error, %", med)
     for method in ("Harvest", "DIO + StoneMask"):
         t, f0 = world(NOISE, method)
-        report("W", f"one second of white noise, {method}: frames called voiced, fraction", np.mean(f0 > 0))
+        report(
+            "W", f"one second of white noise, {method}: time windows called voiced, fraction", np.mean(f0 > 0)
+        )
 
     # Held-out sentences: the prototype's settings were chosen on bdl.
     for path in sorted(Path(SPEECH).glob("rms_*.flac")):
@@ -77,7 +79,7 @@ def main():
             hv = np.interp(t, t_h, (h > 0).astype(float)) > 0.5
             v = est > 0
             both = v & hv
-            report("W", f"{path.stem}, {name}: share of Harvest-voiced frames voiced", np.mean(v[hv]))
+            report("W", f"{path.stem}, {name}: share of Harvest-voiced time windows voiced", np.mean(v[hv]))
             report("W", f"{path.stem}, {name}: share of Harvest-unvoiced voiced", np.mean(v[~hv]))
             report(
                 "W",
@@ -86,7 +88,7 @@ def main():
             )
             if name != "tracker":
                 continue
-            # Where the Harvest-voiced frames the tracker leaves out lie.
+            # Where the Harvest-voiced time windows the tracker leaves out lie.
             miss, hit = hv & ~v, hv & v
             L = 400
             xp = np.concatenate([np.zeros(L), x, np.zeros(L)])
@@ -95,16 +97,18 @@ def main():
             edges = np.flatnonzero(np.diff(np.r_[0, miss.astype(int), 0]))
             report(
                 "W",
-                f"{path.stem}: longest run of those frames, ms",
+                f"{path.stem}: longest run of those time windows, ms",
                 np.max(edges[1::2] - edges[::2]) * HOP * 1000,
             )
             report(
                 "W",
-                f"{path.stem}: their median 25 ms level re the voiced frames', dB",
+                f"{path.stem}: their median 25 ms level re the voiced time windows', dB",
                 np.median(level[miss]) - np.median(level[hit]),
             )
             report("W", f"{path.stem}: their median Harvest F0, Hz", np.median(hh[miss]))
-            report("W", f"{path.stem}: median Harvest F0 of the frames it voices, Hz", np.median(hh[hit]))
+            report(
+                "W", f"{path.stem}: median Harvest F0 of the time windows it voices, Hz", np.median(hh[hit])
+            )
 
 
 if __name__ == "__main__":

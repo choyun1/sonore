@@ -23,11 +23,11 @@ CHUNK = 512  # candidates processed at once
 class F0Track:
     """An F0 track: one estimate per channel every ``hop`` seconds.
 
-    ``f0`` and ``score`` have shape ``(n_channels, n_frames)``; ``f0`` is 0
-    where the frame is unvoiced, and ``score`` is the periodicity score of
+    ``f0`` and ``score`` have shape ``(n_channels, n_windows)``; ``f0`` is 0
+    where the time window is unvoiced, and ``score`` is the periodicity score of
     the chosen candidate (0 where unvoiced). ``candidates`` and
-    ``candidate_scores`` have shape ``(n_channels, n_frames, 4)`` and hold
-    every refined candidate the tracker weighed, NaN where a frame had fewer.
+    ``candidate_scores`` have shape ``(n_channels, n_windows, 4)`` and hold
+    every refined candidate the tracker weighed, NaN where a time window had fewer.
     ``t`` and a row of ``f0`` go straight into
     :meth:`~sonore.analysis.frames.TVGaborFrame.pitch_adaptive` and
     :meth:`~sonore.analysis.cepstrum.Cepstrum.lifter`.
@@ -43,14 +43,14 @@ class F0Track:
 
     @property
     def voiced(self) -> np.ndarray:
-        """True where the frame is voiced, shape ``(n_channels, n_frames)``."""
+        """True where the time window is voiced, shape ``(n_channels, n_windows)``."""
         return self.f0 > 0
 
     def __repr__(self) -> str:
-        n_channels, n_frames = self.f0.shape
+        n_channels, n_windows = self.f0.shape
         voiced = self.voiced
         f0_range = f", F0 {self.f0[voiced].min():.0f}-{self.f0[voiced].max():.0f} Hz" if voiced.any() else ""
-        return f"F0Track({n_frames} frames, {n_channels} ch, {voiced.mean():.0%} voiced{f0_range})"
+        return f"F0Track({n_windows} time windows, {n_channels} ch, {voiced.mean():.0%} voiced{f0_range})"
 
     def plot(self, ax=None, channel: int = 0, candidates: bool = False, **kwargs):
         """F0 against time (see :func:`~sonore.plotting.plot_f0_track`)."""
@@ -91,23 +91,23 @@ def f0_track(
        period done with a windowed sinc. For a periodic sound in independent
        noise it is about ``s / (1 + s)``, ``s`` the ratio of periodic to noise
        power, so 0.5 means the two are equally strong.
-    4. **Tracking.** A Viterbi pass over (unvoiced, candidates) per frame. A
+    4. **Tracking.** A Viterbi pass over (unvoiced, candidates) per time window. A
        candidate costs ``1 - score`` and the unvoiced state ``1 - threshold``,
-       so a frame leans voiced when its best score exceeds ``threshold``;
+       so a time window leans voiced when its best score exceeds ``threshold``;
        moving between candidates costs ``octave_cost`` per octave, and a
        voicing change costs ``switch_cost``. A candidate is never chosen if
        another one an octave above scores at least as well, less
        ``subharmonic_margin``: anything periodic
        with period T is also periodic with period 2T, and without this rule
-       a female voice is tracked an octave low on about 1% of frames. No
+       a female voice is tracked an octave low on about 1% of time windows. No
        smoothing follows.
 
     On synthetic vowels the refined F0 is within 0.12% of the truth on a one
     octave per second glide and a 5.5 Hz vibrato. Against laryngograph
     reference F0 (a male and a female speaker), it gets the voicing of 5.5%
-    and 1.6% of frames wrong, where WORLD's Harvest, which leans towards
-    calling frames voiced, gets about 21% wrong; where both it and the
-    reference say voiced, 98% and 95% of frames are within 5%. Lower ``threshold`` to voice
+    and 1.6% of time windows wrong, where WORLD's Harvest, which leans towards
+    calling time windows voiced, gets about 21% wrong; where both it and the
+    reference say voiced, 98% and 95% of time windows are within 5%. Lower ``threshold`` to voice
     more weak or creaky stretches, for example before resynthesis.
 
     Parameters
@@ -118,9 +118,9 @@ def f0_track(
         The search range [Hz]. The defaults cover speaking voices; raise
         ``f_hi`` for singing.
     hop
-        Frame period [s].
+        Spacing between time windows [s].
     threshold
-        The periodicity score above which a frame leans voiced.
+        The periodicity score above which a time window leans voiced.
     octave_cost, switch_cost
         Tracking costs, as above.
     subharmonic_margin
@@ -143,27 +143,27 @@ def f0_track(
     all_candidate_scores = np.full(shape + (MAX_CANDIDATES,), np.nan)
     for ch in range(n_ch):
         samples = np.asarray(sound.data[:, ch], dtype=float)
-        frame_candidates = _candidates(samples, t, fs, f_lo, f_hi)
-        found = np.isfinite(frame_candidates)
-        found_f0 = frame_candidates[found]
+        window_candidates = _candidates(samples, t, fs, f_lo, f_hi)
+        found = np.isfinite(window_candidates)
+        found_f0 = window_candidates[found]
         refined = _refine(samples, np.repeat(t, MAX_CANDIDATES)[found.ravel()], found_f0, fs)
         in_range = (refined > 0.9 * f_lo) & (refined < 1.1 * f_hi)
         refined_scores = np.zeros_like(refined)
         refined_scores[in_range] = _periodicity(
             samples, np.repeat(t, MAX_CANDIDATES)[found.ravel()][in_range], refined[in_range], fs, f_lo
         )
-        frame_candidates[found] = np.where(in_range, refined, np.nan)
-        frame_scores = np.full(frame_candidates.shape, np.nan)
-        frame_scores[found] = np.where(in_range, refined_scores, np.nan)
-        all_candidates[ch], all_candidate_scores[ch] = frame_candidates, frame_scores
+        window_candidates[found] = np.where(in_range, refined, np.nan)
+        window_scores = np.full(window_candidates.shape, np.nan)
+        window_scores[found] = np.where(in_range, refined_scores, np.nan)
+        all_candidates[ch], all_candidate_scores[ch] = window_candidates, window_scores
         f0[ch], score[ch] = _viterbi(
-            frame_candidates, frame_scores, threshold, octave_cost, switch_cost, subharmonic_margin
+            window_candidates, window_scores, threshold, octave_cost, switch_cost, subharmonic_margin
         )
     return F0Track(t, f0, score, all_candidates, all_candidate_scores, fs, threshold)
 
 
 def _candidates(x, t, fs, f_lo, f_hi):
-    """Up to MAX_CANDIDATES F0 candidates per frame, best first, NaN-padded:
+    """Up to MAX_CANDIDATES F0 candidates per time window, best first, NaN-padded:
     minima of YIN's normalized difference function below 1."""
     n_window = int(round(max(0.025, 1 / f_lo) * fs))
     tau_max = int(np.ceil(fs / f_lo)) + 1
@@ -314,11 +314,11 @@ def _periodicity(x, tc, f, fs, f_lo):
 
 
 def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margin):
-    """Cheapest path through (unvoiced, candidates...) per frame."""
-    n_frames = len(cand)
-    f_states = np.concatenate([np.zeros((n_frames, 1)), np.nan_to_num(cand, nan=-1.0)], axis=1)
+    """Cheapest path through (unvoiced, candidates...) per time window."""
+    n_windows = len(cand)
+    f_states = np.concatenate([np.zeros((n_windows, 1)), np.nan_to_num(cand, nan=-1.0)], axis=1)
     local_cost = np.concatenate(
-        [np.full((n_frames, 1), 1 - threshold), 1 - np.nan_to_num(score, nan=0.0)], axis=1
+        [np.full((n_windows, 1), 1 - threshold), 1 - np.nan_to_num(score, nan=0.0)], axis=1
     )
     if subharmonic_margin is not None:
         # A candidate whose octave above is also a candidate, scoring nearly
@@ -339,7 +339,7 @@ def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margi
     backpointer = np.zeros(f_states.shape, int)
     cost = local_cost[0].copy()
     voiced = f_states > 0
-    for i in range(1, n_frames):
+    for i in range(1, n_windows):
         f_to, f_from = f_states[i][:, None], f_states[i - 1][None, :]
         voiced_to, voiced_from = voiced[i][:, None], voiced[i - 1][None, :]
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -347,12 +347,12 @@ def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margi
         path_cost = np.where(voiced_to == voiced_from, jump, switch_cost) + cost[None, :]
         backpointer[i] = np.argmin(path_cost, axis=1)
         cost = path_cost[np.arange(path_cost.shape[0]), backpointer[i]] + local_cost[i]
-    path = np.zeros(n_frames, int)
-    if n_frames:
+    path = np.zeros(n_windows, int)
+    if n_windows:
         path[-1] = int(np.argmin(cost))
-        for i in range(n_frames - 1, 0, -1):
+        for i in range(n_windows - 1, 0, -1):
             path[i - 1] = backpointer[i][path[i]]
-    rows = np.arange(n_frames)
+    rows = np.arange(n_windows)
     f0 = np.where(path > 0, f_states[rows, path], 0.0)
     chosen_score = np.where(path > 0, np.nan_to_num(score, nan=0.0)[rows, np.maximum(path - 1, 0)], 0.0)
     return f0, chosen_score

@@ -37,7 +37,7 @@ def blackman_periodic(n):
     return 0.42 - 0.5 * np.cos(a) + 0.08 * np.cos(2 * a)
 
 
-def frame_power(x, center, n_win, n_fft, fs=FS, window=hann_periodic):
+def segment_power(x, center, n_win, n_fft, fs=FS, window=hann_periodic):
     """|FFT|^2 of x windowed by a periodic window (Hann by default) of n_win
     samples centered at sample `center`, zero-padded to n_fft, plus its
     frequency grid."""
@@ -52,7 +52,7 @@ def harmonic_dip_db(f0, n_win, f_around=1000.0):
     x = pulse_train(f0, 1.0)
     period = int(round(FS / f0))
     centers = len(x) // 2 + np.arange(period)
-    p = np.mean([frame_power(x, c, n_win, 16 * 4096)[0] for c in centers[:: max(1, period // 16)]], axis=0)
+    p = np.mean([segment_power(x, c, n_win, 16 * 4096)[0] for c in centers[:: max(1, period // 16)]], axis=0)
     f = np.fft.rfftfreq(16 * 4096, 1 / FS)
     h = int(f_around // f0)
     lo, hi = h * f0, (h + 1) * f0
@@ -70,7 +70,7 @@ def pulse_depth_db(f0, n_win, band=(1000.0, 3000.0)):
     n_fft = 4096
     f = np.fft.rfftfreq(n_fft, 1 / FS)
     sel = (f >= band[0]) & (f <= band[1])
-    p = [frame_power(x, len(x) // 2 + c, n_win, n_fft)[0][sel].sum() for c in range(period)]
+    p = [segment_power(x, len(x) // 2 + c, n_win, n_fft)[0][sel].sum() for c in range(period)]
     return 10 * np.log10(max(p) / min(p))
 
 
@@ -121,7 +121,7 @@ for name, window, k in (
     f = np.fft.rfftfreq(n_fft, 1 / FS)
     sel = (f > 300) & (f < 4000)
     mid = len(x) // 2
-    P = np.array([frame_power(x, mid + c, n, n_fft, window=window)[0] for c in range(period)])  # (t, f)
+    P = np.array([segment_power(x, mid + c, n, n_fft, window=window)[0] for c in range(period)])  # (t, f)
     Pt = P + np.roll(P, -period // 2, axis=0)
     single = ((P.max(0) - P.min(0)) / P.mean(0))[sel]
     pair = ((Pt.max(0) - Pt.min(0)) / Pt.mean(0))[sel]
@@ -278,7 +278,7 @@ def contour(t):
 def bridged(t):
     """The same contour with F0 carried through the unvoiced stretches:
     log-linear between voiced neighbours, held constant before the first and
-    after the last voiced frame."""
+    after the last voiced time window."""
     tv = np.linspace(0, 2, 2001)
     fv = np.array([contour(u) for u in tv])
     v = fv > 0
@@ -299,7 +299,7 @@ for name, f0_fn, k, ov, uv in (
     inner = s[int(0.05 * FS) : int(1.95 * FS)]
     report(
         "C20",
-        f"{name}, k {k:g}, overlap {ov}: A/B ({len(times)} frames, n_fft {lens.max()})",
+        f"{name}, k {k:g}, overlap {ov}: A/B ({len(times)} time windows, n_fft {lens.max()})",
         inner.min() / inner.max(),
     )
 times, lens = schedule(lambda t: 125.0, 3.0, 4, 2.0, 0.02)

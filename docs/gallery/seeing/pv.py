@@ -14,12 +14,12 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # Play a recording faster and it gets shorter and higher at once. The phase vocoder (Flanagan &
 # Golden, 1966) pulls the two apart: it measures the frequency of every partial in every short
-# frame, precisely enough to rebuild the sound with its frames spaced differently, or its
+# time window, precisely enough to rebuild the sound with its time windows spaced differently, or its
 # partials moved, while everything else stays the same.
 #
 # - [How it works](#h-how-it-works): the STFT, and the frequency hidden in how fast each bin's
 #   phase turns.
-# - [Changing duration](#h-changing-duration): frames resynthesized further apart, and why their
+# - [Changing duration](#h-changing-duration): time windows resynthesized further apart, and why their
 #   phases have to be locked.
 # - [Changing pitch](#h-changing-pitch): stretching, then resampling.
 # - [Moving the partials](#h-moving-the-partials): an oscillator bank with every frequency remapped.
@@ -30,11 +30,11 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # The analysis is a short-time Fourier transform: Hann windows 46 ms long, one every quarter
 # window, $H_a$ samples apart. Each bin $k$ of the transform is a bandpass filter centered on
 # $\omega_k = 2\pi k / N$ radians per sample, and its output is a slowly varying sinusoid with a
-# magnitude and a phase $\varphi_k(m)$ in frame $m$.
+# magnitude and a phase $\varphi_k(m)$ in time window $m$.
 #
 # The bins are $f_s/N$ apart, about 22 Hz here, far too coarse to say where a partial lies. The
 # phase says it precisely. A partial at exactly $\omega_k$ advances the phase by $\omega_k H_a$
-# from one frame to the next; any extra advance, wrapped into $(-\pi, \pi]$, is the partial's
+# from one time window to the next; any extra advance, wrapped into $(-\pi, \pi]$, is the partial's
 # offset from the bin center:
 #
 # $$\hat\omega_k(m) = \omega_k + \frac{\operatorname{wrap}\bigl(\varphi_k(m) - \varphi_k(m-1) -
@@ -97,7 +97,7 @@ pv = so.pv_analyze(sung)
 sentence = finish(so.load("docs/speech/bdl_arctic_a0131.flac"))
 
 # %% [about]
-# One frame of the reference tone below, 0 to 1 kHz. Top: the magnitude of each bin, with the
+# One time window of the reference tone below, 0 to 1 kHz. Top: the magnitude of each bin, with the
 # partials' main lobes spanning several bins each. Bottom: the frequency each bin reports. Across
 # each main lobe the estimates agree on one value, the partial's frequency at that moment (orange),
 # which the vibrato has pushed away from the bin centers (dotted).
@@ -110,7 +110,7 @@ loud = level > -30
 f0 = 220 * (1 + 0.03 * np.sin(2 * np.pi * 5 * pv.t[m]))  # the vibrato at this moment
 fig, (ax_m, ax_f) = plt.subplots(2, 1, figsize=(10, 5), sharex=True, layout="constrained")
 ax_m.plot(centers, level, ".-", color="k", lw=0.6, ms=3)
-ax_m.set(ylim=(-80, 3), ylabel="Magnitude [dB]", title=f"Frame at {pv.t[m]:.2f} s")
+ax_m.set(ylim=(-80, 3), ylabel="Magnitude [dB]", title=f"Time window at {pv.t[m]:.2f} s")
 ax_f.plot(centers, centers, ":", color="k", lw=0.8, label="bin center")
 for k in range(1, 5):
     ax_f.axhline(k * f0, color="tab:orange", lw=0.8, label="true partials" if k == 1 else None)
@@ -123,14 +123,14 @@ for ax in (ax_m, ax_f):
 # %% [markdown]
 # ## Changing duration
 #
-# To make a sound twice as long, `so.time_stretch` reads frames every $H_a$ samples and writes
+# To make a sound twice as long, `so.time_stretch` reads time windows every $H_a$ samples and writes
 # them out every $H_s = 2H_a$. Magnitudes are copied as they are, but phases cannot be: a partial
-# now has $H_s$ samples, not $H_a$, to get from one frame to the next, so each synthesis phase is
+# now has $H_s$ samples, not $H_a$, to get from one time window to the next, so each synthesis phase is
 # the previous one advanced by the instantaneous frequency times the new hop,
 #
 # $$\psi_k(m) = \psi_k(m-1) + \hat\omega_k(m)\, H_s.$$
 #
-# Overlap-adding the frames then gives a sound twice as long whose partials have the same
+# Overlap-adding the time windows then gives a sound twice as long whose partials have the same
 # frequencies. Every bin advances its own phase independently, though, and the bins that make up
 # one partial slowly drift out of step with each other, which smears the sound, a fault known as
 # *phasiness*. `so.time_stretch` therefore locks the phases (Laroche & Dolson, 1999): only the
@@ -195,7 +195,7 @@ fig, playhead = show(sound, fmax=5000)
 # ## Moving the partials
 #
 # The analysis can also drive a bank of oscillators, one per bin, each following its bin's
-# magnitude and instantaneous frequency from frame to frame (Dolson, 1986). `pv.resynthesize`
+# magnitude and instantaneous frequency from time window to time window (Dolson, 1986). `pv.resynthesize`
 # does this, and its `freq_map` changes every frequency on the way: a ratio scales them all, a
 # function can do anything. Scaling keeps a harmonic sound harmonic; adding a constant does not,
 # unless the constant is a multiple of half the fundamental.

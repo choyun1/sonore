@@ -2,7 +2,7 @@
 
 The design of a time-dependent modulation spectrum for `sonore.analysis`:
 for every band of a filterbank, how strongly its envelope is modulated at
-each rate, frame by frame. An STFT shows how the power spectrum of a sound
+each rate, in every time window. An STFT shows how the power spectrum of a sound
 changes over time; this shows how its modulation spectrum changes over time.
 
 sonore already has two static views of modulation. `ModulationSpectrum`
@@ -59,7 +59,7 @@ should say which one it computes.
 3. **Modulation rate against time**, one band or all bands pooled: the
    direct analogue of a spectrogram, and what Cho asked for.
 
-All three are slices of one array: a modulation power for every frame,
+All three are slices of one array: a modulation power for every time window,
 acoustic band and modulation band. The proposal computes that array once and
 offers each display as a view of it (D7).
 
@@ -72,7 +72,7 @@ Hann window w_k of length L_k samples times a complex exponential,
 
     h_k[j] = w_k[j] exp(i 2π f_k (j − (L_k − 1)/2) / f_E),   Σ_j w_k[j] = 1,
 
-and for every frame n correlates it with the envelope over the kernel's
+and for every time window n correlates it with the envelope over the kernel's
 support:
 
     y_bk[n] = Σ_j e_b[n + j − (L_k − 1)/2] conj(h_k[j])     (centred)
@@ -129,7 +129,7 @@ whole samples at 1000 Hz, the worst DC gain over the half-octave bands
 band and the right stretch of time, with the right depth.** [check] A 1 kHz
 tone, 4 s long, amplitude-modulated at 4 Hz with depth 0.5 from 1 to 3 s
 only. Envelopes from 24 half-cosine ERB-spaced bands (100–7000 Hz) at
-1000 Hz; half-octave modulation bands 0.5–64 Hz; 10 ms frames.
+1000 Hz; half-octave modulation bands 0.5–64 Hz; 10 ms hop.
 
 - The largest modulation power, averaged over 1.5–2.5 s, is in the audio
   band centred at 1052 Hz and the 4 Hz modulation band.
@@ -191,7 +191,7 @@ different filter shapes. The spectrogram unfolds that statistic in time.
 block-by-block processing reproduces it exactly.** [proof, check] The
 causal output uses the kernel's support ending at the current sample, which
 is the centred one shifted by (L_k − 1) / 2. A block processor keeps the last
-L_k − 1 envelope samples and evaluates the kernel at each frame time.
+L_k − 1 envelope samples and evaluates the kernel at each window time.
 Checker: 64-sample blocks against the offline causal result, worst
 difference 2e-16; causal against shifted centred, 0. The causal latency is
 half the kernel: 3.0 s at 0.5 Hz, 0.37 s at 4 Hz, 23 ms at 64 Hz. Evaluated
@@ -230,7 +230,7 @@ compression McDermott & Simoncelli use).
   the loudest for both banks; with compression the gammatone's wider skirts
   bring that to 5 (cosine: still 2).
 - The gallery sentence (`bdl_arctic_a0131`, half-octave rates 2–32 Hz,
-  frames at least half a window from either end): with all four front ends
+  window times at least half a window from either end): with all four front ends
   the largest time-averaged pooled depth is in the 5.7 Hz band. The pooled
   depth at 4 Hz is −5.05 dB (cosine) and −5.05 dB (gammatone), and −11.7 and
   −11.6 dB compressed. Over all rate × time cells, the depth images in dB
@@ -250,8 +250,8 @@ to be stated with any number read off the picture.
 from `Envelopes`: `so.ModulationSpectrogram(env, f_lo=0.5, f_hi=64,
 per_octave=2, cycles=3, hop=0.010)`. It keeps the envelopes' filterbank (for
 the acoustic axis) and stores `power` and `mean` of shape
-`(n_channels, n_bands, n_mod, n_frames)`, with `f` the acoustic band centres,
-`fm` the modulation band centres and `t` the frame times. One way in, as for
+`(n_channels, n_bands, n_mod, n_windows)`, with `f` the acoustic band centres,
+`fm` the modulation band centres and `t` the window times. One way in, as for
 `Cepstrum`. Recommended over a method on `Envelopes`
 (`env.modulation_spectrogram()`), to keep `envelopes.py` (371 lines) about
 envelopes; a thin method can be added later if notebooks want the chain.
@@ -273,7 +273,7 @@ resolution (C1, C5), so it is the main knob. `cycles=3` (the default) gives
 each modulation band a window of `cycles / f_k` seconds: long for slow rates,
 short for fast ones; it must be a whole number of at least 2 so the
 window ignores the envelope's mean (C2). `window=T` gives every band the same T seconds. The
-frame step `hop` (10 ms) is separate from the window, as in an STFT. By
+spacing of the time windows, `hop` (10 ms), is separate from the window, as in an STFT. By
 default, Hann
 kernels with 3 cycles (Q ≈ 2.1, C1), whole cycles so the mean is ignored
 (C2), half-octave centres from 0.5 to 64 Hz (15 bands). `window=T` [s]
@@ -302,23 +302,23 @@ what the rest of sonore uses, the gammatone gives nearly the same picture
 (C10), and with linear envelopes depth keeps its textbook meaning (100% AM
 is 0 dB). Compressed envelopes are a documented alternative, with C10's
 factor stated, not a default. A
-boolean `valid` of shape `(n_bands, n_mod, n_frames)` is False where the
+boolean `valid` of shape `(n_bands, n_mod, n_windows)` is False where the
 modulation rate exceeds the band's width (C6) and within half a kernel of
 either end of the envelopes (C3), and plots grey those cells. The band
 width comes from the filterbank's own responses (its −3 dB width), not from
 a formula, so it is right for every bank.
 
-**D5. Centred frames offline; ends not padded away. (accepted 2026-10-01)** Offline analysis is
+**D5. Centred time windows offline; ends not padded away. (accepted 2026-10-01)** Offline analysis is
 centred (`align="center"`), so a modulation shows up where it happens (C3)
 and bands with different kernel lengths line up. `align="causal"` gives what
 a live analysis would see (C8). Outside its extent the envelope is taken to
 be zero, so the abrupt start and end of a sound read as modulation; those
-frames are marked invalid (D4) rather than hidden by mirroring or tapering,
-which would invent signal. Frames every 10 ms by default.
+time windows are marked invalid (D4) rather than hidden by mirroring or tapering,
+which would invent signal. Time windows every 10 ms by default.
 
 **D6. Streaming: designed for, built later. (accepted 2026-10-01)** The block formulation of C8
 is the contract: a later `ModulationTracker` would keep the last L_k − 1
-envelope samples per band and emit frames as blocks arrive, matching
+envelope samples per band and emit time windows as blocks arrive, matching
 `align="causal"` exactly. Not in this step, because the audio filterbanks
 in sonore are FFT-based and whole-signal, so a live version also needs a
 causal audio stage (gammatone as IIR, envelope by rectify and lowpass). That
@@ -368,8 +368,8 @@ snd = so.load("docs/speech/bdl_arctic_a0131.flac")
 fb = so.ERBFilterbank(n_bands=24, f_lo=100, f_hi=7000)
 env = fb.analyze(snd).envelopes(fs=1000)
 
-msg = so.ModulationSpectrogram(env)          # constant-Q, 0.5-64 Hz, 10 ms frames
-msg.power.shape                              # (1, 24, 15, n_frames)
+msg = so.ModulationSpectrogram(env)          # constant-Q, 0.5-64 Hz, 10 ms hop
+msg.power.shape                              # (1, 24, 15, n_windows)
 msg.plot()                                   # rate vs time, pooled over bands
 msg.plot(rate=4)                             # acoustic band vs time at 4 Hz
 img = msg.at(1.2)                            # bands x rates at t = 1.2 s

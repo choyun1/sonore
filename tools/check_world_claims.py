@@ -269,7 +269,7 @@ def d4c_love_train(x, t, f0, rng):
 
 def d4c(x, times, f0s, n_fft_out=N_FFT):
     """WORLD's aperiodicity (amplitude ratio, as WORLD stores it), one row
-    per frame on n_fft_out // 2 + 1 bins."""
+    per time window on n_fft_out // 2 + 1 bins."""
     n_fft = 2 ** (1 + int(np.log2(4 * FS / D4C_FLOOR_F0 + 1)))
     wl = int(D4C_BAND * n_fft / FS) * 2 + 1
     k = np.arange(wl) / (wl - 1.0)
@@ -321,15 +321,15 @@ def fftshift(v):
     return np.concatenate([v[half:], v[:half]])
 
 
-def world_synthesize(f0, sp, ap, frame_period, n_out):
+def world_synthesize(f0, sp, ap, hop_ms, n_out):
     """WORLD's Synthesis: pulses at the F0 track's phase crossings, each the
     minimum-phase response of S (1 - A^2) plus noise through that of S A^2."""
     n_fft = 2 * (sp.shape[1] - 1)
     rng = WorldRandn()
-    fp = frame_period / 1000.0
+    fp = hop_ms / 1000.0
     lowest = FS / n_fft + 1.0
-    n_frames = len(f0)
-    coarse_t = np.arange(n_frames + 1) * fp
+    n_windows = len(f0)
+    coarse_t = np.arange(n_windows + 1) * fp
     cf0 = np.where(f0 < lowest, 0.0, f0)
     cvuv = (cf0 != 0).astype(float)
     cf0 = np.append(cf0, 2 * cf0[-1] - cf0[-2])
@@ -351,8 +351,8 @@ def world_synthesize(f0, sp, ap, frame_period, n_out):
     for p, i0 in enumerate(idx):
         noise_size = idx[min(len(idx) - 1, p + 1)] - i0
         now = t[i0]
-        lo = min(n_frames - 1, int(np.floor(now / fp)))
-        hi = min(n_frames - 1, int(np.ceil(now / fp)))
+        lo = min(n_windows - 1, int(np.floor(now / fp)))
+        hi = min(n_windows - 1, int(np.ceil(now / fp)))
         frac = now / fp - lo
         safe = np.clip(ap, 0.001, 0.999999999999)
         if lo == hi:
@@ -417,7 +417,7 @@ def harmonic_fit(x, t, f, phi, periods, linear=True, n_fft=1024):
 
 
 def band_aperiodicity(x, f, phi, times, bands, periods=4.0, linear=True, n_fft=1024):
-    """Per band: residual power over total power, summed over frames. The
+    """Per band: residual power over total power, summed over time windows. The
     fit absorbs some noise near every harmonic, so the residual is divided
     by the share of white noise it keeps, cell by cell (cells two harmonic
     spacings wide, over which the noise spectrum is close to flat)."""
@@ -437,7 +437,7 @@ def band_aperiodicity(x, f, phi, times, bands, periods=4.0, linear=True, n_fft=1
 
 
 def true_band(ap_db, bands, f, times):
-    """Each band's true aperiodicity, averaged over the frames: noise power
+    """Each band's true aperiodicity, averaged over the time windows: noise power
     (the integral of A E^2 / (2 F0)) over noise plus harmonic power (the sum
     of a_k^2 / 2 over the harmonics in the band). The harmonics sample E at
     k F0, so near a narrow formant the band's harmonic power is not the

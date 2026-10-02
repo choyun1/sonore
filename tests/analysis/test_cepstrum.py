@@ -55,13 +55,13 @@ def test_scaling_moves_only_c0(noise):
 
 
 def test_minimum_phase_fold():
-    """A minimum-phase FIR alone in a frame comes back with its phase; a
+    """A minimum-phase FIR alone in a time window comes back with its phase; a
     mixed-phase one keeps only its magnitude."""
     roots = np.array([0.8 * np.exp(0.4j), 0.6 * np.exp(1.7j), 0.5 * np.exp(2.6j)])
     h_min = np.real(np.poly(np.concatenate([roots, roots.conj()])))
     frame = so.GaborFrame(256 / FS, 64 / FS, window="boxcar")
     x = np.zeros(1024)
-    x[512 : 512 + len(h_min)] = h_min  # starts at frame 8's phase reference
+    x[512 : 512 + len(h_min)] = h_min  # starts at time window 8's phase reference
     cep = so.Cepstrum(frame.analyze(so.Sound(x, FS)))
     i = int(np.argmin(np.abs(cep.t - 512 / FS)))
     got = cep.to_stft("minimum").data[0, :, i]
@@ -108,9 +108,9 @@ def test_lifter_splits_the_cepstrum(noise):
     low, high = cep.lifter(2e-3), cep.lifter(2e-3, keep="high")
     assert np.allclose(low.data + high.data, cep.data)
     assert np.all(low.data[:, cep.q >= 2e-3] == 0)
-    per_frame = cep.lifter(np.full(len(cep.t), 2e-3))
-    assert np.array_equal(per_frame.data, low.data)
-    with pytest.raises(ValueError, match="one value per frame"):
+    per_window = cep.lifter(np.full(len(cep.t), 2e-3))
+    assert np.array_equal(per_window.data, low.data)
+    with pytest.raises(ValueError, match="one value per time window"):
         cep.lifter(np.ones(3) * 1e-3)
     with pytest.raises(ValueError, match="keep"):
         cep.lifter(1e-3, keep="middle")

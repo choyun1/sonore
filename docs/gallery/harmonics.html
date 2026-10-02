@@ -172,7 +172,7 @@ can be changed without touching the other, which is the idea behind vocoders suc
 <section aria-labelledby="h-the-sentence-and-code-the-examples-share">
 <h2 id="h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</h2>
 <p>The sentence is the one from <a href="speech.html">Seeing speech</a>. Its pitch is measured three ways, as
-on the <a href="cepstrum.html">Cepstral analysis</a> page: the cepstral peak in each 40 ms frame, every
+on the <a href="cepstrum.html">Cepstral analysis</a> page: the cepstral peak in each 40 ms time window, every
 5 ms (Noll, 1967); <code>so.f0_track</code>, which chooses a path through YIN-style candidates
 (de Cheveigné &amp; Kawahara, 2002); and WORLD's Harvest (Morise, 2017), stored with the sentence.
 Unless stated, the syntheses below follow <code>so.f0_track</code>.</p>
@@ -230,7 +230,7 @@ def show(snd, title, contour=None):
 <h2 id="h-three-pitch-tracks-heard">Three pitch tracks, heard</h2>
 <p>The quickest way to hear a pitch track is to play it. A band-limited sawtooth that follows each
 track, silent where the track says unvoiced, keeps the intonation and nothing else. Errors that
-are small on a plot are easy to hear: an octave slip is a sudden jump, and a frame wrongly
+are small on a plot are easy to hear: an octave slip is a sudden jump, and a time window wrongly
 called voiced or unvoiced is a click or a hole.</p>
 
 <article class="sound" id="d-hp0" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
@@ -251,8 +251,8 @@ sound = sentence</code></pre></details>
 <article class="sound" id="d-hp1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.9950315996025886, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>A sawtooth on the cepstral F0</h3>
-    <div class="desc"><p>A sawtooth on the cepstral F0. Each frame is judged on its own, so the buzz flickers on and off
-where the cepstral peak hovers around its threshold, and jumps where a frame picks the wrong
+    <div class="desc"><p>A sawtooth on the cepstral F0. Each time window is judged on its own, so the buzz flickers on and off
+where the cepstral peak hovers around its threshold, and jumps where a time window picks the wrong
 peak.</p></div>
     <audio controls preload="metadata" src="audio/hp1_a_sawtooth_on_the_cepstral_f0.flac"></audio>
     <p class="file">hp1_a_sawtooth_on_the_cepstral_f0.flac, 2.5 s, mono</p>
@@ -300,27 +300,27 @@ fig, playhead = show(buzz, &quot;sawtooth on Harvest&quot;, contours[&quot;Harve
 sound = buzz</code></pre></details>
 </article>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">for name, (_, f) in contours.items():
-    print(f&quot;{name:12s} voiced on {np.mean(f &gt; 0):.0%} of its frames&quot;)</code></pre></details><pre class="out">cepstral     voiced on 64% of its frames
-so.f0_track  voiced on 68% of its frames
-Harvest      voiced on 85% of its frames</pre></div>
+    print(f&quot;{name:12s} voiced on {np.mean(f &gt; 0):.0%} of its time windows&quot;)</code></pre></details><pre class="out">cepstral     voiced on 64% of its time windows
+so.f0_track  voiced on 68% of its time windows
+Harvest      voiced on 85% of its time windows</pre></div>
 </section>
 <section aria-labelledby="h-putting-the-envelope-back">
 <h2 id="h-putting-the-envelope-back">Putting the envelope back</h2>
 <p>The buzz has the right pitch and the wrong timbre: every vowel sounds the same. The timbre is in
-the spectral envelope, and the cepstrum separates it from the harmonics. Lifter each frame below
+the spectral envelope, and the cepstrum separates it from the harmonics. Lifter each time window below
 half its pitch period, as on the <a href="cepstrum.html">Cepstral analysis</a> page, and evaluate that
 envelope at every harmonic's frequency at every instant. Passed to <code>so.harmonic_complex</code> as the
 amplitudes, it gives harmonics that follow the track, with heights that follow the formants.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">voiced_t, voiced_f0 = track.t[track.voiced[0]], track.f0[0][track.voiced[0]]
-cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per frame
-envelope = cep.lifter(cutoffs).envelope()[0]  # (frequencies, frames)
+cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per time window
+envelope = cep.lifter(cutoffs).envelope()[0]  # (frequencies, time windows)
 log_envelope = RegularGridInterpolator(
     (cep.t, stft.f), np.log(envelope.T), bounds_error=False, fill_value=None
 )
 
 
 def formants(t, f):
-    &quot;&quot;&quot;The envelope&#x27;s gain at times t and frequencies f, interpolated in dB between frames and bins.&quot;&quot;&quot;
+    &quot;&quot;&quot;The envelope&#x27;s gain at times t and frequencies f, interpolated in dB between time windows and bins.&quot;&quot;&quot;
     return np.exp(log_envelope(np.stack([t, f], axis=-1)))</code></pre></details></div>
 
 <article class="sound" id="d-he1" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
@@ -386,8 +386,8 @@ sound = vocoded</code></pre></details>
 <section aria-labelledby="h-unvoiced-gaps">
 <h2 id="h-unvoiced-gaps">Unvoiced gaps</h2>
 <p>Where the track says unvoiced, the sound is noise: fricatives, bursts and breath. Noise shaped
-by the same envelope fills the gaps: white noise whose STFT magnitude is replaced, frame by
-frame, by the envelope. It is faded in where the track's voicing turns off, and set as loud,
+by the same envelope fills the gaps: white noise whose STFT magnitude is replaced, at every
+time window, by the envelope. It is faded in where the track's voicing turns off, and set as loud,
 relative to the harmonics, as the unvoiced parts of the sentence are relative to its voiced
 parts.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">noise = so.gaussian_noise(duration, fs, rng=2)
@@ -395,7 +395,7 @@ coloured = so.STFT(noise, win_dur=0.040, hop_dur=0.005)
 coloured.data = envelope[None] * np.exp(1j * np.angle(coloured.data))
 breath = coloured.to_sound().data[: len(sentence), 0]
 
-# Voicing between frames, 1 where voiced; the harmonics are switched by the same frames.
+# Voicing between time windows, 1 where voiced; the harmonics are switched at the same time windows.
 t_samples = np.arange(len(sentence)) / fs
 voicing = np.interp(t_samples, track.t, track.voiced[0].astype(float))
 
@@ -460,14 +460,14 @@ print(f&quot;median voiced F0: {median:.0f} Hz&quot;)
 
 
 def on(values):
-    &quot;&quot;&quot;The resynthesis on another contour, at so.f0_track&#x27;s frame times.&quot;&quot;&quot;
+    &quot;&quot;&quot;The resynthesis on another contour, at so.f0_track&#x27;s window times.&quot;&quot;&quot;
     contour = (track.t, np.where(voiced, values, 0.0))
     return finish(with_breath(so.harmonic_complex(duration, fs, contour, amplitudes=formants))), contour</code></pre></details><pre class="out">median voiced F0: 120 Hz</pre></div>
 
 <article class="sound" id="d-hm1" data-regions="[{&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05344770746527778, &quot;x1&quot;: 0.9951405104936776, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Monotone</h3>
-    <div class="desc"><p>Monotone: every voiced frame at the median F0. The words are all there, without the
+    <div class="desc"><p>Monotone: every voiced time window at the median F0. The words are all there, without the
 intonation that marks the question and the stress.</p></div>
     <audio controls preload="metadata" src="audio/hm1_monotone.flac"></audio>
     <p class="file">hm1_monotone.flac, 2.5 s, mono</p>
@@ -613,7 +613,7 @@ sound = snd</code></pre></details>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>Better envelopes.</strong> The liftered envelope sits a few dB below the harmonic peaks, and is measured with a fixed 40 ms window. WORLD's CheapTrick (Morise, 2015) smooths over one period with a pitch-adaptive window first and corrects the lifter.</li><li><strong>Aperiodicity.</strong> Here every frame is either harmonics or noise. Real voices mix the two, with more noise at high frequencies and in breathy voice, and WORLD measures the mixture in each band and frame (D4C). The <a href="aperiodicity.html">Source, filter and aperiodicity</a> page does.</li><li><strong>The glottal pulse.</strong> The harmonics' phases here are fixed numbers. A voice's phases come from the shape of each glottal pulse and the vocal tract's phase response; a minimum-phase envelope (as in the <a href="cepstrum.html#d-c3">envelope only</a> example) is one step towards it.</li></ul>
+<ul><li><strong>Better envelopes.</strong> The liftered envelope sits a few dB below the harmonic peaks, and is measured with a fixed 40 ms window. WORLD's CheapTrick (Morise, 2015) smooths over one period with a pitch-adaptive window first and corrects the lifter.</li><li><strong>Aperiodicity.</strong> Here every time window is either harmonics or noise. Real voices mix the two, with more noise at high frequencies and in breathy voice, and WORLD measures the mixture in each band and time window (D4C). The <a href="aperiodicity.html">Source, filter and aperiodicity</a> page does.</li><li><strong>The glottal pulse.</strong> The harmonics' phases here are fixed numbers. A voice's phases come from the shape of each glottal pulse and the vocal tract's phase response; a minimum-phase envelope (as in the <a href="cepstrum.html#d-c3">envelope only</a> example) is one step towards it.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>

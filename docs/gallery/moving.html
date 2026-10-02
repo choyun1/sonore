@@ -255,7 +255,7 @@ def show(mix, target_alone, t, azimuths, title):
     sources = [(mix, &quot;k&quot;, &quot;mix&quot;)] if len(azimuths) &gt; 1 else []
     for snd, color, label in sources + [(target_alone, COLORS[0], &quot;target alone&quot;)]:
         cues = so.interaural_cues(snd, win_dur=20e-3)
-        clear = cues.iac &gt; 0.8  # frames where the two ears are well correlated
+        clear = cues.iac &gt; 0.8  # time windows where the two ears are well correlated
         axes[1].plot(cues.t[clear], 1e6 * cues.itd[clear], &quot;.&quot;, color=color, ms=2.5, label=label)
         axes[2].plot(cues.t, cues.ild, &quot;.&quot;, color=color, ms=2.5, label=label)
     axes[1].set(

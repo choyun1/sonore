@@ -14,19 +14,19 @@ __all__ = ["Cepstrum"]
 
 
 class Cepstrum:
-    """The real cepstrum of each frame of an :class:`~sonore.analysis.representations.STFT`
+    """The real cepstrum of each time window of an :class:`~sonore.analysis.representations.STFT`
     or :class:`~sonore.analysis.representations.TVSTFT`.
 
-    For a frame with spectrum ``X[k]`` on ``n_fft`` bins, the cepstrum is
+    For a time window with spectrum ``X[k]`` on ``n_fft`` bins, the cepstrum is
     ``c[n] = IDFT(ln |X[k]|)`` at quefrency ``n / fs`` seconds. It is real and
     even in ``n`` because the sound is real, so only ``n = 0 .. n_fft // 2``
-    is stored: ``data`` has shape ``(n_channels, n_fft // 2 + 1, n_frames)``
-    on quefrencies :attr:`q` [s] and frame times :attr:`t` [s].
+    is stored: ``data`` has shape ``(n_channels, n_fft // 2 + 1, n_windows)``
+    on quefrencies :attr:`q` [s] and window times :attr:`t` [s].
 
     The natural log is used, so ``exp`` undoes it exactly: without liftering,
     :meth:`to_sound` gives back the analyzed sound. Scaling the sound changes
     only ``c[0]``. Before the log, magnitudes are floored at ``floor_db``
-    below the channel's largest magnitude over all frames, so a frame of
+    below the channel's largest magnitude over all time windows, so a time window of
     digital silence has a flat log spectrum rather than ``-inf``; real
     recordings stay far above the default. Only the real cepstrum is
     provided: the complex cepstrum needs phase unwrapping, and the minimum
@@ -60,9 +60,9 @@ class Cepstrum:
         return new
 
     def __repr__(self) -> str:
-        n_channels, n_quefrencies, n_frames = self.data.shape
+        n_channels, n_quefrencies, n_windows = self.data.shape
         return (
-            f"Cepstrum({n_quefrencies} quefrencies x {n_frames} frames, {n_channels} ch, "
+            f"Cepstrum({n_quefrencies} quefrencies x {n_windows} time windows, {n_channels} ch, "
             f"up to {self.q[-1] * 1e3:.1f} ms)"
         )
 
@@ -73,7 +73,7 @@ class Cepstrum:
 
     @property
     def t(self) -> np.ndarray:
-        """Frame center times [s], those of :attr:`source`."""
+        """Window center times [s], those of :attr:`source`."""
         return self.source.t
 
     def _full(self) -> np.ndarray:
@@ -86,13 +86,13 @@ class Cepstrum:
         """A rectangular lifter. ``keep="low"`` keeps the quefrencies below
         ``cutoff`` [s], the smooth spectral envelope; ``"high"`` keeps the
         rest, the fine structure such as the harmonics. ``cutoff`` is one
-        value or one per frame, so it can follow an F0 track (half a period
+        value or one per time window, so it can follow an F0 track (half a period
         separates the envelope from the harmonics)."""
         cutoffs = np.asarray(cutoff, dtype=float)
-        n_frames = self.data.shape[2]
-        if cutoffs.ndim > 1 or (cutoffs.ndim == 1 and len(cutoffs) != n_frames):
-            raise ValueError(f"cutoff must be a scalar or have one value per frame ({n_frames})")
-        below = self.q[:, None] < np.broadcast_to(cutoffs, (n_frames,))[None, :]
+        n_windows = self.data.shape[2]
+        if cutoffs.ndim > 1 or (cutoffs.ndim == 1 and len(cutoffs) != n_windows):
+            raise ValueError(f"cutoff must be a scalar or have one value per time window ({n_windows})")
+        below = self.q[:, None] < np.broadcast_to(cutoffs, (n_windows,))[None, :]
         if keep == "low":
             mask = below
         elif keep == "high":
@@ -103,7 +103,7 @@ class Cepstrum:
 
     def envelope(self) -> np.ndarray:
         """``exp(DFT(c))``: the magnitude spectrum this cepstrum stands for,
-        shape ``(n_channels, n_freqs, n_frames)`` on the source's frequencies.
+        shape ``(n_channels, n_freqs, n_windows)`` on the source's frequencies.
         After a low lifter it is the cepstral spectral envelope, which follows
         the shape of the true envelope but sits a few dB below the harmonic
         peaks, because the lifter averages the peaks with the dips between them."""
@@ -117,7 +117,7 @@ class Cepstrum:
         unliftered cepstrum returns the source's coefficients. ``"minimum"``
         uses the minimum phase for that magnitude, from the folded cepstrum
         (``c[0]`` kept, ``2 c[n]`` up to ``n_fft / 2``, zero beyond). Each
-        frame's response then starts at the frame's phase reference, the
+        time window's response then starts at its phase reference, the
         middle of its window. The fold is exact up to the time aliasing of
         the cepstrum on ``n_fft`` bins, which is negligible once ``n_fft``
         is several times the response's length.
@@ -149,18 +149,18 @@ class Cepstrum:
         quefrencies ``1/f_hi`` and ``1/f_lo``, refined by a parabola through it
         and its neighbors.
 
-        Returns ``(t, f0, peak)``: frame times [s], and F0 [Hz] and the peak's
-        height for each channel and frame, shape ``(n_channels, n_frames)``.
+        Returns ``(t, f0, peak)``: window times [s], and F0 [Hz] and the peak's
+        height for each channel and time window, shape ``(n_channels, n_windows)``.
         F0 is 0 where the peak is below ``threshold``, a crude voicing rule.
 
         A periodic sound puts ripples in the log spectrum, one per harmonic,
         and they are resolved only if the window holds about three periods: at
-        two periods, many frames come out an octave off. So every window must
+        two periods, many time windows come out an octave off. So every window must
         be at least ``3 / f_lo`` long, or this raises. On a male spoken
-        sentence (CMU ARCTIC ``bdl``, 40 ms Hann frames), the result agrees
-        with WORLD's Harvest within 5% on about 79% of the frames Harvest
+        sentence (CMU ARCTIC ``bdl``, 40 ms Hann time windows), the result agrees
+        with WORLD's Harvest within 5% on about 79% of the time windows Harvest
         calls voiced, and on 95% of those whose peak also exceeds 0.1. It is a
-        baseline, not an F0 tracker: each frame is judged alone.
+        baseline, not an F0 tracker: each time window is judged alone.
         """
         if not 0 < f_lo < f_hi < self.fs / 2:
             raise ValueError(f"need 0 < f_lo < f_hi < fs/2, got f_lo={f_lo:g}, f_hi={f_hi:g}")

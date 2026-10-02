@@ -96,7 +96,7 @@ Define synthesis as T⁺ = S⁻¹T*.
   - ‖P² − P‖ + ‖P − Pᵀ‖ = 1e-14.
 
 **C3. Half-spectrum coefficients need weights.** [proof, check]
-A real x has conjugate-symmetric DFT frames. A one-sided STFT stores only
+A real x has conjugate-symmetric windowed DFTs. A one-sided STFT stores only
 bins 0..K/2.
 
 - The full two-sided coefficient energy is recovered by giving every stored
@@ -132,7 +132,7 @@ real. Then:
 1986]
 Let the window have length L ≤ K = n_fft and the hop be a.
 
-- For each frame q, the K DFT samples of a length-≤K segment satisfy
+- For each time window q, the K DFT samples of a length-≤K segment satisfy
   Parseval: Σ_k |c_{q,k}|² = K Σ_t |x(t) w(t − qa)|².
 - Summing over q gives ‖Tx‖² = Σ_t |x(t)|² s(t), where
   s(t) = K Σ_q |w(t − qa)|².
@@ -287,8 +287,8 @@ class GaborFrame(Frame):              # wraps ShortTimeFFT (C5)
 As implemented, `window` also accepts a `get_window` tuple or a callable
 `n -> array`, which is how a non-standard window such as Hann^1.5 is given
 while keeping the frame hashable. `GaborFrame` also exposes `lengths(fs)`,
-`window_samples(fs)`, `frame_power(n, fs)` (s(t), summed over every frame that
-overlaps the signal; the frames SciPy leaves out overlap only where the window
+`window_samples(fs)`, `frame_power(n, fs)` (s(t), summed over every time window that
+overlaps the signal; the time windows SciPy leaves out overlap only where the window
 is zero) and `bin_weights(fs)` (C3). `STFT` gains a keyword `frame=`, and its
 private `_data`/`_sft` constructor arguments are gone.
 
@@ -512,7 +512,7 @@ s(t) = M Σ_q |w_q(t − a_q)|² (full complex FFT; C3's weights handle the
 one-sided case exactly as in step 1).
 
 - Proof: each window's DFT rows are orthogonal with norm² M on its support,
-  so each frame contributes M·diag(|w_q|²). This is the painless condition
+  so each time window contributes M·diag(|w_q|²). This is the painless condition
   of Daubechies, Grossmann & Meyer (1986), generalized to one window per
   position as in Balazs et al. (2011).
 - Check: at N = 64 with lengths 8–16 and M = 16, the diagonal matches the
@@ -605,7 +605,7 @@ unchanged; this will be checked against a worktree of the previous commit.
   `freqs`, `times`, `repr` and `griffin_lim` all go through SciPy's
   `ShortTimeFFT`, which cannot represent varying windows, and retrofitting
   that risks the step 1 invariants. The new type has data shape
-  `(ch, F, frames)` like `STFT` and non-uniform `times`.
+  `(ch, F, time windows)` like `STFT` and non-uniform `times`.
 - **Implementation:** sonore's own, since SciPy cannot do this. The dual is
   conj-window over s(t) (C12, generalizing C5).
 - **Cross-check:** a constant schedule must reproduce `GaborFrame`.
@@ -647,7 +647,7 @@ sb.synthesize()             # canonical dual, exact (D1, D7, D8)
 fb.frame_bounds(len(snd), snd.fs)
 
 tv = so.TVGaborFrame(times=[...], win_durs=[...])
-c = tv.analyze(snd)         # new coefficient type, (ch, F, frames)
+c = tv.analyze(snd)         # new coefficient type, (ch, F, time windows)
 tv.synthesize(c)            # exact
 
 fb.adjoint(sb)              # D10, every frame
@@ -735,7 +735,7 @@ agree.
 - **Patch 4, `TVGaborFrame`.** `times` are window centers, rounded to
   samples, and must be strictly increasing. Each windowed segment is placed
   in the FFT buffer with the window's middle sample at index 0, which is
-  SciPy's phase convention, so a constant schedule over SciPy's frames
+  SciPy's phase convention, so a constant schedule over SciPy's time windows
   reproduces `GaborFrame`'s coefficients exactly (equal to 0.0 in the
   checks). `n_fft` is in samples, like `GaborFrame`'s, while window lengths
   depend on fs. A window longer than `n_fft` is therefore refused when the
@@ -947,7 +947,7 @@ fundamental rate, the largest one, cancels exactly.
 
 **C18. Reassignment, with sonore's phase convention.** [proof, check] For
 an STFT whose phase is referenced to the window's center (SciPy's
-convention, which `GaborFrame` and `TVGaborFrame` both follow), with frame
+convention, which `GaborFrame` and `TVGaborFrame` both follow), with window
 center t and bin frequency f,
 
 - t̂ = t + Re(X_tw · conj X) / |X|²,
@@ -1006,7 +1006,7 @@ overlap, on a sentence-like contour (voiced 0.1–0.9 s gliding 180 → 90 Hz,
 and 1.2–1.9 s gliding 140 → 100 Hz). The frame operator is diagonal (step 2,
 C12), so A/B is the min/max of s(t) over the interior.
 
-| Unvoiced handling | k | Overlap | Frames | n_fft | A/B |
+| Unvoiced handling | k | Overlap | Time windows | n_fft | A/B |
 |---|---|---|---|---|---|
 | Fixed 20 ms window in gaps | 3 | 4 | 356 | 531 | 0.71 |
 | Fixed 10 ms window in gaps | 3 | 4 | 454 | 531 | 0.34 |
@@ -1018,7 +1018,7 @@ C12), so A/B is the min/max of s(t) over the interior.
 
 - "Bridged" carries F0 through unvoiced stretches, log-linearly between
   the voiced neighbors and held constant before the first and after the last
-  voiced frame, so the window length never jumps.
+  voiced time window, so the window length never jumps.
 - Synthesis is exact either way (step 2's dual divides by s(t)); A/B only
   bounds how much edited coefficients can be amplified. The jumps are what
   cost conditioning, not the adaptation itself.
@@ -1087,7 +1087,7 @@ t_end=...)`: Hann windows `periods` F0-periods long, hop = window /
   separate clearly (12 dB dip, C16) and the period-rate flicker is gone
   (pulse depth 0). It is also the length WORLD's CheapTrick uses (a Hann
   window of 3 T0, Morise, 2015). It is a constructor argument.
-- `f0` uses 0 or NaN for unvoiced frames, the common convention of F0
+- `f0` uses 0 or NaN for unvoiced time windows, the common convention of F0
   trackers.
 - The gallery shows it next to the narrowband panel: the two have similar
   window lengths at F0 ≈ 100 Hz, but only the adaptive one keeps the same
@@ -1130,7 +1130,7 @@ section is drawn on the same time axis and the same frequency axis, each in
 dB re its own maximum, over the same 60 dB range.
 
 - **No resampling.** Each representation is drawn with its own native cells
-  (`pcolormesh` with cell edges at mid-points between frame centers or
+  (`pcolormesh` with cell edges at mid-points between window centers or
   between band centers). Interpolating onto one grid would invent detail in
   some panels and blur it in others; shared axes are enough for the eye to
   compare.
@@ -1138,7 +1138,7 @@ dB re its own maximum, over the same 60 dB range.
   it is binned onto a grid of about one screen pixel (1 ms by 10 Hz).
 - Filterbank magnitudes are the existing envelopes, decimated to 1 kHz as
   the other gallery cochleagrams are.
-- `TVSTFT` gets a `plot` method (its frame centers are non-uniform), and
+- `TVSTFT` gets a `plot` method (its window centers are non-uniform), and
   the existing `STFT.plot` and `Envelopes.plot` get the axis options needed
   to match.
 - **(accepted 2026-10-01)** The frequency axis. Recommended: **linear, 0–5 kHz,** the

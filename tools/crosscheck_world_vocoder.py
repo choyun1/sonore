@@ -36,7 +36,7 @@ BANDS = [(0, 1000), (1000, 2000), (2000, 4000), (4000, 7000)]
 
 
 def d4c_bands(x, f, times, bands=BANDS):
-    """pyworld's D4C at the frame times, as band aperiodicity: the power
+    """pyworld's D4C at the window times, as band aperiodicity: the power
     ratio ap^2 averaged over each band, weighted by CheapTrick's envelope."""
     x = np.ascontiguousarray(x)
     f0 = np.ascontiguousarray(f[np.round(times * FS).astype(int)])
@@ -52,7 +52,7 @@ def d4c_bands(x, f, times, bands=BANDS):
 
 
 def within_80_db(sp):
-    """Where WORLD's envelope is within 80 dB of each frame's peak. Below
+    """Where WORLD's envelope is within 80 dB of each time window's peak. Below
     that, the tiny random noise WORLD adds to keep logarithms finite, not
     the signal, sets its values."""
     return sp > 1e-8 * sp.max(axis=1, keepdims=True)
@@ -107,8 +107,8 @@ def main():
         for j in range(len(db))
     )
     report("C6", "D4C at 16 kHz: largest departure from straight lines through 0, 3k, 8 kHz [dB]", resid)
-    report("C6", "D4C at 16 kHz: value at 0 Hz, every voiced frame [dB]", db[:, 0].max())
-    report("C6", "D4C at 16 kHz: value at 8 kHz, every voiced frame [dB]", db[:, -1].min())
+    report("C6", "D4C at 16 kHz: value at 0 Hz, every voiced time window [dB]", db[:, 0].max())
+    report("C6", "D4C at 16 kHz: value at 8 kHz, every voiced time window [dB]", db[:, -1].min())
 
     # F0 errors: D4C against the harmonic residual
     truth = true_band(rising, BANDS, f, times)
@@ -137,11 +137,13 @@ def main():
     voiced = f0 > 0
     ours = np.array([cheaptrick(x, tt, ff) for tt, ff in zip(t[voiced], f0[voiced], strict=True)])
     d = 10 * np.log10(ours / sp[voiced])[within_80_db(sp[voiced])]
-    report("C1", "CheapTrick port vs pyworld on bdl, voiced frames: largest |diff| [dB]", np.abs(d).max())
+    report(
+        "C1", "CheapTrick port vs pyworld on bdl, voiced time windows: largest |diff| [dB]", np.abs(d).max()
+    )
     ap = pyworld.d4c(x, f0, t, fs)
     report(
         "C6",
-        "D4C on bdl: share of voiced frames left fully aperiodic (0 dB everywhere)",
+        "D4C on bdl: share of voiced time windows left fully aperiodic (0 dB everywhere)",
         np.mean(np.all(ap[voiced] > 0.999, axis=1)),
     )
 
@@ -149,7 +151,7 @@ def main():
     ours = d4c(x, t, f0)
     report(
         "C10",
-        "D4C port vs pyworld on bdl, every frame: largest |diff| [dB]",
+        "D4C port vs pyworld on bdl, every time window: largest |diff| [dB]",
         np.abs(20 * np.log10(ours / ap)).max(),
     )
     y_world = pyworld.synthesize(f0, sp, ap, fs, HOP * 1000)

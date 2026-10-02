@@ -58,7 +58,7 @@ def _pulses(f0, dur, fs):
 
 
 def test_tandem_power_cancels_the_period_rate_flicker():
-    """On a pulse train the averaged pair is far steadier over frames than either window alone."""
+    """On a pulse train the averaged pair is far steadier over time windows than either window alone."""
     fs, f0 = 16000, 125.0
     snd = _pulses(f0, 0.5, fs)
     track_t = np.arange(0, 0.5, 0.005)
