@@ -134,10 +134,11 @@ def _max_harmonic(values: np.ndarray, f_max: float) -> int:
 
 def _n_max(f0, fs: float, f_max: float | None) -> int:
     """The highest harmonic number a harmonic waveform on ``f0`` can hold:
-    below Nyquist for a fixed F0, below ``f_max`` somewhere for a contour."""
+    below ``f_max`` (by default Nyquist for a fixed F0, 0.45 fs for a contour)
+    somewhere on it."""
     contour = _contour(f0)
     if contour is None:
-        return int(np.ceil(fs / 2 / f0)) - 1
+        return int(np.ceil((fs / 2 if f_max is None else f_max) / f0)) - 1
     return _max_harmonic(contour[1], 0.45 * fs if f_max is None else f_max)
 
 
@@ -207,6 +208,8 @@ def harmonic_complex(
     amplitudes: Amplitudes = None,
     phases: ArrayLike | str = "cosine",
     rng: RNG = None,
+    *,
+    f_max: float | None = None,
 ) -> Sound: ...
 
 
@@ -264,7 +267,9 @@ def harmonic_complex(
     one per harmonic, or one of ``"cosine"``, ``"sine"``, ``"alternating"``,
     ``"random"``, ``"schroeder+"``, ``"schroeder-"``.
 
-    A fixed F0 drops harmonics at or above Nyquist, with a warning.
+    A fixed F0 drops harmonics at or above Nyquist, with a warning. Given
+    ``f_max``, it also takes harmonics only below ``f_max`` by default and
+    fades them out as a contour does (below); without it, nothing is faded.
 
     A contour (``docs/design/harmonic-source.md``) is filled across its
     unvoiced gaps and interpolated linearly to the sample rate, and the phase
@@ -284,24 +289,32 @@ def harmonic_complex(
         return _contour_complex(
             duration, fs, *contour, harmonics, amplitudes, phases, rng, f_max, ramp, unvoiced
         )
+    if f_max is not None and not 0 < f_max <= fs / 2:
+        raise ValueError(f"f_max must be in (0, fs/2], got {f_max:g}")
     if harmonics is None:
         if f0 <= 0:
             raise ValueError(f"f0 must be positive, got {f0:g}")
-        harmonics = np.arange(1, int(np.ceil(fs / 2 / f0)))
+        harmonics = np.arange(1, int(np.ceil((fs / 2 if f_max is None else f_max) / f0)))
     harmonics = np.atleast_1d(np.asarray(harmonics))
     gains = _gains(amplitudes, harmonics)
     start_phases = _harmonic_phases(harmonics, phases, rng)
+    # the same taper as for a contour, so f_max means the same for both
+    taper = np.ones(len(harmonics)) if f_max is None else _taper(harmonics * f0, f_max)
 
-    keep = harmonics * f0 < fs / 2
-    if not keep.all():
-        warnings.warn(f"dropping {np.sum(~keep)} harmonic(s) at or above Nyquist", stacklevel=2)
+    below_nyquist = harmonics * f0 < fs / 2
+    if not below_nyquist.all():
+        warnings.warn(f"dropping {np.sum(~below_nyquist)} harmonic(s) at or above Nyquist", stacklevel=2)
+    keep = below_nyquist & (taper > 0)
     t = time_axis(n_samples(duration, fs), fs)
     data = np.zeros_like(t)
     if gains is None:
         gain_function = _amplitude_function(amplitudes)
-        gains = [gain_function(t, np.full_like(t, number * f0), number) for number in harmonics[keep]]
+        gains = [
+            weight * gain_function(t, np.full_like(t, number * f0), number)
+            for number, weight in zip(harmonics[keep], taper[keep], strict=True)
+        ]
     else:
-        gains = gains[keep]
+        gains = gains[keep] * taper[keep]
     for number, amplitude, start_phase in zip(harmonics[keep], gains, start_phases[keep], strict=True):
         _add_harmonic(data, amplitude, 2 * np.pi * number * f0 * t + start_phase)
     return _finish(data, fs)

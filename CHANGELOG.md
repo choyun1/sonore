@@ -125,6 +125,18 @@ version (0.x.y) only fixes bugs.
   padding reduces. Texture statistics and synthesis are unchanged (they use
   `pad=0`).
 
+### Fixed
+- `harmonic_complex` (and `schroeder_complex`, `square_wave`,
+  `sawtooth_wave`, `pulse_train`, `glottal_source`) on a fixed F0 ignored
+  `f_max`, so a sound asked to stop at 5 kHz had harmonics up to Nyquist.
+  Now a fixed F0 honors `f_max` as a contour does: harmonics below it by
+  default, with the same cos² fade from 0.9 `f_max`. Without `f_max`, a
+  fixed F0 is unchanged bit for bit.
+- `move_sound` returned a near-silent sound, without an error, for a source
+  coming toward the head faster than sound. It now refuses such a path
+  (and, with PKU-IOA, one at 300 m/s, where the measured onsets change
+  faster than the travel time). Slower paths are unchanged to 1e-10.
+
 ## [0.3.1] - 2026-10-01
 
 The first release archived on Zenodo, which gives it a DOI. No change to the

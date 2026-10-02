@@ -26,6 +26,23 @@ class TestGenerators:
             x = so.harmonic_complex(0.1, FS, 5000, np.arange(1, 6))
         assert x.rms == pytest.approx(1)
 
+    def test_fixed_f0_honors_f_max(self):
+        """A fixed F0 with f_max stops below it and fades as a contour does; without
+        f_max it is unchanged."""
+        f0, f_max = 120.0, 5000.0
+        x = so.harmonic_complex(1.0, FS, f0, f_max=f_max).data[:, 0]
+        spectrum = np.abs(np.fft.rfft(x)) ** 2
+        f = np.fft.rfftfreq(len(x), 1 / FS)
+        assert spectrum[f >= f_max].sum() < 1e-12 * spectrum.sum()
+        top = np.argmin(np.abs(f - 41 * f0))  # 4920 Hz, in the fade
+        first = np.argmin(np.abs(f - f0))
+        fade = np.cos(np.pi / 2 * (41 * f0 - 0.9 * f_max) / (0.1 * f_max)) ** 2
+        assert spectrum[top] / spectrum[first] == pytest.approx(fade**2, rel=1e-6)
+        contour = so.harmonic_complex(1.0, FS, ([0.0, 1.0], [f0, f0]), f_max=f_max, ramp=0)
+        np.testing.assert_allclose(x / np.std(x), contour.data[:, 0] / contour.data[:, 0].std(), atol=1e-6)
+        unchanged = so.harmonic_complex(1.0, FS, f0, harmonics=np.arange(1, int(np.ceil(FS / 2 / f0))))
+        np.testing.assert_array_equal(so.harmonic_complex(1.0, FS, f0).data, unchanged.data)
+
     def test_bandlimited_square_has_no_aliases(self):
         x = so.square_wave(1.0, FS, 1000)
         X = np.abs(np.fft.rfft(x.data[:, 0]))

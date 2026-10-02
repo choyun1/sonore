@@ -463,6 +463,23 @@ and should sound the same (C5).
   the measured HRIR energy with 1/r removed is −5.2, −4.7 and −5.5 dB at
   1, 1.3 and 1.6 m, and the renderer passes that through.
 
+- Fast paths (built for the gallery's straight paths and its path no
+  source could take; numbers from `tools/check_moving_trajectories.py`).
+  Emission times are now found by inverting arrival time on a grid eight
+  times finer than the delay lookup, then refined by Newton's method; the
+  fixed-point iteration before converged ever more slowly as a source
+  coming toward the head neared the speed of sound (it gave up at
+  300 m/s) and, for one faster than sound, settled outside the sound and
+  returned a near-silent result instead of an error. A source whose ear delay shrinks faster than time
+  passes is now refused. With PKU-IOA that happens at 300 m/s already
+  (0.87 of the speed of sound): crossing 1.6 m, the measured onsets make
+  the left ear's delay shrink at 0.99 s per s where the travel time
+  shrinks at 0.87. Results for slower paths are unchanged to 1e-10.
+  On the gallery's jumping path (top speed 247 m/s, 28° of azimuth in
+  5 ms), shapes switched every 5 ms differ from shapes switched every
+  0.0625 ms by −13 dB in the worst 20 ms window, and every 0.5 ms by
+  −29 dB, so the gallery renders it with `hop=0.5e-3`.
+
 ## Order
 
 1. Answer D1–D8 (done).
