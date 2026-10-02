@@ -1,13 +1,15 @@
 """Numerical checks for the claims in docs/design/world.md (C1-C5).
 
 Like the other claim checkers, this is independent of sonore: only NumPy and
-SciPy, with every step written out from its formula. It holds a small
-prototype of the two estimators the design describes (a CheapTrick-style
-envelope and a harmonic-residual aperiodicity) so
-the numbers in the document can be reproduced; it is not the library code.
-The CheapTrick prototype follows WORLD's C++ source (cheaptrick.cpp and
-common.cpp in github.com/mmorise/World). Each line prints the claim number
-and the number that supports it.
+SciPy, with every step written out from its formula. It holds ports of
+WORLD's three steps, written from its C++ source (cheaptrick.cpp, d4c.cpp,
+synthesis.cpp, common.cpp and matlabfunctions.cpp in github.com/mmorise/World,
+commit d625e76), and a prototype of the harmonic-residual aperiodicity the
+design proposes beside D4C, so the numbers in the document can be
+reproduced; none of it is the library code.
+tools/crosscheck_world_vocoder.py compares the ports with WORLD itself
+(claim C10). Each line prints the claim number and the number that
+supports it.
 
     python tools/check_world_claims.py
 
@@ -24,7 +26,7 @@ HOP = 0.005
 N_FFT = 1024  # WORLD's CheapTrick size at 16 kHz with its 71 Hz floor
 FORMANTS = [(730, 60), (1090, 100), (2440, 120), (3400, 175), (4500, 250)]
 F_MAX = 0.45 * FS
-TINY = 1e-12  # keeps empty bins finite in the log, like WORLD's added noise
+TINY = np.finfo(float).eps  # keeps empty bins finite in the log, like WORLD's added noise
 
 
 def report(claim, text, value):
@@ -88,36 +90,51 @@ def vowel(f, ap_db, rng, noise=True):
 
 
 # ------------------------------------------------- CheapTrick-style envelope
+def mround(v):
+    """MATLAB's round (halves away from zero), as WORLD uses."""
+    return int(v + 0.5) if v > 0 else int(v - 0.5)
+
+
+def interp1q(x0, dx, y, xi):
+    """WORLD's interp1Q: y sampled at x0 + k dx, read linearly at xi (the
+    index truncated toward zero, the last step held flat)."""
+    pos = (np.asarray(xi, float) - x0) / dx
+    base = pos.astype(int)
+    dy = np.append(np.diff(y), 0.0)
+    return y[base] + dy[base] * (pos - base)
+
+
 def boxcar(p, width, fs=FS):
     """Mean of p over [f - width/2, f + width/2], p piecewise constant per bin,
-    mirrored at 0 Hz and Nyquist (WORLD's LinearSmoothing)."""
-    df = fs / (2 * (len(p) - 1))
+    mirrored at 0 Hz and Nyquist (WORLD's LinearSmoothing, step for step)."""
+    half = len(p) - 1
+    df = fs / (2 * half)
     b = int(width / df) + 1
-    ext = np.concatenate([p[b:0:-1], p, p[-2 : -2 - b : -1]])
-    edges = (np.arange(len(ext) + 1) - b - 0.5) * df
-    cum = np.concatenate([[0.0], np.cumsum(ext) * df])
-    f = np.arange(len(p)) * df
-    return (np.interp(f + width / 2, edges, cum) - np.interp(f - width / 2, edges, cum)) / width
+    mirror = np.concatenate([p[b:0:-1], p[:half], p[half::-1][: b + 1]])
+    segment = np.cumsum(mirror * df)
+    f = np.arange(half + 1) * df - width / 2
+    origin = -(b - 0.5) * df
+    return (interp1q(origin, df, segment, f + width) - interp1q(origin, df, segment, f)) / width
 
 
 def fold_below_f0(p, f0, fs=FS):
     """Add the mirror image about f0 / 2 below f0 (WORLD's DCCorrection)."""
     df = fs / (2 * (len(p) - 1))
-    f = np.arange(len(p)) * df
-    low = f < f0 + df
+    upper = 2 + int(f0 / df)
+    f = np.arange(upper - 1) * df
     out = p.copy()
-    out[low] += np.interp(f0 - f[low], f, p)
+    out[: upper - 1] += interp1q(f0, -df, p[: upper + 1], f)
     return out
 
 
 def windowed(x, t, f0, periods=3.0, fs=FS):
     """x under a Hann window `periods` F0 periods long, centred at t, scaled
     to unit energy, minus its weighted mean (as CheapTrick)."""
-    h = int(np.round(periods / 2 * fs / f0))
+    h = mround(periods / 2 * fs / f0)
     i = np.arange(-h, h + 1)
     w = 0.5 + 0.5 * np.cos(np.pi * i / (periods / 2 * fs) * f0)
     w /= np.sqrt(np.sum(w**2))
-    seg = x[np.clip(int(np.round(t * fs)) + i, 0, len(x) - 1)] * w
+    seg = x[np.clip(mround(t * fs + 0.001) + i, 0, len(x) - 1)] * w
     return seg - w * seg.sum() / w.sum(), w
 
 
@@ -159,6 +176,215 @@ def peak_level(f0):
 def rising(f):
     """A test aperiodicity [dB]: -30 dB at 0 Hz rising linearly to -5 dB at 8 kHz."""
     return -30 + 25 * np.asarray(f) / 8000
+
+
+# ------------------------------------------------------ WORLD's D4C, ported
+# A step-for-step port of d4c.cpp (WORLD commit d625e76), including the tiny
+# safety noise WORLD adds to each windowed segment, from WORLD's own
+# generator, drawn in the same order.
+D4C_FLOOR_F0 = 47.0
+D4C_BAND = 3000.0
+D4C_UPPER = 15000.0
+D4C_THRESHOLD = 0.85
+
+
+class WorldRandn:
+    """WORLD's randn: a sum of 12 xorshift draws (matlabfunctions.cpp)."""
+
+    def __init__(self):
+        self.state = [123456789, 362436069, 521288629, 88675123]
+
+    def _step(self):
+        x, y, z, w = self.state
+        t = (x ^ (x << 11)) & 0xFFFFFFFF
+        new = (w ^ (w >> 19)) ^ (t ^ (t >> 8))
+        self.state = [y, z, w, new]
+        return new
+
+    def draw(self, n):
+        out = np.empty(n)
+        for k in range(n):
+            total = 0
+            for _ in range(12):
+                total += self._step() >> 4
+            out[k] = total / 268435456.0 - 6.0
+        return out
+
+
+def d4c_segment(x, t, f0, window, ratio, n_fft, rng, fs=FS):
+    """x under an F0-adaptive Hann or Blackman window `ratio` periods long,
+    minus its weighted mean, at the start of an n_fft buffer."""
+    h = mround(ratio * fs / f0 / 2)
+    i = np.arange(-h, h + 1)
+    pos = 2 * i / ratio / fs
+    if window == "hann":
+        w = 0.5 * np.cos(np.pi * pos * f0) + 0.5
+    else:
+        w = 0.42 + 0.5 * np.cos(np.pi * pos * f0) + 0.08 * np.cos(2 * np.pi * pos * f0)
+    seg = x[np.clip(mround(t * fs + 0.001) + i, 0, len(x) - 1)] * w + rng.draw(len(i)) * 1e-6
+    buf = np.zeros(n_fft)
+    buf[: 2 * h + 1] = seg - w * seg.sum() / w.sum()
+    return buf
+
+
+def d4c_centroid(x, t, f0, n_fft, rng):
+    buf = d4c_segment(x, t, f0, "blackman", 4.0, n_fft, rng)
+    buf /= np.sqrt(np.sum(buf[: mround(2 * FS / f0) * 2 + 1] ** 2))
+    spec = np.fft.rfft(buf)
+    spec2 = np.fft.rfft(buf * (np.arange(n_fft) + 1.0))
+    return spec2.real * spec.real + spec.imag * spec2.imag
+
+
+def d4c_band(x, t, f0, n_fft, nuttall, rng):
+    """D4C's coarse aperiodicities [dB] at every multiple of 3 kHz."""
+    first = d4c_centroid(x, t - 0.25 / f0, f0, n_fft, rng)
+    centroid = fold_below_f0(first + d4c_centroid(x, t + 0.25 / f0, f0, n_fft, rng), f0)
+    power = np.abs(np.fft.rfft(d4c_segment(x, t, f0, "hann", 4.0, n_fft, rng))) ** 2
+    power = boxcar(fold_below_f0(power, f0), f0)
+    delay = boxcar(centroid / power, f0 / 2)
+    delay = delay - boxcar(delay, f0)
+    n_bands = int(min(D4C_UPPER, FS / 2 - D4C_BAND) / D4C_BAND)
+    wl = len(nuttall)
+    boundary = mround(n_fft * 8.0 / wl)
+    out = []
+    for b in range(n_bands):
+        centre = int(D4C_BAND * (b + 1) * n_fft / FS)
+        buf = np.zeros(n_fft)
+        buf[:wl] = delay[centre - wl // 2 : centre - wl // 2 + wl] * nuttall
+        cum = np.cumsum(np.sort(np.abs(np.fft.rfft(buf)) ** 2))
+        out.append(10 * np.log10(cum[n_fft // 2 - boundary - 1] / cum[n_fft // 2]))
+    return np.minimum(0.0, np.array(out) + (f0 - 100) / 50)
+
+
+def d4c_love_train(x, t, f0, rng):
+    """The share of power (100 Hz to 7.9 kHz) below 4 kHz: D4C's voicing test."""
+    f0 = max(f0, 40.0)
+    n_fft = 2 ** (1 + int(np.log2(3 * FS / 40.0 + 1)))
+    power = np.abs(np.fft.rfft(d4c_segment(x, t, f0, "blackman", 3.0, n_fft, rng))) ** 2
+    b0, b1, b2 = (int(np.ceil(f * n_fft / FS)) for f in (100.0, 4000.0, 7900.0))
+    power[: b0 + 1] = 0
+    cum = np.cumsum(power)
+    return cum[b1] / cum[b2]
+
+
+def d4c(x, times, f0s, n_fft_out=N_FFT):
+    """WORLD's aperiodicity (amplitude ratio, as WORLD stores it), one row
+    per frame on n_fft_out // 2 + 1 bins."""
+    n_fft = 2 ** (1 + int(np.log2(4 * FS / D4C_FLOOR_F0 + 1)))
+    wl = int(D4C_BAND * n_fft / FS) * 2 + 1
+    k = np.arange(wl) / (wl - 1.0)
+    nuttall = (
+        0.355768
+        - 0.487396 * np.cos(2 * np.pi * k)
+        + 0.144232 * np.cos(4 * np.pi * k)
+        - 0.012604 * np.cos(6 * np.pi * k)
+    )
+    n_bands = int(min(D4C_UPPER, FS / 2 - D4C_BAND) / D4C_BAND)
+    axis = np.append(np.arange(n_bands + 1) * D4C_BAND, FS / 2)
+    freqs = np.arange(n_fft_out // 2 + 1) * FS / n_fft_out
+    out = np.full((len(times), len(freqs)), 1 - 1e-12)
+    rng = WorldRandn()
+    voiced = [
+        f0 != 0 and d4c_love_train(x, t, f0, rng) > D4C_THRESHOLD for t, f0 in zip(times, f0s, strict=True)
+    ]
+    for j, (t, f0) in enumerate(zip(times, f0s, strict=True)):
+        if not voiced[j]:
+            continue
+        bands = d4c_band(x, t, max(D4C_FLOOR_F0, f0), n_fft, nuttall, rng)
+        coarse = np.concatenate([[-60.0], bands, [-1e-12]])
+        out[j] = 10 ** (np.interp(freqs, axis, coarse) / 20)
+    return out
+
+
+# ------------------------------------------------ WORLD's synthesis, ported
+# A step-for-step port of synthesis.cpp (WORLD commit d625e76), with WORLD's
+# noise generator drawn in the same order, so the output is WORLD's.
+def minimum_phase(log_amp, n_fft):
+    """WORLD's GetMinimumPhaseSpectrum: half-spectrum log amplitudes in,
+    minimum-phase spectrum (n_fft // 2 + 1 bins) out."""
+    full = np.concatenate([log_amp, log_amp[-2:0:-1]])
+    c = np.fft.rfft(full)
+    folded = np.zeros(n_fft, complex)
+    folded[0] = np.conj(c[0])
+    folded[1 : n_fft // 2] = 2 * np.conj(c[1 : n_fft // 2])
+    folded[n_fft // 2] = np.conj(c[n_fft // 2])
+    return np.exp(np.fft.fft(folded)[: n_fft // 2 + 1] / n_fft)
+
+
+def c2r(spec, n_fft):
+    """FFTW's unnormalized complex-to-real inverse."""
+    return np.fft.irfft(spec, n_fft) * n_fft
+
+
+def fftshift(v):
+    half = len(v) // 2
+    return np.concatenate([v[half:], v[:half]])
+
+
+def world_synthesize(f0, sp, ap, frame_period, n_out):
+    """WORLD's Synthesis: pulses at the F0 track's phase crossings, each the
+    minimum-phase response of S (1 - A^2) plus noise through that of S A^2."""
+    n_fft = 2 * (sp.shape[1] - 1)
+    rng = WorldRandn()
+    fp = frame_period / 1000.0
+    lowest = FS / n_fft + 1.0
+    n_frames = len(f0)
+    coarse_t = np.arange(n_frames + 1) * fp
+    cf0 = np.where(f0 < lowest, 0.0, f0)
+    cvuv = (cf0 != 0).astype(float)
+    cf0 = np.append(cf0, 2 * cf0[-1] - cf0[-2])
+    cvuv = np.append(cvuv, 2 * cvuv[-1] - cvuv[-2])
+    t = np.arange(n_out) / FS
+    f_int = np.interp(t, coarse_t, cf0)
+    vuv = (np.interp(t, coarse_t, cvuv) > 0.5).astype(float)
+    f_int = np.where(vuv == 0, 500.0, f_int)
+    total = np.cumsum(2 * np.pi * f_int / FS)
+    wrap = np.fmod(total, 2 * np.pi)
+    idx = np.nonzero(np.abs(np.diff(wrap)) > np.pi)[0]
+    shift = -(wrap[idx] - 2 * np.pi) / (wrap[idx + 1] - (wrap[idx] - 2 * np.pi)) / FS
+    k = np.arange(n_fft // 2)
+    remover = 0.5 - 0.5 * np.cos(2 * np.pi * (k + 1.0) / (1.0 + n_fft))
+    remover = np.concatenate([remover, remover[::-1]])
+    remover /= 2 * remover[: n_fft // 2].sum()
+    bins = np.arange(n_fft // 2 + 1)
+    y = np.zeros(n_out)
+    for p, i0 in enumerate(idx):
+        noise_size = idx[min(len(idx) - 1, p + 1)] - i0
+        now = t[i0]
+        lo = min(n_frames - 1, int(np.floor(now / fp)))
+        hi = min(n_frames - 1, int(np.ceil(now / fp)))
+        frac = now / fp - lo
+        safe = np.clip(ap, 0.001, 0.999999999999)
+        if lo == hi:
+            env, ratio = np.abs(sp[lo]), safe[lo] ** 2
+        else:
+            env = (1 - frac) * np.abs(sp[lo]) + frac * np.abs(sp[hi])
+            ratio = ((1 - frac) * safe[lo] + frac * safe[hi]) ** 2
+        # periodic part
+        if vuv[i0] <= 0.5 or ratio[0] > 0.999:
+            periodic = np.zeros(n_fft)
+        else:
+            spec = minimum_phase(np.log(env * (1 - ratio) + 1e-12) / 2, n_fft)
+            re2 = np.cos(2 * np.pi * shift[p] * FS / n_fft * bins)
+            im2 = np.sqrt(1 - re2**2)
+            spec = (spec.real * re2 + spec.imag * im2) + 1j * (spec.imag * re2 - spec.real * im2)
+            periodic = fftshift(c2r(spec, n_fft))
+            dc = periodic[n_fft // 2 :].sum()
+            # WORLD overwrites the first half (negative times) here rather
+            # than subtracting from it
+            periodic = np.concatenate([np.zeros(n_fft // 2), periodic[n_fft // 2 :]]) - dc * remover
+        # aperiodic part
+        noise = rng.draw(noise_size)
+        buf = np.zeros(n_fft)
+        if noise_size:
+            buf[:noise_size] = noise - noise.mean()
+        log_amp = np.log(env * ratio) / 2 if vuv[i0] != 0 else np.log(env) / 2
+        aperiodic = fftshift(c2r(minimum_phase(log_amp, n_fft) * np.fft.rfft(buf), n_fft))
+        response = (periodic * np.sqrt(noise_size) + aperiodic) / n_fft
+        offset = i0 - n_fft // 2 + 1
+        a, b = max(0, -offset), min(n_fft, n_out - offset)
+        y[offset + a : offset + b] += response[a:b]
+    return y
 
 
 # --------------------------------------------- harmonic-residual aperiodicity

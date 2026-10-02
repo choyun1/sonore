@@ -1,5 +1,5 @@
-"""WORLD's own CheapTrick and D4C on the test vowels of docs/design/world.md
-(claims C1 and C6).
+"""WORLD's own CheapTrick, D4C and synthesis against the checker's ports
+and test vowels (claims C1, C6, C10 and C11 of docs/design/world.md).
 
 Runs pyworld (WORLD's C++ code) on the synthetic vowels of
 tools/check_world_claims.py, whose aperiodicity is known exactly, and on the
@@ -22,11 +22,13 @@ from check_world_claims import (
     band_aperiodicity,
     cheaptrick,
     contour,
+    d4c,
     phase_of,
     report,
     rising,
     true_band,
     vowel,
+    world_synthesize,
 )
 
 SPEECH = Path(__file__).resolve().parents[1] / "docs" / "speech"
@@ -62,7 +64,7 @@ def main():
     n = int(FS)
     fr = np.fft.rfftfreq(N_FFT, 1 / FS)
 
-    # The prototype's envelope against WORLD's on the steady vowels
+    # The port's envelope against WORLD's on the steady vowels
     for f0 in (100.0, 200.0, 300.0):
         f = contour("steady", n, f0)
         x = vowel(f, lambda q: np.full_like(np.asarray(q, float), -200.0), rng, noise=False)
@@ -70,7 +72,7 @@ def main():
         sp = pyworld.cheaptrick(x, f[np.round(times * FS).astype(int)], times, int(FS))
         ours = np.array([cheaptrick(x, t, f0) for t in times])
         d = 10 * np.log10(ours / sp)[within_80_db(sp)]
-        report("C1", f"prototype vs pyworld CheapTrick, F0 {f0:.0f} Hz: largest |diff| [dB]", np.abs(d).max())
+        report("C1", f"CheapTrick port vs pyworld, F0 {f0:.0f} Hz: largest |diff| [dB]", np.abs(d).max())
 
     # D4C on the vowels of known aperiodicity
     times = np.arange(0.1, 0.9, 2 * HOP)
@@ -135,15 +137,68 @@ def main():
     voiced = f0 > 0
     ours = np.array([cheaptrick(x, tt, ff) for tt, ff in zip(t[voiced], f0[voiced], strict=True)])
     d = 10 * np.log10(ours / sp[voiced])[within_80_db(sp[voiced])]
-    report(
-        "C1", "prototype vs pyworld CheapTrick on bdl, voiced frames: largest |diff| [dB]", np.abs(d).max()
-    )
+    report("C1", "CheapTrick port vs pyworld on bdl, voiced frames: largest |diff| [dB]", np.abs(d).max())
     ap = pyworld.d4c(x, f0, t, fs)
     report(
         "C6",
         "D4C on bdl: share of voiced frames left fully aperiodic (0 dB everywhere)",
         np.mean(np.all(ap[voiced] > 0.999, axis=1)),
     )
+
+    # C10: the ports reproduce WORLD
+    ours = d4c(x, t, f0)
+    report(
+        "C10",
+        "D4C port vs pyworld on bdl, every frame: largest |diff| [dB]",
+        np.abs(20 * np.log10(ours / ap)).max(),
+    )
+    y_world = pyworld.synthesize(f0, sp, ap, fs, HOP * 1000)
+    y_ours = world_synthesize(f0, sp, ap, HOP * 1000, len(y_world))
+    report(
+        "C10",
+        "synthesis port vs pyworld on bdl: largest |diff| re largest |sample|",
+        np.abs(y_world - y_ours).max() / np.abs(y_world).max(),
+    )
+    for kind in ("steady", "vibrato"):
+        f = contour(kind, n)
+        x = vowel(f, rising, rng)
+        times = np.arange(0.0, 1.0, HOP)
+        f0v = np.ascontiguousarray(f[np.round(times * FS).astype(int)])
+        ap = pyworld.d4c(x, f0v, times, int(FS))
+        report(
+            "C10",
+            f"D4C port vs pyworld, {kind} vowel: largest |diff| [dB]",
+            np.abs(20 * np.log10(d4c(x, times, f0v) / ap)).max(),
+        )
+        sp = pyworld.cheaptrick(x, f0v, times, int(FS))
+        y_world = pyworld.synthesize(f0v, sp, ap, int(FS), HOP * 1000)
+        y_ours = world_synthesize(f0v, sp, ap, HOP * 1000, len(y_world))
+        report(
+            "C10",
+            f"synthesis port vs pyworld, {kind} vowel: largest |diff| re largest |sample|",
+            np.abs(y_world - y_ours).max() / np.abs(y_world).max(),
+        )
+
+    # C11: WORLD's own round trip on the sentence: analyse, synthesize,
+    # analyse the result with the same F0 track
+    x, _ = sf.read(SPEECH / "bdl_arctic_a0131.flac")
+    sp = pyworld.cheaptrick(x, f0, t, fs)
+    ap = pyworld.d4c(x, f0, t, fs)
+    y = np.ascontiguousarray(pyworld.synthesize(f0, sp, ap, fs, HOP * 1000)[: len(x)])
+    sp2 = pyworld.cheaptrick(y, f0, t, fs)
+    ap2 = pyworld.d4c(y, f0, t, fs)
+    within_40_db = sp[voiced] > 1e-4 * sp[voiced].max(axis=1, keepdims=True)
+    d = np.abs(10 * np.log10(sp2[voiced] / sp[voiced]))[within_40_db]
+    report("C11", "WORLD round trip on bdl, envelope within 40 dB of peak: median |diff| [dB]", np.median(d))
+    report(
+        "C11",
+        "WORLD round trip on bdl, envelope within 40 dB of peak: 95th pct |diff| [dB]",
+        np.percentile(d, 95),
+    )
+    at_3k = np.argmin(np.abs(fr - 3000))
+    d = np.abs(20 * np.log10(ap2[voiced, at_3k] / ap[voiced, at_3k]))
+    report("C11", "WORLD round trip on bdl, D4C at 3 kHz: median |diff| [dB]", np.median(d))
+    report("C11", "WORLD round trip on bdl, D4C at 3 kHz: 95th pct |diff| [dB]", np.percentile(d, 95))
 
 
 if __name__ == "__main__":

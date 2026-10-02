@@ -6,10 +6,13 @@ smooth spectral envelope and an aperiodicity, each of which can be changed,
 and put back together as a sound. It is roadmap item "Next 1". It builds on
 `so.f0_track` (`f0.md`), the pitch-adaptive frame
 (`TVGaborFrame.pitch_adaptive`, `frames.md`), `so.Cepstrum`
-(`cepstrum.md`), `harmonic_complex` on an F0 contour
-(`harmonic-source.md`) and the Klatt synthesizer (`klatt.md`).
+(`cepstrum.md`) and the Klatt synthesizer (`klatt.md`).
 
-Status: proposal. No library code until Cho answers D1–D8.
+Status: proposal. No library code until Cho answers D1–D9. The first
+draft proposed several departures from WORLD to fit sonore's own pieces;
+Cho asked on 2026-10-02 how to square that with reproducibility, and
+decided: reproduce WORLD, with no pyworld dependency ("Reproducing WORLD"
+below). The decisions were rewritten to that rule.
 
 ## Why
 
@@ -17,17 +20,16 @@ With the Klatt synthesizer, sonore can build speech from numbers set by
 hand. The WORLD-style vocoder is the other direction: it measures those
 numbers from a recording, so a reader can change one thing about a real
 voice (its pitch, its formants, how breathy it is) and hear the rest stay
-the same. Most of the pieces exist:
+the same. WORLD is the vocoder most speech researchers know and quote, so
+sonore's version is only useful for comparison if it gives WORLD's
+numbers. Several pieces it needs exist already:
 
 - the F0 track (`so.f0_track`), which WORLD gets from Harvest or DIO;
-- the analysis window: `TVGaborFrame.pitch_adaptive` with three periods is
-  CheapTrick's Hann window (`frames.md`, D15), on an exact frame;
 - the cepstrum and its lifter, which CheapTrick uses on a smoothed
   spectrum (`cepstrum.md` C5 showed the plain lifter sits about 4 dB below
   the harmonic peaks and named CheapTrick as the fix);
-- the voiced excitation: `harmonic_complex` on a contour, which `klatt.md`
-  C4 showed is an impulse train through a filter, without the whole-sample
-  period error.
+- the pitch-adaptive frame, whose three-period window is CheapTrick's
+  Hann window (`frames.md`, D15), up to rounding of its length.
 
 Missing: the envelope estimator, an aperiodicity estimator, and the
 synthesis that combines a periodic and an aperiodic part by frequency.
@@ -41,21 +43,73 @@ As in the other design documents, each claim is numbered and tagged:
   2026-10-02.
 - **[source]**: read from WORLD's C++ source (github.com/mmorise/World,
   commit d625e76 of 2025-02-21, files `cheaptrick.cpp`, `d4c.cpp`,
-  `synthesis.cpp`, `common.cpp`; modified BSD). Where the code and the
-  papers differ, both are given ("Papers and code" below).
+  `synthesis.cpp`, `common.cpp`, `matlabfunctions.cpp`; modified BSD).
+  Where the code and the papers differ, both are given ("Papers and code"
+  below).
 - **[check]**: a number printed by `tools/check_world_claims.py`. The
-  script uses only NumPy and SciPy, shares no code with sonore, and holds
-  a prototype of the two estimators below. It runs in about half a minute.
-  The numbers come from NumPy 2.4.6 and SciPy 1.17.1.
+  script uses only NumPy and SciPy and shares no code with sonore. It
+  holds ports of CheapTrick, D4C and WORLD's synthesis, written from the
+  source, and a prototype of the harmonic-residual aperiodicity. It runs
+  in about half a minute. The numbers come from NumPy 2.4.6 and SciPy
+  1.17.1.
 - **[crosscheck]**: a number printed by `tools/crosscheck_world_vocoder.py`,
   which runs WORLD itself (pyworld 0.3.5, development only) on the
-  checker's test vowels and on the gallery sentence.
+  checker's test vowels and on the gallery sentence, and compares the
+  ports with it.
 - **[proof]**: a short argument given here.
 
 The test vowels are built so that their aperiodicity is known exactly:
 harmonics of a steady 120 Hz F0 or a 5.5 Hz ±3% vibrato, with Klatt's
 glottal low-pass, five /a/ formants and radiation, plus noise whose power
 at every frequency is a set share A(f) of the total, 16 kHz.
+
+## Reproducing WORLD
+
+Cho's rule (2026-10-02): wherever sonore says WORLD, it gives WORLD's
+numbers, and sonore does not depend on pyworld. In detail:
+
+1. **One pinned reference.** WORLD's C++ code at commit d625e76 is the
+   reference, run through pyworld 0.3.5. The ports in the checker were
+   written from that commit and match pyworld to floating-point precision
+   (C10).
+2. **The code, not the paper, sets the defaults.** Where the papers and
+   the code differ, the default is the code's value, because that is what
+   every WORLD user gets. The paper's value can be an option, off by
+   default (CheapTrick's q̃₁, D1).
+3. **A different measure gets a different name.** A step named after
+   WORLD (`cheaptrick`, `d4c`, the synthesis) is a faithful port. The
+   harmonic-residual aperiodicity measures something else, so it is
+   offered under its own name beside D4C, never in its place (D3).
+4. **Every difference is written down.** As the texture code keeps
+   `so.texture.DIFFERENCES_FROM_TOOLBOX`, the vocoder module keeps
+   `DIFFERENCES_FROM_WORLD`: each option that departs from WORLD, and
+   each thing sonore leaves out. It starts short: F0 estimation is not
+   ported (the track is an argument, D7); the paper's q̃₁ is an option;
+   fresh noise is an option (D8). With every option at its default, the
+   list says the output is WORLD's.
+5. **Tests compare against stored WORLD output.** A script in `tools/`
+   (pyworld, development only, like the crosscheck) writes WORLD's
+   envelope, aperiodicity and synthesized sound for a short test vowel
+   and a half-second of the gallery sentence to a small file under
+   `tests/`. The library tests compare against that file, so they need no
+   pyworld. The tolerances are the ones C10 measures, with room for other
+   platforms' floating point (to be set when the tests are written, from
+   CI's numbers).
+6. **Synthesis is held to WORLD, then to consistency.** The synthesis
+   port must give WORLD's samples (C10). Whether analysing a synthesized
+   sound returns what it was made from is then a property of WORLD
+   itself, which C11 measures and the documentation states, rather than a
+   standard sonore sets on its own.
+
+Two costs come with exactness. WORLD windows each frame itself, with its
+own rounding of the window length, so the envelope cannot be computed
+from `TVGaborFrame.pitch_adaptive` coefficients and stay exact (D2). And
+WORLD draws its noise from its own generator, a sum of twelve xorshift
+draws, which must be reproduced draw for draw: in pure Python that is
+most of the D4C port's time (4.3 s for the 2.5 s gallery sentence,
+against 0.14 s in pyworld). Because WORLD restarts the generator on every
+call, the stream is the same each time, so the library can compute it
+once and keep it (about 0.8 million values, 6.5 MB, for that sentence).
 
 ## What WORLD's code does [source]
 
@@ -78,17 +132,21 @@ dB. Then a correction: + (F0 − 100)/50 dB, capped at 0. The 0 Hz value is
 fixed at −60 dB and the Nyquist value at 0 dB, and the curve between is
 linear in dB. A separate test ("LoveTrain") leaves a frame fully aperiodic
 when less than 85% of its power between 100 Hz and 7.9 kHz lies below
-4 kHz. Values are stored as amplitudes (dB/20).
+4 kHz. A tiny noise (10⁻⁶ of WORLD's randn) is added to each windowed
+segment to keep the divisions finite. Values are stored as amplitudes
+(dB/20).
 
 **Synthesis.** Pulse times are where the running phase of the F0 track
 crosses multiples of 2π, with the fraction of a sample kept as a linear
 phase shift. At each pulse, the envelope and aperiodicity are interpolated
 linearly between frames; the periodic part is the minimum-phase response
 of S(1 − A²) (S the envelope, A the stored amplitude ratio, so A² is a
-power share), scaled by the square root of the pulse interval; the
-aperiodic part is white noise as long as the pulse interval, through the
-minimum-phase response of S·A². The responses are overlap-added. Unvoiced
-stretches carry pulses every 1/500 s with noise only.
+power share), scaled by the square root of the pulse interval, with its
+DC removed; the aperiodic part is WORLD's randn noise as long as the
+pulse interval, through the minimum-phase response of S·A². The responses
+are overlap-added. Unvoiced stretches carry pulses every 1/500 s with
+noise only. The noise generator is restarted at every call, so the same
+inputs always give the same sound.
 
 ## Papers and code [paper, source]
 
@@ -127,7 +185,7 @@ and the code differ:
   WORLD uses D4C. The paper also says that "an approximation using the
   minimum phase is inappropriate for low-pitch speech", since phase
   differences are easier to hear at low F0, and names phase modelling as
-  future work (D6).
+  future work.
 
 So WORLD's aperiodicity has a plain meaning in synthesis: **the share of
 the power at each frequency that is noise rather than harmonics.** The
@@ -137,22 +195,22 @@ and its aperiodic component, given per frequency band).
 ## Claims
 
 **C1. CheapTrick's envelope follows the harmonic peaks' shape at a fixed
-level, and the prototype is WORLD's.** [check, crosscheck] Noise-free test
+level, and the port is WORLD's.** [check, crosscheck] Noise-free test
 vowel, harmonics below 4 kHz, 40 frame positions within one period. The
 envelope sits a constant distance below each harmonic's peak in the
 windowed spectrum (−3.1, −2.9, −2.7 dB at F0 100, 200, 300 Hz) and
 matches the true envelope's shape to 0.41, 0.64 and 0.92 dB RMS once that
 offset is removed; the plain cepstral lifter of `cepstrum.md` C5 sits
-4.6–4.8 dB below, with 0.8–1.0 dB RMS shape error. The checker's
-prototype matches pyworld's CheapTrick within 0.27 dB on these vowels and
-within 0.09 dB on every voiced frame of the gallery sentence (wherever
-WORLD's value is within 80 dB of the frame's peak; below that WORLD's
-added safety noise sets the value).
+4.6–4.8 dB below, with 0.9–1.1 dB RMS shape error. The port matches
+pyworld's CheapTrick within 0.0007 dB on these vowels and within
+0.00003 dB on every voiced frame of the gallery sentence (wherever
+WORLD's value is within 80 dB of the frame's peak; below that the
+envelope is set by the floor that keeps the log finite).
 
 **C2. Its point is that it does not flicker within a period.** [check]
 Same vowels: across 40 positions within one period, CheapTrick's value at
 any harmonic below 4 kHz changes by at most 0.04, 0.04 and 0.07 dB; the
-plain lifter's changes by up to 5.2, 2.9 and 2.3 dB. A three-period
+plain lifter's changes by up to 5.3, 3.1 and 2.2 dB. A three-period
 window still sees the period's structure; the smoothing over 2F0/3 is
 what removes it. This is what makes the envelope usable frame by frame
 for synthesis.
@@ -165,23 +223,23 @@ shape error with the offset removed, for q̃₁ = 0 (no recovery), −0.09
 the harmonic nearest F1, relative to the mean offset, is 0.63 dB low
 without recovery, 0.19 dB high with the paper's value and 0.74 dB high
 with the code's: the code's value overshoots the sharpest peak. C1's
-numbers use the code's value, to match pyworld. One vowel is not a
-tuning study; it is enough to make the value a choice (D1).
+numbers use the code's value. One vowel is not a tuning study; it is
+enough to offer the paper's value as an option (D1).
 
 **C4. Fitting the harmonics and measuring what is left recovers a known
-aperiodicity.** [check] The proposed estimator (D3): at each frame, a
-weighted least-squares fit of phase-locked harmonics k·Φ(t), Φ the running
-phase of the F0 track, each with a linear amplitude change, over a Hann
-window four periods long; the aperiodicity of a band is the residual's
-power over the signal's power there. The fit also absorbs some noise near
-every harmonic, which is known exactly from the fit's projection and
-divided out, cell by cell (cells two harmonic spacings wide). On the test
-vowels, in four bands (0–1, 1–2, 2–4, 4–7 kHz), with A flat at −20 dB,
-flat at −6 dB, or rising from −30 dB at 0 Hz to −5 dB at 8 kHz, steady and
-with vibrato: every band within 1.4 dB of the truth, mostly slightly low.
-Without noise it reads −247 dB (steady) and −36 dB (vibrato, the floor
-left by the formants changing each harmonic's amplitude faster than a
-linear term follows).
+aperiodicity.** [check] The harmonic-residual measure (D3): at each
+frame, a weighted least-squares fit of phase-locked harmonics k·Φ(t), Φ
+the running phase of the F0 track, each with a linear amplitude change,
+over a Hann window four periods long; the aperiodicity of a band is the
+residual's power over the signal's power there. The fit also absorbs some
+noise near every harmonic, which is known exactly from the fit's
+projection and divided out, cell by cell (cells two harmonic spacings
+wide). On the test vowels, in four bands (0–1, 1–2, 2–4, 4–7 kHz), with A
+flat at −20 dB, flat at −6 dB, or rising from −30 dB at 0 Hz to −5 dB at
+8 kHz, steady and with vibrato: every band within 1.4 dB of the truth,
+mostly slightly low. Without noise it reads −247 dB (steady) and −36 dB
+(vibrato, the floor left by the formants changing each harmonic's
+amplitude faster than a linear term follows).
 
 **C5. It needs F0 to about 0.1%, which `so.f0_track` provides on clean
 vowels.** [check] Vibrato vowel, A rising, the track made too high by a
@@ -232,15 +290,16 @@ between harmonics and noise at each frequency. This is why the two can be
 changed independently. (In a wide band the cancellation is approximate
 when A varies across the band; per frequency it is exact.)
 
-**C8. The periodic part can be built from harmonics instead of pulses.**
-[proof] For a constant F0 of a whole number of samples, a pulse train
-through a filter h has, over one period, the DFT H(k F0): it is the sum of
-harmonics k F0 with complex gains H(k F0) (sampling in frequency is
-aliasing in time). So WORLD's pulses through minimum-phase responses are
-the same sound as harmonics with amplitude |H_min(k F0)| and phase
+**C8. The periodic part could be built from harmonics instead of
+pulses.** [proof] For a constant F0 of a whole number of samples, a pulse
+train through a filter h has, over one period, the DFT H(k F0): it is the
+sum of harmonics k F0 with complex gains H(k F0) (sampling in frequency
+is aliasing in time). So WORLD's pulses through minimum-phase responses
+are the same sound as harmonics with amplitude |H_min(k F0)| and phase
 arg H_min(k F0), the identity `klatt.md` C4 checked numerically for
-Klatt's source. The harmonic form also covers moving F0 with no pulse
-rounding, which WORLD handles with its fractional shift.
+Klatt's source. With a moving F0 the two differ (WORLD rounds pulses to
+samples and shifts by the fraction), which is why the harmonic route is
+not WORLD's synthesis (D5).
 
 **C9. A Klatt breathy vowel has an aperiodicity that rises with
 frequency.** [proof] In Klatt's synthesizer the voiced source falls about
@@ -251,35 +310,59 @@ noise share rises about 6 dB per octave until noise dominates, and the
 true aperiodicity of a sonore Klatt vowel can be written down from its
 parameters. This is the bridge for the gallery page below.
 
+**C10. CheapTrick, D4C and WORLD's synthesis can be reproduced in
+NumPy.** [check, crosscheck] Given the same F0 track and inputs, the
+checker's ports against pyworld 0.3.5: CheapTrick within 0.00003 dB on
+the gallery sentence (C1); D4C within 7e-12 dB on every frame of the
+sentence and within 2e-10 dB on the steady and vibrato vowels; the
+synthesized sound within 1.4e-15, 3.0e-15 and 2.7e-15 of its largest
+sample, which is rounding. The D4C and synthesis ports needed WORLD's own
+noise generator, drawn in WORLD's order, and two details of the code not
+in any paper: the DC removal overwrites the first half of each periodic
+response, and the safety noise is added to the windowed segment before
+its weighted mean is removed.
+
+**C11. WORLD's own round trip is not tight on real speech.** [crosscheck]
+The gallery sentence analysed with its stored Harvest track, synthesized,
+and the result analysed again with the same track: on voiced frames,
+wherever the envelope is within 40 dB of the frame's peak, the second
+envelope differs from the first by 1.2 dB (median) and 7.4 dB (95th
+percentile); D4C at 3 kHz differs by 1.6 and 5.2 dB. So the consistency
+of analysis and synthesis is something to report about WORLD, not a
+tolerance sonore can tighten without departing from it.
+
 ## Proposed design
 
 Layers follow `layout.md`.
 
-**analysis/vocoder.py** (name open, D7):
+**analysis/vocoder.py** (name open, D6):
 
-- `SpectralEnvelope`: CheapTrick on the coefficients of a pitch-adaptive
-  frame (D1, D2). Data are power, shape `(n_channels, n_freqs,
-  n_frames)`, with `.t`, `.f`, `.db`, `.plot()`. It is callable,
-  `env(t, f)`, interpolating linearly in time and in dB over frequency,
-  so it can be handed straight to `harmonic_complex(amplitudes=...)`.
-  (`Envelope` is already the Hilbert envelope class.)
-- `Aperiodicity`: the harmonic-residual estimator (D3), stored as the
-  noise share in dB on the envelope's frequency grid, from per-frame cell
-  values interpolated in dB (D4). Also callable, `ap(t, f)`, and with
-  `.bands(edges)` to average over bands for display and tests.
-- A function that builds both from a sound and an F0 track (D7).
+- `so.cheaptrick(sound, f0, times, *, q1=-0.15)`: the port, returning a
+  `SpectralEnvelope`. Data are WORLD's power spectra, shape `(n_frames,
+  n_freqs)` per channel as pyworld returns them, with `.t`, `.f`, `.db`,
+  `.plot()`. It is callable, `env(t, f)`, interpolating linearly in time
+  and in dB over frequency. (`Envelope` is already the Hilbert envelope
+  class.)
+- `so.d4c(sound, f0, times, *, threshold=0.85)`: the port, returning an
+  `Aperiodicity` in WORLD's storage (amplitude ratio per frequency).
+  Callable, `ap(t, f)`, with `.bands(edges)` to average the power share
+  over bands for display and tests, and a record of which measure made
+  it.
+- `so.harmonic_aperiodicity(sound, f0, times)`: the harmonic-residual
+  measure (C4), in the same storage, so either can be passed to the
+  synthesis; its documentation says it is not D4C and when they differ
+  (C5, C6).
+- `DIFFERENCES_FROM_WORLD`, as above.
 
-**signals**: one generalization of `harmonic_complex`: `amplitudes(t, f)`
-may return complex values, whose angle is added to each harmonic's phase
-(D6). A minimum-phase response is then just an amplitude function.
+**stimuli/vocoder.py**: `so.world_synthesize(f0, envelope, aperiodicity,
+frame_period=5.0, *, rng=None)`, the port of WORLD's synthesis (D5).
+With `rng=None` it uses WORLD's generator and gives WORLD's samples
+(D8).
 
-**stimuli/vocoder.py**: the synthesis (D5): periodic part from
-`harmonic_complex` on the F0 track with complex amplitudes
-√(S(1 − A)) · e^{i·φ_min}; aperiodic part from white noise analysed with
-a Gabor frame, its coefficients multiplied by √(S·A) interpolated to the
-frame's times and frequencies, and synthesized (the least-squares sound
-with those coefficients, `philosophy.md`); unvoiced frames noise only
-(A = 1). Output RMS 1 as the generators.
+The F0 track is an argument everywhere (D7). The windows, the 1024-point
+spectra at 16 kHz and the 5 ms frames are WORLD's; the envelope is a view
+of the sound computed the way WORLD computes it, not a view of a sonore
+frame (D2).
 
 ### Views, and what this one drops
 
@@ -294,15 +377,15 @@ By `philosophy.md` ("Views may discard information"), the triple
   two harmonics' levels between envelope points are interpolated, not
   kept;
 - **temporal detail within about three periods**, and cycle-to-cycle
-  jitter and shimmer, which move into the aperiodicity (C5).
+  jitter and shimmer;
+- with D4C, **most of the aperiodicity's shape**: at 16 kHz one number per
+  frame (C6).
 
-So a sound is recoverable only approximately, and not by search (as
-Griffin–Lim or texture synthesis are) but by a model: harmonics plus
-noise through a smooth filter. What is checked instead is consistency:
-analysing the synthesized sound should return the envelope and
-aperiodicity it was made from, within stated dB, and the library tests
-will check that. The envelope itself is computed from an exact frame's
-coefficients, so everything up to the smoothing is invertible.
+So a sound is recoverable only approximately, by a model (harmonics plus
+noise through a smooth filter), not by search as Griffin–Lim or texture
+synthesis are. What the tests check is that sonore's steps are WORLD's
+(C10); how closely WORLD's own round trip returns its inputs is measured
+and stated (C11).
 
 ### Aperiodicity is explained on a gallery page
 
@@ -325,142 +408,139 @@ has:
    A = 1.
 2. One frame's spectrum: the harmonic peaks, the noise between them, and
    the residual after the harmonics are fitted and removed (C4). The
-   share is read off as residual over total.
-3. The estimate on the Klatt vowel against the truth, then on the
-   gallery sentence as a time–frequency map beside its spectrogram.
-4. Listening: the sentence resynthesized with its measured aperiodicity,
-   with A = 0 everywhere (buzzy), and A = 1 (whispered), same envelope
-   and F0 throughout.
-5. A note on what else is called aperiodicity: D4C's value and why it
-   differs (C6), and that jitter reads as noise (C5).
+   share is read off as residual over total. This is the definition made
+   visible.
+3. What WORLD reports instead: D4C on the same vowel, its one band at
+   16 kHz and its anchors (C6), and why it was built that way (tuned for
+   natural-sounding synthesis, robust to F0 error).
+4. Both measures on the gallery sentence as time–frequency maps beside
+   its spectrogram.
+5. Listening: the sentence through WORLD's synthesis with D4C's
+   aperiodicity, with the harmonic residual's, with A = 0 everywhere
+   (buzzy) and A = 1 (whispered), same envelope and F0 throughout.
 
 ## Order
 
-1. `SpectralEnvelope` with tests against the checker's numbers and a dense
-   oracle; the crosscheck against pyworld stays in `tools/`.
-2. `Aperiodicity` with the test vowels as tests.
-3. Complex amplitudes in `harmonic_complex` (existing outputs unchanged
-   bit for bit).
-4. The synthesis, with the analysis–synthesis consistency tests.
-5. The gallery page (with the aperiodicity explanation above), README row,
-   recipe and roadmap Done entry.
+1. A tools script that stores WORLD's output for the tests (pyworld,
+   development only).
+2. `so.cheaptrick` and `SpectralEnvelope`, tested against the stored
+   output and the checker's numbers.
+3. `so.d4c` and `Aperiodicity`, with WORLD's generator, tested the same
+   way.
+4. `so.world_synthesize`, tested sample by sample against the stored
+   sound.
+5. `so.harmonic_aperiodicity`, with the test vowels as tests.
+6. The gallery page (with the aperiodicity explanation above), README
+   row, recipe and roadmap Done entry.
 
-Steps 1 and 3 are independent of each other and of step 2.
+Steps 2–4 are the WORLD ports and come first; step 5 is independent of
+them except for the storage.
 
 ## Decisions
 
-Each option is stated in its best form before the recommendation.
+Each option is stated in its best form before the recommendation. All
+recommendations follow the reproducibility rule above.
 
-**D1. Envelope estimator.**
-- *CheapTrick* (recommended): temporally stable within a period (C2),
-  WORLD's choice, a few lines on top of sonore's frame and cepstrum, and
-  matched to WORLD's own output (C1). Its recovery lifter's q̃₁ is a
-  sub-choice: the paper's −0.09 (recommended: published, and the better
-  shape in C3) or the code's −0.15 (what pyworld users get). It would be
-  an argument with the default stated.
-- *The plain cepstral lifter* sonore already has: no new code and one
-  idea fewer for the reader; but 4.6 dB low and flickering by up to 5 dB
-  within a period (C1, C2), so a resynthesis would be modulated at F0.
+**D1. Envelope estimator, and CheapTrick's q̃₁.**
+- *CheapTrick, ported exactly, with the code's q̃₁ = −0.15 as default and
+  the paper's −0.09 as an option* (recommended): WORLD's numbers by
+  default (C10); stable within a period (C2); the paper's value, which
+  fits the test vowel's shape better (C3), one argument away and listed in
+  `DIFFERENCES_FROM_WORLD`.
+- *CheapTrick with the paper's −0.09 as default*: published, and the
+  better shape in C3; but every comparison with a WORLD user's numbers
+  would then need the argument set, which is the drift Cho wants to
+  avoid.
 - *True envelope* (iterated cepstrum that rises to the peaks; Röbel &
-  Rodet, cited from memory): passes through the harmonic peaks rather
-  than a fixed distance below, without CheapTrick's fitted q₁; but
-  iterative, with a convergence threshold to choose, and not what WORLD
-  users compare against. A reasonable later option.
-- *LPC*: an all-pole model whose poles are formants, which a reader can
-  name; but biased toward harmonic peaks at high F0 and wrong for nasal
-  zeros. Better as its own view later than as the vocoder's envelope.
+  Rodet, cited from memory) or *LPC*: each is a reasonable view later,
+  under its own name; neither is WORLD's.
 
 **D2. Where the envelope's spectra come from.**
-- *The coefficients of `TVGaborFrame.pitch_adaptive`* (recommended): the
-  window is CheapTrick's (three-period Hann), the frame is exact, and the
-  envelope becomes a view of coefficients like `Cepstrum(coefs)`. Frame
-  times then follow the frame (a hop of a quarter window), not a fixed
-  5 ms; the envelope interpolates to any time. Each frame's F0 is given
-  by its window length, but the class takes the track too, so no
-  "periods" convention is hidden in it.
-- *WORLD's own windowing at the track's times*: bit-for-bit closer to
-  pyworld (the frame rounds the window to a whole number of samples,
-  WORLD to an even number, so the lengths can differ by one sample) and fixed 5 ms
-  frames everyone knows; but a second windowing code path beside the
-  frames, which is what sonore avoided for the cepstrum.
+- *WORLD's own windowing at the track's times* (recommended): the only
+  way to give WORLD's numbers (C10), since WORLD rounds the window length
+  differently from the frame and works on fixed 5 ms frames. The cost is
+  a second windowing path beside sonore's frames; the gallery can still
+  show the link to `TVGaborFrame.pitch_adaptive` (the same three-period
+  Hann window) in words and a figure.
+- *The coefficients of `TVGaborFrame.pitch_adaptive`*: the envelope
+  becomes a view of an exact frame, like `Cepstrum(coefs)`; but window
+  lengths can differ by a sample and the frame's times are not WORLD's,
+  so it would not be CheapTrick's output and would have to carry another
+  name. Not needed now.
 
-**D3. Aperiodicity estimator.**
-- *Harmonic residual* (recommended): its measurement is its definition
-  (fit the best periodic sound, measure what is left), so it is the one a
-  gallery page can explain; within 1.4 dB on known cases (C4); reuses
-  the F0 track's phase, as `harmonic_complex` does. Its weakness is real:
-  it needs F0 to 0.1% (C5), so it reports jitter and tracker error as
-  noise.
-- *A port of D4C*: robust to F0 error (C6; its paper reports errors
-  within 3 dB for F0 errors of ±10%), WORLD's standard, tuned by
-  listening tests for natural synthesis, and the number WORLD users quote.
-  But at 16 kHz it measures one band, pins 0 Hz at −60 dB and Nyquist at
-  0 dB, and misreads every test vowel by 23–41 dB in some band (C6);
-  `d4c.cpp` is about 400 lines of fitted heuristics to explain. pyworld already gives D4C for
-  comparison, so the crosscheck script keeps it in view without a port.
+**D3. Aperiodicity.**
+- *D4C ported exactly as `so.d4c`, and the harmonic residual under its own
+  name* (recommended): D4C is what WORLD's synthesis was tuned with and
+  what WORLD users quote, and is robust to F0 error (C6); the harmonic
+  residual is the measure whose method is its definition (C4), so it is
+  the one the gallery page can explain, and the one that reports the
+  share of noise on the test vowels. Both store the same quantity, so
+  either feeds the synthesis.
+- *Only D4C*: least code; but sonore could then not show what
+  aperiodicity means, only what WORLD reports, and C6 shows the two far
+  apart below 3 kHz.
+- *Only the harmonic residual*: the first draft's recommendation; but
+  under the rule it could not be called WORLD's, and it needs F0 to
+  0.1% (C5), so a vocoder built on it would not be WORLD's vocoder.
 - *Peak-to-valley ratio* (STRAIGHT's idea; Kawahara et al., 1999): simple
   to show on a spectrum; but with a three-period Hann window a perfectly
   periodic sound already has valleys only about 12 dB below its peaks
   (`frames.md`, C16), so it needs a calibration table to mean anything.
 
-**D4. How aperiodicity is stored.**
-- *Noise share in dB on the envelope's frequency grid* (recommended):
-  what the synthesis needs at every frequency; from per-frame cells two
-  harmonics wide, interpolated in dB; `.bands()` averages for display.
-- *Coarse fixed bands* (D4C's 3 kHz): compact and smooth; but at 16 kHz
-  that is one number, and the bands do not scale with F0.
-- *ERB bands*, like sonore's filterbanks: auditory resolution, which
-  suits a psychoacoustics library; but the estimate's natural resolution
-  is the harmonic spacing, which is coarser than an ERB at high F0 and
-  finer at low; could be a `.bands()` choice rather than the storage.
+**D4. How aperiodicity and envelope are stored.**
+- *WORLD's arrays* (recommended): power spectra and amplitude ratios on
+  WORLD's frequency grid and frame times, so a value can be compared
+  with pyworld's directly; the classes add `.t`, `.f`, `.db` and
+  `.bands()` on top.
+- *Noise share in dB, or ERB bands*: closer to how sonore displays things,
+  but a conversion every comparison would need. `.db` and `.bands()` give
+  these views without changing what is stored.
 
 **D5. Synthesis.**
-- *Harmonics plus frame-filtered noise* (recommended): the periodic part
-  is `harmonic_complex` on the track (exact running phase, no pulse
-  rounding, the taper below Nyquist, the voicing ramps), equal to WORLD's
-  pulses for a steady F0 (C8); the noise part is the least-squares sound
-  of filtered coefficients on an exact frame, so its meaning is the one
-  `philosophy.md` already gives.
-- *WORLD's pulse-by-pulse overlap-add*: the reference algorithm,
-  efficient, and what a reader of the WORLD paper expects
-  (`synthesis.cpp`, about 400 lines of C++). But it adds pulse placement, fractional
-  shifts, DC removal and per-pulse noise segments that sonore does not
-  otherwise need, and its F0 handling would differ from
-  `harmonic_complex`'s.
+- *WORLD's pulse-by-pulse overlap-add, ported exactly* (recommended): the
+  reference algorithm, sample for sample (C10), including pulse
+  placement, the fractional shift, DC removal and per-pulse noise.
+- *Harmonics plus frame-filtered noise* (the first draft's
+  recommendation): exact running phase from `harmonic_complex`, noise on
+  an exact frame; equal to WORLD only for a steady F0 of whole samples
+  (C8), so under the rule it is a different synthesis and would need its
+  own name. Deferred; it would also need complex amplitudes in
+  `harmonic_complex`, which nothing else needs now.
 
-**D6. Phases of the harmonics.**
-- *`amplitudes(t, f)` may return complex values* (recommended): one
-  argument carries a filter's full response, so a minimum-phase envelope
-  (or a Klatt cascade) is simply passed in; real-valued outputs keep
-  today's results bit for bit, dispatching on the dtype.
-- *A separate `phase_response(t, f)` argument*: more explicit; but two
-  callables that must describe the same filter.
-- *Keep cosine phase*: no change; but the waveform within each period
-  then differs from a vocal tract's (it is maximally peaky); that it
-  sounds harsher at low F0 is expected but has not been listened to.
+**D6. Names.**
+- *WORLD's names for the ports* (recommended): `so.cheaptrick`,
+  `so.d4c`, `so.world_synthesize`, which tell a reader exactly which
+  algorithm and which numbers to expect; sonore's own names for what is
+  sonore's (`so.harmonic_aperiodicity`, `SpectralEnvelope`,
+  `Aperiodicity`). `klatt.md` D5 kept Klatt's names for the same reason.
+- *Descriptive names throughout* (`spectral_envelope`, `aperiodicity`):
+  sonore's usual style; but they hide which algorithm runs, and a second
+  estimator would need a `method=` switch.
 
-Minimum phase is itself an approximation that the WORLD paper calls
-"inappropriate for low-pitch speech" (see "Papers and code"). Complex
-amplitudes leave room for a better phase model later without another
-change to `harmonic_complex`.
+**D7. The F0 track.**
+- *Required argument* (recommended): WORLD's numbers depend on the track,
+  and sonore's `so.f0_track` is not Harvest, so taking the track
+  explicitly keeps the comparison honest; the gallery uses the stored
+  Harvest track for the sentence, as `f0.md` does.
+- *Default to `so.f0_track` when none is given*: one call from a sound to
+  a resynthesis; but the result would silently differ from WORLD's, and
+  would have to be listed as a difference.
 
-**D7. API shape and names.**
-- *Two view classes plus one synthesis function* (recommended):
-  `so.SpectralEnvelope`, `so.Aperiodicity` (callable, so they plug into
-  `harmonic_complex`), a convenience `so.vocoder_analyze(sound, f0=None)`
-  returning both with the track (running `f0_track` when none is given),
-  and `so.vocoder_synthesize(f0, envelope, aperiodicity, fs)`. A small
-  frozen dataclass holding the three, with `.synthesize()`, makes "change
-  one, keep the rest" a `dataclasses.replace`.
-- *WORLD's names* (`cheaptrick`, `d4c`, `synthesize`): familiar to anyone
-  who has used pyworld; but the aperiodicity is not D4C (D3), and sonore
-  names things by what they are (`klatt.md` D5 kept Klatt's names because
-  they are the literature's parameter names, not algorithm names).
-- *Plain arrays*, as pyworld returns: nothing new to learn; but the axes
-  (times, frequencies) and the dB-or-power convention travel separately
-  and get mixed up.
+**D8. The noise.**
+- *`rng=None` means WORLD's generator, restarted on every call; a NumPy
+  Generator gives fresh noise* (recommended): the default output is
+  WORLD's, deterministic and identical on every call; a reader who wants
+  independent noise tokens passes an `rng`, and that is listed in
+  `DIFFERENCES_FROM_WORLD`. `philosophy.md` says randomness comes from an
+  explicit `rng`; WORLD's stream is not hidden state but a fixed
+  sequence, so the default is a stated constant rather than hidden
+  randomness. D4C's safety noise always uses WORLD's stream (it is part
+  of the measure).
+- *Require an `rng`, with a named constant for WORLD's stream*
+  (`rng=so.WORLD_NOISE`): the rule kept to the letter; but the common
+  call (reproduce WORLD) needs an extra argument.
 
-**D8. Where the aperiodicity explanation goes.** The explanation itself
+**D9. Where the aperiodicity explanation goes.** The explanation itself
 is a requirement (above). As a new gallery page, "Source, filter and
 aperiodicity" (recommended), with the vocoder's other demos (pitch
 change, formant shift, breathiness), or as a section of the Formant
