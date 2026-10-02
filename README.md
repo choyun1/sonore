@@ -30,14 +30,29 @@ playable next to its plots, with a playhead that follows the sound.
 A first tour you can run in the browser, with nothing to install: stimuli, spectrograms, the
 cepstrum, a phase vocoder, ripples and binaural cues.
 
-## Contents
+<!-- Contents: one entry per ## section, in order (tests/test_docs.py checks it). -->
+<table><tr><td>
 
-| Using it | The library | Background | The project |
-|---|---|---|---|
-| 1. [What it's for](#what-its-for) | 5. [Conventions](#conventions) | 8. [Roadmap](#roadmap) | 11. [Development](#development) |
-| 2. [Install](#install) | 6. [What's in it](#whats-in-it) | 9. [References](#references) | 12. [How sonore was developed](#how-sonore-was-developed) |
-| 3. [A short tour](#a-short-tour) | 7. [Related projects](#related-projects) | 10. [Migrating from sigtools](#migrating-from-sigtools) | 13. [License and citation](#license-and-citation) |
-| 4. [Gallery](#gallery) |  |  |  |
+<small><b>Contents</b><br>
+1&ensp;Using it<br>
+&emsp;1.1&ensp;[What it's for](#what-its-for)<br>
+&emsp;1.2&ensp;[Install](#install)<br>
+&emsp;1.3&ensp;[A short tour](#a-short-tour)<br>
+&emsp;1.4&ensp;[Gallery](#gallery)<br>
+2&ensp;The library<br>
+&emsp;2.1&ensp;[Conventions](#conventions)<br>
+&emsp;2.2&ensp;[What's in it](#whats-in-it)<br>
+&emsp;2.3&ensp;[Related projects](#related-projects)<br>
+3&ensp;Background<br>
+&emsp;3.1&ensp;[Roadmap](#roadmap)<br>
+&emsp;3.2&ensp;[References](#references)<br>
+&emsp;3.3&ensp;[Migrating from sigtools](#migrating-from-sigtools)<br>
+4&ensp;The project<br>
+&emsp;4.1&ensp;[Development](#development)<br>
+&emsp;4.2&ensp;[How sonore was developed](#how-sonore-was-developed)<br>
+&emsp;4.3&ensp;[License and citation](#license-and-citation)</small>
+
+</td></tr></table>
 
 ## What it's for
 
