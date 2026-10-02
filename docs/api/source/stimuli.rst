@@ -1,44 +1,19 @@
 stimuli
 =======
 
-Stimuli built from the analysis tools: spatial hearing, binaural cues, reverberation, ripples, the phase vocoder, Klatt-style formant synthesis and WORLD's synthesis.
-
-``sonore.stimuli.spatialization``
----------------------------------
-
-.. automodule:: sonore.stimuli.spatialization
-
-``sonore.stimuli.hrir_data``
-----------------------------
-
-.. automodule:: sonore.stimuli.hrir_data
-
-``sonore.stimuli.binaural``
----------------------------
-
-.. automodule:: sonore.stimuli.binaural
-
-``sonore.stimuli.reverb``
--------------------------
-
-.. automodule:: sonore.stimuli.reverb
+Sounds made by shaping or changing other sounds through an analysis: spectrotemporal ripples, the channel vocoder and the phase vocoder. A branch: builds on the trunk, not on the other branches.
 
 ``sonore.stimuli.ripples``
 --------------------------
 
 .. automodule:: sonore.stimuli.ripples
 
+``sonore.stimuli.channel_vocoder``
+----------------------------------
+
+.. automodule:: sonore.stimuli.channel_vocoder
+
 ``sonore.stimuli.phasevocoder``
 -------------------------------
 
 .. automodule:: sonore.stimuli.phasevocoder
-
-``sonore.stimuli.klatt``
-------------------------
-
-.. automodule:: sonore.stimuli.klatt
-
-``sonore.stimuli.vocoder``
---------------------------
-
-.. automodule:: sonore.stimuli.vocoder

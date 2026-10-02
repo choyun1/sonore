@@ -85,7 +85,7 @@ keeps eight candidates and applies the rule to every whole multiple. On all
 36 synthetic vowels from 100 to 350 Hz the median error is now under 0.4%,
 and the twelve at 400 and 450 Hz are tracked at the right F0 too. On FDA the numbers above barely moved (voicing
 error 5.5% to 5.6% male, 1.6% to 1.5% female), and tracking takes about
-twice as long. `tests/analysis/test_f0.py` holds a regression test that
+twice as long. `tests/views/test_f0.py` holds a regression test that
 fails on the old code.
 
 ## Spectral envelope

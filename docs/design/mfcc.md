@@ -11,8 +11,8 @@ and a sentence on the cepstrum gallery page).
 Status: accepted 2026-10-02. Cho accepted D1–D9 as recommended and chose
 HTK as the primary reference (D10). HTK's site returned 502 errors that
 day, so Cho chose Kaldi in its place (D11) and then dropped HTK.
-Implemented in `src/sonore/analysis/mfcc.py`, tested in
-`tests/analysis/test_mfcc.py` against Kaldi's and librosa's stored output
+Implemented in `src/sonore/views/mfcc.py`, tested in
+`tests/views/test_mfcc.py` against Kaldi's and librosa's stored output
 (C10, C9). The claims are checked by
 `tools/check_mfcc_claims.py`; `tools/crosscheck_mfcc.py` compares the
 recipes with librosa and python_speech_features and with sonore's
@@ -436,7 +436,7 @@ reference changed two defaults, both small (C10):
   would make the default reproduce librosa and not the reference Cho
   chose.
 - a `Sound` is analysed with the symmetric Hamming window HTK and Kaldi
-  use (`sonore.analysis.mfcc.symmetric_hamming`), not SciPy's periodic one.
+  use (`sonore.views.mfcc.symmetric_hamming`), not SciPy's periodic one.
 
 The tests compare with Kaldi in two settings (plain, and Kaldi's window,
 bins, low frequency and lifter), to 1e-6 and 1e-5 of the largest value,

@@ -1,14 +1,17 @@
-"""The package is layered, and each layer imports only from the layers below it.
+"""The package is a trunk with branches, and imports point down the trunk.
 
-Bottom to top: core, signals, analysis, stimuli, texture. ``plotting`` sits
-above them all: the objects' ``.plot()`` methods import it inside the method,
-and nothing imports it at module level. Inside a layer any import is fine.
+The trunk, bottom to top: core, signals, frames, views; each imports only from
+those below it. The branches, spatial, stimuli and texture, import from the
+trunk and never from each other. ``plotting`` sits above them all: the
+objects' ``.plot()`` methods import it inside the method, and nothing imports
+it at module level. Inside a subpackage any import is fine.
 
 A few methods import upward inside the method body, so that the call reads
-naturally in a notebook: ``Sound.envelope()`` returns an ``Envelope`` from the
-analysis layer. Those are listed in ``UPWARD_INSIDE_FUNCTIONS``, so a new one
-has to be added there on purpose. docs/design/layout.md has the diagram, drawn
-from the source by tools/draw_layout.py.
+naturally in a notebook: ``Sound.envelope()`` returns an ``Envelope`` from
+views, and ``Subbands.envelopes()`` returns ``Envelopes``. Those are listed in
+``UPWARD_INSIDE_FUNCTIONS``, so a new one has to be added there on purpose.
+docs/design/layout.md has the diagram, drawn from the source by
+tools/draw_layout.py.
 """
 
 from __future__ import annotations
@@ -20,11 +23,24 @@ import pytest
 
 PACKAGE = Path(__file__).resolve().parent.parent / "src" / "sonore"
 
-LAYERS = ["core", "signals", "analysis", "stimuli", "texture", "plotting"]
+# Rank of each subpackage: an import must point to a lower rank, or stay inside its
+# own subpackage. The branches share one rank, so none can import another.
+RANK = {
+    "core": 0,
+    "signals": 1,
+    "frames": 2,
+    "views": 3,
+    "spatial": 4,
+    "stimuli": 4,
+    "texture": 4,
+    "plotting": 5,
+}
+LAYERS = list(RANK)
 
 # (importer, imported) pairs allowed to point upward from inside a function.
 UPWARD_INSIDE_FUNCTIONS = {
     ("sound", "envelopes"),  # Sound.envelope()
+    ("filterbank", "envelopes"),  # Subbands.envelopes()
 }
 
 
@@ -41,7 +57,7 @@ def modules() -> dict[str, Path]:
 
 
 def layer(name: str) -> str:
-    """``analysis.frames`` is in the analysis layer; ``plotting`` is its own."""
+    """``frames.gabor`` is in frames; ``plotting`` is its own."""
     return name.split(".")[0]
 
 
@@ -76,7 +92,10 @@ def test_imports_point_down():
     wrong = []
     for name, path in known.items():
         for target, at_top in internal_imports(path, known):
-            if LAYERS.index(layer(target)) <= LAYERS.index(layer(name)):
+            if layer(target) == layer(name) or RANK[layer(target)] < RANK[layer(name)]:
+                continue
+            if RANK[layer(target)] == RANK[layer(name)]:
+                wrong.append(f"{name} imports {target}: branches do not import each other")
                 continue
             if at_top:
                 wrong.append(f"{name} imports {target} at module level")

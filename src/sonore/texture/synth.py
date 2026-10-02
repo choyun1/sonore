@@ -33,10 +33,10 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.signal import hilbert, resample
 
-from sonore.analysis.filterbank import Subbands
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng
+from sonore.frames.filterbank import Subbands
 from sonore.texture import grad as tg
 from sonore.texture.stats import PAPER_CLASSES, TextureStats
 

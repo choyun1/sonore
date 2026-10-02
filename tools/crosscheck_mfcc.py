@@ -33,7 +33,7 @@ from scipy.fft import dct
 from scipy.signal import savgol_filter
 
 import sonore as so
-from sonore.analysis.mfcc import symmetric_hamming
+from sonore.views.mfcc import symmetric_hamming
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_mfcc_claims import (  # noqa: E402

@@ -1,4 +1,4 @@
-"""Sound textures (McDermott & Simoncelli, 2011): the top layer.
+"""Sound textures (McDermott & Simoncelli, 2011): a branch of the package.
 
 ``stats`` measures a texture's statistics, ``grad`` gives one channel's
 statistics with their gradients, and ``synth`` imposes them on noise. The

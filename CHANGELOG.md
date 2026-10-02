@@ -92,6 +92,34 @@ version (0.x.y) only fixes bugs.
   the HRIR download tests to `tests/stimuli/test_hrir_data.py`.
 
 ### Changed
+- The package is reorganized as a trunk and three branches
+  (`docs/design/reorganization.md`, `docs/design/layout.md`). Every
+  `so.name` is unchanged; only deep import paths move, with no
+  compatibility modules at the old paths:
+  - `sonore.analysis` is gone. Invertible analyses are in `sonore.frames`:
+    `frame` (`Frame`), `filterbank` (`Filterbank` and the banks, `subbands`,
+    `Subbands`), `gabor` (`GaborFrame`, `TVGaborFrame`, `STFT`, `TVSTFT`)
+    and `mask` (`Mask`, `ideal_binary_mask`, `ideal_ratio_mask`). One-way
+    analyses are in `sonore.views`: `spectrum` (`Spectrum`,
+    `long_term_spectrum`, `TFPower`, `tandem_power`), `reassigned`,
+    `envelopes`, `modulation` (now also `ModulationSpectrum`),
+    `modspectrogram`, `cepstrum`, `mfcc`, `f0` (now also `scale_f0`),
+    `spectral_envelope` (`cheaptrick`, `SpectralEnvelope`, `GridEnvelope`,
+    `warp_frequency`) and `aperiodicity` (`d4c`, `Aperiodicity`,
+    `harmonic_aperiodicity`).
+  - `sonore.signals.glottal` joins `sonore.signals.generators`;
+    `sonore.stimuli.klatt` is `sonore.signals.klatt`; WORLD's synthesis
+    (`sonore.stimuli.vocoder`) and the helpers it shares with the analysis
+    (`world_randn`, `world_fft_size`, `DIFFERENCES_FROM_WORLD`) are
+    `sonore.signals.world`.
+  - `sonore.stimuli.binaural`, `spatialization`, `hrir_data` and `reverb`
+    are in `sonore.spatial`; `noise_vocode` is
+    `sonore.stimuli.channel_vocoder`.
+  - `freq_to_mel` and `mel_to_freq` are in `sonore.core.utils` and exported
+    as `so.freq_to_mel` and `so.mel_to_freq`.
+- `world_synthesize` reads its inputs by what they provide (an F0 track's
+  `.t` and `.f0`, an envelope as `env(t, f)`, an aperiodicity's grid)
+  instead of checking their types; its output is unchanged.
 - `so.world_synthesize` takes any envelope read as `envelope(t, f)` (a
   `GridEnvelope`, a warped envelope, a function), reading it at the
   aperiodicity's time windows and frequencies, and reads an F0 contour on

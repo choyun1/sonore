@@ -331,7 +331,7 @@ def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None)
 
 
 def plot_envelope(env, ax=None, db=False, **kwargs):
-    """A single :class:`~sonore.analysis.envelopes.Envelope` over time."""
+    """A single :class:`~sonore.views.envelopes.Envelope` over time."""
     ax = _ax(ax)
     ax.plot(env.t, env.db if db else env.data, **kwargs)
     ax.set(
@@ -598,7 +598,9 @@ def overview(sound, win_dur=20e-3, figsize=(12, 8), fmax=None):
     (replaces the old ``display_STFT``). Returns the Figure."""
     import matplotlib.pyplot as plt
 
-    from sonore.analysis.representations import STFT, ModulationSpectrum, long_term_spectrum
+    from sonore.frames.gabor import STFT
+    from sonore.views.modulation import ModulationSpectrum
+    from sonore.views.spectrum import long_term_spectrum
 
     stft = STFT(sound.mono(), win_dur)
     fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")

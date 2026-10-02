@@ -12,9 +12,11 @@ __all__ = [
     "freq_to_erb",
     "erb_to_freq",
     "erb_bandwidth",
-    "time_axis",
     "n_samples",
+    "time_axis",
     "as_rng",
+    "freq_to_mel",
+    "mel_to_freq",
 ]
 
 
@@ -70,3 +72,36 @@ def time_axis(n: int, fs: float) -> np.ndarray:
 def as_rng(rng: int | np.random.Generator | None) -> np.random.Generator:
     """Accept a seed, a Generator, or None and return a Generator."""
     return np.random.default_rng(rng)
+
+
+_SLANEY_HZ_PER_MEL = 200 / 3  # linear part: 15 mel at 1000 Hz
+
+
+_SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.4
+
+
+def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
+    """Frequency [Hz] to mel.
+
+    ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses
+    (usually credited to O'Shaughnessy, 1987). ``"slaney"`` is the scale of
+    Slaney's Auditory Toolbox and librosa: linear below 1 kHz (15 mel at
+    1000 Hz) and logarithmic above it (27 mel per factor of 6.4)."""
+    freq = np.asarray(freq, dtype=float)
+    if scale == "htk":
+        return 2595 * np.log10(1 + freq / 700)
+    if scale == "slaney":
+        above = 15 + np.log(np.maximum(freq, 1000) / 1000) / _SLANEY_LOG_STEP
+        return np.where(freq < 1000, freq / _SLANEY_HZ_PER_MEL, above)
+    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
+
+
+def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
+    """Mel to frequency [Hz]; the inverse of :func:`freq_to_mel`."""
+    mel = np.asarray(mel, dtype=float)
+    if scale == "htk":
+        return 700 * (10 ** (mel / 2595) - 1)
+    if scale == "slaney":
+        above = 1000 * np.exp(_SLANEY_LOG_STEP * (np.maximum(mel, 15) - 15))
+        return np.where(mel < 15, mel * _SLANEY_HZ_PER_MEL, above)
+    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
