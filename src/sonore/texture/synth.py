@@ -31,7 +31,7 @@ from functools import cached_property
 
 import numpy as np
 from scipy.optimize import minimize
-from scipy.signal import hilbert, resample
+from scipy.signal import resample
 
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
@@ -311,11 +311,7 @@ def synthesize(
 
     def analyze(x):
         subbands = model.subbands(x)
-        with threads():
-            analytic = hilbert(subbands, axis=0)
-        compressed = np.abs(analytic) ** model.compression
-        env = np.maximum(_resample_circular(compressed, n_env), 0.0)
-        return subbands, analytic, compressed, env
+        return (subbands, *model._envelope_stages(subbands))
 
     def score(iteration, x, subbands, env):
         """SNR of iterate ``x``, from the analysis the next iteration needs anyway."""
