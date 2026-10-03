@@ -6,7 +6,6 @@ import pytest
 
 import sonore as so
 from sonore.core.utils import (
-    _below_nyquist,
     _fit_length,
     _parabola_vertex,
     erb_bandwidth,
@@ -89,7 +88,3 @@ def test_fit_length_cuts_and_pads_at_the_end():
     np.testing.assert_array_equal(_fit_length(data, 7), [1, 2, 3, 4, 5, 0, 0])
     np.testing.assert_array_equal(_fit_length(data, 7, mode="edge"), [1, 2, 3, 4, 5, 5, 5])
     assert _fit_length(np.ones((5, 2)), 7).shape == (7, 2)
-
-
-def test_default_top_edge_is_95_percent_of_nyquist():
-    assert _below_nyquist(16000) == pytest.approx(7600)

@@ -42,6 +42,10 @@ version (0.x.y) only fixes bugs.
   `f_lo`).
 - `envelope_peak_delay` is measured from each filter's impulse response,
   so every bank has it (0 for zero-phase filters).
+- The default top band edge of `so.noise_vocode`, `ModulationSpectrum.octave`,
+  `so.synth_ir` and `so.measure_rt60` is now the Nyquist
+  frequency, not 95% of it (an arbitrary margin with no recorded reason). Output
+  changes only when the requested `f_hi` is above 95% of Nyquist.
 - `power_to_db` treats a negative power as zero and returns the floor,
   instead of the level of its absolute value (audit sitting 1c).
 - `so.subbands(snd, ...)` is removed; write

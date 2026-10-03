@@ -173,9 +173,3 @@ def _phase_ramp_delay(data: np.ndarray, shift: ArrayLike, n_fft: int, n_out: int
     freqs = np.fft.rfftfreq(n_fft)
     spectrum *= np.exp(-2j * np.pi * freqs * np.asarray(shift)[..., None])
     return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
-
-
-def _below_nyquist(fs: float) -> float:
-    """The default top band edge, 95% of the Nyquist frequency (a choice,
-    not a cited value)."""
-    return 0.95 * fs / 2

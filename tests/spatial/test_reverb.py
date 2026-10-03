@@ -37,7 +37,7 @@ class TestReverb:
 # 32 kHz: the profiles (especially "inverted", which uses the max and min over
 # all bands) depend on synth_ir's bands reaching 15 kHz
 IR_FS = 32000
-IR_FB = so.cosine_filterbank(32, 20, 0.95 * IR_FS / 2)  # synth_ir's own bands at this rate
+IR_FB = so.cosine_filterbank(32, 20, IR_FS / 2)  # synth_ir's own bands at this rate
 
 
 def measured_profile(rt60_profile, seeds=3):
