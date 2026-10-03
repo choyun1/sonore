@@ -273,7 +273,7 @@ def world_synthesize(f0, envelope, aperiodicity, *, rng=None) -> Sound:
         own FFT length, which suits a smooth envelope like CheapTrick's; an
         envelope with deep, narrow valleys (tens of dB) comes out a few dB
         off at the harmonics, so smooth such an envelope first, or give it
-        to :func:`~sonore.signals.generators.harmonic_complex` as its
+        to :func:`~sonore.sources.waveforms.harmonic_complex` as its
         ``amplitudes``, which reads the envelope at each harmonic exactly.
     aperiodicity
         An :class:`~sonore.views.aperiodicity.Aperiodicity` (or anything with

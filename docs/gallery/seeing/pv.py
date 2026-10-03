@@ -265,13 +265,13 @@ fig, playhead = show(sound)
 #
 # - Dolson (1986). The phase vocoder: a tutorial. *Computer Music Journal* 10(4), 14–27.
 #   [Semantic Scholar](https://www.semanticscholar.org/paper/31d9e1cc5d87c2b84cde2d4527b15b644544380e).
-#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py)
 # - Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45(9), 1493–1509.
 #   [doi:10.1002/j.1538-7305.1966.tb01706.x](https://doi.org/10.1002/j.1538-7305.1966.tb01706.x).
-#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py)
 # - Gordon & Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), *Digital
 #   Audio Signal Processing: An Anthology*. [CCRMA](https://ccrma.stanford.edu/papers/introduction-phase-vocoder).
-#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py)
+#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py)
 # - Hillenbrand, Getty, Clark & Wheeler (1995). Acoustic characteristics of American English
 #   vowels. *J. Acoust. Soc. Am.* 97(5), 3099–3111.
 #   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872).
@@ -280,4 +280,4 @@ fig, playhead = show(sound)
 #   The sentence, by speakers bdl and slt.
 # - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans.
 #   Speech Audio Process.* 7(3), 323–332. [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/).
-#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L175)
+#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py#L175)

@@ -416,7 +416,7 @@ def scale_f0(contour, ratio: float, *, range: float = 1.0):
     ``range=1`` the contour itself is returned.
 
     The envelope is not touched, so a voice resynthesized on the new contour
-    keeps its formants (unlike :func:`~sonore.stimuli.phasevocoder.pitch_shift`,
+    keeps its formants (unlike :func:`~sonore.views.phasevocoder.pitch_shift`,
     which moves them with the pitch).
     """
     if not ratio > 0:

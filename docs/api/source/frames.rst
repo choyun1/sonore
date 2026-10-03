@@ -1,7 +1,7 @@
 frames
 ======
 
-Invertible analyses: frames, their coefficients, and changes to coefficients whose resynthesis is the frame's least-squares inverse. Builds on core and signals.
+Invertible analyses: frames, their coefficients, and changes to coefficients whose resynthesis is the frame's least-squares inverse.
 
 ``sonore.frames.frame``
 -----------------------

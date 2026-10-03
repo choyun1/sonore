@@ -11,7 +11,7 @@ set of band envelopes be put back together and listened to.
 Status: accepted 2026-10-02, with D2–D6 as recommended, D1 as the
 pattern-matching form of `harmonic_complex` below, D7 with arbitrary
 starting phases, D8 (after the F0 tracker) and D9. Implemented in
-`src/sonore/signals/generators.py`, tested in `tests/signals/test_generators.py`.
+`src/sonore/sources/waveforms.py`, tested in `tests/sources/test_waveforms.py`.
 
 ## Why
 
@@ -276,18 +276,19 @@ take only a number.
 
 ```python
 snd = so.load("docs/speech/bdl_arctic_a0131.flac")
-trk = so.f0_track(snd)                                   # f0.md
+trk = so.f0_track(snd)  # f0.md
 src = so.harmonic_complex(snd.duration, snd.fs, trk, unvoiced="noise", rng=0)
-so.noise_vocode(snd, 16, carrier=src)                    # its envelopes, this pitch
+so.noise_vocode(snd, 16, carrier=src)  # its envelopes, this pitch
 
 # A number is today's call; anything that is an F0 contour also works:
 so.harmonic_complex(1.0, 44100, 220, range(1, 11))
 t = np.arange(0, 2.005, 0.005)
 glide = so.harmonic_complex(2.0, 44100, (t, 100 * 2**t))  # two octaves, no aliasing
 monotone = so.harmonic_complex(snd.duration, snd.fs, (trk.t, np.where(trk.voiced, 120, 0)))
-saw = so.sawtooth_wave(2.0, 44100, (t, 100 * 2**t))      # every named waveform too
-vowel = so.harmonic_complex(2.0, 16000, (t, 110 + 10 * np.sin(2 * np.pi * 5 * t)),
-                            amplitudes=lambda t, f: formant_gain(f))
+saw = so.sawtooth_wave(2.0, 44100, (t, 100 * 2**t))  # every named waveform too
+vowel = so.harmonic_complex(
+    2.0, 16000, (t, 110 + 10 * np.sin(2 * np.pi * 5 * t)), amplitudes=lambda t, f: formant_gain(f)
+)
 ```
 
 ## Tests (target: under 1 s added)
@@ -311,7 +312,7 @@ vowel = so.harmonic_complex(2.0, 16000, (t, 110 + 10 * np.sin(2 * np.pi * 5 * t)
 
 1. This document and `tools/check_harmonic_source_claims.py`.
 2. `harmonic_complex` with contours and the D9 waveforms in
-   `signals/generators.py`, tests, the README "What it's for" line on
+   `sources/waveforms.py`, tests, the README "What it's for" line on
    harmonic sounds and a roadmap note, CHANGELOG.
 3. The Vocoder page section, and `pv.py` and `resynthesis.py` switched
    from their hand-rolled running sums to the new source.

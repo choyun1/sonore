@@ -4,8 +4,8 @@
 step reproduces WORLD's C++ code (github.com/mmorise/World, commit d625e76) to
 floating-point precision, including the tiny noise WORLD adds to keep
 logarithms and divisions finite, drawn from WORLD's own generator in WORLD's
-order (:mod:`sonore.signals.world`, where :data:`DIFFERENCES_FROM_WORLD
-<sonore.signals.world.DIFFERENCES_FROM_WORLD>` lists every option that departs
+order (:mod:`sonore.views.world`, where :data:`DIFFERENCES_FROM_WORLD
+<sonore.views.world.DIFFERENCES_FROM_WORLD>` lists every option that departs
 from WORLD).
 
 An envelope here is anything read as ``env(t, f)``, giving power at times
@@ -16,8 +16,8 @@ or :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`), or a
 function. :class:`~sonore.views.aperiodicity.Aperiodicity` is read the same
 way. :func:`warp_frequency` moves an envelope (or an aperiodicity) along
 frequency without looking at how it was made, so any envelope and any
-synthesizer combine: :func:`~sonore.signals.world.world_synthesize` and
-:func:`~sonore.signals.generators.harmonic_complex` both take any envelope.
+synthesizer combine: :func:`~sonore.views.world.world_synthesize` and
+:func:`~sonore.sources.waveforms.harmonic_complex` both take any envelope.
 """
 
 from __future__ import annotations
@@ -29,7 +29,8 @@ from collections.abc import Callable
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.signals.world import (
+from sonore.views.view import View
+from sonore.views.world import (
     _DEFAULT_F0,
     _EPS,
     _FLOOR_F0,
@@ -40,7 +41,6 @@ from sonore.signals.world import (
     _time_windows,
     world_fft_size,
 )
-from sonore.views.view import View
 
 __all__ = ["SpectralEnvelope", "cheaptrick", "GridEnvelope", "warp_frequency"]
 
@@ -203,7 +203,7 @@ class SpectralEnvelope(_FrequencyView):
     def amplitude(self, t, f, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
         f[i])``, ``t`` and ``f`` of the same shape: the form
-        :func:`~sonore.signals.generators.harmonic_complex` reads, one value
+        :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
         per sample and harmonic. Linear in time and in dB over frequency,
         held beyond the first and last time windows."""
         return np.exp(0.5 * _pointwise(np.log(self.data[channel]), self.t, self.f, t, f))
@@ -280,8 +280,8 @@ class GridEnvelope(View):
     Any envelope estimate can be put in this form, so that it reads like a
     :class:`~sonore.views.spectral_envelope.SpectralEnvelope` and goes wherever an
     envelope is taken: :func:`warp_frequency`,
-    :func:`~sonore.signals.world.world_synthesize`,
-    :func:`~sonore.signals.generators.harmonic_complex`.
+    :func:`~sonore.views.world.world_synthesize`,
+    :func:`~sonore.sources.waveforms.harmonic_complex`.
     :meth:`Cepstrum.envelope_view <sonore.views.cepstrum.Cepstrum.envelope_view>`
     and :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`
     return one.
@@ -340,7 +340,7 @@ class GridEnvelope(View):
     def amplitude(self, t, f, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
         f[i])``, ``t`` and ``f`` of the same shape: the form
-        :func:`~sonore.signals.generators.harmonic_complex` reads, one value
+        :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
         per sample and harmonic."""
         return np.exp(0.5 * _pointwise(self._log()[channel], self.t, self.f, t, f))
 

@@ -13,12 +13,12 @@ from numpy.lib.stride_tricks import sliding_window_view
 from scipy.signal import hilbert
 from scipy.signal.windows import hann
 
+from sonore.core.processing import pad
 from sonore.core.sound import Sound
 from sonore.core.units import dB
 from sonore.core.utils import n_samples, time_axis
 from sonore.frames.filterbank import ERBFilterbank
-from sonore.signals.generators import gaussian_noise
-from sonore.signals.processing import pad
+from sonore.sources.waveforms import gaussian_noise
 from sonore.views.view import View
 
 __all__ = [

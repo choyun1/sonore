@@ -539,7 +539,7 @@ def plot_ripple_pattern(
 ):
     """Envelope of a ripple pattern (dB re its mean level) over time and
     log-frequency, before any sound is made."""
-    from sonore.stimuli.ripples import _evaluate, _max_rate
+    from sonore.sources.ripples import _evaluate, _max_rate
 
     ax = _ax(ax)
     if n_t is None:  # resolve the fastest modulation with ~8 points per cycle

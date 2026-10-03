@@ -200,10 +200,24 @@ Sphinx warnings unchanged, and a grep for each old path returning nothing
 outside the changelog and design history. The gallery groups do not
 change: "Stimuli" there names a use, and stays.
 
+As built (2026-10-03): the move follows the table above, with
+`noise_vocode` appended to `views/envelopes.py` unchanged and tests moved to
+`tests/core`, `tests/sources` and `tests/views` beside their modules.
+`tests/test_layers.py` checks the module-level imports for cycles and `core`
+for imports from above it, and lists by name the four imports inside a
+function that point back up (`Sound.envelope()`, `Subbands.envelopes()`,
+`STFT * mask`, and `units` refusing `Sound * dB`); `tools/draw_layout.py`
+reads the same graph. Checked: 575 tests pass; 36 outputs (texture, WORLD,
+the vocoder, ripples, the phase vocoder, Klatt, filters) hash identically to
+main; the eight gallery pages that use a moved module build, and their audio
+matches main's build byte for byte; Sphinx gives the same 7 warnings as
+main; the old paths remain only in the changelog's history, this document,
+`reorganization.md` and `tools/count_reorganization_references.py`.
+
 ## Order
 
 1. Cho decides D1–D7. Done, 2026-10-03.
-2. One PR: the move, the layer test, the diagram, the docs.
+2. One PR: the move, the layer test, the diagram, the docs. Done.
 3. If D5 (a) or (b): the renames, in their own PR.
 4. PR #85's release notes gain the moved paths; then 0.4.0.
 
