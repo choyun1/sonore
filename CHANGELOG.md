@@ -33,6 +33,11 @@ version (0.x.y) only fixes bugs.
   removed, with and without iterations.
 
 ### Changed
+- `so.normalize(sounds, peak=...)` scales each sound to its own peak, as
+  `Sound.normalize(peak=...)` does; before, the list version took only `rms`.
+- Clearer errors from the list helpers: an empty list, an unknown `mode` in
+  `match_fs`, and a silent reference in `relative_db` raise a `ValueError`
+  saying so (they raised `KeyError` or `ZeroDivisionError`).
 - `so.pad` and `so.truncate` are replaced by
   `so.match_lengths(sounds, mode="pad" | "truncate", align=...)`, next to
   `so.match_fs` and `so.match_channels`; `align` now also chooses which

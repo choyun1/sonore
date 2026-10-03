@@ -1,5 +1,9 @@
 """The FFT thread setting: results do not depend on it."""
 
+import os
+import subprocess
+import sys
+
 import numpy as np
 import pytest
 import scipy.fft
@@ -24,6 +28,32 @@ def test_set_fft_workers_as_call_and_block():
         so.set_fft_workers(before)
     with pytest.raises(ValueError):
         so.set_fft_workers(0)
+
+
+def _cores_this_process_may_use():
+    if hasattr(os, "sched_getaffinity"):
+        return len(os.sched_getaffinity(0))
+    return os.cpu_count() or 1
+
+
+def test_default_is_every_core_this_process_may_use():
+    fresh = subprocess.run(
+        [sys.executable, "-c", "import sonore; print(sonore.fft_workers())"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert int(fresh.stdout) == _cores_this_process_may_use()
+
+
+def test_none_goes_back_to_every_core():
+    before = so.fft_workers()
+    try:
+        so.set_fft_workers(1)
+        so.set_fft_workers(None)
+        assert so.fft_workers() == _cores_this_process_may_use()
+    finally:
+        so.set_fft_workers(before)
 
 
 def test_results_are_identical_for_any_number_of_workers():

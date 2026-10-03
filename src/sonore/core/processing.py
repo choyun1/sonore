@@ -34,7 +34,10 @@ Track = float | tuple[ArrayLike, ArrayLike]
 def match_fs(sounds: Sequence[Sound], fs: float | None = None, mode: str = "down") -> list[Sound]:
     """Resample so all sounds share a rate: ``fs`` if given, else the lowest
     (``mode="down"``) or highest (``mode="up"``) rate in the list."""
+    _check_not_empty(sounds)
     if fs is None:
+        if mode not in ("down", "up"):
+            raise ValueError(f"mode must be 'down' or 'up', not {mode!r}")
         rates = [s.fs for s in sounds]
         fs = {"down": min, "up": max}[mode](rates)
     return [s.resample(fs) for s in sounds]
@@ -42,6 +45,7 @@ def match_fs(sounds: Sequence[Sound], fs: float | None = None, mode: str = "down
 
 def match_channels(sounds: Sequence[Sound]) -> list[Sound]:
     """Upmix mono sounds to the channel count of the others."""
+    _check_not_empty(sounds)
     n_channels = max(s.n_channels for s in sounds)
     return [s.to_channels(n_channels) for s in sounds]
 
@@ -54,8 +58,9 @@ def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "star
     the common length: padding goes after, around or before it, and cutting
     keeps its start, middle or end. With ``center``, an odd number of extra
     samples puts the odd one at the end."""
+    _check_not_empty(sounds)
     if align not in ("start", "center", "end"):
-        raise ValueError("align must be 'start', 'center' or 'end'")
+        raise ValueError(f"align must be 'start', 'center' or 'end', not {align!r}")
     if mode == "pad":
         length = max(len(s) for s in sounds)
         return [s.pad_to(length, align) for s in sounds]
@@ -68,15 +73,26 @@ def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "star
             return Sound(sound.data[start : start + length], sound.fs)
 
         return [keep(s) for s in sounds]
-    raise ValueError("mode must be 'pad' or 'truncate'")
+    raise ValueError(f"mode must be 'pad' or 'truncate', not {mode!r}")
 
 
-def normalize(sounds: Sequence[Sound], rms: float = 1.0) -> list[Sound]:
-    """Set each sound's RMS independently."""
-    return [s.normalize(rms) for s in sounds]
+def normalize(sounds: Sequence[Sound], rms: float | None = 1.0, peak: float | None = None) -> list[Sound]:
+    """Scale each sound on its own to a target RMS (default 1) or, if
+    ``peak`` is given, a target peak, as :meth:`Sound.normalize` does.
+
+    Each sound gets its own gain, so their level differences are lost: with
+    ``rms`` they all come out equally loud, with ``peak`` they all peak at
+    the same value."""
+    return [s.normalize(rms, peak) for s in sounds]
+
+
+def _check_not_empty(sounds: Sequence[Sound]) -> None:
+    if len(sounds) == 0:
+        raise ValueError("need at least one sound")
 
 
 def _check_fs(sounds: Sequence[Sound]) -> float:
+    _check_not_empty(sounds)
     rates = {s.fs for s in sounds}
     if len(rates) > 1:
         raise ValueError(f"sampling rates differ: {sorted(rates)}; use match_fs()")
@@ -98,6 +114,8 @@ def mix(sounds: Sequence[Sound], align: str = "start") -> Sound:
 def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
     """Level of each sound in dB relative to ``sounds[ref]``."""
     ref_rms = sounds[ref].rms
+    if ref_rms == 0:
+        raise ValueError(f"the reference sounds[{ref}] is silent, so levels relative to it are undefined")
     return [float(amp_to_db(s.rms / ref_rms)) for s in sounds]
 
 
@@ -111,7 +129,10 @@ def butter_filter(
     """Butterworth filter along time (each channel separately).
 
     ``btype`` is ``lowpass``, ``highpass``, ``bandpass``, or ``bandstop``.
-    ``zero_phase=True`` runs it forward and backward (doubling the order in dB).
+    ``zero_phase=True`` runs it forward and backward: no phase shift, and the
+    magnitude response is squared (twice the attenuation in dB, so the gain at
+    the cutoff is -6 dB instead of -3 dB). This needs a sound longer than
+    SciPy's padding (15 samples for a 4th-order lowpass).
     """
     sos = butter(order, cutoff, btype=btype, fs=sound.fs, output="sos")
     run_filter = sosfiltfilt if zero_phase else sosfilt
@@ -119,11 +140,20 @@ def butter_filter(
 
 
 def bandpass(sound: Sound, f_lo: float, f_hi: float, order: int = 4, zero_phase: bool = True) -> Sound:
+    """Butterworth band-pass from ``f_lo`` to ``f_hi`` [Hz].
+
+    Shorthand for ``butter_filter(sound, (f_lo, f_hi), "bandpass", order,
+    zero_phase)``; see :func:`butter_filter`. The band edges are where the
+    gain is -3 dB (one way) or -6 dB (``zero_phase=True``). ``order`` is
+    SciPy's, so the band-pass has ``2 * order`` poles."""
     return butter_filter(sound, (f_lo, f_hi), "bandpass", order, zero_phase)
 
 
 def amplitude_modulate(sound: Sound, f_mod: float, depth: float = 1.0, phase: float = 0.0) -> Sound:
-    """Multiply by ``1 + depth*sin(2*pi*f_mod*t + phase)``."""
+    """Multiply by ``1 + depth*sin(2*pi*f_mod*t + phase)``.
+
+    ``phase`` is in radians. ``depth`` 1 takes the envelope down to zero;
+    above 1 the envelope changes sign (overmodulation)."""
     t = time_axis(len(sound), sound.fs)
     return sound * (1 + depth * np.sin(2 * np.pi * f_mod * t + phase))
 
