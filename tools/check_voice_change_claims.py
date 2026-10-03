@@ -26,9 +26,9 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.signal import find_peaks, freqz
 
 import sonore as so
-from sonore.signals.world import world_fft_size
 from sonore.views.aperiodicity import Aperiodicity
 from sonore.views.spectral_envelope import SpectralEnvelope
+from sonore.views.world import world_fft_size
 
 FS = 16000.0
 HOP = 0.005

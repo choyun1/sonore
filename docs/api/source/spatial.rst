@@ -1,7 +1,7 @@
 spatial
 =======
 
-Two ears, heads and rooms: spatialization through HRIRs, binaural cues and reverberation. A branch: builds on the trunk (core, signals, frames, views), not on the other branches.
+Two ears, heads and rooms: spatialization through HRIRs, binaural cues and reverberation.
 
 ``sonore.spatial.spatialization``
 ---------------------------------

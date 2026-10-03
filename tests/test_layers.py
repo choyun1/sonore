@@ -1,16 +1,19 @@
-"""The package is a trunk with branches, and imports point down the trunk.
+"""Imports between modules never form a cycle, and core stays at the bottom.
 
-The trunk, bottom to top: core, signals, frames, views; each imports only from
-those below it. The branches, spatial, stimuli and texture, import from the
-trunk and never from each other. ``plotting`` sits above them all: the
-objects' ``.plot()`` methods import it inside the method, and nothing imports
-it at module level. Inside a subpackage any import is fine.
+The folders follow meaning (docs/design/sound-first.md), not import order:
+``sources.ripples`` imports frames and views, and views import ``core``.
+What keeps the package from tangling is enforced module by module instead:
 
-A few methods import upward inside the method body, so that the call reads
-naturally in a notebook: ``Sound.envelope()`` returns an ``Envelope`` from
-views, and ``Subbands.envelopes()`` returns ``Envelopes``. Those are listed in
-``UPWARD_INSIDE_FUNCTIONS``, so a new one has to be added there on purpose.
-docs/design/layout.md has the diagram, drawn from the source by
+- the module-level imports between sonore's modules form no cycle, so every
+  module sits above everything it imports;
+- ``core`` imports nothing outside ``core`` at module level;
+- an import inside a function (or a ``TYPE_CHECKING`` block) that would close
+  a cycle is listed by name in ``BACK_IMPORTS``, so a new one has to be added
+  there on purpose. They exist so that calls chain in a notebook:
+  ``Sound.envelope()`` returns an ``Envelope`` from views.
+
+``plotting`` is exempt: the objects' ``.plot()`` methods import it inside the
+method. docs/design/layout.md has the diagram, drawn from the source by
 tools/draw_layout.py.
 """
 
@@ -23,24 +26,15 @@ import pytest
 
 PACKAGE = Path(__file__).resolve().parent.parent / "src" / "sonore"
 
-# Rank of each subpackage: an import must point to a lower rank, or stay inside its
-# own subpackage. The branches share one rank, so none can import another.
-RANK = {
-    "core": 0,
-    "signals": 1,
-    "frames": 2,
-    "views": 3,
-    "spatial": 4,
-    "stimuli": 4,
-    "texture": 4,
-    "plotting": 5,
-}
-LAYERS = list(RANK)
+FOLDERS = ["core", "sources", "frames", "views", "spatial", "texture", "plotting"]
 
-# (importer, imported) pairs allowed to point upward from inside a function.
-UPWARD_INSIDE_FUNCTIONS = {
-    ("sound", "envelopes"),  # Sound.envelope()
-    ("filterbank", "envelopes"),  # Subbands.envelopes()
+# (importer, imported) imports inside a function that point back up the
+# module-level import graph.
+BACK_IMPORTS = {
+    ("core.sound", "views.envelopes"),  # Sound.envelope()
+    ("core.units", "core.sound"),  # refusing snd * dB with a hint
+    ("frames.filterbank", "views.envelopes"),  # Subbands.envelopes()
+    ("frames.gabor", "frames.mask"),  # STFT * mask
 }
 
 
@@ -56,7 +50,7 @@ def modules() -> dict[str, Path]:
     return out
 
 
-def layer(name: str) -> str:
+def folder(name: str) -> str:
     """``frames.gabor`` is in frames; ``plotting`` is its own."""
     return name.split(".")[0]
 
@@ -81,34 +75,64 @@ def internal_imports(path: Path, known: dict[str, Path]) -> list[tuple[str, bool
     return found
 
 
-def test_every_module_has_a_layer():
-    for name in modules():
-        assert layer(name) in LAYERS, name
-
-
-def test_imports_point_down():
+def module_graph() -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+    """Module-level and inside-function imports between sonore's modules."""
     known = modules()
-    upward_used = set()
-    wrong = []
+    at_module_level = {name: set() for name in known}
+    inside_functions = {name: set() for name in known}
     for name, path in known.items():
         for target, at_top in internal_imports(path, known):
-            if layer(target) == layer(name) or RANK[layer(target)] < RANK[layer(name)]:
-                continue
-            if RANK[layer(target)] == RANK[layer(name)]:
-                wrong.append(f"{name} imports {target}: branches do not import each other")
-                continue
-            if at_top:
-                wrong.append(f"{name} imports {target} at module level")
-                continue
-            if layer(target) == "plotting":
-                continue
-            pair = (name.split(".")[-1], target.split(".")[-1])
-            if pair in UPWARD_INSIDE_FUNCTIONS:
-                upward_used.add(pair)
-            else:
-                wrong.append(f"{name} imports {target} inside a function")
-    assert not wrong, "imports pointing up a layer:\n" + "\n".join(wrong)
-    assert upward_used == UPWARD_INSIDE_FUNCTIONS, "stale entries in UPWARD_INSIDE_FUNCTIONS"
+            if target != name:
+                (at_module_level if at_top else inside_functions)[name].add(target)
+    return at_module_level, inside_functions
+
+
+def reachable(start: str, graph: dict[str, set[str]]) -> set[str]:
+    """Every module ``start`` imports, directly or through others."""
+    seen, stack = set(), [start]
+    while stack:
+        for target in graph.get(stack.pop(), ()):
+            if target not in seen:
+                seen.add(target)
+                stack.append(target)
+    return seen
+
+
+def test_every_module_has_a_folder():
+    for name in modules():
+        assert folder(name) in FOLDERS, name
+
+
+def test_no_cycles_at_module_level():
+    at_module_level, _ = module_graph()
+    cyclic = [name for name in at_module_level if name in reachable(name, at_module_level)]
+    assert not cyclic, "module-level import cycles through:\n" + "\n".join(sorted(cyclic))
+
+
+def test_core_imports_only_core_at_module_level():
+    at_module_level, _ = module_graph()
+    wrong = [
+        f"{name} imports {target}"
+        for name, targets in at_module_level.items()
+        if folder(name) == "core"
+        for target in targets
+        if folder(target) != "core"
+    ]
+    assert not wrong, "core imports from above it:\n" + "\n".join(wrong)
+
+
+def test_back_imports_are_listed():
+    at_module_level, inside_functions = module_graph()
+    back = {
+        (name, target)
+        for name, targets in inside_functions.items()
+        for target in targets
+        if folder(target) != "plotting" and name in reachable(target, at_module_level)
+    }
+    assert back <= BACK_IMPORTS, "unlisted imports closing a cycle:\n" + "\n".join(
+        f"{name} imports {target}" for name, target in sorted(back - BACK_IMPORTS)
+    )
+    assert back == BACK_IMPORTS, "stale entries in BACK_IMPORTS"
 
 
 def test_layout_diagram_is_current():

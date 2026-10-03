@@ -16,7 +16,7 @@ import scipy.fft as sp_fft
 
 import sonore as so
 from sonore.core.fft import fast_padding
-from sonore.stimuli.ripples import _evaluate
+from sonore.sources.ripples import _evaluate
 
 FS = 16000
 
@@ -30,7 +30,7 @@ def correlation_and_level(x, y, fs):
 
 def phase_vocoder_resynthesis():
     """PVAnalysis.resynthesize: harmonic complexes and noise, unchanged."""
-    print("PVAnalysis.resynthesize (stimuli/phasevocoder.py), 1 s at 16 kHz:")
+    print("PVAnalysis.resynthesize (views/phasevocoder.py), 1 s at 16 kHz:")
     worst = 1.0
     for f0 in (110.0, 220.0, 440.0):
         x = so.harmonic_complex(1.0, FS, f0, np.arange(1, 8)).ramp(20e-3)
@@ -47,7 +47,7 @@ def phase_vocoder_resynthesis():
 def ripple_energy_outside_rate_range():
     """DynamicRipple: share of the dB pattern's temporal-modulation power above
     the largest |rate| in rate_range, over 5 octaves."""
-    print("DynamicRipple (stimuli/ripples.py), 5 octaves, 4 s, seeds 0-4:")
+    print("DynamicRipple (sources/ripples.py), 5 octaves, 4 s, seeds 0-4:")
     grid_rate = 4000.0  # Hz, well above the 350 Hz rate limit and any fanned-out rate
     t = np.arange(int(4.0 * grid_rate)) / grid_rate
     octaves = np.linspace(0, 5, 101)

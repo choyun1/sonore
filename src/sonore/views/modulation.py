@@ -291,7 +291,7 @@ class ModulationSpectrum(View):
     ``ModulationSpectrum(stft)`` uses a dB spectrogram, so spectral modulation
     is w.r.t. *linear* frequency (cycles/kHz). :meth:`octave` uses subband
     envelopes on a log-frequency axis (cycles/octave), the axis on which
-    ripples (:mod:`sonore.stimuli.ripples`) are defined; more generally, any
+    ripples (:mod:`sonore.sources.ripples`) are defined; more generally, any
     :class:`~sonore.views.envelopes.Envelopes` has ``.modulation_spectrum()``.
 
     Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at

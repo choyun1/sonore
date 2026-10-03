@@ -2,9 +2,9 @@ sonore API reference
 ====================
 
 Every public name in sonore, generated from the docstrings. The pages follow
-the package's layout: the trunk bottom to top (core, signals, frames, views),
-each building only on the ones before it, then the branches (spatial, stimuli,
-texture), which build on the trunk and never on each other (see `the layout notes
+the package's folders, which follow meaning: core, sounds made from parameters
+(sources), invertible analyses (frames), one-way analyses (views), then the
+topics spatial and texture (see `the layout notes
 <https://github.com/choyun1/sonore/blob/main/docs/design/layout.md>`_).
 In code, everything here is also reachable as ``so.<name>`` after
 ``import sonore as so``.
@@ -25,11 +25,10 @@ these objects at work.
 
    conventions
    core
-   signals
+   sources
    frames
    views
    spatial
-   stimuli
    texture
    plotting
 

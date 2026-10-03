@@ -13,6 +13,21 @@ Typical use in a notebook::
 
 from sonore import texture
 from sonore.core.fft import fft_workers, set_fft_workers
+from sonore.core.processing import (
+    amplitude_modulate,
+    antiresonator,
+    bandpass,
+    butter_filter,
+    concat,
+    match_channels,
+    match_fs,
+    mix,
+    normalize,
+    pad,
+    relative_db,
+    resonator,
+    truncate,
+)
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
 from sonore.core.utils import (
@@ -40,7 +55,9 @@ from sonore.frames.frame import Frame
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame, TVGaborFrame
 from sonore.frames.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.plotting import overview
-from sonore.signals.generators import (
+from sonore.sources.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
+from sonore.sources.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
+from sonore.sources.waveforms import (
     correlated_noise,
     exponential_chirp,
     gaussian_noise,
@@ -57,23 +74,6 @@ from sonore.signals.generators import (
     silence,
     square_wave,
 )
-from sonore.signals.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
-from sonore.signals.processing import (
-    amplitude_modulate,
-    antiresonator,
-    bandpass,
-    butter_filter,
-    concat,
-    match_channels,
-    match_fs,
-    mix,
-    normalize,
-    pad,
-    relative_db,
-    resonator,
-    truncate,
-)
-from sonore.signals.world import DIFFERENCES_FROM_WORLD, world_synthesize
 from sonore.spatial.binaural import (
     InterauralCues,
     apply_itd_ild,
@@ -96,12 +96,9 @@ from sonore.spatial.spatialization import (
     rect_to_hcc,
     spatialize,
 )
-from sonore.stimuli.channel_vocoder import noise_vocode
-from sonore.stimuli.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
-from sonore.stimuli.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
 from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
 from sonore.views.cepstrum import Cepstrum
-from sonore.views.envelopes import Envelope, Envelopes
+from sonore.views.envelopes import Envelope, Envelopes, noise_vocode
 from sonore.views.f0 import F0Track, f0_track, scale_f0
 from sonore.views.mfcc import MFCC
 from sonore.views.modspectrogram import ModulationSpectrogram
@@ -112,10 +109,12 @@ from sonore.views.modulation import (
     ModulationSpectrum,
     OctaveModulationFilterbank,
 )
+from sonore.views.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
 from sonore.views.reassigned import ReassignedSpectrogram, reassigned_spectrogram
 from sonore.views.spectral_envelope import GridEnvelope, SpectralEnvelope, cheaptrick, warp_frequency
 from sonore.views.spectrum import Spectrum, TFPower, long_term_spectrum, tandem_power
 from sonore.views.view import NotInvertibleError, View
+from sonore.views.world import DIFFERENCES_FROM_WORLD, world_synthesize
 
 __version__ = "0.3.1"
 

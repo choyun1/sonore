@@ -1,4 +1,4 @@
-"""Stimulus generators: silence, tones, harmonic complexes, chirps, noises,
+"""Waveforms made from parameters: silence, tones, harmonic complexes, chirps, noises,
 and the LF glottal source.
 
 Every generator returns a :class:`~sonore.Sound` normalized to RMS = 1.

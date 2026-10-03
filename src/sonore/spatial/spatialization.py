@@ -42,9 +42,9 @@ from scipy.signal import fftconvolve, minimum_phase
 from scipy.spatial import ConvexHull
 from scipy.special import i0
 
+from sonore.core.processing import _track
 from sonore.core.sound import Sound
 from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp, db_to_power, time_axis
-from sonore.signals.processing import _track
 
 __all__ = [
     "rect_to_sph",

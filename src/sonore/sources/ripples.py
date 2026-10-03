@@ -44,7 +44,7 @@ from scipy.special import ndtr
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
 from sonore.frames.filterbank import OctaveFilterbank, Subbands
-from sonore.signals.generators import gaussian_noise
+from sonore.sources.waveforms import gaussian_noise
 from sonore.views.envelopes import Envelopes
 
 __all__ = ["Ripple", "RippleSum", "DynamicRipple", "ripple_sound", "render"]

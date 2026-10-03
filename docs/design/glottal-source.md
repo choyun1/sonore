@@ -273,7 +273,7 @@ perception claims; the examples let Cho judge.
 
 Layers follow `layout.md`.
 
-- **signals** (`signals/generators.py`, beside `harmonic_complex`):
+- **signals** (`sources/waveforms.py`, beside `harmonic_complex`):
   - `lf_harmonics(rd, harmonics)`: complex coefficients of the LF flow
     derivative per harmonic number, from the closed form (C1). With
     `ra=`, `rg=`, `rk=` instead of `rd`, the shape is given directly (the
@@ -320,9 +320,9 @@ unchanged. This proposal touches none of the WORLD files.
 What changed from the proposal above while writing the code:
 
 - The three functions were first built in their own module,
-  `signals/glottal.py`, beside `generators.py` rather than in it; the
+  `signals/glottal.py`, beside `waveforms.py` rather than in it; the
   reorganization (`reorganization.md`, D7) later moved them into
-  `signals/generators.py`. The shape comes second:
+  `sources/waveforms.py`. The shape comes second:
   `lf_harmonics(harmonics, rd=0.7)` and `lf_pulse(x, rd=0.7)`, so `rd`
   can take its default. `ra`, `rg` and `rk` are keyword-only, given all
   three together, in both (D2).
@@ -347,12 +347,12 @@ What changed from the proposal above while writing the code:
   so `AV` keeps its meaning. `klatt_continuum` interpolates `RD` like any
   number and refuses endpoints with different `SS`.
 
-`tests/signals/test_glottal.py` checks the coefficients against numerical
+`tests/sources/test_glottal.py` checks the coefficients against numerical
 integration (C1), zero net flow and E(te) = −1, Fant's Fig. 5A parameters
 at Rd 1 and the pulse's own Rd (C2), the source's line spectrum against
 `2|c_k|`, the Rd track against the exact coefficients at every sample
 (within 1e-3 of RMS), and no aliasing on a rising F0.
-`tests/stimuli/test_klatt.py` checks an LF vowel against LF flow ×
+`tests/sources/test_klatt.py` checks an LF vowel against LF flow ×
 radiation × formants to 1e-6 dB, the 11.8 dB drop at 3 kHz against the
 default source (C6), and the `SS` errors.
 

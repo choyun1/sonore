@@ -45,9 +45,9 @@ from scipy.interpolate import RegularGridInterpolator
 from scipy.signal import freqz
 
 import sonore as so
-from sonore.signals.world import world_fft_size
 from sonore.views.aperiodicity import Aperiodicity
 from sonore.views.spectral_envelope import SpectralEnvelope
+from sonore.views.world import world_fft_size
 
 try:
     import pyworld

@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 
 import sonore as so
-from sonore.signals.world import world_fft_size, world_randn
+from sonore.views.world import world_fft_size, world_randn
 
 REFERENCE = Path(__file__).resolve().parents[1] / "data" / "world_reference.npz"
 FS = 16000

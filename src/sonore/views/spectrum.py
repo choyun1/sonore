@@ -67,7 +67,7 @@ class Spectrum(View):
     def to_noise(self, duration: float, fs: float, rng=None, **kwargs) -> Sound:
         """Gaussian noise with this spectral shape: a new draw, not an inverse
         of the spectrum."""
-        from sonore.signals.generators import gaussian_noise
+        from sonore.sources.waveforms import gaussian_noise
 
         return gaussian_noise(duration, fs, spectrum=self, rng=rng, **kwargs)
 

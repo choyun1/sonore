@@ -344,8 +344,8 @@ class MFCC(View):
         ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
         wherever a spectral envelope is taken
         (:func:`~sonore.views.spectral_envelope.warp_frequency`,
-        :func:`~sonore.signals.world.world_synthesize`,
-        :func:`~sonore.signals.generators.harmonic_complex`). It holds band
+        :func:`~sonore.views.world.world_synthesize`,
+        :func:`~sonore.sources.waveforms.harmonic_complex`). It holds band
         powers, sums over triangles that widen with frequency, so with
         ``triangles="height"`` it tilts upward against a spectral density;
         ``triangles="area"`` removes most of that tilt."""

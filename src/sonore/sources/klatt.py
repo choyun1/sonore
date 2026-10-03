@@ -17,10 +17,7 @@ from types import MappingProxyType
 
 import numpy as np
 
-from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
-from sonore.signals.generators import RNG, _finish, glottal_source, harmonic_complex
-from sonore.signals.processing import (
+from sonore.core.processing import (
     Track,
     _check_resonance,
     _resonator_coefs,
@@ -28,6 +25,9 @@ from sonore.signals.processing import (
     antiresonator,
     resonator,
 )
+from sonore.core.sound import Sound
+from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
+from sonore.sources.waveforms import RNG, _finish, glottal_source, harmonic_complex
 
 __all__ = ["KLATT_DEFAULTS", "klatt_synthesize", "klatt_continuum"]
 

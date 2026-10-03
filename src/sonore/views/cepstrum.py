@@ -125,8 +125,8 @@ class Cepstrum(View):
         """:meth:`envelope` as power on this cepstrum's time windows and
         frequencies, read as ``env(t, f)``, so it goes wherever a spectral
         envelope is taken (:func:`~sonore.views.spectral_envelope.warp_frequency`,
-        :func:`~sonore.signals.world.world_synthesize`,
-        :func:`~sonore.signals.generators.harmonic_complex`). Lifter first:
+        :func:`~sonore.views.world.world_synthesize`,
+        :func:`~sonore.sources.waveforms.harmonic_complex`). Lifter first:
         ``cep.lifter(0.5 / f0).envelope_view()``."""
         freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
         return GridEnvelope(self.envelope() ** 2, self.t, freqs)

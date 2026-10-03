@@ -5,7 +5,7 @@ measures the share of noise directly.
 Every step named after WORLD reproduces WORLD's C++ code
 (github.com/mmorise/World, commit d625e76) to floating-point precision, with
 WORLD's own noise in WORLD's order; options that depart from WORLD are listed
-in :data:`~sonore.signals.world.DIFFERENCES_FROM_WORLD`.
+in :data:`~sonore.views.world.DIFFERENCES_FROM_WORLD`.
 """
 
 from __future__ import annotations
@@ -16,7 +16,14 @@ import numpy as np
 
 from sonore.core.sound import Sound
 from sonore.core.utils import db_to_amp, time_axis
-from sonore.signals.world import (
+from sonore.views.spectral_envelope import (
+    SpectralEnvelope,
+    _dc_correction,
+    _FrequencyView,
+    _linear_smoothing,
+    _windowed_waveform,
+)
+from sonore.views.world import (
     _FLOOR_F0,
     _SAFEGUARD,
     _integer_fs,
@@ -25,13 +32,6 @@ from sonore.signals.world import (
     _Stream,
     _time_windows,
     world_fft_size,
-)
-from sonore.views.spectral_envelope import (
-    SpectralEnvelope,
-    _dc_correction,
-    _FrequencyView,
-    _linear_smoothing,
-    _windowed_waveform,
 )
 
 __all__ = ["Aperiodicity", "d4c", "harmonic_aperiodicity"]
@@ -55,7 +55,7 @@ class Aperiodicity(_FrequencyView):
     harmonics. Stored as WORLD stores it, an amplitude ratio between 0 and
     1 (``data``, shape ``(n_channels, n_freqs, n_windows)``): its square
     :attr:`share` is the share of the power that is noise, which is what
-    :func:`~sonore.signals.world.world_synthesize` uses. ``method`` names
+    :func:`~sonore.views.world.world_synthesize` uses. ``method`` names
     the measure that made it ("D4C" or "harmonic residual").
     """
 

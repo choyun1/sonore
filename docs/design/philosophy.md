@@ -5,6 +5,16 @@ in this folder (`frames.md`, one section per step) give the derivations and the
 numbered claims and decisions behind them; the code and its docstrings are
 meant to be readable without them.
 
+## Sound first
+
+- **`Sound` is the bedrock, so analysis comes first.** What a user holds is
+  a sound or an analysis of one. A way back to sound belongs on the
+  analysis it goes back from. Only sounds made from parameters alone (tones,
+  noises, chirps, the glottal source, Klatt) stand as plain functions.
+- **Folders follow meaning.** A module lives where what it means puts it,
+  so a reader finds it where they expect it. Import order is still enforced,
+  but between modules (no cycles), not by folders.
+
 ## Sounds and units
 
 - **A sound is a value.** `Sound` is an immutable array plus a sampling rate,
@@ -36,22 +46,20 @@ meant to be readable without them.
   because it also says how much coefficient errors can be amplified.
 - **Views may discard information.** Not every analysis is a frame.
   Magnitudes, cepstra, F0 tracks, modulation spectra and reassigned
-  spectrograms are built on a frame and drop something (phase, fine
-  structure, everything but a pitch). They are welcome as displays and
-  features, and each says what it drops and whether a sound can be
-  recovered from it: exactly, approximately (Griffin-Lim, texture synthesis,
-  which search for a sound whose view matches through the exact frame
-  underneath), or not at all. In code, every view is a `View`: its
-  `discards` sentence says what it drops, and its `synthesize` raises
-  `NotInvertibleError` with that sentence and the route back to sound, if
-  sonore has one. Every analysis is one or the other, in the branches
-  too (`InterauralCues`, `TextureStats`, the phase vocoder's
-  `PVAnalysis`), and a test sorts every public class, so a new analysis has
-  to be made a frame or a view. The rule is about what the code returns:
-  an analysis that returns an object (with axes, a plot, something one
-  might try to turn back into sound) is a frame's coefficients or a `View`;
-  a plain number such as `rms` or a mean is a measurement and stays a
-  number.
+  spectrograms drop something (phase, fine structure, everything but a
+  pitch). They are welcome as displays and features. Every analysis is a
+  frame's coefficients or a `View`, in the branches too (`InterauralCues`,
+  `TextureStats`, `PVAnalysis`), and a test sorts every public class. A
+  plain number such as `rms` is a measurement, not a view.
+- **`synthesize` is exact; `to_sound` is a stated route back.** Only frames
+  synthesize. Each view's `discards` sentence says what it dropped, and its
+  `to_sound` takes exactly that as arguments: a spectrum takes a carrier
+  for its phase, envelopes a carrier for their fine structure, each of
+  WORLD's three views the other two. A view gets `to_sound` only where a
+  canonical route exists. Elsewhere (a modulation spectrum, whose possible
+  carriers are too many) it raises `NotInvertibleError` with the reason,
+  and searching for a matching sound stays an experiment until a canonical
+  method is found. (Being built; see `sound-first.md`.)
 - **Keep the simplest representation that loses nothing.** Subbands stay
   real; the complex analytic signal is computed from them exactly when
   envelopes or phase are needed.

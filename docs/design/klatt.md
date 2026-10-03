@@ -224,7 +224,7 @@ All six were accepted as recommended (Cho, 2026-10-02).
 
 What changed from the proposal above while writing the code:
 
-- `resonator` and `antiresonator` live in `signals.processing` and take a
+- `resonator` and `antiresonator` live in `core.processing` and take a
   `Sound`, like the other filters there. A track is a `(times, values)`
   pair, interpolated to every sample (D2, D3); constant values run through
   `scipy.signal.lfilter`, changing ones through a per-sample loop (about
@@ -247,9 +247,9 @@ What changed from the proposal above while writing the code:
   given explicitly raises an error.
 - Klatt's quasi-sinusoidal voicing (AVS, RGS) and RGZ are left out (D4).
 
-`tests/stimuli/test_klatt.py` checks the vowel against source × formants ×
+`tests/sources/test_klatt.py` checks the vowel against source × formants ×
 radiation (C6, to 1e-6 dB), the parallel levels, the source calibration,
-and the continuum; `tests/signals/test_processing.py` checks C1 and C3 on the
+and the continuum; `tests/core/test_processing.py` checks C1 and C3 on the
 library resonator.
 
 ## Listening examples
