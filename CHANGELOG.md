@@ -42,6 +42,13 @@ version (0.x.y) only fixes bugs.
   `f_lo`).
 - `envelope_peak_delay` is measured from each filter's impulse response,
   so every bank has it (0 for zero-phase filters).
+- `so.subbands(snd, ...)` is removed; write
+  `so.cosine_filterbank(...).analyze(snd)`, which shows the bank (audit
+  sitting 8).
+- `Subbands` can be multiplied by a number or by one gain per band (an
+  equalizer); gains that change over time still go through a `Mask`.
+- A `Scale` checks that its two conversions invert each other where it is
+  defined, so a mismatched pair raises instead of misplacing every filter.
 - `Subbands.synthesize()` is now `Subbands.to_sound()`, like every other
   set of coefficients.
 - `Mask` is a View (`sonore.views.mask`, was `sonore.frames.mask`): it holds
@@ -52,6 +59,9 @@ version (0.x.y) only fixes bugs.
   ratio masks.
 
 ### Documentation
+- Gammatone: the factor 1.019 is credited to Slaney (1993), who gives it
+  as Patterson's recommendation (checked against the report). The
+  envelope-peak formula is described as approximate, which it is.
 - Cosine filters credit the steerable pyramid as well as McDermott &
   Simoncelli (2011): Simoncelli & Freeman (1995) for squared responses
   summing to one, Portilla & Simoncelli (2000) for the cosines on a log2

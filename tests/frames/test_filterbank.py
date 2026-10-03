@@ -8,7 +8,7 @@ from helpers import FS
 from scipy.signal import hilbert
 
 import sonore as so
-from sonore.frames.filterbank import SCALES, Cosine
+from sonore.frames.filterbank import SCALES, Cosine, FilterType, Scale
 
 
 class TestFilterbank:
@@ -19,7 +19,7 @@ class TestFilterbank:
 
     def test_perfect_reconstruction(self):
         g = so.gaussian_noise(0.5, FS, rng=0)
-        np.testing.assert_allclose(so.subbands(g).to_sound().data, g.data, atol=1e-10)
+        np.testing.assert_allclose(so.cosine_filterbank().analyze(g).to_sound().data, g.data, atol=1e-10)
 
     def test_vocoder_runs_and_keeps_level(self):
         x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 20))
@@ -49,7 +49,7 @@ def test_subband_plot_labels_and_scale():
     import matplotlib
 
     matplotlib.use("Agg")
-    sb = so.subbands(so.exponential_chirp(0.2, FS, 100, 6000), n_bands=6, f_lo=100, f_hi=6000)
+    sb = so.cosine_filterbank(6, 100, 6000).analyze(so.exponential_chirp(0.2, FS, 100, 6000))
     axes = sb.plot()
     assert len(axes) == 8
     labels = [ax.get_ylabel() for ax in axes]
@@ -455,3 +455,162 @@ def test_octave_scale_has_no_zero():
         so.cosine_filterbank(20, 0, 7000, scale="octave")
     with pytest.raises(ValueError, match="octave scale"):
         so.morlet_filterbank(centers=[0, 100, 200])
+
+
+# Audit sitting 8 (Cho, 2026-10-03): tests for the deliberate breaks that no
+# test noticed, and for the decisions taken there.
+INDEPENDENT_SCALES = {
+    "erb": lambda f: 9.265 * np.log(1 + f / (24.7 * 9.265)),  # exact integral of 1 / ERB(f)
+    "octave": lambda f: np.log(f) / np.log(2),
+    "mel": lambda f: 2595 * np.log10(1 + f / 700),
+    "linear": lambda f: f,
+}
+
+
+@pytest.mark.parametrize("scale", INDEPENDENT_SCALES)
+def test_centers_are_equally_spaced_on_the_published_scale(scale):
+    """The scale's own conversion can't check itself: equal steps on the
+    formulas written out here (Glasberg & Moore 1990, HTK mel)."""
+    bank = so.cosine_filterbank(10, 100, 6000, scale=scale)
+    position = INDEPENDENT_SCALES[scale](bank.band_cfs)
+    expected = np.linspace(INDEPENDENT_SCALES[scale](100.0), INDEPENDENT_SCALES[scale](6000.0), 12)[1:-1]
+    np.testing.assert_allclose(position, expected, rtol=1e-9)
+
+
+def test_scale_names_ignore_case():
+    assert so.cosine_filterbank(scale="ERB").scale is SCALES["erb"]
+    assert so.gammatone_filterbank(scale="Octave").scale is SCALES["octave"]
+
+
+def test_a_scale_must_invert_itself():
+    with pytest.raises(ValueError, match="invert each other"):
+        Scale("erb", "ERB", so.freq_to_erb, so.mel_to_freq)
+    with pytest.raises(ValueError, match="does not give f back"):
+        Scale("log", "nepers", np.log, np.exp2)
+    # a scale undefined at some test frequencies is checked where it is defined
+    Scale("above 500 Hz", "oct", lambda f: np.log2(f - 500), lambda x: np.exp2(x) + 500)
+
+
+def test_default_edge_centers_stay_at_or_above_zero():
+    """Wide default edges would put the lowpass's nominal center below 0 Hz."""
+    assert so.gammatone_filterbank(4, 20, 4000, edge_width=3).cfs[0] == 0.0
+    assert so.gammatone_filterbank(4, 20, 4000).cfs[0] == pytest.approx(20)
+
+
+@pytest.mark.parametrize(
+    "bank",
+    [so.gammatone_filterbank(10, 100, 6000), so.morlet_filterbank(8, 100, 6000)],
+    ids=["gammatone", "morlet"],
+)
+def test_s_floor_is_the_minimum_between_the_outer_centers(bank):
+    knots = bank._knots[1:-1]
+    dense = bank.scale.from_scale(np.linspace(knots[0], knots[-1], 200_001))
+    minimum = np.min(np.sum(np.abs(bank.filter_type.band_response(bank, dense)) ** 2, axis=1))
+    assert minimum <= bank.s_floor <= minimum * (1 + 2e-3)
+
+
+def test_wide_cosine_edges_hold_s_flat_far_outside_the_bank():
+    """Width 2: s stays 2 from 0 Hz up to f_lo and from f_hi far beyond,
+    where only the edge filters reach."""
+    bank = so.cosine_filterbank(10, 500, 6000, width=2)
+    for freqs in (np.linspace(0, 500, 101), np.linspace(6000, 40000, 101)):
+        np.testing.assert_allclose(np.sum(bank.response(freqs) ** 2, axis=1), 2, rtol=1e-12)
+
+
+def test_spacing_needs_exactly_even_knots():
+    knots = np.linspace(2, 30, 12)
+    knots[5] *= 1 + 1e-12
+    assert so.Filterbank("erb", knots, Cosine()).spacing is None
+    assert so.Filterbank("erb", np.linspace(2, 30, 12), Cosine()).spacing == pytest.approx(28 / 11)
+
+
+def test_ringing_counts_up_to_the_last_sample_above_the_level():
+    bank, fs = so.cosine_filterbank(10, 100, 6000), 16000.0
+    ringing = bank.ringing(fs)
+    n_grid = 1 << 16  # 4 s at 16 kHz
+    impulse = np.abs(np.fft.irfft(bank.rfft_response(n_grid, fs), n=n_grid, axis=0)[: n_grid // 2])
+    level = impulse.max(axis=0) * 10 ** (-60 / 20)
+    assert np.any(impulse[ringing - 1] > level)
+    assert np.all(impulse[ringing:] <= level)
+
+
+def test_numeric_padding_is_rounded_to_samples():
+    bank = so.cosine_filterbank(8)
+    assert bank.analyze(so.gaussian_noise(0.1, 1000, rng=0), pad=0.0106).pad == 11
+
+
+def test_peak_delay_is_refined_between_samples():
+    """Against the same measurement on a grid 16 times finer: well within
+    one sample (15.6 us at 64 kHz)."""
+    bank = so.gammatone_filterbank(4, 100, 4000)
+    fs, n_grid = 1024000.0, 1 << 21
+    envelope = np.abs(hilbert(np.fft.irfft(bank.rfft_response(n_grid, fs), n=n_grid, axis=0), axis=0))
+    peaks = np.argmax(envelope, axis=0)
+    fine = []
+    for band, peak in enumerate(peaks):
+        before, at, after = envelope[[peak - 1, peak, peak + 1], band]
+        fine.append((peak + 0.5 * (before - after) / (before - 2 * at + after)) / fs)
+    np.testing.assert_allclose(bank.envelope_peak_delay[1:-1], fine[1:-1], atol=0.5e-6)
+
+
+def test_factory_defaults():
+    assert so.cosine_filterbank().n_bands == 30 and so.cosine_filterbank().scale.name == "erb"
+    assert so.gammatone_filterbank().n_bands == 30 and so.gammatone_filterbank().scale.name == "erb"
+    assert so.morlet_filterbank().n_bands == 30 and so.morlet_filterbank().scale.name == "octave"
+
+
+def test_subbands_refuse_padding_of_half_the_data_or_more():
+    bank = so.cosine_filterbank(4)
+    with pytest.raises(ValueError, match="padding"):
+        so.Subbands(np.zeros((10, bank.n_filters, 1)), 16000, bank, pad=5)
+    so.Subbands(np.zeros((11, bank.n_filters, 1)), 16000, bank, pad=5)
+
+
+def test_is_tight_measures_on_the_padded_grid():
+    """A one-sample signal has one rfft bin, where any s is constant; padded,
+    the grid is long enough to show a gammatone bank's ripple."""
+    bank = so.gammatone_filterbank(10, 100, 6000)
+    assert bank.is_tight(1, 16000, pad=0)
+    assert not bank.is_tight(1, 16000)
+
+
+def test_subbands_take_a_number_or_one_gain_per_band():
+    bank = so.cosine_filterbank(6, 100, 6000)
+    noise = so.gaussian_noise(0.2, 16000, rng=1)
+    bands = bank.analyze(noise)
+    np.testing.assert_allclose((bands * 0.5).to_sound().data, 0.5 * noise.data, atol=1e-12)
+    np.testing.assert_allclose((2 * bands).data, 2 * bands.data)
+    # one band at a time, through the bank's synthesis, the parts add up to the sound
+    parts = [(bands * np.eye(len(bands))[band]).to_sound().data for band in range(len(bands))]
+    np.testing.assert_allclose(np.sum(parts, axis=0), noise.data, atol=1e-12)
+    assert np.std(parts[3]) < 0.5 * np.std(noise.data)
+    with pytest.raises(ValueError, match="one gain per band"):
+        bands * np.ones(len(bands) + 1)
+    with pytest.raises(TypeError):
+        bands * "loud"
+
+
+def test_arguments_of_banks_and_filter_types_are_checked():
+    with pytest.raises(ValueError, match="positive"):
+        so.gammatone_filterbank(order=0)
+    with pytest.raises(ValueError, match="phase"):
+        so.gammatone_filterbank(phase="minimum")
+    with pytest.raises(ValueError, match="positive"):
+        so.morlet_filterbank(cycles=0)
+    with pytest.raises(ValueError, match="spacing must be positive"):
+        so.cosine_filterbank(spacing=0)
+    with pytest.raises(ValueError, match="three knots"):
+        so.Filterbank("erb", [1.0, 2.0], Cosine())
+    with pytest.raises(NotImplementedError):
+        FilterType().band_response(so.cosine_filterbank(4), np.array([100.0]))
+
+
+def test_cosine_band_response_is_the_bandpass_part():
+    bank = so.cosine_filterbank(6, 100, 6000)
+    freqs = np.linspace(0, 8000, 801)
+    np.testing.assert_array_equal(Cosine().band_response(bank, freqs), bank.response(freqs)[:, 1:-1])
+
+
+def test_subbands_repr():
+    bands = so.cosine_filterbank(6, 100, 6000).analyze(so.gaussian_noise(0.5, 16000, rng=0))
+    assert repr(bands) == "Subbands(8 bands, 0.500 s, 16000 Hz, 1 ch)"

@@ -140,8 +140,10 @@ bank = so.Filterbank(scale, knots, filter_type)              # the general form
   has edge filters.
 
 The factories choose sensible arguments and return a `Filterbank`, as
-`pure_tone` returns a `Sound`. `so.subbands(sound)` stays as the one-line
-convenience. There is no subclass per scale or per filter type.
+`pure_tone` returns a `Sound`. There is no subclass per scale or per filter
+type. The old one-line `so.subbands(sound)` was dropped in audit sitting 8
+(Cho, 2026-10-03): the docs teach `so.cosine_filterbank(...).analyze(sound)`,
+which shows the bank.
 
 The third part was first called a "shape". Cho renamed it "filter type"
 (`filter_type`, `FilterType`) on 2026-10-03, because "shape" reads as an

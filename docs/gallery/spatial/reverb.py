@@ -93,7 +93,8 @@ def show(snd, ir, kw=None):
     axes[0, 0].set_title("Waveform")
     # no extra lowpass: resampling to 1 kHz is already band-limited, and a
     # lowpass would ring visibly around the sharp onset of the shot
-    so.subbands(snd, 30, 50, 8000).envelopes(fs=1000).plot(axes[0, 1], colorbar=False, db_range=60)
+    cochleagram = so.cosine_filterbank(30, 50, 8000).analyze(snd).envelopes(fs=1000)
+    cochleagram.plot(axes[0, 1], colorbar=False, db_range=60)
     axes[0, 1].set_title("Cochleagram (60 dB range)")
     time_axes = [axes[0, 0], axes[0, 1]]
     if ir is None:
@@ -103,7 +104,7 @@ def show(snd, ir, kw=None):
         return fig, time_axes
     # band decays of the impulse response itself (dB), a few bands
     tail = so.Sound(ir.data[1:], ir.fs)
-    env = so.subbands(tail, 30, 50, 8000).envelopes(lowpass=30, fs=1000)
+    env = so.cosine_filterbank(30, 50, 8000).analyze(tail).envelopes(lowpass=30, fs=1000)
     for f, color in zip(
         (125, 500, 2000, 6000), ("tab:blue", "tab:green", "tab:orange", "tab:red"), strict=True
     ):

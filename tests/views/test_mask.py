@@ -90,7 +90,7 @@ def test_masks_refuse_other_grids_and_kinds():
         b * mask
     with pytest.raises(ValueError, match="same frame"):
         so.ideal_binary_mask(a, b)
-    bands = so.subbands(so.gaussian_noise(0.2, FS, rng=0))
+    bands = so.cosine_filterbank().analyze(so.gaussian_noise(0.2, FS, rng=0))
     with pytest.raises(TypeError, match="same kind"):
         so.ideal_binary_mask(a, bands)
     with pytest.raises(ValueError, match="different grid"):
@@ -103,6 +103,6 @@ def test_masks_plot_on_either_grid():
     matplotlib.use("Agg")
     stft = so.STFT(so.gaussian_noise(0.1, FS, rng=0))
     so.ideal_ratio_mask(stft, stft).plot()
-    bands = so.subbands(so.gaussian_noise(0.1, 16000, rng=0), n_bands=8)
+    bands = so.cosine_filterbank(8).analyze(so.gaussian_noise(0.1, 16000, rng=0))
     ax = so.ideal_ratio_mask(bands, bands).plot()
     assert ax.get_yscale() == "log"

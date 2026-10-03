@@ -72,7 +72,8 @@ def main():
         for label, s in (("original", orig_n), ("synthesis", snd)):
             (s * gain).save(args.out / f"{name}_{label}.flac")
         for ax, (label, s) in zip(row[:2], (("original", orig_n), ("synthesis", snd)), strict=True):
-            so.subbands(s, 30, 50, 9500).envelopes(fs=400).plot(ax, db_range=50, colorbar=False)
+            envelopes = so.cosine_filterbank(30, 50, 9500).analyze(s).envelopes(fs=400)
+            envelopes.plot(ax, db_range=50, colorbar=False)
             ax.set_title(f"{name}: {label}")
         avg = [np.mean(list(h.values())) for h in rep["snr"]]
         for c in best:

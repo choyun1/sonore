@@ -48,7 +48,6 @@ from scipy.signal import hilbert
 from sonore.core.fft import fast_padding, threads
 from sonore.core.sound import Sound
 from sonore.core.utils import (
-    _below_nyquist,
     _parabola_vertex,
     db_to_amp,
     erb_bandwidth,
@@ -70,7 +69,6 @@ __all__ = [
     "cosine_filterbank",
     "gammatone_filterbank",
     "morlet_filterbank",
-    "subbands",
     "Subbands",
 ]
 
@@ -96,6 +94,19 @@ class Scale:
     unit: str
     to_scale: Callable[[np.ndarray], np.ndarray]
     from_scale: Callable[[np.ndarray], np.ndarray]
+
+    def __post_init__(self):
+        # A mismatched or mistyped pair would still build a bank, with every
+        # filter in the wrong place; check a round trip where the scale is defined.
+        freqs = np.array([100.0, 1000.0, 10000.0])
+        with np.errstate(all="ignore"):
+            back = np.asarray(self.from_scale(self.to_scale(freqs)), float)
+        defined = np.isfinite(back)
+        if not np.allclose(back[defined], freqs[defined], rtol=1e-9):
+            raise ValueError(
+                f"scale {self.name!r}: from_scale(to_scale(f)) does not give f back "
+                f"({freqs[defined]} Hz -> {back[defined]} Hz): the two conversions must invert each other"
+            )
 
 
 #: The scales a bank can be built on by name: the ERB-number scale (Glasberg &
@@ -123,7 +134,7 @@ class FilterType:
     response. A filter type defines
     :meth:`band_response`, the bandpass filters at the bank's centers; the
     edge filters default to the raised-cosine lowpass and highpass described
-    under :meth:`responses`. Shapes must be hashable (a frozen dataclass)."""
+    under :meth:`responses`. Filter types must be hashable (a frozen dataclass)."""
 
     edge_width = 1.0
 
@@ -266,8 +277,8 @@ class Gammatone(FilterType):
     """Gammatone filters of the given ``order`` with bandwidth parameter
     ``b = bandwidth_factor * ERB(cf)`` (Patterson et al., 1992). ERB is
     Glasberg & Moore's (1990); the factor 1.019 for order 4 is the usual
-    convention, commonly credited to Patterson et al. and Slaney (1993), a
-    source not checked here.
+    convention: Slaney (1993) gives it as Patterson's recommendation for
+    the fourth-order filter.
 
     The responses are the exact Fourier transform of the impulse response
     ``t**(order - 1) exp(-2 pi b t) cos(2 pi cf t)``, ``t >= 0``, not an IIR
@@ -422,7 +433,8 @@ class Filterbank(Frame):
         responses and refined between samples; 0 for zero-phase filters.
         Drawing each band this much earlier shows a click as a vertical line
         (see ``plot_envelopes(align="peak")``). For a causal gammatone it is
-        ``(order - 1) / (2 pi b)``, the envelope's peak, not the group delay
+        close to ``(order - 1) / (2 pi b)``, the peak of the envelope
+        ``t**(order - 1) exp(-2 pi b t)``, not the group delay
         ``order / (2 pi b)``."""
         return _envelope_peak_delays(self)
 
@@ -729,13 +741,6 @@ def morlet_filterbank(
     return Filterbank(scale, _knots(scale, n_bands, f_lo, f_hi, spacing, centers), filter_type, edges=edges)
 
 
-def subbands(sound: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float | None = None) -> Subbands:
-    """Convenience: build an ERB :func:`cosine_filterbank` and analyze ``sound``.
-    ``f_hi`` defaults to just under Nyquist."""
-    f_hi = _below_nyquist(sound.fs) if f_hi is None else min(f_hi, sound.fs / 2)
-    return cosine_filterbank(n_bands, f_lo, f_hi).analyze(sound)
-
-
 class _PaddedBands:
     """What Subbands and Envelopes share: one signal per filter of a filterbank,
     stored as ``(n_samples, n_bands, n_channels)`` with ``pad`` zero samples at
@@ -830,13 +835,25 @@ class Subbands(_PaddedBands):
         return self._new(np.cos(np.angle(self._analytic())))
 
     def __mul__(self, other):
-        """``subbands * mask`` (a :class:`~sonore.views.mask.Mask` made for
-        these subbands' grid): the masked subbands."""
+        """``subbands * gain``: a number, or one gain per band (length
+        ``len(sb)``, edges included), for example an equalizer. Gains that
+        change over time go through a :class:`~sonore.views.mask.Mask` made
+        for these subbands' grid, which also handles the padding."""
         from sonore.views.mask import Mask  # views.mask imports Subbands from here
 
         if isinstance(other, Mask):
             return other.apply(self)
-        return NotImplemented
+        if not isinstance(other, (int, float, list, tuple, np.ndarray, np.number)):
+            return NotImplemented
+        gains = np.asarray(other, float)
+        if gains.ndim == 0:
+            return self._new(self._full * gains)
+        if gains.shape == (len(self),):
+            return self._new(self._full * gains[None, :, None])
+        raise ValueError(
+            f"multiply subbands by a number or one gain per band (length {len(self)}), not shape "
+            f"{gains.shape}; for gains that change over time use a Mask"
+        )
 
     __rmul__ = __mul__
 
