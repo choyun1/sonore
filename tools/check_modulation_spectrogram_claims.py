@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/modulation-spectrogram.md (C1-C10).
+"""Numerical checks for the claims in docs/design/views/modulation-spectrogram.md (C1-C10).
 
 Like the other design checkers, this is deliberately independent of sonore:
 only NumPy, SciPy and soundfile (to read the gallery sentence), with every

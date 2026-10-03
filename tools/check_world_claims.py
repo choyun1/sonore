@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/world.md (C1-C5).
+"""Numerical checks for the claims in docs/design/views/world.md (C1-C5).
 
 Like the other claim checkers, this is independent of sonore: only NumPy and
 SciPy, with every step written out from its formula. It holds ports of

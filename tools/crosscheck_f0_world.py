@@ -1,4 +1,4 @@
-"""WORLD's own F0 estimators on the test set of docs/design/f0.md.
+"""WORLD's own F0 estimators on the test set of docs/design/views/f0.md.
 
 Runs Harvest and DIO (followed by StoneMask) through pyworld on the
 synthetic cases of tools/check_f0_claims.py, on white noise alone, and on

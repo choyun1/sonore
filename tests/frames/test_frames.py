@@ -1,11 +1,11 @@
-"""Frames: the ``Frame``/``Filterbank`` contract (docs/design/frames.md).
+"""Frames: the ``Frame``/``Filterbank`` contract (docs/design/frames/frames.md).
 
 The first sections cover the interface, the tight/general equivalence and the
 non-frame behaviour; the last checks every frame against the dense-matrix
 oracle in tests/helpers.py (bounds as eigenvalues, masked coefficients vs.
 canonical least squares, the documented exception for padded non-tight
 filterbanks, and the adjoint as the weighted transpose). Step 2
-(docs/design/frames.md, step 2) adds the Nyquist rule, ``Frame.adjoint`` and
+(docs/design/frames/frames.md, step 2) adds the Nyquist rule, ``Frame.adjoint`` and
 ``TVGaborFrame``.
 """
 

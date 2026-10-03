@@ -1,4 +1,4 @@
-"""Counts what the reorganization proposed in docs/design/reorganization.md would touch.
+"""Counts what the reorganization proposed in docs/design/layout/reorganization.md would touch.
 
 For every module the proposal moves, it counts the files in the repository that name the
 module's current path, grouped by where they live, and the lines of the module itself. It

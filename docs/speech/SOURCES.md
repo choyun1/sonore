@@ -1,7 +1,7 @@
 # Speech recordings
 
 The spoken sentences used by the gallery: the "seeing speech" sentence
-(docs/design/frames.md, step 3: decisions D12 and D13), which is also the
+(docs/design/frames/frames.md, step 3: decisions D12 and D13), which is also the
 target on the moving talkers page, and that page's two masker sentences;
 and the same sentence read by a female speaker, for checking the analyses on
 a voice an octave higher (tools/check_female_voices.py).

@@ -1,7 +1,7 @@
 # Package layout
 
-The folders follow meaning (docs/design/sound-first.md has the reasons;
-docs/design/reorganization.md the earlier step):
+The folders follow meaning (docs/design/layout/sound-first.md has the reasons;
+docs/design/layout/reorganization.md the earlier step):
 
 | Folder | Modules | What it is |
 |---|---|---|

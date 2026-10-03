@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/mfcc.md (C1-C7).
+"""Numerical checks for the claims in docs/design/views/mfcc.md (C1-C7).
 
 Like the other claim checkers, this is deliberately independent of sonore:
 only NumPy, SciPy and soundfile (to read the gallery sentence), with every

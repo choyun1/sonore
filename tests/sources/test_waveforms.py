@@ -106,7 +106,7 @@ def power_above(x, f_cut, fs=FAST, n_win=512):
 
 
 class TestHarmonicContours:
-    """harmonic_complex with an F0 contour (docs/design/harmonic-source.md)."""
+    """harmonic_complex with an F0 contour (docs/design/sources/harmonic-source.md)."""
 
     def test_constant_contour_is_the_fixed_complex(self):
         t, f = time_windows(lambda t: np.full_like(t, 220.0), 0.5)

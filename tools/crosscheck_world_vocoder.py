@@ -1,5 +1,5 @@
 """WORLD's own CheapTrick, D4C and synthesis against the checker's ports
-and test vowels (claims C1, C6, C10 and C11 of docs/design/world.md).
+and test vowels (claims C1, C6, C10 and C11 of docs/design/views/world.md).
 
 Runs pyworld (WORLD's C++ code) on the synthetic vowels of
 tools/check_world_claims.py, whose aperiodicity is known exactly, and on the

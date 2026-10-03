@@ -5,7 +5,7 @@ summarises the spectral envelope of each time window in about thirteen
 numbers. Cho asked on 2026-10-02 whether sonore has MFCCs. It does not:
 there is no mel scale, mel filterbank, DCT feature or delta feature in
 `src/` (searched for `mfcc`, `mel`, `dct`, `htk` and `slaney`; the only
-mention is `cepstrum.md`, which put "Mel-cepstra and MFCCs" out of scope,
+mention is `views/cepstrum.md`, which put "Mel-cepstra and MFCCs" out of scope,
 and a sentence on the cepstrum gallery page).
 
 Status: accepted 2026-10-02. Cho accepted D1–D9 as recommended and chose
@@ -30,12 +30,12 @@ paper should be able to compute one in sonore, see what it keeps, and
 compare it with the envelopes sonore already has. The pieces they relate
 to exist:
 
-- **`so.Cepstrum`** (`cepstrum.md`): the real cepstrum, the inverse DFT of
+- **`so.Cepstrum`** (`views/cepstrum.md`): the real cepstrum, the inverse DFT of
   the log magnitude on linear frequency. An MFCC is the same idea on a
   warped, coarsely sampled frequency axis (C1).
-- **`ERBFilterbank`** (`frames.md`): sonore's auditory frequency axis. The
+- **`ERBFilterbank`** (`frames/frames.md`): sonore's auditory frequency axis. The
   mel scale is a close relative (C2).
-- **`so.cheaptrick`** (`world.md`): an F0-adaptive spectral envelope. MFCCs
+- **`so.cheaptrick`** (`views/world.md`): an F0-adaptive spectral envelope. MFCCs
   are a fixed-resolution envelope summary and depend on F0 where
   CheapTrick largely does not (C5).
 
@@ -106,7 +106,7 @@ spectrum is even about 0 and Nyquist, and its DFT, shifted by half a
 sample, is exactly the (unnormalised) DCT-II of L. So the DCT is the
 cepstrum's inverse DFT for a log spectrum sampled on M mel bands, and
 low-order coefficients are the slow ripples of that log spectrum, as in
-`so.Cepstrum` (`cepstrum.md` C5). Checker: the two agree to 3.6e-15, with
+`so.Cepstrum` (`views/cepstrum.md` C5). Checker: the two agree to 3.6e-15, with
 an imaginary part of 8.8e-16. With the orthonormal scaling the DCT matrix
 is orthogonal (error 4.4e-16), so sums of squared coefficient differences
 equal sums of squared log-band differences (used in C4 and C5).
@@ -175,7 +175,7 @@ track, its gain matches a true derivative at slow rates (0.998 of it at
 1 Hz), peaks at 13.8 Hz with 8.7 times the 1 Hz gain, is above half power
 from 6.9 to 21.0 Hz, and is zero at 50 Hz. So deltas pick out the
 syllable-to-phoneme modulation range that `so.ModulationSpectrogram`
-displays (`modulation-spectrogram.md`), at a fixed rate set by the hop.
+displays (`views/modulation-spectrogram.md`), at a fixed rate set by the hop.
 
 **C7. dB MFCCs are natural-log MFCCs times 10 / ln 10, unless the log is
 floored relative to the loudest cell.** [proof, check, cross]
@@ -309,7 +309,7 @@ and python_speech_features. (accepted 2026-10-02)** Defaults: 25 ms Hamming, 10 
 `triangles="height"` (or `"area"`), natural log, orthonormal DCT-II, c0
 kept, no lifter, no pre-emphasis. Each library's output is reached by
 stating its settings, and tests check the mel, log and DCT stages against
-the checker's formulas on the same power spectra, as `world.md` reproduces
+the checker's formulas on the same power spectra, as `views/world.md` reproduces
 WORLD. The alternative, librosa's defaults, is what many Python users
 will compare with; but 128 bands and 2048-point windows at 16 kHz (128 ms)
 are a music-analysis choice, and its log floor makes coefficients depend
@@ -521,7 +521,7 @@ measures (C8).
   scale (C2); already cited in the README.
 - Morise, M. (2015). CheapTrick, a spectral envelope estimator for
   high-quality speech synthesis. *Speech Communication* 67, 1–7. Already
-  cited in `world.md`.
+  cited in `views/world.md`.
 - Peterson, G. E. & Barney, H. L. (1952). Control methods used in a study
   of the vowels. *J. Acoust. Soc. Am.* 24(2), 175–184. The checker's
   formants.

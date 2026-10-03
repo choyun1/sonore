@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/frames.md, step 3 (C15-C20).
+"""Numerical checks for the claims in docs/design/frames/frames.md, step 3 (C15-C20).
 
 Like the step 1 and step 2 checkers, this is deliberately independent of
 sonore: only NumPy and SciPy, with every window, filter and transform written

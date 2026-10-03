@@ -27,7 +27,7 @@ plot functions in `src/sonore/plotting.py`. Patch 4, the gallery page, is
 
 ## How the claims are verified
 
-As in `frames.md` and `cepstrum.md`, each claim is numbered and tagged:
+As in `frames/frames.md` and `views/cepstrum.md`, each claim is numbered and tagged:
 
 - **[proof]**: a short argument given here.
 - **[check]**: a number printed by `tools/check_modulation_spectrogram_claims.py`.

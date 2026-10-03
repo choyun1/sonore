@@ -1,7 +1,7 @@
 # Design philosophy
 
 The principles behind sonore's design, in plain words. The design documents
-in this folder (`frames.md`, one section per step) give the derivations and the
+in this folder (`frames/frames.md`, one section per step) give the derivations and the
 numbered claims and decisions behind them; the code and its docstrings are
 meant to be readable without them.
 
@@ -66,7 +66,7 @@ meant to be readable without them.
   and searching for a matching sound stays an experiment until a canonical
   method is found. Today `Spectrum`, `Cepstrum` and `PVAnalysis` have
   `to_sound`; envelopes and WORLD's views go back through `noise_vocode`
-  and `world_synthesize`, which their refusal names (`sound-first.md`).
+  and `world_synthesize`, which their refusal names (`layout/sound-first.md`).
 - **Keep the simplest representation that loses nothing.** Subbands stay
   real; the complex analytic signal is computed from them exactly when
   envelopes or phase are needed.

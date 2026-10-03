@@ -16,7 +16,7 @@ the "Voice quality" section of the Formant synthesis gallery page
 
 ## Why
 
-`klatt.md` left the glottal pulse shape for later (its D4). The voiced
+`sources/klatt.md` left the glottal pulse shape for later (its D4). The voiced
 source today is Klatt's (1980) impulse train through the glottal low-pass
 RGP, made from harmonics: one fixed spectrum, falling about 6 dB per octave
 at the lips, with nothing to turn. Real voices differ most in the source:
@@ -173,7 +173,7 @@ harmonics below Nyquist by −21 dB (Rd 0.3), −37 dB (Rd 1) and −56 dB
 −14 dB. Tense voices alias most because their closure is most abrupt.
 VOICEBOX's own code notes this as a known bug of sampling the formula. The
 harmonic route has no aliasing and no whole-sample period error (as for
-Klatt's impulses, `klatt.md` C4).
+Klatt's impulses, `sources/klatt.md` C4).
 
 **C4. Closure abruptness sets the high-frequency slope.** [check] With a
 nearly instantaneous closure (Ra 0.0005) the flow derivative falls
@@ -306,7 +306,7 @@ how to pass both.
 
 ### Relation to the WORLD work
 
-WORLD's synthesis (thread on `docs/design/world.md`, landing separately)
+WORLD's synthesis (thread on `docs/design/views/world.md`, landing separately)
 excites a measured spectral envelope that already contains the voice
 source; it has no separate glottal pulse, so an LF source does not plug
 into it. Splitting a WORLD envelope into an LF source and a vocal tract
@@ -321,7 +321,7 @@ What changed from the proposal above while writing the code:
 
 - The three functions were first built in their own module,
   `signals/glottal.py`, beside `waveforms.py` rather than in it; the
-  reorganization (`reorganization.md`, D7) later moved them into
+  reorganization (`layout/reorganization.md`, D7) later moved them into
   `sources/waveforms.py`. The shape comes second:
   `lf_harmonics(harmonics, rd=0.7)` and `lf_pulse(x, rd=0.7)`, so `rd`
   can take its default. `ra`, `rg` and `rk` are keyword-only, given all
@@ -381,7 +381,7 @@ default source (C6), and the `SS` errors.
   everywhere, including `klatt_synthesize`?
 - **D3.** In `klatt_synthesize`: KLSYN88's switch `SS` (1 = Klatt 1980,
   default; 3 = LF) plus a table parameter `RD` (recommended: it keeps
-  Klatt's names as `klatt.md` D5 chose, and every existing call
+  Klatt's names as `sources/klatt.md` D5 chose, and every existing call
   bit-for-bit; `RD` can vary in time and interpolates in continua), or
   `RD` alone with 0 meaning Klatt's source (this document's first
   proposal, before Klatt & Klatt was read), or a keyword
@@ -408,7 +408,7 @@ default source (C6), and the `SS` errors.
 
 `/mnt/project-files/notes/glottal-source/make_examples.py` (project files,
 not the repository) writes ten 1 s, 16 kHz files beside itself, all the
-same /a/ (formants as in `klatt.md`, F0 130 → 100 Hz): 1 the current
+same /a/ (formants as in `sources/klatt.md`, F0 130 → 100 Hz): 1 the current
 source, 2–4 LF at Rd 0.5, 1 and 2.5, 5 Rd 2.5 with aspiration, 6 LF Rd 1
 levels in cosine phase, 7–8 the polynomial pulse at OQ 0.4 and 0.7 (no tilt
 filter), 9 an Rd glide from 0.5 to 2.5 at 100 Hz, 10 LF at Rd 0.7. It uses the checker's
@@ -428,7 +428,7 @@ prototype for the pulse spectra and the library's `harmonic_complex` and
   domain analysis. *STL-QPSR* 36(2–3), 119–156. Read: pp. 119–126, the
   Eq. 8 passage, and the reference list.
 - Klatt, D. H. (1980). Software for a cascade/parallel formant synthesizer.
-  *JASA* 67(3), 971–995. doi:10.1121/1.383940. (Read for `klatt.md`.)
+  *JASA* 67(3), 971–995. doi:10.1121/1.383940. (Read for `sources/klatt.md`.)
 - Klatt, D. H., & Klatt, L. C. (1990). Analysis, synthesis, and perception
   of voice quality variations among female and male talkers. *JASA* 87(2),
   820–857. doi:10.1121/1.398894. Read in part (see above).

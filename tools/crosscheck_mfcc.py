@@ -1,4 +1,4 @@
-"""Cross-check the MFCC recipes in docs/design/mfcc.md against reference
+"""Cross-check the MFCC recipes in docs/design/views/mfcc.md against reference
 implementations, and compare MFCCs with sonore's CheapTrick envelope.
 
 - librosa (Slaney mel, area-normalized triangles, power in dB with an 80 dB

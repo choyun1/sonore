@@ -312,7 +312,7 @@ another at a whole multiple of its frequency scores about as well (<code>subharm
 Bottom: the three pitch tracks together. Where the tracker and Harvest both call a time window
 voiced they agree; Harvest voices more time windows, stretches where the tracker's best score
 falls below 0.5. Against laryngograph recordings Harvest calls about a third of the unvoiced
-time windows voiced, which is why the tracker is stricter by default (see <code>docs/design/f0.md</code>).</p></div>
+time windows voiced, which is why the tracker is stricter by default (see <code>docs/design/views/f0.md</code>).</p></div>
     <audio controls preload="metadata" src="audio/f1_cepstral_f0_a_tracker_and_harvest.flac"></audio>
     <p class="file">f1_cepstral_f0_a_tracker_and_harvest.flac, 2.5 s, mono</p>
   </div>
@@ -440,7 +440,7 @@ against 4 ms for the male talker, so the envelope it recovers is smoother and fo
 less closely: with harmonics further apart, there is less of the envelope to recover. On a
 database of laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female
 voice's time windows and none on a male voice's
-(<a href="https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md"><code>docs/design/female-voices.md</code></a>).
+(<a href="https://github.com/choyun1/sonore/blob/main/docs/design/views/female-voices.md"><code>docs/design/views/female-voices.md</code></a>).
 There is no stored F0 track for this recording, so <code>so.f0_track</code> stands in for Harvest.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
 stft_female = so.STFT(sentence_female, win_dur=0.040, hop_dur=0.005)
@@ -784,10 +784,10 @@ largest change of any MFCC: 8.9e-16</pre></div>
 <p><code>so.Cepstrum</code> is written from the definitions. <code>tools/crosscheck_cepstrum.py</code> compares it with
 three independent implementations; the numbers below are from SciPy 1.17.1 and Praat 6.1.38.</p>
 <ul><li>**MATLAB <code>rceps</code>.** Its documented definition, <code>real(ifft(log(abs(fft(x)))))</code>, written out in NumPy for one 40 ms time window, matches sonore's real cepstrum to 4e-16.</li><li>**SciPy <code>scipy.signal.minimum_phase</code>** (<code>method=&quot;homomorphic&quot;, half=False</code>) builds a minimum-phase filter by the same folding of the real cepstrum. On a 17-tap mixed-phase filter it matches sonore's minimum phase to 4e-8 of the peak; SciPy adds a tiny constant to the magnitude before the log, which is the whole difference.</li><li><strong>Praat's PowerCepstrogram</strong> (Boersma &amp; Weenink), through <code>parselmouth</code>, measures the same peak by a different route: a Gaussian window, the power spectrum in dB, and the sound resampled to 10 kHz. On the time windows of this sentence that sonore calls voiced, the two peaks agree within 5% on 98% of them; on every time window Harvest calls voiced, on 81%.</li></ul>
-<p>See also the design and its numerical checks, <code>docs/design/cepstrum.md</code>.</p>
+<p>See also the design and its numerical checks, <code>docs/design/views/cepstrum.md</code>.</p>
 <p><code>so.MFCC</code> is tested against Kaldi's MFCCs (through kaldi-native-fbank, a re-implementation of
 Kaldi's feature code) to float32 precision, and against librosa's to 1e-8 of the largest
-coefficient; see <code>docs/design/mfcc.md</code>.</p>
+coefficient; see <code>docs/design/views/mfcc.md</code>.</p>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>

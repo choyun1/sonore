@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/frames.md, step 2 (C8-C14).
+"""Numerical checks for the claims in docs/design/frames/frames.md, step 2 (C8-C14).
 
 Like tools/check_frames_step1_claims.py, this is deliberately independent of sonore:
 only NumPy and SciPy, with filter responses written out from their formulas

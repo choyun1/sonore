@@ -31,9 +31,9 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   `NotImplementedError`) with that sentence and the route back to sound
   where one exists, such as `Cepstrum.to_sound` or `so.world_synthesize`.
   Before, `synthesize` on a view failed with a plain `AttributeError`. See
-  "Only frames synthesize" in `docs/design/reorganization.md`.
+  "Only frames synthesize" in `docs/design/layout/reorganization.md`.
 - `to_sound` is the route from a view back to a sound, and takes what the
-  view discarded (`docs/design/sound-first.md`). `Spectrum.to_sound(duration,
+  view discarded (`docs/design/layout/sound-first.md`). `Spectrum.to_sound(duration,
   fs, carrier=...)` takes the phase from a carrier: `"noise"` (the default,
   as `to_noise` was), a Sound's own phase, or `"minimum"` for the
   minimum-phase impulse response. On a view with no canonical route, such
@@ -48,12 +48,12 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   holds them to WORLD's numbers; `so.DIFFERENCES_FROM_WORLD` lists every way
   sonore departs from WORLD. `so.harmonic_aperiodicity` is a second
   measure, not WORLD's: the share of noise left after fitting the
-  harmonics. See `docs/design/world.md` and the gallery page
+  harmonics. See `docs/design/views/world.md` and the gallery page
   "Aperiodicity".
 - `so.ModulationSpectrogram` and `so.HannModulationFilterbank`: modulation
   power, local mean and depth for every time window, acoustic band and
   modulation rate, from any `Envelopes`, with a `valid` mask, plots and an
-  animation. See `docs/design/modulation-spectrogram.md` and the gallery
+  animation. See `docs/design/views/modulation-spectrogram.md` and the gallery
   page "Modulation spectrogram".
 - `so.move_sound` is a new renderer: each ear reads the sound through its
   own smoothly changing delay, so a source changing distance glides in
@@ -62,7 +62,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   optional `room` tail with `drr_db`. A path can be a function of time;
   `so.hcc_trajectory` builds one in head-centred coordinates, and
   `so.SPEED_OF_SOUND` is the default 343 m/s. See
-  `docs/design/moving-sound.md` and the gallery page "Moving talkers".
+  `docs/design/spatial/moving-sound.md` and the gallery page "Moving talkers".
 - `so.scale_f0` and `so.warp_frequency`: a pitch change (voiced F0 times a
   ratio, optionally spread around the median) and a formant shift (an
   envelope read at `f / ratio`; a number, a ratio over time, or any
@@ -70,7 +70,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   whatever measured them. A ratio of 1 returns the input itself.
   `so.GridEnvelope` holds any envelope as power on a grid of times and
   frequencies; `Cepstrum.envelope_view()` and `MFCC.envelope_view()`
-  return one. See `docs/design/voice-change.md` and the gallery page
+  return one. See `docs/design/views/voice-change.md` and the gallery page
   "Changing a voice" (`docs/gallery/voice/voice.py`).
 - `so.MFCC`: mel-frequency cepstral coefficients (Davis & Mermelstein,
   1980) of a sound, with the usual speech settings (25 ms Hamming window,
@@ -81,7 +81,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   `.deltas()` (computed as librosa's), `.envelope(f)` and `.plot()`. Tests
   compare it with Kaldi's MFCCs (through kaldi-native-fbank) and with
   librosa 0.11's mel power, MFCCs and deltas, all stored. See
-  `docs/design/mfcc.md`.
+  `docs/design/views/mfcc.md`.
 - `so.glottal_source`: a voiced source of Liljencrants-Fant (LF) glottal
   pulses (Fant, Liljencrants & Lin, 1985) on a fixed F0 or an F0 contour,
   built from the pulse's exact harmonics so it does not alias. Its shape is
@@ -89,7 +89,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   or a `(times, values)` track. `so.lf_harmonics` gives the pulse's complex
   Fourier coefficients in closed form (from `rd`, or from `ra`, `rg`, `rk`),
   `so.lf_pulse` one period of the flow derivative or flow. See
-  `docs/design/glottal-source.md`.
+  `docs/design/sources/glottal-source.md`.
 - `so.klatt_synthesize`: KLSYN88's source switch `SS` (1, the default, is
   the existing source, unchanged; 3 is the LF source) and `RD`, the LF
   shape, which may be a track.
@@ -105,7 +105,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   `AF`, `AB`, `F1`-`F6`, `B1`-`B6`, `A1`-`A6`, `FNP`, `BNP`, `FNZ`, `BNZ`),
   each a number or a `(times, values)` track interpolated to every sample;
   defaults are in `so.KLATT_DEFAULTS`. `so.klatt_continuum` makes evenly
-  spaced parameter sets between two endpoints. See `docs/design/klatt.md`.
+  spaced parameter sets between two endpoints. See `docs/design/sources/klatt.md`.
 - `so.resonator` and `so.antiresonator`: Klatt's second-order formant and
   its exact inverse, with unit gain at 0 Hz and a frequency and bandwidth
   that may follow a track; the filter state is carried through every change,
@@ -120,7 +120,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   envelope), `harmonics` is now optional, and a phase array of the wrong
   length raises a clear error. `square_wave`, `sawtooth_wave`,
   `pulse_train` and `schroeder_complex` take contours too. See
-  `docs/design/harmonic-source.md`.
+  `docs/design/sources/harmonic-source.md`.
 - `so.f0_track` and `F0Track`: an F0 tracker with a voiced/unvoiced
   decision. Candidates from YIN's difference function, refinement by the
   instantaneous frequency of six harmonics (after WORLD's StoneMask), a
@@ -129,7 +129,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   6% (male) and 1.5% (female) of frames wrong against laryngograph reference
   F0. Its `t` and `f0` feed `TVGaborFrame.pitch_adaptive` and
   `Cepstrum.lifter`; `.plot()` draws the track and, optionally, every
-  candidate. See `docs/design/f0.md`.
+  candidate. See `docs/design/views/f0.md`.
 - `so.set_fft_workers` and `so.fft_workers`: the large FFTs (filterbank
   analysis and synthesis, Hilbert envelopes, FFT resampling in texture
   synthesis, modulation filtering in `ModulationSpectrogram`) now use every
@@ -154,7 +154,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
 - In `sonore.texture.synth`, `ChannelObjective.ctx` and
   `impose_channel(ctx=...)` are renamed to `context`.
 - The package is reorganized by meaning
-  (`docs/design/reorganization.md`, `docs/design/sound-first.md`,
+  (`docs/design/layout/reorganization.md`, `docs/design/layout/sound-first.md`,
   `docs/design/layout.md`). Every `so.name` is unchanged; only deep import
   paths move, with no compatibility modules at the old paths:
   - `sonore.analysis`, `sonore.signals` and `sonore.stimuli` are gone.
@@ -194,7 +194,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
 - `so.f0_track` keeps up to eight candidates per time window (was four),
   and its subharmonic rule now covers every whole multiple of a candidate's
   frequency, not only the octave. Steady synthetic vowels at 250 to 400 Hz
-  were tracked at F0/3 or F0/5 (`docs/design/female-voices.md`); now they
+  were tracked at F0/3 or F0/5 (`docs/design/views/female-voices.md`); now they
   are tracked exactly. On the FDA laryngograph database the voicing error
   is 5.6% (male) and 1.5% (female), as before within 0.1 points, and
   tracking takes about twice as long. `F0Track.candidates` has eight
@@ -220,7 +220,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
 - Gabor analysis works when the hop is longer than the window (windows
   with gaps between them). Before, `GaborFrame` refused to analyze such a
   layout; synthesis still refuses, since it is not a frame
-  (`docs/design/frames.md`, D4).
+  (`docs/design/frames/frames.md`, D4).
 - `Subbands` and `Envelopes` copy the array they are given, so the
   caller's array stays writeable; before, `Subbands` made it read-only.
   Their shape errors now say the shape they received.
@@ -270,7 +270,7 @@ First release on PyPI.
 - `so.Cepstrum`: the real cepstrum of an `STFT` or `TVSTFT`, with liftering
   (fixed or per-frame cutoff), the cepstral envelope, resynthesis with the
   original or minimum phase, classic cepstral F0, and `plot`. Design and
-  numerical checks in `docs/design/cepstrum.md` and
+  numerical checks in `docs/design/views/cepstrum.md` and
   `tools/check_cepstrum_claims.py`.
 - `so.load_hrirs()` downloads the PKU-IOA HRIR database on first use (1 m by
   default, any of its 8 distances on request), checks each file's SHA-256 and

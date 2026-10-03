@@ -4,7 +4,7 @@ lines through the horizontal plane, and one path no source could take.
 Unlike tools/check_moving_sound_claims.py, which is independent of sonore, this one
 runs `so.move_sound` itself: it measures what the renderer does with these paths,
 including the fast one, which is outside the speeds the renderer was designed for
-(docs/design/moving-sound.md, "Out of scope"). Each line prints what was measured.
+(docs/design/spatial/moving-sound.md, "Out of scope"). Each line prints what was measured.
 
     python tools/check_moving_trajectories.py --pku DIR
 
