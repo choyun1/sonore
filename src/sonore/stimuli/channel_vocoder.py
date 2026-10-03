@@ -7,7 +7,7 @@ from __future__ import annotations
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng
+from sonore.core.utils import _below_nyquist, as_rng
 from sonore.frames.filterbank import ERBFilterbank, Subbands
 
 __all__ = ["noise_vocode"]
@@ -29,7 +29,7 @@ def noise_vocode(
     band centers), or any Sound at least as long. The edge bands (outside
     ``f_lo..f_hi``) are silenced. The output matches the input's RMS.
     """
-    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, 0.95 * sound.fs / 2))
+    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, _below_nyquist(sound.fs)))
     envelopes = filterbank.analyze(sound).envelopes(lowpass=env_lowpass).without_edges()
     if isinstance(carrier, Sound):
         if len(carrier) < len(sound):

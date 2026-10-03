@@ -129,10 +129,11 @@ class _FrequencyView(View):
     """Shared by the envelope and the aperiodicity: data of shape
     ``(n_channels, n_freqs, n_windows)`` on WORLD's grid."""
 
-    data: np.ndarray
-    t: np.ndarray
-    fs: float
-    n_fft: int
+    def __init__(self, data: np.ndarray, t: np.ndarray, fs: float):
+        self.data = data
+        self.t = t
+        self.fs = fs
+        self.n_fft = 2 * (data.shape[1] - 1)
 
     @property
     def f(self) -> np.ndarray:
@@ -149,16 +150,19 @@ class _FrequencyView(View):
         and frequencies ``f``: shape ``(n_channels, len(f), len(t))``."""
         times = np.atleast_1d(np.asarray(t, dtype=float))
         freqs = np.atleast_1d(np.asarray(f, dtype=float))
-        window_position = np.interp(times, self.t, np.arange(len(self.t)))
-        lower = np.floor(window_position).astype(int)
-        upper = np.minimum(lower + 1, len(self.t) - 1)
-        weight = window_position - lower
+        lower, upper, weight = _positions(times, self.t)
         bin_pos = np.clip(freqs * self.n_fft / self.fs, 0, self.n_fft // 2)
         bin_lower = np.floor(bin_pos).astype(int)
         bin_upper = np.minimum(bin_lower + 1, self.n_fft // 2)
         bin_weight = (bin_pos - bin_lower)[:, None]
         at_freqs = log_values[:, bin_lower] * (1 - bin_weight) + log_values[:, bin_upper] * bin_weight
         return at_freqs[:, :, lower] * (1 - weight) + at_freqs[:, :, upper] * weight
+
+    def __call__(self, t, f) -> np.ndarray:
+        """The values at times ``t`` [s] and frequencies ``f`` [Hz], shape
+        ``(n_channels, len(f), len(t))``: linear in time between time
+        windows, linear in dB between bins."""
+        return np.exp(self._interpolate(np.log(self.data), t, f))
 
 
 class SpectralEnvelope(_FrequencyView):
@@ -177,14 +181,12 @@ class SpectralEnvelope(_FrequencyView):
         "smoothing."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds a voice from it together with an F0 track and an aperiodicity."
+        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
+        "an aperiodicity."
     )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, q1: float):
-        self.data = data
-        self.t = t
-        self.fs = fs
-        self.n_fft = 2 * (data.shape[1] - 1)
+        super().__init__(data, t, fs)
         self.q1 = q1
 
     def __repr__(self) -> str:
@@ -198,12 +200,6 @@ class SpectralEnvelope(_FrequencyView):
         """``10 log10`` of the power."""
         return 10 * np.log10(self.data)
 
-    def __call__(self, t, f) -> np.ndarray:
-        """Power at times ``t`` [s] and frequencies ``f`` [Hz], shape
-        ``(n_channels, len(f), len(t))``: linear in time between time windows,
-        linear in dB between bins."""
-        return np.exp(self._interpolate(np.log(self.data), t, f))
-
     def amplitude(self, t, f, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
         f[i])``, ``t`` and ``f`` of the same shape: the form
@@ -214,11 +210,7 @@ class SpectralEnvelope(_FrequencyView):
 
     def plot(self, ax=None, channel: int = 0, db_range: float = 70.0, fmax: float | None = None):
         """The envelope in dB as a time-frequency image."""
-        from sonore.plotting import plot_tf_db
-
-        return plot_tf_db(
-            self.db[channel], self.t, self.f, ax=ax, db_range=db_range, fmax=fmax, title="Spectral envelope"
-        )
+        return _plot_envelope(self, ax, channel, db_range, fmax)
 
 
 # ------------------------------------------------------------ CheapTrick
@@ -282,7 +274,8 @@ def _smooth_with_recovery(power, f0, q1, quefrencies, n_fft):
 
 class GridEnvelope(View):
     """A spectral envelope held as power on any grid of times and
-    frequencies: ``data`` has shape ``(n_channels, len(f), len(t))``.
+    frequencies: ``data`` has shape ``(n_channels, len(f), len(t))``. A view:
+    it keeps the envelope and drops the harmonics and the phase.
 
     Any envelope estimate can be put in this form, so that it reads like a
     :class:`~sonore.views.spectral_envelope.SpectralEnvelope` and goes wherever an
@@ -302,7 +295,8 @@ class GridEnvelope(View):
         "GridEnvelope discards the harmonics, the phase, and everything finer than the envelope's smoothing."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds a voice from it together with an F0 track and an aperiodicity."
+        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
+        "an aperiodicity."
     )
 
     def __init__(self, data: np.ndarray, t, f):
@@ -352,11 +346,21 @@ class GridEnvelope(View):
 
     def plot(self, ax=None, channel: int = 0, db_range: float = 70.0, fmax: float | None = None):
         """The envelope in dB as a time-frequency image."""
-        from sonore.plotting import plot_tf_db
+        return _plot_envelope(self, ax, channel, db_range, fmax)
 
-        return plot_tf_db(
-            self.db[channel], self.t, self.f, ax=ax, db_range=db_range, fmax=fmax, title="Spectral envelope"
-        )
+
+def _plot_envelope(envelope, ax, channel: int, db_range: float, fmax: float | None):
+    from sonore.plotting import plot_tf_db
+
+    return plot_tf_db(
+        envelope.db[channel],
+        envelope.t,
+        envelope.f,
+        ax=ax,
+        db_range=db_range,
+        fmax=fmax,
+        title="Spectral envelope",
+    )
 
 
 # ------------------------------------------------------------ the formants

@@ -319,8 +319,10 @@ unchanged. This proposal touches none of the WORLD files.
 
 What changed from the proposal above while writing the code:
 
-- The three functions live in their own module, `signals/glottal.py`,
-  beside `generators.py` rather than in it, and the shape comes second:
+- The three functions were first built in their own module,
+  `signals/glottal.py`, beside `generators.py` rather than in it; the
+  reorganization (`reorganization.md`, D7) later moved them into
+  `signals/generators.py`. The shape comes second:
   `lf_harmonics(harmonics, rd=0.7)` and `lf_pulse(x, rd=0.7)`, so `rd`
   can take its default. `ra`, `rg` and `rk` are keyword-only, given all
   three together, in both (D2).

@@ -52,8 +52,9 @@ class ModulationSpectrogram(View):
     the envelope is taken to be zero, so an abrupt start reads as
     modulation).
 
-    The representation is not invertible: the phase of ``y`` is dropped and
-    the mean divided out, as a magnitude spectrogram drops an STFT's phase.
+    The representation is not invertible: the phase of ``y`` is dropped, as
+    a magnitude spectrogram drops an STFT's phase (the local mean is kept,
+    and :attr:`depth` divides by it).
     For modulation filtering, filter the envelopes with a modulation bank
     directly.
 

@@ -249,7 +249,7 @@ class MFCC(View):
             raise ValueError(f"n_mfcc must be between 1 and n_mels ({n_mels}), not {n_mfcc}")
         self.source = coefs
         self.fs = coefs.fs
-        self.n_fft = _n_fft(coefs)
+        self.n_fft = coefs.n_fft
         self.mel_scale = mel_scale
         self.floor_db = floor_db
         self.lifter = lifter
@@ -358,9 +358,3 @@ class MFCC(View):
         from sonore.plotting import plot_mfcc
 
         return plot_mfcc(self, ax=ax, channel=channel, kind=kind, **kwargs)
-
-
-def _n_fft(coefs: STFT | TVSTFT) -> int:
-    if isinstance(coefs, STFT):
-        return int(coefs.sft.mfft)
-    return int(coefs.frame.layout(coefs.fs).n_fft)

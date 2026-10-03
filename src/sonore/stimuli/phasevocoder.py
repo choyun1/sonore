@@ -28,6 +28,8 @@ from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
+from sonore.frames.gabor import _bin_weights
+from sonore.views.view import View
 
 __all__ = ["PVAnalysis", "pv_analyze", "time_stretch", "pitch_shift"]
 
@@ -54,9 +56,20 @@ def _win_len(win_dur: float, fs: float) -> int:
 
 
 @dataclass(frozen=True)
-class PVAnalysis:
+class PVAnalysis(View):
     """Phase-vocoder analysis: per-channel magnitude, phase and instantaneous
-    frequency, all shaped ``(n_channels, n_bins, n_windows)``."""
+    frequency, all shaped ``(n_channels, n_bins, n_windows)``. A view: it
+    reads each bin as one sinusoid, and :meth:`resynthesize` rebuilds a
+    sound from those sinusoids, closely for tonal sounds but not exactly."""
+
+    discards = (
+        "PVAnalysis reads each STFT bin as a single sinusoid, which a sound with more than one component "
+        "per bin (noise, close partials) is not, so its oscillator resynthesis is not an inverse."
+    )
+    back_to_sound = (
+        "PVAnalysis.resynthesize rebuilds an approximation through an oscillator bank; "
+        "so.GaborFrame gives an exact STFT."
+    )
 
     magnitude: np.ndarray
     phase: np.ndarray
@@ -88,8 +101,9 @@ class PVAnalysis:
 
         This is designed for tonal sounds, which it reconstructs closely
         (r > 0.999 for harmonic complexes). For noise, neighbouring channels
-        drift out of phase and partially cancel (about 2 dB low, r ~ 0.9); use
-        :func:`time_stretch` for noisy material.
+        drift out of phase and partially cancel (about 2 dB low, r about 0.93);
+        use :func:`time_stretch` for noisy material. Both figures are measured
+        by tools/measure_docstring_numbers.py.
         """
         if freq_map is None:
             map_freqs = None
@@ -103,11 +117,7 @@ class PVAnalysis:
         sample_times = np.arange(n_out) / self.fs
         window_times = self.t * time_scale
         # filterbank-summation gain: sum over bins of |X| equals N*w(center)*amplitude
-        gain = np.full(self.magnitude.shape[1], 2.0)
-        gain[0] = 1.0
-        if self.n_win % 2 == 0:
-            gain[-1] = 1.0
-        gain /= self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
+        gain = _bin_weights(self.n_win) / self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
         # Anchor each oscillator's phase at the first time window that lies
         # fully inside the signal; edge time windows are truncated, which scrambles
         # the phase relationship between neighbouring bins.

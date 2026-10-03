@@ -569,15 +569,15 @@ for name, frame in frames.items():
 #   [`reassigned.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/reassigned.py#L56)
 # - Gabor (1946). Theory of communication. Part 1: The analysis of information. *J. IEE* 93(26).
 #   [doi:10.1049/ji-3-2.1946.0074](https://doi.org/10.1049/ji-3-2.1946.0074).
-#   [`gabor.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L42)
+#   [`gabor.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L60)
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
 #   Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
-#   [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L441)
+#   [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L443)
 # - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
 #   modification and synthesis framework. *Sādhanā* 36(5).
 #   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).
-#   [`spectrum.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L126)
+#   [`spectrum.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L131)
 # - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values.
 #   *IEEE Trans. ASSP* 26(1).
 #   [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047).

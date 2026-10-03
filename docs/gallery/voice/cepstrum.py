@@ -649,14 +649,14 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L99)
 # - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
 #   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
-#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L77)
+#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L79)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`gabor.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L276)
+#   [`gabor.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L289)
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Harvest.
@@ -665,4 +665,4 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   The formants of the synthetic vowels.
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
-#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L164)
+#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L168)

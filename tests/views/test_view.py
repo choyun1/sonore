@@ -19,6 +19,9 @@ VIEW_NAMES = [
     "SpectralEnvelope",
     "Aperiodicity",
     "F0Track",
+    "InterauralCues",
+    "TextureStats",
+    "PVAnalysis",
 ]
 
 
@@ -29,8 +32,38 @@ def _public_subclasses(cls):
         yield from _public_subclasses(subclass)
 
 
+# Every other public class, by kind. A new class has to be put in one of
+# these on purpose, so a one-way analysis cannot arrive without being a View.
+FRAME_SIDE = ["Frame", "Filterbank", "STFT", "TVSTFT", "Subbands", "Mask"]  # with their subclasses
+NOT_ANALYSES = [
+    "Sound",
+    "Decibels",
+    "set_fft_workers",
+    "Ripple",
+    "DynamicRipple",
+    "RippleSum",
+    "HRIRSet",
+    "TextureModel",
+    "ModulationFilterbank",
+]  # ModulationFilterbank: a tool that makes views
+
+
+def _public_classes():
+    namespaces = [(so, so.__all__), (so.texture, so.texture.__all__)]
+    return {
+        name: getattr(module, name)
+        for module, names in namespaces
+        for name in names
+        if isinstance(getattr(module, name), type) and not issubclass(getattr(module, name), BaseException)
+    }
+
+
 def test_every_analysis_that_is_not_a_frame_is_a_view():
     assert {view.__name__ for view in _public_subclasses(View)} == set(VIEW_NAMES)
+    classes = _public_classes()
+    bases = tuple(classes[name] for name in FRAME_SIDE + NOT_ANALYSES)
+    unsorted = [name for name, cls in classes.items() if not issubclass(cls, (View, *bases))]
+    assert unsorted == [], f"make these frames or views: {unsorted}"
 
 
 @pytest.mark.parametrize("view", list(_public_subclasses(View)), ids=lambda view: view.__name__)

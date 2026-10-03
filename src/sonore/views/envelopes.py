@@ -31,6 +31,7 @@ import numpy as np
 from scipy.signal import butter, resample_poly, sosfiltfilt
 
 from sonore.core.utils import amp_to_db
+from sonore.frames.filterbank import _PaddedBands
 from sonore.views.view import View
 
 if TYPE_CHECKING:
@@ -92,6 +93,7 @@ def _check_duration(n_env: int, fs_env: float, n: int, fs: float) -> None:
 
 class Envelope(View):
     """A single (possibly multichannel) envelope, shape ``(n_samples, n_channels)``.
+    A view: it keeps a magnitude over time and drops the fine structure.
 
     Arithmetic: ``*``, ``/`` and ``+`` with numbers and other Envelopes (so
     ``1 + 0.5 * env`` works), and ``env * snd`` / ``snd * env`` modulate a
@@ -199,13 +201,16 @@ class Envelope(View):
         return plot_envelope(self, ax=ax, **kwargs)
 
 
-class Envelopes(View):
+class Envelopes(_PaddedBands, View):
     """One envelope per band of a filterbank: a spectrotemporal envelope.
 
     Conceptually this is a **cochleagram**: the envelope of each filter's
     output over time. Shape ``(n_samples, n_bands, n_channels)``; the bands
     include the filterbank's lowpass and highpass edge filters, as in
     :class:`~sonore.frames.filterbank.Subbands`.
+
+    A view: it keeps each band's Hilbert magnitude and drops the fine
+    structure (and, with ``lowpass``, the envelope's own fast detail).
 
     ``env[i]`` is an :class:`Envelope`; ``env * subbands`` modulates each band
     (imposing the envelopes on a carrier, not an inverse);
@@ -219,7 +224,10 @@ class Envelopes(View):
     zero outside their own extent when combined with padded bands.
     """
 
-    discards = "Envelopes discard the fine structure: only the Hilbert magnitude of each band is kept."
+    discards = (
+        "Envelopes discard the fine structure: only the Hilbert magnitude of each band is kept, "
+        "smoothed further when a lowpass was asked for."
+    )
     back_to_sound = (
         "To hear them, impose them on a carrier's subbands (envelopes * subbands) and synthesize those, as "
         "the noise vocoder does."
@@ -228,41 +236,14 @@ class Envelopes(View):
     __array_ufunc__ = None
 
     def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
-        arr = np.array(data, dtype=float)
-        if arr.ndim == 2:
-            arr = arr[:, :, None]
-        if arr.ndim != 3 or arr.shape[1] != filterbank.n_filters:
-            raise ValueError(
-                f"expected shape (n_samples, {filterbank.n_filters}, n_channels), got {arr.shape}"
-            )
-        if 2 * pad >= arr.shape[0]:
-            raise ValueError("padding is longer than the data")
-        arr = _nonnegative(arr)
-        arr.flags.writeable = False
-        self._full, self.fs, self.filterbank, self.pad = arr, fs, filterbank, int(pad)
+        data = np.asarray(data, dtype=float)
+        super().__init__(data[:, :, None] if data.ndim == 2 else data, fs, filterbank, pad)
 
-    @property
-    def data(self) -> np.ndarray:
-        """Envelopes without the padding, shape ``(n_samples, n_bands, n_channels)``."""
-        return self._full[self.pad : self._full.shape[0] - self.pad]
-
-    @property
-    def cfs(self) -> np.ndarray:
-        return self.filterbank.cfs
-
-    def __len__(self) -> int:
-        """Number of bands (including the two edge filters)."""
-        return self._full.shape[1]
+    def _checked(self, bands: np.ndarray) -> np.ndarray:
+        return _nonnegative(bands)
 
     def __getitem__(self, i: int) -> Envelope:
         return Envelope(self.data[:, i, :], self.fs)
-
-    def __iter__(self):
-        return (self[i] for i in range(len(self)))
-
-    @property
-    def n_samples(self) -> int:
-        return self._full.shape[0] - 2 * self.pad
 
     @property
     def duration(self) -> float:
@@ -275,10 +256,6 @@ class Envelopes(View):
     @property
     def db(self) -> np.ndarray:
         return amp_to_db(self.data)
-
-    def __repr__(self) -> str:
-        n_samples, n_bands, n_channels = self.data.shape
-        return f"Envelopes({n_bands} bands, {n_samples / self.fs:.3f} s, {self.fs:g} Hz, {n_channels} ch)"
 
     def _new(self, full, fs=None, pad=None) -> Envelopes:
         return Envelopes(

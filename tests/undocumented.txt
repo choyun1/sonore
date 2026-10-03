@@ -22,15 +22,9 @@ sonore.frames.filterbank.MorletFilterbank.from_scale
 sonore.frames.filterbank.MorletFilterbank.to_scale
 sonore.frames.filterbank.OctaveFilterbank.from_scale
 sonore.frames.filterbank.OctaveFilterbank.to_scale
-sonore.frames.filterbank.Subbands.cfs
-sonore.frames.filterbank.Subbands.n_samples
-sonore.frames.gabor.STFT.db
 sonore.frames.gabor.STFT.f
-sonore.frames.gabor.STFT.magnitude
 sonore.frames.gabor.STFT.plot
-sonore.frames.gabor.TVSTFT.db
 sonore.frames.gabor.TVSTFT.f
-sonore.frames.gabor.TVSTFT.magnitude
 sonore.frames.mask.Mask.plot
 sonore.plotting.plot_mask
 sonore.plotting.plot_modulation_spectrum
@@ -64,11 +58,9 @@ sonore.views.envelopes.Envelope.duration
 sonore.views.envelopes.Envelope.plot
 sonore.views.envelopes.Envelope.resample
 sonore.views.envelopes.Envelope.t
-sonore.views.envelopes.Envelopes.cfs
 sonore.views.envelopes.Envelopes.db
 sonore.views.envelopes.Envelopes.duration
 sonore.views.envelopes.Envelopes.lowpass
-sonore.views.envelopes.Envelopes.n_samples
 sonore.views.envelopes.Envelopes.plot
 sonore.views.envelopes.Envelopes.resample
 sonore.views.envelopes.Envelopes.t
