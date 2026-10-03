@@ -26,6 +26,8 @@ moving-sound renderer.
   Before, `synthesize` on a view failed with a plain `AttributeError`. See
   "Only frames synthesize" in `docs/design/reorganization.md`.
 - `STFT` and `TVSTFT` have `n_fft` and `shortest_window` properties.
+- `so.power_to_db(x, ref=1.0, floor_db=-300.0)` and `so.db_to_power(db)`,
+  the power counterparts of `amp_to_db` and `db_to_amp`.
 - `so.cheaptrick`, `so.d4c` and `so.world_synthesize`: WORLD's spectral
   envelope (Morise, 2015), aperiodicity (Morise, 2016) and synthesis,
   ported exactly to NumPy with no pyworld dependency, returning
@@ -128,6 +130,13 @@ moving-sound renderer.
   `tests/undocumented.txt`.
 
 ### Changed
+- `so.long_term_spectrum(sounds, win_dur=0.1)` takes its Welch segment
+  length in seconds, replacing `nperseg=4096` samples, with no
+  compatibility argument. The default now gives 10 Hz spacing at any
+  sample rate, so its output changes slightly, and with it speech-shaped
+  noise made from it.
+- In `sonore.texture.synth`, `ChannelObjective.ctx` and
+  `impose_channel(ctx=...)` are renamed to `context`.
 - The package is reorganized as a trunk and three branches
   (`docs/design/reorganization.md`, `docs/design/layout.md`). Every
   `so.name` is unchanged; only deep import paths move, with no
@@ -217,6 +226,9 @@ moving-sound renderer.
   faster than the travel time). Slower paths are unchanged to 1e-10.
 
 ### Changed (development)
+- `docs/design/philosophy.md`: names that come from a cited paper or a
+  reference implementation (Klatt, LF, the texture statistics C, C1 and
+  C2, WORLD) are never renamed.
 - Tests are in folders that mirror `src/sonore` (`tests/core/`,
   `tests/frames/`, `tests/views/`, ...). The dB tests moved to `tests/core/test_units.py` and
   the HRIR download tests to `tests/spatial/test_hrir_data.py`.
