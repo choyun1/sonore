@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use sonore in your research, please cite it as below."
 title: "sonore: signals and stimuli for auditory research"
 type: software
-version: 0.4.0
-date-released: 2026-10-02
+version: 0.3.1
+date-released: 2026-10-01
 doi: 10.5281/zenodo.23086165
 abstract: >-
   A Python library of signals and stimuli for auditory research: generators,
