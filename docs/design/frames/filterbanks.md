@@ -4,9 +4,11 @@ The redesign of `sonore.frames.filterbank`, together with two changes the
 code audit moved here: subbands go back to a sound with `to_sound`, and
 masks become views.
 
-Status: proposed 2026-10-03, awaiting Cho's decisions (D1–D12). Nothing
-in `src/` changes until they are agreed. The claims are checked by
-`tools/check_filterbank_claims.py` (C1–C8), which uses only NumPy and
+Status: accepted 2026-10-03. Cho accepted D1–D12 as recommended and added
+D13: the tests must cover enough kinds of bank and choices of centers that
+a bank is never reported tight when it is not, because then `to_sound`
+would lose part of the sound without saying so. The claims are checked by
+`tools/check_filterbank_claims.py` (C1–C10), which uses only NumPy and
 SciPy, with every scale and filter written out from its formula, so it
 shares no code with the implementation it will later test.
 
@@ -93,6 +95,18 @@ Each claim gives the number `tools/check_filterbank_claims.py` printed on
   100 Hz) is bit-identical to a cosine bank on log2 frequency with spacing
   one octave and no edge filters: largest difference 0, no response
   differs in any bit.
+- **C9. What a wrong "tight" would cost.** The tight path multiplies
+  each frequency by `s / c` instead of 1, so the error it makes is the
+  ripple in `s` and no more: a ripple of 1e-12 gives an error of 7.0e-13
+  of the peak, 1e-6 gives 7.0e-7, 1e-2 gives 7.0e-3. The tolerance in
+  D5 therefore bounds the loss to about 1e-12 of the peak.
+- **C10. A small lower bound costs little on unmodified coefficients.**
+  The canonical dual divides by `s`, so round-off in the bands is
+  amplified where `s` is small. With one rounding step in the bands, the
+  error is 3.4e-15 of the peak at `B/A` = 1e2, 3.5e-13 at 1e6, 3.2e-11
+  at 1e10 and 3.3e-10 at 1e12, just above the point (`A <= 1e-12 B`)
+  where synthesis already refuses. So the loss to guard against is a
+  wrong "tight", not a poorly conditioned frame.
 - **C8. Measuring `s` is cheap.** For 5 s at 44.1 kHz and 32 filters,
   computing `max |s - 1|` takes 5% of the time of one synthesis (4% in an
   earlier run; timings vary by machine and run).
@@ -298,10 +312,26 @@ Each has a recommendation.
   checked. Recommended.
 - **D12. Out of scope now**: the nonstationary Gabor transform, a
   per-band hop, and moving the modulation banks. Recommended.
+- **D13. Tightness is tested widely, and a wrong "tight" cannot pass
+  silently** (Cho, 2026-10-03). Three guards:
+  1. `is_tight` and the tight path are decided only from `s` measured on
+     the grid the coefficients live on, never from the kind of bank. By
+     C9 the most the tight path can then lose is the 1e-12 tolerance.
+  2. A test sweep over kinds of bank and centers: cosine banks on every
+     scale with uniform and random centers, widths 0.75 to 2.5, edges on
+     and off; gammatone and Morlet banks; rates from 8 to 96 kHz, odd
+     and even lengths, `f_hi` at and beyond Nyquist. For each, the test
+     checks `is_tight` against `s` computed independently in the test,
+     and checks that `to_sound` reconstructs the input to within 1e-12.
+     Banks that must not be tight (cosine widths 0.75, 1.25 and 2.5,
+     gammatone, Morlet, a cosine bank with one center nudged without
+     the gap formula) must report so.
+  3. Synthesis refuses when the bank is not a frame on that grid, as
+     today (`A <= 1e-12 B`), naming the bounds. Analysis still works.
 
 ## Plan
 
-After the decisions, as a stack of PRs:
+As a stack of PRs:
 
 1. `Filterbank`, scales, factories and measured tightness, with every
    call site moved (`texture/stats.py`, `views/envelopes.py`,
