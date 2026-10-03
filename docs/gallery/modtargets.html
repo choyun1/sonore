@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Drawing a modulation spectrum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.ref { margin-left: auto; }
+nav.pages a.ref + a.repo { margin-left: 0; }
+nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
+nav.pages a.repo:hover { color: var(--ink); }
+@media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 2.5rem 1.25rem 2rem 1.75rem;
+    border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  html:not(.side-closed) nav.pages > a:first-child, html:not(.side-closed) nav.pages details { display: none; }
+  .side-closed .layout { grid-template-columns: 3rem minmax(0, 1fr); }
+  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
+  .side-closed .side .home, .side-closed .side-body { display: none; }
+  .side-closed .side-top { justify-content: center; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html" aria-current="page">Drawing a modulation spectrum</a><ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a></li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a></li><li><a href="#h-an-edited-sentence">An edited sentence</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed"); show(closed);
+    save("sonore-side", closed ? "closed" : "open"); });
+  let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
+  groups.forEach((group) => { const name = group.dataset.group;
+    if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
+    group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
+      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="here"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html" aria-current="page">Drawing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>Drawing a modulation spectrum</h1>
+<p>A modulation spectrum is the two-dimensional Fourier transform of a sound's envelopes, band by
+band over time: how much of the pattern moves at each rate (Hz, across) and at each density
+(cycles per octave, up), keeping only the magnitude (Singh &amp; Theunissen, 2003). The
+<a href="ripples.html">ripples page</a> goes from a pattern to its spectrum. This page goes the other way:
+from a spectrum, measured and edited or drawn from scratch, to a sound that has it.</p>
+<p>A magnitude is not enough to make a sound. The spectrum has dropped the phase of the
+modulations, which says when each event happens, and the fine structure under each band's
+envelope. <code>ModulationSpectrum.to_sound(carrier=...)</code> takes both from a <em>carrier</em>, the way an
+envelope is put back on a carrier: a sound lends its own, while <code>&quot;tones&quot;</code> and <code>&quot;noise&quot;</code> draw a
+random modulation phase and put the envelopes on steady tones or on noise.</p>
+<ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a>: a sentence and a sound with the sentence's modulation spectrum and random modulation phase.</li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a>: one patch of modulation, heard on three carriers.</li><li><a href="#h-an-edited-sentence">An edited sentence</a>: a sentence with every modulation faster than 4 Hz removed, and how close the sound comes to that.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: drawing with a mouse, dB targets, and the other modulation spectra.</li></ul>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+FS = 44100
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+def measure(snd, f_lo):
+    &quot;&quot;&quot;The modulation spectrum on the page&#x27;s grid: 12 bands per octave from f_lo to 8 kHz.&quot;&quot;&quot;
+    return so.ModulationSpectrum.octave(snd, f_lo=f_lo, f_hi=8000)
+
+
+def show(snd, target=None, f_lo=250):
+    &quot;&quot;&quot;The sound&#x27;s envelopes (a cochleagram), the target spectrum if there is one, and the
+    spectrum measured from the sound. Returns the figure and the panel the playhead follows.&quot;&quot;&quot;
+    n_panels = 2 if target is None else 3
+    fig, axes = plt.subplots(1, n_panels, figsize=(4 * n_panels, 3.4), layout=&quot;constrained&quot;)
+    bank = so.cosine_filterbank(f_lo=f_lo, f_hi=8000, spacing=1 / 24, scale=&quot;octave&quot;)
+    bank.analyze(snd).envelopes(lowpass=200, fs=1000).plot(axes[0], db_range=30, colorbar=False)
+    axes[0].set_title(&quot;Envelopes (cochleagram)&quot;)
+    if target is not None:
+        target.plot(axes[1], db_range=30, wt_max=20, wf_max=4, colorbar=False)
+        axes[1].set_title(&quot;Target modulation spectrum&quot;)
+    measure(snd, f_lo).plot(axes[-1], db_range=30, wt_max=20, wf_max=4, colorbar=False)
+    axes[-1].set_title(&quot;Measured from the sound&quot;)
+    return fig, [axes[0]]</code></pre></details></div>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-same-spectrum-different-sound">
+<h2 id="h-same-spectrum-different-sound">Same spectrum, different sound</h2>
+<p>A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
+heard with the sentence's own modulation phase thrown away. <code>to_sound</code> with <code>carrier=&quot;tones&quot;</code>
+draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
+on a steady tone at its band's centre. The magnitudes include the zero-rate column, the
+sentence's long-term spectrum, so the new sound keeps the sentence's overall colour.</p>
+
+<article class="sound" id="d-mt1" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.499739581729232, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+  <div class="about">
+    <h3>A sentence</h3>
+    <div class="desc"><p>The sentence, a male talker reading one of the CMU ARCTIC prompts. Its modulation spectrum
+is brightest at low rates and densities, as for most natural sounds (Singh &amp; Theunissen,
+2003).</p></div>
+    <audio controls preload="metadata" src="audio/mt1_a_sentence.flac"></audio>
+    <p class="file">mt1_a_sentence.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt1_a_sentence.png" width="800" height="340" alt="Plots of the a sentence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)
+spectrum = measure(sentence, f_lo=125)
+sound = finish(sentence)
+fig, playhead = show(sound, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt2" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+  <div class="about">
+    <h3>Its modulation spectrum, random modulation phase</h3>
+    <div class="desc"><p>The same magnitudes with a random modulation phase. The syllables, the pauses and the onsets
+are gone from the envelopes, which change at the sentence's rates and densities but never at
+its moments. A random phase also asks for envelopes below zero, which no
+envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
+and that is why the measured spectrum is smoother than the target.</p></div>
+    <audio controls preload="metadata" src="audio/mt2_its_modulation_spectrum_random_modulation_phase.flac"></audio>
+    <p class="file">mt2_its_modulation_spectrum_random_modulation_phase.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt2_its_modulation_spectrum_random_modulation_phase.png" width="1200" height="340" alt="Plots of the its modulation spectrum, random modulation phase sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">twin = spectrum.to_sound(carrier=&quot;tones&quot;, fs=sentence.fs, rng=0)
+sound = finish(twin)
+fig, playhead = show(sound, target=spectrum, f_lo=125)</code></pre></details>
+</article>
+<p>So a modulation spectrum fixes how a sound changes, not when. In the design note's check of
+the same sentence (<code>docs/design/views/modulation-targets.md</code>, C1) the two envelope arrays
+correlate at −0.08, and the pooled envelope, more than 30 dB below its peak 9.6% of the time
+in the sentence, never is in the twin. Sounds made this way, with a natural sound's modulation
+spectrum and a random modulation phase, have been used to ask what auditory neurons respond
+to (Hsu et al., 2004).</p>
+</section>
+<section aria-labelledby="h-a-drawn-spectrum">
+<h2 id="h-a-drawn-spectrum">A drawn spectrum</h2>
+<p>A target can be drawn from scratch as a few patches on the rate × density plane.
+<code>so.ModulationBlob(rate, density)</code> is a Gaussian bump at that rate [Hz] and density
+[cycles/octave], half an octave wide in rate and a quarter of a cycle per octave in density by
+default. The signs follow the <a href="ripples.html">ripples</a>: a positive rate and density is a
+downward sweep. A ripple is a blob of no width.</p>
+<p>A drawing sets a shape, not a depth, so <code>from_blobs</code> takes the depth separately: <code>rms_depth</code>,
+the rms of the envelopes about their mean, relative to the mean (0.2 by default). Envelopes
+cannot go below zero, and a random phase reaches only a limited depth before they would: about
+0.28 for the blob below (C2 of the design note), against 0.71 for one full ripple. A drawn
+target that would need clipping is refused, with the largest depth that fits.</p>
+
+<article class="sound" id="d-mt3" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.3380707098765435, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}]">
+  <div class="about">
+    <h3>A drawn blob, on tones</h3>
+    <div class="desc"><p>Downward sweeps around 4 Hz and half a cycle per octave, on steady tones at the band centres.
+Unlike a ripple, the sweeps come at irregular moments and with varying slopes, since the blob
+spreads over a range of rates and densities and the phase is random. The faint patch at
+negative rates along the bottom is the tail of the blob's mirror image at (−4 Hz, −0.5
+cycle/octave), which every real pattern has.</p></div>
+    <audio controls preload="metadata" src="audio/mt3_a_drawn_blob_on_tones.flac"></audio>
+    <p class="file">mt3_a_drawn_blob_on_tones.flac, 3.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt3_a_drawn_blob_on_tones.png" width="1200" height="340" alt="Plots of the a drawn blob, on tones sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">target = so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), duration=3.0)
+on_tones = target.to_sound(carrier=&quot;tones&quot;, fs=FS, rng=0)
+sound = finish(on_tones)
+fig, playhead = show(sound, target=target)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt4" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.3380707098765435, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}]">
+  <div class="about">
+    <h3>The same blob, on noise</h3>
+    <div class="desc"><p>The same target on noise: each envelope multiplies a band of noise instead of a tone. The
+sweeps are still there, under a hiss whose own random fluctuations fill the whole modulation
+spectrum.</p></div>
+    <audio controls preload="metadata" src="audio/mt4_the_same_blob_on_noise.flac"></audio>
+    <p class="file">mt4_the_same_blob_on_noise.flac, 3.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt4_the_same_blob_on_noise.png" width="1200" height="340" alt="Plots of the the same blob, on noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">on_noise = target.to_sound(carrier=&quot;noise&quot;, fs=FS, rng=0)
+sound = finish(on_noise)
+fig, playhead = show(sound, target=target)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt5" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.3380707098765435, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.4995000000000003}]">
+  <div class="about">
+    <h3>The same blob, on the sentence</h3>
+    <div class="desc"><p>The same target on the sentence. A sound as carrier lends its own modulation phase as well as
+its fine structure, so the sweeps now come when the sentence's syllables did, in its voice. The
+sentence is 2.5 s long, so this target is drawn for 2.5 s.</p></div>
+    <audio controls preload="metadata" src="audio/mt5_the_same_blob_on_the_sentence.flac"></audio>
+    <p class="file">mt5_the_same_blob_on_the_sentence.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt5_the_same_blob_on_the_sentence.png" width="1200" height="340" alt="Plots of the the same blob, on the sentence sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">short_target = so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), duration=2.5)
+on_sentence = short_target.to_sound(carrier=sentence)
+sound = finish(on_sentence)
+fig, playhead = show(sound, target=short_target)</code></pre></details>
+</article>
+<p>How much of each sound's measured modulation power lies where the target has its power (within
+20 dB of its peak), leaving out the zero-rate column, which holds the long-term spectrum:</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def share_in_target(snd, target):
+    &quot;&quot;&quot;Share of the measured modulation power, off the zero-rate column, inside the target.&quot;&quot;&quot;
+    measured = measure(snd, f_lo=250)
+    measured_power = 10 ** (measured.level / 10)
+    in_target = target.level &gt; target.level.max() - 20
+    moving = measured.w_t != 0
+    return measured_power[in_target &amp; moving].sum() / measured_power[:, moving].sum()
+
+
+for name, snd, drawn in [
+    (&quot;tones&quot;, on_tones, target),
+    (&quot;noise&quot;, on_noise, target),
+    (&quot;sentence&quot;, on_sentence, short_target),
+]:
+    print(f&quot;{name:&gt;8}: {share_in_target(snd, drawn):.0%}&quot;)</code></pre></details><pre class="out">   tones: 98%
+   noise: 31%
+sentence: 24%</pre></div>
+<p>The carrier matters as much as the target. A steady tone at each band's centre adds almost no
+modulation of its own, so the target survives. Noise and speech fluctuate inside every band,
+and those fluctuations land in the measured spectrum on top of the drawn one. That is why
+<code>&quot;tones&quot;</code> is the default carrier (C3 of the design note).</p>
+</section>
+<section aria-labelledby="h-an-edited-sentence">
+<h2 id="h-an-edited-sentence">An edited sentence</h2>
+<p>A measured spectrum can be edited and heard. <code>with_gain(g)</code> multiplies every cell by
+<code>g(rate, density)</code>; <code>lambda r, d: abs(r) &lt;= 4</code> keeps only the modulations at 4 Hz and below,
+roughly the syllable rate and slower, and removes everything faster. Elliott &amp; Theunissen
+(2009) filtered the modulation spectrum of speech's spectrogram in a similar way to find which
+modulations intelligibility needs. With the sentence itself as carrier, its own modulation phase and fine
+structure go back under the edited magnitudes, so wherever the gain is 1 the timing is kept.</p>
+
+<article class="sound" id="d-mt6" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+  <div class="about">
+    <h3>Modulations above 4 Hz removed</h3>
+    <div class="desc"><p>The edit, put straight back on the sentence. The measured spectrum keeps some power above
+4 Hz, less than the sentence had but more than the edit asks for: the sentence's fine
+structure brings fast modulation of its own back into every band.</p></div>
+    <audio controls preload="metadata" src="audio/mt6_modulations_above_4_hz_removed.flac"></audio>
+    <p class="file">mt6_modulations_above_4_hz_removed.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt6_modulations_above_4_hz_removed.png" width="1200" height="340" alt="Plots of the modulations above 4 hz removed sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">slow = spectrum.with_gain(lambda rate, density: np.abs(rate) &lt;= 4)
+edited = slow.to_sound(carrier=sentence)
+sound = finish(edited)
+fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt7" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+  <div class="about">
+    <h3>The same edit, after 20 iterations</h3>
+    <div class="desc"><p>The same edit with 20 rounds of a search in the manner of Griffin &amp; Lim (1984): analyse the
+sound, keep its fine structure and modulation phase, impose the edited magnitudes again, and
+resynthesize. Each round brings the sound's own spectrum closer to the edit.</p></div>
+    <audio controls preload="metadata" src="audio/mt7_the_same_edit_after_20_iterations.flac"></audio>
+    <p class="file">mt7_the_same_edit_after_20_iterations.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt7_the_same_edit_after_20_iterations.png" width="1200" height="340" alt="Plots of the the same edit, after 20 iterations sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">searched = slow.to_sound(carrier=sentence, iterations=20)
+sound = finish(searched)
+fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt8" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+  <div class="about">
+    <h3>The same edit, on tones</h3>
+    <div class="desc"><p>The same edit on steady tones, with a random modulation phase: the slow modulations survive,
+but the sentence's timing does not.</p></div>
+    <audio controls preload="metadata" src="audio/mt8_the_same_edit_on_tones.flac"></audio>
+    <p class="file">mt8_the_same_edit_on_tones.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt8_the_same_edit_on_tones.png" width="1200" height="340" alt="Plots of the the same edit, on tones sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">on_tones_edit = slow.to_sound(carrier=&quot;tones&quot;, fs=sentence.fs, rng=0)
+sound = finish(on_tones_edit)
+fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
+</article>
+<p>The modulation power left between 6 and 40 Hz, relative to the sentence's:</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def fast_share(snd):
+    &quot;&quot;&quot;Share of the measured modulation power at 6-40 Hz.&quot;&quot;&quot;
+    measured = measure(snd, f_lo=125)
+    power = 10 ** (measured.level / 10)
+    fast = (np.abs(measured.w_t) &gt;= 6) &amp; (np.abs(measured.w_t) &lt;= 40)
+    return power[:, fast].sum() / power.sum()
+
+
+for name, snd in [(&quot;edit&quot;, edited), (&quot;20 iterations&quot;, searched), (&quot;on tones&quot;, on_tones_edit)]:
+    print(f&quot;{name:&gt;13}: {10 * np.log10(fast_share(snd) / fast_share(sentence)):.1f} dB&quot;)</code></pre></details><pre class="out">         edit: -4.1 dB
+20 iterations: -16.3 dB
+     on tones: -13.3 dB</pre></div>
+<p>None of them reaches the edit exactly, which removed everything there. A sound's envelopes are
+not free: they come from filtering one waveform, so most arrays of magnitudes belong to no
+sound at all, and the search finds a sound whose spectrum is close, never equal. The design
+note measures the same comparison in C6 and C7.</p>
+</section>
+<section aria-labelledby="h-what-this-page-leaves-out">
+<h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
+<ul><li><strong>Drawing with a mouse.</strong> Targets here are written in code, as blobs or as edits; a program for painting them is left to a separate project.</li><li><strong>dB targets.</strong> A spectrum measured with <code>scale=&quot;db&quot;</code> (of the log envelope, as Elliott &amp; Theunissen, 2009, define it) also goes back to sound, and never needs clipping, but the linear spectrum of the result is not the one drawn.</li><li><strong>The other modulation spectra.</strong> A <a href="modspectrogram.html">modulation spectrogram</a> changes over time and has no route back to sound, and a <a href="textures.html">sound texture</a>'s per-band modulation power is set through its statistics, not here.</li></ul>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Elliott &amp; Theunissen (2009). The modulation transfer function for speech intelligibility. <em>PLoS Comput. Biol.</em> 5(3), e1000302. <a href="https://doi.org/10.1371/journal.pcbi.1000302">doi:10.1371/journal.pcbi.1000302</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L498"><code>modulation.ModulationSpectrum.with_gain</code></a></li><li>Griffin &amp; Lim (1984). Signal estimation from modified short-time Fourier transform. <em>IEEE Trans. Acoust. Speech Signal Process.</em> 32(2), 236–243. <a href="https://doi.org/10.1109/TASSP.1984.1164317">doi:10.1109/TASSP.1984.1164317</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596"><code>modulation.ModulationSpectrum.to_sound</code></a></li><li>Hsu, Woolley, Fremouw &amp; Theunissen (2004). Modulation power and phase spectrum of natural sounds enhance neural encoding performed by single auditory neurons. <em>J. Neurosci.</em> 24(41), 9201–9211. <a href="https://doi.org/10.1523/JNEUROSCI.2449-04.2004">doi:10.1523/JNEUROSCI.2449-04.2004</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596"><code>modulation.ModulationSpectrum.to_sound</code></a></li><li>Singh &amp; Theunissen (2003). Modulation spectra of natural sounds and ethological theories of auditory processing. <em>J. Acoust. Soc. Am.</em> 114(6), 3394–3411. <a href="https://doi.org/10.1121/1.1624067">doi:10.1121/1.1624067</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L333"><code>modulation.ModulationSpectrum</code></a></li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/seeing/modtargets.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/modtargets.py</code>, or a cell at a time.</footer>
+</main>
+</div>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const canvas = el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const liveCanvas = el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live };
+  });
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the colour bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      if (item.live) item.live.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

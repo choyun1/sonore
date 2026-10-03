@@ -10,7 +10,8 @@ are implemented (`ModulationSpectrum.to_envelopes`, `with_gain` and
 `to_sound` in `src/sonore/views/modulation.py`, tested in
 `tests/views/test_modulation.py`), and so are D1's blobs and D6's
 `rms_depth` (`ModulationBlob`, `ModulationSpectrum.from_blobs`), and D7
-(`to_sound(iterations=...)`, after C7). D9 follows. The claims are checked by
+(`to_sound(iterations=...)`, after C7), and D9 (the gallery page
+`docs/gallery/seeing/modtargets.py`). The claims are checked by
 `tools/check_modulation_targets_claims.py` (C1–C7), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its
 formula, and shares no code with sonore. It runs in about 45 s. The numbers
@@ -419,7 +420,8 @@ All accepted 2026-10-03.
   modulation. Accepted 2026-10-03.
 - **D9. A gallery page** ("Drawing a modulation spectrum") showing C1 (a
   sentence and its twin, heard), a drawn blob on the three carriers, and an
-  edit. Accepted 2026-10-03, once D2 exists.
+  edit. Accepted 2026-10-03, once D2 exists; built as
+  `docs/gallery/seeing/modtargets.py`.
 
 ## References
 
