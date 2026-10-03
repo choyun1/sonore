@@ -27,8 +27,8 @@ time it runs.
 # - [A different voice](#h-a-different-voice): a female talker as the target, still and moving.
 # - [Coming closer](#h-coming-closer): the target walking up to the listener, without and with
 #   a room.
-# - [A cocktail party](#h-a-cocktail-party): three to six talkers walking around the listener for
-#   10 to 30 s.
+# - [A cocktail party](#h-a-cocktail-party): two to four talkers walking around the listener for
+#   20 to 30 s.
 # - [Passing by](#h-passing-by): a buzz going past at 15 m/s, and the Doppler glide of its pitch.
 # - [Straight paths across the plane](#h-straight-paths-across-the-plane): the buzz in front,
 #   close by, down the side, behind, crossing at an angle and coming straight at the listener.
@@ -473,13 +473,16 @@ def close_passes(paths, within=1.0):
 
 def passes_title(n_talkers, duration, paths, hurries):
     pairs = close_passes(paths)
-    closest = min((apart for _, _, apart in pairs), default=None)
-    passing = f"{len(pairs)} pairs pass within 1 m" if pairs else "no two pass within 1 m"
+    if pairs:
+        closest = min(apart for _, _, apart in pairs)
+        passing = f"{len(pairs)} {'pair passes' if len(pairs) == 1 else 'pairs pass'} within 1 m"
+        passing += f" (closest {closest:.1f} m)"
+    else:
+        passing = "no two pass within 1 m"
     hurrying = ", ".join(
         f"{PARTY[talker][1]} +{100 * (speed_up - 1):.0f} %" for talker, _, _, speed_up in hurries
     )
-    closest_text = f", the closest {closest:.1f} m apart" if pairs else ""
-    return f"{n_talkers} talkers, {duration:.0f} s: {passing}{closest_text}; hurrying: {hurrying}"
+    return f"{n_talkers} talkers, {duration:.0f} s: {passing}\nhurrying (shaded): {hurrying}"
 
 
 def show_party(paths, hurries, title):
