@@ -87,7 +87,7 @@ def finish(snd):
 
 def analyze(snd):
     """The cochleagram, and modulation spectrograms with 3-cycle (default) and 6-cycle windows."""
-    env = so.ERBFilterbank(n_bands=24, f_lo=100, f_hi=7000).analyze(snd).envelopes(fs=1000)
+    env = so.cosine_filterbank(n_bands=24, f_lo=100, f_hi=7000).analyze(snd).envelopes(fs=1000)
     return env, so.ModulationSpectrogram(env), so.ModulationSpectrogram(env, cycles=6, per_octave=4)
 
 

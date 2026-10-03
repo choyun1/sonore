@@ -20,6 +20,28 @@ version (0.x.y) only fixes bugs.
   inverts), an array of the wrong length gets the "lengths differ" message,
   `snd.right` on a mono sound and `normalize` of silence raise a sonore
   message instead of NumPy's `IndexError` or a division by zero.
+- One `so.Filterbank` class holds every undecimated bank: a frequency scale
+  (`"erb"`, `"octave"`, `"mel"`, `"linear"` or your own `Scale`), the
+  centers as positions on it, and a filter type (`Cosine`, `Gammatone`,
+  `Morlet`, or your own `FilterType`). `so.cosine_filterbank`,
+  `so.gammatone_filterbank` and `so.morlet_filterbank` build the common
+  ones and replace `ERBFilterbank`, `OctaveFilterbank`, `CosineFilterbank`,
+  `GammatoneFilterbank`, `MorletFilterbank` and `BandpassFilterbank`
+  (`OctaveFilterbank.per_octave(12, lo, hi)` is now
+  `cosine_filterbank(f_lo=lo, f_hi=hi, spacing=1/12, scale="octave")`).
+  Cosine banks keep their output bit for bit. New: any increasing
+  `centers=`, wider cosines (`width=`), and every factory on any scale
+  (docs/design/frames/filterbanks.md).
+- Tightness is measured, not declared: the `tight` attribute is gone, and
+  `bank.is_tight(n_samples, fs)` and synthesis decide from `s` on the
+  grid the coefficients live on (to 1e-12), so a bank is never treated as
+  tight when it is not.
+- `f_lo` and `f_hi` mean the same for every filter type: the outer knots, with
+  the bandpass centers strictly inside. For gammatone and Morlet banks this
+  moves the centers slightly for the same arguments (they used to start at
+  `f_lo`).
+- `envelope_peak_delay` is measured from each filter's impulse response,
+  so every bank has it (0 for zero-phase filters).
 
 ### Documentation
 - `frames`: the module docstring no longer promises a JAX port, and the

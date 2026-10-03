@@ -1,18 +1,6 @@
 # Public names still without a docstring. tests/test_docstrings.py keeps this
 # list exact; each audit sitting (issue #48) documents its module's names and
 # removes them here.
-sonore.frames.filterbank.BandpassFilterbank.from_scale
-sonore.frames.filterbank.BandpassFilterbank.to_scale
-sonore.frames.filterbank.CosineFilterbank.from_scale
-sonore.frames.filterbank.CosineFilterbank.to_scale
-sonore.frames.filterbank.ERBFilterbank.from_scale
-sonore.frames.filterbank.ERBFilterbank.to_scale
-sonore.frames.filterbank.GammatoneFilterbank.from_scale
-sonore.frames.filterbank.GammatoneFilterbank.to_scale
-sonore.frames.filterbank.MorletFilterbank.from_scale
-sonore.frames.filterbank.MorletFilterbank.to_scale
-sonore.frames.filterbank.OctaveFilterbank.from_scale
-sonore.frames.filterbank.OctaveFilterbank.to_scale
 sonore.frames.gabor.STFT.f
 sonore.frames.gabor.STFT.plot
 sonore.frames.gabor.TVSTFT.f

@@ -43,7 +43,7 @@ from scipy.special import ndtr
 
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
-from sonore.frames.filterbank import OctaveFilterbank, Subbands
+from sonore.frames.filterbank import Filterbank, Subbands, cosine_filterbank
 from sonore.sources.waveforms import gaussian_noise
 from sonore.views.envelopes import Envelopes
 
@@ -64,7 +64,7 @@ class _Pattern:
 
     __radd__ = __add__
 
-    def render(self, filterbank: OctaveFilterbank, duration: float, fs: float) -> Envelopes:
+    def render(self, filterbank: Filterbank, duration: float, fs: float) -> Envelopes:
         """The pattern evaluated at each band center of ``filterbank`` (with
         ``x`` in octaves above ``filterbank.f_lo``), as Envelopes."""
         return render(self, filterbank, duration, fs)
@@ -267,18 +267,18 @@ def _check_resolution(pattern: Pattern, per_octave: float, what: str) -> None:
         )
 
 
-def render(pattern: Pattern, filterbank: OctaveFilterbank, duration: float, fs: float) -> Envelopes:
+def render(pattern: Pattern, filterbank: Filterbank, duration: float, fs: float) -> Envelopes:
     """Evaluate any pattern (including a plain ``f(t, x)``) on the band centers
     of an octave filterbank, giving :class:`~sonore.views.envelopes.Envelopes`.
     Compare it with a sound's measured envelopes on the same filterbank."""
-    if not isinstance(filterbank, OctaveFilterbank):
-        raise TypeError("patterns are defined in octaves; use an OctaveFilterbank")
+    if filterbank.scale.name != "octave":
+        raise TypeError("patterns are defined in octaves; use a filterbank on the octave scale")
     t = time_axis(n_samples(duration, fs), fs)
     x = np.log2(filterbank.cfs / filterbank.f_lo)
     return Envelopes(_evaluate(pattern, t, x).T, fs, filterbank)
 
 
-def _flat_noise_bands(noise: Sound, filterbank: OctaveFilterbank) -> Subbands:
+def _flat_noise_bands(noise: Sound, filterbank: Filterbank) -> Subbands:
     """Noise bands shaped by the *squared* filter responses and scaled to equal
     RMS. Because the squared responses sum to 1, these bands add up to a flat
     spectrum without re-filtering, so modulation sidebands survive intact
@@ -367,7 +367,7 @@ def ripple_sound(
 
     # channel carriers: pattern envelopes x the carrier's band fine structure
     _check_resolution(pattern, bands_per_octave, "channel carrier")
-    filterbank = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
+    filterbank = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
     if isinstance(carrier, Sound):
         if carrier.fs != fs or len(carrier) < length:
             raise ValueError("carrier sound must have the same fs and be at least as long")

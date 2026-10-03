@@ -28,7 +28,7 @@ def test_set_fft_workers_as_call_and_block():
 
 def test_results_are_identical_for_any_number_of_workers():
     s = so.gaussian_noise(0.5, 16000, rng=0)
-    fb = so.ERBFilterbank(20, 80.0, 6000.0)
+    fb = so.cosine_filterbank(20, 80.0, 6000.0)
     out = {}
     for n in (1, 3):
         with so.set_fft_workers(n):

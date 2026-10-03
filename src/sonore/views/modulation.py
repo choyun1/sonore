@@ -354,12 +354,13 @@ class ModulationSpectrum(View):
 
         Shorthand for::
 
-            fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, f_hi)
+            fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
             fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
         """
-        from sonore.frames.filterbank import OctaveFilterbank
+        from sonore.frames.filterbank import cosine_filterbank
 
-        fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, min(f_hi, _below_nyquist(sound.fs)))
+        f_hi = min(f_hi, _below_nyquist(sound.fs))
+        fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
         return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
 
     def peak(self, exclude_dc: bool = True) -> tuple[float, float]:

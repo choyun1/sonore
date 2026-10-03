@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 
 import sonore as so
+from sonore.frames.filterbank import FilterType
 
 FS = 44100
 # A lower rate for spectral and modulation tests. These check where modulation
@@ -34,41 +35,38 @@ def cents(f, ref):
 
 
 @dataclass(frozen=True)
-class GaussianFilterbank(so.Filterbank):
-    """Test-only, deliberately non-tight frame: ``n`` Gaussian filters with
-    centers linearly spaced from 0 Hz to ``f_hi`` and standard deviation
-    ``width`` times the spacing, truncated to zero beyond 3 SD (so a small
-    ``width`` leaves true gaps in coverage)."""
+class GaussianType(FilterType):
+    """Test-only filter type: Gaussians with standard deviation ``width``
+    times the spacing of the bank's centers, truncated to zero beyond 3 SD
+    (so a small ``width`` leaves true gaps in coverage), delayed by ``delay``
+    [s]. A delay makes the response complex (conjugate-symmetric) with a
+    value at Nyquist that is not real, which exercises the Nyquist rule (see
+    ``Filterbank.rfft_response``)."""
 
-    n: int = 8
-    f_hi: float = 4000.0
     width: float = 0.7
+    delay: float = 0.0
 
-    @property
-    def n_filters(self) -> int:
-        return self.n
-
-    @property
-    def cfs(self) -> np.ndarray:
-        return np.linspace(0.0, self.f_hi, self.n)
-
-    def response(self, freqs):
-        sd = self.width * self.f_hi / (self.n - 1)
-        u = (np.asarray(freqs, float)[:, None] - self.cfs[None, :]) / sd
-        return np.where(np.abs(u) <= 3, np.exp(-0.5 * u**2), 0.0)
+    def band_response(self, bank, freqs):
+        centers = bank.band_cfs
+        u = (np.asarray(freqs, float)[:, None] - centers[None, :]) / (self.width * (centers[1] - centers[0]))
+        gaussian = np.where(np.abs(u) <= 3, np.exp(-0.5 * u**2), 0.0)
+        if self.delay:
+            return gaussian * np.exp(-2j * np.pi * np.asarray(freqs, float) * self.delay)[:, None]
+        return gaussian
 
 
-@dataclass(frozen=True)
-class DelayedGaussianFilterbank(GaussianFilterbank):
-    """:class:`GaussianFilterbank` with a fractional-sample delay ``delay``
-    [s]: a complex (conjugate-symmetric) response whose value at Nyquist is
-    not real, to exercise the Nyquist rule (see ``Filterbank.rfft_response``)."""
+def GaussianFilterbank(n: int = 8, f_hi: float = 4000.0, width: float = 0.7, delay: float = 0.0):
+    """Test-only, deliberately non-tight frame: ``n`` Gaussian filters
+    (:class:`GaussianType`) with centers linearly spaced from 0 Hz to
+    ``f_hi``, and no edge filters."""
+    step = f_hi / (n - 1)
+    knots = np.linspace(-step, f_hi + step, n + 2)
+    return so.Filterbank("linear", knots, GaussianType(width, delay), edges=False)
 
-    delay: float = 0.3e-3
 
-    def response(self, freqs):
-        f = np.asarray(freqs, float)
-        return super().response(f) * np.exp(-2j * np.pi * f * self.delay)[:, None]
+def DelayedGaussianFilterbank(f_hi: float = 4000.0, delay: float = 0.3e-3):
+    """:func:`GaussianFilterbank` with a fractional-sample delay ``delay`` [s]."""
+    return GaussianFilterbank(f_hi=f_hi, delay=delay)
 
 
 # ------------------------------------------------ dense-matrix frame oracle
