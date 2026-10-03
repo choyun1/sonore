@@ -43,7 +43,7 @@ class TestBinaural:
 
     def test_per_band_cues(self):
         b = so.apply_itd_ild(so.gaussian_noise(0.5, FS, rng=0), itd=200e-6)
-        c = so.interaural_cues(b, 20e-3, filterbank=so.ERBFilterbank(8, 200, 1500))
+        c = so.interaural_cues(b, 20e-3, filterbank=so.cosine_filterbank(8, 200, 1500))
         assert c.itd.shape[1] == 10
         assert np.nanmedian(c.itd[:, 2:-2]) == pytest.approx(200e-6, abs=10e-6)
 

@@ -65,9 +65,8 @@ def show(snd, pattern, dmr=False):
     fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout="constrained")
     pattern.plot(duration=snd.duration, f_lo=250, f_hi=8000, ax=axes[0, 0], colorbar=False)
     axes[0, 0].set_title("Pattern as specified (envelope, dB)")
-    so.OctaveFilterbank.per_octave(24, 250, 8000).analyze(snd).envelopes(lowpass=200, fs=1000).plot(
-        axes[0, 1], db_range=30, colorbar=False
-    )
+    bank = so.cosine_filterbank(f_lo=250, f_hi=8000, spacing=1 / 24, scale="octave")
+    bank.analyze(snd).envelopes(lowpass=200, fs=1000).plot(axes[0, 1], db_range=30, colorbar=False)
     axes[0, 1].set_title("Measured envelopes of the sound (cochleagram)")
     snd.plot(axes[1, 0], lw=0.4)
     axes[1, 0].set_title("Waveform (the pattern barely shows here)")

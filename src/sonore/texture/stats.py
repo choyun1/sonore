@@ -26,7 +26,7 @@ from scipy.signal import hilbert, resample
 
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
-from sonore.frames.filterbank import ERBFilterbank
+from sonore.frames.filterbank import Filterbank, cosine_filterbank
 from sonore.views.modulation import ConstantQModulationFilterbank, OctaveModulationFilterbank
 from sonore.views.view import View
 
@@ -101,8 +101,8 @@ class TextureModel:
     corr_offsets: tuple[int, ...] = (1, 2, 3, 5, 8, 11, 16, 21)
 
     @property
-    def filterbank(self) -> ERBFilterbank:
-        return ERBFilterbank(self.n_bands, self.f_lo, self.f_hi)
+    def filterbank(self) -> Filterbank:
+        return cosine_filterbank(self.n_bands, self.f_lo, self.f_hi)
 
     @property
     def mod_bank(self) -> ConstantQModulationFilterbank:

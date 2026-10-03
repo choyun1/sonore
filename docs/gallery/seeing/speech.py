@@ -282,8 +282,8 @@ sound = sentence
 # envelope peaks at $t = 3 / (2\pi b)$ after a click, later for lower, narrower filters.
 
 # %%
-morlet = so.MorletFilterbank(54, 70, 7000, cycles=6)  # 54 wavelets, 70 Hz to 7 kHz, zero-phase
-gammatone = so.GammatoneFilterbank(60, 70, 7000)  # 60 filters, 2 per ERB, causal
+morlet = so.morlet_filterbank(54, 70, 7000, cycles=6)  # 54 wavelets, 70 Hz to 7 kHz, zero-phase
+gammatone = so.gammatone_filterbank(60, 70, 7000)  # 60 filters, 2 per ERB, causal
 latency = gammatone.envelope_peak_delay[1:-1]  # without the two edge filters
 print(
     f"envelope-peak latency: {1e3 * latency[0]:.1f} ms at {gammatone.cfs[1]:.0f} Hz, "
@@ -573,7 +573,7 @@ for name, frame in frames.items():
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
 #   Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
-#   [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L443)
+#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L259)
 # - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
 #   modification and synthesis framework. *Sādhanā* 36(5).
 #   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).
