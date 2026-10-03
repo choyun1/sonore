@@ -28,6 +28,7 @@ from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
+from sonore.frames.gabor import _bin_weights
 from sonore.views.view import View
 
 __all__ = ["PVAnalysis", "pv_analyze", "time_stretch", "pitch_shift"]
@@ -115,11 +116,7 @@ class PVAnalysis(View):
         sample_times = np.arange(n_out) / self.fs
         window_times = self.t * time_scale
         # filterbank-summation gain: sum over bins of |X| equals N*w(center)*amplitude
-        gain = np.full(self.magnitude.shape[1], 2.0)
-        gain[0] = 1.0
-        if self.n_win % 2 == 0:
-            gain[-1] = 1.0
-        gain /= self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
+        gain = _bin_weights(self.n_win) / self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
         # Anchor each oscillator's phase at the first time window that lies
         # fully inside the signal; edge time windows are truncated, which scrambles
         # the phase relationship between neighbouring bins.

@@ -57,7 +57,7 @@ class Cepstrum(View):
             raise TypeError(f"expected an STFT or TVSTFT, not {type(coefs).__name__}")
         self.source = coefs
         self.fs = coefs.fs
-        self.n_fft = _n_fft(coefs)
+        self.n_fft = coefs.n_fft
         mag = np.abs(coefs.data)
         peak = mag.max(axis=(1, 2), keepdims=True)
         floor = np.where(peak > 0, peak * 10 ** (floor_db / 20), np.finfo(float).tiny)
@@ -187,7 +187,7 @@ class Cepstrum(View):
         """
         if not 0 < f_lo < f_hi < self.fs / 2:
             raise ValueError(f"need 0 < f_lo < f_hi < fs/2, got f_lo={f_lo:g}, f_hi={f_hi:g}")
-        shortest = _shortest_window(self.source) / self.fs
+        shortest = self.source.shortest_window / self.fs
         if shortest < 3 / f_lo:
             raise ValueError(
                 f"the shortest window is {shortest * 1e3:.1f} ms; cepstral F0 down to f_lo={f_lo:g} Hz "
@@ -211,16 +211,3 @@ class Cepstrum(View):
         from sonore.plotting import plot_cepstrum
 
         return plot_cepstrum(self, ax=ax, channel=channel, **kwargs)
-
-
-def _n_fft(coefs: STFT | TVSTFT) -> int:
-    if isinstance(coefs, STFT):
-        return int(coefs.sft.mfft)
-    return int(coefs.frame.layout(coefs.fs).n_fft)
-
-
-def _shortest_window(coefs: STFT | TVSTFT) -> int:
-    """Shortest window [samples]."""
-    if isinstance(coefs, STFT):
-        return int(coefs.sft.m_num)
-    return int(coefs.frame.layout(coefs.fs).lengths.min())

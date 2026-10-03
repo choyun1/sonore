@@ -38,8 +38,26 @@ from sonore.core.utils import amp_to_db, as_rng
 __all__ = ["GaborFrame", "TVGaborFrame", "STFT", "TVSTFT"]
 
 
+class _ShortTimeFourierFrame(Frame):
+    """What :class:`GaborFrame` and :class:`TVGaborFrame` share: frame bounds
+    from :meth:`frame_power`, and the coefficient energy weighted by
+    :meth:`bin_weights`, so that it is the energy of the full two-sided STFT."""
+
+    def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]:
+        """``(min s, max s)`` over a signal of ``n_samples`` at ``fs``, in the
+        weighted coefficient norm of :meth:`energy`."""
+        power_sum = self.frame_power(n_samples, fs)
+        return (float(power_sum.min()), float(power_sum.max()))
+
+    def energy(self, coefs) -> np.ndarray:
+        """Weighted coefficient energy per channel: the energy of the full
+        two-sided STFT."""
+        weights = self.bin_weights(coefs.fs)
+        return np.einsum("f,cft->c", weights, np.abs(coefs.data) ** 2)
+
+
 @dataclass(frozen=True)
-class GaborFrame(Frame):
+class GaborFrame(_ShortTimeFourierFrame):
     """The one-sided short-time Fourier transform as a frame.
 
     Parameters
@@ -88,13 +106,7 @@ class GaborFrame(Frame):
 
     def window_samples(self, fs: float) -> np.ndarray:
         """The analysis window at ``fs``."""
-        n_win = self.lengths(fs)[0]
-        if callable(self.window):
-            w = np.asarray(self.window(n_win), dtype=float)
-            if w.shape != (n_win,):
-                raise ValueError(f"window callable returned shape {w.shape}, expected ({n_win},)")
-            return w
-        return get_window(self.window, n_win, fftbins=True)
+        return _window(self.window, self.lengths(fs)[0])
 
     def sft(self, fs: float) -> ShortTimeFFT:
         """The :class:`~scipy.signal.ShortTimeFFT` at ``fs`` (cached), with
@@ -117,22 +129,11 @@ class GaborFrame(Frame):
         weights = np.broadcast_to(window_power, positions.shape)[inside]
         return n_fft * np.bincount(positions[inside], weights=weights, minlength=n)
 
-    def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]:
-        """``(min s, max s)`` over a signal of ``n_samples`` at ``fs``, in the
-        weighted coefficient norm of :meth:`energy`."""
-        power_sum = self.frame_power(n_samples, fs)
-        return (float(power_sum.min()), float(power_sum.max()))
-
     def bin_weights(self, fs: float) -> np.ndarray:
         """Weight of each stored frequency bin: 1 for DC and, for even
         ``n_fft``, Nyquist; 2 for the rest, which stand for their negative-
         frequency mirror images too."""
-        n_fft = self.lengths(fs)[2]
-        weights = np.full(n_fft // 2 + 1, 2.0)
-        weights[0] = 1.0
-        if n_fft % 2 == 0:
-            weights[-1] = 1.0
-        return weights
+        return _bin_weights(self.lengths(fs)[2])
 
     def analyze(self, sound: Sound) -> STFT:
         """The STFT of ``sound``, data shape ``(n_channels, n_freqs, n_windows)``."""
@@ -148,12 +149,6 @@ class GaborFrame(Frame):
             raise ValueError(f"expected {short_time_fft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
         signal = short_time_fft.istft(coefs.data, k1=coefs.n_samples)
         return Sound(np.real(signal).T, coefs.fs)
-
-    def energy(self, coefs: STFT) -> np.ndarray:
-        """Weighted coefficient energy per channel: the energy of the full
-        two-sided STFT."""
-        weights = self.bin_weights(coefs.fs)
-        return np.einsum("f,cft->c", weights, np.abs(coefs.data) ** 2)
 
     def adjoint(self, coefs: STFT) -> Sound:
         """``n_fft`` times SciPy's ``istft`` with ``dual_win = win``: the
@@ -198,6 +193,15 @@ def _gabor_adjoint_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
     return ShortTimeFFT(window, hop=hop, fs=fs, mfft=n_fft, dual_win=window, fft_mode="onesided")
 
 
+def _bin_weights(n_fft: int) -> np.ndarray:
+    """1 for DC and, for even ``n_fft``, Nyquist; 2 for every other stored bin."""
+    weights = np.full(n_fft // 2 + 1, 2.0)
+    weights[0] = 1.0
+    if n_fft % 2 == 0:
+        weights[-1] = 1.0
+    return weights
+
+
 def _window(spec, n: int) -> np.ndarray:
     """A periodic window of ``n`` samples from a get_window spec or a callable."""
     if callable(spec):
@@ -209,7 +213,7 @@ def _window(spec, n: int) -> np.ndarray:
 
 
 @dataclass(frozen=True)
-class TVGaborFrame(Frame):
+class TVGaborFrame(_ShortTimeFourierFrame):
     """A Gabor frame with a time-varying window.
 
     Window ``q`` is ``win_durs[q]`` long and centered at ``times[q]`` [s];
@@ -327,20 +331,9 @@ class TVGaborFrame(Frame):
             signal_index[valid], weights=np.abs(frame_layout.windows[valid]) ** 2, minlength=n
         )
 
-    def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]:
-        """``(min s, max s)`` over a signal of ``n_samples`` at ``fs``, in the
-        weighted coefficient norm of :meth:`energy`."""
-        power_sum = self.frame_power(n_samples, fs)
-        return (float(power_sum.min()), float(power_sum.max()))
-
     def bin_weights(self, fs: float) -> np.ndarray:
         """Weight of each stored frequency bin, as for :class:`GaborFrame`."""
-        n_fft = self.layout(fs).n_fft
-        weights = np.full(n_fft // 2 + 1, 2.0)
-        weights[0] = 1.0
-        if n_fft % 2 == 0:
-            weights[-1] = 1.0
-        return weights
+        return _bin_weights(self.layout(fs).n_fft)
 
     def analyze(self, sound: Sound) -> TVSTFT:
         """The time-varying STFT of ``sound``, data shape ``(n_channels, n_freqs, n_windows)``."""
@@ -388,11 +381,6 @@ class TVGaborFrame(Frame):
             float(power_sum.min()), float(power_sum.max()), f"{type(self).__name__} at {coefs.fs:g} Hz"
         )
         return Sound(self._overlap_add(coefs, frame_layout) / power_sum[:, None], coefs.fs)
-
-    def energy(self, coefs: TVSTFT) -> np.ndarray:
-        """Weighted coefficient energy per channel, as for :class:`GaborFrame`."""
-        weights = self.bin_weights(coefs.fs)
-        return np.einsum("f,cft->c", weights, np.abs(coefs.data) ** 2)
 
 
 def _bridged_f0(f0_times: Sequence[float], f0: Sequence[float]) -> Callable[[float], float]:
@@ -457,7 +445,28 @@ _FLOOR_DB = -200.0
 
 
 # -------------------------------------------------------------------- STFT
-class STFT:
+class _ShortTimeCoefficients:
+    """What :class:`STFT` and :class:`TVSTFT` share: magnitudes and levels of
+    ``data`` (``(n_channels, n_freqs, n_windows)``), and resynthesis through
+    the frame that made them."""
+
+    __array_ufunc__ = None
+
+    @property
+    def magnitude(self) -> np.ndarray:
+        return np.abs(self.data)
+
+    @property
+    def db(self) -> np.ndarray:
+        return amp_to_db(self.data, floor_db=_FLOOR_DB)
+
+    def to_sound(self) -> Sound:
+        """Least-squares resynthesis through :attr:`frame` (its ``synthesize``):
+        exact for unmodified coefficients."""
+        return self.frame.synthesize(self)
+
+
+class STFT(_ShortTimeCoefficients):
     """Short-time Fourier transform (wraps :class:`scipy.signal.ShortTimeFFT`).
 
     ``data`` has shape ``(n_channels, n_freqs, n_windows)``. Resynthesis with
@@ -478,8 +487,6 @@ class STFT:
         A :class:`~sonore.frames.gabor.GaborFrame` to use instead (other windows,
         zero-padded FFTs); ``win_dur`` and ``hop_dur`` are then ignored.
     """
-
-    __array_ufunc__ = None
 
     def __init__(
         self,
@@ -520,12 +527,14 @@ class STFT:
         return self.sft.t(self.n_samples)
 
     @property
-    def magnitude(self) -> np.ndarray:
-        return np.abs(self.data)
+    def n_fft(self) -> int:
+        """FFT length [samples]."""
+        return int(self.sft.mfft)
 
     @property
-    def db(self) -> np.ndarray:
-        return amp_to_db(self.data, floor_db=_FLOOR_DB)
+    def shortest_window(self) -> int:
+        """Window length [samples]: every window has it."""
+        return int(self.sft.m_num)
 
     def __mul__(self, other):
         from sonore.frames.mask import Mask  # mask.py imports STFT from here
@@ -534,11 +543,6 @@ class STFT:
         return STFT._from(self, self.data * gains)
 
     __rmul__ = __mul__
-
-    def to_sound(self) -> Sound:
-        """Inverse STFT (least-squares overlap-add); see
-        :meth:`~sonore.frames.gabor.GaborFrame.synthesize`."""
-        return self.frame.synthesize(self)
 
     def griffin_lim(self, n_iter: int = 100, momentum: float = 0.99, rng=None) -> Sound:
         """Reconstruct a signal from the magnitude only (fast Griffin-Lim,
@@ -562,7 +566,7 @@ class STFT:
         return plot_stft(self, ax=ax, channel=channel, **kwargs)
 
 
-class TVSTFT:
+class TVSTFT(_ShortTimeCoefficients):
     """Coefficients of a :class:`~sonore.frames.gabor.TVGaborFrame`: a short-time
     Fourier transform whose window changes over time.
 
@@ -572,8 +576,6 @@ class TVSTFT:
     :attr:`t`. :meth:`to_sound` is exact for unmodified coefficients and the
     least-squares signal for modified ones. Multiply by an array to mask.
     """
-
-    __array_ufunc__ = None
 
     def __init__(self, data: np.ndarray, fs: float, n_samples: int, frame: TVGaborFrame):
         self.data, self.fs, self.n_samples, self.frame = data, fs, int(n_samples), frame
@@ -600,22 +602,19 @@ class TVSTFT:
         return self.frame.layout(self.fs).centers / self.fs
 
     @property
-    def magnitude(self) -> np.ndarray:
-        return np.abs(self.data)
+    def n_fft(self) -> int:
+        """FFT length [samples], shared by every window."""
+        return int(self.frame.layout(self.fs).n_fft)
 
     @property
-    def db(self) -> np.ndarray:
-        return amp_to_db(self.data, floor_db=_FLOOR_DB)
+    def shortest_window(self) -> int:
+        """Length of the shortest window [samples]."""
+        return int(self.frame.layout(self.fs).lengths.min())
 
     def __mul__(self, other):
         return TVSTFT._from(self, self.data * other)
 
     __rmul__ = __mul__
-
-    def to_sound(self) -> Sound:
-        """Least-squares resynthesis; see
-        :meth:`~sonore.frames.gabor.TVGaborFrame.synthesize`."""
-        return self.frame.synthesize(self)
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
         """Spectrogram in dB at the window centers (see :func:`~sonore.plotting.plot_tf_db`)."""
