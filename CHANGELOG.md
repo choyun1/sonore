@@ -6,6 +6,18 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+- `ModulationSpectrum.to_sound(carrier=...)`: a sound whose envelopes have
+  the spectrum, the carrier supplying what it lacks, the modulation phase
+  and the fine structure. A `Sound` lends its own (so the spectrum of `x`
+  with `carrier=x` gives `x`'s envelopes back); `"tones"` (steady tones at
+  the band centres, the default) and `"noise"` draw a random modulation
+  phase. `ModulationSpectrum.with_gain(g)` edits a spectrum, for example
+  `g = lambda rate, density: abs(rate) <= 4`, and `to_envelopes` gives the
+  rebuilt envelopes. Spectra made from envelopes keep how they were made
+  for this. Design and measurements in
+  `docs/design/views/modulation-targets.md`.
+
 ### Changed
 - `so.pad` and `so.truncate` are replaced by
   `so.match_lengths(sounds, mode="pad" | "truncate", align=...)`, next to
