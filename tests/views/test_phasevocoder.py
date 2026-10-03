@@ -68,7 +68,7 @@ class TestPhaseVocoder:
 
     def test_oscillator_bank_identity(self):
         x = so.harmonic_complex(1.0, FS, 220, np.arange(1, 8)).ramp(20e-3)
-        y = so.pv_analyze(x).resynthesize()
+        y = so.pv_analyze(x).to_sound()
         sl = slice(int(0.1 * FS), int(0.9 * FS))
         assert np.corrcoef(x.data[sl, 0], y.data[sl, 0])[0, 1] > 0.99
         assert so.amp_to_db(so.rms(y.data[sl]) / so.rms(x.data[sl])) == pytest.approx(0, abs=0.3)
@@ -76,8 +76,8 @@ class TestPhaseVocoder:
     def test_oscillator_bank_frequency_map(self):
         x = so.pure_tone(1.0, FS, 500.0).ramp(20e-3)
         a = so.pv_analyze(x)
-        assert abs(cents(dominant_freq(a.resynthesize(freq_map=1.5)[0.2:0.8]), 750)) < 2
-        assert abs(cents(dominant_freq(a.resynthesize(freq_map=lambda f: f + 100)[0.2:0.8]), 600)) < 2
-        stretched = a.resynthesize(time_scale=2.0)
+        assert abs(cents(dominant_freq(a.to_sound(freq_map=1.5)[0.2:0.8]), 750)) < 2
+        assert abs(cents(dominant_freq(a.to_sound(freq_map=lambda f: f + 100)[0.2:0.8]), 600)) < 2
+        stretched = a.to_sound(time_scale=2.0)
         assert len(stretched) == 2 * len(x)
         assert abs(cents(dominant_freq(stretched[0.4:1.6]), 500)) < 2

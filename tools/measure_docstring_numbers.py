@@ -29,18 +29,18 @@ def correlation_and_level(x, y, fs):
 
 
 def phase_vocoder_resynthesis():
-    """PVAnalysis.resynthesize: harmonic complexes and noise, unchanged."""
-    print("PVAnalysis.resynthesize (views/phasevocoder.py), 1 s at 16 kHz:")
+    """PVAnalysis.to_sound: harmonic complexes and noise, unchanged."""
+    print("PVAnalysis.to_sound (views/phasevocoder.py), 1 s at 16 kHz:")
     worst = 1.0
     for f0 in (110.0, 220.0, 440.0):
         x = so.harmonic_complex(1.0, FS, f0, np.arange(1, 8)).ramp(20e-3)
-        r, level = correlation_and_level(x, so.pv_analyze(x).resynthesize(), FS)
+        r, level = correlation_and_level(x, so.pv_analyze(x).to_sound(), FS)
         worst = min(worst, r)
         print(f"  harmonic complex, f0 {f0:g} Hz, harmonics 1-7: r = {r:.5f}, level {level:+.2f} dB")
     print(f"  lowest r over harmonic complexes: {worst:.5f}")
     for seed in range(3):
         x = so.gaussian_noise(1.0, FS, rng=seed).ramp(20e-3)
-        r, level = correlation_and_level(x, so.pv_analyze(x).resynthesize(), FS)
+        r, level = correlation_and_level(x, so.pv_analyze(x).to_sound(), FS)
         print(f"  Gaussian noise, seed {seed}: r = {r:.3f}, level {level:+.2f} dB")
 
 

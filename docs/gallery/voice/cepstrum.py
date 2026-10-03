@@ -642,7 +642,7 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 # - Bogert, Healy & Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum,
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
 #   Analysis*. Wiley. [Semantic Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
-#   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L19)
+#   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L35)
 # - Davis & Mermelstein (1980). Comparison of parametric representations for monosyllabic word
 #   recognition in continuously spoken sentences. *IEEE Trans. Acoust., Speech, Signal Process.*
 #   28(4), 357–366.
@@ -665,4 +665,4 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   The formants of the synthetic vowels.
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
-#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L169)
+#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L179)

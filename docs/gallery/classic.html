@@ -189,7 +189,7 @@ def show(snd, fmax=4000, win_dur=50e-3):
 <p>A masker with the long-term average spectrum of speech (LTASS) covers the same frequencies as
 a talker without carrying any words. Long-term spectra of speech are much alike from one
 language to another (Byrne et al., 1994). <code>so.long_term_spectrum</code> averages Welch power spectra
-over a set of recordings, weighted by duration, and <code>to_noise</code> turns the average into Gaussian
+over a set of recordings, weighted by duration, and <code>to_sound</code> (noise by default) turns it into Gaussian
 noise with that spectrum. Here the recordings are the three CMU Arctic sentences in the
 repository, from two talkers, each brought to the same RMS first so that neither talker
 dominates by being louder.</p>
@@ -198,7 +198,7 @@ dominates by being louder.</p>
     for name in (&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;)
 ]
 ltass = so.long_term_spectrum(sentences)
-ssn = ltass.to_noise(3, sentences[0].fs, rng=0)</code></pre></details></div>
+ssn = ltass.to_sound(3, sentences[0].fs, rng=0)</code></pre></details></div>
 
 <article class="still" id="d-k0">
   <div class="about">
@@ -477,7 +477,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)</code></pre></details>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Byrne et al. (1994). An international comparison of long-term average speech spectra. <em>J. Acoust. Soc. Am.</em> 96(4), 2108–2120. <a href="https://doi.org/10.1121/1.410152">doi:10.1121/1.410152</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L80"><code>spectrum.long_term_spectrum</code></a></li><li>Glasberg &amp; Moore (1990). Derivation of auditory filter shapes from notched-noise data. <em>Hearing Research</em> 47. <a href="https://doi.org/10.1016/0378-5955(90)90170-T">doi:10.1016/0378-5955(90)90170-T</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences, by speakers bdl, rms and slt.</li><li>Licklider, Webster &amp; Hedlun (1950). On the frequency limits of binaural beats. <em>J. Acoust. Soc. Am.</em> 22(4), 468–473. <a href="https://doi.org/10.1121/1.1906629">doi:10.1121/1.1906629</a>.</li><li>Plomp &amp; Levelt (1965). Tonal consonance and critical bandwidth. <em>J. Acoust. Soc. Am.</em> 38(4), 548–560. <a href="https://doi.org/10.1121/1.1909741">doi:10.1121/1.1909741</a>.</li></ul>
+<ul><li>Byrne et al. (1994). An international comparison of long-term average speech spectra. <em>J. Acoust. Soc. Am.</em> 96(4), 2108–2120. <a href="https://doi.org/10.1121/1.410152">doi:10.1121/1.410152</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L118"><code>spectrum.long_term_spectrum</code></a></li><li>Glasberg &amp; Moore (1990). Derivation of auditory filter shapes from notched-noise data. <em>Hearing Research</em> 47. <a href="https://doi.org/10.1016/0378-5955(90)90170-T">doi:10.1016/0378-5955(90)90170-T</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences, by speakers bdl, rms and slt.</li><li>Licklider, Webster &amp; Hedlun (1950). On the frequency limits of binaural beats. <em>J. Acoust. Soc. Am.</em> 22(4), 468–473. <a href="https://doi.org/10.1121/1.1906629">doi:10.1121/1.1906629</a>.</li><li>Plomp &amp; Levelt (1965). Tonal consonance and critical bandwidth. <em>J. Acoust. Soc. Am.</em> 38(4), 548–560. <a href="https://doi.org/10.1121/1.1909741">doi:10.1121/1.1909741</a>.</li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/stimuli/classic.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/stimuli/classic.py</code>, or a cell at a time.</footer>
 </main>

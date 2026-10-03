@@ -432,7 +432,7 @@ fig, playhead = show(sound, fmax=5000)</code></pre></details>
 <section aria-labelledby="h-moving-the-partials">
 <h2 id="h-moving-the-partials">Moving the partials</h2>
 <p>The analysis can also drive a bank of oscillators, one per bin, each following its bin's
-magnitude and instantaneous frequency from time window to time window (Dolson, 1986). <code>pv.resynthesize</code>
+magnitude and instantaneous frequency from time window to time window (Dolson, 1986). <code>pv.to_sound</code>
 does this, and its <code>freq_map</code> changes every frequency on the way: a ratio scales them all, a
 function can do anything. Scaling keeps a harmonic sound harmonic; adding a constant does not,
 unless the constant is a multiple of half the fundamental.</p>
@@ -450,7 +450,7 @@ its pitch less certain.</p></div>
     <img src="img/14_partials_shifted_up_70_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 70 hz sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 70))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pv.to_sound(freq_map=lambda f: f + 70))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
@@ -466,7 +466,7 @@ result is harmonic again, a hollow, clarinet-like tone an octave below the refer
     <img src="img/14b_partials_shifted_up_110_hz.png" width="1000" height="620" alt="Plots of the partials shifted up 110 hz sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pv.resynthesize(freq_map=lambda f: f + 110))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pv.to_sound(freq_map=lambda f: f + 110))
 fig, playhead = show(sound)</code></pre></details>
 </article>
 </section>

@@ -9,8 +9,8 @@ predicts. With amplitudes and frequencies in hand you can:
   re-accumulating phase at a different hop and overlap-adding;
 - change pitch without changing duration (:func:`pitch_shift`), by stretching
   and then resampling;
-- resynthesize through an oscillator bank with any frequency remapping
-  (:meth:`PVAnalysis.resynthesize`), e.g. to shift or stretch partials.
+- go back to a sound through an oscillator bank with any frequency
+  remapping (:meth:`PVAnalysis.to_sound`), e.g. to shift or stretch partials.
 
 Time stretching uses identity phase locking (Laroche & Dolson, 1999) by default:
 bins around each spectral peak keep their original phase relationship to the
@@ -60,7 +60,7 @@ def _win_len(win_dur: float, fs: float) -> int:
 class PVAnalysis(View):
     """Phase-vocoder analysis: per-channel magnitude, phase and instantaneous
     frequency, all shaped ``(n_channels, n_bins, n_windows)``. A view: it
-    reads each bin as one sinusoid, and :meth:`resynthesize` rebuilds a
+    reads each bin as one sinusoid, and :meth:`to_sound` rebuilds a
     sound from those sinusoids, closely for tonal sounds but not exactly."""
 
     discards = (
@@ -68,7 +68,7 @@ class PVAnalysis(View):
         "per bin (noise, close partials) is not, so its oscillator resynthesis is not an inverse."
     )
     back_to_sound = (
-        "PVAnalysis.resynthesize rebuilds an approximation through an oscillator bank; "
+        "PVAnalysis.to_sound rebuilds an approximation through an oscillator bank; "
         "so.GaborFrame gives an exact STFT."
     )
 
@@ -81,7 +81,7 @@ class PVAnalysis(View):
     hop: int
     n_samples: int
 
-    def resynthesize(
+    def to_sound(
         self,
         time_scale: float = 1.0,
         freq_map: float | Callable[[np.ndarray], np.ndarray] | None = None,

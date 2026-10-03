@@ -52,3 +52,37 @@ def test_tv_and_power_plots():
     ax = so.tandem_power(snd, t, np.full_like(t, 125.0)).plot(db_range=40, title="TANDEM")
     lo, hi = ax.collections[0].get_clim()
     assert hi - lo == 40 and ax.get_title() == "TANDEM"
+
+
+def test_to_sound_noise_carrier_is_shaped_noise():
+    ltass = so.long_term_spectrum(so.gaussian_noise(1.0, FS, tilt=-3, rng=2))
+    noise = ltass.to_sound(2.0, FS, rng=0)
+    assert np.array_equal(noise.data, so.gaussian_noise(2.0, FS, spectrum=ltass, rng=0).data)
+    with pytest.raises(TypeError):
+        ltass.to_sound(1.0, FS, carrier="minimum", rng=0)
+
+
+def test_to_sound_with_a_sounds_phase_gives_it_back():
+    sound = so.harmonic_complex(0.3, FS, 220.0, np.arange(1, 12)) + 0.1 * so.gaussian_noise(0.3, FS, rng=1)
+    rebuilt = so.Spectrum.from_sound(sound).to_sound(sound.duration, FS, carrier=sound)
+    assert np.max(np.abs(rebuilt.data - sound.normalize().data)) < 1e-10
+    with pytest.raises(ValueError):
+        so.Spectrum.from_sound(sound).to_sound(1.0, FS, carrier=sound)
+
+
+def test_to_sound_minimum_phase_recovers_a_minimum_phase_response():
+    # a one-pole lowpass, h[n] = 0.9**n, is minimum phase; from its magnitude
+    # alone the minimum-phase route must give it back
+    length = 2048
+    response = 0.9 ** np.arange(length)
+    freqs = np.fft.rfftfreq(length, 1 / FS)
+    spectrum = so.Spectrum(freqs, 20 * np.log10(np.abs(np.fft.rfft(response))))
+    rebuilt = spectrum.to_sound(length / FS, FS, carrier="minimum")
+    expected = so.Sound(response, FS).normalize()
+    assert np.max(np.abs(rebuilt.data - expected.data)) < 1e-9
+
+
+def test_unknown_carrier_is_refused():
+    spectrum = so.Spectrum(np.array([0.0, 8000.0]), np.zeros(2))
+    with pytest.raises(ValueError):
+        spectrum.to_sound(0.1, FS, carrier="pink")
