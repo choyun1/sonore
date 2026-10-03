@@ -1,8 +1,9 @@
 """How many threads sonore's large FFTs use, and FFT-friendly lengths.
 
 The whole-signal transforms (filterbank analysis and synthesis, Hilbert
-envelopes, FFT resampling, modulation filtering) run a batch of 1-D FFTs, one
-per band and channel. SciPy can split such a batch across threads. Each
+envelopes of subbands, FFT resampling, modulation filtering) run a batch of
+1-D FFTs, one per band and channel. SciPy can split such a batch across
+threads. Each
 transform is computed exactly as on one thread, so results are bit-identical
 whatever the number of threads; only the speed changes.
 
@@ -13,6 +14,10 @@ compete::
     so.set_fft_workers(1)          # from now on
     with so.set_fft_workers(1):    # or only inside the block
         ...
+
+The setting is one value for the whole process, not one per Python thread:
+two threads that each enter ``with so.set_fft_workers(...)`` overwrite each
+other's value.
 """
 
 from __future__ import annotations
