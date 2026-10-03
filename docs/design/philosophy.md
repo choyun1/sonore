@@ -13,7 +13,12 @@ meant to be readable without them.
   noises, chirps, the glottal source, Klatt) stand as plain functions.
 - **Folders follow meaning.** A module lives where what it means puts it,
   so a reader finds it where they expect it. Import order is still enforced,
-  but between modules (no cycles), not by folders.
+  but between modules (no cycles), not by folders. A voice is not a
+  different kind of sound, so there is no `voice` subpackage: synthesizers
+  live in `sources` and analyses of a voice in `views`.
+- **Heavy dependencies are optional.** They go in optional extras. A
+  component becomes its own distribution only when it needs a heavy
+  dependency, a different release cadence, or a separate audience.
 
 ## Sounds and units
 
