@@ -311,9 +311,7 @@ listed at the end.
 
 **Next, in order**
 
-1. **Release 0.4.0**, with the moved import paths and the `to_sound`
-   renames in its notes.
-2. **Texture modulation convergence.** Rebalance the objective so
+1. **Texture modulation convergence.** Rebalance the objective so
    modulation power converges (see Texture synthesis below).
 
 **Texture synthesis**
@@ -491,7 +489,8 @@ listed at the end.
   A view goes back to sound through `to_sound` where a canonical route
   exists, taking what the view discarded (`Spectrum.to_sound` a carrier,
   `PVAnalysis.to_sound` a time scale and a frequency map), and refuses
-  otherwise; see `docs/design/sound-first.md`.
+  otherwise; see `docs/design/sound-first.md`. Released as 0.4.0
+  ([10.5281/zenodo.23114390](https://doi.org/10.5281/zenodo.23114390)).
 </details>
 
 ## References
@@ -697,4 +696,5 @@ it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff
 
 Every release is archived on Zenodo. [10.5281/zenodo.23086165](https://doi.org/10.5281/zenodo.23086165)
 always points to the latest version; each version also has its own DOI, listed on that page
-(0.3.1 is [10.5281/zenodo.23086166](https://doi.org/10.5281/zenodo.23086166)). Cite the version you used.
+(0.4.0 is [10.5281/zenodo.23114390](https://doi.org/10.5281/zenodo.23114390), 0.3.1 is
+[10.5281/zenodo.23086166](https://doi.org/10.5281/zenodo.23086166)). Cite the version you used.
