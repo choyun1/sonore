@@ -367,6 +367,7 @@ class ModulationSpectrum(View):
     )
     _analysis = None  # an _EnvelopeAnalysis when made from Envelopes or blobs
     _rms_depth = None  # set by from_blobs, which refuses to clip
+    _long_term_phase = None  # phase of the zero-rate column, kept by random draws
 
     def __init__(self, stft: STFT, channel: int = 0):
         spectrogram_db = stft.db[channel]
@@ -389,7 +390,11 @@ class ModulationSpectrum(View):
         # cycles long). Removing each band's own mean instead would also work but
         # would erase static spectral structure (rate-0 ripples).
         self._mean = float(env.mean())
-        self._magnitude = np.abs(np.fft.fft2(env - self._mean))  # untapered, whole plane, for to_sound
+        untapered = np.fft.fft2(env - self._mean)  # whole plane, for to_sound
+        self._magnitude = np.abs(untapered)
+        # The zero-rate column is the long-term spectrum: its magnitudes alone don't say which
+        # band is loud, its phase does, so a random modulation phase must leave it alone.
+        self._long_term_phase = np.angle(untapered[:, 0])
         env = (env - self._mean) * np.hanning(env.shape[1])[None, :]
         spectrum = np.fft.fft2(env)
         w_f = np.fft.fftfreq(env.shape[0], d=dx)
@@ -530,7 +535,9 @@ class ModulationSpectrum(View):
         line up. A :class:`~sonore.Sound` ``carrier`` lends the phase of its
         own envelopes (analysed as this spectrum's were), so the spectrum of
         ``x`` with ``carrier=x`` gives back ``x``'s envelopes; with no carrier
-        the phase is drawn at random from ``rng``. Envelopes rebuilt from a
+        the phase is drawn at random from ``rng`` at every nonzero rate, while
+        the zero-rate column keeps its own phase, so each band keeps its
+        long-term level (the long-term spectrum). Envelopes rebuilt from a
         linear-scale spectrum can go below zero; they are clipped, with a
         warning saying how much, which changes their spectrum. Edge bands
         that the spectrum dropped are zero.
@@ -539,6 +546,8 @@ class ModulationSpectrum(View):
         analysis = self._analysis
         if carrier is None:
             phase = np.angle(np.fft.fft2(as_rng(rng).standard_normal(self._magnitude.shape)))
+            if self._long_term_phase is not None:
+                phase[:, 0] = self._long_term_phase
         else:
             if rng is not None:
                 raise TypeError("rng applies only when no carrier is given")
@@ -603,7 +612,8 @@ class ModulationSpectrum(View):
 
         * the **modulation phase** (when each event happens, how the bands
           line up; see :meth:`to_envelopes`): a :class:`~sonore.Sound` lends
-          its own, ``"tones"`` and ``"noise"`` draw a random one from ``rng``;
+          its own, ``"tones"`` and ``"noise"`` draw a random one from ``rng``
+          that keeps each band's long-term level;
         * the **fine structure** under each band's envelope: a Sound's own
           (``(envelopes * subbands.tfs()).to_sound()``, the vocoder's route),
           narrowband noise (``"noise"``, the same route), or a steady tone at

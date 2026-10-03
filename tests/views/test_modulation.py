@@ -74,6 +74,22 @@ def test_random_phase_keeps_the_magnitudes():
     )
 
 
+def test_random_phase_keeps_each_bands_long_term_level():
+    # Noise with its low bands 10 dB up: the zero-rate column's phase says which bands are loud,
+    # so a random draw that keeps it keeps every band's mean envelope, up to what clipping adds
+    # (under 1 dB here; scrambling that column too misses by 4-6 dB).
+    x = so.amplitude_modulate(so.gaussian_noise(2, FAST, rng=0), 4, depth=0.3)
+    x = x + so.bandpass(so.gaussian_noise(2, FAST, rng=1), 250, 1000) * 3
+    envelopes, spectrum = _octave_spectrum(x)
+    inner = slice(1, -1)
+    own_levels = envelopes.data[:, inner].mean(axis=(0, 2))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # noise envelopes clip a few cells
+        for seed in range(3):
+            levels = spectrum.to_envelopes(rng=seed).data[:, inner].mean(axis=(0, 2))
+            assert np.max(np.abs(20 * np.log10(levels / own_levels))) < 1
+
+
 def test_clipping_is_reported():
     _, spectrum = _octave_spectrum(_speech_like())
     with pytest.warns(UserWarning, match="were clipped"):

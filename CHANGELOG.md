@@ -120,6 +120,14 @@ version (0.x.y) only fixes bugs.
   scripts, and two of the README's three figures now come from the
   gallery. `docs/images/ripples.png` stays, as the README still shows it.
 
+### Fixed
+- `ModulationSpectrum.to_envelopes` and `to_sound` with a random modulation
+  phase (`carrier="tones"` or `"noise"`) scrambled the long-term spectrum:
+  which band is loud is set by the phase of the zero-rate column, and the
+  draw randomized it too. It now keeps that column's own phase. The
+  "Drawing a modulation spectrum" gallery page's random-phase demos are
+  rebuilt.
+
 ## [0.4.0] - 2026-10-03
 
 The package is reorganized by meaning: core, sources (sounds made from

@@ -75,8 +75,9 @@ def show(snd, target=None, f_lo=250):
 # A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
 # heard with the sentence's own modulation phase thrown away. `to_sound` with `carrier="tones"`
 # draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
-# on a steady tone at its band's centre. The magnitudes include the zero-rate column, the
-# sentence's long-term spectrum, so the new sound keeps the sentence's overall colour.
+# on a steady tone at its band's centre. The random phase leaves the zero-rate column alone,
+# since that column (its phase as well as its magnitudes) is the sentence's long-term spectrum:
+# which bands are loud.
 
 # %% [about]
 # The sentence, a male talker reading one of the CMU ARCTIC prompts. Its modulation spectrum
@@ -94,7 +95,10 @@ fig, playhead = show(sound, f_lo=125)
 # are gone from the envelopes, which change at the sentence's rates and densities but never at
 # its moments. A random phase also asks for envelopes below zero, which no
 # envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
-# and that is why the measured spectrum is smoother than the target.
+# and that is why the measured spectrum is smoother than the target. The colour is kept only
+# roughly. A two-dimensional modulation spectrum does not say which bands carry which
+# modulation, so the random phase spreads the sentence's modulation into bands that were quiet,
+# and clipping turns it into level there.
 
 # %% [demo mt2] Its modulation spectrum, random modulation phase
 twin = spectrum.to_sound(carrier="tones", fs=sentence.fs, rng=0)
@@ -266,16 +270,16 @@ for name, snd in [("edit", edited), ("20 iterations", searched), ("on tones", on
 # - Elliott & Theunissen (2009). The modulation transfer function for speech intelligibility.
 #   *PLoS Comput. Biol.* 5(3), e1000302.
 #   [doi:10.1371/journal.pcbi.1000302](https://doi.org/10.1371/journal.pcbi.1000302).
-#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L498)
+#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L503)
 # - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE
 #   Trans. Acoust. Speech Signal Process.* 32(2), 236–243.
 #   [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L605)
 # - Hsu, Woolley, Fremouw & Theunissen (2004). Modulation power and phase spectrum of natural
 #   sounds enhance neural encoding performed by single auditory neurons. *J. Neurosci.* 24(41),
 #   9201–9211.
 #   [doi:10.1523/JNEUROSCI.2449-04.2004](https://doi.org/10.1523/JNEUROSCI.2449-04.2004).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L605)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.
 #   [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067).
