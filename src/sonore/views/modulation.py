@@ -535,32 +535,47 @@ class ModulationSpectrum(View):
         warning saying how much, which changes their spectrum. Edge bands
         that the spectrum dropped are zero.
         """
-        from sonore.views.envelopes import Envelopes
-
         self._require_envelopes("to_envelopes")
         analysis = self._analysis
-        bank, n_env = analysis.filterbank, analysis.n_samples
-        kept = slice(1, -1) if analysis.drop_edges else slice(None)
         if carrier is None:
             phase = np.angle(np.fft.fft2(as_rng(rng).standard_normal(self._magnitude.shape)))
         else:
             if rng is not None:
                 raise TypeError("rng applies only when no carrier is given")
-            n_audio = int(round(n_env * carrier.fs / analysis.fs))
+            n_audio = int(round(analysis.n_samples * carrier.fs / analysis.fs))
             if carrier.n_samples < n_audio:
-                raise ValueError(f"the carrier is shorter than the analysed {n_env / analysis.fs:g} s")
+                raise ValueError(
+                    f"the carrier is shorter than the analysed {analysis.n_samples / analysis.fs:g} s"
+                )
             own_sound = Sound(carrier.mono().data[:n_audio], carrier.fs)
-            own = bank.analyze(own_sound).envelopes(fs=analysis.fs).data.mean(axis=2)[:, kept]
-            if own.shape[0] != n_env:
-                raise ValueError("the carrier's envelopes do not fit the analysed grid")
-            if analysis.scale == "db":
-                own = amp_to_db(own + 1e-12 * (own.max() or 1.0))
-            phase = np.angle(np.fft.fft2(own.T - own.mean()))
+            phase = self._modulation_phase(analysis.filterbank.analyze(own_sound))
+        return self._rebuild(phase)
+
+    def _modulation_phase(self, subbands) -> np.ndarray:
+        """Phase of the 2-D transform of these subbands' envelopes, analysed
+        as this spectrum's were."""
+        analysis = self._analysis
+        kept = slice(1, -1) if analysis.drop_edges else slice(None)
+        own = subbands.envelopes(fs=analysis.fs).data.mean(axis=2)[:, kept]
+        if own.shape[0] != analysis.n_samples:
+            raise ValueError("the carrier's envelopes do not fit the analysed grid")
+        if analysis.scale == "db":
+            own = amp_to_db(own + 1e-12 * (own.max() or 1.0))
+        return np.angle(np.fft.fft2(own.T - own.mean()))
+
+    def _rebuild(self, phase: np.ndarray, quiet: bool = False) -> Envelopes:
+        """Envelopes from the stored magnitudes and mean and this phase;
+        ``quiet`` clips without a word (inside a search)."""
+        from sonore.views.envelopes import Envelopes
+
+        analysis = self._analysis
+        bank, n_env = analysis.filterbank, analysis.n_samples
+        kept = slice(1, -1) if analysis.drop_edges else slice(None)
         rebuilt = self._mean + np.real(np.fft.ifft2(self._magnitude * np.exp(1j * phase)))
         if analysis.scale == "db":
             values = db_to_amp(rebuilt)
         else:
-            clipped = float(np.mean(rebuilt < -1e-9 * (np.max(np.abs(rebuilt)) or 1.0)))  # not round-off
+            clipped = 0.0 if quiet else float(np.mean(rebuilt < -1e-9 * (np.max(np.abs(rebuilt)) or 1.0)))
             if clipped > 0 and self._rms_depth is not None:
                 fits = self._rms_depth * self._mean / np.max(self._mean - rebuilt)
                 raise ValueError(
@@ -571,14 +586,16 @@ class ModulationSpectrum(View):
                 warnings.warn(
                     f"{clipped:.1%} of the rebuilt envelope values were below zero and were clipped, "
                     "which changes their modulation spectrum",
-                    stacklevel=3,
+                    stacklevel=4,
                 )
             values = np.maximum(rebuilt, 0.0)
         bands = np.zeros((n_env, bank.n_filters))
         bands[:, kept] = values.T
         return Envelopes(bands, analysis.fs, bank)
 
-    def to_sound(self, carrier: str | Sound = "tones", fs: float | None = None, rng=None) -> Sound:
+    def to_sound(
+        self, carrier: str | Sound = "tones", fs: float | None = None, rng=None, iterations: int = 0
+    ) -> Sound:
         """A sound whose envelopes have this modulation spectrum.
 
         A modulation spectrum lacks two kinds of phase, and the ``carrier``
@@ -604,6 +621,14 @@ class ModulationSpectrum(View):
         4 Hz from a sentence leaves about 15 dB less power at 6-40 Hz on
         tones, but only 3-5 dB less on noise or the sentence's own fine
         structure (``docs/design/views/modulation-targets.md``, C6).
+
+        ``iterations`` then searches for a sound whose own envelopes come
+        closer to the spectrum, as Griffin & Lim (1984) do for a
+        spectrogram: analyse the sound, keep its fine structure and its
+        modulation phase, impose the stored magnitudes again, and go back.
+        On the same sentence edit, 20 iterations from the sentence's own
+        fine structure leave 16.5 dB less power at 6-40 Hz (C7 of the design
+        note); each iteration costs one analysis and one synthesis.
         """
         from sonore.frames.filterbank import Subbands
         from sonore.sources.waveforms import gaussian_noise
@@ -637,6 +662,11 @@ class ModulationSpectrum(View):
             tones = np.cos(2 * np.pi * bank.cfs[None, :] * t + rng.uniform(0, 2 * np.pi, bank.n_filters))
             sound = (envelopes * Subbands(tones[:, :, None], fs, bank)).sum()
         sound = Sound(sound.data[:n_audio], fs)
+        for _ in range(int(iterations)):
+            subbands = bank.analyze(sound)
+            envelopes = self._rebuild(self._modulation_phase(subbands), quiet=True)
+            sound = (envelopes * subbands.tfs()).to_sound()
+            sound = Sound(sound.data[:n_audio], fs)
         return sound.normalize() if sound.rms > 0 else sound
 
     def peak(self, exclude_dc: bool = True) -> tuple[float, float]:

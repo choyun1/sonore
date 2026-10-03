@@ -170,3 +170,16 @@ def test_blob_target_is_found_again_in_the_sound():
     drawn = target._magnitude > 0.1 * target._magnitude.max()
     correlation = np.corrcoef(np.log(measured._magnitude[drawn]), np.log(target._magnitude[drawn]))[0, 1]
     assert correlation > 0.9
+
+
+def test_iterations_bring_the_sound_closer_to_an_edit():
+    x = _speech_like()
+    _, spectrum = _octave_spectrum(x)
+    slow = spectrum.with_gain(lambda rate, density: np.abs(rate) <= 8)
+    shares = []
+    for iterations in (0, 5):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            y = slow.to_sound(carrier=x, iterations=iterations)
+        shares.append(_share_above(_octave_spectrum(y)[1], 12))
+    assert shares[1] < 0.5 * shares[0]
