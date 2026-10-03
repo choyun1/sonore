@@ -31,6 +31,7 @@ import numpy as np
 from scipy.signal import butter, resample_poly, sosfiltfilt
 
 from sonore.core.utils import amp_to_db
+from sonore.frames.filterbank import _PaddedBands
 from sonore.views.view import View
 
 if TYPE_CHECKING:
@@ -200,7 +201,7 @@ class Envelope(View):
         return plot_envelope(self, ax=ax, **kwargs)
 
 
-class Envelopes(View):
+class Envelopes(_PaddedBands, View):
     """One envelope per band of a filterbank: a spectrotemporal envelope.
 
     Conceptually this is a **cochleagram**: the envelope of each filter's
@@ -235,41 +236,14 @@ class Envelopes(View):
     __array_ufunc__ = None
 
     def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
-        arr = np.array(data, dtype=float)
-        if arr.ndim == 2:
-            arr = arr[:, :, None]
-        if arr.ndim != 3 or arr.shape[1] != filterbank.n_filters:
-            raise ValueError(
-                f"expected shape (n_samples, {filterbank.n_filters}, n_channels), got {arr.shape}"
-            )
-        if 2 * pad >= arr.shape[0]:
-            raise ValueError("padding is longer than the data")
-        arr = _nonnegative(arr)
-        arr.flags.writeable = False
-        self._full, self.fs, self.filterbank, self.pad = arr, fs, filterbank, int(pad)
+        data = np.asarray(data, dtype=float)
+        super().__init__(data[:, :, None] if data.ndim == 2 else data, fs, filterbank, pad)
 
-    @property
-    def data(self) -> np.ndarray:
-        """Envelopes without the padding, shape ``(n_samples, n_bands, n_channels)``."""
-        return self._full[self.pad : self._full.shape[0] - self.pad]
-
-    @property
-    def cfs(self) -> np.ndarray:
-        return self.filterbank.cfs
-
-    def __len__(self) -> int:
-        """Number of bands (including the two edge filters)."""
-        return self._full.shape[1]
+    def _checked(self, bands: np.ndarray) -> np.ndarray:
+        return _nonnegative(bands)
 
     def __getitem__(self, i: int) -> Envelope:
         return Envelope(self.data[:, i, :], self.fs)
-
-    def __iter__(self):
-        return (self[i] for i in range(len(self)))
-
-    @property
-    def n_samples(self) -> int:
-        return self._full.shape[0] - 2 * self.pad
 
     @property
     def duration(self) -> float:
@@ -282,10 +256,6 @@ class Envelopes(View):
     @property
     def db(self) -> np.ndarray:
         return amp_to_db(self.data)
-
-    def __repr__(self) -> str:
-        n_samples, n_bands, n_channels = self.data.shape
-        return f"Envelopes({n_bands} bands, {n_samples / self.fs:.3f} s, {self.fs:g} Hz, {n_channels} ch)"
 
     def _new(self, full, fs=None, pad=None) -> Envelopes:
         return Envelopes(

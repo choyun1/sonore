@@ -549,7 +549,55 @@ def subbands(sound: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float | 
     return ERBFilterbank(n_bands, f_lo, f_hi).analyze(sound)
 
 
-class Subbands:
+class _PaddedBands:
+    """What Subbands and Envelopes share: one signal per filter of a filterbank,
+    stored as ``(n_samples, n_bands, n_channels)`` with ``pad`` zero samples at
+    each end that :attr:`data` hides. The array is a copy, read-only, so the
+    caller's array stays writeable and the object can't change under its users."""
+
+    def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
+        bands = np.array(data, dtype=float)
+        if bands.ndim != 3 or bands.shape[1] != filterbank.n_filters:
+            raise ValueError(
+                f"expected shape (n_samples, {filterbank.n_filters}, n_channels), got {bands.shape}"
+            )
+        if 2 * pad >= bands.shape[0]:
+            raise ValueError("padding is longer than the data")
+        bands = self._checked(bands)
+        bands.flags.writeable = False
+        self._full, self.fs, self.filterbank, self.pad = bands, fs, filterbank, int(pad)
+
+    def _checked(self, bands: np.ndarray) -> np.ndarray:
+        """A subclass's own check on the band values; Envelopes clips round-off negatives."""
+        return bands
+
+    @property
+    def data(self) -> np.ndarray:
+        """Band signals without the padding, shape ``(n_samples, n_bands, n_channels)``."""
+        return self._full[self.pad : self._full.shape[0] - self.pad]
+
+    @property
+    def n_samples(self) -> int:
+        return self._full.shape[0] - 2 * self.pad
+
+    @property
+    def cfs(self) -> np.ndarray:
+        return self.filterbank.cfs
+
+    def __len__(self) -> int:
+        """Number of bands (including the two edge filters)."""
+        return self._full.shape[1]
+
+    def __iter__(self):
+        return (self[i] for i in range(len(self)))
+
+    def __repr__(self) -> str:
+        n_samples, n_bands, n_channels = self.data.shape
+        name = type(self).__name__
+        return f"{name}({n_bands} bands, {n_samples / self.fs:.3f} s, {self.fs:g} Hz, {n_channels} ch)"
+
+
+class Subbands(_PaddedBands):
     """The output of a :class:`~sonore.frames.filterbank.Filterbank`: one band-limited
     :class:`~sonore.Sound` per filter.
 
@@ -567,40 +615,8 @@ class Subbands:
     so a vocoder is ``(speech.envelopes() * carrier.tfs()).synthesize()``.
     """
 
-    def __init__(self, data: np.ndarray, fs: float, filterbank: Filterbank, pad: int = 0):
-        bands = np.array(data, dtype=float)  # a copy, as in Sound: the caller's array stays writeable
-        if bands.ndim != 3 or bands.shape[1] != filterbank.n_filters:
-            raise ValueError(f"expected shape (n_samples, {filterbank.n_filters}, n_channels)")
-        if 2 * pad >= bands.shape[0]:
-            raise ValueError("padding is longer than the data")
-        bands.flags.writeable = False
-        self._full, self.fs, self.filterbank, self.pad = bands, fs, filterbank, int(pad)
-
-    @property
-    def data(self) -> np.ndarray:
-        """Band signals without the padding, shape ``(n_samples, n_bands, n_channels)``."""
-        return self._full[self.pad : self._full.shape[0] - self.pad]
-
-    @property
-    def n_samples(self) -> int:
-        return self._full.shape[0] - 2 * self.pad
-
-    @property
-    def cfs(self) -> np.ndarray:
-        return self.filterbank.cfs
-
-    def __len__(self) -> int:
-        return self._full.shape[1]
-
     def __getitem__(self, i: int) -> Sound:
         return Sound(self.data[:, i, :], self.fs)
-
-    def __iter__(self):
-        return (self[i] for i in range(len(self)))
-
-    def __repr__(self) -> str:
-        n_samples, n_bands, n_channels = self.data.shape
-        return f"Subbands({n_bands} bands, {n_samples / self.fs:.3f} s, {self.fs:g} Hz, {n_channels} ch)"
 
     def _new(self, full: np.ndarray, pad: int | None = None) -> Subbands:
         return Subbands(full, self.fs, self.filterbank, self.pad if pad is None else pad)
