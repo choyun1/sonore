@@ -8,7 +8,8 @@ could offer. It adds no library code; the decisions at the end come first.
 Status: accepted 2026-10-03. Cho accepted D1–D9 as recommended. D2–D6
 are implemented (`ModulationSpectrum.to_envelopes`, `with_gain` and
 `to_sound` in `src/sonore/views/modulation.py`, tested in
-`tests/views/test_modulation.py`); D1's blobs, D6's `rms_depth`, D7 and D9
+`tests/views/test_modulation.py`), and so are D1's blobs and D6's
+`rms_depth` (`ModulationBlob`, `ModulationSpectrum.from_blobs`). D7 and D9
 follow. The claims are checked by
 `tools/check_modulation_targets_claims.py` (C1–C6), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its

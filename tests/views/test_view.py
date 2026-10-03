@@ -46,6 +46,7 @@ NOT_ANALYSES = [
     "HRIRSet",
     "TextureModel",
     "ModulationFilterbank",
+    "ModulationBlob",
 ]  # ModulationFilterbank: a tool that makes views
 
 

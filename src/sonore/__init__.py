@@ -101,6 +101,7 @@ from sonore.views.modspectrogram import ModulationSpectrogram
 from sonore.views.modulation import (
     ConstantQModulationFilterbank,
     HannModulationFilterbank,
+    ModulationBlob,
     ModulationFilterbank,
     ModulationSpectrum,
     OctaveModulationFilterbank,
@@ -210,6 +211,7 @@ __all__ = [
     "match_fs",
     "mel_to_freq",
     "mix",
+    "ModulationBlob",
     "ModulationSpectrum",
     "move_sound",
     "noise_vocode",

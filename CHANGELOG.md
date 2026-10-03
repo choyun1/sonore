@@ -17,6 +17,11 @@ version (0.x.y) only fixes bugs.
   rebuilt envelopes. Spectra made from envelopes keep how they were made
   for this. Design and measurements in
   `docs/design/views/modulation-targets.md`.
+- `ModulationSpectrum.from_blobs(blobs, duration, rms_depth=0.2)` draws a
+  target in code as a sum of `so.ModulationBlob(rate, density, ...)`
+  Gaussian patches, on the grid `ModulationSpectrum.octave` measures. Its
+  `to_envelopes` and `to_sound` refuse a draw whose envelopes would go below
+  zero and name the largest depth that fits it.
 
 ### Changed
 - `so.pad` and `so.truncate` are replaced by

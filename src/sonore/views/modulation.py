@@ -46,6 +46,7 @@ __all__ = [
     "OctaveModulationFilterbank",
     "HannModulationFilterbank",
     "ModulationSpectrum",
+    "ModulationBlob",
 ]
 
 
@@ -290,6 +291,45 @@ def _correlate(x: np.ndarray, h: np.ndarray, align: str) -> np.ndarray:
 
 
 # ------------------------------------------------------ modulation spectrum
+@dataclass(frozen=True)
+class ModulationBlob:
+    """A patch of modulation power, for drawing a target spectrum in code
+    (:meth:`ModulationSpectrum.from_blobs`).
+
+    A Gaussian bump centred on ``rate`` [Hz] and ``density`` [cycles/octave]:
+    ``rate_width`` is its standard deviation in octaves of rate,
+    ``density_width`` in cycles/octave, and ``level`` its peak power [dB]
+    relative to the other blobs. The signs follow :class:`~sonore.Ripple`:
+    positive rate and density are downward sweeps, a negative rate upward
+    ones, and a blob at density 0 is temporal modulation alone. A ripple is a
+    blob of zero width.
+    """
+
+    rate: float
+    density: float
+    rate_width: float = 0.5
+    density_width: float = 0.25
+    level: float = 0.0
+
+    def __post_init__(self):
+        if self.rate == 0:
+            raise ValueError("a blob needs a nonzero rate (its width is in octaves of rate)")
+        if self.rate_width <= 0 or self.density_width <= 0:
+            raise ValueError("widths must be positive")
+
+    def power(self, rate: np.ndarray, density: np.ndarray) -> np.ndarray:
+        """Relative power at every ``(rate, density)`` (broadcast), zero on
+        the other side of the rate axis."""
+        same_side = np.sign(rate) == np.sign(self.rate)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            octaves = np.log2(np.abs(rate) / abs(self.rate))
+        bump = np.exp(
+            -(octaves**2) / (2 * self.rate_width**2)
+            - (density - self.density) ** 2 / (2 * self.density_width**2)
+        )
+        return np.where(same_side, 10 ** (self.level / 10) * bump, 0.0)
+
+
 class ModulationSpectrum(View):
     """2-D Fourier transform of a time-frequency envelope (Singh & Theunissen,
     2003; Chi et al., 1999).
@@ -325,7 +365,8 @@ class ModulationSpectrum(View):
         "ModulationSpectrum.to_sound(carrier=...) takes both from a carrier: a Sound lends its own "
         "modulation phase and fine structure, 'tones' and 'noise' draw a random modulation phase."
     )
-    _analysis = None  # an _EnvelopeAnalysis when made from Envelopes
+    _analysis = None  # an _EnvelopeAnalysis when made from Envelopes or blobs
+    _rms_depth = None  # set by from_blobs, which refuses to clip
 
     def __init__(self, stft: STFT, channel: int = 0):
         spectrogram_db = stft.db[channel]
@@ -382,10 +423,66 @@ class ModulationSpectrum(View):
         fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
         return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
 
-    def _full_axes(self) -> tuple[np.ndarray, np.ndarray]:
+    @classmethod
+    def from_blobs(
+        cls,
+        blobs,
+        duration: float,
+        f_lo: float = 250.0,
+        f_hi: float = 8000.0,
+        bands_per_octave: float = 12,
+        env_fs: float = 1000.0,
+        rms_depth: float = 0.2,
+    ) -> ModulationSpectrum:
+        """A target spectrum drawn in code: the sum of :class:`ModulationBlob`
+        powers, on the grid :meth:`octave` would measure for a sound of
+        ``duration`` seconds, ready for :meth:`to_sound`.
+
+        A drawing sets a shape, not a depth, and no long-term spectrum: every
+        band gets the same mean envelope, and ``rms_depth`` scales the
+        modulation (the rms of the envelope array about its mean, relative to
+        the mean). Because envelopes cannot go below zero, a random draw
+        reaches only a limited depth: about 0.28 for a one-blob target in
+        ``docs/design/views/modulation-targets.md`` (C2), against 0.71 for one
+        full ripple. :meth:`to_envelopes` refuses a draw that would need
+        clipping and names the largest depth that fits it. :attr:`level`
+        shows the drawn power itself (no taper).
+        """
+        from sonore.core.utils import n_samples
+        from sonore.frames.filterbank import cosine_filterbank
+        from sonore.views.envelopes import _EnvelopeAnalysis
+
+        if isinstance(blobs, ModulationBlob):
+            blobs = [blobs]
+        if not blobs:
+            raise ValueError("give at least one ModulationBlob")
+        if rms_depth <= 0:
+            raise ValueError("rms_depth must be positive")
+        bank = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
+        n_bands, n_times = bank.n_filters - 2, n_samples(duration, env_fs)
+        new = cls.__new__(cls)
+        new._analysis = _EnvelopeAnalysis(bank, env_fs, n_times, "linear", True)
+        rate, density = new._full_axes(shape=(n_bands, n_times))
+        power = sum(blob.power(rate, density) for blob in blobs)
+        power = (power + np.roll(power[::-1, ::-1], 1, axis=(0, 1))) / 2  # the same at (-rate, -density)
+        magnitude = np.sqrt(power)
+        if not np.any(magnitude > 0):
+            raise ValueError("the blobs fall outside this grid's rates and densities")
+        # Parseval: the rms of an array is the norm of its unnormalized 2-D DFT over the cell count
+        new._mean = 1.0
+        new._magnitude = magnitude * (rms_depth * magnitude.size / np.linalg.norm(magnitude))
+        new._rms_depth = rms_depth
+        keep = np.fft.fftfreq(n_bands, bank.spacing) >= 0
+        new.w_f = np.fft.fftfreq(n_bands, bank.spacing)[keep]
+        new.w_t = np.fft.fftshift(np.fft.fftfreq(n_times, 1 / env_fs))
+        new.level = amp_to_db(np.fft.fftshift(new._magnitude[keep], axes=1), floor_db=_FLOOR_DB)
+        new.spectral_unit = f"cyc/{bank.unit}"
+        return new
+
+    def _full_axes(self, shape=None) -> tuple[np.ndarray, np.ndarray]:
         """Rate [Hz] (row) and density (column) of every cell of the
         untapered transform, in FFT order."""
-        n_density, n_times = self._magnitude.shape
+        n_density, n_times = self._magnitude.shape if shape is None else shape
         analysis = self._analysis
         rate = np.fft.fftfreq(n_times, 1 / analysis.fs)[None, :]
         density = np.fft.fftfreq(n_density, analysis.filterbank.spacing)[:, None]
@@ -464,6 +561,12 @@ class ModulationSpectrum(View):
             values = db_to_amp(rebuilt)
         else:
             clipped = float(np.mean(rebuilt < -1e-9 * (np.max(np.abs(rebuilt)) or 1.0)))  # not round-off
+            if clipped > 0 and self._rms_depth is not None:
+                fits = self._rms_depth * self._mean / np.max(self._mean - rebuilt)
+                raise ValueError(
+                    f"rms_depth {self._rms_depth:g} would push {clipped:.1%} of this draw's envelope values "
+                    f"below zero; at most {fits:.3g} fits it (or draw again with another rng)"
+                )
             if clipped > 0:
                 warnings.warn(
                     f"{clipped:.1%} of the rebuilt envelope values were below zero and were clipped, "
