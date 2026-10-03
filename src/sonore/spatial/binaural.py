@@ -15,7 +15,7 @@ from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
 from sonore.core.units import dB
-from sonore.core.utils import time_axis
+from sonore.core.utils import n_samples, time_axis
 from sonore.frames.filterbank import ERBFilterbank
 from sonore.signals.generators import gaussian_noise
 from sonore.signals.processing import pad
@@ -122,8 +122,8 @@ def interaural_cues(
     if sound.n_channels != 2:
         raise ValueError("interaural_cues needs a 2-channel sound")
     fs = sound.fs
-    n_win = int(round(win_dur * fs))
-    hop = max(1, int(round((hop_dur if hop_dur is not None else win_dur / 2) * fs)))
+    n_win = n_samples(win_dur, fs)
+    hop = max(1, n_samples(hop_dur if hop_dur is not None else win_dur / 2, fs))
     max_lag = int(np.ceil(max_itd * fs))
 
     if filterbank is None:

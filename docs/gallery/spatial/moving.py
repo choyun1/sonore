@@ -722,7 +722,7 @@ sound = finish(rendered)
 #
 # - Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying filters. *Applied
 #   Sciences* 8(1), 103. [MDPI](https://www.mdpi.com/2076-3417/8/1/103).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L524)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L520)
 # - Brungart (2001). Informational and energetic masking effects in the perception of two
 #   simultaneous talkers. *J. Acoust. Soc. Am.* 109(3), 1101–1109.
 #   [doi:10.1121/1.1345696](https://doi.org/10.1121/1.1345696).
@@ -732,12 +732,12 @@ sound = finish(rendered)
 #   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
 #   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Experiment code:
 #   [choyun1/MSM](https://github.com/choyun1/MSM).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L524)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L520)
 #   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L105)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
 #   library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899.
 #   [doi:10.1371/journal.pone.0211899](https://doi.org/10.1371/journal.pone.0211899).
-#   [`spatialization.HRIRSet`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L178)
+#   [`spatialization.HRIRSet`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L175)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentences, by speakers bdl, rms and slt.

@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 import numpy as np
 from numpy.typing import ArrayLike
+from scipy.signal import resample_poly
 
 __all__ = [
     "rms",
     "amp_to_db",
+    "power_to_db",
+    "db_to_power",
     "db_to_amp",
     "freq_to_erb",
     "erb_to_freq",
@@ -32,9 +37,21 @@ def amp_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.nd
         return np.maximum(20 * np.log10(x), floor_db)
 
 
+def power_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
+    """Power (not amplitude) to decibels: ``10*log10(|x|/ref)``, floored."""
+    x = np.abs(np.asarray(x)).astype(float) / ref
+    with np.errstate(divide="ignore"):
+        return np.maximum(10 * np.log10(x), floor_db)
+
+
 def db_to_amp(db: ArrayLike) -> np.ndarray:
     """Decibels to amplitude factor: ``10**(db/20)``."""
     return np.power(10.0, np.asarray(db, dtype=float) / 20)
+
+
+def db_to_power(db: ArrayLike) -> np.ndarray:
+    """Decibels to power factor: ``10**(db/10)``."""
+    return np.power(10.0, np.asarray(db, dtype=float) / 10)
 
 
 def freq_to_erb(freq: ArrayLike) -> np.ndarray:
@@ -67,6 +84,44 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     """Sample times ``k/fs``. Use this instead of ``np.linspace(0, dur, n)``,
     whose spacing is ``dur/(n-1)`` rather than ``1/fs``."""
     return np.arange(n) / fs
+
+
+def _parabola_vertex(before: np.ndarray, at: np.ndarray, after: np.ndarray, dip: bool = False) -> np.ndarray:
+    """Offset, in samples, of the vertex of the parabola through three equally
+    spaced values (``at`` in the middle): the usual sub-sample refinement of a
+    peak or a dip. The offset is 0 where the parabola is flat, and with
+    ``dip=True`` also where it opens downward (no dip to refine)."""
+    curvature = before - 2 * at + after
+    curved = curvature > 0 if dip else curvature != 0
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(curved, 0.5 * (before - after) / curvature, 0.0)
+
+
+def _resample_poly(data: np.ndarray, fs: float, fs_new: float, axis: int = 0, **kwargs) -> np.ndarray:
+    """Polyphase resampling of ``data`` along ``axis`` from ``fs`` to ``fs_new``, the
+    rate ratio approximated by a fraction with denominator at most 10000.
+    ``kwargs`` go to ``scipy.signal.resample_poly`` (``padtype``)."""
+    ratio = Fraction(fs_new / fs).limit_denominator(10000)
+    return resample_poly(data, ratio.numerator, ratio.denominator, axis=axis, **kwargs)
+
+
+def _fit_length(data: np.ndarray, length: int, mode: str = "constant") -> np.ndarray:
+    """``data`` cut or padded at the end (axis 0) to ``length`` samples; ``mode``
+    is ``np.pad``'s (zeros by default, ``"edge"`` repeats the last sample)."""
+    if data.shape[0] >= length:
+        return data[:length]
+    return np.pad(data, [(0, length - data.shape[0])] + [(0, 0)] * (data.ndim - 1), mode=mode)
+
+
+def _phase_ramp_delay(data: np.ndarray, shift: ArrayLike, n_fft: int, n_out: int) -> np.ndarray:
+    """Delay signals along the last axis by ``shift`` samples (fractional, one per
+    signal, broadcast over the leading axes) with an FFT phase ramp: band-limited
+    interpolation. ``n_fft`` must leave room for the delay and the sinc tails, which
+    otherwise wrap around; the first ``n_out`` samples are returned."""
+    spectrum = np.fft.rfft(data, n=n_fft, axis=-1)
+    freqs = np.fft.rfftfreq(n_fft)
+    spectrum *= np.exp(-2j * np.pi * freqs * np.asarray(shift)[..., None])
+    return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
 
 
 def _below_nyquist(fs: float) -> float:

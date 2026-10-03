@@ -66,6 +66,11 @@ class TestGenerators:
         lo, hi = spec.level_at(np.array([1000, 2000]))
         assert hi - lo == pytest.approx(-3, abs=0.5)
 
+    def test_long_term_spectrum_window_is_in_seconds(self):
+        x = so.gaussian_noise(1, FS, rng=0)
+        assert np.diff(so.long_term_spectrum(x).f)[0] == pytest.approx(10.0)
+        assert np.diff(so.long_term_spectrum(x, win_dur=0.05).f)[0] == pytest.approx(20.0)
+
     def test_noise_band(self):
         x = so.gaussian_noise(1, FS, band=(500, 1000), rng=0)
         X = np.abs(np.fft.rfft(x.data[:, 0]))

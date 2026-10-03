@@ -15,7 +15,17 @@ from sonore import texture
 from sonore.core.fft import fft_workers, set_fft_workers
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
-from sonore.core.utils import amp_to_db, db_to_amp, erb_to_freq, freq_to_erb, freq_to_mel, mel_to_freq, rms
+from sonore.core.utils import (
+    amp_to_db,
+    db_to_amp,
+    db_to_power,
+    erb_to_freq,
+    freq_to_erb,
+    freq_to_mel,
+    mel_to_freq,
+    power_to_db,
+    rms,
+)
 from sonore.frames.filterbank import (
     CosineFilterbank,
     ERBFilterbank,
@@ -162,6 +172,8 @@ __all__ = [
     "klatt_synthesize",
     "PVAnalysis",
     "amp_to_db",
+    "power_to_db",
+    "db_to_power",
     "amplitude_modulate",
     "antiresonator",
     "resonator",

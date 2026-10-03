@@ -140,9 +140,17 @@ class TextureModel:
         """Compressed, downsampled envelopes, shape ``(n // decimation, n_bands + 2)``:
         Hilbert magnitude, raised to :attr:`compression` at the full rate,
         resampled (FFT, circular) to :attr:`env_fs`, clipped at 0."""
+        return self._envelope_stages(subbands)[2]
+
+    def _envelope_stages(self, subbands: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """The steps of :meth:`envelopes` with what synthesis also needs: the
+        analytic signals, the compressed magnitudes at the full rate, and the
+        envelopes."""
         with threads():
-            env = np.abs(hilbert(subbands, axis=0)) ** self.compression
-            return np.maximum(resample(env, subbands.shape[0] // self.decimation, axis=0), 0.0)
+            analytic = hilbert(subbands, axis=0)
+            compressed = np.abs(analytic) ** self.compression
+            env = np.maximum(resample(compressed, subbands.shape[0] // self.decimation, axis=0), 0.0)
+        return analytic, compressed, env
 
 
 def measurement_window(n: int, n_seconds: int) -> np.ndarray:
@@ -159,13 +167,12 @@ def measurement_window(n: int, n_seconds: int) -> np.ndarray:
 
 
 def _div(numerator, denominator):
-    denominator = np.asarray(denominator)
-    return np.divide(
-        numerator,
-        denominator,
-        out=np.zeros(np.broadcast(numerator, denominator).shape),
-        where=denominator > 1e-300,
-    )
+    """``numerator / denominator``, real or complex, and 0 where the denominator
+    is 0 (a silent band)."""
+    numerator, denominator = np.asarray(numerator), np.asarray(denominator)
+    shape = np.broadcast(numerator, denominator).shape
+    out = np.zeros(shape, np.result_type(numerator, denominator, float))
+    return np.divide(numerator, denominator, out=out, where=denominator > 1e-300)
 
 
 def _pair_corr(x: np.ndarray, w: np.ndarray, offsets, centered: bool) -> np.ndarray:
@@ -285,7 +292,7 @@ class TextureStats(View):
         oct_real = oct_analytic.real
         c1 = _pair_corr(oct_real[:, :, list(model.c1_bands)], weights, model.c1_offsets, centered=False)
         lower_magnitude = np.abs(oct_analytic[:, :, :-1])
-        doubled = np.real(_div_complex(oct_analytic[:, :, :-1] ** 2, lower_magnitude))
+        doubled = np.real(_div(oct_analytic[:, :, :-1] ** 2, lower_magnitude))
         upper_band = oct_analytic[:, :, 1:]
         norm = np.sqrt(
             np.tensordot(weights, doubled**2, axes=(0, 0))
@@ -398,9 +405,3 @@ class TextureStats(View):
 
     def __repr__(self) -> str:
         return f"TextureStats({self.count()} stats, {self.env_mean.shape[0]} channels, {self.duration:.2f} s)"
-
-
-def _div_complex(numerator, denominator):
-    return np.divide(
-        numerator, denominator, out=np.zeros(numerator.shape, complex), where=denominator > 1e-300
-    )

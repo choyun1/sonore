@@ -9,15 +9,22 @@ from __future__ import annotations
 
 import numbers
 import warnings
-from fractions import Fraction
 from os import PathLike
 
 import numpy as np
 from numpy.typing import ArrayLike
-from scipy.signal import fftconvolve, hilbert, resample_poly
+from scipy.signal import fftconvolve, hilbert
 
 from sonore.core.units import Decibels
-from sonore.core.utils import amp_to_db, db_to_amp, rms, time_axis
+from sonore.core.utils import (
+    _phase_ramp_delay,
+    _resample_poly,
+    amp_to_db,
+    db_to_amp,
+    n_samples,
+    rms,
+    time_axis,
+)
 
 __all__ = ["Sound", "load"]
 
@@ -241,8 +248,8 @@ class Sound:
             raise TypeError(
                 "Sound indexing takes a time slice in seconds, e.g. snd[0.1:0.5]; index snd.data for samples"
             )
-        start = None if key.start is None else int(round(key.start * self.fs))
-        stop = None if key.stop is None else int(round(key.stop * self.fs))
+        start = None if key.start is None else n_samples(key.start, self.fs)
+        stop = None if key.stop is None else n_samples(key.stop, self.fs)
         return Sound(self._data[start:stop], self.fs)
 
     # ------------------------------------------------------------- operations
@@ -265,7 +272,7 @@ class Sound:
 
         ``shape`` is ``"cosine"`` (raised cosine) or ``"linear"``.
         """
-        n_ramp = int(round(duration * self.fs))
+        n_ramp = n_samples(duration, self.fs)
         if n_ramp == 0:
             return self
         if 2 * n_ramp > self.n_samples:
@@ -284,7 +291,7 @@ class Sound:
 
     def pad(self, before: float = 0.0, after: float = 0.0) -> Sound:
         """Zero-pad by ``before``/``after`` seconds."""
-        n_before, n_after = int(round(before * self.fs)), int(round(after * self.fs))
+        n_before, n_after = n_samples(before, self.fs), n_samples(after, self.fs)
         return Sound(np.pad(self._data, ((n_before, n_after), (0, 0))), self.fs)
 
     def pad_to(self, n: int, align: str = "start") -> Sound:
@@ -312,19 +319,14 @@ class Sound:
         if fraction > 1e-9:
             guard = data.shape[0]  # sinc tails decay slowly; keep them from wrapping around
             n_fft = data.shape[0] + 1 + guard
-            spectrum = np.fft.rfft(data, n=n_fft, axis=0)
-            freq = np.fft.rfftfreq(n_fft)
-            spectrum *= np.exp(-2j * np.pi * freq * fraction)[:, None]
-            data = np.fft.irfft(spectrum, n=n_fft, axis=0)[: data.shape[0] + 1]
+            data = _phase_ramp_delay(data.T, fraction, n_fft, data.shape[0] + 1).T
         return Sound(data, self.fs)
 
     def resample(self, fs: float) -> Sound:
         """Polyphase resampling to a new rate."""
         if fs == self.fs:
             return self
-        ratio = Fraction(fs / self.fs).limit_denominator(10000)
-        data = resample_poly(self._data, ratio.numerator, ratio.denominator, axis=0)
-        return Sound(data, fs)
+        return Sound(_resample_poly(self._data, self.fs, fs), fs)
 
     def convolve(self, ir: Sound | ArrayLike) -> Sound:
         """Convolve with an impulse response (full length).

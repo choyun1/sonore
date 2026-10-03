@@ -280,7 +280,7 @@ fig = msg.slices(2.0, rate=4.0)
 # - Atlas & Shamma (2003). Joint acoustic and modulation frequency. *EURASIP J. Appl. Signal
 #   Processing* 2003(7).
 #   [doi:10.1155/S1110865703305013](https://doi.org/10.1155/S1110865703305013).
-#   [`modspectrogram.ModulationSpectrogram.at`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modspectrogram.py#L163)
+#   [`modspectrogram.ModulationSpectrogram.at`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modspectrogram.py#L164)
 # - Dau, Kollmeier & Kohlrausch (1997). Modeling auditory processing of amplitude modulation. I.
 #   Detection and masking with narrow-band carriers. *JASA* 102(5), 2892–2905.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/9373976/). Modulation filters a few cycles long.
@@ -288,7 +288,7 @@ fig = msg.slices(2.0, rate=4.0)
 # - Greenberg & Kingsbury (1997). The modulation spectrogram: in pursuit of an invariant
 #   representation of speech. *Proc. ICASSP 1997*, vol. 3, 1647–1650.
 #   [Semantic Scholar](https://www.semanticscholar.org/paper/71c0095d37084b6055a1abc8d4edcde3ef9f130b).
-#   [`modspectrogram.ModulationSpectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modspectrogram.py#L28)
+#   [`modspectrogram.ModulationSpectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modspectrogram.py#L29)
 # - Kingsbury, Morgan & Greenberg (1998). Robust speech recognition using the modulation
 #   spectrogram. *Speech Communication* 25(1–3), 117–132.
 #   [doi:10.1016/S0167-6393(98)00032-6](https://doi.org/10.1016/S0167-6393(98)00032-6).

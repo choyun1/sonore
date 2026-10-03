@@ -9,6 +9,7 @@ from dataclasses import dataclass, replace
 import numpy as np
 
 from sonore.core.sound import Sound
+from sonore.core.utils import _parabola_vertex
 from sonore.views.view import View
 
 __all__ = ["F0Track", "f0_track", "scale_f0"]
@@ -235,9 +236,7 @@ def _candidates(x, t, fs, f_lo, f_hi):
             cmnd_at_lag[rows, ranked_pos],
             cmnd_after[rows, ranked_pos],
         )
-        curvature = min_before - 2 * min_value + min_after
-        with np.errstate(divide="ignore", invalid="ignore"):
-            shift = np.where(curvature > 0, 0.5 * (min_before - min_after) / curvature, 0.0)
+        shift = _parabola_vertex(min_before, min_value, min_after, dip=True)
         out[chunk_start : chunk_start + 4 * CHUNK] = np.where(
             is_valid, fs / (lags[ranked_pos] + shift), np.nan
         )
@@ -253,22 +252,22 @@ def _blackman(n, length):
     return np.where(np.abs(n) <= half, window, 0.0)
 
 
-def _refine(x, tc, f, fs, iters=2):
-    """Instantaneous-frequency refinement of candidates f at times tc."""
-    out = f.copy()
-    if not len(f):
+def _refine(samples, candidate_times, candidate_f0s, fs, iters=2):
+    """Instantaneous-frequency refinement of the candidate F0s at their times."""
+    out = candidate_f0s.copy()
+    if not len(candidate_f0s):
         return out
-    # Refinement can lower f a little, so leave room for a longer window.
-    pad = int(round(PERIODS * fs / (0.8 * f.min()))) + 2
-    padded = np.concatenate([np.zeros(pad), x, np.zeros(pad)])
+    # Refinement can lower an F0 a little, so leave room for a longer window.
+    pad = int(round(PERIODS * fs / (0.8 * candidate_f0s.min()))) + 2
+    padded = np.concatenate([np.zeros(pad), samples, np.zeros(pad)])
     harmonic_numbers = np.arange(1, N_HARMONICS + 1)
-    order = np.argsort(f)  # similar window lengths in each chunk
-    for chunk_start in range(0, len(f), CHUNK):
+    order = np.argsort(candidate_f0s)  # similar window lengths in each chunk
+    for chunk_start in range(0, len(candidate_f0s), CHUNK):
         chunk = order[chunk_start : chunk_start + CHUNK]
-        chunk_f0 = f[chunk]
+        chunk_f0 = candidate_f0s[chunk]
         max_length = int(round(PERIODS * fs / (0.8 * chunk_f0.min()))) | 1
         offsets = np.arange(max_length) - max_length // 2
-        sample_index = np.round(tc[chunk] * fs).astype(int)[:, None] + pad + offsets[None, :]
+        sample_index = np.round(candidate_times[chunk] * fs).astype(int)[:, None] + pad + offsets[None, :]
         segment, segment_next = padded[sample_index], padded[sample_index + 1]
         for _ in range(iters):
             length = np.round(PERIODS * fs / chunk_f0).astype(int) | 1
@@ -295,34 +294,34 @@ def _refine(x, tc, f, fs, iters=2):
     return out
 
 
-def _periodicity(x, tc, f, fs):
+def _periodicity(samples, candidate_times, candidate_f0s, fs):
     """Normalized correlation between a stretch PERIODS periods long, centred
-    half a period before tc, and the same stretch one period later. The
+    half a period before the candidate time, and the same stretch one period later. The
     fractional part of the period is done with a Kaiser-windowed sinc."""
-    out = np.zeros(len(f))
-    if not len(f):
+    out = np.zeros(len(candidate_f0s))
+    if not len(candidate_f0s):
         return out
-    max_length = int(np.ceil(PERIODS * fs / f.min())) + 1
-    max_period = int(np.ceil(fs / f.min())) + 1
+    max_length = int(np.ceil(PERIODS * fs / candidate_f0s.min())) + 1
+    max_period = int(np.ceil(fs / candidate_f0s.min())) + 1
     pad = max_length + max_period + 2 * SINC_HALF + 2
-    padded = np.concatenate([np.zeros(pad), x, np.zeros(pad)])
+    padded = np.concatenate([np.zeros(pad), samples, np.zeros(pad)])
     taps = np.arange(-SINC_HALF + 1, SINC_HALF + 1)
     kaiser = np.kaiser(2 * SINC_HALF, 8.0)
-    order = np.argsort(f)
-    for chunk_start in range(0, len(f), CHUNK):
+    order = np.argsort(candidate_f0s)
+    for chunk_start in range(0, len(candidate_f0s), CHUNK):
         chunk = order[chunk_start : chunk_start + CHUNK]
-        chunk_f0 = f[chunk]
+        chunk_f0 = candidate_f0s[chunk]
         offsets = np.arange(int(np.ceil(PERIODS * fs / chunk_f0.min())) + 1)
         period = fs / chunk_f0
         length = np.round(PERIODS * period).astype(int)
-        start = np.round(tc[chunk] * fs - length / 2 - period / 2).astype(int) + pad
+        start = np.round(candidate_times[chunk] * fs - length / 2 - period / 2).astype(int) + pad
         in_window = offsets[None, :] < length[:, None]
         stretch = padded[start[:, None] + offsets[None, :]] * in_window
         period_int = np.floor(period).astype(int)
         period_frac = period - period_int
         sinc_kernel = np.sinc(taps[None, :] - period_frac[:, None]) * kaiser[None, :]
-        # stretch_later[j] = x(start + j + period)
-        #                  = sum_tap sinc_kernel[tap] x[start + j + period_int + tap]
+        # stretch_later[j] = samples(start + j + period)
+        #                  = sum_tap sinc_kernel[tap] samples[start + j + period_int + tap]
         base = start + period_int
         stretch_later = np.zeros_like(stretch)
         for i, tap in enumerate(taps):
@@ -380,6 +379,12 @@ def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margi
 
 
 # ------------------------------------------------------------ the pitch
+def _spread_around(values: np.ndarray, median: float, ratio: float, spread: float) -> np.ndarray:
+    """The pitch-change map: ``values`` times ``ratio``, their distance from
+    ``median`` on a log scale multiplied by ``spread``."""
+    return median * ratio * (values / median) ** spread
+
+
 def _scaled(values: np.ndarray, ratio: float, spread: float) -> np.ndarray:
     """Voiced values (> 0, one row per channel) times ratio, spread around
     each row's median on a log scale; 0 and NaN stay as they are."""
@@ -392,7 +397,7 @@ def _scaled(values: np.ndarray, ratio: float, spread: float) -> np.ndarray:
         voiced = row_in > 0
         if voiced.any():
             median = np.median(row_in[voiced])
-            row_out[voiced] = median * ratio * (row_in[voiced] / median) ** spread
+            row_out[voiced] = _spread_around(row_in[voiced], median, ratio, spread)
     return out.reshape(values.shape)
 
 
@@ -445,5 +450,5 @@ def _scaled_candidates(track: F0Track, ratio: float, spread: float) -> np.ndarra
         voiced = f0_row > 0
         if voiced.any():
             median = np.median(f0_row[voiced])
-            out[channel] = median * ratio * (track.candidates[channel] / median) ** spread
+            out[channel] = _spread_around(track.candidates[channel], median, ratio, spread)
     return out

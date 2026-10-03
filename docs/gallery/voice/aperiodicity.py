@@ -522,7 +522,7 @@ fig, playhead = show(sound, "so.world_synthesize with so.d4c, slt", fmax=8000)
 #   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L217)
 # - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
 #   Communication* 84, 57–65. [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
-#   [`aperiodicity.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L118)
+#   [`aperiodicity.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L119)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
