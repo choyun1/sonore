@@ -251,7 +251,7 @@ A Gabor frame already raises at construction, because SciPy builds the dual
 window eagerly. sonore keeps that behavior but re-raises the error with a
 clearer message that includes the bounds.
 
-*Amended 2026-10-02 (after the philosophy audit, PR #86):* a Gabor frame now
+*Amended 2026-10-03 (Cho, after the philosophy audit, PR #86):* a Gabor frame now
 follows the same rule as the filterbanks. `analyze` works for any window and
 hop, gaps and hops longer than the window included, using a
 `ShortTimeFFT` whose dual is the window itself (analysis never reads the
