@@ -30,7 +30,7 @@ from scipy.signal import fftconvolve
 
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
-from sonore.core.utils import amp_to_db
+from sonore.core.utils import _below_nyquist, amp_to_db
 from sonore.frames.gabor import _FLOOR_DB, STFT
 from sonore.views.view import View
 
@@ -359,7 +359,7 @@ class ModulationSpectrum(View):
         """
         from sonore.frames.filterbank import OctaveFilterbank
 
-        fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, min(f_hi, 0.95 * sound.fs / 2))
+        fb = OctaveFilterbank.per_octave(bands_per_octave, f_lo, min(f_hi, _below_nyquist(sound.fs)))
         return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
 
     def peak(self, exclude_dc: bool = True) -> tuple[float, float]:

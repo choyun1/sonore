@@ -42,7 +42,7 @@ from dataclasses import KW_ONLY
 
 from scipy.signal import hilbert
 
-from sonore.core.utils import erb_bandwidth, erb_to_freq, freq_to_erb
+from sonore.core.utils import _below_nyquist, erb_bandwidth, erb_to_freq, freq_to_erb
 
 __all__ = [
     "Filterbank",
@@ -545,7 +545,7 @@ class MorletFilterbank(BandpassFilterbank):
 def subbands(sound: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float | None = None) -> Subbands:
     """Convenience: build an :class:`ERBFilterbank` and analyze ``sound``.
     ``f_hi`` defaults to just under Nyquist."""
-    f_hi = 0.95 * sound.fs / 2 if f_hi is None else min(f_hi, sound.fs / 2)
+    f_hi = _below_nyquist(sound.fs) if f_hi is None else min(f_hi, sound.fs / 2)
     return ERBFilterbank(n_bands, f_lo, f_hi).analyze(sound)
 
 

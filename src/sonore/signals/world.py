@@ -18,6 +18,7 @@ from __future__ import annotations
 import numpy as np
 
 from sonore.core.sound import Sound
+from sonore.core.utils import as_rng
 
 __all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "world_fft_size", "world_synthesize"]
 
@@ -156,7 +157,15 @@ def world_fft_size(fs: float, f0_floor: float = _FLOOR_F0) -> int:
     """CheapTrick's FFT size: ``2 ** (1 + floor(log2(3 fs / f0_floor + 1)))``,
     long enough for a window three periods of ``f0_floor`` long. 1024 at
     16 kHz and 2048 at 44.1 or 48 kHz with WORLD's floor of 71 Hz."""
-    return int(2.0 ** (1 + int(np.log(3.0 * int(fs) / f0_floor + 1) / np.log(2))))
+    return _periods_fft_size(int(fs), 3.0, f0_floor)
+
+
+def _periods_fft_size(fs: float, n_periods: float, f0_floor: float) -> int:
+    """WORLD's FFT size for a window ``n_periods`` periods of ``f0_floor`` long:
+    the power of two above twice that many samples. CheapTrick passes ``int(fs)``
+    and D4C passes ``fs`` as is, as WORLD does, so the two agree only for whole
+    sample rates."""
+    return int(2.0 ** (1 + int(np.log(n_periods * fs / f0_floor + 1) / np.log(2))))
 
 
 # ------------------------------------------------------------- F0 tracks
@@ -215,7 +224,7 @@ class _GaussianNoise:
     """Fresh noise in place of WORLD's stream, from a seed or Generator."""
 
     def __init__(self, rng):
-        self.rng = np.random.default_rng(rng)
+        self.rng = as_rng(rng)
 
     def draw(self, n: int) -> np.ndarray:
         return self.rng.standard_normal(n)

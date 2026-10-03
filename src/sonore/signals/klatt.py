@@ -19,7 +19,7 @@ import numpy as np
 
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng, n_samples, time_axis
-from sonore.signals.generators import RNG, glottal_source, harmonic_complex
+from sonore.signals.generators import RNG, _finish, glottal_source, harmonic_complex
 from sonore.signals.processing import (
     Track,
     _check_resonance,
@@ -233,8 +233,7 @@ def klatt_synthesize(
             out = out + (-1) ** (k + 1) * a_k / peak * formant_out
         out = out + _gain(track("AB")) * frication
 
-    result = Sound(out, fs)
-    return result.normalize() if result.rms > 0 else result
+    return _finish(out, fs)
 
 
 def klatt_continuum(

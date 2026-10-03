@@ -9,7 +9,7 @@ from importlib.resources import files
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, db_to_amp
+from sonore.core.utils import _below_nyquist, as_rng, db_to_amp
 from sonore.frames.filterbank import ERBFilterbank
 from sonore.signals.generators import gaussian_noise
 from sonore.views.envelopes import Envelopes
@@ -130,7 +130,7 @@ def synth_ir(
     """
     fit_drr, _, fit_freqs = _model()
     rng = as_rng(rng)
-    f_hi = min(f_hi, 0.95 * fs / 2)
+    f_hi = min(f_hi, _below_nyquist(fs))
     filterbank = ERBFilterbank(n_bands, f_lo, f_hi)
     cfs = filterbank.cfs
 
@@ -178,7 +178,7 @@ def measure_rt60(
     default measures T20 x 3). The direct sound, if any, should be removed
     first; bands that never decay through the fit range give NaN.
     """
-    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, 0.95 * ir.fs / 2))
+    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, _below_nyquist(ir.fs)))
     bands = filterbank.analyze(ir.mono()).data[:, 1:-1, 0]  # bandpass bands only
     energy = np.cumsum(bands[::-1] ** 2, axis=0)[::-1]
     t = np.arange(len(ir)) / ir.fs
