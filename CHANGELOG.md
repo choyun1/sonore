@@ -27,10 +27,12 @@ version (0.x.y) only fixes bugs.
   through the filterbank: on a sentence with every rate above 4 Hz removed,
   20 iterations from its own fine structure leave 16.5 dB less power at
   6-40 Hz, against 3.5 dB in one step.
-- Gallery page "Drawing a modulation spectrum" (Seeing and changing
+- Gallery page "Hearing a modulation spectrum" (Seeing and changing
   sound): a sentence and its random-phase twin, a drawn blob on tones,
   noise and the sentence, and the sentence with every rate above 4 Hz
-  removed, with and without iterations.
+  removed, with and without iterations. Renamed "Hearing a modulation
+  spectrum" when it gained the sentence and rain trading magnitudes and
+  timing, and crickets and a fire with twins on the plane and band by band.
 
 ### Changed
 - `so.normalize(sounds, peak=...)` scales each sound to its own peak, as
@@ -125,7 +127,7 @@ version (0.x.y) only fixes bugs.
   phase (`carrier="tones"` or `"noise"`) scrambled the long-term spectrum:
   which band is loud is set by the phase of the zero-rate column, and the
   draw randomized it too. It now keeps that column's own phase. The
-  "Drawing a modulation spectrum" gallery page's random-phase demos are
+  "Hearing a modulation spectrum" gallery page's random-phase demos are
   rebuilt.
 
 ## [0.4.0] - 2026-10-03
