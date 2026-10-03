@@ -127,9 +127,11 @@ class Filterbank(Frame):
 
         By default the sound is zero-padded by at least the filters' ringing
         time (:meth:`ringing`), so filter ringing near one end can't wrap
-        around to the other. The padding is rounded up (typically by well
-        under 1% of the length) so the FFT length has no large prime factor,
-        which makes the transforms several times faster. The padding travels
+        around to the other. The padding is rounded up (by a median 0.3% of
+        the length, at most about 4%, for a 30-band ERB bank on 1 to 10 s)
+        so the FFT length has no large prime factor, which makes the
+        transforms about four times faster than at a prime length (measured
+        by tools/measure_docstring_numbers.py). The padding travels
         with the Subbands (and any Envelopes derived from them) and is
         removed on output, so ``.data`` and :meth:`Subbands.synthesize` have
         the sound's own length, and analysis followed by synthesis is exact.

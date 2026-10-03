@@ -101,8 +101,9 @@ class PVAnalysis(View):
 
         This is designed for tonal sounds, which it reconstructs closely
         (r > 0.999 for harmonic complexes). For noise, neighbouring channels
-        drift out of phase and partially cancel (about 2 dB low, r ~ 0.9); use
-        :func:`time_stretch` for noisy material.
+        drift out of phase and partially cancel (about 2 dB low, r about 0.93);
+        use :func:`time_stretch` for noisy material. Both figures are measured
+        by tools/measure_docstring_numbers.py.
         """
         if freq_map is None:
             map_freqs = None

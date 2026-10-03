@@ -169,10 +169,11 @@ class DynamicRipple(_Pattern):
 
     Note that ``rate(t)`` is the temporal modulation at ``x = 0`` (``f_lo``).
     Elsewhere the local rate is ``rate(t) + x * d(density)/dt``, because a
-    changing density fans the ripple out across frequency. With fast density
-    changes, a good share of the modulation energy lies outside
-    ``rate_range`` (about 40% for the defaults over 5 octaves, under 10% with
-    ``density_change=0.25``). Analyze with
+    changing density fans the ripple out across frequency, so some of the
+    modulation power lies outside ``rate_range``: about 7% for the defaults
+    over 5 octaves (14% in the top octave), under 1% with
+    ``density_change=0.25`` (measured by tools/measure_docstring_numbers.py).
+    Analyze with
     ``ModulationSpectrum.octave(..., scale="db")``, since the pattern is
     defined in dB.
 
