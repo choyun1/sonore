@@ -4,8 +4,6 @@
 sonore.frames.gabor.STFT.f
 sonore.frames.gabor.STFT.plot
 sonore.frames.gabor.TVSTFT.f
-sonore.frames.mask.Mask.plot
-sonore.plotting.plot_mask
 sonore.plotting.plot_modulation_spectrum
 sonore.plotting.plot_spectrum
 sonore.plotting.plot_stft

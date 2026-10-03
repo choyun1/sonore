@@ -156,7 +156,7 @@ def synth_ir(
     decay = Envelopes(envelopes, fs, filterbank)  # one decay envelope per band
     # analyze pads by default, so re-filtering the decaying bands can't wrap the
     # loud onset around to the end of the IR
-    tail = (decay * filterbank.analyze(noise)).synthesize().normalize()
+    tail = (decay * filterbank.analyze(noise)).to_sound().normalize()
 
     if drr_db is None:
         return tail

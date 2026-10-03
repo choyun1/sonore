@@ -351,7 +351,7 @@ def synthesize(
         new_subbands = full_env * fine_structure
         new_subband_var = np.mean(new_subbands**2, axis=0) - np.mean(new_subbands, axis=0) ** 2
         new_subbands *= np.sqrt(target.subband_var / np.maximum(new_subband_var, 1e-300))[None, :]
-        resynth = Subbands(new_subbands[:, :, None], model.fs, filterbank).synthesize().data[:, 0]
+        resynth = Subbands(new_subbands[:, :, None], model.fs, filterbank).to_sound().data[:, 0]
         x = resynth * (model.rms / np.sqrt(np.mean(resynth**2)))
 
         subbands, analytic, compressed, env = analyze(x)

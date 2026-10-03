@@ -23,6 +23,11 @@ One-way analyses, each saying what it drops: spectra, the reassigned spectrogram
 
 .. automodule:: sonore.views.envelopes
 
+``sonore.views.mask``
+---------------------
+
+.. automodule:: sonore.views.mask
+
 ``sonore.views.modulation``
 ---------------------------
 

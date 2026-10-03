@@ -19,7 +19,7 @@ class TestFilterbank:
 
     def test_perfect_reconstruction(self):
         g = so.gaussian_noise(0.5, FS, rng=0)
-        np.testing.assert_allclose(so.subbands(g).synthesize().data, g.data, atol=1e-10)
+        np.testing.assert_allclose(so.subbands(g).to_sound().data, g.data, atol=1e-10)
 
     def test_vocoder_runs_and_keeps_level(self):
         x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 20))
@@ -32,7 +32,7 @@ def test_octave_filterbank_reconstructs():
     H = fb.response(np.linspace(0, FS / 2, 5000))
     np.testing.assert_allclose((H**2).sum(axis=1), 1, atol=1e-12)
     g = so.gaussian_noise(0.5, 16000, rng=0)
-    np.testing.assert_allclose(fb.analyze(g).synthesize().data, g.data, atol=1e-10)
+    np.testing.assert_allclose(fb.analyze(g).to_sound().data, g.data, atol=1e-10)
 
 
 def test_subbands_copy_and_leave_the_callers_array_writeable():
@@ -107,7 +107,7 @@ class TestGammatone:
         fb = so.gammatone_filterbank(30, 50, 7500, phase=phase)
         x = so.Sound(np.random.default_rng(0).standard_normal((n, 2)), 16000)
         for pad in ("auto", 0):
-            np.testing.assert_allclose(fb.analyze(x, pad=pad).synthesize().data, x.data, rtol=0, atol=1e-12)
+            np.testing.assert_allclose(fb.analyze(x, pad=pad).to_sound().data, x.data, rtol=0, atol=1e-12)
 
     def test_bank_attributes(self):
         """f_lo and f_hi are the outer knots; the bandpass centers lie strictly
@@ -144,12 +144,12 @@ class TestMorlet:
         sb = fb.analyze(so.gaussian_noise(0.05, 16000, rng=0))
         assert sb.envelopes().without_edges() is not None
         with pytest.raises(ValueError, match="not a frame"):
-            sb.synthesize()
+            sb.to_sound()
 
     def test_exact_with_edges(self):
         x = so.gaussian_noise(0.25, 16000, n_channels=2, rng=1)
         fb = so.morlet_filterbank(28, 50, 7000)
-        np.testing.assert_allclose(fb.analyze(x).synthesize().data, x.data, rtol=0, atol=1e-12)
+        np.testing.assert_allclose(fb.analyze(x).to_sound().data, x.data, rtol=0, atol=1e-12)
 
 
 def _edge_banks(width):
@@ -281,9 +281,9 @@ def test_tightness_is_reported_only_when_true(case, fs, n, pad):
     coefs = bank.analyze(x, pad=pad)
     if lo <= 1e-12 * hi:
         with pytest.raises(ValueError, match="not a frame"):
-            coefs.synthesize()
+            coefs.to_sound()
     else:
-        np.testing.assert_allclose(coefs.synthesize().data, x.data, rtol=0, atol=1e-11)
+        np.testing.assert_allclose(coefs.to_sound().data, x.data, rtol=0, atol=1e-11)
 
 
 def test_wide_cosines_are_tight_at_their_width():
@@ -445,9 +445,9 @@ def test_extremes_never_lose_part_of_the_sound(case, fs, n):
     lo, hi = bank.frame_bounds(n, fs, pad=0)
     if not lo > 1e-12 * hi:
         with pytest.raises(ValueError, match="not a frame"):
-            coefs.synthesize()
+            coefs.to_sound()
     else:
-        np.testing.assert_allclose(coefs.synthesize().data, x.data, rtol=0, atol=1e-11)
+        np.testing.assert_allclose(coefs.to_sound().data, x.data, rtol=0, atol=1e-11)
 
 
 def test_octave_scale_has_no_zero():

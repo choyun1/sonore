@@ -399,4 +399,4 @@ def noise_vocode(
         )
     else:
         raise ValueError("carrier must be 'noise', 'tone', or a Sound")
-    return (envelopes * fine).synthesize().normalize(sound.rms)
+    return (envelopes * fine).to_sound().normalize(sound.rms)

@@ -42,6 +42,14 @@ version (0.x.y) only fixes bugs.
   `f_lo`).
 - `envelope_peak_delay` is measured from each filter's impulse response,
   so every bank has it (0 for zero-phase filters).
+- `Subbands.synthesize()` is now `Subbands.to_sound()`, like every other
+  set of coefficients.
+- `Mask` is a View (`sonore.views.mask`, was `sonore.frames.mask`): it holds
+  gains, not a sound, so `to_sound()` refuses and names the route back
+  (`(coefs * mask).to_sound()`). Masks now work on `TVSTFT` and `Subbands`
+  as well as `STFT`; for subbands the power is the squared Hilbert envelope
+  of each band. The docstrings cite the sources of the ideal binary and
+  ratio masks.
 
 ### Documentation
 - `frames`: the module docstring no longer promises a JAX port, and the

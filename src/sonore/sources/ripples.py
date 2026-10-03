@@ -282,7 +282,7 @@ def _flat_noise_bands(noise: Sound, filterbank: Filterbank) -> Subbands:
     """Noise bands shaped by the *squared* filter responses and scaled to equal
     RMS. Because the squared responses sum to 1, these bands add up to a flat
     spectrum without re-filtering, so modulation sidebands survive intact
-    (re-filtering with :meth:`Subbands.synthesize` would attenuate fast
+    (re-filtering with :meth:`Subbands.to_sound` would attenuate fast
     modulations in narrow low-frequency bands)."""
     length = len(noise)
     response = filterbank.rfft_response(length, noise.fs)

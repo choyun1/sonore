@@ -22,7 +22,7 @@ class TestEnvelopes:
         sb = so.subbands(self.x, n_bands=8)
         rebuilt = sb.envelopes() * sb.tfs()
         np.testing.assert_allclose(rebuilt.data, sb.data, atol=1e-10)
-        np.testing.assert_allclose(rebuilt.synthesize().data, self.x.data, atol=1e-10)
+        np.testing.assert_allclose(rebuilt.to_sound().data, self.x.data, atol=1e-10)
         band = sb[4]
         np.testing.assert_allclose((band.envelope() * (band / band.envelope())).data, band.data, atol=1e-10)
 
@@ -32,8 +32,8 @@ class TestEnvelopes:
         assert coarse.fs == 1000 and coarse.n_samples == 500
         # compare with the same lowpassed envelopes kept at the full rate:
         # the only difference is the automatic upsampling
-        full = (sb.envelopes(lowpass=100) * sb.tfs()).synthesize()
-        upsampled = (coarse * sb.tfs()).synthesize()
+        full = (sb.envelopes(lowpass=100) * sb.tfs()).to_sound()
+        upsampled = (coarse * sb.tfs()).to_sound()
         assert (upsampled - full).rms / full.rms < 0.001
         env = so.gaussian_noise(0.5, FS, rng=0).envelope().lowpass(20).resample(500)
         assert len(env * self.x) == len(self.x)

@@ -66,9 +66,9 @@ def show_bands(original):
     r = right.subplots(3, 1, sharex=True)
     original.plot(r[0], color="k", lw=0.4)
     r[0].set(title="Original sweep, 100 Hz to 6 kHz", xlabel="")
-    recon = sb.synthesize()  # recomputed: the played sound has been level-normalized
+    recon = sb.to_sound()  # recomputed: the played sound has been level-normalized
     recon.plot(r[1], color="tab:blue", lw=0.4)
-    r[1].set(title="Reconstruction: sb.synthesize()", xlabel="")
+    r[1].set(title="Reconstruction: sb.to_sound()", xlabel="")
     err = recon - original
     r[2].plot(err.t, 1e15 * err.data[:, 0], color="tab:red", lw=0.5)
     r[2].set(title=f"Difference (max |error| = {err.peak:.1e})", ylabel="× 1e-15", xlabel="Time [s]")
@@ -83,7 +83,7 @@ def show_bands(original):
 
 # %% [demo 26] Perfect reconstruction
 sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
-sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize())
+sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).to_sound())
 fig, playhead = show_bands(sweep)
 
 # %% [markdown]
@@ -148,4 +148,4 @@ fig, playhead = show_mask(sound, target, mask)
 # - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In
 #   *Speech Separation by Humans and Machines*, 181–197. Springer.
 #   [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12).
-#   [`mask.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/mask.py#L35)
+#   [`mask.ideal_binary_mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mask.py#L119)
