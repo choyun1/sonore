@@ -27,7 +27,7 @@ time it runs.
 # - [A different voice](#h-a-different-voice): a female talker as the target, still and moving.
 # - [Coming closer](#h-coming-closer): the target walking up to the listener, without and with
 #   a room.
-# - [A cocktail party](#h-a-cocktail-party): two to four talkers walking around the listener for
+# - [A cocktail party](#h-a-cocktail-party): two to six talkers walking around the listener for
 #   20 to 30 s.
 # - [Passing by](#h-passing-by): a buzz going past at 15 m/s, and the Doppler glide of its pitch.
 # - [Straight paths across the plane](#h-straight-paths-across-the-plane): the buzz in front,
@@ -349,37 +349,32 @@ sound = finish(rendered)
 # %% [markdown]
 # ## A cocktail party
 #
-# A real party has more talkers than three, and they do not stay put. In these scenes two to
-# four talkers walk around the listener for 20 to 30 s, each reading a passage from an
-# audiobook. They walk at the speeds people walk: across 41 studies, the mean normal walking
-# speed of adults is 0.94 to 1.43 m/s, depending on age and sex (Bohannon & Andrews, 2011), and
-# people in groups walk more slowly, by about 0.04 to 0.08 m/s for every extra member (Moussaïd
-# et al., 2010). Each talker here keeps a speed of its own between 0.9 and 1.3 m/s that drifts
-# by up to 10 % over several seconds, and some talkers hurry once, 25 to 50 % faster for 2 to
-# 3 s. A talker walks straight ahead while its heading drifts slowly at random, and bends away
-# from the walls of the 16 m by 16 m room, from the listener in the middle (no talker comes
-# nearer than 1.5 m) and from the other talkers, slowing down when someone is close ahead. So
-# the paths curve gently and cross, and now and then two talkers pass close by each other.
+# Up to six talkers walk around the listener for 20 to 30 s, each reading a passage from an
+# audiobook. Each talker keeps a speed of its own between 0.9 and 1.3 m/s, inside the range of
+# mean normal walking speeds reported for adults (0.94 to 1.43 m/s across 41 studies; Bohannon
+# & Andrews, 2011), that drifts by up to 10 % over several seconds, and some talkers hurry
+# once, 25 to 50 % faster for 2 to 3 s. A talker walks straight ahead while its heading drifts
+# slowly at random, and bends away from the walls of a 16 m by 16 m room, from the listener in
+# the middle (no talker comes nearer than 1.5 m) and from the other talkers, slowing down when
+# someone is close ahead. These rules were chosen for this page; they are not fitted to how
+# people move at a party.
 #
-# Walking is slow motion for the ears. A talker 3 m away walking across the line of sight at
-# 1.1 m/s changes azimuth by at most 21° per second (1.1/3 radians per second), and less when
-# it walks toward or away from the listener; the swing of 30° at 2 Hz above peaks at 377° per
-# second ($2\pi \cdot 2 \cdot 30$). So the walkers' directions change slowly, and with several
-# voices at once the motion can wash out.
+# A talker 3 m away walking across the line of sight at 1.1 m/s changes azimuth by at most 21°
+# per second (1.1/3 radians per second), and less when it walks toward or away from the
+# listener; the swing of 30° at 2 Hz above peaks at 377° per second ($2\pi \cdot 2 \cdot 30$).
 #
-# The voices are nine readers from LibriSpeech (Panayotov et al., 2015), a different cast in
-# each scene, each scaled to the same RMS before rendering, so a talker's level at the ears
-# depends on its distance alone. The room is drier than the one above: RT60 0.3 s, with direct
-# and reverberant sound equal 5.6 m from a talker (15 dB more direct sound at 1 m than the walk
-# above), so the direct sound leads unless a talker is far across the room. Each scene fades in
-# and out over 2 s, as if walking into the party and away again. The last scene is also played
-# without the room. What is
-# not modelled: talkers sound the same whichever way they face (real voices radiate unevenly,
-# and differently at high frequencies; Monson et al., 2012), and nobody raises their voice over
-# the others.
+# The voices are LibriSpeech readers (Panayotov et al., 2015), a different cast in each scene,
+# each scaled to the same RMS before rendering, so a talker's level at the ears depends on its
+# distance alone. The room is drier than the one above: RT60 0.3 s, with direct and reverberant
+# sound equal 5.6 m from a talker (15 dB more direct sound at 1 m than the walk above). Each
+# scene fades in and out over 2 s. The four-talker scene is also played without the room. Not
+# rendered: talkers sound the same whichever way they face (real voices radiate unevenly, and
+# differently at high frequencies; Monson et al., 2012), and every voice keeps the same level
+# however many others talk.
 
 # %%
-# Each scene's cast: LibriSpeech reader, label in the plots, color. No reader is in two casts.
+# Each scene's cast: LibriSpeech reader and chapter, label in the plots, color. A reader in two
+# casts reads from a different chapter.
 PAIR = [("2035_152373", "female talker", "#d62728"), ("5694_64029", "male talker", "#1f77b4")]
 TRIO = [
     ("6345_93306", "female talker", "#d62728"),
@@ -392,6 +387,14 @@ FOURSOME = [
     ("1993_147149", "female talker B", "#ff7f0e"),
     ("1272_141231", "male talker B", "#2ca02c"),
 ]
+SIXSOME = [
+    ("5338_284437", "female talker A", "#d62728"),
+    ("8297_275155", "male talker A", "#1f77b4"),
+    ("8842_304647", "female talker B", "#ff7f0e"),
+    ("5694_64025", "male talker B", "#2ca02c"),
+    ("2035_147961", "female talker C", "#9467bd"),
+    ("2428_83699", "male talker C", "#8c564b"),
+]
 ROOM_HALF_WIDTH = 8.0  # m: the room is 16 m by 16 m, with the listener in the middle
 PERSONAL_SPACE = 1.5  # m: no talker comes nearer the listener than this
 PATH_STEP = 0.05  # s between points on a path
@@ -403,7 +406,7 @@ def walks(n_talkers, duration, seed):
     changing over about 3 s), and it bends away from what is near: a wall within 2 m, the
     listener within 3 m (and never nearer than 1.5 m), another talker within 1.5 m (stepping to
     the right to pass), harder the closer it gets, turning at most 90 degrees per second. Its
-    speed drifts by up to 10 % around its own, and it slows down, as people do, when another
+    speed drifts by up to 10 % around its own, and it slows down when another
     talker is close ahead, easing into the new pace over about 0.3 s rather than braking at once.
     Half the talkers (at least one) also hurry once, for 2 to 3 s, 25 to 50 % faster, easing
     in and out over 0.5 s. Returns the walks and the hurries as (talker, start [s], length
@@ -497,7 +500,8 @@ def passes_title(cast, duration, paths, hurries):
     else:
         passing = "no two pass within 1 m"
     hurrying = ", ".join(
-        f"{cast[talker][1]} +{100 * (speed_up - 1):.0f} %" for talker, _, _, speed_up in hurries
+        f"{cast[talker][1].replace(' talker', '')} +{100 * (speed_up - 1):.0f} %"
+        for talker, _, _, speed_up in hurries
     )
     return f"{len(cast)} talkers, {duration:.0f} s: {passing}\nhurrying (shaded): {hurrying}"
 
@@ -596,6 +600,16 @@ sound = finish(mix)
 mix, paths, hurries = party(FOURSOME, duration=30.0, seed=0, room=None)
 fig, playhead = show_party(FOURSOME, paths, hurries, "The same four talkers without the room")
 scene = party_scene(FOURSOME, paths)
+sound = finish(mix)
+
+# %% [about]
+# Six talkers, three female and three male, for 30 s. Three of them also read in the scenes
+# above, here from another chapter.
+
+# %% [demo cp5] A party of six
+mix, paths, hurries = party(SIXSOME, duration=30.0, seed=0)
+fig, playhead = show_party(SIXSOME, paths, hurries, passes_title(SIXSOME, 30, paths, hurries))
+scene = party_scene(SIXSOME, paths)
 sound = finish(mix)
 
 # %% [markdown]
@@ -1001,14 +1015,11 @@ sound = finish(rendered)
 # - Monson, Hunter & Story (2012). Horizontal directivity of low- and high-frequency energy in
 #   speech and singing. *J. Acoust. Soc. Am.* 132(1), 433–441.
 #   [doi:10.1121/1.4725963](https://doi.org/10.1121/1.4725963).
-# - Moussaïd, Perozo, Garnier, Helbing & Theraulaz (2010). The walking behaviour of pedestrian
-#   social groups and its impact on crowd dynamics. *PLoS ONE* 5(4), e10047.
-#   [doi:10.1371/journal.pone.0010047](https://doi.org/10.1371/journal.pone.0010047).
 # - Panayotov, Chen, Povey & Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain
 #   audio books. *Proc. ICASSP 2015*, 5206–5210.
 #   [doi:10.1109/ICASSP.2015.7178964](https://doi.org/10.1109/ICASSP.2015.7178964). The
-#   cocktail-party passages, by LibriVox readers 2035, 5694, 6345, 251, 2428, 1462, 1993,
-#   3000 and 1272 (CC BY 4.0; sources in docs/speech/SOURCES.md).
+#   cocktail-party passages, by 12 LibriVox readers (CC BY 4.0; sources in
+#   docs/speech/SOURCES.md).
 # - Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer functions
 #   measured with high spatial resolution using a spark gap. *IEEE Trans. Audio, Speech, Lang.
 #   Process.* 17(6), 1124–1132. [PKU

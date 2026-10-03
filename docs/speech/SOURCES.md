@@ -104,6 +104,12 @@ python tools/make_speech_f0.py docs/speech/bdl_arctic_a0131.flac
 | `librispeech_5694_64029.flac` | 5694, Winston Tharp | male | *'Co. Aytch,' Maury Grays, First Tennessee Regiment*, "06 - Murfreesboro" | `5694-64029-0000` to `-0006` | 32.6 s |
 | `librispeech_251_136532.flac` | 251, Mark Nelson | male | *Omnilingual*, Part 4 | `251-136532-0000` to `-0003` | 40.5 s |
 | `librispeech_2428_83705.flac` | 2428, Stephen Kinford | male | *Amusement Only*, "29 - Mr. Whitings and Mary Ann" | `2428-83705-0000` to `-0003` | 30.2 s |
+| `librispeech_5338_284437.flac` | 5338, S R Colon | female | *Sky Island* (version 2), "14 - Tourmaline the Poverty Queen" | `5338-284437-0000` to `-0005` | 32.0 s |
+| `librispeech_8842_304647.flac` | 8842, Mary J | female | *Sonnets of Michael Angelo Buonarroti and Tommaso Campanella*, "Campanella XVI-XXX" | `8842-304647-0000` to `-0002` | 44.7 s |
+| `librispeech_2035_147961.flac` | 2035, Sharon Bautista | female | *My Antonia*, "Book 1 (The Shimerdas), Chapter 8" | `2035-147961-0000` to `-0003` | 30.1 s |
+| `librispeech_8297_275155.flac` | 8297, David Mecionis | male | *Evil Genius*, "Fifth Book - Chapter XL - Keep Your Temper" | `8297-275155-0000` to `-0003` | 30.4 s |
+| `librispeech_5694_64025.flac` | 5694, Winston Tharp | male | *'Co. Aytch,' Maury Grays, First Tennessee Regiment*, "02 - Shiloh" | `5694-64025-0000` to `-0005` | 35.3 s |
+| `librispeech_2428_83699.flac` | 2428, Stephen Kinford | male | *Amusement Only*, "23 - An Old-Fashioned Christmas, Chapter 1" | `2428-83699-0000` to `-0005` | 38.4 s |
 
 Source: the `dev-clean` subset of LibriSpeech (`dev-clean.tar.gz` from
 https://www.openslr.org/12/, supplied by Cho, 2026-10-03). Reader names, sex,
@@ -123,12 +129,15 @@ and this table; the changes are listed below.
 **Why these readers.** All 40 `dev-clean` readers were measured (speech-to-pause
 level range, median F0, chapter length), and the 12 with the cleanest
 recordings and a spread of F0 were auditioned by Cho, who found all of them
-usable. Nine of them are used, a different cast in each cocktail-party scene,
-with median F0 of about 173, 202, 203 and 237 Hz (female) and 94, 118, 118,
-120 and 136 Hz (male), from `so.f0_track` on each reader's first minute.
+usable. All 12 are used, with median F0 of about 173, 180, 195, 202, 203 and
+237 Hz (female) and 94, 111, 118, 118, 120 and 136 Hz (male), from
+`so.f0_track` on each reader's first minute. Each cocktail-party scene has its
+own cast; the three readers who also appear in the six-talker scene read
+there from their second-longest chapter.
 
 **Changes** (as CC BY 4.0 asks): each file joins the first consecutive
-utterances of the reader's longest chapter in `dev-clean`, in order, with
+utterances of one chapter of the reader in `dev-clean` (the longest, or for
+the second file of a reader the second longest), in order, with
 0.3 s of silence between them, until at least 30 s; the samples of each
 utterance are unchanged (16 kHz, 16-bit). No trimming inside utterances,
 resampling or level change. The transcripts are not copied here.
