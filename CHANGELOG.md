@@ -18,12 +18,14 @@ moving-sound renderer.
 ### Added
 - `so.View` and `so.NotInvertibleError`: every view (the spectra,
   envelopes, modulation spectra, the cepstrum, MFCCs, F0 tracks, spectral
-  envelopes and aperiodicity) is now a `View`, with a `discards` sentence
+  envelopes and aperiodicity, interaural cues, texture statistics and the
+  phase vocoder's analysis) is now a `View`, with a `discards` sentence
   saying what it drops. Its `synthesize` raises `NotInvertibleError` (a
   `NotImplementedError`) with that sentence and the route back to sound
   where one exists, such as `Cepstrum.to_sound` or `so.world_synthesize`.
   Before, `synthesize` on a view failed with a plain `AttributeError`. See
   "Only frames synthesize" in `docs/design/reorganization.md`.
+- `STFT` and `TVSTFT` have `n_fft` and `shortest_window` properties.
 - `so.cheaptrick`, `so.d4c` and `so.world_synthesize`: WORLD's spectral
   envelope (Morise, 2015), aperiodicity (Morise, 2016) and synthesis,
   ported exactly to NumPy with no pyworld dependency, returning
@@ -189,6 +191,20 @@ moving-sound renderer.
   `pad=0`).
 
 ### Fixed
+- Gabor analysis works when the hop is longer than the window (windows
+  with gaps between them). Before, `GaborFrame` refused to analyze such a
+  layout; synthesis still refuses, since it is not a frame
+  (`docs/design/frames.md`, D4).
+- `Subbands` and `Envelopes` copy the array they are given, so the
+  caller's array stays writeable; before, `Subbands` made it read-only.
+  Their shape errors now say the shape they received.
+- Two numbers in docstrings were wrong. `DynamicRipple` puts about 7% of
+  its modulation power outside `rate_range`, not 40%, and `fast_padding`'s
+  median growth for odd lengths is 1.1%, not 0.3%. Every number a
+  docstring quotes is now measured by `tools/measure_docstring_numbers.py`.
+- `sonore.plotting.plot_f0_track` is listed in `plotting.__all__`, and the
+  per-band ITD image is rasterized like the other images (this changes SVG
+  and PDF output only).
 - `harmonic_complex` (and `schroeder_complex`, `square_wave`,
   `sawtooth_wave`, `pulse_train`, `glottal_source`) on a fixed F0 ignored
   `f_max`, so a sound asked to stop at 5 kHz had harmonics up to Nyquist.
