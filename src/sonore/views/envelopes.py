@@ -42,14 +42,14 @@ if TYPE_CHECKING:
 __all__ = ["Envelope", "Envelopes"]
 
 
-def _nonnegative(arr: np.ndarray) -> np.ndarray:
+def _nonnegative(values: np.ndarray) -> np.ndarray:
     """Clip round-off negatives; reject genuinely negative envelopes."""
-    if arr.size and np.min(arr) < 0:
-        scale = np.max(np.abs(arr)) or 1.0
-        if np.min(arr) < -1e-9 * scale:
+    if values.size and np.min(values) < 0:
+        scale = np.max(np.abs(values)) or 1.0
+        if np.min(values) < -1e-9 * scale:
             raise ValueError("envelopes must be non-negative")
-        arr = np.maximum(arr, 0.0)
-    return arr
+        values = np.maximum(values, 0.0)
+    return values
 
 
 def _lowpass(data: np.ndarray, cutoff: float, fs: float, order: int) -> np.ndarray:
@@ -106,14 +106,14 @@ class Envelope(View):
     __array_ufunc__ = None
 
     def __init__(self, data, fs: float):
-        arr = np.array(data, dtype=float)
-        if arr.ndim == 1:
-            arr = arr[:, None]
-        if arr.ndim != 2:
-            raise ValueError(f"envelope data must be 1-D or 2-D, got shape {arr.shape}")
-        arr = _nonnegative(arr)
-        arr.flags.writeable = False
-        self._data, self.fs = arr, fs
+        values = np.array(data, dtype=float)
+        if values.ndim == 1:
+            values = values[:, None]
+        if values.ndim != 2:
+            raise ValueError(f"envelope data must be 1-D or 2-D, got shape {values.shape}")
+        values = _nonnegative(values)
+        values.flags.writeable = False
+        self._data, self.fs = values, fs
 
     @property
     def data(self) -> np.ndarray:

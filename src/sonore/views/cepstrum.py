@@ -58,11 +58,11 @@ class Cepstrum(View):
         self.source = coefs
         self.fs = coefs.fs
         self.n_fft = coefs.n_fft
-        mag = np.abs(coefs.data)
-        peak = mag.max(axis=(1, 2), keepdims=True)
+        magnitude = np.abs(coefs.data)
+        peak = magnitude.max(axis=(1, 2), keepdims=True)
         floor = np.where(peak > 0, peak * 10 ** (floor_db / 20), np.finfo(float).tiny)
-        log_mag = np.log(np.maximum(mag, floor))
-        self.data = np.fft.irfft(log_mag, n=self.n_fft, axis=1)[:, : self.n_fft // 2 + 1]
+        log_magnitude = np.log(np.maximum(magnitude, floor))
+        self.data = np.fft.irfft(log_magnitude, n=self.n_fft, axis=1)[:, : self.n_fft // 2 + 1]
 
     @classmethod
     def _from(cls, template: Cepstrum, data: np.ndarray) -> Cepstrum:

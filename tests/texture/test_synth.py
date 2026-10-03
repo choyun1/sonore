@@ -31,9 +31,9 @@ def test_objective_is_zero_at_the_target(setup):
     objective vanishes: checks that every pairwise term (both directions)
     is compared with the right stored target."""
     target, env_t, _, _ = setup
-    ctx = tg.ChannelContext.build(M, env_t.shape[0])
+    context = tg.ChannelContext.build(M, env_t.shape[0])
     for k in (0, 1, 15, 30, 31):
-        obj = ChannelObjective(ctx, target, k, env_t, np.ones(env_t.shape[1], bool))
+        obj = ChannelObjective(context, target, k, env_t, np.ones(env_t.shape[1], bool))
         names = [name for name, _, _ in obj.terms()]
         assert {"env_corr", "c1"} <= set(names)
         assert obj(env_t[:, k])[0] < 1e-20
@@ -41,8 +41,8 @@ def test_objective_is_zero_at_the_target(setup):
 
 def test_objective_gradient(setup):
     target, _, env, adjusted = setup
-    ctx = tg.ChannelContext.build(M, env.shape[0])
-    obj = ChannelObjective(ctx, target, 15, env, adjusted)
+    context = tg.ChannelContext.build(M, env.shape[0])
+    obj = ChannelObjective(context, target, 15, env, adjusted)
     s = env[:, 15]
     v = np.random.default_rng(0).standard_normal(s.shape) * s.std()
     eps = 1e-6
@@ -85,9 +85,9 @@ def test_channel_order():
 
 def test_affine_correction_sets_mean_and_variance(setup):
     target, _, env, adjusted = setup
-    ctx = tg.ChannelContext.build(M, env.shape[0])
-    s, _ = impose_channel(target, env, 15, adjusted, n_iter=2, ctx=ctx)
-    mom = tg.env_moments(s, ctx)[0]
+    context = tg.ChannelContext.build(M, env.shape[0])
+    s, _ = impose_channel(target, env, 15, adjusted, n_iter=2, context=context)
+    mom = tg.env_moments(s, context)[0]
     assert mom[0] == pytest.approx(target.env_mean[15], rel=1e-9)
     assert mom[1] == pytest.approx(target.env_var[15], rel=1e-9)
 
@@ -122,9 +122,9 @@ def test_synthesis_restricted_classes():
 @pytest.mark.parametrize("classes", [None, ("env_var", "c1"), ("mod_power", "c2", "env_corr")])
 def test_fused_objective_matches_reference(setup, k, classes):
     target, _, env, adjusted = setup
-    ctx = tg.ChannelContext.build(M, env.shape[0])
+    context = tg.ChannelContext.build(M, env.shape[0])
     args = () if classes is None else (classes,)
-    obj = ChannelObjective(ctx, target, k, env, np.ones(env.shape[1], bool), *args)
+    obj = ChannelObjective(context, target, k, env, np.ones(env.shape[1], bool), *args)
     s = env[:, k] * 1.1 + 0.01
     fast, ref = obj(s, per_term=True), obj.reference(s, per_term=True)
     assert fast[0] == pytest.approx(ref[0], rel=1e-10)

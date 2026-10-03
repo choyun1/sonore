@@ -119,15 +119,15 @@ class GaborFrame(_ShortTimeFourierFrame):
         the diagonal of the frame operator. Sums over every time window
         that overlaps the signal; time windows SciPy leaves out overlap it only
         where the window is zero, so they add nothing."""
-        n = int(n_samples)
+        n_samples = int(n_samples)
         window_power = np.abs(self.window_samples(fs)) ** 2
         n_win, hop, n_fft = self.lengths(fs)
         centre_index = n_win // 2
-        window_indices = np.arange((centre_index - n_win) // hop + 1, -(-(n + centre_index) // hop))
+        window_indices = np.arange((centre_index - n_win) // hop + 1, -(-(n_samples + centre_index) // hop))
         positions = window_indices[:, None] * hop - centre_index + np.arange(n_win)[None, :]
-        inside = (positions >= 0) & (positions < n)
+        inside = (positions >= 0) & (positions < n_samples)
         weights = np.broadcast_to(window_power, positions.shape)[inside]
-        return n_fft * np.bincount(positions[inside], weights=weights, minlength=n)
+        return n_fft * np.bincount(positions[inside], weights=weights, minlength=n_samples)
 
     def bin_weights(self, fs: float) -> np.ndarray:
         """Weight of each stored frequency bin: 1 for DC and, for even
@@ -202,14 +202,14 @@ def _bin_weights(n_fft: int) -> np.ndarray:
     return weights
 
 
-def _window(spec, n: int) -> np.ndarray:
-    """A periodic window of ``n`` samples from a get_window spec or a callable."""
+def _window(spec, length: int) -> np.ndarray:
+    """A periodic window of ``length`` samples from a get_window spec or a callable."""
     if callable(spec):
-        samples = np.asarray(spec(n), dtype=float)
-        if samples.shape != (n,):
-            raise ValueError(f"window callable returned shape {samples.shape}, expected ({n},)")
+        samples = np.asarray(spec(length), dtype=float)
+        if samples.shape != (length,):
+            raise ValueError(f"window callable returned shape {samples.shape}, expected ({length},)")
         return samples
-    return get_window(spec, n, fftbins=True)
+    return get_window(spec, length, fftbins=True)
 
 
 @dataclass(frozen=True)
@@ -325,10 +325,10 @@ class TVGaborFrame(_ShortTimeFourierFrame):
     def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
         """``s(t) = M sum_q |w_q(t - a_q)|**2`` for ``t`` in ``0..n_samples-1``:
         the diagonal of the frame operator."""
-        frame_layout, n = self.layout(fs), int(n_samples)
-        signal_index, valid = frame_layout.positions(n)
+        frame_layout, n_samples = self.layout(fs), int(n_samples)
+        signal_index, valid = frame_layout.positions(n_samples)
         return frame_layout.n_fft * np.bincount(
-            signal_index[valid], weights=np.abs(frame_layout.windows[valid]) ** 2, minlength=n
+            signal_index[valid], weights=np.abs(frame_layout.windows[valid]) ** 2, minlength=n_samples
         )
 
     def bin_weights(self, fs: float) -> np.ndarray:
@@ -338,13 +338,13 @@ class TVGaborFrame(_ShortTimeFourierFrame):
     def analyze(self, sound: Sound) -> TVSTFT:
         """The time-varying STFT of ``sound``, data shape ``(n_channels, n_freqs, n_windows)``."""
 
-        frame_layout, n = self.layout(sound.fs), len(sound)
-        signal_index, valid = frame_layout.positions(n)
+        frame_layout, n_samples = self.layout(sound.fs), len(sound)
+        signal_index, valid = frame_layout.positions(n_samples)
         segments = np.where(valid, frame_layout.windows, 0.0) * sound.data[
-            np.clip(signal_index, 0, n - 1)
+            np.clip(signal_index, 0, n_samples - 1)
         ].transpose(2, 0, 1)
         data = np.fft.rfft(segments, axis=-1).transpose(0, 2, 1)
-        return TVSTFT(data, sound.fs, n, self)
+        return TVSTFT(data, sound.fs, n_samples, self)
 
     def _check(self, coefs: TVSTFT) -> _TVLayout:
         frame_layout = self.layout(coefs.fs)
@@ -354,14 +354,14 @@ class TVGaborFrame(_ShortTimeFourierFrame):
         return frame_layout
 
     def _overlap_add(self, coefs: TVSTFT, frame_layout: _TVLayout) -> np.ndarray:
-        n = coefs.n_samples
-        signal_index, valid = frame_layout.positions(n)
+        n_samples = coefs.n_samples
+        signal_index, valid = frame_layout.positions(n_samples)
         segments = frame_layout.n_fft * np.fft.irfft(coefs.data, n=frame_layout.n_fft, axis=1).transpose(
             0, 2, 1
         )  # (C, Q, M)
         weighted_segments = segments * np.conj(frame_layout.windows)[None]
         channel_signals = [
-            np.bincount(signal_index[valid], weights=channel_segments[valid], minlength=n)
+            np.bincount(signal_index[valid], weights=channel_segments[valid], minlength=n_samples)
             for channel_segments in weighted_segments
         ]
         return np.stack(channel_signals, axis=1)

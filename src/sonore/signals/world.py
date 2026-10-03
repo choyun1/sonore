@@ -212,12 +212,12 @@ def _contour_on_grid(times, f0_values, grid) -> np.ndarray:
     upper = np.clip(np.searchsorted(times, grid), 0, len(times) - 1)
     lower = np.clip(upper - 1, 0, len(times) - 1)
     nearest = np.where(np.abs(times[lower] - grid) <= np.abs(times[upper] - grid), lower, upper)
-    out = np.zeros((len(rows), len(grid)))
-    for row_in, row_out in zip(rows, out, strict=True):
-        voiced = row_in > 0
+    contours = np.zeros((len(rows), len(grid)))
+    for given_row, contour_row in zip(rows, contours, strict=True):
+        voiced = given_row > 0
         if voiced.any():
-            row_out[:] = np.where(voiced[nearest], np.interp(grid, times[voiced], row_in[voiced]), 0.0)
-    return out
+            contour_row[:] = np.where(voiced[nearest], np.interp(grid, times[voiced], given_row[voiced]), 0.0)
+    return contours
 
 
 class _GaussianNoise:

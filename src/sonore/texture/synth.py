@@ -50,7 +50,7 @@ class ChannelObjective:
     """The squared-error objective for channel ``k`` given the other channels'
     envelopes ``env`` ``(n, B)`` and which of them count as ``adjusted``."""
 
-    ctx: tg.ChannelContext
+    context: tg.ChannelContext
     target: TextureStats
     k: int
     env: np.ndarray
@@ -71,24 +71,24 @@ class ChannelObjective:
 
     def terms(self):
         """``[(name, f(s) -> (value, vjp), target)]`` for this channel."""
-        target, k, ctx = self.target, self.k, self.ctx
+        target, k, context = self.target, self.k, self.context
         moments = np.array([target.env_mean[k], target.env_var[k], target.env_skew[k], target.env_kurt[k]])
         active = set(self.classes)
         out = []
         if active & set(MOMENTS):
-            out.append(("env_moments", lambda s: tg.env_moments(s, ctx), moments))
+            out.append(("env_moments", lambda s: tg.env_moments(s, context), moments))
         if "mod_power" in active:
-            out.append(("mod_power", lambda s: tg.mod_power(s, ctx), target.mod_power[k]))
+            out.append(("mod_power", lambda s: tg.mod_power(s, context), target.mod_power[k]))
         if "c2" in active:
-            out.append(("c2", lambda s: tg.c2(s, ctx), target.c2[k]))
+            out.append(("c2", lambda s: tg.c2(s, context), target.c2[k]))
         neighbors, pair_targets = self._pairs(target.model.corr_offsets, target.env_corr)
         if neighbors and "env_corr" in active:
             others = self.env[:, neighbors]
-            out.append(("env_corr", lambda s, o=others: tg.env_corr(s, o, ctx), np.array(pair_targets)))
+            out.append(("env_corr", lambda s, o=others: tg.env_corr(s, o, context), np.array(pair_targets)))
         neighbors, pair_targets = self._pairs(target.model.c1_offsets, target.c1)
         if neighbors and "c1" in active:
             others = self.env[:, neighbors]
-            out.append(("c1", lambda s, o=others: tg.c1(s, o, ctx), np.stack(pair_targets, axis=-1)))
+            out.append(("c1", lambda s, o=others: tg.c1(s, o, context), np.stack(pair_targets, axis=-1)))
         return out
 
     def reference(self, s: np.ndarray, per_term: bool = False):
@@ -111,7 +111,7 @@ class ChannelObjective:
         """Everything that doesn't depend on ``s``: targets, and the neighbors'
         centered envelopes and octave bands (computed once per channel instead
         of on every objective call)."""
-        target, k, ctx, active = self.target, self.k, self.ctx, set(self.classes)
+        target, k, context, active = self.target, self.k, self.context, set(self.classes)
         fixed = {"mask": np.array([m in active for m in MOMENTS], float)}
         fixed["moments"] = np.array(
             [target.env_mean[k], target.env_var[k], target.env_skew[k], target.env_kurt[k]]
@@ -124,7 +124,7 @@ class ChannelObjective:
             bands = list(target.model.c1_bands)
             fixed["c1"] = (
                 bands,
-                ctx.analytic_many(self.env[:, neighbors], bands).real,
+                context.analytic_many(self.env[:, neighbors], bands).real,
                 np.stack(pair_targets, axis=-1),
             )
         return fixed
@@ -135,7 +135,7 @@ class ChannelObjective:
         Fused: one forward transform per filterbank shared by all classes,
         and the band-domain cotangents of C2 and C1 summed before a single
         adjoint transform."""
-        target, k, ctx, w, fixed = self.target, self.k, self.ctx, self.ctx.w, self._fixed
+        target, k, context, w, fixed = self.target, self.k, self.context, self.context.w, self._fixed
         active = set(self.classes)
         loss, grad, parts = 0.0, np.zeros_like(s), {}
 
@@ -149,17 +149,17 @@ class ChannelObjective:
 
         centered = s - w @ s
         if fixed["mask"].any():
-            value, vjp = tg.env_moments(s, ctx)
+            value, vjp = tg.env_moments(s, context)
             error = (value - fixed["moments"]) * fixed["mask"]
             add("env_moments", error, vjp(error))
         if "mod_power" in active:
-            value, vjp = tg.mod_power_core(ctx.mod_filter(s), centered, w)
+            value, vjp = tg.mod_power_core(context.mod_filter(s), centered, w)
             error = value - target.mod_power[k]
             mod_cotangent, direct = vjp(error)
-            add("mod_power", error, ctx.mod_adjoint(mod_cotangent) + direct)
+            add("mod_power", error, context.mod_adjoint(mod_cotangent) + direct)
         if "c2" in active or "c1" in fixed:
-            n_oct = ctx.A_oct.shape[1]
-            oct_bands = ctx.analytic(s, range(n_oct))
+            n_oct = context.A_oct.shape[1]
+            oct_bands = context.analytic(s, range(n_oct))
             band_cotangent = np.zeros(
                 (len(s), n_oct), complex
             )  # cotangents of oct_bands.real + 1j * of .imag
@@ -175,10 +175,10 @@ class ChannelObjective:
                 error = value - target_value
                 band_cotangent[:, bands] += vjp(error)
                 add("c1", error, None)
-            grad += ctx.analytic_adjoint(band_cotangent.real, band_cotangent.imag, range(n_oct))
+            grad += context.analytic_adjoint(band_cotangent.real, band_cotangent.imag, range(n_oct))
         if "corr" in fixed:
             others, target_value = fixed["corr"]
-            value, vjp = tg.env_corr(s, others, ctx)
+            value, vjp = tg.env_corr(s, others, context)
             error = value - target_value
             add("env_corr", error, vjp(error))
         return (loss, grad, parts) if per_term else (loss, grad)
@@ -200,7 +200,7 @@ def impose_channel(
     k: int,
     adjusted: np.ndarray | None = None,
     n_iter: int = 5,
-    ctx: tg.ChannelContext | None = None,
+    context: tg.ChannelContext | None = None,
     classes=PAPER_CLASSES,
     affine: bool = True,
 ) -> tuple[np.ndarray, dict]:
@@ -220,14 +220,14 @@ def impose_channel(
     """
     n_channels = env.shape[1]
     adjusted = np.zeros(n_channels, bool) if adjusted is None else np.asarray(adjusted, bool)
-    ctx = tg.ChannelContext.build(target.model, env.shape[0]) if ctx is None else ctx
-    objective = ChannelObjective(ctx, target, k, env, adjusted, tuple(classes))
+    context = tg.ChannelContext.build(target.model, env.shape[0]) if context is None else context
+    objective = ChannelObjective(context, target, k, env, adjusted, tuple(classes))
     s_init = env[:, k]
     before = objective(s_init, per_term=True)
     result = minimize(objective, s_init, jac=True, method="CG", options={"maxiter": n_iter, "gtol": 0.0})
     s = result.x
     if affine:
-        s = _match_mean_var(s, target, k, ctx.w, classes)
+        s = _match_mean_var(s, target, k, context.w, classes)
     s = np.maximum(s, 0.0)
     after = objective(s, per_term=True)
     report = {"before": before[0], "after": after[0], "terms_before": before[2], "terms_after": after[2]}
@@ -305,7 +305,7 @@ def synthesize(
     filterbank = model.filterbank
     n_samples = len(x)
     n_env = n_samples // model.decimation
-    ctx = tg.ChannelContext.build(model, n_env)
+    context = tg.ChannelContext.build(model, n_env)
     order = channel_order(target.env_mean)
     history, best = [], (-np.inf, x, 0)
 
@@ -346,7 +346,7 @@ def synthesize(
         n_cg_iter = 5 + round(0.2 * (iteration - 1))
         for k in order:
             env[:, k], _ = impose_channel(
-                target, env, k, adjusted, n_iter=n_cg_iter, ctx=ctx, classes=classes
+                target, env, k, adjusted, n_iter=n_cg_iter, context=context, classes=classes
             )
             adjusted[k] = True
 
