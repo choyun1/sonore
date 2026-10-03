@@ -177,7 +177,8 @@ class SpectralEnvelope(_FrequencyView):
         "smoothing."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds a voice from it together with an F0 track and an aperiodicity."
+        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
+        "an aperiodicity."
     )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, q1: float):
@@ -282,7 +283,8 @@ def _smooth_with_recovery(power, f0, q1, quefrencies, n_fft):
 
 class GridEnvelope(View):
     """A spectral envelope held as power on any grid of times and
-    frequencies: ``data`` has shape ``(n_channels, len(f), len(t))``.
+    frequencies: ``data`` has shape ``(n_channels, len(f), len(t))``. A view:
+    it keeps the envelope and drops the harmonics and the phase.
 
     Any envelope estimate can be put in this form, so that it reads like a
     :class:`~sonore.views.spectral_envelope.SpectralEnvelope` and goes wherever an
@@ -302,7 +304,8 @@ class GridEnvelope(View):
         "GridEnvelope discards the harmonics, the phase, and everything finer than the envelope's smoothing."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds a voice from it together with an F0 track and an aperiodicity."
+        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
+        "an aperiodicity."
     )
 
     def __init__(self, data: np.ndarray, t, f):

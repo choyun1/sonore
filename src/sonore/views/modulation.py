@@ -45,7 +45,13 @@ __all__ = [
 
 @dataclass(frozen=True)
 class ModulationFilterbank:
-    """Base class. Subclasses define ``n_bands``, :attr:`cfs` and :meth:`response`."""
+    """Base class. Subclasses define ``n_bands``, :attr:`cfs` and :meth:`response`.
+
+    Despite the name, a modulation filterbank is not a
+    :class:`~sonore.frames.filterbank.Filterbank`: it filters envelopes to
+    make views such as :class:`~sonore.views.modspectrogram.ModulationSpectrogram`,
+    and has no synthesis.
+    """
 
     @property
     def cfs(self) -> np.ndarray:
@@ -289,8 +295,12 @@ class ModulationSpectrum(View):
     :class:`~sonore.views.envelopes.Envelopes` has ``.modulation_spectrum()``.
 
     Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at
-    ``(+rate, +density)``. Only non-negative spectral modulations are kept
+    ``(+rate, +density)``. Only non-negative spectral modulations are stored
     (the other half is the complex conjugate).
+
+    A view: before the transform the envelope's mean is removed and a Hann
+    taper applied in time, and only the level (dB, floored) is kept, so the
+    phase of the modulations is dropped and no envelope can be read back.
     """
 
     discards = (

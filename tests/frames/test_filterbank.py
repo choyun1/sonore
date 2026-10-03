@@ -32,6 +32,16 @@ def test_octave_filterbank_reconstructs():
     np.testing.assert_allclose(fb.analyze(g).synthesize().data, g.data, atol=1e-10)
 
 
+def test_subbands_copy_and_leave_the_callers_array_writeable():
+    bank = so.ERBFilterbank(8, 100, 4000)
+    subbands = bank.analyze(so.gaussian_noise(0.1, FS, rng=0))
+    full = np.array(subbands._full)
+    copied = so.Subbands(full, subbands.fs, bank, subbands.pad)
+    assert full.flags.writeable and not copied._full.flags.writeable
+    full[:] = 0  # the caller changing its array leaves the Subbands as built
+    np.testing.assert_array_equal(copied._full, subbands._full)
+
+
 def test_subband_plot_labels_and_scale():
     import matplotlib
 

@@ -28,6 +28,7 @@ from sonore.core.fft import threads
 from sonore.core.sound import Sound
 from sonore.frames.filterbank import ERBFilterbank
 from sonore.views.modulation import ConstantQModulationFilterbank, OctaveModulationFilterbank
+from sonore.views.view import View
 
 __all__ = ["TextureModel", "TextureStats", "measurement_window", "STAT_CLASSES", "DIFFERENCES_FROM_TOOLBOX"]
 
@@ -185,7 +186,7 @@ def _pair_corr(x: np.ndarray, w: np.ndarray, offsets, centered: bool) -> np.ndar
 
 
 @dataclass(frozen=True, eq=False)
-class TextureStats:
+class TextureStats(View):
     """The statistics of one texture. Arrays are indexed by cochlear channel
     first (``n_bands + 2`` channels, including the lowpass and highpass
     edges, as in the paper's count of 1515 statistics).
@@ -207,6 +208,15 @@ class TextureStats:
     subband_var : (B,)
         Variance of each cochlear subband (used to set levels in synthesis).
     """
+
+    discards = (
+        "TextureStats keeps only time-averaged statistics of the envelopes and their modulations: it "
+        "discards the phase, the fine structure and every event's timing."
+    )
+    back_to_sound = (
+        "sonore.texture.synth.synthesize draws a new sound with these statistics, which is not the "
+        "measured one."
+    )
 
     model: TextureModel
     env_mean: np.ndarray

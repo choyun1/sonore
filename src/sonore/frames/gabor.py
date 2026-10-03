@@ -58,10 +58,10 @@ class GaborFrame(Frame):
     :class:`~scipy.signal.ShortTimeFFT` is built once per rate
     (:meth:`sft`). ``analyze`` returns an :class:`~sonore.STFT`.
 
-    A window/hop pair that leaves gaps (A = 0) is refused when the frame is
-    first used at a sampling rate, because SciPy builds the dual window
-    eagerly; the error gives the frame bounds. A hop longer than
-    the window is refused at construction.
+    Analysis always works, even for a window and hop that leave gaps
+    (A = 0, including a hop longer than the window): the STFT is still a
+    picture of the sound. :meth:`synthesize` (and Griffin-Lim) refuse such a
+    pair, and the error gives the frame bounds.
     """
 
     win_dur: float
@@ -72,11 +72,8 @@ class GaborFrame(Frame):
     def __post_init__(self):
         if not self.win_dur > 0:
             raise ValueError("win_dur must be positive")
-        if self.hop_dur is not None and not 0 < self.hop_dur <= self.win_dur:
-            raise ValueError(
-                f"hop_dur must be in (0, win_dur]: a hop of {self.hop_dur:g} s with a {self.win_dur:g} s "
-                "window leaves gaps, so it is not a frame"
-            )
+        if self.hop_dur is not None and not self.hop_dur > 0:
+            raise ValueError("hop_dur must be positive")
 
     def lengths(self, fs: float) -> tuple[int, int, int]:
         """``(window, hop, n_fft)`` in samples at ``fs``."""
@@ -100,7 +97,9 @@ class GaborFrame(Frame):
         return get_window(self.window, n_win, fftbins=True)
 
     def sft(self, fs: float) -> ShortTimeFFT:
-        """The :class:`~scipy.signal.ShortTimeFFT` at ``fs`` (cached)."""
+        """The :class:`~scipy.signal.ShortTimeFFT` at ``fs`` (cached), with
+        the canonical dual window for synthesis. Raises, with the frame
+        bounds, when the window and hop leave gaps."""
         return _gabor_sft(self, float(fs))
 
     def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
@@ -180,6 +179,16 @@ def _gabor_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
         ) from err
     _check_frame(lower, upper, f"{frame} at {fs:g} Hz", note="")
     return short_time_fft
+
+
+def _analysis_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
+    """The frame's own ShortTimeFFT, or, when the window and hop leave gaps,
+    one with the window as its own dual: analysis does not use the dual, so
+    the coefficients are the same, and only synthesis needs to refuse."""
+    try:
+        return frame.sft(fs)
+    except ValueError:
+        return _gabor_adjoint_sft(frame, fs)
 
 
 @lru_cache(maxsize=64)
@@ -482,7 +491,7 @@ class STFT:
     ):
         self.frame = GaborFrame(win_dur, hop_dur) if frame is None else frame
         self.fs = sound.fs
-        self.sft = self.frame.sft(sound.fs)
+        self.sft = _analysis_sft(self.frame, float(sound.fs))
         self.n_samples = len(sound)
         self.data = self.sft.stft(sound.data.T, axis=-1)
 
@@ -538,9 +547,10 @@ class STFT:
         rng = as_rng(rng)
         coefs = target_mag * np.exp(2j * np.pi * rng.random(target_mag.shape))
         prev_projected = coefs
+        short_time_fft = self.frame.sft(self.fs)  # the canonical dual; refuses a non-frame
         for _ in range(n_iter):
-            signal = self.sft.istft(coefs, k1=self.n_samples)
-            projected = self.sft.stft(np.real(signal), axis=-1)
+            signal = short_time_fft.istft(coefs, k1=self.n_samples)
+            projected = short_time_fft.stft(np.real(signal), axis=-1)
             coefs = projected + momentum * (projected - prev_projected)
             prev_projected = projected
             coefs = target_mag * np.exp(1j * np.angle(coefs))

@@ -577,7 +577,7 @@ for name, frame in frames.items():
 # - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
 #   modification and synthesis framework. *Sādhanā* 36(5).
 #   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).
-#   [`spectrum.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L126)
+#   [`spectrum.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L131)
 # - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values.
 #   *IEEE Trans. ASSP* 26(1).
 #   [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047).

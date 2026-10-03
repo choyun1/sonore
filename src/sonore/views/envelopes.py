@@ -92,6 +92,7 @@ def _check_duration(n_env: int, fs_env: float, n: int, fs: float) -> None:
 
 class Envelope(View):
     """A single (possibly multichannel) envelope, shape ``(n_samples, n_channels)``.
+    A view: it keeps a magnitude over time and drops the fine structure.
 
     Arithmetic: ``*``, ``/`` and ``+`` with numbers and other Envelopes (so
     ``1 + 0.5 * env`` works), and ``env * snd`` / ``snd * env`` modulate a
@@ -207,6 +208,9 @@ class Envelopes(View):
     include the filterbank's lowpass and highpass edge filters, as in
     :class:`~sonore.frames.filterbank.Subbands`.
 
+    A view: it keeps each band's Hilbert magnitude and drops the fine
+    structure (and, with ``lowpass``, the envelope's own fast detail).
+
     ``env[i]`` is an :class:`Envelope`; ``env * subbands`` modulates each band
     (imposing the envelopes on a carrier, not an inverse);
     ``env.modulation_spectrum()`` gives its 2-D modulation spectrum on the
@@ -219,7 +223,10 @@ class Envelopes(View):
     zero outside their own extent when combined with padded bands.
     """
 
-    discards = "Envelopes discard the fine structure: only the Hilbert magnitude of each band is kept."
+    discards = (
+        "Envelopes discard the fine structure: only the Hilbert magnitude of each band is kept, "
+        "smoothed further when a lowpass was asked for."
+    )
     back_to_sound = (
         "To hear them, impose them on a carrier's subbands (envelopes * subbands) and synthesize those, as "
         "the noise vocoder does."

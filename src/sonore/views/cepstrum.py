@@ -43,7 +43,10 @@ class Cepstrum(View):
         The floor, in dB below each channel's maximum.
     """
 
-    discards = "Cepstrum discards the phase: the real cepstrum is the transform of the log magnitude."
+    discards = (
+        "Cepstrum discards the phase: its coefficients are the transform of the log magnitude alone, "
+        "and only the source STFT it keeps holds the phase."
+    )
     back_to_sound = (
         "Cepstrum.to_sound borrows the phase of the STFT it was computed from, and gives the sound back "
         "exactly only for an unliftered cepstrum with phase='original'."
@@ -156,8 +159,9 @@ class Cepstrum(View):
 
     def to_sound(self, phase: str = "original") -> Sound:
         """:meth:`to_stft` synthesized by the source's frame: exact for an
-        unliftered cepstrum with the original phase, and otherwise the
-        least-squares signal for those coefficients. It is not an inverse of
+        unliftered cepstrum with the original phase, as long as no
+        magnitude fell below ``floor_db`` (those are raised to the floor),
+        and otherwise the least-squares signal for those coefficients. It is not an inverse of
         the cepstrum alone: the phase comes from the source STFT."""
         return self.to_stft(phase).to_sound()
 

@@ -21,7 +21,11 @@ __all__ = ["Spectrum", "long_term_spectrum", "TFPower", "tandem_power"]
 # ---------------------------------------------------------------- spectrum
 @dataclass(frozen=True)
 class Spectrum(View):
-    """A magnitude spectrum: frequencies [Hz] and levels [dB]."""
+    """A magnitude spectrum: frequencies [Hz] and levels [dB].
+
+    A view: it keeps one level per frequency and drops the phase, and with
+    it all timing, so no sound can be read back from it.
+    """
 
     discards = (
         "Spectrum keeps only the level at each frequency: it discards the phase, and with it all timing, so "
@@ -94,7 +98,8 @@ def long_term_spectrum(sounds: Sound | Sequence[Sound], nperseg: int = 4096) -> 
 @dataclass(frozen=True)
 class TFPower(View):
     """A time-frequency power that is not a frame's coefficients, so it has
-    no synthesis: for example :func:`tandem_power`.
+    no synthesis: for example :func:`tandem_power`. It keeps the power of
+    each cell and drops the phase.
 
     ``power`` has shape ``(n_channels, n_freqs, n_windows)``, on frequencies
     :attr:`f` [Hz] and window times :attr:`t` [s], which need not be uniform.

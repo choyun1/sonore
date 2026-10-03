@@ -568,7 +568,7 @@ class Subbands:
     """
 
     def __init__(self, data: np.ndarray, fs: float, filterbank: Filterbank, pad: int = 0):
-        bands = np.asarray(data, dtype=float)
+        bands = np.array(data, dtype=float)  # a copy, as in Sound: the caller's array stays writeable
         if bands.ndim != 3 or bands.shape[1] != filterbank.n_filters:
             raise ValueError(f"expected shape (n_samples, {filterbank.n_filters}, n_channels)")
         if 2 * pad >= bands.shape[0]:

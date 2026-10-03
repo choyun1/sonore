@@ -19,6 +19,7 @@ from sonore.core.utils import time_axis
 from sonore.frames.filterbank import ERBFilterbank
 from sonore.signals.generators import gaussian_noise
 from sonore.signals.processing import pad
+from sonore.views.view import View
 
 __all__ = [
     "apply_itd_ild",
@@ -78,9 +79,15 @@ def simple_bir(fs: float, itd: float = 0.0, ild: float = 0.0, half_width: int = 
 
 
 @dataclass(frozen=True)
-class InterauralCues:
+class InterauralCues(View):
     """Short-time interaural cues. Arrays are ``(n_windows,)`` for broadband
-    analysis or ``(n_windows, n_bands)`` per band. Silent time windows are NaN."""
+    analysis or ``(n_windows, n_bands)`` per band. Silent time windows are NaN.
+    A view: it keeps a few numbers per time window and drops the sounds."""
+
+    discards = (
+        "InterauralCues keeps only the time and level differences and the coherence between the ears in "
+        "each time window: it discards the sounds themselves."
+    )
 
     t: np.ndarray
     itd: np.ndarray

@@ -62,7 +62,8 @@ class Aperiodicity(_FrequencyView):
         "spectrum, the pitch and the phase."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds a voice from it together with an F0 track and a spectral envelope."
+        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
+        "a spectral envelope."
     )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, method: str):
