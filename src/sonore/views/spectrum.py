@@ -11,7 +11,7 @@ import numpy as np
 from scipy.signal import welch
 
 from sonore.core.sound import Sound
-from sonore.core.utils import _power_to_db, amp_to_db, n_samples
+from sonore.core.utils import amp_to_db, n_samples, power_to_db
 from sonore.frames.gabor import _FLOOR_DB, TVGaborFrame
 from sonore.views.view import View
 
@@ -62,7 +62,7 @@ class Spectrum(View):
         stop = np.searchsorted(self.f, self.f * half, side="right")
         stop = np.maximum(stop, start + 1)
         mean_power = (cumulative[stop] - cumulative[start]) / (stop - start)
-        return Spectrum(self.f, _power_to_db(mean_power, _FLOOR_DB))
+        return Spectrum(self.f, power_to_db(mean_power, floor_db=_FLOOR_DB))
 
     def to_noise(self, duration: float, fs: float, rng=None, **kwargs) -> Sound:
         """Gaussian noise with this spectral shape: a new draw, not an inverse
@@ -95,7 +95,7 @@ def long_term_spectrum(sounds: Sound | Sequence[Sound], win_dur: float = 0.1) ->
         total = total + sound_psd * len(sound)
         weight += len(sound)
     psd = total / weight
-    return Spectrum(freqs, _power_to_db(psd, _FLOOR_DB))
+    return Spectrum(freqs, power_to_db(psd, floor_db=_FLOOR_DB))
 
 
 # ------------------------------------------------- magnitude-only analyses
@@ -122,8 +122,7 @@ class TFPower(View):
     @property
     def db(self) -> np.ndarray:
         """``10*log10(power)``, floored like the other representations."""
-        with np.errstate(divide="ignore"):
-            return np.maximum(10 * np.log10(self.power), _FLOOR_DB)
+        return power_to_db(self.power, floor_db=_FLOOR_DB)
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
         """Power in dB (see :func:`~sonore.plotting.plot_tf_db`)."""

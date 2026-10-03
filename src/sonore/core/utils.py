@@ -11,6 +11,7 @@ from scipy.signal import resample_poly
 __all__ = [
     "rms",
     "amp_to_db",
+    "power_to_db",
     "db_to_amp",
     "freq_to_erb",
     "erb_to_freq",
@@ -33,6 +34,13 @@ def amp_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.nd
     x = np.abs(np.asarray(x)).astype(float) / ref
     with np.errstate(divide="ignore"):
         return np.maximum(20 * np.log10(x), floor_db)
+
+
+def power_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
+    """Power (not amplitude) to decibels: ``10*log10(|x|/ref)``, floored."""
+    x = np.abs(np.asarray(x)).astype(float) / ref
+    with np.errstate(divide="ignore"):
+        return np.maximum(10 * np.log10(x), floor_db)
 
 
 def db_to_amp(db: ArrayLike) -> np.ndarray:
@@ -81,11 +89,6 @@ def _parabola_vertex(before: np.ndarray, at: np.ndarray, after: np.ndarray, dip:
     curved = curvature > 0 if dip else curvature != 0
     with np.errstate(divide="ignore", invalid="ignore"):
         return np.where(curved, 0.5 * (before - after) / curvature, 0.0)
-
-
-def _power_to_db(power: ArrayLike, floor_db: float) -> np.ndarray:
-    """Power to decibels, ``10*log10(power)``, with power floored at ``floor_db``."""
-    return 10 * np.log10(np.maximum(power, 10 ** (floor_db / 10)))
 
 
 def _resample_poly(data: np.ndarray, fs: float, fs_new: float, axis: int = 0, **kwargs) -> np.ndarray:
