@@ -43,7 +43,7 @@ from scipy.spatial import ConvexHull
 from scipy.special import i0
 
 from sonore.core.sound import Sound
-from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp, time_axis
+from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp, db_to_power, time_axis
 from sonore.signals.processing import _track
 
 __all__ = [
@@ -620,7 +620,7 @@ def move_sound(
         direct_energy, diffuse_filters = hrirs._diffuse_field(fs)
         tail_at_ears = fftconvolve(tail.data, diffuse_filters.T, axes=0)
         tail_energy = np.mean(np.sum(tail_at_ears**2, axis=0))
-        scale = np.sqrt(direct_energy * 10 ** (-drr_db / 10) / tail_energy)
+        scale = np.sqrt(direct_energy * db_to_power(-drr_db) / tail_energy)
         arriving = _read_between_samples(signal, (emission_by_ear[0] + emission_by_ear[1]) / 2 * fs)
         reverberant = fftconvolve(arriving[:, None], tail_at_ears * scale, axes=0)
         total = np.zeros((max(len(out), len(reverberant)), 2))

@@ -14,6 +14,12 @@ def test_power_to_db_is_half_amp_to_db():
     assert so.power_to_db(4.0, ref=2.0) == pytest.approx(so.amp_to_db(2.0, ref=np.sqrt(2.0)))
 
 
+def test_db_to_power_inverts_power_to_db():
+    levels = np.array([-60.0, -3.0, 0.0, 20.0])
+    np.testing.assert_allclose(so.power_to_db(so.db_to_power(levels)), levels, rtol=1e-12)
+    np.testing.assert_allclose(so.db_to_power(levels), so.db_to_amp(levels) ** 2, rtol=1e-12)
+
+
 def test_amp_to_db_floor():
     assert so.amp_to_db(0.0) == -300
     assert so.amp_to_db(0.0, floor_db=-120) == -120

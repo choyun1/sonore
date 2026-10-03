@@ -18,6 +18,7 @@ from sonore.core.units import Decibels, dB
 from sonore.core.utils import (
     amp_to_db,
     db_to_amp,
+    db_to_power,
     erb_to_freq,
     freq_to_erb,
     freq_to_mel,
@@ -172,6 +173,7 @@ __all__ = [
     "PVAnalysis",
     "amp_to_db",
     "power_to_db",
+    "db_to_power",
     "amplitude_modulate",
     "antiresonator",
     "resonator",

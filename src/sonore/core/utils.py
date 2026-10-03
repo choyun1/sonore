@@ -12,6 +12,7 @@ __all__ = [
     "rms",
     "amp_to_db",
     "power_to_db",
+    "db_to_power",
     "db_to_amp",
     "freq_to_erb",
     "erb_to_freq",
@@ -46,6 +47,11 @@ def power_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.
 def db_to_amp(db: ArrayLike) -> np.ndarray:
     """Decibels to amplitude factor: ``10**(db/20)``."""
     return np.power(10.0, np.asarray(db, dtype=float) / 20)
+
+
+def db_to_power(db: ArrayLike) -> np.ndarray:
+    """Decibels to power factor: ``10**(db/10)``."""
+    return np.power(10.0, np.asarray(db, dtype=float) / 10)
 
 
 def freq_to_erb(freq: ArrayLike) -> np.ndarray:

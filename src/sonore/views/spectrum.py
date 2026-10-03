@@ -11,7 +11,7 @@ import numpy as np
 from scipy.signal import welch
 
 from sonore.core.sound import Sound
-from sonore.core.utils import amp_to_db, n_samples, power_to_db
+from sonore.core.utils import amp_to_db, db_to_power, n_samples, power_to_db
 from sonore.frames.gabor import _FLOOR_DB, TVGaborFrame
 from sonore.views.view import View
 
@@ -55,7 +55,7 @@ class Spectrum(View):
 
     def smooth(self, fraction: float = 1 / 3) -> Spectrum:
         """Fractional-octave smoothing (power average over ``fraction`` octave)."""
-        power = 10 ** (self.level / 10)
+        power = db_to_power(self.level)
         cumulative = np.concatenate([[0], np.cumsum(power)])
         half = 2 ** (fraction / 2)
         start = np.searchsorted(self.f, self.f / half, side="left")
