@@ -81,10 +81,13 @@ Each claim gives the number `tools/check_filterbank_claims.py` printed on
   centers in scale units and reports Hz only as `cfs`.
 - **C5. Wider cosines.** With each cosine `w` spacings wide (today `w =
   1`), `s` between the inner centers is constant, and equal to `w`, when
-  `2w` is a whole number of at least 2: `w` = 1.5 and 2 give `s` = 1.5 and
-  2 exactly. Other widths ripple: `w` = 0.75 gives 0.5 to 1, 1.25 gives
-  1.19 to 1.31, 2.5 gives 2.41 to 2.5. So "tight" should mean "`s` is
-  constant", with the bound `A = B = s` reported, not "`s` is 1".
+  `2w` is a whole number of at least 2: `w` = 1.5, 2 and 2.5 give `s` =
+  1.5, 2 and 2.5 exactly. Other widths ripple: `w` = 0.75 gives 0.5 to 1,
+  1.25 gives 1.19 to 1.31. So "tight" should mean "`s` is constant", with
+  the bound `A = B = s` reported, not "`s` is 1". (A first version of the
+  checker looked too close to the ends, where some of the wider cosines
+  are missing, and reported a ripple at 2.5; the check now starts
+  `ceil(w)` centers in from each end.)
 - **C6. The gammatone envelope's peak delay.** For a causal 4th-order
   gammatone the formula `(order - 1) / (2 pi b)` (13.2 ms at 100 Hz,
   0.70 ms at 6 kHz) and the peak measured from the impulse response
@@ -323,7 +326,7 @@ Each has a recommendation.
      and even lengths, `f_hi` at and beyond Nyquist. For each, the test
      checks `is_tight` against `s` computed independently in the test,
      and checks that `to_sound` reconstructs the input to within 1e-12.
-     Banks that must not be tight (cosine widths 0.75, 1.25 and 2.5,
+     Banks that must not be tight (cosine widths 0.75, 1.25 and 1.75,
      gammatone, Morlet, a cosine bank with one center nudged without
      the gap formula) must report so.
   3. Synthesis refuses when the bank is not a frame on that grid, as

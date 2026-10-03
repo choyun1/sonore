@@ -99,12 +99,14 @@ report(
 )
 
 # C5. Other widths: s stays constant (= width) only when twice the width, in
-# spacings, is a whole number of at least 2.
+# spacings, is a whole number of at least 2. Checked only where every cosine
+# that reaches a point is in the bank (ceil(width) knots in from each end).
 for width in (0.75, 1.25, 1.5, 2.0, 2.5):
     position = erb_to(rfft_freqs)[:, None]
     distance = (position - uniform_knots[None, :]) / ((uniform_knots[1] - uniform_knots[0]) * width)
     transfer = np.where(np.abs(distance) < 1, np.cos(np.pi / 2 * np.clip(distance, -1, 1)), 0.0)
-    inner = (position[:, 0] > uniform_knots[1]) & (position[:, 0] < uniform_knots[-2])
+    reach = int(np.ceil(width))
+    inner = (position[:, 0] > uniform_knots[reach]) & (position[:, 0] < uniform_knots[-1 - reach])
     s = power_sum(transfer)[inner]
     report("C5", f"width {width} spacings: min s between the inner centers", s.min())
     report("C5", f"width {width} spacings: max s between the inner centers", s.max())
