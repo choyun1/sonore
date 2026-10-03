@@ -27,6 +27,10 @@ version (0.x.y) only fixes bugs.
   through the filterbank: on a sentence with every rate above 4 Hz removed,
   20 iterations from its own fine structure leave 16.5 dB less power at
   6-40 Hz, against 3.5 dB in one step.
+- Gallery page "Drawing a modulation spectrum" (Seeing and changing
+  sound): a sentence and its random-phase twin, a drawn blob on tones,
+  noise and the sentence, and the sentence with every rate above 4 Hz
+  removed, with and without iterations.
 
 ### Changed
 - `so.pad` and `so.truncate` are replaced by
