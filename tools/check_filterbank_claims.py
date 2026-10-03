@@ -90,7 +90,8 @@ report("C3", "uniform ERB knots: largest difference", np.abs(today - gaps).max()
 
 # C4. Storing centers in Hz and mapping back to the scale changes the knots.
 round_trip = erb_to(erb_from(uniform_knots))
-report("C4", "ERB knots -> Hz -> ERB: fraction of knots that differ in any bit", np.mean(round_trip != uniform_knots))
+knots_differ = np.mean(round_trip != uniform_knots)
+report("C4", "ERB knots -> Hz -> ERB: fraction of knots that differ in any bit", knots_differ)
 report(
     "C4",
     "  and fraction of responses that then differ",
@@ -128,7 +129,8 @@ for fs in (16000.0, 44100.0):
         measured = np.argmax(np.abs(analytic[: n_grid // 2])) / fs
         formula = 3 / (2 * np.pi * b)
         report("C6", f"{fs:g} Hz, fc {fc:g} Hz: formula [ms]", 1000 * formula)
-        report("C6", f"{fs:g} Hz, fc {fc:g} Hz: measured envelope peak - formula [ms]", 1000 * (measured - formula))
+        difference_ms = 1000 * (measured - formula)
+        report("C6", f"{fs:g} Hz, fc {fc:g} Hz: measured envelope peak - formula [ms]", difference_ms)
 
 # C7. The octave modulation bank is a cosine bank on log2 frequency, spacing
 # one octave, without the flat edges.
@@ -136,10 +138,13 @@ mod_freqs = np.fft.rfftfreq(4000, 1 / 400.0)
 mod_cfs = 100.0 / 2.0 ** np.arange(6, -1, -1)
 with np.errstate(divide="ignore"):
     octave_offset = (np.log2(mod_freqs)[:, None] - np.log2(mod_cfs)[None, :]) / 2
-    texture_bank = np.where(np.abs(octave_offset) < 0.5, np.cos(np.pi * np.clip(octave_offset, -0.5, 0.5)), 0.0)
+    texture_bank = np.where(
+        np.abs(octave_offset) < 0.5, np.cos(np.pi * np.clip(octave_offset, -0.5, 0.5)), 0.0
+    )
     distance = (np.log2(mod_freqs)[:, None] - np.log2(mod_cfs)[None, :]) / 1.0
     cosine_bank = np.where(np.abs(distance) < 1, np.cos(np.pi / 2 * np.clip(distance, -1, 1)), 0.0)
-report("C7", "octave modulation bank vs cosine bank on log2: largest difference", np.abs(texture_bank - cosine_bank).max())
+largest = np.abs(texture_bank - cosine_bank).max()
+report("C7", "octave modulation bank vs cosine bank on log2: largest difference", largest)
 report("C7", "  fraction of responses that differ in any bit", np.mean(texture_bank != cosine_bank))
 
 # C8. Computing s in synthesize costs little next to the transforms.
