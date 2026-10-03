@@ -9,7 +9,7 @@ meant to be readable without them.
 
 - **`Sound` is the bedrock, so analysis comes first.** What a user holds is
   a sound or an analysis of one. A way back to sound belongs on the
-  analysis it goes back from. Only sounds made from numbers alone (tones,
+  analysis it goes back from. Only sounds made from parameters alone (tones,
   noises, chirps, the glottal source, Klatt) stand as plain functions.
 - **Folders follow meaning.** A module lives where what it means puts it,
   so a reader finds it where they expect it. Import order is still enforced,

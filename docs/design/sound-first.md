@@ -82,7 +82,7 @@ fs, carrier=...)` takes what the pattern does not specify, which is the
 carrier. `ripple_sound(pattern, duration, fs, carrier=...)` already has
 exactly these arguments.
 
-Synthesis from numbers alone (tones, noises, chirps, harmonic complexes,
+Synthesis from parameters alone (tones, noises, chirps, harmonic complexes,
 the glottal source, Klatt) has no object to attach to. It stays as plain
 constructors, in one folder (D1).
 
@@ -91,7 +91,7 @@ constructors, in one folder (D1).
 | Folder | Holds | Modules |
 |---|---|---|
 | `core` | `Sound`, its operations, units, scales, numeric helpers | `sound`, `units`, `utils`, `fft`, plus today's `signals/processing.py` (D2) |
-| `sources` | sounds from numbers | `tones`, `noise`, `glottal`, `klatt`, `ripples` (D1, D4) |
+| `sources` | sounds from parameters | `tones`, `noise`, `glottal`, `klatt`, `ripples` (D1, D4) |
 | `frames` | Sound ⇄ coefficients | unchanged |
 | `views` | Sound → a one-way summary, with its route back where one exists | unchanged, plus `world` (D3) and `phasevocoder` (D6) |
 | `spatial` | topic: two ears, heads, rooms | unchanged |
@@ -112,7 +112,7 @@ it imports.
 
 ## Decisions
 
-- **D1. The folder of sounds from numbers.** (a) `sources` (recommended):
+- **D1. The folder of sounds from parameters.** (a) `sources` (recommended):
   each module is a kind of sound source. The cost is that the word also
   means a source position in `spatial` (`move_sound`'s "source"). (b)
   `synthesis`: clear, but synthesis also lives on frames and views, so the
