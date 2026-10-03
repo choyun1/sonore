@@ -7,7 +7,8 @@ releasing 0.4.0, Cho asked to rethink the split between `signals`,
 having slightly confusing and arbitrary definitions. so Sound is at the
 bedrock."
 
-Status: draft for discussion. No code has changed. Cho deferred 0.4.0 until
+Status: accepted. On 2026-10-03 Cho accepted D1, D2, D3, D5, D6 and D7 as
+recommended (option a) and decided D4 (one `sources/waveforms.py`). Cho deferred 0.4.0 until
 this is resolved, and asked for `philosophy.md` to say what was decided in
 discussion (its "Sound first" section and the `to_sound` principle). The table of every
 module in three hierarchies (folder, import rank, meaning) is in the
@@ -201,7 +202,7 @@ change: "Stimuli" there names a use, and stays.
 
 ## Order
 
-1. Cho decides D1–D7.
+1. Cho decides D1–D7. Done, 2026-10-03.
 2. One PR: the move, the layer test, the diagram, the docs.
 3. If D5 (a) or (b): the renames, in their own PR.
 4. PR #85's release notes gain the moved paths; then 0.4.0.
