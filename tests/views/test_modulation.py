@@ -123,3 +123,50 @@ def test_random_carriers_are_seeded(carrier):
         b = spectrum.to_sound(carrier=carrier, fs=FAST, rng=3)
     assert a.duration == pytest.approx(2) and a.rms == pytest.approx(1)
     np.testing.assert_array_equal(a.data, b.data)
+
+
+# -- targets drawn in code -------------------------------------------------
+def _blob_target(rms_depth=0.2):
+    return so.ModulationSpectrum.from_blobs(
+        so.ModulationBlob(4, 0.5), 2, f_lo=250, f_hi=FAST_HI, bands_per_octave=6, rms_depth=rms_depth
+    )
+
+
+def test_blob_power_peaks_at_its_centre_on_its_side_only():
+    blob = so.ModulationBlob(-8, 1.0, level=-6)
+    rate = np.array([[-8.0, 8.0, -16.0]])
+    density = np.array([[1.0]])
+    power = blob.power(rate, density)
+    assert power[0, 0] == pytest.approx(10 ** (-0.6))
+    assert power[0, 1] == 0
+    assert power[0, 2] == pytest.approx(10 ** (-0.6) * np.exp(-1 / (2 * 0.5**2)))
+    with pytest.raises(ValueError, match="nonzero rate"):
+        so.ModulationBlob(0, 1)
+
+
+def test_blob_target_has_the_asked_depth_and_its_drawn_magnitudes():
+    target = _blob_target()
+    envelopes = target.to_envelopes(rng=0).data[:, 1:-1, 0]
+    assert envelopes.std() / envelopes.mean() == pytest.approx(0.2)
+    deviation = envelopes.T - envelopes.mean()
+    np.testing.assert_allclose(
+        np.abs(np.fft.fft2(deviation)), target._magnitude, atol=1e-9 * target._magnitude.max()
+    )
+
+
+def test_blob_target_refuses_to_clip_and_names_the_depth_that_fits():
+    with pytest.raises(ValueError, match="at most") as refusal:
+        _blob_target(rms_depth=0.6).to_envelopes(rng=0)
+    fits = float(str(refusal.value).split("at most ")[1].split(" ")[0])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        _blob_target(rms_depth=0.99 * fits).to_envelopes(rng=0)
+
+
+def test_blob_target_is_found_again_in_the_sound():
+    target = _blob_target()
+    y = target.to_sound(carrier="tones", fs=FAST, rng=0)
+    _, measured = _octave_spectrum(y)
+    drawn = target._magnitude > 0.1 * target._magnitude.max()
+    correlation = np.corrcoef(np.log(measured._magnitude[drawn]), np.log(target._magnitude[drawn]))[0, 1]
+    assert correlation > 0.9
