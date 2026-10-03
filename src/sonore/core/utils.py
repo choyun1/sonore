@@ -1,4 +1,5 @@
-"""Small numerical helpers: levels, decibels, ERB scale, time axes, RNGs."""
+"""Small numerical helpers: levels and decibels, the ERB and mel scales, time
+axes, random generators, and internal array helpers used across sonore."""
 
 from __future__ import annotations
 
@@ -17,11 +18,11 @@ __all__ = [
     "freq_to_erb",
     "erb_to_freq",
     "erb_bandwidth",
+    "freq_to_mel",
+    "mel_to_freq",
     "n_samples",
     "time_axis",
     "as_rng",
-    "freq_to_mel",
-    "mel_to_freq",
 ]
 
 
@@ -73,6 +74,37 @@ def erb_bandwidth(freq: ArrayLike) -> np.ndarray:
     return 24.7 * (4.37 * np.asarray(freq, dtype=float) / 1000 + 1)
 
 
+_SLANEY_HZ_PER_MEL = 200 / 3  # linear part: 15 mel at 1000 Hz
+_SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.4
+
+
+def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
+    """Frequency [Hz] to mel.
+
+    ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses
+    (usually credited to O'Shaughnessy, 1987). ``"slaney"`` is the scale of
+    Slaney's Auditory Toolbox and librosa: linear below 1 kHz (15 mel at
+    1000 Hz) and logarithmic above it (27 mel per factor of 6.4)."""
+    freq = np.asarray(freq, dtype=float)
+    if scale == "htk":
+        return 2595 * np.log10(1 + freq / 700)
+    if scale == "slaney":
+        above = 15 + np.log(np.maximum(freq, 1000) / 1000) / _SLANEY_LOG_STEP
+        return np.where(freq < 1000, freq / _SLANEY_HZ_PER_MEL, above)
+    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
+
+
+def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
+    """Mel to frequency [Hz]; the inverse of :func:`freq_to_mel`."""
+    mel = np.asarray(mel, dtype=float)
+    if scale == "htk":
+        return 700 * (10 ** (mel / 2595) - 1)
+    if scale == "slaney":
+        above = 1000 * np.exp(_SLANEY_LOG_STEP * (np.maximum(mel, 15) - 15))
+        return np.where(mel < 15, mel * _SLANEY_HZ_PER_MEL, above)
+    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
+
+
 def n_samples(duration: float, fs: float) -> int:
     """Number of samples in ``duration`` seconds, rounded to the nearest whole
     number rather than floored (exact halves round to even, as Python's
@@ -84,6 +116,16 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     """Sample times ``k/fs``. Use this instead of ``np.linspace(0, dur, n)``,
     whose spacing is ``dur/(n-1)`` rather than ``1/fs``."""
     return np.arange(n) / fs
+
+
+def as_rng(rng: int | np.random.Generator | None) -> np.random.Generator:
+    """Accept a seed, a Generator, or None and return a Generator."""
+    return np.random.default_rng(rng)
+
+
+# Internal helpers on plain arrays, imported by other modules of sonore. They
+# are not in processing.py because Sound uses two of them and processing
+# imports Sound; an underscore name is never API (docs/design/layout.md).
 
 
 def _parabola_vertex(before: np.ndarray, at: np.ndarray, after: np.ndarray, dip: bool = False) -> np.ndarray:
@@ -127,41 +169,3 @@ def _phase_ramp_delay(data: np.ndarray, shift: ArrayLike, n_fft: int, n_out: int
 def _below_nyquist(fs: float) -> float:
     """The default top band edge, 95% of the Nyquist frequency."""
     return 0.95 * fs / 2
-
-
-def as_rng(rng: int | np.random.Generator | None) -> np.random.Generator:
-    """Accept a seed, a Generator, or None and return a Generator."""
-    return np.random.default_rng(rng)
-
-
-_SLANEY_HZ_PER_MEL = 200 / 3  # linear part: 15 mel at 1000 Hz
-
-
-_SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.4
-
-
-def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
-    """Frequency [Hz] to mel.
-
-    ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses
-    (usually credited to O'Shaughnessy, 1987). ``"slaney"`` is the scale of
-    Slaney's Auditory Toolbox and librosa: linear below 1 kHz (15 mel at
-    1000 Hz) and logarithmic above it (27 mel per factor of 6.4)."""
-    freq = np.asarray(freq, dtype=float)
-    if scale == "htk":
-        return 2595 * np.log10(1 + freq / 700)
-    if scale == "slaney":
-        above = 15 + np.log(np.maximum(freq, 1000) / 1000) / _SLANEY_LOG_STEP
-        return np.where(freq < 1000, freq / _SLANEY_HZ_PER_MEL, above)
-    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
-
-
-def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
-    """Mel to frequency [Hz]; the inverse of :func:`freq_to_mel`."""
-    mel = np.asarray(mel, dtype=float)
-    if scale == "htk":
-        return 700 * (10 ** (mel / 2595) - 1)
-    if scale == "slaney":
-        above = 1000 * np.exp(_SLANEY_LOG_STEP * (np.maximum(mel, 15) - 15))
-        return np.where(mel < 15, mel * _SLANEY_HZ_PER_MEL, above)
-    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
