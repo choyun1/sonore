@@ -438,7 +438,7 @@ All accepted 2026-10-03.
 - **D8. The texture route needs no code**: document
   `TextureStats.replace(mod_power=...)` as the per-band way to specify
   modulation. Accepted 2026-10-03.
-- **D9. A gallery page** ("Drawing a modulation spectrum") showing C1 (a
+- **D9. A gallery page** ("Drawing a modulation spectrum", since renamed "Hearing a modulation spectrum") showing C1 (a
   sentence and its twin, heard), a drawn blob on the three carriers, and an
   edit. Accepted 2026-10-03, once D2 exists; built as
   `docs/gallery/seeing/modtargets.py`.
