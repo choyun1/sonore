@@ -57,7 +57,7 @@ def show(snd, fmax=4000, win_dur=50e-3):
 # A masker with the long-term average spectrum of speech (LTASS) covers the same frequencies as
 # a talker without carrying any words. Long-term spectra of speech are much alike from one
 # language to another (Byrne et al., 1994). `so.long_term_spectrum` averages Welch power spectra
-# over a set of recordings, weighted by duration, and `to_noise` turns the average into Gaussian
+# over a set of recordings, weighted by duration, and `to_sound` (noise by default) turns it into Gaussian
 # noise with that spectrum. Here the recordings are the three CMU Arctic sentences in the
 # repository, from two talkers, each brought to the same RMS first so that neither talker
 # dominates by being louder.
@@ -68,7 +68,7 @@ sentences = [
     for name in ("bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133")
 ]
 ltass = so.long_term_spectrum(sentences)
-ssn = ltass.to_noise(3, sentences[0].fs, rng=0)
+ssn = ltass.to_sound(3, sentences[0].fs, rng=0)
 
 # %% [about]
 # The long-term spectrum of the three sentences (smoothed to a third of an octave), and the
@@ -287,7 +287,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)
 # - Byrne et al. (1994). An international comparison of long-term average speech spectra.
 #   *J. Acoust. Soc. Am.* 96(4), 2108–2120.
 #   [doi:10.1121/1.410152](https://doi.org/10.1121/1.410152).
-#   [`spectrum.long_term_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L80)
+#   [`spectrum.long_term_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L118)
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data.
 #   *Hearing Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955(90)90170-T).

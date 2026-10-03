@@ -63,14 +63,14 @@ sentence each view already carries predicts its signature:
 
 | View | Discards | `to_sound` takes | Today |
 |---|---|---|---|
-| `Spectrum` | the phase, and with it all timing | `duration`, `fs`, `carrier="noise"` (random phase), a Sound (its phase, with this magnitude), or `"minimum"` (an impulse response) | `to_noise(duration, fs)` |
+| `Spectrum` | the phase, and with it all timing | `duration`, `fs`, `carrier="noise"` (random phase), a Sound (its phase, with this magnitude), or `"minimum"` (an impulse response) | `to_sound(duration, fs, carrier=...)`, as built |
 | `Cepstrum` | the phase | `phase="original" \| "minimum"` | `to_sound(phase=...)`, already this rule |
 | `Envelopes` | the fine structure | `carrier=` noise, tones or a Sound | `envelopes * subbands`; `noise_vocode` wraps it |
 | `MFCC` | the phase, the detail in each mel band, and the source | an F0 track and an aperiodicity | `world_synthesize(f0, mfcc.envelope_view(), aperiodicity)` |
 | `SpectralEnvelope`, `GridEnvelope` | the harmonics and the phase | an F0 track and an aperiodicity | `world_synthesize` |
 | `Aperiodicity` | everything but the noise share | an F0 track and an envelope | `world_synthesize` |
 | `F0Track` | everything but pitch and voicing | an envelope and an aperiodicity | `world_synthesize` |
-| `PVAnalysis` | the phase between bins | `time_scale`, `freq_map` | `resynthesize(time_scale, freq_map)` |
+| `PVAnalysis` | the phase between bins | `time_scale`, `freq_map` | `to_sound(time_scale, freq_map)`, as built |
 | `TextureStats` | everything but the statistics | `duration`, `rng`, iteration settings | `texture.synth.synthesize(stats, ...)` (see D5) |
 | `ModulationSpectrum`, `ModulationSpectrogram`, `ReassignedSpectrogram`, `TFPower`, `InterauralCues` | (as their `discards` say) | refuses: no canonical route | refuses through `synthesize` |
 
@@ -218,7 +218,7 @@ main; the old paths remain only in the changelog's history, this document,
 
 1. Cho decides D1–D7. Done, 2026-10-03.
 2. One PR: the move, the layer test, the diagram, the docs. Done.
-3. If D5 (a) or (b): the renames, in their own PR.
+3. If D5 (a) or (b): the renames, in their own PR. Done (option a).
 4. PR #85's release notes gain the moved paths; then 0.4.0.
 
 ## Out of scope

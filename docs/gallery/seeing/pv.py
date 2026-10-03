@@ -238,7 +238,7 @@ fig, playhead = show(sound, fmax=5000)
 # ## Moving the partials
 #
 # The analysis can also drive a bank of oscillators, one per bin, each following its bin's
-# magnitude and instantaneous frequency from time window to time window (Dolson, 1986). `pv.resynthesize`
+# magnitude and instantaneous frequency from time window to time window (Dolson, 1986). `pv.to_sound`
 # does this, and its `freq_map` changes every frequency on the way: a ratio scales them all, a
 # function can do anything. Scaling keeps a harmonic sound harmonic; adding a constant does not,
 # unless the constant is a multiple of half the fundamental.
@@ -249,7 +249,7 @@ fig, playhead = show(sound, fmax=5000)
 # its pitch less certain.
 
 # %% [demo 14] Partials shifted up 70 Hz
-sound = finish(pv.resynthesize(freq_map=lambda f: f + 70))
+sound = finish(pv.to_sound(freq_map=lambda f: f + 70))
 fig, playhead = show(sound)
 
 # %% [about]
@@ -257,7 +257,7 @@ fig, playhead = show(sound)
 # result is harmonic again, a hollow, clarinet-like tone an octave below the reference.
 
 # %% [demo 14b] Partials shifted up 110 Hz
-sound = finish(pv.resynthesize(freq_map=lambda f: f + 110))
+sound = finish(pv.to_sound(freq_map=lambda f: f + 110))
 fig, playhead = show(sound)
 
 # %% [markdown]

@@ -95,7 +95,7 @@ panels = [
     ("original (220 Hz, 5 Hz vibrato)", demo("11").sound),
     ("so.time_stretch(snd, 2)", demo("12").sound),
     ("so.pitch_shift(snd, 7)", demo("13").sound),
-    ("pv_analyze(snd).resynthesize(freq_map=lambda f: f + 70)", demo("14").sound),
+    ("pv_analyze(snd).to_sound(freq_map=lambda f: f + 70)", demo("14").sound),
 ]
 fig, axes = plt.subplots(1, 4, figsize=(16, 3.6), sharey=True, layout="constrained")
 for ax, (title, s) in zip(axes, panels, strict=True):

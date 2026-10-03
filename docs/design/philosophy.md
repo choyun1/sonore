@@ -59,7 +59,9 @@ meant to be readable without them.
   canonical route exists. Elsewhere (a modulation spectrum, whose possible
   carriers are too many) it raises `NotInvertibleError` with the reason,
   and searching for a matching sound stays an experiment until a canonical
-  method is found. (Being built; see `sound-first.md`.)
+  method is found. Today `Spectrum`, `Cepstrum` and `PVAnalysis` have
+  `to_sound`; envelopes and WORLD's views go back through `noise_vocode`
+  and `world_synthesize`, which their refusal names (`sound-first.md`).
 - **Keep the simplest representation that loses nothing.** Subbands stay
   real; the complex analytic signal is computed from them exactly when
   envelopes or phase are needed.

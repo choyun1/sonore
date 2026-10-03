@@ -1,4 +1,4 @@
-"""Every view refuses to synthesize, and says what it drops."""
+"""Every view refuses to synthesize, says what it drops, and has to_sound only where a route back exists."""
 
 import pytest
 
@@ -77,7 +77,7 @@ def test_view_says_what_it_drops_and_refuses(view):
     with pytest.raises(NotInvertibleError) as refusal:
         instance.synthesize()
     assert view.discards in str(refusal.value)
-    assert (view.back_to_sound or "no route") in str(refusal.value)
+    assert (view.back_to_sound or "no canonical route") in str(refusal.value)
 
 
 def test_refusal_is_a_not_implemented_error():
@@ -88,3 +88,21 @@ def test_refusal_is_a_not_implemented_error():
 def test_frames_and_tools_are_not_views():
     for name in ["Frame", "GaborFrame", "Filterbank", "STFT", "Subbands", "Mask", "ModulationFilterbank"]:
         assert not issubclass(getattr(so, name), View), name
+
+
+# Views with a canonical route back to a sound; every other view refuses to_sound.
+ROUTES_BACK = {"Spectrum", "Cepstrum", "PVAnalysis"}
+
+
+@pytest.mark.parametrize("view", list(_public_subclasses(View)), ids=lambda view: view.__name__)
+def test_to_sound_exists_only_where_a_route_does(view):
+    if view.__name__ in ROUTES_BACK:
+        assert view.to_sound is not View.to_sound
+        assert f"{view.__name__}.to_sound" in view.back_to_sound
+        return
+    assert view.to_sound is View.to_sound, f"{view.__name__}.to_sound: add it to ROUTES_BACK on purpose"
+    instance = object.__new__(view)
+    with pytest.raises(NotInvertibleError) as refusal:
+        instance.to_sound()
+    assert view.discards in str(refusal.value)
+    assert (view.back_to_sound or "no canonical route") in str(refusal.value)

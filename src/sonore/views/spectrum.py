@@ -11,7 +11,7 @@ import numpy as np
 from scipy.signal import welch
 
 from sonore.core.sound import Sound
-from sonore.core.utils import amp_to_db, db_to_power, n_samples, power_to_db
+from sonore.core.utils import amp_to_db, db_to_amp, db_to_power, n_samples, power_to_db
 from sonore.frames.gabor import _FLOOR_DB, TVGaborFrame
 from sonore.views.view import View
 
@@ -31,7 +31,10 @@ class Spectrum(View):
         "Spectrum keeps only the level at each frequency: it discards the phase, and with it all timing, so "
         "many sounds share one spectrum."
     )
-    back_to_sound = "Spectrum.to_noise draws a new noise with this spectrum, which is not the analysed sound."
+    back_to_sound = (
+        "Spectrum.to_sound makes a sound with this spectrum from a carrier that supplies the phase "
+        "(a new noise, another sound's phase, or the minimum phase), which is not the analysed sound."
+    )
 
     f: np.ndarray
     level: np.ndarray
@@ -64,12 +67,47 @@ class Spectrum(View):
         mean_power = (cumulative[stop] - cumulative[start]) / (stop - start)
         return Spectrum(self.f, power_to_db(mean_power, floor_db=_FLOOR_DB))
 
-    def to_noise(self, duration: float, fs: float, rng=None, **kwargs) -> Sound:
-        """Gaussian noise with this spectral shape: a new draw, not an inverse
-        of the spectrum."""
-        from sonore.sources.waveforms import gaussian_noise
+    def to_sound(
+        self, duration: float, fs: float, carrier: str | Sound = "noise", rng=None, **noise_kwargs
+    ) -> Sound:
+        """A sound with this magnitude spectrum, its phase supplied by ``carrier``.
 
-        return gaussian_noise(duration, fs, spectrum=self, rng=rng, **kwargs)
+        ``"noise"`` draws Gaussian noise with this spectral shape (extra
+        keyword arguments go to :func:`~sonore.sources.waveforms.gaussian_noise`).
+        A :class:`~sonore.Sound` lends its phase: its first ``duration``
+        seconds, each channel's spectrum given this magnitude, so
+        ``Spectrum.from_sound(x).to_sound(x.duration, x.fs, carrier=x)``
+        gives back ``x`` at RMS 1. ``"minimum"`` gives the minimum-phase
+        impulse response with this magnitude, from the folded cepstrum as in
+        :meth:`Cepstrum.to_stft <sonore.views.cepstrum.Cepstrum.to_stft>`.
+        The magnitude is read at the FFT bins of ``duration`` by linear
+        interpolation, and every result has RMS 1, as the generators do. None
+        is the analysed sound: the spectrum keeps no phase to give back.
+        """
+        if isinstance(carrier, str) and carrier == "noise":
+            from sonore.sources.waveforms import gaussian_noise
+
+            return gaussian_noise(duration, fs, spectrum=self, rng=rng, **noise_kwargs)
+        if noise_kwargs or rng is not None:
+            raise TypeError("rng and noise keyword arguments apply only to carrier='noise'")
+        length = n_samples(duration, fs)
+        magnitude = db_to_amp(self.level_at(np.fft.rfftfreq(length, 1 / fs)))
+        if isinstance(carrier, Sound):
+            if carrier.fs != fs:
+                raise ValueError(f"carrier fs {carrier.fs} differs from fs {fs}")
+            if len(carrier) < length:
+                raise ValueError("carrier is shorter than duration")
+            phase = np.angle(np.fft.rfft(carrier.data[:length], axis=0))
+            data = np.fft.irfft(magnitude[:, None] * np.exp(1j * phase), n=length, axis=0)
+        elif isinstance(carrier, str) and carrier == "minimum":
+            from sonore.views.cepstrum import _minimum_phase
+
+            cepstrum = np.fft.irfft(np.log(magnitude), n=length)[: length // 2 + 1]
+            data = np.fft.irfft(_minimum_phase(cepstrum, length, axis=0), n=length)
+        else:
+            raise ValueError(f"carrier must be 'noise', 'minimum' or a Sound, not {carrier!r}")
+        sound = Sound(data, fs)
+        return sound.normalize() if sound.rms > 0 else sound
 
     def plot(self, ax=None, **kwargs):
         from sonore.plotting import plot_spectrum

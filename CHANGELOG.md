@@ -15,6 +15,12 @@ version (0.x.y) only fixes bugs.
   where one exists, such as `Cepstrum.to_sound` or `so.world_synthesize`.
   Before, `synthesize` on a view failed with a plain `AttributeError`. See
   "Only frames synthesize" in `docs/design/reorganization.md`.
+- `to_sound` is the route from a view back to a sound, and takes what the
+  view discarded (`docs/design/sound-first.md`). `Spectrum.to_sound(duration,
+  fs, carrier=...)` takes the phase from a carrier: `"noise"` (the default,
+  as `to_noise` was), a Sound's own phase, or `"minimum"` for the
+  minimum-phase impulse response. On a view with no canonical route, such
+  as `ModulationSpectrum`, `to_sound` raises `NotInvertibleError`.
 - `so.scale_f0` and `so.warp_frequency`: a pitch change (voiced F0 times a
   ratio, optionally spread around the median) and a formant shift (an
   envelope read at `f / ratio`; a number, a ratio over time, or any
@@ -100,6 +106,9 @@ version (0.x.y) only fixes bugs.
   the HRIR download tests to `tests/spatial/test_hrir_data.py`.
 
 ### Changed
+- `Spectrum.to_noise(duration, fs)` is `Spectrum.to_sound(duration, fs)`,
+  and `PVAnalysis.resynthesize` is `PVAnalysis.to_sound`, with the same
+  arguments and output. The old names are gone.
 - The package is reorganized by meaning
   (`docs/design/reorganization.md`, `docs/design/sound-first.md`,
   `docs/design/layout.md`). Every `so.name` is unchanged; only deep import

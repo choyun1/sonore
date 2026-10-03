@@ -163,7 +163,7 @@ for s in sentences * 2:
     x = np.tile(s.data[:, 0], 3)
     start = int(rng.uniform(0, 1.5) * fs)
     babble[start:] += x[: n - start]
-ssn = so.long_term_spectrum(sentences).to_noise(4, fs, rng=0)
+ssn = so.long_term_spectrum(sentences).to_sound(4, fs, rng=0)
 mixed = so.concat([talk, so.Sound(babble, fs).normalize(rms=0.1), ssn.normalize(rms=0.1)])
 marks = [talk.duration, talk.duration + 4]
 print(f"sentences {talk.duration:.2f} s, then babble and noise, {mixed.duration:.2f} s in all")

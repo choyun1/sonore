@@ -16,6 +16,22 @@ from sonore.views.view import View
 __all__ = ["Cepstrum"]
 
 
+def _minimum_phase(cepstrum: np.ndarray, n_fft: int, axis: int) -> np.ndarray:
+    """The minimum-phase spectrum (``n_fft // 2 + 1`` bins along ``axis``)
+    whose log magnitude has the real cepstrum ``cepstrum``, given at
+    quefrencies ``0 .. n_fft // 2`` along ``axis``: the folded cepstrum
+    (``c[0]`` kept, ``2 c[n]`` up to ``n_fft / 2``, zero beyond), exponentiated.
+    Used by :meth:`Cepstrum.to_stft` and ``Spectrum.to_sound``."""
+    half = np.moveaxis(cepstrum, axis, 0)
+    n_mid = (n_fft + 1) // 2
+    folded = np.zeros((n_fft, *half.shape[1:]))
+    folded[0] = half[0]
+    folded[1:n_mid] = 2 * half[1:n_mid]
+    if n_fft % 2 == 0:
+        folded[n_mid] = half[n_mid]
+    return np.moveaxis(np.exp(np.fft.rfft(folded, axis=0)), 0, axis)
+
+
 class Cepstrum(View):
     """The real cepstrum of each time window of an :class:`~sonore.frames.gabor.STFT`
     or :class:`~sonore.frames.gabor.TVSTFT`.
@@ -147,13 +163,7 @@ class Cepstrum(View):
         if phase == "original":
             data = self.envelope() * np.exp(1j * np.angle(self.source.data))
         elif phase == "minimum":
-            n_mid = (self.n_fft + 1) // 2
-            folded = np.zeros((self.data.shape[0], self.n_fft, self.data.shape[2]))
-            folded[:, 0] = self.data[:, 0]
-            folded[:, 1:n_mid] = 2 * self.data[:, 1:n_mid]
-            if self.n_fft % 2 == 0:
-                folded[:, n_mid] = self.data[:, n_mid]
-            data = np.exp(np.fft.rfft(folded, axis=1))
+            data = _minimum_phase(self.data, self.n_fft, axis=1)
         else:
             raise ValueError(f"phase must be 'original' or 'minimum', not {phase!r}")
         return type(self.source)._from(self.source, data)
