@@ -21,12 +21,11 @@ from sonore.core.processing import (
     concat,
     match_channels,
     match_fs,
+    match_lengths,
     mix,
     normalize,
-    pad,
     relative_db,
     resonator,
-    truncate,
 )
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
@@ -212,6 +211,7 @@ __all__ = [
     "long_term_spectrum",
     "Mask",
     "match_channels",
+    "match_lengths",
     "match_fs",
     "mel_to_freq",
     "mix",
@@ -221,7 +221,6 @@ __all__ = [
     "normalize",
     "oscor",
     "overview",
-    "pad",
     "phasewarp",
     "pulse_train",
     "pure_tone",
@@ -241,5 +240,4 @@ __all__ = [
     "Subbands",
     "subbands",
     "synth_ir",
-    "truncate",
 ]

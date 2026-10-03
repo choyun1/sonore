@@ -200,7 +200,8 @@ print(hrirs)
 
 # Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
 files = [&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;]
-target, *maskers = so.normalize(so.pad([so.load(f&quot;docs/speech/{f}.flac&quot;) for f in files], align=&quot;center&quot;))
+talkers = [so.load(f&quot;docs/speech/{f}.flac&quot;) for f in files]
+target, *maskers = so.normalize(so.match_lengths(talkers, align=&quot;center&quot;))
 fs, duration = target.fs, target.duration
 spoken = so.load(f&quot;docs/speech/{files[0]}.flac&quot;).duration
 TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
@@ -374,7 +375,7 @@ two talkers at once, Brungart (2001) found a masker of the other sex far easier 
 of the same sex. Here the target is the same sentence read by a female talker (slt), among the
 same two male talkers.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">target_female = so.normalize(
-    so.pad([so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;), maskers[0]], align=&quot;center&quot;)
+    so.match_lengths([so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;), maskers[0]], align=&quot;center&quot;)
 )[0]
 spoken_female = so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;).duration
 TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)</code></pre></details></div>
