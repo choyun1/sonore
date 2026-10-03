@@ -75,11 +75,12 @@ def _is_fast(n: int) -> bool:
 
 def fast_padding(n: int, pad: int) -> int:
     """The smallest padding ``>= pad`` for which ``n + 2 * padding`` has no
-    prime factor above 11. FFTs of such lengths are several times faster than
-    of lengths with a large prime factor. Padding on both sides keeps the
-    parity of ``n``, so an odd ``n`` cannot use the factor 2. For ``n`` above
-    10000 the padded length grows by at most about 5% (median 0.3%) for odd
-    ``n``, and by under 2% for even ``n``."""
+    prime factor above 11. FFTs of such lengths are about four times faster
+    than of a prime length. Padding on both sides keeps the parity of ``n``,
+    so an odd ``n`` cannot use the factor 2. For ``n`` from 10001 to 60000
+    the padded length grows by at most about 5% (median 1.1%) for odd ``n``,
+    and by at most 1.6% (median 0.2%) for even ``n``. All of these are
+    measured by tools/measure_docstring_numbers.py."""
     while not _is_fast(n + 2 * pad):
         pad += 1
     return pad

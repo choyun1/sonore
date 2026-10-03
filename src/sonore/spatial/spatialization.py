@@ -380,17 +380,26 @@ class HRIRSet:
         each with its onset ``_pre`` samples (at ``self.fs``) after the start,
         and their onsets [s], shape (N, 2)."""
         indices, weights = self._weights(points)
-        shapes = np.einsum("nk,nkcs->ncs", weights, self._aligned[indices])
-        onsets = np.einsum("nk,nkc->nc", weights, self._onsets[indices]) / self.fs
-        if fs != self.fs:
-            ratio = Fraction(fs / self.fs).limit_denominator(10000)
-            shapes = resample_poly(shapes, ratio.numerator, ratio.denominator, axis=-1)
-        return shapes, onsets
+        shapes = self._resampled(self._blend(weights, self._aligned[indices]), fs)
+        return shapes, self._blend(weights, self._onsets[indices]) / self.fs
 
     def _onset_times(self, points: np.ndarray) -> np.ndarray:
         """Interpolated onsets [s] at ``points`` (N, 3), shape (N, 2)."""
         indices, weights = self._weights(points)
-        return np.einsum("nk,nkc->nc", weights, self._onsets[indices]) / self.fs
+        return self._blend(weights, self._onsets[indices]) / self.fs
+
+    @staticmethod
+    def _blend(weights: np.ndarray, measured: np.ndarray) -> np.ndarray:
+        """Each point's weighted sum of its measured neighbors: ``weights`` (N, k),
+        ``measured`` (N, k, ...) (HRIRs, aligned shapes or onsets)."""
+        return np.einsum("nk,nk...->n...", weights, measured)
+
+    def _resampled(self, hrir: np.ndarray, fs: float | None) -> np.ndarray:
+        """``hrir`` (at ``self.fs``) resampled to ``fs`` along its last axis."""
+        if fs is None or fs == self.fs:
+            return hrir
+        ratio = Fraction(fs / self.fs).limit_denominator(10000)
+        return resample_poly(hrir, ratio.numerator, ratio.denominator, axis=-1)
 
     def _diffuse_field(self, fs: float) -> tuple[float, np.ndarray]:
         """What sound arriving from every direction at once sounds like at the ears,
@@ -420,16 +429,13 @@ class HRIRSet:
         points = np.atleast_2d(np.asarray(positions, float))
         indices, weights = self._weights(points)
         if self.align:
-            shapes = np.einsum("nk,nkcs->ncs", weights, self._aligned[indices])
-            onsets = np.einsum("nk,nkc->nc", weights, self._onsets[indices])
+            shapes = self._blend(weights, self._aligned[indices])
+            onsets = self._blend(weights, self._onsets[indices])
             n_out = self.irs.shape[-1] + int(np.ceil(self._onsets.max()))
             hrir = _frac_shift(shapes, onsets - self._pre, n_out)
         else:
-            hrir = np.einsum("nk,nkcs->ncs", weights, self.irs[indices])
-        if fs is not None and fs != self.fs:
-            ratio = Fraction(fs / self.fs).limit_denominator(10000)
-            hrir = resample_poly(hrir, ratio.numerator, ratio.denominator, axis=-1)
-        return hrir
+            hrir = self._blend(weights, self.irs[indices])
+        return self._resampled(hrir, fs)
 
 
 def spatialize(

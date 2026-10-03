@@ -69,6 +69,11 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     return np.arange(n) / fs
 
 
+def _below_nyquist(fs: float) -> float:
+    """The default top band edge, 95% of the Nyquist frequency."""
+    return 0.95 * fs / 2
+
+
 def as_rng(rng: int | np.random.Generator | None) -> np.random.Generator:
     """Accept a seed, a Generator, or None and return a Generator."""
     return np.random.default_rng(rng)

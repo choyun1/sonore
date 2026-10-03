@@ -20,6 +20,7 @@ from sonore.signals.world import (
     _SAFEGUARD,
     _integer_fs,
     _matlab_round,
+    _periods_fft_size,
     _Stream,
     _time_windows,
     world_fft_size,
@@ -151,7 +152,7 @@ def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
     n_fft_out = world_fft_size(fs, f0_floor)
-    n_fft = int(2.0 ** (1 + int(np.log(4.0 * fs / _FLOOR_F0_D4C + 1) / np.log(2))))
+    n_fft = _periods_fft_size(fs, 4.0, _FLOOR_F0_D4C)
     n_bands = int(min(_D4C_UPPER_LIMIT, fs / 2.0 - _D4C_BAND_SPACING) / _D4C_BAND_SPACING)
     window_length = int(_D4C_BAND_SPACING * n_fft / fs) * 2 + 1
     position = np.arange(window_length) / (window_length - 1.0)
@@ -185,7 +186,7 @@ def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F
 def _love_train(samples, fs, time, f0, noise):
     """The share of power (100 Hz to 7.9 kHz) below 4 kHz."""
     f0 = max(f0, 40.0)
-    n_fft = int(2.0 ** (1 + int(np.log(3.0 * fs / 40.0 + 1) / np.log(2))))
+    n_fft = _periods_fft_size(fs, 3.0, 40.0)
     segment = _windowed_waveform(samples, fs, f0, time, "blackman", 3.0, noise, _D4C_SAFEGUARD)
     power = np.abs(np.fft.rfft(segment, n_fft)) ** 2
     lowest, middle, highest = (int(np.ceil(edge * n_fft / fs)) for edge in (100.0, 4000.0, 7900.0))

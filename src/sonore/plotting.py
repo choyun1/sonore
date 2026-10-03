@@ -23,6 +23,7 @@ __all__ = [
     "plot_tf_db",
     "plot_cepstrum",
     "plot_mfcc",
+    "plot_f0_track",
     "plot_interaural_cues",
     "plot_ripple_pattern",
     "overview",
@@ -70,12 +71,25 @@ def plot_spectrum(spectrum, ax=None, fscale="log", relative=True, **kwargs):
     return ax
 
 
-def _tf_image(ax, values, t, f, cmap, vmin, vmax, colorbar, label):
-    im = ax.pcolormesh(t, f / 1000, values, cmap=cmap, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
-    ax.set(xlabel="Time [s]", ylabel="Frequency [kHz]")
+def _image(ax, x, y, values, cmap, vmin, vmax, colorbar=False, label=""):
+    """Every image plot's drawing: ``values`` on the ``x`` by ``y`` grid, each
+    cell halfway to its neighbors, rasterized so vector files stay small, with
+    an optional colorbar."""
+    im = ax.pcolormesh(x, y, values, cmap=cmap, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
     if colorbar:
         ax.figure.colorbar(im, ax=ax, label=label)
     return im
+
+
+def _db_limits(db, db_range):
+    """Color limits for levels in dB: the top ``db_range`` dB below the maximum."""
+    vmax = np.max(db)
+    return vmax - db_range, vmax
+
+
+def _tf_image(ax, values, t, f, cmap, vmin, vmax, colorbar, label):
+    ax.set(xlabel="Time [s]", ylabel="Frequency [kHz]")
+    return _image(ax, t, f / 1000, values, cmap, vmin, vmax, colorbar, label)
 
 
 def _interior(stft):
@@ -92,8 +106,7 @@ def plot_stft(
     ax = _ax(ax)
     keep = _interior(stft) if trim_edges else slice(None)
     levels_db = stft.db[channel][:, keep]
-    vmax = levels_db.max()
-    _tf_image(ax, levels_db, stft.t[keep], stft.f, cmap, vmax - db_range, vmax, colorbar, "dB")
+    _tf_image(ax, levels_db, stft.t[keep], stft.f, cmap, *_db_limits(levels_db, db_range), colorbar, "dB")
     ax.set_title("Spectrogram")
     ax.set_xlim(0, stft.n_samples / stft.fs)
     if fmax:
@@ -113,10 +126,7 @@ def plot_modulation_spectrum(
     ms, ax=None, db_range=60.0, cmap="magma", colorbar=True, wt_max=None, wf_max=None
 ):
     ax = _ax(ax)
-    vmax = ms.level.max()
-    im = ax.pcolormesh(
-        ms.w_t, ms.w_f, ms.level, cmap=cmap, vmin=vmax - db_range, vmax=vmax, shading="auto", rasterized=True
-    )
+    _image(ax, ms.w_t, ms.w_f, ms.level, cmap, *_db_limits(ms.level, db_range), colorbar, "dB")
     ax.set(
         title="Modulation spectrum",
         xlabel="Temporal modulation [Hz]",
@@ -127,8 +137,6 @@ def plot_modulation_spectrum(
         ax.set_xlim(-wt_max, wt_max)
     if wf_max:
         ax.set_ylim(0, min(wf_max, ms.w_f.max()))
-    if colorbar:
-        ax.figure.colorbar(im, ax=ax, label="dB")
     return ax
 
 
@@ -186,20 +194,16 @@ def plot_modulation_spectrogram(
     ax = _ax(ax)
     db, x, y, ylabel, title, logy = _modulation_view(msg, channel, band, rate)
     vmin, vmax = _depth_limits(db, db_range)
-    im = ax.pcolormesh(
-        x, y, db, cmap=_depth_cmap(cmap), vmin=vmin, vmax=vmax, shading="auto", rasterized=True
-    )
+    _image(ax, x, y, db, _depth_cmap(cmap), vmin, vmax, colorbar, "Depth [dB]")
     if logy:
         ax.set_yscale("log")
     ax.set(xlabel="Time [s]", ylabel=ylabel, title=title)
-    if colorbar:
-        ax.figure.colorbar(im, ax=ax, label="Depth [dB]")
     return ax
 
 
 def _plot_band_rate(msg, ax, i, channel, vmin, vmax, cmap):
     db = _depth_db(msg.depth[channel, :, :, i], msg.valid[:, :, i])
-    im = ax.pcolormesh(msg.fm, msg.f, db, cmap=cmap, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
+    im = _image(ax, msg.fm, msg.f, db, cmap, vmin, vmax)
     ax.set(xscale="log", yscale="log", xlabel="Modulation rate [Hz]", ylabel="Frequency [Hz]")
     ax.set_title(f"Band x rate at {msg.t[i]:.2f} s")
     return im
@@ -222,7 +226,7 @@ def plot_modulation_slices(msg, t, rate=4.0, channel=0, db_range=30.0, cmap="mag
         np.concatenate([view[0].ravel() for view in views] + [band_rate_db.ravel()]), db_range
     )
     for ax, (db, x, y, ylabel, title, _) in zip(axes[:2], views, strict=True):
-        ax.pcolormesh(x, y, db, cmap=colormap, vmin=vmin, vmax=vmax, shading="auto", rasterized=True)
+        _image(ax, x, y, db, colormap, vmin, vmax)
         ax.set(yscale="log", xlabel="Time [s]", ylabel=ylabel, title=title)
         ax.axvline(msg.t[t_idx], color="w", lw=1.2)
     im = _plot_band_rate(msg, axes[2], t_idx, channel, vmin, vmax, colormap)
@@ -368,7 +372,6 @@ def plot_envelopes(
     ax = _ax(ax)
     sel = slice(None) if edges else slice(1, -1)
     db = env.db[:, sel, channel]
-    vmax = db.max()
     cfs = env.cfs[sel] / (1000 if fscale == "linear" else 1)
     if fscale not in ("log", "linear"):
         raise ValueError("fscale must be 'log' or 'linear'")
@@ -382,9 +385,7 @@ def plot_envelopes(
         f = np.broadcast_to(cfs[:, None], t.shape)
     else:
         raise ValueError("align must be None or 'peak'")
-    im = ax.pcolormesh(
-        t, f, db.T, cmap=cmap, vmin=vmax - db_range, vmax=vmax, shading="auto", rasterized=True
-    )
+    _image(ax, t, f, db.T, cmap, *_db_limits(db, db_range), colorbar, "dB")
     if fscale == "log":
         ax.set_yscale("log")
         ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Envelopes (cochleagram)")
@@ -394,8 +395,6 @@ def plot_envelopes(
             ax.set_ylim(0, fmax / 1000)
     if align == "peak":
         ax.set_xlim(env.t[0], env.t[-1])
-    if colorbar:
-        ax.figure.colorbar(im, ax=ax, label="dB")
     return ax
 
 
@@ -405,8 +404,7 @@ def plot_tf_db(db, t, f, ax=None, db_range=60.0, cmap="magma", colorbar=True, fm
     uniform: each cell extends halfway to its neighbors. Frequency is linear
     in kHz, as in :func:`plot_stft`."""
     ax = _ax(ax)
-    vmax = np.max(db)
-    _tf_image(ax, db, np.asarray(t), np.asarray(f), cmap, vmax - db_range, vmax, colorbar, "dB")
+    _tf_image(ax, db, np.asarray(t), np.asarray(f), cmap, *_db_limits(db, db_range), colorbar, "dB")
     if fmax:
         ax.set_ylim(0, fmax / 1000)
     if title:
@@ -427,12 +425,8 @@ def plot_cepstrum(cep, ax=None, channel=0, q_range=(1e-3, 15e-3), cmap="magma", 
     values = np.maximum(cep.data[channel][in_range], 0)
     vmax = np.percentile(values, 99.5) or values.max() or 1.0
     quefrency_ms = quefrency[in_range] * 1e3
-    im = ax.pcolormesh(
-        cep.t, quefrency_ms, values, cmap=cmap, vmin=0, vmax=vmax, shading="auto", rasterized=True
-    )
+    _image(ax, cep.t, quefrency_ms, values, cmap, 0, vmax, colorbar, "Cepstrum")
     ax.set(title="Cepstrum", xlabel="Time [s]", ylabel="Quefrency [ms]")
-    if colorbar:
-        ax.figure.colorbar(im, ax=ax, label="Cepstrum")
     return ax
 
 
@@ -450,40 +444,18 @@ def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, d
         values = mfcc.data[channel][1:]
         limit = np.percentile(np.abs(values), 99) or 1.0
         rows = np.arange(1, values.shape[0] + 1)
-        im = ax.pcolormesh(
-            mfcc.t,
-            rows,
-            values,
-            cmap=cmap or "RdBu_r",
-            vmin=-limit,
-            vmax=limit,
-            shading="auto",
-            rasterized=True,
-        )
-        ax.set(title="MFCCs", xlabel="Time [s]", ylabel="Coefficient")
         label = "MFCC (natural log units)"
+        _image(ax, mfcc.t, rows, values, cmap or "RdBu_r", -limit, limit, colorbar, label)
+        ax.set(title="MFCCs", xlabel="Time [s]", ylabel="Coefficient")
     elif kind == "mel":
         values = mfcc.mel_db[channel]
-        vmax = values.max()
         rows = np.arange(len(mfcc.cfs))
-        im = ax.pcolormesh(
-            mfcc.t,
-            rows,
-            values,
-            cmap=cmap or "magma",
-            vmin=vmax - db_range,
-            vmax=vmax,
-            shading="auto",
-            rasterized=True,
-        )
+        _image(ax, mfcc.t, rows, values, cmap or "magma", *_db_limits(values, db_range), colorbar, "dB")
         ticks = np.unique(np.linspace(0, len(rows) - 1, 6).round().astype(int))
         ax.set_yticks(ticks, [f"{mfcc.cfs[tick]:.0f}" for tick in ticks])
         ax.set(title="Mel spectrogram", xlabel="Time [s]", ylabel="Band centre [Hz]")
-        label = "dB"
     else:
         raise ValueError(f"kind must be 'mfcc' or 'mel', not {kind!r}")
-    if colorbar:
-        ax.figure.colorbar(im, ax=ax, label=label)
     return ax
 
 
@@ -522,19 +494,11 @@ def plot_interaural_cues(cues, ax=None, show_iac=True):
     if cues.itd.ndim == 2:
         ax = _ax(ax)
         itd_lim = np.nanmax(np.abs(cues.itd)) * 1e6 or 1
-        im = ax.pcolormesh(
-            cues.t,
-            np.arange(cues.itd.shape[1]),
-            1e6 * cues.itd.T,
-            cmap="RdBu_r",
-            vmin=-itd_lim,
-            vmax=itd_lim,
-            shading="auto",
-        )
+        bands = np.arange(cues.itd.shape[1])
+        _image(ax, cues.t, bands, 1e6 * cues.itd.T, "RdBu_r", -itd_lim, itd_lim, True, "ITD [µs]")
         n_bands, step = len(cues.cfs), max(1, len(cues.cfs) // 8)
         ax.set_yticks(np.arange(n_bands)[::step], _band_labels(cues.cfs)[::step])
         ax.set(xlabel="Time [s]", ylabel="CF [Hz]", title="ITD per band (+ = right leads)")
-        ax.figure.colorbar(im, ax=ax, label="ITD [µs]")
         return ax
 
     if ax is None:
@@ -583,13 +547,9 @@ def plot_ripple_pattern(
     env = _evaluate(pattern, t, octaves)
     db = 20 * np.log10(np.maximum(env, 1e-6) / np.mean(env))
     db_lim = np.max(np.abs(db)) or 1.0
-    im = ax.pcolormesh(
-        t, f_lo * 2**octaves, db, cmap=cmap, vmin=-db_lim, vmax=db_lim, shading="auto", rasterized=True
-    )
+    _image(ax, t, f_lo * 2**octaves, db, cmap, -db_lim, db_lim, colorbar, "Envelope [dB]")
     ax.set_yscale("log")
     ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Ripple pattern")
-    if colorbar:
-        ax.figure.colorbar(im, ax=ax, label="Envelope [dB]")
     return ax
 
 

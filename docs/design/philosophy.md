@@ -70,10 +70,14 @@ meant to be readable without them.
   line should not have to work out what a name stands for. There are three
   exceptions, and only these: the field's own short names (`fs`, `f0`, `cfs`,
   `n_fft`, `itd` and the others listed under "Names and conventions" in the
-  API reference); names taken from a cited paper, where matching the paper
-  matters more (Klatt's synthesis parameters such as `AV` and `F1`, and a
-  resonator's coefficients `a`, `b`, `c`); and symbols a docstring defines as the
-  notation of a formula, used in the code that implements it. A new
+  API reference); names taken from a cited paper or from a reference
+  implementation that sonore ports, where matching the source matters more,
+  so a reader can check one against the other (Klatt's synthesis parameters
+  such as `AV` and `F1`, and a resonator's coefficients `a`, `b`, `c`; the LF
+  model's `rd`, `ra`, `rg`, `rk`, `te`, `tp`, `alpha`, `epsilon`; McDermott and
+  Simoncelli's texture statistics C, C1, C2; WORLD's `q1` and `f0_floor`); and
+  symbols a docstring defines as the notation of a formula, used in the code
+  that implements it. A rename sweep leaves all of these alone. A new
   exception is written down here or in the docstring that uses it.
 - **"Frame" means only the mathematical frame.** A frame is an analysis
   with frame bounds 0 < A ≤ B and so a stable exact inverse: `Frame`,
@@ -95,7 +99,18 @@ meant to be readable without them.
   numerically.** Design documents number their claims, and standalone scripts
   in `tools/` check them using only NumPy and SciPy, with every operator built
   as an explicit dense matrix, so the checks share no code with the
-  implementation. Tests compare each frame against such a dense oracle.
+  implementation. The tests build a different dense oracle: they analyze
+  unit impulses with the frame's own `analyze`, so they check the bounds,
+  energy and exact synthesis of what the code computes, while the `tools/`
+  checkers and specific tests check that analysis against the formulas.
+- **Checking and measuring are kept apart.** A `check_*_claims.py` script
+  in `tools/` is independent of sonore. A script that runs sonore to measure
+  what it does (`measure_docstring_numbers.py`, and the older
+  `check_voice_change_claims.py`, `check_female_voices.py`,
+  `check_moving_trajectories.py`, `check_pku_ioa_sofa.py` and
+  `check_reorganization_walkthrough.py`) says so in its docstring. A number
+  a docstring quotes about sonore's behavior names the test or script that
+  measures it.
 - **Cross-check against independent implementations** where one exists (see
   "Reference implementations" in the README).
 - **Document every deviation and data choice.** Differences from reference
