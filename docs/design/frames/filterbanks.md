@@ -33,11 +33,11 @@ Today the file has seven classes for what is one idea:
 | `Filterbank` | the abstract frame: `response`, `cfs`, `n_filters`, a declared `tight` flag |
 | `CosineFilterbank` | half-cycle cosines on some scale, plus a flat lowpass and highpass |
 | `ERBFilterbank`, `OctaveFilterbank` | the scale only (two static methods each) |
-| `BandpassFilterbank` | any bandpass shape, plus raised-cosine edge filters |
-| `GammatoneFilterbank`, `MorletFilterbank` | the shape and its scale |
+| `BandpassFilterbank` | any bandpass filter type, plus raised-cosine edge filters |
+| `GammatoneFilterbank`, `MorletFilterbank` | the filter type and its scale |
 
 Each class is frozen, so a bank is fixed once built, which is right, but
-the choices that should be arguments (the scale, the shape, the centers,
+the choices that should be arguments (the scale, the filter type, the centers,
 whether there are edge filters) are classes instead. The same two numbers
 also mean different things: for the cosine banks `f_lo` and `f_hi` are
 where the flat edge filters begin, with the bandpass filters inside, while
@@ -52,7 +52,7 @@ operator is diagonal in frequency, `s(f) = sum_k |H_k(f)|^2`. Any set of
 responses with `0 < A <= s(f) <= B` is a frame, its canonical dual filters
 are `H_k / s`, and it is tight exactly when `s` is constant (Balazs et
 al., 2011, call such frames "painless"). Nothing in that statement depends
-on the scale, the shape or the spacing. So one class can hold all of them,
+on the scale, the filter type or the spacing. So one class can hold all of them,
 and tightness is a fact about `s` that the bank can measure.
 
 ## Claims
@@ -125,7 +125,7 @@ bank = so.cosine_filterbank(f_lo=125, f_hi=8000, spacing=1/6, scale="octave")  #
 bank = so.cosine_filterbank(centers=[200, 450, 1000, 2400], scale="erb")       # any centers
 bank = so.gammatone_filterbank(30, 50, 8000, phase="causal")
 bank = so.morlet_filterbank(30, 50, 8000, cycles=6)
-bank = so.Filterbank(scale, centers, shape)                  # the general form
+bank = so.Filterbank(scale, knots, filter_type)              # the general form
 ```
 
 `Filterbank` is one frozen class holding three things:
@@ -134,14 +134,18 @@ bank = so.Filterbank(scale, centers, shape)                  # the general form
   octaves, mel, linear), with its two conversions taken from `core/utils`
   (one copy of each formula);
 - the **centers**, in scale units (C4), with `cfs` giving them in Hz;
-- a **shape**: the response of one filter as a function of its center
+- a **filter type**: the response of one filter as a function of its center
   (cosine of a given width, gammatone of a given order, bandwidth factor
   and phase, Morlet of a given number of cycles), plus whether the bank
   has edge filters.
 
 The factories choose sensible arguments and return a `Filterbank`, as
 `pure_tone` returns a `Sound`. `so.subbands(sound)` stays as the one-line
-convenience. There is no subclass per scale or per shape.
+convenience. There is no subclass per scale or per filter type.
+
+The third part was first called a "shape". Cho renamed it "filter type"
+(`filter_type`, `FilterType`) on 2026-10-03, because "shape" reads as an
+array's shape everywhere else in NumPy code.
 
 ### Tightness is measured
 
@@ -168,7 +172,7 @@ today's edge filters already put their corners (one spacing outside the
 outermost centers), so only the arguments move, not the geometry.
 
 `edges=True` is the default. Cosine banks keep their flat lowpass and
-highpass, which is what makes them tight. Other shapes keep today's
+highpass, which is what makes them tight. Other filter types keep today's
 raised-cosine edges at the level `sqrt(s_floor)`. `edges=False` gives the
 bare bank (a cochleagram with no edge bands), which may not be a frame;
 `synthesize` refuses then, as today.
@@ -184,7 +188,7 @@ bare bank (a cochleagram with no edge bands), which may not be a frame;
 - `envelope_peak_delay` (used by `plot_envelopes(align="peak")`) is
   measured from each filter's impulse response, with parabolic
   interpolation between samples, and cached like the ringing time. This is
-  one copy that works for every shape; the gammatone formula stays as a
+  one copy that works for every filter type; the gammatone formula stays as a
   test oracle (C6 shows the two agree to within about a sample).
 
 ### Subbands go back with `to_sound`
@@ -282,7 +286,7 @@ The page reads that would check them need approval in this project.
 Each has a recommendation.
 
 - **D1. One `Filterbank` class** holding a scale, centers on the scale and
-  a shape; `CosineFilterbank`, `ERBFilterbank`, `OctaveFilterbank`,
+  a filter type; `CosineFilterbank`, `ERBFilterbank`, `OctaveFilterbank`,
   `BandpassFilterbank`, `GammatoneFilterbank` and `MorletFilterbank` are
   removed, with no aliases. Recommended.
 - **D2. Factories** `so.cosine_filterbank`, `so.gammatone_filterbank`,
@@ -302,7 +306,7 @@ Each has a recommendation.
   Optional; recommended only because it costs one argument and makes the
   redundant cosine banks used in later texture work a one-liner. Say no
   and it stays out.
-- **D7. `f_lo` and `f_hi` mean the same for every shape**: where the edge
+- **D7. `f_lo` and `f_hi` mean the same for every filter type**: where the edge
   filters' flat part ends, bandpass centers inside. Recommended.
 - **D8. `envelope_peak_delay` measured** for every bank, the gammatone
   formula kept as a test. Recommended.
