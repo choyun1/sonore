@@ -197,11 +197,8 @@ def resonator(sound: Sound, f: Track, bw: Track) -> Sound:
     the decay rate, and its gain at 0 Hz is exactly 1, as the oscillator's
     is (so ``f = 0`` gives a low-pass filter). ``f`` and ``bw`` are the peak
     and the -3 dB bandwidth only when ``bw`` is much smaller than ``f``, in
-    the oscillator too: ``f = 300, bw = 300`` peaks at 260 Hz and is 397 Hz
-    wide. Above the resonance the gain falls more slowly than the
-    oscillator's (1.8 dB more at 4 kHz for ``f = 500`` at 16 kHz), since a
-    digital response repeats every ``fs``. ``tools/check_resonator_physics.py``
-    has the numbers.
+    the oscillator too. Far above the resonance the gain falls more slowly
+    than the oscillator's, since a digital response repeats every ``fs``.
 
     ``f`` and ``bw`` are numbers, or ``(times, values)`` pairs that are
     interpolated linearly to every sample (held beyond their ends), so a
