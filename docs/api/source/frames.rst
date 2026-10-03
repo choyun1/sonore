@@ -1,7 +1,7 @@
 frames
 ======
 
-Invertible analyses: frames, their coefficients, and changes to coefficients whose resynthesis is the frame's least-squares inverse.
+Invertible analyses: frames and their coefficients, whose resynthesis after a change is the frame's least-squares inverse.
 
 ``sonore.frames.frame``
 -----------------------
@@ -17,8 +17,3 @@ Invertible analyses: frames, their coefficients, and changes to coefficients who
 -----------------------
 
 .. automodule:: sonore.frames.gabor
-
-``sonore.frames.mask``
-----------------------
-
-.. automodule:: sonore.frames.mask

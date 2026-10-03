@@ -50,7 +50,6 @@ from sonore.frames.filterbank import (
 )
 from sonore.frames.frame import Frame
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame, TVGaborFrame
-from sonore.frames.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.plotting import overview
 from sonore.sources.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
 from sonore.sources.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
@@ -97,6 +96,7 @@ from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
 from sonore.views.cepstrum import Cepstrum
 from sonore.views.envelopes import Envelope, Envelopes, noise_vocode
 from sonore.views.f0 import F0Track, f0_track, scale_f0
+from sonore.views.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.views.mfcc import MFCC
 from sonore.views.modspectrogram import ModulationSpectrogram
 from sonore.views.modulation import (

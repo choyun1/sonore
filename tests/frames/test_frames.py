@@ -77,7 +77,7 @@ def test_nontight_filterbank_reconstructs_exactly(pad, n_channels):
     assert 0 < lo < 0.9 * hi  # genuinely non-tight
     sb = fb.analyze(x, pad=pad)
     assert sb.data.shape == (N, fb.n_filters, n_channels)
-    assert np.allclose(sb.synthesize().data, x.data, rtol=0, atol=1e-12)
+    assert np.allclose(sb.to_sound().data, x.data, rtol=0, atol=1e-12)
 
 
 @pytest.mark.parametrize("pad", ["auto", 0])
@@ -107,7 +107,7 @@ def test_coverage_gap_analyzes_but_refuses_to_synthesize():
     env = sb.envelopes()
     assert env.data.shape == (N, fb.n_filters, 1)
     with pytest.raises(ValueError, match="not a frame"):
-        sb.synthesize()
+        sb.to_sound()
 
 
 def test_modulation_spectrum_needs_evenly_spaced_centers():

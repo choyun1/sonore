@@ -533,10 +533,11 @@ class STFT(_ShortTimeCoefficients):
         return int(self.sft.m_num)
 
     def __mul__(self, other):
-        from sonore.frames.mask import Mask  # mask.py imports STFT from here
+        from sonore.views.mask import Mask  # views.mask imports STFT from here
 
-        gains = other.values if isinstance(other, Mask) else other
-        return STFT._from(self, self.data * gains)
+        if isinstance(other, Mask):
+            return other.apply(self)
+        return STFT._from(self, self.data * other)
 
     __rmul__ = __mul__
 
@@ -570,7 +571,8 @@ class TVSTFT(_ShortTimeCoefficients):
     :class:`STFT`, on one frequency grid :attr:`f` (every window is
     zero-padded to the same FFT length) and at non-uniform window centers
     :attr:`t`. :meth:`to_sound` is exact for unmodified coefficients and the
-    least-squares signal for modified ones. Multiply by an array to mask.
+    least-squares signal for modified ones. Multiply by an array or a
+    :class:`~sonore.views.mask.Mask` to mask.
     """
 
     def __init__(self, data: np.ndarray, fs: float, n_samples: int, frame: TVGaborFrame):
@@ -608,6 +610,10 @@ class TVSTFT(_ShortTimeCoefficients):
         return int(self.frame.layout(self.fs).lengths.min())
 
     def __mul__(self, other):
+        from sonore.views.mask import Mask  # views.mask imports TVSTFT from here
+
+        if isinstance(other, Mask):
+            return other.apply(self)
         return TVSTFT._from(self, self.data * other)
 
     __rmul__ = __mul__

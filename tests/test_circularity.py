@@ -80,8 +80,8 @@ def test_padding_is_hidden():
     assert sb.pad > 0 and ERB.analyze(s, pad=0).pad == 0
     assert sb.data.shape[0] == len(s) == sb.n_samples
     assert sb.envelopes().data.shape[0] == len(s)
-    assert len(sb.synthesize()) == len(s)
-    np.testing.assert_allclose(sb.synthesize().data, s.data, atol=1e-10)
+    assert len(sb.to_sound()) == len(s)
+    np.testing.assert_allclose(sb.to_sound().data, s.data, atol=1e-10)
 
 
 def test_unpadded_envelopes_combine_with_padded_bands():

@@ -7,8 +7,8 @@ docs/design/layout/reorganization.md the earlier step):
 |---|---|---|
 | `core` | `sound`, `units`, `utils`, `fft`, `processing` | `Sound`, decibels, numeric helpers and frequency scales, FFT sizes and threads, and processing that needs no analysis (padding, mixing, filters, level changes) |
 | `sources` | `waveforms`, `klatt`, `ripples` | sounds made from parameters alone: tones, noises, chirps and the LF source, Klatt's formant synthesizer, spectrotemporal ripples |
-| `frames` | `frame`, `filterbank`, `gabor`, `mask` | invertible analyses, their coefficients, and changes to coefficients with exact least-squares resynthesis |
-| `views` | `view`, `spectrum`, `reassigned`, `envelopes`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `f0`, `spectral_envelope`, `aperiodicity`, `world`, `phasevocoder` | one-way analyses, each saying what it drops, with the routes back to sound they have: the channel vocoder (in `envelopes`), WORLD's synthesis, the phase vocoder |
+| `frames` | `frame`, `filterbank`, `gabor` | invertible analyses and their coefficients, with exact least-squares resynthesis of changed coefficients |
+| `views` | `view`, `spectrum`, `reassigned`, `envelopes`, `mask`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `f0`, `spectral_envelope`, `aperiodicity`, `world`, `phasevocoder` | one-way analyses, each saying what it drops, with the routes back to sound they have: the channel vocoder (in `envelopes`), WORLD's synthesis, the phase vocoder |
 | `spatial` | `binaural`, `spatialization`, `hrir_data`, `reverb` | two ears, heads and rooms |
 | `texture` | `stats`, `grad`, `synth` | sound texture statistics and synthesis |
 
@@ -29,9 +29,10 @@ down; the colour is its folder.
 
 The red dashed arrows are imports inside a function that point back up. They
 exist so that calls chain in a notebook: `Sound.envelope()` returns an
-`Envelope`, `Subbands.envelopes()` returns `Envelopes`, and `STFT * mask`
-takes a `Mask`; `Sound * dB` is refused with a hint. None of them runs at
-import, so they close no cycle there; all four are listed by name in the test,
+`Envelope`, `Subbands.envelopes()` returns `Envelopes`, and `STFT * mask`,
+`TVSTFT * mask` and `Subbands * mask` take a `Mask`; `Sound * dB` is
+refused with a hint. None of them runs at import, so they close no cycle
+there; all of them are listed by name in the test,
 so a new one has to be added there on purpose. Every `.plot()` reaches into
 `plotting` the same way.
 

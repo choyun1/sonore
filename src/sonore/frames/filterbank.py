@@ -480,7 +480,7 @@ class Filterbank(Frame):
         transforms about four times faster than at a prime length (measured
         by tools/measure_docstring_numbers.py). The padding travels
         with the Subbands (and any Envelopes derived from them) and is
-        removed on output, so ``.data`` and :meth:`Subbands.synthesize` have
+        removed on output, so ``.data`` and :meth:`Subbands.to_sound` have
         the sound's own length, and analysis followed by synthesis is exact.
 
         ``pad=0`` makes the analysis circular, which is what you want for
@@ -793,7 +793,7 @@ class Subbands(_PaddedBands):
         sb.tfs()            # Subbands: the fine structure, itself audible
         sb.envelopes() * sb.tfs()   # == sb
 
-    so a vocoder is ``(speech.envelopes() * carrier.tfs()).synthesize()``.
+    so a vocoder is ``(speech.envelopes() * carrier.tfs()).to_sound()``.
     """
 
     def __getitem__(self, i: int) -> Sound:
@@ -823,7 +823,18 @@ class Subbands(_PaddedBands):
         phase (unit amplitude)."""
         return self._new(np.cos(np.angle(self._analytic())))
 
-    def synthesize(self) -> Sound:
+    def __mul__(self, other):
+        """``subbands * mask`` (a :class:`~sonore.views.mask.Mask` made for
+        these subbands' grid): the masked subbands."""
+        from sonore.views.mask import Mask  # views.mask imports Subbands from here
+
+        if isinstance(other, Mask):
+            return other.apply(self)
+        return NotImplemented
+
+    __rmul__ = __mul__
+
+    def to_sound(self) -> Sound:
         """Back to a Sound with the filterbank's canonical dual
         (:meth:`~sonore.frames.filterbank.Filterbank.synthesize`): the exact inverse of
         :meth:`~sonore.frames.filterbank.Filterbank.analyze`, and the least-squares
@@ -833,7 +844,7 @@ class Subbands(_PaddedBands):
         return self.filterbank.synthesize(self)
 
     def sum(self) -> Sound:
-        """Add the bands without re-filtering. :meth:`synthesize` is almost
+        """Add the bands without re-filtering. :meth:`to_sound` is almost
         always what you want; ``sum`` is for bands that were already shaped to
         add up correctly."""
         return Sound(self.data.sum(axis=1), self.fs)

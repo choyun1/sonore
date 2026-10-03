@@ -34,7 +34,8 @@ BACK_IMPORTS = {
     ("core.sound", "views.envelopes"),  # Sound.envelope()
     ("core.units", "core.sound"),  # refusing snd * dB with a hint
     ("frames.filterbank", "views.envelopes"),  # Subbands.envelopes()
-    ("frames.gabor", "frames.mask"),  # STFT * mask
+    ("frames.gabor", "views.mask"),  # STFT * mask, TVSTFT * mask
+    ("frames.filterbank", "views.mask"),  # Subbands * mask
 }
 
 
