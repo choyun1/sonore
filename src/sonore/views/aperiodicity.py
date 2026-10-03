@@ -67,10 +67,7 @@ class Aperiodicity(_FrequencyView):
     )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, method: str):
-        self.data = data
-        self.t = t
-        self.fs = fs
-        self.n_fft = 2 * (data.shape[1] - 1)
+        super().__init__(data, t, fs)
         self.method = method
 
     def __repr__(self) -> str:
@@ -86,12 +83,6 @@ class Aperiodicity(_FrequencyView):
     def db(self) -> np.ndarray:
         """The noise share in dB, ``20 log10 data``."""
         return 20 * np.log10(self.data)
-
-    def __call__(self, t, f) -> np.ndarray:
-        """The amplitude ratio at times ``t`` [s] and frequencies ``f`` [Hz],
-        shape ``(n_channels, len(f), len(t))``: linear in time between time windows,
-        linear in dB between bins."""
-        return np.exp(self._interpolate(np.log(self.data), t, f))
 
     def bands(self, edges: Sequence[float], envelope: SpectralEnvelope | None = None) -> np.ndarray:
         """The noise share averaged over each band ``[edges[i], edges[i+1])``,

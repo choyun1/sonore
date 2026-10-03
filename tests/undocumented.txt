@@ -24,13 +24,9 @@ sonore.frames.filterbank.OctaveFilterbank.from_scale
 sonore.frames.filterbank.OctaveFilterbank.to_scale
 sonore.frames.filterbank.Subbands.cfs
 sonore.frames.filterbank.Subbands.n_samples
-sonore.frames.gabor.STFT.db
 sonore.frames.gabor.STFT.f
-sonore.frames.gabor.STFT.magnitude
 sonore.frames.gabor.STFT.plot
-sonore.frames.gabor.TVSTFT.db
 sonore.frames.gabor.TVSTFT.f
-sonore.frames.gabor.TVSTFT.magnitude
 sonore.frames.mask.Mask.plot
 sonore.plotting.plot_mask
 sonore.plotting.plot_modulation_spectrum
