@@ -252,7 +252,7 @@ under `so.texture` and `sonore.texture.synth`.
 | [`frames.filterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py) | `Filterbank` (frequency-domain filters, any shape; canonical dual), `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `GammatoneFilterbank` (exact 4th-order gammatone responses, causal or zero-phase; `envelope_peak_delay` gives each filter's latency), `MorletFilterbank` (log-spaced Morlet wavelets); both add edge filters by default so synthesis is exact on the whole band, and `edges=False` gives the bare bank for cochleagrams. `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`) |
 | [`frames.gabor`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py) | `GaborFrame` (the STFT as a frame; any window, zero-padded FFTs), `TVGaborFrame` (a Gabor frame whose window changes over time, from an explicit schedule, `from_function`, or `pitch_adaptive` from an F0 track; exact inverse; coefficients are a `TVSTFT`), `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis) |
 | [`frames.mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/mask.py) | `Mask`, `ideal_binary_mask`, `ideal_ratio_mask` |
-| [`views.view`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/view.py) | `View` (the base of every view: a `discards` sentence saying what it drops, and a `synthesize` that raises `NotInvertibleError` with that reason and the route back to sound, if any) |
+| [`views.view`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/view.py) | `View` (the base of every view: a `discards` sentence saying what it drops, and a `synthesize` and a `to_sound` that raise `NotInvertibleError` with that reason and the route back to sound, if any; views with a canonical route back override `to_sound`) |
 | [`views.spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py) | `Spectrum` (`.to_sound` with a noise, a sound's phase or the minimum phase as carrier), `long_term_spectrum`, `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`) |
 | [`views.reassigned`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/reassigned.py) | `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible) |
 | [`views.envelopes`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py) | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`); `noise_vocode` (the channel vocoder of cochlear-implant simulations, after Shannon et al., 1995: band envelopes, lowpassed at any cutoff, on a carrier of noise, tones at the band centres, or any sound) |
@@ -311,7 +311,10 @@ listed at the end.
 
 **Next, in order**
 
-1. **Texture modulation convergence.** Rebalance the objective so
+1. **Cocktail party scenes.** Gallery scenes on the Moving talkers page
+   with three to six talkers walking on slowly bending paths, 10 to 30 s
+   long, with speech from LibriSpeech dev-clean (CC BY 4.0).
+2. **Texture modulation convergence.** Rebalance the objective so
    modulation power converges (see Texture synthesis below).
 
 **Texture synthesis**
@@ -335,7 +338,7 @@ listed at the end.
   dependency, a different release cadence, or a separate audience.
 - Bayesian inference of sound sources will be a separate package built on
   sonore (JAX plus a probabilistic-programming layer), using sonore's
-  generators, frames and texture statistics as its differentiable forward
+  sources, frames and texture statistics as its differentiable forward
   model.
 
 **Other**
@@ -483,7 +486,6 @@ listed at the end.
   (one-way), and a `View` base class whose `synthesize` raises
   `NotInvertibleError`, saying what the view discards and naming the route
   back to sound where one exists; see `docs/design/reorganization.md`.
-
 - **Sound first.** Folders follow meaning (`core`, `sources`, `frames`,
   `views`, `spatial`, `texture`), with import order kept module by module.
   A view goes back to sound through `to_sound` where a canonical route
