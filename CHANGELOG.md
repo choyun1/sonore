@@ -52,6 +52,13 @@ version (0.x.y) only fixes bugs.
   ratio masks.
 
 ### Documentation
+- Cosine filters credit the steerable pyramid as well as McDermott &
+  Simoncelli (2011): Simoncelli & Freeman (1995) for squared responses
+  summing to one, Portilla & Simoncelli (2000) for the cosines on a log2
+  scale. The README references gain these two and the mask sources, with
+  pages checked against the papers.
+- `GaborFrame` and `TVGaborFrame` docstrings put their Parameters last, so
+  the reference no longer folds the text after them into the list.
 - `frames`: the module docstring no longer promises a JAX port, and the
   STFT's levels are described as "dB, `20 log10 |X|`" (audit sitting 7).
 - `Sound`: time slices behave like Python index slicing (negative times
