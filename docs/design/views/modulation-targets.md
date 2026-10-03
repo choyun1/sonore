@@ -9,11 +9,11 @@ Status: accepted 2026-10-03. Cho accepted D1–D9 as recommended. D2–D6
 are implemented (`ModulationSpectrum.to_envelopes`, `with_gain` and
 `to_sound` in `src/sonore/views/modulation.py`, tested in
 `tests/views/test_modulation.py`), and so are D1's blobs and D6's
-`rms_depth` (`ModulationBlob`, `ModulationSpectrum.from_blobs`). D7 and D9
-follow. The claims are checked by
-`tools/check_modulation_targets_claims.py` (C1–C6), which uses only NumPy,
+`rms_depth` (`ModulationBlob`, `ModulationSpectrum.from_blobs`), and D7
+(`to_sound(iterations=...)`, after C7). D9 follows. The claims are checked by
+`tools/check_modulation_targets_claims.py` (C1–C7), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its
-formula, and shares no code with sonore. It runs in about 20 s. The numbers
+formula, and shares no code with sonore. It runs in about 45 s. The numbers
 below come from NumPy 2.4.6 and SciPy 1.17.1, with the seeds in the script.
 
 ## How the claims are verified
@@ -207,6 +207,28 @@ envelope fluctuations (the same mechanism as C3). Only a carrier that is
 steady in each band keeps the edit. So the envelope route does not escape
 the problem C4 shows for the STFT; it moves it into the choice of carrier.
 
+**C7. A search through the filterbank keeps the edit, on any fine
+structure.** [check] Griffin & Lim's iteration with the filterbank in
+place of the STFT, on the C6 edit: impose the target magnitudes with the
+current modulation phase, put the envelopes on the current fine structure,
+re-filter, then take the new sound's own fine structure and modulation
+phase.
+
+| Start | Iterations | Share at 6–40 Hz, re the sentence's | ‖ \|MPS\| − target ‖ / ‖ target ‖ |
+|---|---|---|---|
+| The sentence's own phases | 0 | −3.5 dB | 0.38 |
+| | 5 | −11.4 dB | 0.16 |
+| | 20 | −16.5 dB | 0.10 |
+| Noise's phases | 0 | −4.1 dB | 0.51 |
+| | 5 | −10.7 dB | 0.26 |
+| | 20 | −14.0 dB | 0.18 |
+
+From the sentence's own phases, 20 iterations do better than steady tones
+in one shot (−14.9 dB, C6) and keep the sentence's own fine structure.
+Each iteration is one analysis and one synthesis (about 0.7 s for this
+2.5 s sentence in this container, an estimate elsewhere). As for the
+STFT (C5), the mismatch falls more and more slowly and does not reach zero.
+
 ## Ways to specify a target
 
 Each way, what it fixes, what it leaves free, and how it gets to a sound.
@@ -389,9 +411,9 @@ All accepted 2026-10-03.
   be reached without clipping (C2). Accepted 2026-10-03.
 - **D7. The consistency search** (`iterations > 0`): Griffin–Lim through
   the filterbank (impose the target envelopes, re-analyse, keep the new
-  fine structure and modulation phase, repeat). Not built or measured
-  through the filterbank yet; C5 measures it on the STFT. Accepted 2026-10-03, as a second step
-  after measuring it in the checker.
+  fine structure and modulation phase, repeat). Accepted 2026-10-03,
+  as a second step after measuring it; measured in C7 and implemented as
+  `to_sound(iterations=...)`.
 - **D8. The texture route needs no code**: document
   `TextureStats.replace(mod_power=...)` as the per-band way to specify
   modulation. Accepted 2026-10-03.

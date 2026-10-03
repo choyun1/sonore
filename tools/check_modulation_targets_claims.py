@@ -426,8 +426,58 @@ def c6():
         )
 
 
+# ------------------------------------------------------------- C7: a search through the filterbank
+def c7():
+    """Griffin & Lim's idea through the filterbank instead of the STFT, on
+    the C6 edit: impose the target magnitudes with the current modulation
+    phase, put the envelopes on the current fine structure, re-filter, then
+    take the new sound's own fine structure and modulation phase. Started
+    from the sentence's own phases, or from noise's."""
+    rng = np.random.default_rng(5)
+    per_octave = 12
+    centres = band_centres(per_octave)
+    x = speech()
+    n_samples = len(x)
+    transfer = cosine_responses(n_samples, centres, per_octave)
+    env = envelopes(x, centres, per_octave)
+    original = band_share(env)
+    rate = np.abs(np.fft.fftfreq(env.shape[1], 1 / FE))[None, :]
+    target = np.abs(np.fft.fft2(env - env.mean())) * (rate <= 4.0)
+    starts = {
+        "the sentence's own phases": (
+            np.cos(np.angle(analytic_bands(x, transfer))),
+            np.angle(np.fft.fft2(env - env.mean())),
+        ),
+        "noise's phases": (
+            np.cos(np.angle(analytic_bands(rng.standard_normal(n_samples), transfer))),
+            np.angle(np.fft.fft2(rng.standard_normal(env.shape))),
+        ),
+    }
+    for name, (fine, phase) in starts.items():
+        for iteration in range(21):
+            rebuilt = np.maximum(env.mean() + np.real(np.fft.ifft2(target * np.exp(1j * phase))), 0)
+            rebuilt_full = np.maximum(resample_poly(rebuilt.T, FS, FE, axis=0)[:n_samples], 0)
+            bands = rebuilt_full * fine
+            y = np.fft.irfft(np.sum(np.fft.rfft(bands, axis=0) * transfer, axis=1), n=n_samples)
+            fine = np.cos(np.angle(analytic_bands(y, transfer)))
+            measured = envelopes(y, centres, per_octave)
+            phase = np.angle(np.fft.fft2(measured - measured.mean()))
+            if iteration in (0, 5, 20):
+                share = band_share(measured)
+                mismatch = np.linalg.norm(
+                    np.abs(np.fft.fft2(measured - measured.mean())) - target
+                ) / np.linalg.norm(target)
+                report(
+                    "C7",
+                    f"{name}, {iteration} iterations: share at 6-40 Hz re speech's [dB]",
+                    10 * np.log10(share / original),
+                )
+                report("C7", f"{name}, {iteration} iterations: | |MPS| - target | / | target |", mismatch)
+
+
 if __name__ == "__main__":
     c1()
     c2_c3()
     c4_c5()
     c6()
+    c7()
