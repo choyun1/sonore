@@ -25,3 +25,17 @@ def test_ideal_ratio_mask_known_cases():
     np.testing.assert_allclose(so.ideal_ratio_mask(noise, silent).values, 1.0, rtol=1e-12)
     np.testing.assert_array_equal(so.ideal_ratio_mask(silent, noise).values, 0.0)
     np.testing.assert_array_equal(so.ideal_ratio_mask(silent, silent).values, 0.0)
+
+
+def test_ibm_needs_the_target_to_exceed_the_criterion():
+    """Cells where the target equals the masker plus lc_db are not kept: the target must exceed it."""
+    noise = so.STFT(so.gaussian_noise(0.2, FS, rng=0))
+    assert not so.ideal_binary_mask(noise, noise, lc_db=0).values.any()
+    assert so.ideal_binary_mask(noise, noise, lc_db=-1).values.all()
+
+
+def test_mask_multiplies_from_either_side():
+    target = so.STFT(so.pure_tone(0.2, FS, 500))
+    masker = so.STFT(so.gaussian_noise(0.2, FS, rng=0))
+    mask = so.ideal_binary_mask(target, masker)
+    np.testing.assert_array_equal((mask * masker).data, (masker * mask).data)

@@ -15,7 +15,7 @@ SciPy's ``istft`` is the least-squares inverse.
 ``s(t) = M sum_q |w_q(t - a_q)|**2``.
 
 :class:`STFT` and :class:`TVSTFT` are their coefficients, which synthesize
-back exactly. Levels are in dB of *power* (``20*log10|X|``).
+back exactly. Levels are in dB, ``20 log10 |X|``.
 """
 
 from __future__ import annotations
@@ -23,17 +23,13 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.signal import ShortTimeFFT, get_window
 
 from sonore.core.sound import Sound
-from sonore.frames.frame import Frame, _check_frame
-
-if TYPE_CHECKING:
-    pass
 from sonore.core.utils import amp_to_db, as_rng, n_samples
+from sonore.frames.frame import Frame, _check_frame
 
 __all__ = ["GaborFrame", "TVGaborFrame", "STFT", "TVSTFT"]
 

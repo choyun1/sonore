@@ -18,21 +18,16 @@ respect to the signal.
 
 The frames themselves are in :mod:`sonore.frames.filterbank` (filters on the
 DFT grid) and :mod:`sonore.frames.gabor` (the STFT and its time-varying
-version). The code is written as pure array functions (no in-place mutation)
-so that a JAX port is mechanical.
+version).
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
 import numpy as np
 
 from sonore.core.sound import Sound
-
-if TYPE_CHECKING:
-    pass
 
 __all__ = ["Frame"]
 

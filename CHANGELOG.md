@@ -22,6 +22,8 @@ version (0.x.y) only fixes bugs.
   message instead of NumPy's `IndexError` or a division by zero.
 
 ### Documentation
+- `frames`: the module docstring no longer promises a JAX port, and the
+  STFT's levels are described as "dB, `20 log10 |X|`" (audit sitting 7).
 - `Sound`: time slices behave like Python index slicing (negative times
   count from the end, times past the end are clipped); `from_channels`
   zero-pads shorter channels at the end; `resample` names SciPy's default
