@@ -5,8 +5,7 @@ spectrum: by drawing it, or in other ways. This note answers that, measures
 what such a specification actually pins down, and proposes what sonore
 could offer. It adds no library code; the decisions at the end come first.
 
-Status: proposed 2026-10-03. Cho accepted D1–D3 on 2026-10-03; D4–D9
-are open. The claims are checked by
+Status: accepted 2026-10-03. Cho accepted D1–D9 as recommended. The claims are checked by
 `tools/check_modulation_targets_claims.py` (C1–C6), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its
 formula, and shares no code with sonore. It runs in about 20 s. The numbers
@@ -346,7 +345,7 @@ a requirement on this design.
 
 ## Decisions
 
-Each has a recommendation.
+All accepted 2026-10-03.
 
 - **D1. How a target is specified**: in code, as a few blobs on the rate
   (Hz, signed) × density (cycles/octave) plane, each with a centre, two
@@ -367,28 +366,28 @@ Each has a recommendation.
 - **D4. `ModulationSpectrum` keeps its analysis**: the filterbank, envelope
   rate, compression and linear or dB scale, and the untapered magnitude, so
   `to_sound` can rebuild envelopes on the same grid and refuse a mismatched
-  carrier. The display keeps its Hann taper. Recommended.
+  carrier. The display keeps its Hann taper. Accepted 2026-10-03.
 - **D5. Default carrier `"tones"`**: steady tones at the band centres, the
   only fine structure measured here that keeps the target in the sound
-  (C3, C6). Recommended. Whether `ripple_sound`'s own default carrier
+  (C3, C6). Accepted 2026-10-03. Whether `ripple_sound`'s own default carrier
   should change for the same reason is separate: measure the beat floor on
   sonore's code first.
 - **D6. Depth**: when imposing magnitudes pushes envelopes below zero,
   `to_sound` clips and reports the fraction clipped (15% for the C6 edit,
   33% for the C1 twin), rather than refusing. For drawn targets, an
   `rms_depth` argument scales the spectrum and refuses a depth that cannot
-  be reached without clipping (C2). Recommended.
+  be reached without clipping (C2). Accepted 2026-10-03.
 - **D7. The consistency search** (`iterations > 0`): Griffin–Lim through
   the filterbank (impose the target envelopes, re-analyse, keep the new
   fine structure and modulation phase, repeat). Not built or measured
-  through the filterbank yet; C5 measures it on the STFT. Recommended as a
-  second step, after measuring it in the checker.
+  through the filterbank yet; C5 measures it on the STFT. Accepted 2026-10-03, as a second step
+  after measuring it in the checker.
 - **D8. The texture route needs no code**: document
   `TextureStats.replace(mod_power=...)` as the per-band way to specify
-  modulation. Recommended.
+  modulation. Accepted 2026-10-03.
 - **D9. A gallery page** ("Drawing a modulation spectrum") showing C1 (a
   sentence and its twin, heard), a drawn blob on the three carriers, and an
-  edit. Optional; recommended once D2 exists.
+  edit. Accepted 2026-10-03, once D2 exists.
 
 ## References
 
