@@ -327,20 +327,6 @@ listed at the end.
 - Validate against the MATLAB toolbox's published examples by running both
   on the same original recordings.
 
-**Architecture**
-
-- Folders follow meaning, and imports between modules never form a cycle;
-  `tests/test_layers.py` keeps enforcing it. A voice is not a separate kind
-  of sound, so there is no `voice` subpackage: synthesizers live in
-  `sources` and analyses of a voice in `views`. Heavy dependencies go in
-  optional extras.
-- Split a component into its own distribution only when it needs a heavy
-  dependency, a different release cadence, or a separate audience.
-- Bayesian inference of sound sources will be a separate package built on
-  sonore (JAX plus a probabilistic-programming layer), using sonore's
-  sources, frames and texture statistics as its differentiable forward
-  model.
-
 **Other**
 
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
@@ -349,6 +335,10 @@ listed at the end.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - On-demand download of other public HRIR databases.
+- A separate package for Bayesian inference of sound sources, built on
+  sonore (JAX plus a probabilistic-programming layer), using sonore's
+  sources, frames and texture statistics as its differentiable forward
+  model.
 - A block-by-block (streaming) modulation spectrogram, as the reference for a
   live version on a phone: the modulation spectrum of everyday sounds as they happen.
 
