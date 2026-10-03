@@ -99,6 +99,11 @@ python tools/make_speech_f0.py docs/speech/bdl_arctic_a0131.flac
 | `librispeech_1993_147149.flac` | 1993, Wendy Belcher | female | *Mary Barton*, "Jem Wilson's Repulse." | `1993-147149-0000` to `-0003` | 37.2 s |
 | `librispeech_3000_15664.flac` | 3000, Brian von Dedenroth | male | *Steep Trails*, "05 - Shasta Rambles and Modoc Memories" | `3000-15664-0000` to `-0002` | 31.8 s |
 | `librispeech_1272_141231.flac` | 1272, John Rose | male | *Planet of the Damned*, Chapter 01 | `1272-141231-0000` to `-0003` | 30.8 s |
+| `librispeech_2035_152373.flac` | 2035, Sharon Bautista | female | *Popular History of Ireland, Book 01*, "06 - Kings of the Seventh Century" | `2035-152373-0000` to `-0002` | 34.5 s |
+| `librispeech_6345_93306.flac` | 6345, Jean Bascom | female | *Literary Sense*, "05 The Girl With The Guitar" | `6345-93306-0000` to `-0001` | 35.8 s |
+| `librispeech_5694_64029.flac` | 5694, Winston Tharp | male | *'Co. Aytch,' Maury Grays, First Tennessee Regiment*, "06 - Murfreesboro" | `5694-64029-0000` to `-0006` | 32.6 s |
+| `librispeech_251_136532.flac` | 251, Mark Nelson | male | *Omnilingual*, Part 4 | `251-136532-0000` to `-0003` | 40.5 s |
+| `librispeech_2428_83705.flac` | 2428, Stephen Kinford | male | *Amusement Only*, "29 - Mr. Whitings and Mary Ann" | `2428-83705-0000` to `-0003` | 30.2 s |
 
 Source: the `dev-clean` subset of LibriSpeech (`dev-clean.tar.gz` from
 https://www.openslr.org/12/, supplied by Cho, 2026-10-03). Reader names, sex,
@@ -118,8 +123,9 @@ and this table; the changes are listed below.
 **Why these readers.** All 40 `dev-clean` readers were measured (speech-to-pause
 level range, median F0, chapter length), and the 12 with the cleanest
 recordings and a spread of F0 were auditioned by Cho, who found all of them
-usable. These four differ in F0: medians of about 173 and 203 Hz (female)
-and 94 and 118 Hz (male), from `so.f0_track` on each reader's first minute.
+usable. Nine of them are used, a different cast in each cocktail-party scene,
+with median F0 of about 173, 202, 203 and 237 Hz (female) and 94, 118, 118,
+120 and 136 Hz (male), from `so.f0_track` on each reader's first minute.
 
 **Changes** (as CC BY 4.0 asks): each file joins the first consecutive
 utterances of the reader's longest chapter in `dev-clean`, in order, with

@@ -357,9 +357,9 @@ sound = finish(rendered)
 # et al., 2010). Each talker here keeps a speed of its own between 0.9 and 1.3 m/s that drifts
 # by up to 10 % over several seconds, and some talkers hurry once, 25 to 50 % faster for 2 to
 # 3 s. A talker walks straight ahead while its heading drifts slowly at random, and bends away
-# from the walls of the 10 m by 10 m room, from the listener in the middle and from the other
-# talkers, slowing down when someone is close ahead. So the paths curve gently and cross, and
-# now and then two talkers pass close by each other.
+# from the walls of the 16 m by 16 m room, from the listener in the middle (no talker comes
+# nearer than 1.5 m) and from the other talkers, slowing down when someone is close ahead. So
+# the paths curve gently and cross, and now and then two talkers pass close by each other.
 #
 # Walking is slow motion for the ears. A talker 3 m away walking across the line of sight at
 # 1.1 m/s changes azimuth by at most 21° per second (1.1/3 radians per second), and less when
@@ -367,26 +367,33 @@ sound = finish(rendered)
 # second ($2\pi \cdot 2 \cdot 30$). So the walkers' directions change slowly, and with several
 # voices at once the motion can wash out.
 #
-# The voices are two female and two male readers from LibriSpeech (Panayotov et al., 2015),
-# each scaled to the same RMS before rendering, so a talker's level at the ears depends on its
-# distance alone. The room is drier than the one above: RT60 0.3 s, with direct and reverberant
-# sound equal 5.6 m from a talker (15 dB more direct sound at 1 m than the walk above), so the
-# direct sound leads wherever a talker walks in the room. Each scene fades in and out over 1 s,
-# as if walking into the party and away again. The last scene is also played without the room. What is
+# The voices are nine readers from LibriSpeech (Panayotov et al., 2015), a different cast in
+# each scene, each scaled to the same RMS before rendering, so a talker's level at the ears
+# depends on its distance alone. The room is drier than the one above: RT60 0.3 s, with direct
+# and reverberant sound equal 5.6 m from a talker (15 dB more direct sound at 1 m than the walk
+# above), so the direct sound leads unless a talker is far across the room. Each scene fades in
+# and out over 2 s, as if walking into the party and away again. The last scene is also played
+# without the room. What is
 # not modelled: talkers sound the same whichever way they face (real voices radiate unevenly,
 # and differently at high frequencies; Monson et al., 2012), and nobody raises their voice over
 # the others.
 
 # %%
-PARTY = [  # LibriSpeech reader, label in the plots, color; female and male talkers alternate
+# Each scene's cast: LibriSpeech reader, label in the plots, color. No reader is in two casts.
+PAIR = [("2035_152373", "female talker", "#d62728"), ("5694_64029", "male talker", "#1f77b4")]
+TRIO = [
+    ("6345_93306", "female talker", "#d62728"),
+    ("251_136532", "male talker A", "#1f77b4"),
+    ("2428_83705", "male talker B", "#2ca02c"),
+]
+FOURSOME = [
     ("1462_170142", "female talker A", "#d62728"),
     ("3000_15664", "male talker A", "#1f77b4"),
     ("1993_147149", "female talker B", "#ff7f0e"),
     ("1272_141231", "male talker B", "#2ca02c"),
 ]
-voices = so.normalize([so.load(f"docs/speech/librispeech_{reader}.flac") for reader, _, _ in PARTY])
-ROOM_HALF_WIDTH = 5.0  # m: the room is 10 m by 10 m, with the listener in the middle
-PERSONAL_SPACE = 1.0  # m: the listener pushes talkers away hardest here
+ROOM_HALF_WIDTH = 8.0  # m: the room is 16 m by 16 m, with the listener in the middle
+PERSONAL_SPACE = 1.5  # m: no talker comes nearer the listener than this
 PATH_STEP = 0.05  # s between points on a path
 
 
@@ -394,10 +401,10 @@ def walks(n_talkers, duration, seed):
     """One walk across the room per talker: a list of (times [s], points [m], shape (n, 3)).
     Each talker walks straight ahead, but its heading drifts slowly (a few degrees per second,
     changing over about 3 s), and it bends away from what is near: a wall within 2 m, the
-    listener within 2.5 m, another talker within 1.5 m (stepping to the right to pass), harder
-    the closer it gets, turning at most 90 degrees per second. Its speed drifts by up to 10 %
-    around its own, and it slows down, as people do, when another talker is close ahead,
-    easing into the new pace over about 0.3 s rather than braking at once.
+    listener within 3 m (and never nearer than 1.5 m), another talker within 1.5 m (stepping to
+    the right to pass), harder the closer it gets, turning at most 90 degrees per second. Its
+    speed drifts by up to 10 % around its own, and it slows down, as people do, when another
+    talker is close ahead, easing into the new pace over about 0.3 s rather than braking at once.
     Half the talkers (at least one) also hurry once, for 2 to 3 s, 25 to 50 % faster, easing
     in and out over 0.5 s. Returns the walks and the hurries as (talker, start [s], length
     [s], speed-up)."""
@@ -413,10 +420,10 @@ def walks(n_talkers, duration, seed):
         speed[:, talker] *= 1 + (speed_up - 1) * np.sin(np.pi / 2 * ease) ** 2
         hurries.append((int(talker), start, length, speed_up))
     starts = []
-    while len(starts) < n_talkers:  # apart, at least 1.5 m from the walls and 2.5 m from the listener
+    while len(starts) < n_talkers:  # apart, at least 1.5 m from the walls and 3 m from the listener
         candidate = rng.uniform(-ROOM_HALF_WIDTH + 1.5, ROOM_HALF_WIDTH - 1.5, 2)
         clear = all(np.linalg.norm(candidate - other) > 1.5 for other in starts)
-        if np.linalg.norm(candidate) > 2.5 and clear:
+        if np.linalg.norm(candidate) > PERSONAL_SPACE + 1.5 and clear:
             starts.append(candidate)
     position = np.array(starts)  # (talkers, 2)
     heading = rng.uniform(-np.pi, np.pi, n_talkers)  # direction of travel, angle from +x
@@ -447,18 +454,22 @@ def walks(n_talkers, duration, seed):
         heading += (np.clip(2.0 * off_course, -np.radians(90), np.radians(90)) + wobble) * PATH_STEP
         step_length = speed[step] * pace * PATH_STEP
         position = position + step_length[:, None] * np.column_stack([np.cos(heading), np.sin(heading)])
+        distance = np.linalg.norm(position, axis=1, keepdims=True)  # step back out of the listener's space
+        position = np.where(distance < PERSONAL_SPACE, position * PERSONAL_SPACE / distance, position)
+        position = np.clip(position, -ROOM_HALF_WIDTH, ROOM_HALF_WIDTH)
     return [(times, talker_points) for talker_points in points], hurries
 
 
 PARTY_ROOM = so.synth_ir(0.3, fs, n_channels=2, rng=2)  # RT60 0.3 s
 PARTY_DRR = 15.0  # dB at 1 m: direct and reverberant sound are equal 5.6 m away
-PARTY_FADE = 1.0  # s, at the start and end of each scene
+PARTY_FADE = 2.0  # s, at the start and end of each scene
 
 
-def party(n_talkers, duration, seed, room=PARTY_ROOM):
-    """The first ``n_talkers`` voices, each from the start of its passage for ``duration`` [s],
-    each on its own walk. Returns the mix, each talker's path and the hurries."""
-    paths, hurries = walks(n_talkers, duration, seed)
+def party(cast, duration, seed, room=PARTY_ROOM):
+    """The cast's voices, each from the start of its passage for ``duration`` [s], each on its
+    own walk. Returns the mix, each talker's path and the hurries."""
+    voices = so.normalize([so.load(f"docs/speech/librispeech_{reader}.flac") for reader, _, _ in cast])
+    paths, hurries = walks(len(cast), duration, seed)
     rendered = []
     for voice, (times, points) in zip(voices, paths, strict=False):
         excerpt = so.Sound(voice.data[: int(duration * fs)], fs).ramp(20e-3)
@@ -477,7 +488,7 @@ def close_passes(paths, within=1.0):
     return pairs
 
 
-def passes_title(n_talkers, duration, paths, hurries):
+def passes_title(cast, duration, paths, hurries):
     pairs = close_passes(paths)
     if pairs:
         closest = min(apart for _, _, apart in pairs)
@@ -486,18 +497,18 @@ def passes_title(n_talkers, duration, paths, hurries):
     else:
         passing = "no two pass within 1 m"
     hurrying = ", ".join(
-        f"{PARTY[talker][1]} +{100 * (speed_up - 1):.0f} %" for talker, _, _, speed_up in hurries
+        f"{cast[talker][1]} +{100 * (speed_up - 1):.0f} %" for talker, _, _, speed_up in hurries
     )
-    return f"{n_talkers} talkers, {duration:.0f} s: {passing}\nhurrying (shaded): {hurrying}"
+    return f"{len(cast)} talkers, {duration:.0f} s: {passing}\nhurrying (shaded): {hurrying}"
 
 
-def show_party(paths, hurries, title):
+def show_party(cast, paths, hurries, title):
     """The paths from above (a dot where each talker starts, thick where it hurries), and each
     talker's distance (shaded where it hurries). Both lines thicken with the talker's speed
     above its usual pace, so a hurry shows as a line that swells and thins again."""
     fig = plt.figure(figsize=(10, 4.6), layout="constrained")
     top, distance_axes = fig.subplots(1, 2, width_ratios=(1, 1.6))
-    for (times, points), (_, label, color) in zip(paths, PARTY, strict=False):
+    for (times, points), (_, label, color) in zip(paths, cast, strict=False):
         speed = np.linalg.norm(np.diff(points, axis=0), axis=1) / np.diff(times)
         above_usual = np.clip(speed / np.median(speed) - 1.1, 0, None)  # the drift stays within 10 %
         widths = 0.7 + 8 * above_usual
@@ -508,7 +519,7 @@ def show_party(paths, hurries, title):
         top.plot(*points[0, :2], "o", color=color, ms=5)
         distance_axes.plot([], [], color=color, lw=1.5, label=label)
     for talker, start, length, _ in hurries:
-        distance_axes.axvspan(start, start + length, color=PARTY[talker][2], alpha=0.12, lw=0)
+        distance_axes.axvspan(start, start + length, color=cast[talker][2], alpha=0.12, lw=0)
     top.add_patch(plt.Circle((0, 0), 0.09, fill=False, color="k"))
     top.plot([0], [0.16], "^", color="k", ms=4)  # the listener faces +y
     top.add_patch(plt.Circle((0, 0), PERSONAL_SPACE, fill=False, color="0.6", ls=":"))
@@ -523,7 +534,7 @@ def show_party(paths, hurries, title):
         title="From above (dot: start; thicker: faster)",
     )
     distance_axes.set(
-        ylim=(0, 6), xlim=(0, paths[0][0][-1]), xlabel="Time [s]", ylabel="Distance [m]", title=title
+        ylim=(0, 10), xlim=(0, paths[0][0][-1]), xlabel="Time [s]", ylabel="Distance [m]", title=title
     )
     distance_axes.legend(loc="upper right", fontsize=8, ncols=3)
     for ax in (top, distance_axes):
@@ -531,11 +542,11 @@ def show_party(paths, hurries, title):
     return fig, [distance_axes]
 
 
-def party_scene(paths):
+def party_scene(cast, paths):
     """The talkers for the view from above, every 50 ms: azimuth (unwrapped, so a talker
     crossing straight ahead does not jump) and distance."""
     scene = []
-    for (times, points), (_, label, color) in zip(paths, PARTY, strict=False):
+    for (times, points), (_, label, color) in zip(paths, cast, strict=False):
         keep = slice(None, None, 2)
         _, _, azimuth = so.rect_to_hcc(*points[keep].T)
         scene.append(
@@ -554,27 +565,27 @@ def party_scene(paths):
 # Two talkers, one female and one male, for 20 s.
 
 # %% [demo cp1] A party of two
-mix, paths, hurries = party(2, duration=20.0, seed=0)
-fig, playhead = show_party(paths, hurries, passes_title(2, 20, paths, hurries))
-scene = party_scene(paths)
+mix, paths, hurries = party(PAIR, duration=20.0, seed=0)
+fig, playhead = show_party(PAIR, paths, hurries, passes_title(PAIR, 20, paths, hurries))
+scene = party_scene(PAIR, paths)
 sound = finish(mix)
 
 # %% [about]
-# Three talkers, two female and one male, for 25 s.
+# Three new talkers, one female and two male, for 25 s.
 
 # %% [demo cp2] A party of three
-mix, paths, hurries = party(3, duration=25.0, seed=0)
-fig, playhead = show_party(paths, hurries, passes_title(3, 25, paths, hurries))
-scene = party_scene(paths)
+mix, paths, hurries = party(TRIO, duration=25.0, seed=0)
+fig, playhead = show_party(TRIO, paths, hurries, passes_title(TRIO, 25, paths, hurries))
+scene = party_scene(TRIO, paths)
 sound = finish(mix)
 
 # %% [about]
-# Four talkers, two female and two male, for 30 s.
+# Four more talkers, two female and two male, for 30 s.
 
 # %% [demo cp3] A party of four
-mix, paths, hurries = party(4, duration=30.0, seed=0)
-fig, playhead = show_party(paths, hurries, passes_title(4, 30, paths, hurries))
-scene = party_scene(paths)
+mix, paths, hurries = party(FOURSOME, duration=30.0, seed=0)
+fig, playhead = show_party(FOURSOME, paths, hurries, passes_title(FOURSOME, 30, paths, hurries))
+scene = party_scene(FOURSOME, paths)
 sound = finish(mix)
 
 # %% [about]
@@ -582,9 +593,9 @@ sound = finish(mix)
 # voice is sharper and its direction and distance easier to follow.
 
 # %% [demo cp4] A party of four, without the room
-mix, paths, hurries = party(4, duration=30.0, seed=0, room=None)
-fig, playhead = show_party(paths, hurries, "The same four talkers without the room")
-scene = party_scene(paths)
+mix, paths, hurries = party(FOURSOME, duration=30.0, seed=0, room=None)
+fig, playhead = show_party(FOURSOME, paths, hurries, "The same four talkers without the room")
+scene = party_scene(FOURSOME, paths)
 sound = finish(mix)
 
 # %% [markdown]
@@ -996,8 +1007,8 @@ sound = finish(rendered)
 # - Panayotov, Chen, Povey & Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain
 #   audio books. *Proc. ICASSP 2015*, 5206–5210.
 #   [doi:10.1109/ICASSP.2015.7178964](https://doi.org/10.1109/ICASSP.2015.7178964). The
-#   cocktail-party passages, by LibriVox readers 1462, 1993, 3000 and 1272 (CC BY 4.0;
-#   sources in docs/speech/SOURCES.md).
+#   cocktail-party passages, by LibriVox readers 2035, 5694, 6345, 251, 2428, 1462, 1993,
+#   3000 and 1272 (CC BY 4.0; sources in docs/speech/SOURCES.md).
 # - Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer functions
 #   measured with high spatial resolution using a spark gap. *IEEE Trans. Audio, Speech, Lang.
 #   Process.* 17(6), 1124–1132. [PKU
