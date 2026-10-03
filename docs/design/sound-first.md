@@ -91,7 +91,7 @@ constructors, in one folder (D1).
 | Folder | Holds | Modules |
 |---|---|---|
 | `core` | `Sound`, its operations, units, scales, numeric helpers | `sound`, `units`, `utils`, `fft`, plus today's `signals/processing.py` (D2) |
-| `sources` | sounds from parameters | `tones`, `noise`, `glottal`, `klatt`, `ripples` (D1, D4) |
+| `sources` | sounds from parameters | `waveforms`, `klatt`, `ripples` (D1, D4) |
 | `frames` | Sound ⇄ coefficients | unchanged |
 | `views` | Sound → a one-way summary, with its route back where one exists | unchanged, plus `world` (D3) and `phasevocoder` (D6) |
 | `spatial` | topic: two ears, heads, rooms | unchanged |
@@ -112,7 +112,8 @@ it imports.
 
 ## Decisions
 
-- **D1. The folder of sounds from parameters.** (a) `sources` (recommended):
+- **D1. The folder of sounds from parameters.** (a) `sources` (recommended;
+  Cho chose `sources/waveforms` in D4):
   each module is a kind of sound source. The cost is that the word also
   means a source position in `spatial` (`move_sound`'s "source"). (b)
   `synthesis`: clear, but synthesis also lives on frames and views, so the
@@ -139,15 +140,15 @@ it imports.
   `world_synthesize` kept as the function form: more uniform, but a new
   type for something a function already does. It can be added later
   without moving anything.
-- **D4. Splitting `generators`.** In a folder called `sources`,
-  "generators" says nothing. (a) Split by kind (recommended): `tones.py`
-  (silence, pure tones, harmonic and Schroeder complexes, square, sawtooth,
-  pulse trains, chirps), `noise.py` (Gaussian, correlated and iterated
-  ripple noise) and `glottal.py` (the LF source, `lf_harmonics`,
-  `lf_pulse`). This reverses the reorganization's D7, which merged
-  `glottal.py` into `generators.py`, because the folder now says
-  "sources" and a glottal source is one. (b) Keep one file and call it
-  `basic.py`.
+- **D4. The file of waveforms.** Decided (Cho, 2026-10-03): one file,
+  `sources/waveforms.py`, holding everything in today's `generators.py`
+  (silence, tones, harmonic and Schroeder complexes, square, sawtooth,
+  pulse trains, chirps, the noises, and the LF glottal source with
+  `lf_harmonics` and `lf_pulse`). "Generators" said nothing inside a
+  folder called `sources`. A split by kind was considered and dropped:
+  `glottal_source` is built on `harmonic_complex` (it calls it and shares
+  its harmonic-count helper), so it would need a private import between
+  files, and the reorganization's D7 merged it for that reason.
 - **D5. Renames that follow the rule.** No compatibility names, as for
   the rest of 0.4.0. (a) Rename now (recommended):
   `Spectrum.to_noise(duration, fs)` becomes `Spectrum.to_sound(duration,
@@ -180,7 +181,7 @@ break once.
 
 | Old path | New path |
 |---|---|
-| `sonore.signals.generators` | `sonore.sources.tones`, `.noise`, `.glottal` (D4) |
+| `sonore.signals.generators` | `sonore.sources.waveforms` (D4) |
 | `sonore.signals.klatt` | `sonore.sources.klatt` |
 | `sonore.signals.processing` | `sonore.core.processing` (D2) |
 | `sonore.signals.world` | `sonore.views.world` (D3) |
