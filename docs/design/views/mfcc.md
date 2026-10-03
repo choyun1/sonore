@@ -506,8 +506,9 @@ measures (C8).
 - Stevens, S. S., Volkmann, J. & Newman, E. B. (1937). A scale for the
   measurement of the psychological magnitude pitch. *J. Acoust. Soc. Am.*
   8(3), 185–190. The mel scale.
-- O'Shaughnessy, D. (1987). *Speech Communication: Human and Machine*.
-  Addison-Wesley. Usually given as the source of 2595 log10(1 + f/700).
+- O'Shaughnessy, D. (2000). *Speech Communications: Human and Machine*,
+  2nd ed. IEEE Press. Eq. 4.2, p. 128, prints 2595 log10(1 + f/700) with no
+  earlier source; the 1987 first edition is the one usually cited (not read).
 - Slaney, M. (1998). *Auditory Toolbox*, version 2. Technical Report
   1998-010, Interval Research Corporation. The linear-then-log mel and
   area-normalised triangles used by librosa.

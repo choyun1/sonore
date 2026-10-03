@@ -33,7 +33,7 @@ from scipy.signal import fftconvolve
 
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
-from sonore.core.utils import _below_nyquist, amp_to_db, as_rng, db_to_amp
+from sonore.core.utils import amp_to_db, as_rng, db_to_amp
 from sonore.frames.gabor import _FLOOR_DB, STFT
 from sonore.views.view import View
 
@@ -378,7 +378,7 @@ class ModulationSpectrum(View):
         """
         from sonore.frames.filterbank import cosine_filterbank
 
-        f_hi = min(f_hi, _below_nyquist(sound.fs))
+        f_hi = min(f_hi, sound.fs / 2)
         fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
         return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
 

@@ -39,8 +39,16 @@ def amp_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.nd
 
 
 def power_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
-    """Power (not amplitude) to decibels: ``10*log10(|x|/ref)``, floored."""
-    x = np.abs(np.asarray(x)).astype(float) / ref
+    """Power (not amplitude) to decibels: ``10*log10(x/ref)``, floored at
+    ``floor_db``.
+
+    A power is never negative. A negative value is treated as zero and
+    returns ``floor_db``, never the level of its absolute value: a tiny
+    negative from round-off (a power of -1e-17 where the true value is 0)
+    lands where true zeros do, and a negative from a bug upstream shows up
+    at the floor instead of as a plausible level. (``amp_to_db`` takes the
+    absolute value instead, because amplitudes are signed.)"""
+    x = np.maximum(np.asarray(x, dtype=float), 0.0) / ref
     with np.errstate(divide="ignore"):
         return np.maximum(10 * np.log10(x), floor_db)
 
@@ -81,8 +89,9 @@ _SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.
 def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
     """Frequency [Hz] to mel.
 
-    ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses
-    (usually credited to O'Shaughnessy, 1987). ``"slaney"`` is the scale of
+    ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses,
+    as printed in O'Shaughnessy (2000, Eq. 4.2, p. 128), which gives no
+    earlier source for it. ``"slaney"`` is the scale of
     Slaney's Auditory Toolbox and librosa: linear below 1 kHz (15 mel at
     1000 Hz) and logarithmic above it (27 mel per factor of 6.4)."""
     freq = np.asarray(freq, dtype=float)
@@ -164,8 +173,3 @@ def _phase_ramp_delay(data: np.ndarray, shift: ArrayLike, n_fft: int, n_out: int
     freqs = np.fft.rfftfreq(n_fft)
     spectrum *= np.exp(-2j * np.pi * freqs * np.asarray(shift)[..., None])
     return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
-
-
-def _below_nyquist(fs: float) -> float:
-    """The default top band edge, 95% of the Nyquist frequency."""
-    return 0.95 * fs / 2

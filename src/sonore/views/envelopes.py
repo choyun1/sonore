@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
 
-from sonore.core.utils import _below_nyquist, _fit_length, _resample_poly, amp_to_db, as_rng, time_axis
+from sonore.core.utils import _fit_length, _resample_poly, amp_to_db, as_rng, time_axis
 from sonore.frames.filterbank import Subbands, _PaddedBands, cosine_filterbank
 from sonore.views.view import View
 
@@ -395,7 +395,7 @@ def noise_vocode(
     """
     from sonore.core.sound import Sound
 
-    filterbank = cosine_filterbank(n_bands, f_lo, min(f_hi, _below_nyquist(sound.fs)))
+    filterbank = cosine_filterbank(n_bands, f_lo, min(f_hi, sound.fs / 2))
     envelopes = filterbank.analyze(sound).envelopes(lowpass=env_lowpass).without_edges()
     if isinstance(carrier, Sound):
         if len(carrier) < len(sound):
