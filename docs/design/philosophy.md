@@ -9,7 +9,7 @@ meant to be readable without them.
 
 - **A sound is a value.** `Sound` is an immutable array plus a sampling rate,
   and every operation returns a new one. Code is written as pure array
-  functions, which also keeps a JAX port mechanical.
+  functions.
 - **Quantities are written in the units people think in.** Levels in dB
   (`snd + 6*dB`), times in seconds (`snd[0.1:0.5]`), hops and windows
   specified in seconds and rounded to samples per sampling rate. Adding a bare
