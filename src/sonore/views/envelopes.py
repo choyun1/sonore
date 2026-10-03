@@ -28,9 +28,9 @@ from fractions import Fraction
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.signal import butter, resample_poly, sosfiltfilt
+from scipy.signal import butter, sosfiltfilt
 
-from sonore.core.utils import amp_to_db
+from sonore.core.utils import _fit_length, _resample_poly, amp_to_db
 from sonore.frames.filterbank import _PaddedBands
 from sonore.views.view import View
 
@@ -58,10 +58,9 @@ def _lowpass(data: np.ndarray, cutoff: float, fs: float, order: int) -> np.ndarr
 
 
 def _resample(data: np.ndarray, fs_old: float, fs_new: float) -> np.ndarray:
-    ratio = Fraction(fs_new / fs_old).limit_denominator(10000)
     # padtype="line": extend the envelope at its ends instead of padding with
     # zeros, which would drag the first and last few ms toward zero
-    return np.maximum(resample_poly(data, ratio.numerator, ratio.denominator, axis=0, padtype="line"), 0.0)
+    return np.maximum(_resample_poly(data, fs_old, fs_new, padtype="line"), 0.0)
 
 
 def _upsample_to(data: np.ndarray, fs: float, n: int, fs_new: float) -> np.ndarray:
@@ -77,13 +76,7 @@ def _upsample_to(data: np.ndarray, fs: float, n: int, fs_new: float) -> np.ndarr
         columns = data.reshape(data.shape[0], -1)
         upsampled = np.column_stack([np.interp(t_new, t_old, column) for column in columns.T])
         return upsampled.reshape((n,) + data.shape[1:])
-    upsampled = np.maximum(
-        resample_poly(data, ratio.numerator, ratio.denominator, axis=0, padtype="line"), 0.0
-    )
-    if upsampled.shape[0] >= n:
-        return upsampled[:n]
-    pad_width = [(0, n - upsampled.shape[0])] + [(0, 0)] * (data.ndim - 1)
-    return np.pad(upsampled, pad_width, mode="edge")
+    return _fit_length(_resample(data, fs, fs_new), n, mode="edge")
 
 
 def _check_duration(n_env: int, fs_env: float, n: int, fs: float) -> None:
@@ -276,9 +269,7 @@ class Envelopes(_PaddedBands, View):
         full = _resample(full, self.fs, fs)
         pad = (self.pad + extra) * ratio.numerator // ratio.denominator
         n_total = pad + int(round(self.n_samples * float(ratio))) + pad
-        if full.shape[0] < n_total:
-            full = np.pad(full, [(0, n_total - full.shape[0])] + [(0, 0)] * 2, mode="edge")
-        return self._new(full[:n_total], fs, pad)
+        return self._new(_fit_length(full, n_total, mode="edge"), fs, pad)
 
     def without_edges(self) -> Envelopes:
         """Zero the lowpass and highpass edge bands (which lie outside

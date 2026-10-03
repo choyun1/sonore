@@ -247,7 +247,7 @@ def channel_order(env_mean: np.ndarray) -> list[int]:
     return order
 
 
-def _resample(x: np.ndarray, n: int) -> np.ndarray:
+def _resample_circular(x: np.ndarray, n: int) -> np.ndarray:
     """Circular (FFT) resampling along axis 0."""
     with threads():
         return resample(x, n, axis=0)
@@ -314,7 +314,7 @@ def synthesize(
         with threads():
             analytic = hilbert(subbands, axis=0)
         compressed = np.abs(analytic) ** model.compression
-        env = np.maximum(_resample(compressed, n_env), 0.0)
+        env = np.maximum(_resample_circular(compressed, n_env), 0.0)
         return subbands, analytic, compressed, env
 
     def score(iteration, x, subbands, env):
@@ -340,7 +340,7 @@ def synthesize(
     subbands, analytic, compressed, env = analyze(x)
     for iteration in range(1, max_iter + 1):
         fine_structure = np.cos(np.angle(analytic))
-        residual = compressed - _resample(env, n_samples)
+        residual = compressed - _resample_circular(env, n_samples)
 
         adjusted = np.zeros(env.shape[1], bool)
         n_cg_iter = 5 + round(0.2 * (iteration - 1))
@@ -350,7 +350,7 @@ def synthesize(
             )
             adjusted[k] = True
 
-        full_env = np.maximum(_resample(env, n_samples) + residual, 0.0) ** (1 / model.compression)
+        full_env = np.maximum(_resample_circular(env, n_samples) + residual, 0.0) ** (1 / model.compression)
         new_subbands = full_env * fine_structure
         new_subband_var = np.mean(new_subbands**2, axis=0) - np.mean(new_subbands, axis=0) ** 2
         new_subbands *= np.sqrt(target.subband_var / np.maximum(new_subband_var, 1e-300))[None, :]

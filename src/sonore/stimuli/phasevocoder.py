@@ -28,6 +28,7 @@ from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
+from sonore.core.utils import _fit_length
 from sonore.frames.gabor import _bin_weights
 from sonore.views.view import View
 
@@ -244,10 +245,4 @@ def pitch_shift(sound: Sound, semitones: float, win_dur: float = 46e-3, phase_lo
     ratio = Fraction(2 ** (semitones / 12)).limit_denominator(1000)
     stretched = time_stretch(sound, float(ratio), win_dur, phase_lock)
     resampled = resample_poly(stretched.data, ratio.denominator, ratio.numerator, axis=0)
-    length = len(sound)
-    resampled = (
-        resampled[:length]
-        if len(resampled) >= length
-        else np.pad(resampled, ((0, length - len(resampled)), (0, 0)))
-    )
-    return Sound(resampled, sound.fs)
+    return Sound(_fit_length(resampled, len(sound)), sound.fs)

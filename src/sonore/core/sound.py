@@ -9,15 +9,14 @@ from __future__ import annotations
 
 import numbers
 import warnings
-from fractions import Fraction
 from os import PathLike
 
 import numpy as np
 from numpy.typing import ArrayLike
-from scipy.signal import fftconvolve, hilbert, resample_poly
+from scipy.signal import fftconvolve, hilbert
 
 from sonore.core.units import Decibels
-from sonore.core.utils import amp_to_db, db_to_amp, rms, time_axis
+from sonore.core.utils import _phase_ramp_delay, _resample_poly, amp_to_db, db_to_amp, rms, time_axis
 
 __all__ = ["Sound", "load"]
 
@@ -312,19 +311,14 @@ class Sound:
         if fraction > 1e-9:
             guard = data.shape[0]  # sinc tails decay slowly; keep them from wrapping around
             n_fft = data.shape[0] + 1 + guard
-            spectrum = np.fft.rfft(data, n=n_fft, axis=0)
-            freq = np.fft.rfftfreq(n_fft)
-            spectrum *= np.exp(-2j * np.pi * freq * fraction)[:, None]
-            data = np.fft.irfft(spectrum, n=n_fft, axis=0)[: data.shape[0] + 1]
+            data = _phase_ramp_delay(data.T, fraction, n_fft, data.shape[0] + 1).T
         return Sound(data, self.fs)
 
     def resample(self, fs: float) -> Sound:
         """Polyphase resampling to a new rate."""
         if fs == self.fs:
             return self
-        ratio = Fraction(fs / self.fs).limit_denominator(10000)
-        data = resample_poly(self._data, ratio.numerator, ratio.denominator, axis=0)
-        return Sound(data, fs)
+        return Sound(_resample_poly(self._data, self.fs, fs), fs)
 
     def convolve(self, ir: Sound | ArrayLike) -> Sound:
         """Convolve with an impulse response (full length).

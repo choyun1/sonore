@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from fractions import Fraction
+
 import numpy as np
 from numpy.typing import ArrayLike
+from scipy.signal import resample_poly
 
 __all__ = [
     "rms",
@@ -67,6 +70,33 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     """Sample times ``k/fs``. Use this instead of ``np.linspace(0, dur, n)``,
     whose spacing is ``dur/(n-1)`` rather than ``1/fs``."""
     return np.arange(n) / fs
+
+
+def _resample_poly(data: np.ndarray, fs: float, fs_new: float, axis: int = 0, **kwargs) -> np.ndarray:
+    """Polyphase resampling of ``data`` along ``axis`` from ``fs`` to ``fs_new``, the
+    rate ratio approximated by a fraction with denominator at most 10000.
+    ``kwargs`` go to ``scipy.signal.resample_poly`` (``padtype``)."""
+    ratio = Fraction(fs_new / fs).limit_denominator(10000)
+    return resample_poly(data, ratio.numerator, ratio.denominator, axis=axis, **kwargs)
+
+
+def _fit_length(data: np.ndarray, length: int, mode: str = "constant") -> np.ndarray:
+    """``data`` cut or padded at the end (axis 0) to ``length`` samples; ``mode``
+    is ``np.pad``'s (zeros by default, ``"edge"`` repeats the last sample)."""
+    if data.shape[0] >= length:
+        return data[:length]
+    return np.pad(data, [(0, length - data.shape[0])] + [(0, 0)] * (data.ndim - 1), mode=mode)
+
+
+def _phase_ramp_delay(data: np.ndarray, shift: ArrayLike, n_fft: int, n_out: int) -> np.ndarray:
+    """Delay signals along the last axis by ``shift`` samples (fractional, one per
+    signal, broadcast over the leading axes) with an FFT phase ramp: band-limited
+    interpolation. ``n_fft`` must leave room for the delay and the sinc tails, which
+    otherwise wrap around; the first ``n_out`` samples are returned."""
+    spectrum = np.fft.rfft(data, n=n_fft, axis=-1)
+    freqs = np.fft.rfftfreq(n_fft)
+    spectrum *= np.exp(-2j * np.pi * freqs * np.asarray(shift)[..., None])
+    return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
 
 
 def _below_nyquist(fs: float) -> float:

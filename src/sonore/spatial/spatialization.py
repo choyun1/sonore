@@ -31,7 +31,6 @@ import re
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from fractions import Fraction
 from functools import cached_property
 from os import PathLike
 from pathlib import Path
@@ -39,11 +38,12 @@ from pathlib import Path
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.interpolate import CubicSpline
-from scipy.signal import fftconvolve, minimum_phase, resample_poly
+from scipy.signal import fftconvolve, minimum_phase
 from scipy.spatial import ConvexHull
 from scipy.special import i0
 
 from sonore.core.sound import Sound
+from sonore.core.utils import _phase_ramp_delay, _resample_poly
 from sonore.signals.processing import _track
 
 __all__ = [
@@ -168,10 +168,7 @@ def distance_gain_db(distance: ArrayLike, ref: float = 1.0) -> np.ndarray:
 def _frac_shift(h: np.ndarray, shift: np.ndarray, n_out: int) -> np.ndarray:
     """Delay each IR in ``h`` (..., n) by ``shift`` (...,) samples (fractional ok)."""
     n_fft = max(h.shape[-1], n_out) + int(np.ceil(np.max(np.abs(shift)))) + 64
-    spectrum = np.fft.rfft(h, n=n_fft, axis=-1)
-    freqs = np.fft.rfftfreq(n_fft)
-    spectrum *= np.exp(-2j * np.pi * freqs * shift[..., None])
-    return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
+    return _phase_ramp_delay(h, shift, n_fft, n_out)
 
 
 @dataclass
@@ -398,8 +395,7 @@ class HRIRSet:
         """``hrir`` (at ``self.fs``) resampled to ``fs`` along its last axis."""
         if fs is None or fs == self.fs:
             return hrir
-        ratio = Fraction(fs / self.fs).limit_denominator(10000)
-        return resample_poly(hrir, ratio.numerator, ratio.denominator, axis=-1)
+        return _resample_poly(hrir, self.fs, fs, axis=-1)
 
     def _diffuse_field(self, fs: float) -> tuple[float, np.ndarray]:
         """What sound arriving from every direction at once sounds like at the ears,
