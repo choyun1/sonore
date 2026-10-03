@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from sonore.core.sound import Sound
+from sonore.core.utils import db_to_amp
 from sonore.frames.gabor import STFT, TVSTFT
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
@@ -60,7 +61,7 @@ class Cepstrum(View):
         self.n_fft = coefs.n_fft
         magnitude = np.abs(coefs.data)
         peak = magnitude.max(axis=(1, 2), keepdims=True)
-        floor = np.where(peak > 0, peak * 10 ** (floor_db / 20), np.finfo(float).tiny)
+        floor = np.where(peak > 0, peak * db_to_amp(floor_db), np.finfo(float).tiny)
         log_magnitude = np.log(np.maximum(magnitude, floor))
         self.data = np.fft.irfft(log_magnitude, n=self.n_fft, axis=1)[:, : self.n_fft // 2 + 1]
 

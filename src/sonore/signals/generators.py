@@ -21,7 +21,7 @@ from scipy.optimize import brentq
 from scipy.signal import chirp
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, n_samples, time_axis
+from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
 
 __all__ = [
     "silence",
@@ -514,7 +514,7 @@ def _spectral_gain(
         else:
             table_freqs, table_db = map(np.asarray, spectrum)
             level_db = np.interp(freqs, table_freqs, table_db)
-        gain *= 10 ** (np.asarray(level_db) / 20)
+        gain *= db_to_amp(level_db)
     return gain
 
 

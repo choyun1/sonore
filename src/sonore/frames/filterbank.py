@@ -42,7 +42,7 @@ from dataclasses import KW_ONLY
 
 from scipy.signal import hilbert
 
-from sonore.core.utils import _below_nyquist, erb_bandwidth, erb_to_freq, freq_to_erb
+from sonore.core.utils import _below_nyquist, db_to_amp, erb_bandwidth, erb_to_freq, freq_to_erb
 
 __all__ = [
     "Filterbank",
@@ -214,7 +214,7 @@ class Filterbank(Frame):
 def _ringing_samples(filterbank: Filterbank, fs: float, level_db: float) -> int:
     n_grid = 1 << int(np.ceil(np.log2(4 * fs)))  # a 4 s grid: impulse responses up to 2 s each side
     impulse_mag = np.abs(np.fft.irfft(filterbank.rfft_response(n_grid, fs), n=n_grid, axis=0)[: n_grid // 2])
-    above = impulse_mag > impulse_mag.max(axis=0, keepdims=True) * 10 ** (level_db / 20)
+    above = impulse_mag > impulse_mag.max(axis=0, keepdims=True) * db_to_amp(level_db)
     last_above = np.array(
         [np.flatnonzero(band_above).max() if band_above.any() else 0 for band_above in above.T]
     )

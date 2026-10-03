@@ -43,7 +43,7 @@ from scipy.spatial import ConvexHull
 from scipy.special import i0
 
 from sonore.core.sound import Sound
-from sonore.core.utils import _phase_ramp_delay, _resample_poly
+from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp
 from sonore.signals.processing import _track
 
 __all__ = [
@@ -285,7 +285,7 @@ class HRIRSet:
     @cached_property
     def _onsets(self) -> np.ndarray:
         envelope = np.abs(self.irs)
-        threshold = envelope.max(axis=-1, keepdims=True) * 10 ** (self.onset_threshold_db / 20)
+        threshold = envelope.max(axis=-1, keepdims=True) * db_to_amp(self.onset_threshold_db)
         return np.argmax(envelope >= threshold, axis=-1).astype(float)  # (M, 2)
 
     @cached_property

@@ -28,7 +28,7 @@ from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
-from sonore.core.utils import _fit_length
+from sonore.core.utils import _fit_length, db_to_amp
 from sonore.frames.gabor import _bin_weights
 from sonore.views.view import View
 
@@ -130,7 +130,7 @@ class PVAnalysis(View):
         out = np.zeros((n_out, self.magnitude.shape[0]))
         for channel in range(self.magnitude.shape[0]):
             magnitude = self.magnitude[channel]
-            active = np.flatnonzero(magnitude.max(axis=1) > magnitude.max() * 10 ** (floor_db / 20))
+            active = np.flatnonzero(magnitude.max(axis=1) > magnitude.max() * db_to_amp(floor_db))
             for start in range(0, len(active), chunk):
                 bins = active[start : start + chunk]
                 amplitude = (

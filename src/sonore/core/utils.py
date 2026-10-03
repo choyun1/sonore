@@ -72,6 +72,11 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     return np.arange(n) / fs
 
 
+def _power_to_db(power: ArrayLike, floor_db: float) -> np.ndarray:
+    """Power to decibels, ``10*log10(power)``, with power floored at ``floor_db``."""
+    return 10 * np.log10(np.maximum(power, 10 ** (floor_db / 10)))
+
+
 def _resample_poly(data: np.ndarray, fs: float, fs_new: float, axis: int = 0, **kwargs) -> np.ndarray:
     """Polyphase resampling of ``data`` along ``axis`` from ``fs`` to ``fs_new``, the
     rate ratio approximated by a fraction with denominator at most 10000.
