@@ -42,6 +42,8 @@ version (0.x.y) only fixes bugs.
   `f_lo`).
 - `envelope_peak_delay` is measured from each filter's impulse response,
   so every bank has it (0 for zero-phase filters).
+- `power_to_db` treats a negative power as zero and returns the floor,
+  instead of the level of its absolute value (audit sitting 1c).
 - `so.subbands(snd, ...)` is removed; write
   `so.cosine_filterbank(...).analyze(snd)`, which shows the bank (audit
   sitting 8).

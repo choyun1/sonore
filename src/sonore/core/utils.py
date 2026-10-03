@@ -39,8 +39,16 @@ def amp_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.nd
 
 
 def power_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
-    """Power (not amplitude) to decibels: ``10*log10(|x|/ref)``, floored."""
-    x = np.abs(np.asarray(x)).astype(float) / ref
+    """Power (not amplitude) to decibels: ``10*log10(x/ref)``, floored at
+    ``floor_db``.
+
+    A power is never negative. A negative value is treated as zero and
+    returns ``floor_db``, never the level of its absolute value: a tiny
+    negative from round-off (a power of -1e-17 where the true value is 0)
+    lands where true zeros do, and a negative from a bug upstream shows up
+    at the floor instead of as a plausible level. (``amp_to_db`` takes the
+    absolute value instead, because amplitudes are signed.)"""
+    x = np.maximum(np.asarray(x, dtype=float), 0.0) / ref
     with np.errstate(divide="ignore"):
         return np.maximum(10 * np.log10(x), floor_db)
 
@@ -167,5 +175,6 @@ def _phase_ramp_delay(data: np.ndarray, shift: ArrayLike, n_fft: int, n_out: int
 
 
 def _below_nyquist(fs: float) -> float:
-    """The default top band edge, 95% of the Nyquist frequency."""
+    """The default top band edge, 95% of the Nyquist frequency (a choice,
+    not a cited value)."""
     return 0.95 * fs / 2
