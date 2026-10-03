@@ -43,7 +43,7 @@ class TestRipples:
         levels = []
         for carrier in ("tones", "harmonic", "noise", "low-noise"):
             s = so.ripple_sound(so.Ripple(4, 1, depth=0), 1.0, FAST, f_hi=FAST_HI, carrier=carrier, rng=0)
-            spec = so.long_term_spectrum(s, nperseg=8192).smooth(1)
+            spec = so.long_term_spectrum(s, win_dur=0.512).smooth(1)
             f = np.array([500, 1000, 2000, 4000])
             levels.append(spec.level_at(f) - spec.level_at(np.array([1000]))[0])
         spread = np.ptp(np.array(levels), axis=0)

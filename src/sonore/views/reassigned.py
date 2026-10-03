@@ -9,6 +9,7 @@ import numpy as np
 from scipy.signal import ShortTimeFFT
 
 from sonore.core.sound import Sound
+from sonore.core.utils import db_to_power
 from sonore.frames.gabor import GaborFrame
 from sonore.views.spectrum import TFPower
 from sonore.views.view import View
@@ -96,7 +97,7 @@ def reassigned_spectrogram(
         t_hat = short_time_fft.t(len(sound))[None, None, :] + np.real(X_tw * X.conj()) / power
         f_hat = short_time_fft.f[None, :, None] - np.imag(X_dw * X.conj()) / power / (2 * np.pi)
     peak = power.max(axis=(1, 2), keepdims=True)
-    keep = (power > peak * 10 ** (threshold_db / 10)) & np.isfinite(t_hat) & np.isfinite(f_hat)
+    keep = (power > peak * db_to_power(threshold_db)) & np.isfinite(t_hat) & np.isfinite(f_hat)
     return ReassignedSpectrogram(t_hat, f_hat, power, keep)
 
 

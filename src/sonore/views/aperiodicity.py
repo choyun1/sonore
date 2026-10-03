@@ -15,6 +15,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from sonore.core.sound import Sound
+from sonore.core.utils import db_to_amp, time_axis
 from sonore.signals.world import (
     _FLOOR_F0,
     _SAFEGUARD,
@@ -179,7 +180,7 @@ def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F
                 samples, fs, time, max(_FLOOR_F0_D4C, window_f0), n_fft, n_bands, nuttall, noise
             )
             coarse = np.concatenate([[-60.0], bands, [-_SAFEGUARD]])
-            data[channel, :, window_index] = 10 ** (np.interp(freqs, coarse_freqs, coarse) / 20)
+            data[channel, :, window_index] = db_to_amp(np.interp(freqs, coarse_freqs, coarse))
     return Aperiodicity(data, times, fs, "D4C")
 
 
@@ -272,7 +273,7 @@ def harmonic_aperiodicity(
     n_fft_out = world_fft_size(fs, f0_floor)
     freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
     data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))
-    sample_times = np.arange(sound.n_samples) / fs
+    sample_times = time_axis(sound.n_samples, fs)
     for channel in range(sound.n_channels):
         voiced = f0_values[channel] > 0
         if not voiced.any():
@@ -294,7 +295,7 @@ def harmonic_aperiodicity(
                 cell_harmonics,
             )
             share_db = np.interp(freqs_out, cell_freqs, 10 * np.log10(share))
-            data[channel, :, window_index] = 10 ** (share_db / 20)
+            data[channel, :, window_index] = db_to_amp(share_db)
     return Aperiodicity(data, times, fs, "harmonic residual")
 
 

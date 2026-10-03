@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from sonore.core.sound import Sound
+from sonore.core.utils import _parabola_vertex, db_to_amp
 from sonore.frames.gabor import STFT, TVSTFT
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
@@ -58,11 +59,11 @@ class Cepstrum(View):
         self.source = coefs
         self.fs = coefs.fs
         self.n_fft = coefs.n_fft
-        mag = np.abs(coefs.data)
-        peak = mag.max(axis=(1, 2), keepdims=True)
-        floor = np.where(peak > 0, peak * 10 ** (floor_db / 20), np.finfo(float).tiny)
-        log_mag = np.log(np.maximum(mag, floor))
-        self.data = np.fft.irfft(log_mag, n=self.n_fft, axis=1)[:, : self.n_fft // 2 + 1]
+        magnitude = np.abs(coefs.data)
+        peak = magnitude.max(axis=(1, 2), keepdims=True)
+        floor = np.where(peak > 0, peak * db_to_amp(floor_db), np.finfo(float).tiny)
+        log_magnitude = np.log(np.maximum(magnitude, floor))
+        self.data = np.fft.irfft(log_magnitude, n=self.n_fft, axis=1)[:, : self.n_fft // 2 + 1]
 
     @classmethod
     def _from(cls, template: Cepstrum, data: np.ndarray) -> Cepstrum:
@@ -199,9 +200,7 @@ class Cepstrum(View):
         left, peak, right = (
             np.take_along_axis(self.data, peak_index + offset, axis=1)[:, 0] for offset in (-1, 0, 1)
         )
-        curvature = left - 2 * peak + right
-        with np.errstate(divide="ignore", invalid="ignore"):
-            shift = np.where(curvature != 0, 0.5 * (left - right) / curvature, 0.0)
+        shift = _parabola_vertex(left, peak, right)
         f0 = self.fs / (peak_index[:, 0] + shift)
         return self.t, np.where(peak >= threshold, f0, 0.0), peak
 

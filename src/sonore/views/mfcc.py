@@ -8,7 +8,7 @@ from scipy.fft import dct, idct
 from scipy.signal import savgol_filter
 
 from sonore.core.sound import Sound
-from sonore.core.utils import freq_to_mel, mel_to_freq
+from sonore.core.utils import db_to_power, freq_to_mel, mel_to_freq
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
@@ -273,7 +273,7 @@ class MFCC(View):
 
     def _floored(self, mel_power: np.ndarray) -> np.ndarray:
         peak = mel_power.max(axis=(1, 2), keepdims=True)
-        floor = np.where(peak > 0, peak * 10 ** (self.floor_db / 10), np.finfo(float).tiny)
+        floor = np.where(peak > 0, peak * db_to_power(self.floor_db), np.finfo(float).tiny)
         return np.maximum(mel_power, floor)
 
     def _lifter_gains(self, n_mfcc: int) -> np.ndarray:

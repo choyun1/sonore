@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from sonore.core.utils import n_samples
 from sonore.views.modulation import HannModulationFilterbank, _correlate
 from sonore.views.view import View
 
@@ -106,7 +107,7 @@ class ModulationSpectrogram(View):
             bank = HannModulationFilterbank(f_lo, f_hi, per_octave, cycles, window)
         fs = envelopes.fs
         bank.check_fs(fs)
-        hop_samples = int(round(hop * fs))
+        hop_samples = n_samples(hop, fs)
         if hop_samples < 1:
             raise ValueError(f"hop {hop:g} s is shorter than one envelope sample at {fs:g} Hz")
 
@@ -114,8 +115,8 @@ class ModulationSpectrogram(View):
         band_env = envelopes.data  # (n, B, C)
         keep = slice(None) if getattr(filterbank, "edges", True) is False else slice(1, -1)
         band_env = band_env[:, keep, :]
-        n_samples = band_env.shape[0]
-        positions = np.arange(0, n_samples, hop_samples)
+        n_env_samples = band_env.shape[0]
+        positions = np.arange(0, n_env_samples, hop_samples)
 
         y = np.empty((len(positions),) + band_env.shape[1:] + (bank.n_bands,), complex)
         mean = np.empty(y.shape)
@@ -131,7 +132,7 @@ class ModulationSpectrogram(View):
         self.f = np.asarray(filterbank.cfs)[keep]
         self.fm = bank.cfs
         self.t = positions / fs
-        self.valid = self._valid(filterbank, keep, n_samples, positions)
+        self.valid = self._valid(filterbank, keep, n_env_samples, positions)
 
     def _valid(self, fb, keep, n: int, positions: np.ndarray) -> np.ndarray:
         bandwidth = _band_widths(fb)[keep]  # (B,)

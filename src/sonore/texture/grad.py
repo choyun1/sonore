@@ -96,9 +96,9 @@ def _central(s, w):
     return mean, d
 
 
-def env_moments(s: np.ndarray, ctx: ChannelContext):
+def env_moments(s: np.ndarray, context: ChannelContext):
     """``[mean, var/mean**2, skew, kurtosis]`` of the envelope."""
-    w = ctx.w
+    w = context.w
     mean, d = _central(s, w)
     d_squared = d * d
     d_cubed = d_squared * d
@@ -122,15 +122,15 @@ def env_moments(s: np.ndarray, ctx: ChannelContext):
     return value, vjp
 
 
-def mod_power(s: np.ndarray, ctx: ChannelContext):
+def mod_power(s: np.ndarray, context: ChannelContext):
     """Modulation power in each constant-Q band, relative to envelope variance."""
-    _, d = _central(s, ctx.w)
-    value, core_vjp = mod_power_core(ctx.mod_filter(s), d, ctx.w)
+    _, d = _central(s, context.w)
+    value, core_vjp = mod_power_core(context.mod_filter(s), d, context.w)
 
     def vjp(g):
         # Gradient w.r.t. s: back through the modulation filters, plus the variance term.
         g_filtered, direct = core_vjp(g)
-        return ctx.mod_adjoint(g_filtered) + direct
+        return context.mod_adjoint(g_filtered) + direct
 
     return value, vjp
 
@@ -150,10 +150,10 @@ def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray):
     return value, vjp
 
 
-def env_corr(s: np.ndarray, others: np.ndarray, ctx: ChannelContext):
+def env_corr(s: np.ndarray, others: np.ndarray, context: ChannelContext):
     """Correlation of ``s`` with each column of ``others`` ``(n, k)`` (fixed
     envelopes of other channels)."""
-    w = ctx.w
+    w = context.w
     _, d = _central(s, w)
     others_c = others - (w @ others)[None, :]  # centered
     m2, var_others = w @ d**2, w @ others_c**2
@@ -168,17 +168,19 @@ def env_corr(s: np.ndarray, others: np.ndarray, ctx: ChannelContext):
     return value, vjp
 
 
-def c1(s: np.ndarray, others: np.ndarray, ctx: ChannelContext, bands=None):
+def c1(s: np.ndarray, others: np.ndarray, context: ChannelContext, bands=None):
     """C1: correlation of ``s``'s octave modulation bands with the same bands
     of each column of ``others`` ``(n, k)``. Shape ``(len(bands), k)``. No
     mean subtraction (paper Eq. 6)."""
-    bands = ctx.model.c1_bands if bands is None else bands
-    value, core_vjp = c1_core(ctx.analytic(s, bands).real, ctx.analytic_many(others, bands).real, ctx.w)
+    bands = context.model.c1_bands if bands is None else bands
+    value, core_vjp = c1_core(
+        context.analytic(s, bands).real, context.analytic_many(others, bands).real, context.w
+    )
 
     def vjp(g):
         # Gradient w.r.t. s: back through the real part of the analytic bands.
         g_bands = core_vjp(g)
-        return ctx.analytic_adjoint(g_bands, np.zeros_like(g_bands), bands)
+        return context.analytic_adjoint(g_bands, np.zeros_like(g_bands), bands)
 
     return value, vjp
 
@@ -200,17 +202,17 @@ def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray):
     return value, vjp
 
 
-def c2(s: np.ndarray, ctx: ChannelContext):
+def c2(s: np.ndarray, context: ChannelContext):
     """C2 within one channel: correlation of each octave band, frequency-doubled,
     with the next band up. Complex ``(n_oct - 1,)``: real part against the
     band's real part, imaginary part against its imaginary (quadrature) part."""
-    n_oct = ctx.A_oct.shape[1]
-    value, core_vjp = c2_core(ctx.analytic(s, range(n_oct)), ctx.w)
+    n_oct = context.A_oct.shape[1]
+    value, core_vjp = c2_core(context.analytic(s, range(n_oct)), context.w)
 
     def vjp(g):
         # Gradient w.r.t. s: back through the real and imaginary analytic bands.
         g_re, g_im = core_vjp(g)
-        return ctx.analytic_adjoint(g_re, g_im, range(n_oct))
+        return context.analytic_adjoint(g_re, g_im, range(n_oct))
 
     return value, vjp
 

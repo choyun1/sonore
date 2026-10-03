@@ -18,7 +18,7 @@ from __future__ import annotations
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng
+from sonore.core.utils import as_rng, time_axis
 
 __all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "world_fft_size", "world_synthesize"]
 
@@ -212,12 +212,12 @@ def _contour_on_grid(times, f0_values, grid) -> np.ndarray:
     upper = np.clip(np.searchsorted(times, grid), 0, len(times) - 1)
     lower = np.clip(upper - 1, 0, len(times) - 1)
     nearest = np.where(np.abs(times[lower] - grid) <= np.abs(times[upper] - grid), lower, upper)
-    out = np.zeros((len(rows), len(grid)))
-    for row_in, row_out in zip(rows, out, strict=True):
-        voiced = row_in > 0
+    contours = np.zeros((len(rows), len(grid)))
+    for given_row, contour_row in zip(rows, contours, strict=True):
+        voiced = given_row > 0
         if voiced.any():
-            row_out[:] = np.where(voiced[nearest], np.interp(grid, times[voiced], row_in[voiced]), 0.0)
-    return out
+            contour_row[:] = np.where(voiced[nearest], np.interp(grid, times[voiced], given_row[voiced]), 0.0)
+    return contours
 
 
 class _GaussianNoise:
@@ -377,7 +377,7 @@ def _synthesize_channel(f0, spectrogram, ratio_windows, hop, fs, n_samples, nois
     coarse_voicing = (coarse_f0 != 0).astype(float)
     coarse_f0 = np.append(coarse_f0, 2 * coarse_f0[-1] - coarse_f0[-2])
     coarse_voicing = np.append(coarse_voicing, 2 * coarse_voicing[-1] - coarse_voicing[-2])
-    sample_times = np.arange(n_samples) / fs
+    sample_times = time_axis(n_samples, fs)
     sample_f0 = np.interp(sample_times, coarse_times, coarse_f0)
     voicing = (np.interp(sample_times, coarse_times, coarse_voicing) > 0.5).astype(float)
     sample_f0 = np.where(voicing == 0, _DEFAULT_F0, sample_f0)

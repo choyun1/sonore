@@ -42,7 +42,7 @@ from scipy.signal import butter, sosfiltfilt
 from scipy.special import ndtr
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, n_samples, time_axis
+from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
 from sonore.frames.filterbank import OctaveFilterbank, Subbands
 from sonore.signals.generators import gaussian_noise
 from sonore.views.envelopes import Envelopes
@@ -154,7 +154,7 @@ class RippleSum(_Pattern):
                 2 * np.pi * (ripple.rate * t[None, :] + ripple.density * x[:, None]) + ripple.phase
             )
             total += (ripple.depth if self.scale == "linear" else ripple.depth / 2) * modulation
-        return 1 + total if self.scale == "linear" else 10 ** (total / 20)
+        return 1 + total if self.scale == "linear" else db_to_amp(total)
 
 
 @dataclass(frozen=True)
@@ -204,7 +204,7 @@ class DynamicRipple(_Pattern):
         """``rate(t)`` [Hz] and ``density(t)`` [cycles/octave] at times ``t``."""
         t = np.asarray(t, float)
         n_grid = int(np.ceil(t[-1] * self.grid_fs)) + 2
-        grid = np.arange(n_grid) / self.grid_fs
+        grid = time_axis(n_grid, self.grid_fs)
         rng = as_rng(self.seed)
         out = []
         for (lo, hi), cutoff in (
@@ -224,7 +224,7 @@ class DynamicRipple(_Pattern):
         dt = t[1] - t[0] if len(t) > 1 else 1.0
         phi = 2 * np.pi * np.cumsum(rate) * dt
         level_db = (self.depth / 2) * np.sin(2 * np.pi * density[None, :] * x[:, None] + phi[None, :])
-        return 10 ** (level_db / 20)
+        return db_to_amp(level_db)
 
 
 Pattern = Ripple | RippleSum | DynamicRipple | Callable[[np.ndarray, np.ndarray], np.ndarray]

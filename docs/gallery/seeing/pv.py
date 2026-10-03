@@ -79,7 +79,7 @@ def show(snd, fmax=3000):
     ax_w, ax_s, ax_f = fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])
     snd.plot(ax_w, lw=0.5)
     so.STFT(snd, 46e-3).plot(ax_s, fmax=fmax, colorbar=False, db_range=70)
-    spec = so.long_term_spectrum(snd, nperseg=16384)
+    spec = so.long_term_spectrum(snd, win_dur=0.37)
     ax_f.plot(spec.f, spec.level - spec.level.max(), lw=0.8)
     ax_f.set(
         xlim=(0, fmax),
@@ -280,4 +280,4 @@ fig, playhead = show(sound)
 #   The sentence, by speakers bdl and slt.
 # - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans.
 #   Speech Audio Process.* 7(3), 323–332. [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/).
-#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L174)
+#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L175)

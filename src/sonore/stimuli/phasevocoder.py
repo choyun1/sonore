@@ -28,6 +28,7 @@ from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
+from sonore.core.utils import _fit_length, db_to_amp, n_samples, time_axis
 from sonore.frames.gabor import _bin_weights
 from sonore.views.view import View
 
@@ -51,7 +52,7 @@ def _inst_freq(phase: np.ndarray, n_win: int, hop: int) -> np.ndarray:
 
 
 def _win_len(win_dur: float, fs: float) -> int:
-    n_win = int(round(win_dur * fs))
+    n_win = n_samples(win_dur, fs)
     return n_win + (n_win % 2)  # even, so the window has a single center sample
 
 
@@ -114,7 +115,7 @@ class PVAnalysis(View):
             map_freqs = lambda freqs: ratio * freqs  # noqa: E731
 
         n_out = int(round(self.n_samples * time_scale))
-        sample_times = np.arange(n_out) / self.fs
+        sample_times = time_axis(n_out, self.fs)
         window_times = self.t * time_scale
         # filterbank-summation gain: sum over bins of |X| equals N*w(center)*amplitude
         gain = _bin_weights(self.n_win) / self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
@@ -129,7 +130,7 @@ class PVAnalysis(View):
         out = np.zeros((n_out, self.magnitude.shape[0]))
         for channel in range(self.magnitude.shape[0]):
             magnitude = self.magnitude[channel]
-            active = np.flatnonzero(magnitude.max(axis=1) > magnitude.max() * 10 ** (floor_db / 20))
+            active = np.flatnonzero(magnitude.max(axis=1) > magnitude.max() * db_to_amp(floor_db))
             for start in range(0, len(active), chunk):
                 bins = active[start : start + chunk]
                 amplitude = (
@@ -153,7 +154,7 @@ def pv_analyze(sound: Sound, win_dur: float = 46e-3, hop_dur: float | None = Non
     of ``hop_dur`` (default: a quarter window, the largest hop at which
     instantaneous frequency is unambiguous across a Hann main lobe)."""
     n_win = _win_len(win_dur, sound.fs)
-    hop = max(1, int(round(hop_dur * sound.fs))) if hop_dur else n_win // 4
+    hop = max(1, n_samples(hop_dur, sound.fs)) if hop_dur else n_win // 4
     sft = _sft(n_win, hop, sound.fs)
     spectrum = sft.stft(sound.data.T, axis=-1)
     phase = np.angle(spectrum)
@@ -244,10 +245,4 @@ def pitch_shift(sound: Sound, semitones: float, win_dur: float = 46e-3, phase_lo
     ratio = Fraction(2 ** (semitones / 12)).limit_denominator(1000)
     stretched = time_stretch(sound, float(ratio), win_dur, phase_lock)
     resampled = resample_poly(stretched.data, ratio.denominator, ratio.numerator, axis=0)
-    length = len(sound)
-    resampled = (
-        resampled[:length]
-        if len(resampled) >= length
-        else np.pad(resampled, ((0, length - len(resampled)), (0, 0)))
-    )
-    return Sound(resampled, sound.fs)
+    return Sound(_fit_length(resampled, len(sound)), sound.fs)

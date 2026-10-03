@@ -31,7 +31,6 @@ import re
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from fractions import Fraction
 from functools import cached_property
 from os import PathLike
 from pathlib import Path
@@ -39,11 +38,12 @@ from pathlib import Path
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.interpolate import CubicSpline
-from scipy.signal import fftconvolve, minimum_phase, resample_poly
+from scipy.signal import fftconvolve, minimum_phase
 from scipy.spatial import ConvexHull
 from scipy.special import i0
 
 from sonore.core.sound import Sound
+from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp, db_to_power, time_axis
 from sonore.signals.processing import _track
 
 __all__ = [
@@ -168,10 +168,7 @@ def distance_gain_db(distance: ArrayLike, ref: float = 1.0) -> np.ndarray:
 def _frac_shift(h: np.ndarray, shift: np.ndarray, n_out: int) -> np.ndarray:
     """Delay each IR in ``h`` (..., n) by ``shift`` (...,) samples (fractional ok)."""
     n_fft = max(h.shape[-1], n_out) + int(np.ceil(np.max(np.abs(shift)))) + 64
-    spectrum = np.fft.rfft(h, n=n_fft, axis=-1)
-    freqs = np.fft.rfftfreq(n_fft)
-    spectrum *= np.exp(-2j * np.pi * freqs * shift[..., None])
-    return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
+    return _phase_ramp_delay(h, shift, n_fft, n_out)
 
 
 @dataclass
@@ -288,7 +285,7 @@ class HRIRSet:
     @cached_property
     def _onsets(self) -> np.ndarray:
         envelope = np.abs(self.irs)
-        threshold = envelope.max(axis=-1, keepdims=True) * 10 ** (self.onset_threshold_db / 20)
+        threshold = envelope.max(axis=-1, keepdims=True) * db_to_amp(self.onset_threshold_db)
         return np.argmax(envelope >= threshold, axis=-1).astype(float)  # (M, 2)
 
     @cached_property
@@ -398,8 +395,7 @@ class HRIRSet:
         """``hrir`` (at ``self.fs``) resampled to ``fs`` along its last axis."""
         if fs is None or fs == self.fs:
             return hrir
-        ratio = Fraction(fs / self.fs).limit_denominator(10000)
-        return resample_poly(hrir, ratio.numerator, ratio.denominator, axis=-1)
+        return _resample_poly(hrir, self.fs, fs, axis=-1)
 
     def _diffuse_field(self, fs: float) -> tuple[float, np.ndarray]:
         """What sound arriving from every direction at once sounds like at the ears,
@@ -594,7 +590,7 @@ def move_sound(
     shape_step = shape_times[1] - shape_times[0]
 
     n_out = len(signal) + int(np.ceil(ear_delays.max() * fs)) + _READ_HALF_WIDTH + 1
-    arrival_times = np.arange(n_out) / fs
+    arrival_times = time_axis(n_out, fs)
     out = np.zeros((n_out + shapes.shape[-1] - 1, 2))
     emission_by_ear = []
     for ear in range(2):
@@ -624,7 +620,7 @@ def move_sound(
         direct_energy, diffuse_filters = hrirs._diffuse_field(fs)
         tail_at_ears = fftconvolve(tail.data, diffuse_filters.T, axes=0)
         tail_energy = np.mean(np.sum(tail_at_ears**2, axis=0))
-        scale = np.sqrt(direct_energy * 10 ** (-drr_db / 10) / tail_energy)
+        scale = np.sqrt(direct_energy * db_to_power(-drr_db) / tail_energy)
         arriving = _read_between_samples(signal, (emission_by_ear[0] + emission_by_ear[1]) / 2 * fs)
         reverberant = fftconvolve(arriving[:, None], tail_at_ears * scale, axes=0)
         total = np.zeros((max(len(out), len(reverberant)), 2))

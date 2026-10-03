@@ -18,7 +18,7 @@ from types import MappingProxyType
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, n_samples, time_axis
+from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
 from sonore.signals.generators import RNG, _finish, glottal_source, harmonic_complex
 from sonore.signals.processing import (
     Track,
@@ -76,7 +76,7 @@ _PARALLEL = (1, 2, 3, 4, 5, 6)
 def _gain(level_db):
     """dB (60 = unit) to a linear gain; 0 dB or less is silence."""
     level_db = np.asarray(level_db, float)
-    return np.where(level_db > 0, 10 ** ((level_db - 60) / 20), 0.0)
+    return np.where(level_db > 0, db_to_amp(level_db - 60), 0.0)
 
 
 def _resonator_gain(f_res, bw, f, fs: float):
