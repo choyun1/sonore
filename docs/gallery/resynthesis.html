@@ -183,7 +183,7 @@ def finish(snd):
 </header>
 <section aria-labelledby="h-perfect-reconstruction">
 <h2 id="h-perfect-reconstruction">Perfect reconstruction</h2>
-<p><code>so.subbands</code> splits a sound with half-cosine filters equally spaced on the ERB scale, plus a
+<p><code>so.cosine_filterbank</code> splits a sound with half-cosine filters equally spaced on the ERB scale, plus a
 lowpass and a highpass filter at the edges. Their squared responses sum to 1 at every
 frequency, so analysis followed by synthesis (each band filtered again, then summed) gives back
 the original, up to floating-point rounding.</p>
@@ -192,11 +192,11 @@ the original, up to floating-point rounding.</p>
     Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
     fig = plt.figure(figsize=(10, 6.2), layout=&quot;constrained&quot;)
     left, right = fig.subfigures(1, 2, width_ratios=[1.35, 1])
-    sb = so.subbands(original, n_bands=6, f_lo=100, f_hi=6000)
+    sb = so.cosine_filterbank(6, 100, 6000).analyze(original)
     band_axes = left.subplots(len(sb), 1, sharex=True)
     sb.plot(band_axes)
     band_axes[0].set_title(
-        &quot;so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)&quot;, family=&quot;monospace&quot;, fontsize=8
+        &quot;so.cosine_filterbank(6, 100, 6000).analyze(sweep)&quot;, family=&quot;monospace&quot;, fontsize=8
     )
     r = right.subplots(3, 1, sharex=True)
     original.plot(r[0], color=&quot;k&quot;, lw=0.4)
@@ -224,7 +224,7 @@ the level of floating-point rounding.</p></div>
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
-sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).to_sound())
+sound = finish(so.cosine_filterbank(6, 100, 6000).analyze(sweep).to_sound())
 fig, playhead = show_bands(sweep)</code></pre></details>
 </article>
 </section>

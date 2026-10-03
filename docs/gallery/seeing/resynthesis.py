@@ -45,7 +45,7 @@ def finish(snd):
 # %% [markdown]
 # ## Perfect reconstruction
 #
-# `so.subbands` splits a sound with half-cosine filters equally spaced on the ERB scale, plus a
+# `so.cosine_filterbank` splits a sound with half-cosine filters equally spaced on the ERB scale, plus a
 # lowpass and a highpass filter at the edges. Their squared responses sum to 1 at every
 # frequency, so analysis followed by synthesis (each band filtered again, then summed) gives back
 # the original, up to floating-point rounding.
@@ -57,11 +57,11 @@ def show_bands(original):
     Returns the figure and the panels the playhead follows."""
     fig = plt.figure(figsize=(10, 6.2), layout="constrained")
     left, right = fig.subfigures(1, 2, width_ratios=[1.35, 1])
-    sb = so.subbands(original, n_bands=6, f_lo=100, f_hi=6000)
+    sb = so.cosine_filterbank(6, 100, 6000).analyze(original)
     band_axes = left.subplots(len(sb), 1, sharex=True)
     sb.plot(band_axes)
     band_axes[0].set_title(
-        "so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000)", family="monospace", fontsize=8
+        "so.cosine_filterbank(6, 100, 6000).analyze(sweep)", family="monospace", fontsize=8
     )
     r = right.subplots(3, 1, sharex=True)
     original.plot(r[0], color="k", lw=0.4)
@@ -83,7 +83,7 @@ def show_bands(original):
 
 # %% [demo 26] Perfect reconstruction
 sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
-sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).to_sound())
+sound = finish(so.cosine_filterbank(6, 100, 6000).analyze(sweep).to_sound())
 fig, playhead = show_bands(sweep)
 
 # %% [markdown]

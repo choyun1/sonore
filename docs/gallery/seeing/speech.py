@@ -573,7 +573,7 @@ for name, frame in frames.items():
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
 #   Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
-#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L265)
+#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L276)
 # - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
 #   modification and synthesis framework. *Sādhanā* 36(5).
 #   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).

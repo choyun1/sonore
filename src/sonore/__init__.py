@@ -46,7 +46,6 @@ from sonore.frames.filterbank import (
     cosine_filterbank,
     gammatone_filterbank,
     morlet_filterbank,
-    subbands,
 )
 from sonore.frames.frame import Frame
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame, TVGaborFrame
@@ -234,6 +233,5 @@ __all__ = [
     "square_wave",
     "STFT",
     "Subbands",
-    "subbands",
     "synth_ir",
 ]
