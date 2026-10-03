@@ -5,7 +5,8 @@ spectrum: by drawing it, or in other ways. This note answers that, measures
 what such a specification actually pins down, and proposes what sonore
 could offer. It adds no library code; the decisions at the end come first.
 
-Status: proposed 2026-10-03, decisions open. The claims are checked by
+Status: proposed 2026-10-03. Cho accepted D1–D3 on 2026-10-03; D4–D9
+are open. The claims are checked by
 `tools/check_modulation_targets_claims.py` (C1–C6), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its
 formula, and shares no code with sonore. It runs in about 20 s. The numbers
@@ -352,17 +353,17 @@ Each has a recommendation.
   widths, a direction and a level; a ripple is a blob of zero width. Or
   as a measured spectrum, edited. A painted grid is accepted too, but a GUI
   for drawing is left to TrackDraw, which would hand over the same blob list
-  or grid. Recommended (thread, 2026-10-03; not yet agreed).
+  or grid. Accepted 2026-10-03.
 - **D2. `ModulationSpectrum.to_sound(carrier=..., iterations=0, rng=...)`**,
   with the carrier supplying the modulation phase, the fine structure and
   the envelope mean, as above. `carrier` is a `Sound`, `"noise"` (random
   modulation phase and noise fine structure) or `"tones"` (random
-  modulation phase, steady tones at the band centres). Recommended (Cho's
-  proposal). It needs `ModulationSpectrum` to keep the untapered magnitude
+  modulation phase, steady tones at the band centres). Accepted
+  2026-10-03 (Cho's proposal). It needs `ModulationSpectrum` to keep the untapered magnitude
   on the full plane and its analysis settings (D4).
 - **D3. `philosophy.md` changes**: the modulation spectrum moves from
   "raises `NotInvertibleError`" to the views whose `to_sound` takes what
-  they discarded, with the carrier as that argument. Recommended if D2 is.
+  they discarded, with the carrier as that argument. Accepted 2026-10-03.
 - **D4. `ModulationSpectrum` keeps its analysis**: the filterbank, envelope
   rate, compression and linear or dB scale, and the untapered magnitude, so
   `to_sound` can rebuild envelopes on the same grid and refuse a mismatched
