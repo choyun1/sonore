@@ -489,7 +489,7 @@ def show_party(paths, title):
     distance_axes.legend(loc="upper right", fontsize=8, ncols=3)
     for ax in (top, distance_axes):
         ax.grid(ls=":")
-    return fig, distance_axes
+    return fig, [distance_axes]
 
 
 def party_scene(paths):
