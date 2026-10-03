@@ -56,6 +56,15 @@ class _ShortTimeFourierFrame(Frame):
 class GaborFrame(_ShortTimeFourierFrame):
     """The one-sided short-time Fourier transform as a frame.
 
+    Durations are rounded to samples per sampling rate, and the
+    :class:`~scipy.signal.ShortTimeFFT` is built once per rate
+    (:meth:`sft`). ``analyze`` returns an :class:`~sonore.STFT`.
+
+    Analysis always works, even for a window and hop that leave gaps
+    (A = 0, including a hop longer than the window): the STFT is still a
+    picture of the sound. :meth:`synthesize` (and Griffin-Lim) refuse such a
+    pair, and the error gives the frame bounds.
+
     Parameters
     ----------
     win_dur
@@ -67,15 +76,6 @@ class GaborFrame(_ShortTimeFourierFrame):
         periodically, or a callable ``n -> array`` of length ``n``.
     n_fft
         FFT length K (``>=`` the window length); defaults to the window length.
-
-    Durations are rounded to samples per sampling rate, and the
-    :class:`~scipy.signal.ShortTimeFFT` is built once per rate
-    (:meth:`sft`). ``analyze`` returns an :class:`~sonore.STFT`.
-
-    Analysis always works, even for a window and hop that leave gaps
-    (A = 0, including a hop longer than the window): the STFT is still a
-    picture of the sound. :meth:`synthesize` (and Griffin-Lim) refuse such a
-    pair, and the error gives the frame bounds.
     """
 
     win_dur: float
@@ -221,6 +221,11 @@ class TVGaborFrame(_ShortTimeFourierFrame):
     times are rounded to samples at each sampling rate, and a window longer
     than ``n_fft`` is refused when the frame is first used at a rate.
 
+    ``analyze`` returns a :class:`~sonore.frames.gabor.TVSTFT`, data shape
+    ``(n_channels, n_fft // 2 + 1, len(times))``. The signal is zero outside
+    its own extent, as in :class:`GaborFrame`. A constant schedule over the
+    time windows SciPy uses reproduces :class:`GaborFrame` exactly.
+
     Parameters
     ----------
     times
@@ -232,11 +237,6 @@ class TVGaborFrame(_ShortTimeFourierFrame):
     window
         A :func:`scipy.signal.get_window` spec, sampled periodically at each
         window's length, or a callable ``n -> array``.
-
-    ``analyze`` returns a :class:`~sonore.frames.gabor.TVSTFT`, data shape
-    ``(n_channels, n_fft // 2 + 1, len(times))``. The signal is zero outside
-    its own extent, as in :class:`GaborFrame`. A constant schedule over the
-    time windows SciPy uses reproduces :class:`GaborFrame` exactly.
     """
 
     times: Sequence[float]

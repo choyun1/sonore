@@ -23,10 +23,16 @@ lowpass and a highpass take over below ``f_lo`` and above ``f_hi``, which
 makes the bank a frame on the whole band.
 
 The cosine filter type is a half-cycle cosine on the scale, spanning two band
-spacings, as McDermott & Simoncelli (2011) used on the ERB scale for sound
-texture. Its squared responses sum to 1 (they are power complementary), so
-filtering on analysis *and* synthesis reconstructs the input. The gammatone
-and Morlet types are not tight; their synthesis is the canonical dual.
+spacings. Its squared responses sum to 1 (they are power complementary), so
+filtering on analysis *and* synthesis reconstructs the input. McDermott &
+Simoncelli (2011) used these filters on the ERB scale for sound texture,
+with a lowpass and a highpass at the ends so that "the summed squared
+frequency response of the filter bank was constant across frequency". The
+construction comes from image processing: a squared response summing to one
+is the "flat system response" of the steerable pyramid (Simoncelli &
+Freeman, 1995), and its radial filters in Portilla & Simoncelli (2000) are
+these cosines on a log2 scale. The gammatone and Morlet types are not tight;
+their synthesis is the canonical dual.
 """
 
 from __future__ import annotations

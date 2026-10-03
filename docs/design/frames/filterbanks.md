@@ -273,13 +273,15 @@ construction and credit both. Where it first appeared is not settled here.
 | Brungart, Chang, Simpson & Wang (2006), JASA 120(6), 4007–4018. doi:10.1121/1.2363929 | Bibliographic details checked on Crossref; the LC wording not read in the paper |
 | Srinivasan, Roman & Wang (2006), "Binary and ratio time-frequency masks for robust speech recognition", Speech Communication 48(11), 1486–1501. doi:10.1016/j.specom.2006.09.003 | Checked |
 | Wang, Narayanan & Wang (2014), "On training targets for supervised speech separation", IEEE/ACM TASLP 22(12), 1849–1858 | Checked, including `beta = 0.5` |
-| Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011), "Theory, implementation and applications of nonstationary Gabor frames", J. Comput. Appl. Math. | Title and authors found (HAL record); volume and pages from memory (236(6), 1481–1496), to check |
-| McDermott & Simoncelli (2011), "Sound texture perception via statistics of the auditory periphery: evidence from sound synthesis", Neuron | Found; volume and pages (71(5), 926–940), and their description of the filters, from memory, to check |
-| Portilla & Simoncelli (2000), "A parametric texture model based on joint statistics of complex wavelet coefficients", IJCV 40(1), 49–71 | Bibliographic details found; the raised-cosine radial filters from memory, to check |
-| Simoncelli & Freeman (1995), "The steerable pyramid: a flexible architecture for multi-scale derivative computation", ICIP | From memory, to check |
+| Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011), "Theory, implementation and applications of nonstationary Gabor frames", J. Comput. Appl. Math. | Checked against the PDF: 236, 1481–1496, doi:10.1016/j.cam.2011.09.011 (the PDF does not show the issue number) |
+| McDermott & Simoncelli (2011), "Sound texture perception via statistics of the auditory periphery: evidence from sound synthesis", Neuron | Checked against the PDF: 71, 926–940. Their Experimental Procedures describe half-cosine filters equally spaced on the ERB scale, with lowpass and highpass filters at the ends so that "the summed squared frequency response of the filter bank was constant across frequency" |
+| Portilla & Simoncelli (2000), "A parametric texture model based on joint statistics of complex wavelet coefficients", IJCV 40(1), 49–71 | Checked against the reprint: the radial filter is `H(r) = cos(π/2 · log2(2r/π))` on its transition band, a half cosine on a log2 scale |
+| Simoncelli & Freeman (1995), "The steerable pyramid: a flexible architecture for multi-scale derivative computation", ICIP | Checked against the reprint: Proc. 2nd IEEE ICIP, vol. III, 444–447; its "flat system response" constraint is that the squared responses sum to one, and the result is a tight frame |
 
-The ones marked "to check" are checked before the docstrings are written.
-The page reads that would check them need approval in this project.
+Cho supplied the four PDFs on 2026-10-03. The last four rows were checked
+against them, and the cosine docstring credits all three sources. The
+steerable pyramid gives the requirement and the log2 cosine; where the
+cosine construction first appeared is still not settled here.
 
 ## Decisions
 
