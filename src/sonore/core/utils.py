@@ -89,8 +89,9 @@ _SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.
 def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
     """Frequency [Hz] to mel.
 
-    ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses
-    (usually credited to O'Shaughnessy, 1987). ``"slaney"`` is the scale of
+    ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses,
+    as printed in O'Shaughnessy (2000, Eq. 4.2, p. 128), which gives no
+    earlier source for it. ``"slaney"`` is the scale of
     Slaney's Auditory Toolbox and librosa: linear below 1 kHz (15 mel at
     1000 Hz) and logarithmic above it (27 mel per factor of 6.4)."""
     freq = np.asarray(freq, dtype=float)
