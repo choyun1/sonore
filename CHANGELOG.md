@@ -6,10 +6,21 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-03
+
+The package is reorganized by meaning: core, sources (sounds made from
+parameters), frames (invertible analyses), views (one-way analyses) and the
+topics spatial and texture. Every `so.name` is unchanged, but deep import
+paths move (see Changed). Views refuse to synthesize, with the reason, and
+go back to sound through `to_sound` where a canonical route exists. Also
+new since 0.3.1: MFCCs, F0 tracking, WORLD's analysis and synthesis, Klatt
+and LF voice synthesis, voice changes and a moving-sound renderer.
+
 ### Added
 - `so.View` and `so.NotInvertibleError`: every view (the spectra,
   envelopes, modulation spectra, the cepstrum, MFCCs, F0 tracks, spectral
-  envelopes and aperiodicity) is now a `View`, with a `discards` sentence
+  envelopes and aperiodicity, interaural cues, texture statistics and the
+  phase vocoder's analysis) is now a `View`, with a `discards` sentence
   saying what it drops. Its `synthesize` raises `NotInvertibleError` (a
   `NotImplementedError`) with that sentence and the route back to sound
   where one exists, such as `Cepstrum.to_sound` or `so.world_synthesize`.
@@ -21,6 +32,31 @@ version (0.x.y) only fixes bugs.
   as `to_noise` was), a Sound's own phase, or `"minimum"` for the
   minimum-phase impulse response. On a view with no canonical route, such
   as `ModulationSpectrum`, `to_sound` raises `NotInvertibleError`.
+- `STFT` and `TVSTFT` have `n_fft` and `shortest_window` properties.
+- `so.power_to_db(x, ref=1.0, floor_db=-300.0)` and `so.db_to_power(db)`,
+  the power counterparts of `amp_to_db` and `db_to_amp`.
+- `so.cheaptrick`, `so.d4c` and `so.world_synthesize`: WORLD's spectral
+  envelope (Morise, 2015), aperiodicity (Morise, 2016) and synthesis,
+  ported exactly to NumPy with no pyworld dependency, returning
+  `SpectralEnvelope` and `Aperiodicity` views. A stored pyworld fixture
+  holds them to WORLD's numbers; `so.DIFFERENCES_FROM_WORLD` lists every way
+  sonore departs from WORLD. `so.harmonic_aperiodicity` is a second
+  measure, not WORLD's: the share of noise left after fitting the
+  harmonics. See `docs/design/world.md` and the gallery page
+  "Aperiodicity".
+- `so.ModulationSpectrogram` and `so.HannModulationFilterbank`: modulation
+  power, local mean and depth for every time window, acoustic band and
+  modulation rate, from any `Envelopes`, with a `valid` mask, plots and an
+  animation. See `docs/design/modulation-spectrogram.md` and the gallery
+  page "Modulation spectrogram".
+- `so.move_sound` is a new renderer: each ear reads the sound through its
+  own smoothly changing delay, so a source changing distance glides in
+  pitch (Doppler) instead of comb-filtering; HRIRs are interpolated between
+  measured distances and travel time and 1/r carry it beyond them; an
+  optional `room` tail with `drr_db`. A path can be a function of time;
+  `so.hcc_trajectory` builds one in head-centred coordinates, and
+  `so.SPEED_OF_SOUND` is the default 343 m/s. See
+  `docs/design/moving-sound.md` and the gallery page "Moving talkers".
 - `so.scale_f0` and `so.warp_frequency`: a pitch change (voiced F0 times a
   ratio, optionally spread around the median) and a formant shift (an
   envelope read at `f / ratio`; a number, a ratio over time, or any
@@ -100,15 +136,17 @@ version (0.x.y) only fixes bugs.
   name documented; the names still waiting are listed in
   `tests/undocumented.txt`.
 
-### Changed (development)
-- Tests are in folders that mirror `src/sonore` (`tests/core/`,
-  `tests/sources/`, ...). The dB tests moved to `tests/core/test_units.py` and
-  the HRIR download tests to `tests/spatial/test_hrir_data.py`.
-
 ### Changed
 - `Spectrum.to_noise(duration, fs)` is `Spectrum.to_sound(duration, fs)`,
   and `PVAnalysis.resynthesize` is `PVAnalysis.to_sound`, with the same
   arguments and output. The old names are gone.
+- `so.long_term_spectrum(sounds, win_dur=0.1)` takes its Welch segment
+  length in seconds, replacing `nperseg=4096` samples, with no
+  compatibility argument. The default now gives 10 Hz spacing at any
+  sample rate, so its output changes slightly, and with it speech-shaped
+  noise made from it.
+- In `sonore.texture.synth`, `ChannelObjective.ctx` and
+  `impose_channel(ctx=...)` are renamed to `context`.
 - The package is reorganized by meaning
   (`docs/design/reorganization.md`, `docs/design/sound-first.md`,
   `docs/design/layout.md`). Every `so.name` is unchanged; only deep import
@@ -173,6 +211,20 @@ version (0.x.y) only fixes bugs.
   `pad=0`).
 
 ### Fixed
+- Gabor analysis works when the hop is longer than the window (windows
+  with gaps between them). Before, `GaborFrame` refused to analyze such a
+  layout; synthesis still refuses, since it is not a frame
+  (`docs/design/frames.md`, D4).
+- `Subbands` and `Envelopes` copy the array they are given, so the
+  caller's array stays writeable; before, `Subbands` made it read-only.
+  Their shape errors now say the shape they received.
+- Two numbers in docstrings were wrong. `DynamicRipple` puts about 7% of
+  its modulation power outside `rate_range`, not 40%, and `fast_padding`'s
+  median growth for odd lengths is 1.1%, not 0.3%. Every number a
+  docstring quotes is now measured by `tools/measure_docstring_numbers.py`.
+- `sonore.plotting.plot_f0_track` is listed in `plotting.__all__`, and the
+  per-band ITD image is rasterized like the other images (this changes SVG
+  and PDF output only).
 - `harmonic_complex` (and `schroeder_complex`, `square_wave`,
   `sawtooth_wave`, `pulse_train`, `glottal_source`) on a fixed F0 ignored
   `f_max`, so a sound asked to stop at 5 kHz had harmonics up to Nyquist.
@@ -183,6 +235,14 @@ version (0.x.y) only fixes bugs.
   coming toward the head faster than sound. It now refuses such a path
   (and, with PKU-IOA, one at 300 m/s, where the measured onsets change
   faster than the travel time). Slower paths are unchanged to 1e-10.
+
+### Changed (development)
+- `docs/design/philosophy.md`: names that come from a cited paper or a
+  reference implementation (Klatt, LF, the texture statistics C, C1 and
+  C2, WORLD) are never renamed.
+- Tests are in folders that mirror `src/sonore` (`tests/core/`,
+  `tests/sources/`, `tests/frames/`, `tests/views/`, ...). The dB tests moved to `tests/core/test_units.py` and
+  the HRIR download tests to `tests/spatial/test_hrir_data.py`.
 
 ## [0.3.1] - 2026-10-01
 
@@ -231,7 +291,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.3.1...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.4.0...main
+[0.4.0]: https://github.com/choyun1/sonore/releases/tag/v0.4.0
 [0.3.1]: https://github.com/choyun1/sonore/releases/tag/v0.3.1
 [0.3.0]: https://github.com/choyun1/sonore/releases/tag/v0.3.0
 [0.2.0]: https://github.com/choyun1/sonore/commit/213e21a
