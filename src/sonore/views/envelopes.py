@@ -28,6 +28,7 @@ simulations of cochlear-implant hearing.
 from __future__ import annotations
 
 import numbers
+from dataclasses import dataclass
 from fractions import Fraction
 from typing import TYPE_CHECKING
 
@@ -44,6 +45,19 @@ if TYPE_CHECKING:
     from sonore.views.modulation import ModulationSpectrum
 
 __all__ = ["Envelope", "Envelopes", "noise_vocode"]
+
+
+@dataclass(frozen=True)
+class _EnvelopeAnalysis:
+    """How a modulation spectrum's envelopes were made, so that envelopes
+    can be rebuilt on the same grid: the filterbank, the envelope rate and
+    length, linear or dB envelopes, and whether the edge bands were dropped."""
+
+    filterbank: Filterbank
+    fs: float
+    n_samples: int
+    scale: str
+    drop_edges: bool
 
 
 def _nonnegative(values: np.ndarray) -> np.ndarray:
@@ -351,9 +365,11 @@ class Envelopes(_PaddedBands, View):
             band_env = amp_to_db(band_env + 1e-12 * (band_env.max() or 1.0))
         elif scale != "linear":
             raise ValueError("scale must be 'linear' or 'db'")
-        return ModulationSpectrum.from_array(
+        spectrum = ModulationSpectrum.from_array(
             band_env.T, dt=1 / self.fs, dx=filterbank.spacing, spectral_unit=f"cyc/{filterbank.unit}"
         )
+        spectrum._analysis = _EnvelopeAnalysis(filterbank, self.fs, self.n_samples, scale, drop_edges)
+        return spectrum
 
     def plot(self, ax=None, **kwargs):
         from sonore.plotting import plot_envelopes

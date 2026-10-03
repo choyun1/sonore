@@ -60,11 +60,12 @@ meant to be readable without them.
   synthesize. Each view's `discards` sentence says what it dropped, and its
   `to_sound` takes exactly that as arguments: a spectrum takes a carrier
   for its phase, envelopes a carrier for their fine structure, each of
-  WORLD's three views the other two. A view gets `to_sound` only where a
-  canonical route exists. Elsewhere (a modulation spectrum, whose possible
-  carriers are too many) it raises `NotInvertibleError` with the reason,
-  and searching for a matching sound stays an experiment until a canonical
-  method is found. Today `Spectrum`, `Cepstrum` and `PVAnalysis` have
+  WORLD's three views the other two, a modulation spectrum a carrier for
+  its modulation phase and fine structure (`views/modulation-targets.md`).
+  A view gets `to_sound` only where a canonical route exists. Elsewhere it
+  raises `NotInvertibleError` with the reason, and searching for a matching
+  sound stays an experiment until a canonical method is found. Today
+  `Spectrum`, `Cepstrum`, `PVAnalysis` and `ModulationSpectrum` have
   `to_sound`; envelopes and WORLD's views go back through `noise_vocode`
   and `world_synthesize`, which their refusal names (`layout/sound-first.md`).
 - **Keep the simplest representation that loses nothing.** Subbands stay
