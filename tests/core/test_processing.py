@@ -14,7 +14,7 @@ class TestProcessing:
         assert abs(np.corrcoef(y.data.T)[0, 1]) < 0.1
 
     def test_pad_uses_zeros(self):
-        a, b = so.pad([so.Sound(np.ones(3), FS), so.Sound(np.ones(5), FS)], align="center")
+        a, b = so.match_lengths([so.Sound(np.ones(3), FS), so.Sound(np.ones(5), FS)], align="center")
         np.testing.assert_array_equal(a.data[:, 0], [0, 1, 1, 1, 0])
 
     def test_concat_upmixes_mono(self):
@@ -33,7 +33,7 @@ class TestProcessing:
         np.testing.assert_array_equal(so.mix([short, long], align=align).data[:, 0], expected)
 
     def test_truncate_cuts_to_the_shortest(self):
-        a, b = so.truncate([so.Sound(np.arange(5.0), FS), so.Sound(np.arange(3.0), FS)])
+        a, b = so.match_lengths([so.Sound(np.arange(5.0), FS), so.Sound(np.arange(3.0), FS)], mode="truncate")
         np.testing.assert_array_equal(a.data[:, 0], [0, 1, 2])
         assert len(b) == 3
 

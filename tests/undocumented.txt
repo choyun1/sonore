@@ -1,15 +1,6 @@
 # Public names still without a docstring. tests/test_docstrings.py keeps this
 # list exact; each audit sitting (issue #48) documents its module's names and
 # removes them here.
-sonore.core.sound.Sound.channel
-sonore.core.sound.Sound.duration
-sonore.core.sound.Sound.left
-sonore.core.sound.Sound.n_channels
-sonore.core.sound.Sound.n_samples
-sonore.core.sound.Sound.peak
-sonore.core.sound.Sound.right
-sonore.core.sound.Sound.to_stereo
-sonore.core.sound.Sound.zero_mean
 sonore.frames.filterbank.BandpassFilterbank.from_scale
 sonore.frames.filterbank.BandpassFilterbank.to_scale
 sonore.frames.filterbank.CosineFilterbank.from_scale

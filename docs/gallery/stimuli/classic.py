@@ -241,7 +241,7 @@ streams = [
     tone_sequence(so.erb_to_freq(rng.uniform(erb_lo, erb_hi, 8)), tone_dur=0.2, gap_dur=gap)
     for gap in (0.05, 0.1, 0.15)
 ]
-sound = finish(sum(so.pad(streams)))
+sound = finish(sum(so.match_lengths(streams)))
 fig, playhead = show(sound, fmax=5000, win_dur=20e-3)
 
 # %% [markdown]

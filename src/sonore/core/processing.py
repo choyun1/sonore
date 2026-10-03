@@ -15,8 +15,7 @@ from sonore.core.utils import amp_to_db, time_axis
 __all__ = [
     "match_fs",
     "match_channels",
-    "pad",
-    "truncate",
+    "match_lengths",
     "normalize",
     "concat",
     "mix",
@@ -47,16 +46,29 @@ def match_channels(sounds: Sequence[Sound]) -> list[Sound]:
     return [s.to_channels(n_channels) for s in sounds]
 
 
-def pad(sounds: Sequence[Sound], align: str = "start") -> list[Sound]:
-    """Zero-pad to the longest length. ``align``: ``start``, ``center``, ``end``."""
-    length = max(len(s) for s in sounds)
-    return [s.pad_to(length, align) for s in sounds]
+def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "start") -> list[Sound]:
+    """Bring sounds to one length: zero-pad to the longest (``mode="pad"``)
+    or cut to the shortest (``mode="truncate"``).
 
+    ``align`` (``start``, ``center`` or ``end``) is where each sound sits in
+    the common length: padding goes after, around or before it, and cutting
+    keeps its start, middle or end. With ``center``, an odd number of extra
+    samples puts the odd one at the end."""
+    if align not in ("start", "center", "end"):
+        raise ValueError("align must be 'start', 'center' or 'end'")
+    if mode == "pad":
+        length = max(len(s) for s in sounds)
+        return [s.pad_to(length, align) for s in sounds]
+    if mode == "truncate":
+        length = min(len(s) for s in sounds)
 
-def truncate(sounds: Sequence[Sound]) -> list[Sound]:
-    """Cut all sounds to the shortest length."""
-    length = min(len(s) for s in sounds)
-    return [Sound(s.data[:length], s.fs) for s in sounds]
+        def keep(sound: Sound) -> Sound:
+            extra = len(sound) - length
+            start = {"start": 0, "center": extra // 2, "end": extra}[align]
+            return Sound(sound.data[start : start + length], sound.fs)
+
+        return [keep(s) for s in sounds]
+    raise ValueError("mode must be 'pad' or 'truncate'")
 
 
 def normalize(sounds: Sequence[Sound], rms: float = 1.0) -> list[Sound]:
@@ -80,7 +92,7 @@ def concat(sounds: Sequence[Sound]) -> Sound:
 def mix(sounds: Sequence[Sound], align: str = "start") -> Sound:
     """Sum sounds of possibly different lengths (zero-padded per ``align``)."""
     _check_fs(sounds)
-    return sum(pad(match_channels(sounds), align), start=0)
+    return sum(match_lengths(match_channels(sounds), align=align), start=0)
 
 
 def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:

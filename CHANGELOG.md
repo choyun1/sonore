@@ -6,6 +6,28 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Changed
+- `so.pad` and `so.truncate` are replaced by
+  `so.match_lengths(sounds, mode="pad" | "truncate", align=...)`, next to
+  `so.match_fs` and `so.match_channels`; `align` now also chooses which
+  part a truncated sound keeps. `Sound.pad` is unchanged and is now the only
+  `pad`.
+- `Sound.fs` is read-only, like the samples.
+- In a notebook, a Sound plays at its true level instead of being
+  normalized by the player; a sound peaking above 1 shows a note suggesting
+  `normalize(peak=...)` instead of a player.
+- Clearer errors: `2 - snd` says why it is ambiguous (`0 - snd` still
+  inverts), an array of the wrong length gets the "lengths differ" message,
+  `snd.right` on a mono sound and `normalize` of silence raise a sonore
+  message instead of NumPy's `IndexError` or a division by zero.
+
+### Documentation
+- `Sound`: time slices behave like Python index slicing (negative times
+  count from the end, times past the end are clipped); `from_channels`
+  zero-pads shorter channels at the end; `resample` names SciPy's default
+  anti-aliasing filter. Docstrings for the remaining undocumented `Sound`
+  members.
+
 ### Changed (development)
 - `docs/make_figures.py` and the eight README figures only it drew are
   removed: it no longer ran once the gallery examples moved into the page
