@@ -63,6 +63,7 @@ time it runs.
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.collections import LineCollection
 
 import sonore as so
 
@@ -368,9 +369,10 @@ sound = finish(rendered)
 #
 # The voices are two female and two male readers from LibriSpeech (Panayotov et al., 2015),
 # each scaled to the same RMS before rendering, so a talker's level at the ears depends on its
-# distance alone. The room is drier than the one above: RT60 0.4 s, with direct and reverberant
-# sound equal 3.2 m from a talker (10 dB more direct sound at 1 m than the walk above), so most
-# of the time the direct sound leads. The last scene is also played without the room. What is
+# distance alone. The room is drier than the one above: RT60 0.3 s, with direct and reverberant
+# sound equal 5.6 m from a talker (15 dB more direct sound at 1 m than the walk above), so the
+# direct sound leads wherever a talker walks in the room. Each scene fades in and out over 1 s,
+# as if walking into the party and away again. The last scene is also played without the room. What is
 # not modelled: talkers sound the same whichever way they face (real voices radiate unevenly,
 # and differently at high frequencies; Monson et al., 2012), and nobody raises their voice over
 # the others.
@@ -394,7 +396,8 @@ def walks(n_talkers, duration, seed):
     changing over about 3 s), and it bends away from what is near: a wall within 2 m, the
     listener within 2.5 m, another talker within 1.5 m (stepping to the right to pass), harder
     the closer it gets, turning at most 90 degrees per second. Its speed drifts by up to 10 %
-    around its own, and it slows down, as people do, when another talker is close ahead.
+    around its own, and it slows down, as people do, when another talker is close ahead,
+    easing into the new pace over about 0.3 s rather than braking at once.
     Half the talkers (at least one) also hurry once, for 2 to 3 s, 25 to 50 % faster, easing
     in and out over 0.5 s. Returns the walks and the hurries as (talker, start [s], length
     [s], speed-up)."""
@@ -418,6 +421,7 @@ def walks(n_talkers, duration, seed):
     position = np.array(starts)  # (talkers, 2)
     heading = rng.uniform(-np.pi, np.pi, n_talkers)  # direction of travel, angle from +x
     wobble = np.zeros(n_talkers)  # rad/s
+    pace = np.ones(n_talkers)  # the slowing, eased
     others = 1 - np.eye(n_talkers)
     points = np.zeros((n_talkers, len(times), 3))
     for step in range(len(times)):
@@ -437,16 +441,18 @@ def walks(n_talkers, duration, seed):
         ahead = (np.einsum("tox,tx->to", -between, facing) > 0.5 * apart) & (others > 0)
         nearest_ahead = np.where(ahead, apart, np.inf).min(axis=1)
         slowing = np.clip((nearest_ahead - 0.5) / 1.0, 0.15, 1.0)
+        pace += (slowing - pace) * PATH_STEP / 0.3
         wobble += -wobble * PATH_STEP / 3.0 + np.radians(4) * np.sqrt(PATH_STEP) * rng.normal(size=n_talkers)
         off_course = np.angle(np.exp(1j * (np.arctan2(wanted[:, 1], wanted[:, 0]) - heading)))
         heading += (np.clip(2.0 * off_course, -np.radians(90), np.radians(90)) + wobble) * PATH_STEP
-        step_length = speed[step] * slowing * PATH_STEP
+        step_length = speed[step] * pace * PATH_STEP
         position = position + step_length[:, None] * np.column_stack([np.cos(heading), np.sin(heading)])
     return [(times, talker_points) for talker_points in points], hurries
 
 
-PARTY_ROOM = so.synth_ir(0.4, fs, n_channels=2, rng=2)  # RT60 0.4 s
-PARTY_DRR = 10.0  # dB at 1 m: direct and reverberant sound are equal 3.2 m away
+PARTY_ROOM = so.synth_ir(0.3, fs, n_channels=2, rng=2)  # RT60 0.3 s
+PARTY_DRR = 15.0  # dB at 1 m: direct and reverberant sound are equal 5.6 m away
+PARTY_FADE = 1.0  # s, at the start and end of each scene
 
 
 def party(n_talkers, duration, seed, room=PARTY_ROOM):
@@ -457,7 +463,7 @@ def party(n_talkers, duration, seed, room=PARTY_ROOM):
     for voice, (times, points) in zip(voices, paths, strict=False):
         excerpt = so.Sound(voice.data[: int(duration * fs)], fs).ramp(20e-3)
         rendered.append(so.move_sound(excerpt, (times, points), hrirs, room=room, drr_db=PARTY_DRR))
-    return so.mix(rendered), paths, hurries
+    return so.mix(rendered).ramp(PARTY_FADE), paths, hurries
 
 
 def close_passes(paths, within=1.0):
@@ -487,17 +493,21 @@ def passes_title(n_talkers, duration, paths, hurries):
 
 def show_party(paths, hurries, title):
     """The paths from above (a dot where each talker starts, thick where it hurries), and each
-    talker's distance (shaded where it hurries)."""
+    talker's distance (shaded where it hurries). Both lines thicken with the talker's speed
+    above its usual pace, so a hurry shows as a line that swells and thins again."""
     fig = plt.figure(figsize=(10, 4.6), layout="constrained")
     top, distance_axes = fig.subplots(1, 2, width_ratios=(1, 1.6))
     for (times, points), (_, label, color) in zip(paths, PARTY, strict=False):
-        top.plot(points[:, 0], points[:, 1], color=color, lw=1.3)
+        speed = np.linalg.norm(np.diff(points, axis=0), axis=1) / np.diff(times)
+        above_usual = np.clip(speed / np.median(speed) - 1.1, 0, None)  # the drift stays within 10 %
+        widths = 0.7 + 8 * above_usual
+        distance = np.linalg.norm(points, axis=1)
+        for x, y, ax in ((points[:, 0], points[:, 1], top), (times, distance, distance_axes)):
+            segments = np.stack([np.column_stack([x[:-1], y[:-1]]), np.column_stack([x[1:], y[1:]])], 1)
+            ax.add_collection(LineCollection(segments, linewidths=widths, color=color, capstyle="round"))
         top.plot(*points[0, :2], "o", color=color, ms=5)
-        distance_axes.plot(times, np.linalg.norm(points, axis=1), color=color, lw=1.5, label=label)
+        distance_axes.plot([], [], color=color, lw=1.5, label=label)
     for talker, start, length, _ in hurries:
-        times, points = paths[talker]
-        hurrying = (times >= start) & (times <= start + length)
-        top.plot(points[hurrying, 0], points[hurrying, 1], color=PARTY[talker][2], lw=4, alpha=0.6)
         distance_axes.axvspan(start, start + length, color=PARTY[talker][2], alpha=0.12, lw=0)
     top.add_patch(plt.Circle((0, 0), 0.09, fill=False, color="k"))
     top.plot([0], [0.16], "^", color="k", ms=4)  # the listener faces +y
@@ -510,7 +520,7 @@ def show_party(paths, hurries, title):
         aspect="equal",
         xlabel="Right [m]",
         ylabel="Front [m]",
-        title="From above (dot: start; thick: hurrying)",
+        title="From above (dot: start; thicker: faster)",
     )
     distance_axes.set(
         ylim=(0, 6), xlim=(0, paths[0][0][-1]), xlabel="Time [s]", ylabel="Distance [m]", title=title
