@@ -6,6 +6,12 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Changed (development)
+- `docs/make_figures.py` and the eight README figures only it drew are
+  removed: it no longer ran once the gallery examples moved into the page
+  scripts, and two of the README's three figures now come from the
+  gallery. `docs/images/ripples.png` stays, as the README still shows it.
+
 ## [0.4.0] - 2026-10-03
 
 The package is reorganized by meaning: core, sources (sounds made from
