@@ -4,7 +4,8 @@ The spoken sentences used by the gallery: the "seeing speech" sentence
 (docs/design/frames/frames.md, step 3: decisions D12 and D13), which is also the
 target on the moving talkers page, and that page's two masker sentences;
 and the same sentence read by a female speaker, for checking the analyses on
-a voice an octave higher (tools/check_female_voices.py).
+a voice an octave higher (tools/check_female_voices.py); and four passages
+from LibriSpeech for the cocktail-party scenes on the moving talkers page.
 
 ## Sources
 
@@ -89,3 +90,54 @@ python tools/make_speech_f0.py docs/speech/bdl_arctic_a0131.flac
 - Licences: WORLD is modified BSD; `pyworld` is MIT (from its repository's
   LICENSE file). Neither is redistributed here, and only the track they
   produced is.
+
+## LibriSpeech passages
+
+| File | Reader (LibriVox ID, name) | Sex | Book, chapter | Utterances | Length |
+|---|---|---|---|---|---|
+| `librispeech_1462_170142.flac` | 1462, E. Tavano | female | *Alexander's Bridge* (version 2), Chapter 6 | `1462-170142-0000` to `-0004` | 31.6 s |
+| `librispeech_1993_147149.flac` | 1993, Wendy Belcher | female | *Mary Barton*, "Jem Wilson's Repulse." | `1993-147149-0000` to `-0003` | 37.2 s |
+| `librispeech_3000_15664.flac` | 3000, Brian von Dedenroth | male | *Steep Trails*, "05 - Shasta Rambles and Modoc Memories" | `3000-15664-0000` to `-0002` | 31.8 s |
+| `librispeech_1272_141231.flac` | 1272, John Rose | male | *Planet of the Damned*, Chapter 01 | `1272-141231-0000` to `-0003` | 30.8 s |
+| `librispeech_2035_152373.flac` | 2035, Sharon Bautista | female | *Popular History of Ireland, Book 01*, "06 - Kings of the Seventh Century" | `2035-152373-0000` to `-0002` | 34.5 s |
+| `librispeech_6345_93306.flac` | 6345, Jean Bascom | female | *Literary Sense*, "05 The Girl With The Guitar" | `6345-93306-0000` to `-0001` | 35.8 s |
+| `librispeech_5694_64029.flac` | 5694, Winston Tharp | male | *'Co. Aytch,' Maury Grays, First Tennessee Regiment*, "06 - Murfreesboro" | `5694-64029-0000` to `-0006` | 32.6 s |
+| `librispeech_251_136532.flac` | 251, Mark Nelson | male | *Omnilingual*, Part 4 | `251-136532-0000` to `-0003` | 40.5 s |
+| `librispeech_2428_83705.flac` | 2428, Stephen Kinford | male | *Amusement Only*, "29 - Mr. Whitings and Mary Ann" | `2428-83705-0000` to `-0003` | 30.2 s |
+| `librispeech_5338_284437.flac` | 5338, S R Colon | female | *Sky Island* (version 2), "14 - Tourmaline the Poverty Queen" | `5338-284437-0000` to `-0005` | 32.0 s |
+| `librispeech_8842_304647.flac` | 8842, Mary J | female | *Sonnets of Michael Angelo Buonarroti and Tommaso Campanella*, "Campanella XVI-XXX" | `8842-304647-0000` to `-0002` | 44.7 s |
+| `librispeech_2035_147961.flac` | 2035, Sharon Bautista | female | *My Antonia*, "Book 1 (The Shimerdas), Chapter 8" | `2035-147961-0000` to `-0003` | 30.1 s |
+| `librispeech_8297_275155.flac` | 8297, David Mecionis | male | *Evil Genius*, "Fifth Book - Chapter XL - Keep Your Temper" | `8297-275155-0000` to `-0003` | 30.4 s |
+| `librispeech_5694_64025.flac` | 5694, Winston Tharp | male | *'Co. Aytch,' Maury Grays, First Tennessee Regiment*, "02 - Shiloh" | `5694-64025-0000` to `-0005` | 35.3 s |
+| `librispeech_2428_83699.flac` | 2428, Stephen Kinford | male | *Amusement Only*, "23 - An Old-Fashioned Christmas, Chapter 1" | `2428-83699-0000` to `-0005` | 38.4 s |
+
+Source: the `dev-clean` subset of LibriSpeech (`dev-clean.tar.gz` from
+https://www.openslr.org/12/, supplied by Cho, 2026-10-03). Reader names, sex,
+book and chapter titles are from the corpus's `SPEAKERS.TXT` and
+`CHAPTERS.TXT`. The recordings are LibriVox readings of public-domain books.
+
+Citation: Panayotov, V., Chen, G., Povey, D. & Khudanpur, S. (2015).
+LibriSpeech: an ASR corpus based on public domain audio books. *Proc. IEEE
+ICASSP 2015*, 5206–5210. https://doi.org/10.1109/ICASSP.2015.7178964
+
+**Licence.** "LibriSpeech (c) 2014 by Vassil Panayotov. LibriSpeech ASR
+corpus is licensed under a Creative Commons Attribution 4.0 International
+License" (the corpus's `LICENSE.TXT`;
+https://creativecommons.org/licenses/by/4.0/). Attribution is the citation
+and this table; the changes are listed below.
+
+**Why these readers.** All 40 `dev-clean` readers were measured (speech-to-pause
+level range, median F0, chapter length), and the 12 with the cleanest
+recordings and a spread of F0 were auditioned by Cho, who found all of them
+usable. All 12 are used, with median F0 of about 173, 180, 195, 202, 203 and
+237 Hz (female) and 94, 111, 118, 118, 120 and 136 Hz (male), from
+`so.f0_track` on each reader's first minute. Each cocktail-party scene has its
+own cast; the three readers who also appear in the six-talker scene read
+there from their second-longest chapter.
+
+**Changes** (as CC BY 4.0 asks): each file joins the first consecutive
+utterances of one chapter of the reader in `dev-clean` (the longest, or for
+the second file of a reader the second longest), in order, with
+0.3 s of silence between them, until at least 30 s; the samples of each
+utterance are unchanged (16 kHz, 16-bit). No trimming inside utterances,
+resampling or level change. The transcripts are not copied here.
