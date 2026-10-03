@@ -349,8 +349,85 @@ def c4_c5():
                 "C5", f"Griffin-Lim, {iteration} iterations: | |STFT| - target | / | target |", inconsistency
             )
 
+    # The same iteration on the sentence's own, unedited magnitude (a target a
+    # real sound has), from random phase.
+    magnitude = np.abs(z)
+    phase = rng.uniform(0, 2 * np.pi, z.shape)
+    for iteration in range(1, 201):
+        y = to_sound(magnitude * np.exp(1j * phase), len(x))
+        phase = np.angle(spectrogram(y))
+        if iteration in (1, 10, 50, 200):
+            mismatch = np.linalg.norm(np.abs(spectrogram(y)) - magnitude) / np.linalg.norm(magnitude)
+            report("C5", f"unedited magnitude, random start, {iteration} iterations: mismatch", mismatch)
+
+
+# ------------------------------------------------------------- C6: what the carrier must supply
+def band_share(env, removed_rate_lo=6.0, removed_rate_hi=40.0):
+    """Share of the envelope array's modulation power at removed_rate_lo..hi Hz."""
+    rate = np.abs(np.fft.fftfreq(env.shape[1], 1 / FE))[None, :]
+    removed = np.broadcast_to((rate > removed_rate_lo) & (rate < removed_rate_hi), env.shape)
+    power = mps(env)
+    return power[removed].sum() / power.sum()
+
+
+def analytic_bands(x, transfer):
+    """Analytic signal of every band, shape (n_samples, K)."""
+    n_samples = len(x)
+    spectrum = np.fft.rfft(x)[:, None] * transfer
+    full = np.zeros((n_samples, transfer.shape[1]), complex)
+    full[: spectrum.shape[0]] = spectrum
+    full[1 : (n_samples + 1) // 2] *= 2
+    return np.fft.ifft(full, axis=0)
+
+
+def c6():
+    """The edit of C4 (temporal modulations above 4 Hz removed), made on the
+    filterbank envelopes instead: the envelope array's 2-D transform keeps
+    the sentence's own modulation phase, so the edited envelopes are exact.
+    They then go on three fine structures, and the sound is re-analysed."""
+    rng = np.random.default_rng(5)
+    per_octave = 12
+    centres = band_centres(per_octave)
+    x = speech()
+    n_samples = len(x)
+    transfer = cosine_responses(n_samples, centres, per_octave)
+    env = envelopes(x, centres, per_octave)
+    original = band_share(env)
+    report("C6", "speech: share of envelope modulation power at 6-40 Hz", original)
+
+    rate = np.abs(np.fft.fftfreq(env.shape[1], 1 / FE))[None, :]
+    edited = env.mean() + np.real(np.fft.ifft2(np.fft.fft2(env - env.mean()) * (rate <= 4.0)))
+    report("C6", "edited envelopes: fraction of cells below zero (clipped)", np.mean(edited < 0))
+    edited = np.maximum(edited, 0)
+    report(
+        "C6",
+        "edited envelopes themselves: share re speech's [dB]",
+        10 * np.log10(band_share(edited) / original),
+    )
+    edited_full = np.maximum(resample_poly(edited.T, FS, FE, axis=0)[:n_samples], 0)
+
+    t = np.arange(n_samples) / FS
+    fine_structures = {
+        "speech's own fine structure": np.cos(np.angle(analytic_bands(x, transfer))),
+        "noise fine structure": np.cos(np.angle(analytic_bands(rng.standard_normal(n_samples), transfer))),
+        "steady tones at the band centres": np.cos(
+            2 * np.pi * (F_LO * 2**centres)[None, :] * t[:, None] + rng.uniform(0, 2 * np.pi, len(centres))
+        ),
+    }
+    for name, fine in fine_structures.items():
+        bands = edited_full * fine
+        if name.startswith("steady tones"):
+            y = bands.sum(axis=1)  # each tone sits where only its own band responds
+        else:  # back through the bank (tight: squared responses sum to one)
+            y = np.fft.irfft(np.sum(np.fft.rfft(bands, axis=0) * transfer, axis=1), n=n_samples)
+        share = band_share(envelopes(y, centres, per_octave))
+        report(
+            "C6", f"{name}: re-analysed share at 6-40 Hz re speech's [dB]", 10 * np.log10(share / original)
+        )
+
 
 if __name__ == "__main__":
     c1()
     c2_c3()
     c4_c5()
+    c6()

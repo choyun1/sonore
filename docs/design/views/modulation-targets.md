@@ -6,9 +6,9 @@ what such a specification actually pins down, and proposes what sonore
 could offer. It adds no library code; the decisions at the end come first.
 
 Status: proposed 2026-10-03, decisions open. The claims are checked by
-`tools/check_modulation_targets_claims.py` (C1–C5), which uses only NumPy,
+`tools/check_modulation_targets_claims.py` (C1–C6), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its
-formula, and shares no code with sonore. It runs in about 10 s. The numbers
+formula, and shares no code with sonore. It runs in about 20 s. The numbers
 below come from NumPy 2.4.6 and SciPy 1.17.1, with the seeds in the script.
 
 ## How the claims are verified
@@ -167,12 +167,39 @@ the C4 target:
 | 50 | −14.1 dB | 0.11 |
 | 200 | −15.1 dB | 0.09 |
 
+The same iteration on the sentence's own, *unedited* magnitude, a target
+that a real sound is known to have, from random phase: mismatch 0.73 after
+one step, 0.23 after 10, 0.14 after 50, 0.069 after 200. So even a
+consistent target is approached, not reached, and random phase alone (one
+step) is far from it.
+
 The mismatch keeps falling, more and more slowly. Each iteration is one
 STFT and one inverse (the 200 took 4.0 s for this 2.5 s sentence,
 measured in this container, so an estimate elsewhere). A search through
 the modulation analysis itself, with gradients as the texture synthesis
 does, would aim at the modulation spectrum directly instead of at a
 spectrogram; that is not measured here.
+
+**C6. The fine structure must not carry modulations of its own.** [check]
+The C4 edit (temporal modulations above 4 Hz removed) made on the
+filterbank envelopes of C1 instead of the spectrogram. The envelope array's
+2-D transform keeps the sentence's own modulation phase, so the edited
+envelopes are exact: their 6–40 Hz share is 21.5 dB below the sentence's
+(after clipping the 15% of cells the edit pushed below zero). The envelopes
+then go on three fine structures and the sound is re-analysed:
+
+| Fine structure under the edited envelopes | Share at 6–40 Hz, re the sentence's |
+|---|---|
+| The sentence's own (`tfs()` of its bands) | −3.5 dB |
+| Noise's | −4.5 dB |
+| Steady tones at the band centres | −14.9 dB |
+
+The first two lose most of the edit, as badly as the one-shot STFT route of
+C4. A band's fine structure is not free of envelope: its phase changes as
+fast as the band is wide, and re-filtering turns those changes back into
+envelope fluctuations (the same mechanism as C3). Only a carrier that is
+steady in each band keeps the edit. So the envelope route does not escape
+the problem C4 shows for the STFT; it moves it into the choice of carrier.
 
 ## Ways to specify a target
 
@@ -193,8 +220,7 @@ on a grid with rate signed (positive for downward sweeps, as in
 A drawing also needs, outside the plane: the long-term spectrum, the
 depth (C2), the duration, the carrier, and a seed for the phase. Route to
 sound: random phase gives an envelope pattern with exactly the drawn
-spectrum (C2), which `ripple_sound` already accepts as a function
-`f(t, x)` once it interpolates the grid. Free: the phase (C1), so every
+spectrum (C2), put on a carrier (see `to_sound(carrier=...)` below). Free: the phase (C1), so every
 seed is a different sound with the same drawing.
 
 The closest published precedent found is Hsu, Woolley, Fremouw &
@@ -227,7 +253,8 @@ Two routes back:
   the `Envelopes` array, which is exactly invertible on that array), then
   put them on a carrier as the vocoder already does,
   `(edited_envelopes * carrier.tfs()).to_sound()`. One step, exact for
-  the envelopes, and C3 applies to the carrier.
+  the envelopes, but the edit survives in the sound only on a steady
+  carrier (C6).
 - Edit a *log spectrogram* and search for a signal (C4, C5). Elliott &
   Theunissen exponentiate the edited log spectrogram and invert it "using
   an iterative spectrogram inversion algorithm" [source]; their text, as
@@ -248,25 +275,55 @@ pins down more than item 2 (the correlations give some of the phase
 structure across bands), and it is slow, about 0.4 s per iteration per
 second of sound (from the `synthesize` docstring). Not measured here.
 
-## Turning a target into a sound
+## Turning a target into a sound: `to_sound(carrier=...)`
 
-The choice is one shot or search.
+Cho's proposal (2026-10-03): as envelopes go back to sound on a carrier,
+a modulation spectrum should go back on a carrier too, which supplies what
+the spectrum lacks. `philosophy.md` already says that `to_sound` takes
+as arguments exactly what a view discarded, and `Spectrum.to_sound(carrier=...)`
+is the model: the spectrum gives magnitudes, the carrier gives phase. Its
+"possible carriers are too many" objection to a modulation spectrum's
+`to_sound` is the same for a spectrum, and the answer is the same: make
+the carrier an argument.
 
-- **One shot** (ways 1, 2 and the envelope route of 3): build an envelope
-  array with the target spectrum, put it on a carrier. Fast and exact on
-  the envelopes (C2), and the phase is either given (ripples, an edited
-  sound) or drawn from a seed. Whether a re-analysis finds the target
-  depends on the carrier being built for that analysis (C3).
-- **Search** (the spectrogram route of 3, and way 4): iterate until a
-  sound's own analysis matches. Closer to the target as measured, never
-  exact, and slow (C5).
+A modulation spectrum lacks phase at two levels, and the carrier supplies
+both, plus the envelope mean:
 
-`philosophy.md` already decides that a modulation spectrum has no
-`to_sound`, because no carrier is canonical, and that "searching for a
-matching sound stays an experiment until a canonical method is found."
-Nothing here changes that. A target is not a `View` of a sound either: it
-is a specification, like a ripple pattern, so its route to sound belongs
-in `sources`, with the carrier and the seed as explicit arguments.
+1. **The modulation phase** (when events happen, how bands line up): the
+   phase of the 2-D transform of the carrier's envelope array. The target
+   supplies the magnitudes; the inverse transform gives envelopes with
+   exactly the target spectrum, clipped at zero where needed (C1, C2).
+2. **The fine structure** (the phase within each band): the carrier's
+   band phases, or a steady tone per band (C3, C6).
+3. **The envelope mean** (the long-term spectrum): the carrier's, unless
+   given.
+
+A person thinks in magnitudes on a time-frequency grid (Cho, 2026-10-03),
+so both phases start random and can then be improved by a search that
+makes them consistent with the analysis, as Griffin & Lim do for a
+spectrogram (C5). The one method then covers the ways above:
+
+- a drawn or parametric target with `carrier="noise"` or a seed: random
+  modulation phase (way 2);
+- the sound's own, edited spectrum with the sound as carrier: its own
+  modulation phase (way 3, envelope route);
+- `iterations=n`: a consistency search after the one-shot result (way 3,
+  search route).
+
+What the measurements say about the defaults:
+
+- One shot keeps the target exactly on the envelopes (C2) but not in the
+  sound: a re-analysis finds it only if the fine structure is steady in each
+  band (C3, C6). Steady tones at the analysis band centres are the only
+  fine structure measured here that keeps it (−14.9 dB against −3.5 and
+  −4.5 dB for speech and noise fine structure).
+- A search improves agreement with the analysis it searches through (C5),
+  slowly, and never exactly, even for a target a real sound has.
+- The result is only defined with respect to one analysis: the filterbank
+  and envelope settings the target was measured or drawn on. The
+  `ModulationSpectrum` would have to keep those (today it keeps only the dB
+  level of half the plane, after a Hann taper), and `to_sound` would refuse
+  a carrier analysed differently.
 
 ## Fit with the filterbank redesign
 
@@ -274,9 +331,10 @@ in `sources`, with the carrier and the seed as explicit arguments.
 coefficients, applied as `(mask * coefficients).to_sound()`. A
 modulation-domain edit is the same idea one level down, gains on the 2-D
 transform of an `Envelopes` array, but that transform is not a frame of the
-sound, so it cannot be a `Mask` on subbands. The consistent form is a
-function from `Envelopes` to `Envelopes`, and the route back is the
-existing one for envelopes (a carrier's `tfs()`, then
+sound, so it cannot be a `Mask` on subbands. With D2, an edit is a change
+to the `ModulationSpectrum`'s magnitudes followed by
+`to_sound(carrier=the_sound)`; inside, the envelopes are rebuilt and go
+back by the existing route for envelopes (a fine structure, then
 `Subbands.to_sound()`). Ripple patterns already render on an octave-scale
 bank (`bank.scale.name == "octave"` after the redesign), and a drawn
 pattern would use the same check.
@@ -289,36 +347,47 @@ a requirement on this design.
 
 Each has a recommendation.
 
-- **D1. A drawn target is item 1**: modulation power on rate (Hz, signed)
-  × density (cycles/octave, non-negative), in dB, with the long-term
-  spectrum, the depth, the duration, the carrier and a seed given
-  separately. Recommended: it is the plane of ripples and of the
-  intelligibility experiments, and the long-term spectrum is the part
-  people already think about separately. Drawing item 2 is a later option.
-- **D2. A pattern made from a target**: a new pattern type in
-  `sources/ripples.py`, built from a target grid and a seed, that draws
-  the random phase once and works with `render` and `ripple_sound` like
-  `DynamicRipple`. It takes depth as an rms depth and refuses a depth the
-  draw cannot reach without going negative (C2), naming the largest one,
-  rather than clipping silently. Recommended. Name to be chosen (for
-  example `DrawnRipple` or `ModulationPattern`).
-- **D3. The carrier for a drawn target**: tones at the analysis bands'
-  centres by default, so that `ModulationSpectrum.octave` with the same
-  bands per octave finds the drawing (C3). Recommended. Whether
-  `ripple_sound`'s own default carrier should change for the same reason
-  is a separate question: measure the beat floor on sonore's code first.
-- **D4. A modulation filter on envelopes**: gains on the envelope array's
-  2-D transform, `Envelopes` in and `Envelopes` out, for the measure-and-edit
-  route; back to sound through a carrier as today. Recommended, after D2.
-- **D5. Spectrogram search stays out of the library**: Griffin & Lim and
-  any gradient search through the modulation analysis are gallery
-  experiments for now, as `philosophy.md` says. Recommended.
-- **D6. The texture route needs no code**: document
+- **D1. How a target is specified**: in code, as a few blobs on the rate
+  (Hz, signed) × density (cycles/octave) plane, each with a centre, two
+  widths, a direction and a level; a ripple is a blob of zero width. Or
+  as a measured spectrum, edited. A painted grid is accepted too, but a GUI
+  for drawing is left to TrackDraw, which would hand over the same blob list
+  or grid. Recommended (thread, 2026-10-03; not yet agreed).
+- **D2. `ModulationSpectrum.to_sound(carrier=..., iterations=0, rng=...)`**,
+  with the carrier supplying the modulation phase, the fine structure and
+  the envelope mean, as above. `carrier` is a `Sound`, `"noise"` (random
+  modulation phase and noise fine structure) or `"tones"` (random
+  modulation phase, steady tones at the band centres). Recommended (Cho's
+  proposal). It needs `ModulationSpectrum` to keep the untapered magnitude
+  on the full plane and its analysis settings (D4).
+- **D3. `philosophy.md` changes**: the modulation spectrum moves from
+  "raises `NotInvertibleError`" to the views whose `to_sound` takes what
+  they discarded, with the carrier as that argument. Recommended if D2 is.
+- **D4. `ModulationSpectrum` keeps its analysis**: the filterbank, envelope
+  rate, compression and linear or dB scale, and the untapered magnitude, so
+  `to_sound` can rebuild envelopes on the same grid and refuse a mismatched
+  carrier. The display keeps its Hann taper. Recommended.
+- **D5. Default carrier `"tones"`**: steady tones at the band centres, the
+  only fine structure measured here that keeps the target in the sound
+  (C3, C6). Recommended. Whether `ripple_sound`'s own default carrier
+  should change for the same reason is separate: measure the beat floor on
+  sonore's code first.
+- **D6. Depth**: when imposing magnitudes pushes envelopes below zero,
+  `to_sound` clips and reports the fraction clipped (15% for the C6 edit,
+  33% for the C1 twin), rather than refusing. For drawn targets, an
+  `rms_depth` argument scales the spectrum and refuses a depth that cannot
+  be reached without clipping (C2). Recommended.
+- **D7. The consistency search** (`iterations > 0`): Griffin–Lim through
+  the filterbank (impose the target envelopes, re-analyse, keep the new
+  fine structure and modulation phase, repeat). Not built or measured
+  through the filterbank yet; C5 measures it on the STFT. Recommended as a
+  second step, after measuring it in the checker.
+- **D8. The texture route needs no code**: document
   `TextureStats.replace(mod_power=...)` as the per-band way to specify
   modulation. Recommended.
-- **D7. A gallery page** ("Drawing a modulation spectrum") showing C1 (a
-  sentence and its twin, heard), C2 and C3 with a drawn blob, and an edit.
-  Optional; recommended once D2 exists.
+- **D9. A gallery page** ("Drawing a modulation spectrum") showing C1 (a
+  sentence and its twin, heard), a drawn blob on the three carriers, and an
+  edit. Optional; recommended once D2 exists.
 
 ## References
 
