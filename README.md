@@ -252,7 +252,7 @@ under `so.texture` and `sonore.texture.synth`.
 | [`frames.filterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py) | `Filterbank` (frequency-domain filters, any shape; canonical dual), `ERBFilterbank`, `OctaveFilterbank` (perfect-reconstruction cosine banks sharing `CosineFilterbank`, a tight `Filterbank`), `GammatoneFilterbank` (exact 4th-order gammatone responses, causal or zero-phase; `envelope_peak_delay` gives each filter's latency), `MorletFilterbank` (log-spaced Morlet wavelets); both add edge filters by default so synthesis is exact on the whole band, and `edges=False` gives the bare bank for cochleagrams. `subbands`, `Subbands` (a collection of Sounds: `.envelopes()`, `.tfs()`, `.synthesize()`) |
 | [`frames.gabor`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py) | `GaborFrame` (the STFT as a frame; any window, zero-padded FFTs), `TVGaborFrame` (a Gabor frame whose window changes over time, from an explicit schedule, `from_function`, or `pitch_adaptive` from an F0 track; exact inverse; coefficients are a `TVSTFT`), `STFT` (a `GaborFrame` analysis: exact inverse, fast Griffin-Lim), `TVSTFT` (a `TVGaborFrame` analysis) |
 | [`frames.mask`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/mask.py) | `Mask`, `ideal_binary_mask`, `ideal_ratio_mask` |
-| [`views.view`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/view.py) | `View` (the base of every view: a `discards` sentence saying what it drops, and a `synthesize` that raises `NotInvertibleError` with that reason and the route back to sound, if any) |
+| [`views.view`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/view.py) | `View` (the base of every view: a `discards` sentence saying what it drops, and a `synthesize` and a `to_sound` that raise `NotInvertibleError` with that reason and the route back to sound, if any; views with a canonical route back override `to_sound`) |
 | [`views.spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py) | `Spectrum` (`.to_sound` with a noise, a sound's phase or the minimum phase as carrier), `long_term_spectrum`, `tandem_power` (TANDEM-STRAIGHT-style pitch-adaptive power, after Kawahara et al., 2011; magnitude only, a `TFPower`) |
 | [`views.reassigned`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/reassigned.py) | `reassigned_spectrogram` (Kodera et al., 1978; Auger & Flandrin, 1995: spectrogram cells moved to their reassigned time and frequency, binned for display; not invertible) |
 | [`views.envelopes`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py) | `Envelope` (one envelope; `env * snd` modulates), `Envelopes` (one per band, i.e. a cochleagram; `.plot()`, `.modulation_spectrum()`, `env * subbands`); `noise_vocode` (the channel vocoder of cochlear-implant simulations, after Shannon et al., 1995: band envelopes, lowpassed at any cutoff, on a carrier of noise, tones at the band centres, or any sound) |
@@ -306,37 +306,23 @@ Where to go for what sonore leaves out:
 
 ## Roadmap
 
-What is planned comes first, in the order it will be done; finished work is
-listed at the end.
+What is planned comes first; finished work is listed at the end.
 
-**Next, in order**
+**Next**
 
-1. **Texture modulation convergence.** Rebalance the objective so
-   modulation power converges (see Texture synthesis below).
+- **Cocktail party scenes.** Gallery scenes on the Moving talkers page
+  with three to six talkers walking on slowly bending paths, 10 to 30 s
+  long, with speech from LibriSpeech dev-clean (CC BY 4.0).
 
 **Texture synthesis**
 
-- Rebalance the objective so modulation power converges (it reaches 30 dB
-  SNR when imposed without the correlation classes, but 18-23 dB in full
-  synthesis); try joint imposition of all channels.
-- Impose several channels at once; the per-channel objective is
-  overhead-bound (about 2 s per iteration for 5 s of sound).
-- Validate against the MATLAB toolbox's published examples by running both
-  on the same original recordings.
-
-**Architecture**
-
-- Folders follow meaning, and imports between modules never form a cycle;
-  `tests/test_layers.py` keeps enforcing it. A voice is not a separate kind
-  of sound, so there is no `voice` subpackage: synthesizers live in
-  `sources` and analyses of a voice in `views`. Heavy dependencies go in
-  optional extras.
-- Split a component into its own distribution only when it needs a heavy
-  dependency, a different release cadence, or a separate audience.
-- Bayesian inference of sound sources will be a separate package built on
-  sonore (JAX plus a probabilistic-programming layer), using sonore's
-  generators, frames and texture statistics as its differentiable forward
-  model.
+- **Modulation convergence.** Rebalance the objective so modulation power
+  converges: it reaches 30 dB SNR when imposed without the correlation
+  classes, but 18-23 dB in full synthesis.
+- **All channels at once.** Impose the channels jointly; the per-channel
+  objective is overhead-bound (about 2 s per iteration for 5 s of sound).
+- **Validation.** Run the MATLAB toolbox on the same original recordings
+  and compare with its published examples.
 
 **Other**
 
@@ -346,6 +332,10 @@ listed at the end.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - On-demand download of other public HRIR databases.
+- A separate package for Bayesian inference of sound sources, built on
+  sonore (JAX plus a probabilistic-programming layer), using sonore's
+  sources, frames and texture statistics as its differentiable forward
+  model.
 - A block-by-block (streaming) modulation spectrogram, as the reference for a
   live version on a phone: the modulation spectrum of everyday sounds as they happen.
 
@@ -411,8 +401,8 @@ listed at the end.
   pitch never aliases. The square, sawtooth, pulse train and Schroeder
   complexes follow contours too. With `so.noise_vocode(snd, 16,
   carrier=...)` it puts a sound's band envelopes on harmonics that follow
-  its own F0 track. The harmonic half of the pulse-plus-noise synthesis in
-  item 1 of Next; see `docs/design/sources/harmonic-source.md` and the
+  its own F0 track. The harmonic half of the pulse-plus-noise synthesis
+  that WORLD's vocoder (below) completes; see `docs/design/sources/harmonic-source.md` and the
   [Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) gallery page.
 - **Klatt-style formant synthesizer.** `so.klatt_synthesize` after Klatt
   (1980): harmonic voicing with Klatt's glottal spectrum, aspiration and
@@ -483,7 +473,6 @@ listed at the end.
   (one-way), and a `View` base class whose `synthesize` raises
   `NotInvertibleError`, saying what the view discards and naming the route
   back to sound where one exists; see `docs/design/layout/reorganization.md`.
-
 - **Sound first.** Folders follow meaning (`core`, `sources`, `frames`,
   `views`, `spatial`, `texture`), with import order kept module by module.
   A view goes back to sound through `to_sound` where a canonical route
