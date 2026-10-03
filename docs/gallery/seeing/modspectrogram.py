@@ -284,7 +284,7 @@ fig = msg.slices(2.0, rate=4.0)
 # - Dau, Kollmeier & Kohlrausch (1997). Modeling auditory processing of amplitude modulation. I.
 #   Detection and masking with narrow-band carriers. *JASA* 102(5), 2892–2905.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/9373976/). Modulation filters a few cycles long.
-#   [`modulation.HannModulationFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L151)
+#   [`modulation.HannModulationFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L157)
 # - Greenberg & Kingsbury (1997). The modulation spectrogram: in pursuit of an invariant
 #   representation of speech. *Proc. ICASSP 1997*, vol. 3, 1647–1650.
 #   [Semantic Scholar](https://www.semanticscholar.org/paper/71c0095d37084b6055a1abc8d4edcde3ef9f130b).

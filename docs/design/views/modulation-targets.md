@@ -5,7 +5,11 @@ spectrum: by drawing it, or in other ways. This note answers that, measures
 what such a specification actually pins down, and proposes what sonore
 could offer. It adds no library code; the decisions at the end come first.
 
-Status: accepted 2026-10-03. Cho accepted D1–D9 as recommended. The claims are checked by
+Status: accepted 2026-10-03. Cho accepted D1–D9 as recommended. D2–D6
+are implemented (`ModulationSpectrum.to_envelopes`, `with_gain` and
+`to_sound` in `src/sonore/views/modulation.py`, tested in
+`tests/views/test_modulation.py`); D1's blobs, D6's `rms_depth`, D7 and D9
+follow. The claims are checked by
 `tools/check_modulation_targets_claims.py` (C1–C6), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its
 formula, and shares no code with sonore. It runs in about 20 s. The numbers
@@ -56,10 +60,11 @@ phase of the 2-D transform holds the timing of every event and how the
 bands line up across frequency. Any phase gives the same power spectrum,
 and the inverse transform of each is an envelope array with exactly that
 spectrum, as long as it stays non-negative. Beyond phase, a target leaves
-out three more things, each of which a route back to sound has to supply:
+out three more things, which a route back to sound has to supply or store:
 
-- **the envelope mean**, which is the long-term spectrum (the 2-D transform
-  is taken after the mean is removed, in sonore as in the checker);
+- **the overall level**: the 2-D transform is taken after removing one
+  number, the mean of the whole envelope array (in sonore as in the
+  checker); the long-term spectrum's shape stays in the zero-rate column;
 - **the fine structure** under the envelopes, i.e. the carrier;
 - **the analysis it was measured with**: the filterbank, the envelope
   extraction, compression, and linear or dB envelopes. C10 of
@@ -287,7 +292,7 @@ is the model: the spectrum gives magnitudes, the carrier gives phase. Its
 the carrier an argument.
 
 A modulation spectrum lacks phase at two levels, and the carrier supplies
-both, plus the envelope mean:
+both:
 
 1. **The modulation phase** (when events happen, how bands line up): the
    phase of the 2-D transform of the carrier's envelope array. The target
@@ -295,8 +300,11 @@ both, plus the envelope mean:
    exactly the target spectrum, clipped at zero where needed (C1, C2).
 2. **The fine structure** (the phase within each band): the carrier's
    band phases, or a steady tone per band (C3, C6).
-3. **The envelope mean** (the long-term spectrum): the carrier's, unless
-   given.
+3. **The envelope mean**: the 2-D transform is taken after removing one
+   number, the mean over the whole array, so the long-term spectrum is
+   kept in the transform's zero-rate column. The spectrum stores that
+   number too, and the carrier does not have to supply it (a change made
+   while implementing D2).
 
 A person thinks in magnitudes on a time-frequency grid (Cho, 2026-10-03),
 so both phases start random and can then be improved by a search that
@@ -354,8 +362,9 @@ All accepted 2026-10-03.
   for drawing is left to TrackDraw, which would hand over the same blob list
   or grid. Accepted 2026-10-03.
 - **D2. `ModulationSpectrum.to_sound(carrier=..., iterations=0, rng=...)`**,
-  with the carrier supplying the modulation phase, the fine structure and
-  the envelope mean, as above. `carrier` is a `Sound`, `"noise"` (random
+  with the carrier supplying the modulation phase and the fine structure,
+  as above (the mean is stored with the spectrum). `iterations` comes
+  with D7. `carrier` is a `Sound`, `"noise"` (random
   modulation phase and noise fine structure) or `"tones"` (random
   modulation phase, steady tones at the band centres). Accepted
   2026-10-03 (Cho's proposal). It needs `ModulationSpectrum` to keep the untapered magnitude
