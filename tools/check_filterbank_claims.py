@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/frames/filterbanks.md (C1-C8).
+"""Numerical checks for the claims in docs/design/frames/filterbanks.md (C1-C10).
 
 Like the frames checkers, this is independent of sonore: only NumPy and
 SciPy, with every scale and filter written out from its formula, so the
@@ -99,12 +99,14 @@ report(
 )
 
 # C5. Other widths: s stays constant (= width) only when twice the width, in
-# spacings, is a whole number of at least 2.
+# spacings, is a whole number of at least 2. Checked only where every cosine
+# that reaches a point is in the bank (ceil(width) knots in from each end).
 for width in (0.75, 1.25, 1.5, 2.0, 2.5):
     position = erb_to(rfft_freqs)[:, None]
     distance = (position - uniform_knots[None, :]) / ((uniform_knots[1] - uniform_knots[0]) * width)
     transfer = np.where(np.abs(distance) < 1, np.cos(np.pi / 2 * np.clip(distance, -1, 1)), 0.0)
-    inner = (position[:, 0] > uniform_knots[1]) & (position[:, 0] < uniform_knots[-2])
+    reach = int(np.ceil(width))
+    inner = (position[:, 0] > uniform_knots[reach]) & (position[:, 0] < uniform_knots[-1 - reach])
     s = power_sum(transfer)[inner]
     report("C5", f"width {width} spacings: min s between the inner centers", s.min())
     report("C5", f"width {width} spacings: max s between the inner centers", s.max())
@@ -160,3 +162,28 @@ for _ in range(repeats):
     np.abs(np.sum(np.abs(transfer) ** 2, axis=1) - 1).max()
 measuring = (time.perf_counter() - start) / repeats
 report("C8", "5 s at 44.1 kHz, 32 filters: time to measure s / time of synthesis", measuring / transforms)
+
+
+# C9. Taking the tight path (re-filter, no division by s) on a bank whose s is
+# not constant loses exactly the ripple: per frequency the output is s / c
+# times the input, so the error is bounded by max |s / c - 1|.
+signal = rng.standard_normal(N_SAMPLES)
+spectrum = np.fft.rfft(signal)
+for ripple in (1e-14, 1e-12, 1e-6, 1e-2):
+    s_rippled = 1 + ripple * np.cos(np.linspace(0, 40 * np.pi, len(rfft_freqs)))
+    rebuilt = np.fft.irfft(spectrum * s_rippled, n=N_SAMPLES)
+    error = np.abs(rebuilt - signal).max() / np.abs(signal).max()
+    report("C9", f"ripple {ripple:g} in s, tight path: largest error / peak", error)
+
+
+# C10. A frame with a small lower bound inverts exactly in theory but loses
+# accuracy in floating point: the canonical dual divides by s, amplifying
+# round-off by up to B / A.
+for condition in (1e2, 1e6, 1e10, 1e12):
+    s_bounds = np.where(rfft_freqs < 1000, 1.0, 1.0 / condition)
+    responses = np.sqrt(s_bounds)
+    bands = np.fft.irfft(spectrum * responses, n=N_SAMPLES)
+    bands = bands + np.finfo(float).eps * np.abs(bands).max() * rng.standard_normal(N_SAMPLES)
+    rebuilt = np.fft.irfft(np.fft.rfft(bands) * responses / s_bounds, n=N_SAMPLES)
+    error = np.abs(rebuilt - signal).max() / np.abs(signal).max()
+    report("C10", f"B/A = {condition:g}, one rounding step in the bands: error / peak", error)
