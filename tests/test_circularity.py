@@ -16,8 +16,8 @@ from helpers import FAST, FAST_HI, FS
 import sonore as so
 
 N = FS
-ERB = so.ERBFilterbank(30, 50, 8000)
-OCTAVE = so.OctaveFilterbank.per_octave(12, 125, 8000)
+ERB = so.cosine_filterbank(30, 50, 8000)
+OCTAVE = so.cosine_filterbank(f_lo=125, f_hi=8000, spacing=1 / 12, scale="octave")
 
 
 def click(at=0.02):
@@ -80,13 +80,13 @@ def test_padding_is_hidden():
     assert sb.pad > 0 and ERB.analyze(s, pad=0).pad == 0
     assert sb.data.shape[0] == len(s) == sb.n_samples
     assert sb.envelopes().data.shape[0] == len(s)
-    assert len(sb.synthesize()) == len(s)
-    np.testing.assert_allclose(sb.synthesize().data, s.data, atol=1e-10)
+    assert len(sb.to_sound()) == len(s)
+    np.testing.assert_allclose(sb.to_sound().data, s.data, atol=1e-10)
 
 
 def test_unpadded_envelopes_combine_with_padded_bands():
     # a rendered pattern (no padding) times the bands of a padded analysis
-    fb = so.OctaveFilterbank.per_octave(6, 250, 4000)
+    fb = so.cosine_filterbank(f_lo=250, f_hi=4000, spacing=1 / 6, scale="octave")
     carrier = burst()
     env = so.Ripple(4, 1, depth=0).render(fb, carrier.duration, FS)
     out = (env * fb.analyze(carrier).tfs()).sum()
@@ -105,7 +105,7 @@ def test_auto_padding_covers_the_ringing_at_a_fast_fft_length():
     from sonore.core.fft import _is_fast
 
     s = burst()
-    for fb in (ERB, so.GammatoneFilterbank(20, 80.0, 6000.0)):
+    for fb in (ERB, so.gammatone_filterbank(20, 80.0, 6000.0)):
         sb = fb.analyze(s)
         n = sb._full.shape[0]
         assert sb.pad >= fb.ringing(FS) and _is_fast(n)

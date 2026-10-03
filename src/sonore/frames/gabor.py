@@ -15,7 +15,7 @@ SciPy's ``istft`` is the least-squares inverse.
 ``s(t) = M sum_q |w_q(t - a_q)|**2``.
 
 :class:`STFT` and :class:`TVSTFT` are their coefficients, which synthesize
-back exactly. Levels are in dB of *power* (``20*log10|X|``).
+back exactly. Levels are in dB, ``20 log10 |X|``.
 """
 
 from __future__ import annotations
@@ -23,17 +23,13 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.signal import ShortTimeFFT, get_window
 
 from sonore.core.sound import Sound
-from sonore.frames.frame import Frame, _check_frame
-
-if TYPE_CHECKING:
-    pass
 from sonore.core.utils import amp_to_db, as_rng, n_samples
+from sonore.frames.frame import Frame, _check_frame
 
 __all__ = ["GaborFrame", "TVGaborFrame", "STFT", "TVSTFT"]
 
@@ -60,6 +56,15 @@ class _ShortTimeFourierFrame(Frame):
 class GaborFrame(_ShortTimeFourierFrame):
     """The one-sided short-time Fourier transform as a frame.
 
+    Durations are rounded to samples per sampling rate, and the
+    :class:`~scipy.signal.ShortTimeFFT` is built once per rate
+    (:meth:`sft`). ``analyze`` returns an :class:`~sonore.STFT`.
+
+    Analysis always works, even for a window and hop that leave gaps
+    (A = 0, including a hop longer than the window): the STFT is still a
+    picture of the sound. :meth:`synthesize` (and Griffin-Lim) refuse such a
+    pair, and the error gives the frame bounds.
+
     Parameters
     ----------
     win_dur
@@ -71,15 +76,6 @@ class GaborFrame(_ShortTimeFourierFrame):
         periodically, or a callable ``n -> array`` of length ``n``.
     n_fft
         FFT length K (``>=`` the window length); defaults to the window length.
-
-    Durations are rounded to samples per sampling rate, and the
-    :class:`~scipy.signal.ShortTimeFFT` is built once per rate
-    (:meth:`sft`). ``analyze`` returns an :class:`~sonore.STFT`.
-
-    Analysis always works, even for a window and hop that leave gaps
-    (A = 0, including a hop longer than the window): the STFT is still a
-    picture of the sound. :meth:`synthesize` (and Griffin-Lim) refuse such a
-    pair, and the error gives the frame bounds.
     """
 
     win_dur: float
@@ -225,6 +221,11 @@ class TVGaborFrame(_ShortTimeFourierFrame):
     times are rounded to samples at each sampling rate, and a window longer
     than ``n_fft`` is refused when the frame is first used at a rate.
 
+    ``analyze`` returns a :class:`~sonore.frames.gabor.TVSTFT`, data shape
+    ``(n_channels, n_fft // 2 + 1, len(times))``. The signal is zero outside
+    its own extent, as in :class:`GaborFrame`. A constant schedule over the
+    time windows SciPy uses reproduces :class:`GaborFrame` exactly.
+
     Parameters
     ----------
     times
@@ -236,11 +237,6 @@ class TVGaborFrame(_ShortTimeFourierFrame):
     window
         A :func:`scipy.signal.get_window` spec, sampled periodically at each
         window's length, or a callable ``n -> array``.
-
-    ``analyze`` returns a :class:`~sonore.frames.gabor.TVSTFT`, data shape
-    ``(n_channels, n_fft // 2 + 1, len(times))``. The signal is zero outside
-    its own extent, as in :class:`GaborFrame`. A constant schedule over the
-    time windows SciPy uses reproduces :class:`GaborFrame` exactly.
     """
 
     times: Sequence[float]
@@ -537,10 +533,11 @@ class STFT(_ShortTimeCoefficients):
         return int(self.sft.m_num)
 
     def __mul__(self, other):
-        from sonore.frames.mask import Mask  # mask.py imports STFT from here
+        from sonore.views.mask import Mask  # views.mask imports STFT from here
 
-        gains = other.values if isinstance(other, Mask) else other
-        return STFT._from(self, self.data * gains)
+        if isinstance(other, Mask):
+            return other.apply(self)
+        return STFT._from(self, self.data * other)
 
     __rmul__ = __mul__
 
@@ -574,7 +571,8 @@ class TVSTFT(_ShortTimeCoefficients):
     :class:`STFT`, on one frequency grid :attr:`f` (every window is
     zero-padded to the same FFT length) and at non-uniform window centers
     :attr:`t`. :meth:`to_sound` is exact for unmodified coefficients and the
-    least-squares signal for modified ones. Multiply by an array to mask.
+    least-squares signal for modified ones. Multiply by an array or a
+    :class:`~sonore.views.mask.Mask` to mask.
     """
 
     def __init__(self, data: np.ndarray, fs: float, n_samples: int, frame: TVGaborFrame):
@@ -612,6 +610,10 @@ class TVSTFT(_ShortTimeCoefficients):
         return int(self.frame.layout(self.fs).lengths.min())
 
     def __mul__(self, other):
+        from sonore.views.mask import Mask  # views.mask imports TVSTFT from here
+
+        if isinstance(other, Mask):
+            return other.apply(self)
         return TVSTFT._from(self, self.data * other)
 
     __rmul__ = __mul__

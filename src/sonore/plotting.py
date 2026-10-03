@@ -117,9 +117,18 @@ def plot_stft(
 
 
 def plot_mask(mask, ax=None, channel=0, cmap="Greys_r", colorbar=False):
+    """A mask's gains as an image, black 0 to white 1: time windows by FFT
+    bins for an STFT mask, samples by bands for a subband mask."""
+    from sonore.frames.filterbank import Subbands
+
     ax = _ax(ax)
-    values = mask.values[channel] if mask.values.ndim == 3 else mask.values
-    _tf_image(ax, values, mask.t, mask.f, cmap, 0, 1, colorbar, "")
+    like = mask._like
+    if isinstance(like, Subbands):
+        values = mask.values[like.pad : mask.values.shape[0] - like.pad, :, channel].T
+        _image(ax, mask.t, mask.f, values, cmap, 0, 1, colorbar, "")
+        ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", yscale="log")
+    else:
+        _tf_image(ax, mask.values[channel], mask.t, mask.f, cmap, 0, 1, colorbar, "")
     ax.set_title("Mask")
     return ax
 
@@ -380,10 +389,7 @@ def plot_envelopes(
     if align is None:
         t, f = env.t, cfs
     elif align == "peak":
-        delay = getattr(env.filterbank, "envelope_peak_delay", None)
-        if delay is None:
-            raise TypeError(f"{type(env.filterbank).__name__} has no envelope_peak_delay to align by")
-        t = env.t[None, :] - np.asarray(delay)[sel][:, None]  # one time axis per band
+        t = env.t[None, :] - env.filterbank.envelope_peak_delay[sel][:, None]  # one time axis per band
         f = np.broadcast_to(cfs[:, None], t.shape)
     else:
         raise ValueError("align must be None or 'peak'")

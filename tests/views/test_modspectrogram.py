@@ -18,7 +18,7 @@ def am_tone(rate=4.0, depth=0.5, dur=3.0, on=(1.0, 2.0), fc=1000.0):
 
 @pytest.fixture(scope="module")
 def tone_env():
-    fb = so.ERBFilterbank(n_bands=24, f_lo=100, f_hi=7000)
+    fb = so.cosine_filterbank(n_bands=24, f_lo=100, f_hi=7000)
     return fb.analyze(am_tone()).envelopes(fs=FE)
 
 
@@ -101,7 +101,7 @@ def test_glide_is_tracked():
     t = np.arange(int(dur * FS)) / FS
     phase = 2 * np.pi * r0 * dur / np.log(r1 / r0) * ((r1 / r0) ** (t / dur) - 1)
     snd = so.Sound(0.1 * (1 + 0.5 * np.sin(phase)) * np.sin(2 * np.pi * 1000 * t), FS)
-    env = so.ERBFilterbank(n_bands=12, f_lo=500, f_hi=2000).analyze(snd).envelopes(fs=FE)
+    env = so.cosine_filterbank(n_bands=12, f_lo=500, f_hi=2000).analyze(snd).envelopes(fs=FE)
     msg = so.ModulationSpectrogram(env, f_lo=2.0, f_hi=32.0, per_octave=4)
     band = int(np.argmin(np.abs(msg.f - 1000)))
     D = np.log(msg.depth[0, band] + 1e-12)  # (K, F)
@@ -115,7 +115,7 @@ def test_glide_is_tracked():
 
 
 def test_checks():
-    fb = so.ERBFilterbank(n_bands=8, f_lo=200, f_hi=4000)
+    fb = so.cosine_filterbank(n_bands=8, f_lo=200, f_hi=4000)
     env = fb.analyze(am_tone(dur=0.5, on=(0, 0.5))).envelopes(fs=150)
     with pytest.raises(ValueError, match="too low"):
         so.ModulationSpectrogram(env)
@@ -129,7 +129,7 @@ def test_stereo_and_silence():
     rng = np.random.default_rng(2)
     x = np.zeros((8000, 2))
     x[2000:6000, 0] = rng.standard_normal(4000)
-    fb = so.ERBFilterbank(n_bands=8, f_lo=200, f_hi=4000)
+    fb = so.cosine_filterbank(n_bands=8, f_lo=200, f_hi=4000)
     msg = so.ModulationSpectrogram(fb.analyze(so.Sound(x, FS)).envelopes(fs=FE), f_lo=4.0, f_hi=32.0)
     assert msg.power.shape[0] == 2
     assert np.isnan(msg.depth[1]).all()  # a silent channel has no depth
@@ -179,7 +179,7 @@ def test_animation_with_audio(tmp_path):
     import matplotlib.pyplot as plt
 
     snd = am_tone(dur=0.3, on=(0, 0.3))
-    env = so.ERBFilterbank(n_bands=4, f_lo=500, f_hi=2000).analyze(snd).envelopes(fs=FE)
+    env = so.cosine_filterbank(n_bands=4, f_lo=500, f_hi=2000).analyze(snd).envelopes(fs=FE)
     msg = so.ModulationSpectrogram(env, f_lo=16.0, f_hi=32.0)
     path = tmp_path / "msg.mp4"
     msg.animate(path, sound=snd, fps=10, figsize=(2, 2), dpi=50)

@@ -34,26 +34,32 @@ def _noise(n_channels=1, seed=0):
 
 
 @dataclass(frozen=True)
-class _UntightERB(so.ERBFilterbank):
-    """An ERB bank forced through the general (divide-by-s) synthesis path."""
+class _ForcedGeneral(so.Filterbank):
+    """A bank forced through the general (divide-by-s) synthesis path."""
 
-    tight = False
+    def _tight_gain(self, n, fs):
+        return None
+
+
+def _forced_general(bank):
+    return _ForcedGeneral(bank.scale, bank.knots, bank.filter_type, edges=bank.edges)
 
 
 def test_cosine_banks_are_tight_filterbank_frames():
-    for fb in [so.ERBFilterbank(10, 50, 3000), so.OctaveFilterbank(6, 125, 3000)]:
+    for fb in [so.cosine_filterbank(10, 50, 3000), so.cosine_filterbank(6, 125, 3000, scale="octave")]:
         assert isinstance(fb, so.Filterbank) and isinstance(fb, so.Frame)
-        assert fb.tight and fb.n_filters == fb.n_bands + 2
+        assert fb.is_tight(N, FS) and fb.n_filters == fb.n_bands + 2
         assert fb.frame_bounds(N, FS) == (1.0, 1.0)
         s = fb.frame_power(N, FS)
-        assert np.allclose(s, 1.0, atol=1e-12)  # the flag is backed by the responses
+        assert np.allclose(s, 1.0, atol=1e-12)  # the measurement is backed by the responses
 
 
 @pytest.mark.parametrize("pad", ["auto", 0])
 @pytest.mark.parametrize("n_channels", [1, 2])
 def test_tight_path_equals_general_path(pad, n_channels):
     x = _noise(n_channels)
-    tight, general = so.ERBFilterbank(10, 50, 3000), _UntightERB(10, 50, 3000)
+    tight = so.cosine_filterbank(10, 50, 3000)
+    general = _forced_general(tight)
     sb = tight.analyze(x, pad=pad)
     masked = so.Subbands(sb._full * np.linspace(0, 1, sb._full.shape[1])[None, :, None], FS, tight, sb.pad)
     for coefs in (sb, masked):
@@ -71,7 +77,7 @@ def test_nontight_filterbank_reconstructs_exactly(pad, n_channels):
     assert 0 < lo < 0.9 * hi  # genuinely non-tight
     sb = fb.analyze(x, pad=pad)
     assert sb.data.shape == (N, fb.n_filters, n_channels)
-    assert np.allclose(sb.synthesize().data, x.data, rtol=0, atol=1e-12)
+    assert np.allclose(sb.to_sound().data, x.data, rtol=0, atol=1e-12)
 
 
 @pytest.mark.parametrize("pad", ["auto", 0])
@@ -89,7 +95,7 @@ def test_energy_lies_within_frame_bounds(pad):
 def test_cosine_energy_is_signal_energy():
     x = _noise(2, 3)
     for pad in ["auto", 0]:
-        e = so.ERBFilterbank(10, 50, 3000).energy(so.ERBFilterbank(10, 50, 3000).analyze(x, pad=pad))
+        e = so.cosine_filterbank(10, 50, 3000).energy(so.cosine_filterbank(10, 50, 3000).analyze(x, pad=pad))
         assert np.allclose(e, np.sum(x.data**2, axis=0), rtol=1e-12)
 
 
@@ -101,12 +107,12 @@ def test_coverage_gap_analyzes_but_refuses_to_synthesize():
     env = sb.envelopes()
     assert env.data.shape == (N, fb.n_filters, 1)
     with pytest.raises(ValueError, match="not a frame"):
-        sb.synthesize()
+        sb.to_sound()
 
 
-def test_modulation_spectrum_needs_a_scale():
-    env = GaussianFilterbank().analyze(_noise()).envelopes()
-    with pytest.raises(TypeError, match="spacing"):
+def test_modulation_spectrum_needs_evenly_spaced_centers():
+    env = so.cosine_filterbank(centers=[100, 300, 400, 1200, 2000]).analyze(_noise()).envelopes()
+    with pytest.raises(TypeError, match="evenly spaced"):
         env.modulation_spectrum()
 
 
@@ -327,16 +333,16 @@ def test_tvstft_container():
 # padded circular grid).
 
 ORACLE = {
-    "erb": (so.ERBFilterbank(10, 50, 3000), ["auto", 0]),
-    "octave": (so.OctaveFilterbank(6, 125, 3000), ["auto", 0]),
+    "erb": (so.cosine_filterbank(10, 50, 3000), ["auto", 0]),
+    "octave": (so.cosine_filterbank(6, 125, 3000, scale="octave"), ["auto", 0]),
     "gaussian": (GaussianFilterbank(), ["auto", 0]),
     # A fractional delay rings for thousands of samples near Nyquist, so pad
     # explicitly: the padded-grid oracle would otherwise be thousands wide.
     "delayed gaussian": (DelayedGaussianFilterbank(f_hi=FS / 2), [0, 4e-3]),
     # Step 2 banks; explicit pads keep the padded-grid oracle small (they ring 25-40 ms).
-    "gammatone": (so.GammatoneFilterbank(19, 300, 3500), [0, 4e-3]),
-    "gammatone zero": (so.GammatoneFilterbank(19, 300, 3500, phase="zero"), [0, 4e-3]),
-    "morlet": (so.MorletFilterbank(5, 300, 3500, cycles=3), [0, 4e-3]),
+    "gammatone": (so.gammatone_filterbank(19, 300, 3500), [0, 4e-3]),
+    "gammatone zero": (so.gammatone_filterbank(19, 300, 3500, phase="zero"), [0, 4e-3]),
+    "morlet": (so.morlet_filterbank(5, 300, 3500, cycles=3), [0, 4e-3]),
     **{f"gabor {k}": (v, [None]) for k, v in GABORS.items()},
     **{k: (v, [None]) for k, v in TVS.items()},
 }
@@ -365,7 +371,7 @@ def _masked(coefs, seed=0):
 
 def _is_padded_grid_case(frame, pad):
     """Padded non-tight filterbank: least squares on the padded grid."""
-    return isinstance(frame, so.Filterbank) and not frame.tight and pad != 0
+    return isinstance(frame, so.Filterbank) and not frame.is_tight(N, FS, pad) and pad != 0
 
 
 @pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)
@@ -417,14 +423,16 @@ def test_masked_synthesis_is_the_documented_least_squares(name, pad):
 
 
 @dataclass(frozen=True)
-class _WronglyTightGaussian(GaussianFilterbank):
+class _WronglyTight(so.Filterbank):
     """Re-filters with H instead of H/s: what the oracle must catch."""
 
-    tight = True
+    def _tight_gain(self, n, fs):
+        return 1.0
 
 
 def test_oracle_catches_a_wrong_dual():
-    good, bad = GaussianFilterbank(), _WronglyTightGaussian()
+    good = GaussianFilterbank()
+    bad = _WronglyTight(good.scale, good.knots, good.filter_type, edges=good.edges)
     masked = _masked(good.analyze(_noise(1, 7), pad=0))
     T, w = dense_operator(good, N, FS, 0)
     canonical = canonical_lstsq(T, w, coef_matrix(masked)[:, 0])
@@ -467,7 +475,7 @@ def test_gabor_adjoint_inner_product(name):
 
 
 def test_tight_adjoint_is_synthesis():
-    fb = so.ERBFilterbank(10, 50, 3000)
+    fb = so.cosine_filterbank(10, 50, 3000)
     for pad in ("auto", 0):
         coefs = _masked(fb.analyze(_noise(2, 12), pad=pad))
         assert np.array_equal(fb.adjoint(coefs).data, fb.synthesize(coefs).data)
@@ -475,7 +483,7 @@ def test_tight_adjoint_is_synthesis():
 
 # ----------------------------------------------------------- Nyquist rule
 @dataclass(frozen=True)
-class _NaiveNyquist(DelayedGaussianFilterbank):
+class _NaiveNyquist(so.Filterbank):
     """Without the Nyquist rule: the dual divides by |H(fs/2)|^2 while analysis
     applied Re H(fs/2), so reconstruction is not exact."""
 
@@ -486,7 +494,8 @@ class _NaiveNyquist(DelayedGaussianFilterbank):
 @pytest.mark.parametrize("n", [N, N + 1])
 @pytest.mark.parametrize("pad", ["auto", 0])
 def test_nyquist_rule_keeps_complex_banks_exact(n, pad):
-    fb, naive = DelayedGaussianFilterbank(f_hi=FS / 2), _NaiveNyquist(f_hi=FS / 2)
+    fb = DelayedGaussianFilterbank(f_hi=FS / 2)
+    naive = _NaiveNyquist(fb.scale, fb.knots, fb.filter_type, edges=fb.edges)
     x = so.Sound(np.random.default_rng(13).standard_normal((n, 2)), FS)
     H = fb.rfft_response(n, FS)
     assert np.iscomplexobj(H) and np.all(H[-1].imag == 0) == (n % 2 == 0)
@@ -499,7 +508,7 @@ def test_nyquist_rule_keeps_complex_banks_exact(n, pad):
 
 
 def test_nyquist_rule_leaves_real_responses_alone():
-    fb = so.ERBFilterbank(10, 50, FS / 2)
+    fb = so.cosine_filterbank(10, 50, FS / 2)
     H = fb.rfft_response(N, FS)
     assert H.dtype == float and np.array_equal(H, fb.response(np.fft.rfftfreq(N, 1 / FS)))
 

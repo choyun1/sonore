@@ -122,7 +122,7 @@ def show(snd, ir, kw=None):
     profile = (kw or {}).get("rt60_profile")
     if profile:
         # requested profile, computed over synth_ir's own bands (which run to 16 kHz)
-        synth_cfs = so.ERBFilterbank(32, 20, min(16000, 0.95 * FS / 2)).cfs
+        synth_cfs = so.cosine_filterbank(32, 20, min(16000, 0.95 * FS / 2)).cfs
         requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile))
         axes[1, 1].semilogx(cfs, requested, color="tab:purple", lw=1, ls=":", label=f"requested ({profile})")
     if not kw or "decay_shape" not in kw:

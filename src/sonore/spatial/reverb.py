@@ -10,7 +10,7 @@ import numpy as np
 
 from sonore.core.sound import Sound
 from sonore.core.utils import _below_nyquist, as_rng, db_to_amp
-from sonore.frames.filterbank import ERBFilterbank
+from sonore.frames.filterbank import cosine_filterbank
 from sonore.sources.waveforms import gaussian_noise
 from sonore.views.envelopes import Envelopes
 
@@ -131,7 +131,7 @@ def synth_ir(
     fit_drr, _, fit_freqs = _model()
     rng = as_rng(rng)
     f_hi = min(f_hi, _below_nyquist(fs))
-    filterbank = ERBFilterbank(n_bands, f_lo, f_hi)
+    filterbank = cosine_filterbank(n_bands, f_lo, f_hi)
     cfs = filterbank.cfs
 
     taus = band_rt60s(rt60, cfs, rt60_profile)
@@ -156,7 +156,7 @@ def synth_ir(
     decay = Envelopes(envelopes, fs, filterbank)  # one decay envelope per band
     # analyze pads by default, so re-filtering the decaying bands can't wrap the
     # loud onset around to the end of the IR
-    tail = (decay * filterbank.analyze(noise)).synthesize().normalize()
+    tail = (decay * filterbank.analyze(noise)).to_sound().normalize()
 
     if drr_db is None:
         return tail
@@ -178,7 +178,7 @@ def measure_rt60(
     default measures T20 x 3). The direct sound, if any, should be removed
     first; bands that never decay through the fit range give NaN.
     """
-    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, _below_nyquist(ir.fs)))
+    filterbank = cosine_filterbank(n_bands, f_lo, min(f_hi, _below_nyquist(ir.fs)))
     bands = filterbank.analyze(ir.mono()).data[:, 1:-1, 0]  # bandpass bands only
     energy = np.cumsum(bands[::-1] ** 2, axis=0)[::-1]
     t = np.arange(len(ir)) / ir.fs

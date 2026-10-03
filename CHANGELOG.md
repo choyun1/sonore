@@ -6,6 +6,67 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Changed
+- `so.pad` and `so.truncate` are replaced by
+  `so.match_lengths(sounds, mode="pad" | "truncate", align=...)`, next to
+  `so.match_fs` and `so.match_channels`; `align` now also chooses which
+  part a truncated sound keeps. `Sound.pad` is unchanged and is now the only
+  `pad`.
+- `Sound.fs` is read-only, like the samples.
+- In a notebook, a Sound plays at its true level instead of being
+  normalized by the player; a sound peaking above 1 shows a note suggesting
+  `normalize(peak=...)` instead of a player.
+- Clearer errors: `2 - snd` says why it is ambiguous (`0 - snd` still
+  inverts), an array of the wrong length gets the "lengths differ" message,
+  `snd.right` on a mono sound and `normalize` of silence raise a sonore
+  message instead of NumPy's `IndexError` or a division by zero.
+- One `so.Filterbank` class holds every undecimated bank: a frequency scale
+  (`"erb"`, `"octave"`, `"mel"`, `"linear"` or your own `Scale`), the
+  centers as positions on it, and a filter type (`Cosine`, `Gammatone`,
+  `Morlet`, or your own `FilterType`). `so.cosine_filterbank`,
+  `so.gammatone_filterbank` and `so.morlet_filterbank` build the common
+  ones and replace `ERBFilterbank`, `OctaveFilterbank`, `CosineFilterbank`,
+  `GammatoneFilterbank`, `MorletFilterbank` and `BandpassFilterbank`
+  (`OctaveFilterbank.per_octave(12, lo, hi)` is now
+  `cosine_filterbank(f_lo=lo, f_hi=hi, spacing=1/12, scale="octave")`).
+  Cosine banks keep their output bit for bit. New: any increasing
+  `centers=`, wider cosines (`width=`), and every factory on any scale
+  (docs/design/frames/filterbanks.md).
+- Tightness is measured, not declared: the `tight` attribute is gone, and
+  `bank.is_tight(n_samples, fs)` and synthesis decide from `s` on the
+  grid the coefficients live on (to 1e-12), so a bank is never treated as
+  tight when it is not.
+- `f_lo` and `f_hi` mean the same for every filter type: the outer knots, with
+  the bandpass centers strictly inside. For gammatone and Morlet banks this
+  moves the centers slightly for the same arguments (they used to start at
+  `f_lo`).
+- `envelope_peak_delay` is measured from each filter's impulse response,
+  so every bank has it (0 for zero-phase filters).
+- `Subbands.synthesize()` is now `Subbands.to_sound()`, like every other
+  set of coefficients.
+- `Mask` is a View (`sonore.views.mask`, was `sonore.frames.mask`): it holds
+  gains, not a sound, so `to_sound()` refuses and names the route back
+  (`(coefs * mask).to_sound()`). Masks now work on `TVSTFT` and `Subbands`
+  as well as `STFT`; for subbands the power is the squared Hilbert envelope
+  of each band. The docstrings cite the sources of the ideal binary and
+  ratio masks.
+
+### Documentation
+- Cosine filters credit the steerable pyramid as well as McDermott &
+  Simoncelli (2011): Simoncelli & Freeman (1995) for squared responses
+  summing to one, Portilla & Simoncelli (2000) for the cosines on a log2
+  scale. The README references gain these two and the mask sources, with
+  pages checked against the papers.
+- `GaborFrame` and `TVGaborFrame` docstrings put their Parameters last, so
+  the reference no longer folds the text after them into the list.
+- `frames`: the module docstring no longer promises a JAX port, and the
+  STFT's levels are described as "dB, `20 log10 |X|`" (audit sitting 7).
+- `Sound`: time slices behave like Python index slicing (negative times
+  count from the end, times past the end are clipped); `from_channels`
+  zero-pads shorter channels at the end; `resample` names SciPy's default
+  anti-aliasing filter. Docstrings for the remaining undocumented `Sound`
+  members.
+
 ### Changed (development)
 - `docs/make_figures.py` and the eight README figures only it drew are
   removed: it no longer ran once the gallery examples moved into the page

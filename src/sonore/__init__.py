@@ -21,12 +21,11 @@ from sonore.core.processing import (
     concat,
     match_channels,
     match_fs,
+    match_lengths,
     mix,
     normalize,
-    pad,
     relative_db,
     resonator,
-    truncate,
 )
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
@@ -42,18 +41,15 @@ from sonore.core.utils import (
     rms,
 )
 from sonore.frames.filterbank import (
-    CosineFilterbank,
-    ERBFilterbank,
     Filterbank,
-    GammatoneFilterbank,
-    MorletFilterbank,
-    OctaveFilterbank,
     Subbands,
+    cosine_filterbank,
+    gammatone_filterbank,
+    morlet_filterbank,
     subbands,
 )
 from sonore.frames.frame import Frame
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame, TVGaborFrame
-from sonore.frames.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.plotting import overview
 from sonore.sources.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
 from sonore.sources.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
@@ -100,6 +96,7 @@ from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
 from sonore.views.cepstrum import Cepstrum
 from sonore.views.envelopes import Envelope, Envelopes, noise_vocode
 from sonore.views.f0 import F0Track, f0_track, scale_f0
+from sonore.views.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.views.mfcc import MFCC
 from sonore.views.modspectrogram import ModulationSpectrogram
 from sonore.views.modulation import (
@@ -128,14 +125,14 @@ __all__ = [
     "OctaveModulationFilterbank",
     "measure_rt60",
     "band_rt60s",
-    "CosineFilterbank",
+    "cosine_filterbank",
     "Filterbank",
     "Frame",
     "View",
     "NotInvertibleError",
     "GaborFrame",
-    "GammatoneFilterbank",
-    "MorletFilterbank",
+    "gammatone_filterbank",
+    "morlet_filterbank",
     "TVGaborFrame",
     "TVSTFT",
     "Cepstrum",
@@ -162,7 +159,6 @@ __all__ = [
     "RippleSum",
     "Ripple",
     "DynamicRipple",
-    "OctaveFilterbank",
     "time_stretch",
     "pv_analyze",
     "pitch_shift",
@@ -187,7 +183,6 @@ __all__ = [
     "Decibels",
     "distance_gain_db",
     "erb_to_freq",
-    "ERBFilterbank",
     "exponential_chirp",
     "fft_workers",
     "freq_to_erb",
@@ -212,6 +207,7 @@ __all__ = [
     "long_term_spectrum",
     "Mask",
     "match_channels",
+    "match_lengths",
     "match_fs",
     "mel_to_freq",
     "mix",
@@ -221,7 +217,6 @@ __all__ = [
     "normalize",
     "oscor",
     "overview",
-    "pad",
     "phasewarp",
     "pulse_train",
     "pure_tone",
@@ -241,5 +236,4 @@ __all__ = [
     "Subbands",
     "subbands",
     "synth_ir",
-    "truncate",
 ]

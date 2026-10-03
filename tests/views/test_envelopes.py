@@ -22,7 +22,7 @@ class TestEnvelopes:
         sb = so.subbands(self.x, n_bands=8)
         rebuilt = sb.envelopes() * sb.tfs()
         np.testing.assert_allclose(rebuilt.data, sb.data, atol=1e-10)
-        np.testing.assert_allclose(rebuilt.synthesize().data, self.x.data, atol=1e-10)
+        np.testing.assert_allclose(rebuilt.to_sound().data, self.x.data, atol=1e-10)
         band = sb[4]
         np.testing.assert_allclose((band.envelope() * (band / band.envelope())).data, band.data, atol=1e-10)
 
@@ -32,8 +32,8 @@ class TestEnvelopes:
         assert coarse.fs == 1000 and coarse.n_samples == 500
         # compare with the same lowpassed envelopes kept at the full rate:
         # the only difference is the automatic upsampling
-        full = (sb.envelopes(lowpass=100) * sb.tfs()).synthesize()
-        upsampled = (coarse * sb.tfs()).synthesize()
+        full = (sb.envelopes(lowpass=100) * sb.tfs()).to_sound()
+        upsampled = (coarse * sb.tfs()).to_sound()
         assert (upsampled - full).rms / full.rms < 0.001
         env = so.gaussian_noise(0.5, FS, rng=0).envelope().lowpass(20).resample(500)
         assert len(env * self.x) == len(self.x)
@@ -61,7 +61,7 @@ class TestEnvelopes:
 
     def test_modulation_spectrum_from_envelopes(self):
         x = so.harmonic_complex(0.5, FAST, 150, np.arange(1, 30), phases="random", rng=0)
-        fb = so.OctaveFilterbank.per_octave(12, 125, FAST_HI)
+        fb = so.cosine_filterbank(f_lo=125, f_hi=FAST_HI, spacing=1 / 12, scale="octave")
         direct = so.ModulationSpectrum.octave(x, f_hi=FAST_HI)
         via = fb.analyze(x).envelopes(fs=1000).modulation_spectrum()
         np.testing.assert_allclose(via.level, direct.level)
@@ -69,7 +69,7 @@ class TestEnvelopes:
         assert erb.spectral_unit == "cyc/ERB" and via.spectral_unit == "cyc/oct"
 
     def test_rendered_pattern_matches_its_parameters(self):
-        fb = so.OctaveFilterbank.per_octave(12, 250, 8000)
+        fb = so.cosine_filterbank(f_lo=250, f_hi=8000, spacing=1 / 12, scale="octave")
         env = so.Ripple(-6, 1.5).render(fb, 2.0, 1000)
         assert isinstance(env, so.Envelopes)
         rate, density = env.modulation_spectrum().peak()
@@ -98,11 +98,14 @@ def test_gammatone_peak_delay_aligns_a_click():
     fs = 16000
     x = np.zeros(int(0.1 * fs))
     x[int(0.03 * fs)] = 1.0
-    fb = so.GammatoneFilterbank(n_bands=16, f_lo=100, f_hi=5000)
+    fb = so.gammatone_filterbank(n_bands=16, f_lo=100, f_hi=5000)
     env = fb.analyze(so.Sound(x, fs)).envelopes()
     delay = fb.envelope_peak_delay
     assert delay[0] == delay[-1] == 0 and len(delay) == fb.n_filters
-    np.testing.assert_allclose(delay[1:-1], 3 / (2 * np.pi * fb.b))
+    # (order - 1) / (2 pi b) is the peak of t**3 exp(-2 pi b t) alone; the
+    # measured peak of the true envelope agrees to within 1% at these centers
+    b = 1.019 * 24.7 * (4.37e-3 * fb.band_cfs + 1)
+    np.testing.assert_allclose(delay[1:-1], 3 / (2 * np.pi * b), rtol=1e-2)
     peaks = np.argmax(env.data[:, 1:-1, 0], axis=0) / fs
     assert np.ptp(peaks) > 5e-3
     assert np.ptp(peaks - delay[1:-1]) < 0.2e-3
@@ -111,9 +114,8 @@ def test_gammatone_peak_delay_aligns_a_click():
     row_left = mesh[:-1, 0, 0]
     assert np.ptp(row_left) > 5e-3  # each row starts at its own, shifted time
     assert ax.get_ylim() == (0, 5.0)
-    zero = so.GammatoneFilterbank(n_bands=16, f_lo=100, f_hi=5000, phase="zero")
+    zero = so.gammatone_filterbank(n_bands=16, f_lo=100, f_hi=5000, phase="zero")
     assert not np.any(zero.envelope_peak_delay)
-    with pytest.raises(TypeError, match="envelope_peak_delay"):
-        so.MorletFilterbank(n_bands=8, f_lo=100, f_hi=5000).analyze(so.Sound(x, fs)).envelopes().plot(
-            align="peak"
-        )
+    morlet = so.morlet_filterbank(n_bands=8, f_lo=100, f_hi=5000)
+    assert not np.any(morlet.envelope_peak_delay)  # zero-phase: nothing to shift
+    morlet.analyze(so.Sound(x, fs)).envelopes().plot(align="peak")

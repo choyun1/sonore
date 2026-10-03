@@ -81,7 +81,8 @@ print(hrirs)
 
 # Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
 files = ["bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133"]
-target, *maskers = so.normalize(so.pad([so.load(f"docs/speech/{f}.flac") for f in files], align="center"))
+talkers = [so.load(f"docs/speech/{f}.flac") for f in files]
+target, *maskers = so.normalize(so.match_lengths(talkers, align="center"))
 fs, duration = target.fs, target.duration
 spoken = so.load(f"docs/speech/{files[0]}.flac").duration
 TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
@@ -225,7 +226,7 @@ sound = finish(mix)
 
 # %%
 target_female = so.normalize(
-    so.pad([so.load("docs/speech/slt_arctic_a0131.flac"), maskers[0]], align="center")
+    so.match_lengths([so.load("docs/speech/slt_arctic_a0131.flac"), maskers[0]], align="center")
 )[0]
 spoken_female = so.load("docs/speech/slt_arctic_a0131.flac").duration
 TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)

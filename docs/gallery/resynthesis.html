@@ -201,9 +201,9 @@ the original, up to floating-point rounding.</p>
     r = right.subplots(3, 1, sharex=True)
     original.plot(r[0], color=&quot;k&quot;, lw=0.4)
     r[0].set(title=&quot;Original sweep, 100 Hz to 6 kHz&quot;, xlabel=&quot;&quot;)
-    recon = sb.synthesize()  # recomputed: the played sound has been level-normalized
+    recon = sb.to_sound()  # recomputed: the played sound has been level-normalized
     recon.plot(r[1], color=&quot;tab:blue&quot;, lw=0.4)
-    r[1].set(title=&quot;Reconstruction: sb.synthesize()&quot;, xlabel=&quot;&quot;)
+    r[1].set(title=&quot;Reconstruction: sb.to_sound()&quot;, xlabel=&quot;&quot;)
     err = recon - original
     r[2].plot(err.t, 1e15 * err.data[:, 0], color=&quot;tab:red&quot;, lw=0.5)
     r[2].set(title=f&quot;Difference (max |error| = {err.peak:.1e})&quot;, ylabel=&quot;× 1e-15&quot;, xlabel=&quot;Time [s]&quot;)
@@ -224,7 +224,7 @@ the level of floating-point rounding.</p></div>
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sweep = so.exponential_chirp(2.0, FS, 100, 6000).ramp(20e-3)
-sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).synthesize())
+sound = finish(so.subbands(sweep, n_bands=6, f_lo=100, f_hi=6000).to_sound())
 fig, playhead = show_bands(sweep)</code></pre></details>
 </article>
 </section>
@@ -298,7 +298,7 @@ fig, playhead = show_mask(sound, target, mask)</code></pre></details>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In <em>Speech Separation by Humans and Machines</em>, 181–197. Springer. <a href="https://doi.org/10.1007/0-387-22794-6_12">doi:10.1007/0-387-22794-6_12</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/frames/mask.py#L35"><code>mask.ideal_binary_mask</code></a></li></ul>
+<ul><li>Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In <em>Speech Separation by Humans and Machines</em>, 181–197. Springer. <a href="https://doi.org/10.1007/0-387-22794-6_12">doi:10.1007/0-387-22794-6_12</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/mask.py#L119"><code>mask.ideal_binary_mask</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/seeing/resynthesis.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/resynthesis.py</code>, or a cell at a time.</footer>
 </main>

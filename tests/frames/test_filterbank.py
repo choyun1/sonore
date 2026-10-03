@@ -1,22 +1,25 @@
 """Cosine, gammatone and Morlet filterbanks, and subbands."""
 
+from dataclasses import dataclass
+
 import numpy as np
 import pytest
 from helpers import FS
 from scipy.signal import hilbert
 
 import sonore as so
+from sonore.frames.filterbank import SCALES, Cosine
 
 
 class TestFilterbank:
     def test_power_complementary(self):
-        fb = so.ERBFilterbank(30, 50, 8000)
+        fb = so.cosine_filterbank(30, 50, 8000)
         H = fb.response(np.linspace(0, 22050, 5000))
         np.testing.assert_allclose((H**2).sum(axis=1), 1, atol=1e-12)
 
     def test_perfect_reconstruction(self):
         g = so.gaussian_noise(0.5, FS, rng=0)
-        np.testing.assert_allclose(so.subbands(g).synthesize().data, g.data, atol=1e-10)
+        np.testing.assert_allclose(so.subbands(g).to_sound().data, g.data, atol=1e-10)
 
     def test_vocoder_runs_and_keeps_level(self):
         x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 20))
@@ -25,15 +28,15 @@ class TestFilterbank:
 
 
 def test_octave_filterbank_reconstructs():
-    fb = so.OctaveFilterbank.per_octave(12, 125, 6000)
+    fb = so.cosine_filterbank(f_lo=125, f_hi=6000, spacing=1 / 12, scale="octave")
     H = fb.response(np.linspace(0, FS / 2, 5000))
     np.testing.assert_allclose((H**2).sum(axis=1), 1, atol=1e-12)
     g = so.gaussian_noise(0.5, 16000, rng=0)
-    np.testing.assert_allclose(fb.analyze(g).synthesize().data, g.data, atol=1e-10)
+    np.testing.assert_allclose(fb.analyze(g).to_sound().data, g.data, atol=1e-10)
 
 
 def test_subbands_copy_and_leave_the_callers_array_writeable():
-    bank = so.ERBFilterbank(8, 100, 4000)
+    bank = so.cosine_filterbank(8, 100, 4000)
     subbands = bank.analyze(so.gaussian_noise(0.1, FS, rng=0))
     full = np.array(subbands._full)
     copied = so.Subbands(full, subbands.fs, bank, subbands.pad)
@@ -75,19 +78,20 @@ def _gammatone_formula(f, fc):
 
 
 class TestGammatone:
-    fb = so.GammatoneFilterbank(2, 100, 4000, edges=False)
+    fb = so.gammatone_filterbank(2, 100, 4000, edges=False)
 
     def test_response_is_the_closed_form(self):
         f = np.linspace(0, 8000, 801)
         H = self.fb.response(f)
         for k, fc in enumerate(self.fb.cfs):
             np.testing.assert_allclose(H[:, k], _gammatone_formula(f, fc), rtol=1e-12, atol=1e-15)
-        zero = so.GammatoneFilterbank(2, 100, 4000, edges=False, phase="zero")
+        zero = so.gammatone_filterbank(2, 100, 4000, edges=False, phase="zero")
         assert np.array_equal(zero.response(f), np.abs(H))
 
     def test_group_delay_and_envelope_peak(self):
         """Group delay 4/(2 pi b) at cf, envelope peak 3/(2 pi b), within 1%."""
-        b, cfs, df = self.fb.b, self.fb.cfs, 1e-3
+        cfs, df = self.fb.cfs, 1e-3
+        b = 1.019 * 24.7 * (4.37e-3 * cfs + 1)
         H = self.fb.response(np.concatenate([cfs - df, cfs + df]))
         gd = -np.angle(H[[2, 3], [0, 1]] / H[[0, 1], [0, 1]]) / (2 * np.pi * 2 * df)
         np.testing.assert_allclose(gd, 4 / (2 * np.pi * b), rtol=1e-2)
@@ -100,48 +104,52 @@ class TestGammatone:
     @pytest.mark.parametrize("n", [4000, 4001])
     def test_exact_up_to_nyquist(self, phase, n):
         """Bands up to 7.5 kHz at 16 kHz, where Im H(fs/2) is large: exact on even and odd lengths."""
-        fb = so.GammatoneFilterbank(30, 50, 7500, phase=phase)
+        fb = so.gammatone_filterbank(30, 50, 7500, phase=phase)
         x = so.Sound(np.random.default_rng(0).standard_normal((n, 2)), 16000)
         for pad in ("auto", 0):
-            np.testing.assert_allclose(fb.analyze(x, pad=pad).synthesize().data, x.data, rtol=0, atol=1e-12)
+            np.testing.assert_allclose(fb.analyze(x, pad=pad).to_sound().data, x.data, rtol=0, atol=1e-12)
 
     def test_bank_attributes(self):
-        fb = so.GammatoneFilterbank(40, 50, 7000)
-        assert fb.n_filters == 42 and fb.unit == "ERB" and not fb.tight
-        knots = np.linspace(so.freq_to_erb(50), so.freq_to_erb(7000), 40)
-        assert np.allclose(fb.cfs[1:-1], so.erb_to_freq(knots))
-        assert np.allclose(np.diff(so.freq_to_erb(fb.cfs[1:-1])), fb.spacing)
-        assert fb.cfs[0] < 50 and fb.cfs[-1] > 7000
-        assert so.GammatoneFilterbank(40, 50, 7000, edges=False).n_filters == 40
+        """f_lo and f_hi are the outer knots; the bandpass centers lie strictly
+        inside, equally spaced on the ERB scale, and the edge filters' corners
+        are the outer knots."""
+        fb = so.gammatone_filterbank(40, 50, 7000)
+        assert fb.n_filters == 42 and fb.unit == "ERB" and not fb.is_tight(4000, 16000)
+        knots = np.linspace(so.freq_to_erb(50), so.freq_to_erb(7000), 42)
+        np.testing.assert_allclose(fb.band_cfs, so.erb_to_freq(knots[1:-1]), rtol=1e-14)
+        assert fb.spacing == pytest.approx(knots[1] - knots[0], rel=1e-14)
+        np.testing.assert_allclose(fb.cfs[[0, -1]], [50, 7000], rtol=1e-12)
+        assert so.gammatone_filterbank(40, 50, 7000, edges=False).n_filters == 40
         with pytest.raises(ValueError, match="phase"):
-            so.GammatoneFilterbank(phase="minimum")
+            so.gammatone_filterbank(phase="minimum")
         with pytest.raises(ValueError, match="n_bands"):
-            so.GammatoneFilterbank(1)
+            so.gammatone_filterbank(0)
 
 
 class TestMorlet:
     def test_response(self):
-        fb = so.MorletFilterbank(3, 250, 1000, cycles=5, edges=False)
+        fb = so.morlet_filterbank(3, 125, 2000, cycles=5, edges=False)  # centers 250, 500, 1000 Hz
         f = np.linspace(0, 4000, 4001)
         H = fb.response(f)
         assert H.dtype == float and np.all(H[0] == 0)  # DC correction
         assert np.allclose(H[[250, 500, 1000], [0, 1, 2]], 1.0)
         assert np.all(H >= 0) and np.array_equal(np.argmax(H, axis=0), [250, 500, 1000])
         assert fb.unit == "oct" and fb.spacing == pytest.approx(1.0)
+        np.testing.assert_allclose(fb.band_cfs, [250, 500, 1000], rtol=1e-12)
 
     def test_bare_bank_is_not_a_frame(self):
         """Without edges A = 0 (DC); analysis works, synthesis refuses."""
-        fb = so.MorletFilterbank(28, 50, 7000, edges=False)
+        fb = so.morlet_filterbank(28, 50, 7000, edges=False)
         assert fb.frame_bounds(1000, 16000)[0] == 0
         sb = fb.analyze(so.gaussian_noise(0.05, 16000, rng=0))
         assert sb.envelopes().without_edges() is not None
         with pytest.raises(ValueError, match="not a frame"):
-            sb.synthesize()
+            sb.to_sound()
 
     def test_exact_with_edges(self):
         x = so.gaussian_noise(0.25, 16000, n_channels=2, rng=1)
-        fb = so.MorletFilterbank(28, 50, 7000)
-        np.testing.assert_allclose(fb.analyze(x).synthesize().data, x.data, rtol=0, atol=1e-12)
+        fb = so.morlet_filterbank(28, 50, 7000)
+        np.testing.assert_allclose(fb.analyze(x).to_sound().data, x.data, rtol=0, atol=1e-12)
 
 
 def _edge_banks(width):
@@ -150,8 +158,10 @@ def _edge_banks(width):
     e = so.freq_to_erb(50.0)
     n = len(np.arange(e, so.freq_to_erb(7000.0), 1.0))
     return (
-        so.GammatoneFilterbank(n, 50, float(so.erb_to_freq(e + n - 1)), edge_width=width),
-        so.MorletFilterbank(29, 50, 50 * 2**7.0, edge_width=width),
+        so.gammatone_filterbank(
+            n, float(so.erb_to_freq(e - 1)), float(so.erb_to_freq(e + n)), edge_width=width
+        ),
+        so.morlet_filterbank(29, 50 * 2**-0.25, 50 * 2**7.25, edge_width=width),
     )
 
 
@@ -169,19 +179,279 @@ def test_edge_filters_match_design_table(width, ratios, ring_ms):
 
 
 def test_edge_filters_are_flat_outside_and_zero_inside():
-    fb = so.GammatoneFilterbank(20, 200, 4000)
+    fb = so.gammatone_filterbank(20, 200, 4000)
     f = np.array([0.0, fb.cfs[0], fb.band_cfs[0], fb.band_cfs[-1], fb.cfs[-1], 20000.0])
     H = fb.response(f)
     g = np.sqrt(fb.s_floor)
     assert np.allclose(H[:, 0], [g, g, 0, 0, 0, 0]) and np.allclose(H[:, -1], [0, 0, 0, 0, g, g])
-    assert so.GammatoneFilterbank(20, 200, 4000, edge_width=2).cfs[0] < fb.cfs[0]
+    assert so.gammatone_filterbank(20, 200, 4000, edge_width=2).cfs[0] < fb.cfs[0]
 
 
 def test_new_banks_feed_the_cochleagram_tools():
     x = so.gaussian_noise(0.25, 16000, rng=2)
-    for fb in (so.GammatoneFilterbank(24, 80, 6000), so.MorletFilterbank(20, 80, 6000)):
+    for fb in (so.gammatone_filterbank(24, 80, 6000), so.morlet_filterbank(20, 80, 6000)):
         env = fb.analyze(x).envelopes()
         assert env.data.shape == (len(x), fb.n_filters, 1)
         env.modulation_spectrum()  # needs spacing and unit
-    bare = so.GammatoneFilterbank(24, 80, 6000, edges=False).analyze(x).envelopes()
+    bare = so.gammatone_filterbank(24, 80, 6000, edges=False).analyze(x).envelopes()
     assert bare.without_edges() is bare  # no edge bands to drop
+
+
+# ------------------------------------------- tightness is measured (D13)
+# docs/design/frames/filterbanks.md, D13: a bank must never be reported tight
+# when it is not, because the tight path then loses the ripple in s silently
+# (C9). Each case carries the answer the mathematics gives, independently of
+# the code: cosines one gap wide are tight on any increasing centers (C1, C2),
+# wider ones on equal spacing exactly when twice the width is whole (C5), and no
+# other filter type is tight.
+
+
+@dataclass(frozen=True)
+class _UniformFormulaAnyway(Cosine):
+    """The equal-spacing cosine formula applied to centers that are not
+    equally spaced: the mistake the gap formula exists to avoid."""
+
+    def responses(self, bank, freqs, edges=None):
+        scale_pos = bank.scale.to_scale(freqs)[:, None]
+        knots = bank._knots
+        distance = (scale_pos - knots[None, :]) / (knots[1] - knots[0])
+        transfer = np.where(np.abs(distance) < 1, np.cos(np.pi / 2 * np.clip(distance, -1, 1)), 0.0)
+        transfer[:, 0] = np.where(scale_pos[:, 0] <= knots[0], 1.0, transfer[:, 0])
+        transfer[:, -1] = np.where(scale_pos[:, 0] >= knots[-1], 1.0, transfer[:, -1])
+        return transfer
+
+
+def _random_centers(scale, seed, f_lo=60.0, f_hi=7000.0, n=20):
+    to_scale, from_scale = SCALES[scale].to_scale, SCALES[scale].from_scale
+    knots = np.sort(np.random.default_rng(seed).uniform(to_scale(f_lo), to_scale(f_hi), n))
+    return from_scale(knots)
+
+
+def _nudged():
+    bank = so.cosine_filterbank(20, 60, 7000)
+    knots = np.array(bank.knots)
+    knots[7] += 0.2 * (knots[1] - knots[0])
+    return so.Filterbank(bank.scale, knots, _UniformFormulaAnyway())
+
+
+TIGHTNESS_CASES = {
+    **{
+        f"cosine {scale}": (lambda scale=scale: so.cosine_filterbank(24, 60, 7000, scale=scale), True)
+        for scale in SCALES
+    },
+    **{
+        f"cosine {scale} random centers": (
+            lambda scale=scale: so.cosine_filterbank(centers=_random_centers(scale, 1), scale=scale),
+            True,
+        )
+        for scale in SCALES
+    },
+    **{
+        f"cosine width {width}": (lambda width=width: so.cosine_filterbank(24, 60, 7000, width=width), tight)
+        for width, tight in [(0.75, False), (1.25, False), (1.5, True), (1.75, False), (2, True), (2.5, True)]
+    },
+    "cosine f_hi at Nyquist": (lambda: so.cosine_filterbank(24, 60, 4000), True),
+    "cosine f_hi beyond Nyquist": (lambda: so.cosine_filterbank(24, 60, 30000), True),
+    "cosine without edges": (lambda: so.cosine_filterbank(24, 60, 7000, edges=False), False),
+    "cosine nudged, uniform formula": (_nudged, False),
+    "gammatone": (lambda: so.gammatone_filterbank(24, 60, 7000), False),
+    "gammatone zero phase": (lambda: so.gammatone_filterbank(24, 60, 7000, phase="zero"), False),
+    "gammatone random centers": (lambda: so.gammatone_filterbank(centers=_random_centers("erb", 2)), False),
+    "morlet": (lambda: so.morlet_filterbank(20, 60, 7000), False),
+}
+GRIDS = [(8000, 1001), (16000, 1600), (44100, 4411), (96000, 9600)]
+
+
+@pytest.mark.parametrize("pad", ["auto", 0])
+@pytest.mark.parametrize(("fs", "n"), GRIDS)
+@pytest.mark.parametrize("case", TIGHTNESS_CASES)
+def test_tightness_is_reported_only_when_true(case, fs, n, pad):
+    make, tight = TIGHTNESS_CASES[case]
+    bank = make()
+    n_grid = n + 2 * bank._pad_samples(pad, fs, n)
+    power_sum = np.sum(np.abs(bank.rfft_response(n_grid, fs)) ** 2, axis=1)  # s, computed here
+    measured_tight = np.ptp(power_sum) <= 1e-12 * power_sum.max()
+    # the grid sees the whole of s unless the bank lies above Nyquist
+    if fs / 2 > bank.f_hi * 1.05 or tight:
+        assert measured_tight == tight
+    assert bank.is_tight(n, fs, pad=pad) == measured_tight
+    lo, hi = bank.frame_bounds(n, fs, pad=pad)
+    assert (lo == hi) == measured_tight
+    x = so.Sound(np.random.default_rng(3).standard_normal((n, 2)), fs)
+    coefs = bank.analyze(x, pad=pad)
+    if lo <= 1e-12 * hi:
+        with pytest.raises(ValueError, match="not a frame"):
+            coefs.to_sound()
+    else:
+        np.testing.assert_allclose(coefs.to_sound().data, x.data, rtol=0, atol=1e-11)
+
+
+def test_wide_cosines_are_tight_at_their_width():
+    """s = width when twice the width is whole (C5); the bounds report it."""
+    for width in (1.5, 2.0, 2.5, 3.0):
+        bank = so.cosine_filterbank(24, 60, 7000, width=width)
+        lo, hi = bank.frame_bounds(4000, 16000, pad=0)
+        assert lo == hi and hi == pytest.approx(width, rel=1e-12)
+        assert np.ptp(bank.frame_power(4000, 16000)) < 1e-12 * width
+
+
+def test_the_tight_path_divides_by_a_constant_other_than_one():
+    bank = so.cosine_filterbank(16, 100, 6000, width=2.0)
+    x = so.gaussian_noise(0.2, 16000, rng=4)
+    masked = bank.analyze(x, pad=0)
+    masked = so.Subbands(
+        masked._full * np.linspace(0, 1, masked._full.shape[1])[None, :, None], 16000, bank, 0
+    )
+    general = _GeneralPath(bank.scale, bank.knots, bank.filter_type, edges=bank.edges)
+    np.testing.assert_allclose(bank.synthesize(masked).data, general.synthesize(masked).data, atol=1e-12)
+
+
+@dataclass(frozen=True)
+class _GeneralPath(so.Filterbank):
+    def _tight_gain(self, n, fs):
+        return None
+
+
+# ---------------------------------------------------------- the one bank
+def test_knots_are_stored_on_the_scale():
+    """C4: centers live on the scale, so building from n_bands is exactly
+    the linspace the formulas use, and cfs are reported in Hz."""
+    bank = so.cosine_filterbank(30, 50, 8000)
+    expected = np.linspace(so.freq_to_erb(50.0), so.freq_to_erb(8000.0), 32)
+    assert np.array_equal(bank._knots, expected)
+    assert bank.spacing == expected[1] - expected[0] and bank.n_bands == 30 and bank.n_filters == 32
+    np.testing.assert_allclose([bank.f_lo, bank.f_hi], [50, 8000], rtol=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("scale", "unit"), [("erb", "ERB"), ("octave", "oct"), ("mel", "mel"), ("linear", "Hz")]
+)
+def test_scales_space_the_centers(scale, unit):
+    bank = so.cosine_filterbank(10, 100, 6000, scale=scale)
+    assert bank.unit == unit and bank.scale is SCALES[scale]
+    np.testing.assert_allclose(np.diff(bank.scale.to_scale(bank.band_cfs)), bank.spacing, rtol=1e-9)
+
+
+def test_spacing_chooses_the_number_of_bands():
+    bank = so.cosine_filterbank(f_lo=125, f_hi=8000, spacing=1 / 12, scale="octave")
+    assert bank.n_bands == 71 and bank.spacing == pytest.approx(1 / 12)
+
+
+def test_explicit_centers_follow_the_gaps():
+    centers = [100, 250, 300, 900, 4000]
+    bank = so.cosine_filterbank(centers=centers)
+    assert bank.spacing is None and bank.n_bands == 3
+    np.testing.assert_allclose(bank.cfs, centers, rtol=1e-12)
+    H = bank.response(np.array(centers, float))
+    np.testing.assert_allclose(
+        H, np.eye(5), atol=1e-12
+    )  # each filter peaks at its center, zero at the others
+
+
+def test_factory_arguments_are_checked():
+    with pytest.raises(ValueError, match="scale"):
+        so.cosine_filterbank(scale="bark")
+    with pytest.raises(ValueError, match="not both"):
+        so.cosine_filterbank(10, spacing=0.5)
+    with pytest.raises(ValueError, match="not both"):
+        so.cosine_filterbank(10, centers=[100, 200, 300])
+    with pytest.raises(ValueError, match="f_lo < f_hi"):
+        so.cosine_filterbank(10, 4000, 100)
+    with pytest.raises(ValueError, match="increasing"):
+        so.cosine_filterbank(centers=[100, 300, 200])
+    with pytest.raises(ValueError, match="equally spaced"):
+        so.cosine_filterbank(centers=[100, 250, 300, 900], width=2).response(np.array([500.0]))
+    with pytest.raises(ValueError, match="width"):
+        so.cosine_filterbank(width=0)
+
+
+def test_ripples_need_the_octave_scale():
+    with pytest.raises(TypeError, match="octave scale"):
+        so.Ripple(4, 1).render(so.cosine_filterbank(10, 250, 4000), 0.1, 1000)
+
+
+# Extremes and edges (Cho, 2026-10-03): the same guarantees at the limits of
+# every argument and of the grid. Each case says what the mathematics gives on
+# an ordinary grid (16 kHz, 1600 samples): "tight", "frame" (exact through the
+# canonical dual) or "not a frame" (synthesis refuses).
+EXTREME_CASES = {
+    "cosine, 1 band": (lambda: so.cosine_filterbank(1, 100, 4000), "tight"),
+    "cosine, 400 bands": (lambda: so.cosine_filterbank(400, 50, 7000), "tight"),
+    "cosine, bands narrower than a bin": (lambda: so.cosine_filterbank(20, 1000, 1010), "tight"),
+    "cosine, f_lo 1 Hz": (lambda: so.cosine_filterbank(20, 1, 7000), "tight"),
+    "cosine linear, f_lo 0 Hz": (lambda: so.cosine_filterbank(20, 0, 7000, scale="linear"), "tight"),
+    "cosine mel, f_lo 0 Hz": (lambda: so.cosine_filterbank(20, 0, 7000, scale="mel"), "tight"),
+    "cosine ERB, f_lo 0 Hz": (lambda: so.cosine_filterbank(20, 0, 7000), "tight"),
+    "cosine, f_hi 10 times Nyquist": (lambda: so.cosine_filterbank(20, 50, 80000), "tight"),
+    "cosine, every filter above Nyquist": (lambda: so.cosine_filterbank(20, 9000, 12000), "tight"),
+    "cosine, every filter below the first bin": (
+        lambda: so.cosine_filterbank(5, 0.01, 0.5, scale="linear"),
+        "tight",
+    ),
+    "cosine, bins exactly on the knots": (lambda: so.cosine_filterbank(8, 100, 400, scale="linear"), "tight"),
+    "cosine, centers 1e-9 Hz apart": (
+        lambda: so.cosine_filterbank(centers=[100, 1000, 1000 + 1e-9, 1000 + 2e-9, 5000]),
+        "tight",
+    ),
+    "cosine, one huge gap": (lambda: so.cosine_filterbank(centers=[20, 21, 7900, 7901]), "tight"),
+    "cosine, width 10": (lambda: so.cosine_filterbank(40, 50, 7000, width=10), "tight"),
+    "cosine, width 10 on 3 bands": (lambda: so.cosine_filterbank(3, 50, 7000, width=10), "tight"),
+    "cosine, width 1 + 1e-9": (lambda: so.cosine_filterbank(24, 60, 7000, width=1 + 1e-9), "frame"),
+    "cosine, width 1.4999999": (lambda: so.cosine_filterbank(24, 60, 7000, width=1.4999999), "frame"),
+    "cosine, width 0.5 (no overlap)": (lambda: so.cosine_filterbank(20, 50, 7000, width=0.5), "not a frame"),
+    "cosine, width 0.01": (lambda: so.cosine_filterbank(20, 50, 7000, width=0.01), "not a frame"),
+    "gammatone, 1 band": (lambda: so.gammatone_filterbank(1, 100, 4000), "frame"),
+    "gammatone, order 1": (lambda: so.gammatone_filterbank(20, 50, 7000, order=1), "frame"),
+    "gammatone, order 20": (lambda: so.gammatone_filterbank(20, 50, 7000, order=20), "frame"),
+    "gammatone, 100 times too narrow": (
+        lambda: so.gammatone_filterbank(20, 50, 7000, bandwidth_factor=0.01),
+        "not a frame",
+    ),
+    "gammatone, 50 times too wide": (
+        lambda: so.gammatone_filterbank(20, 50, 7000, bandwidth_factor=50),
+        "frame",
+    ),
+    "gammatone, every filter above Nyquist": (lambda: so.gammatone_filterbank(20, 9000, 12000), "frame"),
+    "morlet, half a cycle": (lambda: so.morlet_filterbank(20, 50, 7000, cycles=0.5), "frame"),
+    "morlet, 100 cycles": (lambda: so.morlet_filterbank(20, 50, 7000, cycles=100), "not a frame"),
+    "morlet, edge width 0.01": (lambda: so.morlet_filterbank(20, 50, 7000, edge_width=0.01), "frame"),
+}
+EXTREME_GRIDS = [(16000, 1), (16000, 2), (16000, 3), (16000, 64), (1000, 500), (384000, 3840), (16000, 1600)]
+
+
+@pytest.mark.parametrize("case", EXTREME_CASES)
+def test_extremes_on_an_ordinary_grid(case):
+    make, expected = EXTREME_CASES[case]
+    bank = make()
+    lo, hi = bank.frame_bounds(1600, 16000, pad=0)
+    outcome = "tight" if bank.is_tight(1600, 16000, pad=0) else "frame" if lo > 1e-12 * hi else "not a frame"
+    assert outcome == expected
+
+
+@pytest.mark.parametrize(("fs", "n"), EXTREME_GRIDS)
+@pytest.mark.parametrize("case", EXTREME_CASES)
+def test_extremes_never_lose_part_of_the_sound(case, fs, n):
+    """On every grid, down to a single sample: tight only when s is constant
+    there, and synthesis either exact or refused."""
+    make, expected = EXTREME_CASES[case]
+    bank = make()
+    power_sum = np.sum(np.abs(bank.rfft_response(n, fs)) ** 2, axis=1)  # s, computed here
+    measured_tight = power_sum.max() > 0 and np.ptp(power_sum) <= 1e-12 * power_sum.max()
+    assert bank.is_tight(n, fs, pad=0) == measured_tight
+    if expected == "tight":
+        assert measured_tight  # a tight bank is tight on every grid
+    x = so.Sound(np.random.default_rng(5).standard_normal((n, 1)), fs)
+    coefs = bank.analyze(x, pad=0)
+    lo, hi = bank.frame_bounds(n, fs, pad=0)
+    if not lo > 1e-12 * hi:
+        with pytest.raises(ValueError, match="not a frame"):
+            coefs.to_sound()
+    else:
+        np.testing.assert_allclose(coefs.to_sound().data, x.data, rtol=0, atol=1e-11)
+
+
+def test_octave_scale_has_no_zero():
+    with pytest.raises(ValueError, match="not on the octave scale"):
+        so.cosine_filterbank(20, 0, 7000, scale="octave")
+    with pytest.raises(ValueError, match="octave scale"):
+        so.morlet_filterbank(centers=[0, 100, 200])

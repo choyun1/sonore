@@ -97,8 +97,8 @@ def fft_padding():
 
 def filterbank_padding():
     """Filterbank pad='auto': how much fast_padding adds on top of the ringing time."""
-    print("Filterbank pad='auto' (frames/filterbank.py), ERBFilterbank(30, 50, 7600), 16 kHz:")
-    bank = so.ERBFilterbank(30, 50, 7600)
+    print("Filterbank pad='auto' (frames/filterbank.py), cosine_filterbank(30, 50, 7600), 16 kHz:")
+    bank = so.cosine_filterbank(30, 50, 7600)
     ringing = bank.ringing(FS)
     extra = []
     for n in range(16000, 16000 * 10, 997):

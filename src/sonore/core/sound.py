@@ -46,10 +46,14 @@ class Sound:
     Arithmetic works the way you'd expect for signals: ``a + b`` mixes,
     ``a * b`` multiplies sample-by-sample (e.g. an envelope), ``2 * a`` scales,
     and ``a + 6*dB`` / ``a - 3*dB`` change the level (``from sonore import dB``).
-    Mono sounds broadcast against multichannel ones. Use :meth:`pad` /
-    :func:`sonore.pad` to match lengths.
+    Mono sounds broadcast against multichannel ones. Use :meth:`pad` or
+    :func:`sonore.match_lengths` to match lengths.
 
     Indexing with a slice selects by *time in seconds*: ``snd[0.1:0.5]``.
+    Times round to the nearest sample, and time slices behave like Python
+    index slicing: a negative time counts from the end (``snd[-0.1:]`` is the
+    last 0.1 s), and a time past either end is clipped to it (``snd[0.5:2.0]``
+    of a 1 s sound is its last 0.5 s).
     """
 
     # Make numpy defer to our operators, so ``np.float64(2) * snd`` calls
@@ -72,12 +76,15 @@ class Sound:
             raise ValueError("fs must be positive")
         samples.flags.writeable = False
         self._data = samples
-        self.fs = fs
+        self._fs = fs
 
     # ------------------------------------------------------------------ basics
     @classmethod
     def from_channels(cls, *channels: ArrayLike | Sound, fs: float | None = None) -> Sound:
-        """Stack 1-D arrays or mono Sounds into a multichannel Sound."""
+        """Stack 1-D arrays or mono Sounds into a multichannel Sound.
+
+        Channels of different lengths are allowed: the shorter ones are
+        zero-padded at the end to the longest."""
         arrays = []
         for channel in channels:
             if isinstance(channel, Sound):
@@ -103,6 +110,12 @@ class Sound:
         return cls(data, fs)
 
     @property
+    def fs(self) -> float:
+        """Sampling rate [Hz]. Read-only, like the samples: :meth:`resample`
+        gives the sound at another rate."""
+        return self._fs
+
+    @property
     def data(self) -> np.ndarray:
         """Read-only ``(n_samples, n_channels)`` array."""
         return self._data
@@ -112,14 +125,17 @@ class Sound:
 
     @property
     def n_samples(self) -> int:
+        """Number of samples per channel (the same as ``len(snd)``)."""
         return self._data.shape[0]
 
     @property
     def n_channels(self) -> int:
+        """Number of channels."""
         return self._data.shape[1]
 
     @property
     def duration(self) -> float:
+        """Length [s]: ``n_samples / fs``."""
         return self.n_samples / self.fs
 
     @property
@@ -134,17 +150,23 @@ class Sound:
 
     @property
     def peak(self) -> float:
+        """Largest absolute sample over all channels (0 for an empty sound)."""
         return float(np.max(np.abs(self._data))) if self.n_samples else 0.0
 
     def channel(self, i: int) -> Sound:
+        """Channel ``i`` as a mono Sound (negative ``i`` counts from the last)."""
         return Sound(self._data[:, i], self.fs)
 
     @property
     def left(self) -> Sound:
+        """The first channel, as a mono Sound."""
         return self.channel(0)
 
     @property
     def right(self) -> Sound:
+        """The second channel, as a mono Sound."""
+        if self.n_channels < 2:
+            raise ValueError("a mono sound has no right channel; use .to_stereo() to copy it into two")
         return self.channel(1)
 
     def mono(self) -> Sound:
@@ -160,6 +182,7 @@ class Sound:
         return Sound(np.repeat(self._data, n, axis=1), self.fs)
 
     def to_stereo(self) -> Sound:
+        """``to_channels(2)``: a mono sound in both ears (diotic)."""
         return self.to_channels(2)
 
     def __repr__(self) -> str:
@@ -167,37 +190,52 @@ class Sound:
         return f"Sound({self.duration:.3f} s, {self.fs:g} Hz, {self.n_channels} ch, rms {level:.1f} dB)"
 
     def _repr_html_(self) -> str | None:
-        """Notebook display: an audio player."""
+        """Notebook display: an audio player at the sound's true level, so a
+        sound 20 dB down plays 20 dB quieter. A player can't go above full
+        scale, so a sound peaking above 1 shows a note instead; normalize it
+        first."""
         try:
             from IPython.display import Audio
         except ImportError:
             return None
         if self.n_samples == 0 or self.peak == 0:
             return f"<code>{self!r}</code>"
-        player = Audio(self._data.T, rate=int(self.fs), normalize=True)
+        if self.peak > 1:
+            return (
+                f"<code>{self!r}</code><br>No player: the peak is {self.peak:.2f}, above full scale (1). "
+                "Use <code>snd.normalize(peak=0.9)</code> to listen."
+            )
+        player = Audio(self._data.T, rate=int(self.fs), normalize=False)
         return f"<code>{self!r}</code><br>{player._repr_html_()}"
 
     # -------------------------------------------------------------- arithmetic
     def _coerce(self, other) -> np.ndarray:
-        if isinstance(other, Sound):
-            if other.fs != self.fs:
-                raise ValueError(
-                    f"sampling rates differ ({self.fs} vs {other.fs}); use .resample() or sonore.match_fs()"
-                )
-            if len(other) != len(self):
-                raise ValueError(
-                    f"lengths differ ({len(self)} vs {len(other)} samples); "
-                    "use sonore.pad() or sonore.truncate() first"
-                )
-            return other._data
-        if isinstance(other, numbers.Real):
-            return np.asarray(float(other))
-        if isinstance(other, np.ndarray):
-            array = other.astype(float)
-            if array.ndim == 1:
-                array = array[:, None]
-            return array
-        return NotImplemented
+        match other:
+            case Sound():
+                if other.fs != self.fs:
+                    raise ValueError(
+                        f"sampling rates differ ({self.fs} vs {other.fs}); "
+                        "use .resample() or sonore.match_fs()"
+                    )
+                self._check_length(len(other))
+                return other._data
+            case numbers.Real():
+                return np.asarray(float(other))
+            case np.ndarray():
+                array = other.astype(float)
+                if array.ndim == 1:
+                    array = array[:, None]
+                if array.ndim >= 1 and array.shape[0] != 1:
+                    self._check_length(array.shape[0])
+                return array
+            case _:
+                return NotImplemented
+
+    def _check_length(self, n_other: int) -> None:
+        if n_other != len(self):
+            raise ValueError(
+                f"lengths differ ({len(self)} vs {n_other} samples); use sonore.match_lengths() first"
+            )
 
     def _binary(self, other, op, reflected=False):
         other_data = self._coerce(other)
@@ -227,6 +265,11 @@ class Sound:
     def __rsub__(self, other):
         if isinstance(other, Decibels):
             raise TypeError("dB - Sound is undefined; did you mean snd - x*dB?")
+        if isinstance(other, numbers.Real) and not isinstance(other, bool) and other != 0:
+            raise TypeError(
+                f"subtracting a Sound from a bare number is ambiguous; write -snd to invert the sound, "
+                f"or {other!r} * np.ones(len(snd)) - snd for a DC offset"
+            )
         return (-self) + other
 
     def __neg__(self):
@@ -260,11 +303,15 @@ class Sound:
 
     def normalize(self, rms: float | None = 1.0, peak: float | None = None) -> Sound:
         """Scale to a target RMS (default 1) or, if ``peak`` is given, a target peak."""
+        current = self.peak if peak is not None else self.rms
+        if current == 0:
+            raise ValueError("cannot normalize silence")
         if peak is not None:
-            return self * (peak / self.peak)
-        return self * (rms / self.rms)
+            return self * (peak / current)
+        return self * (rms / current)
 
     def zero_mean(self) -> Sound:
+        """Remove each channel's own mean (DC offset)."""
         return Sound(self._data - self._data.mean(axis=0), self.fs)
 
     def ramp(self, duration: float, shape: str = "cosine") -> Sound:
@@ -323,7 +370,11 @@ class Sound:
         return Sound(data, self.fs)
 
     def resample(self, fs: float) -> Sound:
-        """Polyphase resampling to a new rate."""
+        """Polyphase resampling to a new rate (:func:`scipy.signal.resample_poly`
+        with SciPy's default anti-aliasing filter, a Kaiser window with beta
+        5). The ratio of rates is approximated by a fraction with denominator
+        at most 10000, which is exact for the common rates (8, 16, 22.05,
+        44.1, 48, 96 kHz)."""
         if fs == self.fs:
             return self
         return Sound(_resample_poly(self._data, self.fs, fs), fs)

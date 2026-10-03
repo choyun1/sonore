@@ -20,7 +20,7 @@ error = np.max(np.abs(frame.synthesize(coefs).data - sentence.data))
 print(f"GaborFrame: analyze gives {type(coefs).__name__}, synthesize max error {error:.1e}")
 
 bands = so.subbands(sentence, n_bands=16)
-error = np.max(np.abs(bands.synthesize().data - sentence.data))
+error = np.max(np.abs(bands.to_sound().data - sentence.data))
 print(f"subbands: synthesize max error {error:.1e}")
 
 for name, view in [("MFCC", so.MFCC(sentence)), ("Envelopes", bands.envelopes())]:

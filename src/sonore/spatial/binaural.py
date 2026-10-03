@@ -13,11 +13,11 @@ from numpy.lib.stride_tricks import sliding_window_view
 from scipy.signal import hilbert
 from scipy.signal.windows import hann
 
-from sonore.core.processing import pad
+from sonore.core.processing import match_lengths
 from sonore.core.sound import Sound
 from sonore.core.units import dB
 from sonore.core.utils import n_samples, time_axis
-from sonore.frames.filterbank import ERBFilterbank
+from sonore.frames.filterbank import Filterbank
 from sonore.sources.waveforms import gaussian_noise
 from sonore.views.view import View
 
@@ -42,7 +42,7 @@ def apply_itd_ild(sound: Sound, itd: float = 0.0, ild: float = 0.0) -> Sound:
         left = left.delay(itd)
     elif itd < 0:
         right = right.delay(-itd)
-    left, right = pad([left - ild / 2 * dB, right + ild / 2 * dB])
+    left, right = match_lengths([left - ild / 2 * dB, right + ild / 2 * dB])
     return Sound.from_channels(left, right)
 
 
@@ -107,7 +107,7 @@ def interaural_cues(
     win_dur: float = 20e-3,
     hop_dur: float | None = None,
     max_itd: float = 1e-3,
-    filterbank: ERBFilterbank | None = None,
+    filterbank: Filterbank | None = None,
     silence_db: float = -40.0,
 ) -> InterauralCues:
     """Windowed ITD, ILD and interaural coherence.

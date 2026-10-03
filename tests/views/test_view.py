@@ -18,6 +18,7 @@ VIEW_NAMES = [
     "GridEnvelope",
     "SpectralEnvelope",
     "Aperiodicity",
+    "Mask",
     "F0Track",
     "InterauralCues",
     "TextureStats",
@@ -34,7 +35,7 @@ def _public_subclasses(cls):
 
 # Every other public class, by kind. A new class has to be put in one of
 # these on purpose, so a one-way analysis cannot arrive without being a View.
-FRAME_SIDE = ["Frame", "Filterbank", "STFT", "TVSTFT", "Subbands", "Mask"]  # with their subclasses
+FRAME_SIDE = ["Frame", "Filterbank", "STFT", "TVSTFT", "Subbands"]  # with their subclasses
 NOT_ANALYSES = [
     "Sound",
     "Decibels",
@@ -86,7 +87,7 @@ def test_refusal_is_a_not_implemented_error():
 
 
 def test_frames_and_tools_are_not_views():
-    for name in ["Frame", "GaborFrame", "Filterbank", "STFT", "Subbands", "Mask", "ModulationFilterbank"]:
+    for name in ["Frame", "GaborFrame", "Filterbank", "STFT", "Subbands", "ModulationFilterbank"]:
         assert not issubclass(getattr(so, name), View), name
 
 

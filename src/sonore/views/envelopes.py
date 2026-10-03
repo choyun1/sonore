@@ -9,7 +9,7 @@ to a sound. The types reflect that:
   spectrotemporal envelope. This is conceptually the same thing as a
   **cochleagram** (the envelope of each cochlear-filter output over time);
   here the "cochlea" is whichever :class:`~sonore.frames.filterbank.Filterbank` (by
-  default a :class:`~sonore.frames.filterbank.CosineFilterbank`) produced it.
+  default an ERB :func:`~sonore.frames.filterbank.cosine_filterbank`) produced it.
   ``Envelopes * Subbands`` modulates each band.
 
 The Hilbert decomposition of a band is then literal::
@@ -35,7 +35,7 @@ import numpy as np
 from scipy.signal import butter, sosfiltfilt
 
 from sonore.core.utils import _below_nyquist, _fit_length, _resample_poly, amp_to_db, as_rng, time_axis
-from sonore.frames.filterbank import ERBFilterbank, Subbands, _PaddedBands
+from sonore.frames.filterbank import Subbands, _PaddedBands, cosine_filterbank
 from sonore.views.view import View
 
 if TYPE_CHECKING:
@@ -339,11 +339,10 @@ class Envelopes(_PaddedBands, View):
         from sonore.views.modulation import ModulationSpectrum
 
         filterbank = self.filterbank
-        if getattr(filterbank, "spacing", None) is None or getattr(filterbank, "unit", None) is None:
+        if filterbank.spacing is None:
             raise TypeError(
-                "modulation_spectrum needs filters evenly spaced on a frequency scale (a filterbank "
-                "with 'spacing' and 'unit', such as ERBFilterbank or OctaveFilterbank); "
-                f"{type(filterbank).__name__} has none"
+                "modulation_spectrum needs filters evenly spaced on a frequency scale; "
+                "this filterbank's centers are not"
             )
         band_env = self.data.mean(axis=2)  # (n, B), channels averaged
         if drop_edges:
@@ -380,7 +379,7 @@ def noise_vocode(
     """
     from sonore.core.sound import Sound
 
-    filterbank = ERBFilterbank(n_bands, f_lo, min(f_hi, _below_nyquist(sound.fs)))
+    filterbank = cosine_filterbank(n_bands, f_lo, min(f_hi, _below_nyquist(sound.fs)))
     envelopes = filterbank.analyze(sound).envelopes(lowpass=env_lowpass).without_edges()
     if isinstance(carrier, Sound):
         if len(carrier) < len(sound):
@@ -400,4 +399,4 @@ def noise_vocode(
         )
     else:
         raise ValueError("carrier must be 'noise', 'tone', or a Sound")
-    return (envelopes * fine).synthesize().normalize(sound.rms)
+    return (envelopes * fine).to_sound().normalize(sound.rms)
