@@ -47,6 +47,12 @@ reads an F0 track as `.t` and `.f0`, an envelope as `env(t, f)` and an
 aperiodicity as its grid, rather than checking their types, as
 `harmonic_complex` and `klatt_synthesize` already did.
 
+A name with a leading underscore is internal to sonore: it may be imported
+between sonore's modules, across subpackages too (WORLD's `_matlab_round`
+and noise stream are shared by its synthesis and by CheapTrick and D4C),
+but it is never part of the API, never in `__all__`, and may change
+without notice. Only names without an underscore are for users.
+
 `import sonore as so` re-exports the public names from every subpackage, so
 code written against `so.` doesn't need to know where anything lives. The
 texture names stay under `so.texture`; synthesis is `sonore.texture.synth`.
