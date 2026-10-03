@@ -9,6 +9,7 @@ from dataclasses import dataclass, replace
 import numpy as np
 
 from sonore.core.sound import Sound
+from sonore.core.utils import _parabola_vertex
 from sonore.views.view import View
 
 __all__ = ["F0Track", "f0_track", "scale_f0"]
@@ -235,9 +236,7 @@ def _candidates(x, t, fs, f_lo, f_hi):
             cmnd_at_lag[rows, ranked_pos],
             cmnd_after[rows, ranked_pos],
         )
-        curvature = min_before - 2 * min_value + min_after
-        with np.errstate(divide="ignore", invalid="ignore"):
-            shift = np.where(curvature > 0, 0.5 * (min_before - min_after) / curvature, 0.0)
+        shift = _parabola_vertex(min_before, min_value, min_after, dip=True)
         out[chunk_start : chunk_start + 4 * CHUNK] = np.where(
             is_valid, fs / (lags[ranked_pos] + shift), np.nan
         )
@@ -380,6 +379,12 @@ def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margi
 
 
 # ------------------------------------------------------------ the pitch
+def _spread_around(values: np.ndarray, median: float, ratio: float, spread: float) -> np.ndarray:
+    """The pitch-change map: ``values`` times ``ratio``, their distance from
+    ``median`` on a log scale multiplied by ``spread``."""
+    return median * ratio * (values / median) ** spread
+
+
 def _scaled(values: np.ndarray, ratio: float, spread: float) -> np.ndarray:
     """Voiced values (> 0, one row per channel) times ratio, spread around
     each row's median on a log scale; 0 and NaN stay as they are."""
@@ -392,7 +397,7 @@ def _scaled(values: np.ndarray, ratio: float, spread: float) -> np.ndarray:
         voiced = row_in > 0
         if voiced.any():
             median = np.median(row_in[voiced])
-            row_out[voiced] = median * ratio * (row_in[voiced] / median) ** spread
+            row_out[voiced] = _spread_around(row_in[voiced], median, ratio, spread)
     return out.reshape(values.shape)
 
 
@@ -445,5 +450,5 @@ def _scaled_candidates(track: F0Track, ratio: float, spread: float) -> np.ndarra
         voiced = f0_row > 0
         if voiced.any():
             median = np.median(f0_row[voiced])
-            out[channel] = median * ratio * (track.candidates[channel] / median) ** spread
+            out[channel] = _spread_around(track.candidates[channel], median, ratio, spread)
     return out

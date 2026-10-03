@@ -11,7 +11,7 @@ import numpy as np
 from scipy.signal import welch
 
 from sonore.core.sound import Sound
-from sonore.core.utils import _power_to_db, amp_to_db
+from sonore.core.utils import _power_to_db, amp_to_db, n_samples
 from sonore.frames.gabor import _FLOOR_DB, TVGaborFrame
 from sonore.views.view import View
 
@@ -77,9 +77,13 @@ class Spectrum(View):
         return plot_spectrum(self, ax=ax, **kwargs)
 
 
-def long_term_spectrum(sounds: Sound | Sequence[Sound], nperseg: int = 4096) -> Spectrum:
+def long_term_spectrum(sounds: Sound | Sequence[Sound], win_dur: float = 0.1) -> Spectrum:
     """Long-term average spectrum via Welch's method, averaged over sounds
-    (weighted by duration). This is the right input for speech-shaped noise."""
+    (weighted by duration). This is the right input for speech-shaped noise.
+
+    ``win_dur`` [s] is Welch's segment length (Hann windows, half
+    overlapping), cut to the sound's length if that is shorter; the
+    frequency spacing is ``1 / win_dur``, 10 Hz by default."""
     if isinstance(sounds, Sound):
         sounds = [sounds]
     fs = sounds[0].fs
@@ -87,7 +91,7 @@ def long_term_spectrum(sounds: Sound | Sequence[Sound], nperseg: int = 4096) -> 
     for sound in sounds:
         if sound.fs != fs:
             sound = sound.resample(fs)
-        freqs, sound_psd = welch(sound.mono().data[:, 0], fs, nperseg=min(nperseg, len(sound)))
+        freqs, sound_psd = welch(sound.mono().data[:, 0], fs, nperseg=min(n_samples(win_dur, fs), len(sound)))
         total = total + sound_psd * len(sound)
         weight += len(sound)
     psd = total / weight

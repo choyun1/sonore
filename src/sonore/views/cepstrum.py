@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import db_to_amp
+from sonore.core.utils import _parabola_vertex, db_to_amp
 from sonore.frames.gabor import STFT, TVSTFT
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
@@ -200,9 +200,7 @@ class Cepstrum(View):
         left, peak, right = (
             np.take_along_axis(self.data, peak_index + offset, axis=1)[:, 0] for offset in (-1, 0, 1)
         )
-        curvature = left - 2 * peak + right
-        with np.errstate(divide="ignore", invalid="ignore"):
-            shift = np.where(curvature != 0, 0.5 * (left - right) / curvature, 0.0)
+        shift = _parabola_vertex(left, peak, right)
         f0 = self.fs / (peak_index[:, 0] + shift)
         return self.t, np.where(peak >= threshold, f0, 0.0), peak
 

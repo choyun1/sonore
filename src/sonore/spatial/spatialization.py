@@ -43,7 +43,7 @@ from scipy.spatial import ConvexHull
 from scipy.special import i0
 
 from sonore.core.sound import Sound
-from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp
+from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp, time_axis
 from sonore.signals.processing import _track
 
 __all__ = [
@@ -590,7 +590,7 @@ def move_sound(
     shape_step = shape_times[1] - shape_times[0]
 
     n_out = len(signal) + int(np.ceil(ear_delays.max() * fs)) + _READ_HALF_WIDTH + 1
-    arrival_times = np.arange(n_out) / fs
+    arrival_times = time_axis(n_out, fs)
     out = np.zeros((n_out + shapes.shape[-1] - 1, 2))
     emission_by_ear = []
     for ear in range(2):

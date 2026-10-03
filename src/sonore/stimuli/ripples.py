@@ -204,7 +204,7 @@ class DynamicRipple(_Pattern):
         """``rate(t)`` [Hz] and ``density(t)`` [cycles/octave] at times ``t``."""
         t = np.asarray(t, float)
         n_grid = int(np.ceil(t[-1] * self.grid_fs)) + 2
-        grid = np.arange(n_grid) / self.grid_fs
+        grid = time_axis(n_grid, self.grid_fs)
         rng = as_rng(self.seed)
         out = []
         for (lo, hi), cutoff in (

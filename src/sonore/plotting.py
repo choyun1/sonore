@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import numpy as np
 
+from sonore.core.utils import time_axis
+
 __all__ = [
     "plot_waveform",
     "plot_spectrum",
@@ -309,7 +311,7 @@ def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None)
     n_samples = sb.data.shape[0]
     band_idx = np.arange(sb.data.shape[1]) if bands is None else np.asarray(list(bands))
     n_shown = len(band_idx)
-    t = np.arange(n_samples) / sb.fs
+    t = time_axis(n_samples, sb.fs)
     data = sb.data[:, band_idx, channel]
     labels = [_band_labels(sb.cfs)[i] for i in band_idx]
     if axes is None:

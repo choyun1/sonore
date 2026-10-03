@@ -35,7 +35,7 @@ from scipy.signal import resample
 
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng
+from sonore.core.utils import as_rng, n_samples
 from sonore.frames.filterbank import Subbands
 from sonore.texture import grad as tg
 from sonore.texture.stats import PAPER_CLASSES, TextureStats
@@ -298,13 +298,13 @@ def synthesize(
     classes = tuple(classes)
     rng = as_rng(rng)
     if init is None:
-        x = rng.standard_normal(int(round(duration * model.fs)))
+        x = rng.standard_normal(n_samples(duration, model.fs))
     else:
         x = model.prepare(init)
     x = model.prepare(Sound(x, model.fs))
     filterbank = model.filterbank
-    n_samples = len(x)
-    n_env = n_samples // model.decimation
+    signal_length = len(x)
+    n_env = signal_length // model.decimation
     context = tg.ChannelContext.build(model, n_env)
     order = channel_order(target.env_mean)
     history, best = [], (-np.inf, x, 0)
@@ -336,7 +336,7 @@ def synthesize(
     subbands, analytic, compressed, env = analyze(x)
     for iteration in range(1, max_iter + 1):
         fine_structure = np.cos(np.angle(analytic))
-        residual = compressed - _resample_circular(env, n_samples)
+        residual = compressed - _resample_circular(env, signal_length)
 
         adjusted = np.zeros(env.shape[1], bool)
         n_cg_iter = 5 + round(0.2 * (iteration - 1))
@@ -346,7 +346,8 @@ def synthesize(
             )
             adjusted[k] = True
 
-        full_env = np.maximum(_resample_circular(env, n_samples) + residual, 0.0) ** (1 / model.compression)
+        full_env = np.maximum(_resample_circular(env, signal_length) + residual, 0.0)
+        full_env = full_env ** (1 / model.compression)
         new_subbands = full_env * fine_structure
         new_subband_var = np.mean(new_subbands**2, axis=0) - np.mean(new_subbands, axis=0) ** 2
         new_subbands *= np.sqrt(target.subband_var / np.maximum(new_subband_var, 1e-300))[None, :]

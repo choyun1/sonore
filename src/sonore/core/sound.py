@@ -16,7 +16,15 @@ from numpy.typing import ArrayLike
 from scipy.signal import fftconvolve, hilbert
 
 from sonore.core.units import Decibels
-from sonore.core.utils import _phase_ramp_delay, _resample_poly, amp_to_db, db_to_amp, rms, time_axis
+from sonore.core.utils import (
+    _phase_ramp_delay,
+    _resample_poly,
+    amp_to_db,
+    db_to_amp,
+    n_samples,
+    rms,
+    time_axis,
+)
 
 __all__ = ["Sound", "load"]
 
@@ -240,8 +248,8 @@ class Sound:
             raise TypeError(
                 "Sound indexing takes a time slice in seconds, e.g. snd[0.1:0.5]; index snd.data for samples"
             )
-        start = None if key.start is None else int(round(key.start * self.fs))
-        stop = None if key.stop is None else int(round(key.stop * self.fs))
+        start = None if key.start is None else n_samples(key.start, self.fs)
+        stop = None if key.stop is None else n_samples(key.stop, self.fs)
         return Sound(self._data[start:stop], self.fs)
 
     # ------------------------------------------------------------- operations
@@ -264,7 +272,7 @@ class Sound:
 
         ``shape`` is ``"cosine"`` (raised cosine) or ``"linear"``.
         """
-        n_ramp = int(round(duration * self.fs))
+        n_ramp = n_samples(duration, self.fs)
         if n_ramp == 0:
             return self
         if 2 * n_ramp > self.n_samples:
@@ -283,7 +291,7 @@ class Sound:
 
     def pad(self, before: float = 0.0, after: float = 0.0) -> Sound:
         """Zero-pad by ``before``/``after`` seconds."""
-        n_before, n_after = int(round(before * self.fs)), int(round(after * self.fs))
+        n_before, n_after = n_samples(before, self.fs), n_samples(after, self.fs)
         return Sound(np.pad(self._data, ((n_before, n_after), (0, 0))), self.fs)
 
     def pad_to(self, n: int, align: str = "start") -> Sound:

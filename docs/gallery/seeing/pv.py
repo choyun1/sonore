@@ -79,7 +79,7 @@ def show(snd, fmax=3000):
     ax_w, ax_s, ax_f = fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])
     snd.plot(ax_w, lw=0.5)
     so.STFT(snd, 46e-3).plot(ax_s, fmax=fmax, colorbar=False, db_range=70)
-    spec = so.long_term_spectrum(snd, nperseg=16384)
+    spec = so.long_term_spectrum(snd, win_dur=0.37)
     ax_f.plot(spec.f, spec.level - spec.level.max(), lw=0.8)
     ax_f.set(
         xlim=(0, fmax),

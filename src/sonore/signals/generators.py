@@ -162,7 +162,7 @@ def _voicing_gate(
     """1 where the nearest time window is voiced, 0 elsewhere, every step smoothed by
     a Hann window ``ramp`` seconds long. The ends are extended, not faded."""
     gate = (np.interp(t, window_times, voiced.astype(float)) >= 0.5).astype(float)
-    n_ramp = int(round(ramp * fs))
+    n_ramp = n_samples(ramp, fs)
     if n_ramp < 2:
         return gate
     window = np.hanning(n_ramp + 2)[1:-1]

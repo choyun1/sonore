@@ -16,86 +16,86 @@
 <text x="367" y="42" font-weight="bold" fill="#444">stimuli/</text>
 <rect x="705" y="22" width="335" height="232" rx="8" fill="#efe6fb"/>
 <text x="715" y="42" font-weight="bold" fill="#444">texture/</text>
-<line x1="541" y1="1006" x2="359" y2="1042" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="541" y1="1006" x2="528" y2="1042" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="554" y1="656" x2="604" y2="692" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="716" y1="656" x2="604" y2="692" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="716" y1="586" x2="716" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="533" y1="831" x2="694" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="533" y1="831" x2="370" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="178" y1="236" x2="554" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="178" y1="236" x2="694" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="178" y1="236" x2="370" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="543" y1="1006" x2="361" y2="1042" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="543" y1="1006" x2="541" y2="1042" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="570" y1="656" x2="615" y2="692" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="732" y1="656" x2="615" y2="692" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="732" y1="586" x2="732" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="539" y1="831" x2="699" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="539" y1="831" x2="375" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="178" y1="236" x2="570" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="178" y1="236" x2="699" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="178" y1="236" x2="375" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="178" y1="236" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="101" y1="166" x2="73" y2="202" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="283" y1="236" x2="554" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="283" y1="236" x2="694" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="283" y1="236" x2="463" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="73" y1="236" x2="370" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="525" y1="236" x2="554" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="630" y1="236" x2="716" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="283" y1="236" x2="570" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="283" y1="236" x2="699" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="283" y1="236" x2="625" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="73" y1="236" x2="375" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="420" y1="236" x2="570" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="630" y1="236" x2="732" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="630" y1="236" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="420" y1="236" x2="554" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="420" y1="236" x2="694" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="420" y1="236" x2="463" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="525" y1="236" x2="570" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="525" y1="236" x2="699" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="525" y1="236" x2="625" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="796" y1="166" x2="796" y2="202" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="796" y1="236" x2="554" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="796" y1="236" x2="570" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="796" y1="236" x2="787" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="796" y1="236" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="796" y1="96" x2="554" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="796" y1="96" x2="570" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="796" y1="96" x2="796" y2="132" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <path d="M766,96 Q706,149 766,202" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="301" y1="341" x2="532" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="301" y1="341" x2="537" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="301" y1="341" x2="301" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="625" y1="341" x2="716" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="625" y1="341" x2="301" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<path d="M595,341 Q535,394 599,447" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="463" y1="411" x2="554" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="463" y1="411" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="625" y1="411" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="463" y1="341" x2="716" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="463" y1="341" x2="732" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="463" y1="341" x2="301" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <path d="M433,341 Q373,394 599,447" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="625" y1="411" x2="570" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="625" y1="411" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="463" y1="411" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="625" y1="341" x2="732" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="625" y1="341" x2="301" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<path d="M595,341 Q535,394 599,447" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="787" y1="341" x2="787" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <path d="M757,341 Q539,394 599,447" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="787" y1="411" x2="716" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="787" y1="411" x2="732" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="787" y1="411" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="949" y1="341" x2="716" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="949" y1="341" x2="732" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="949" y1="341" x2="949" y2="377" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <path d="M919,341 Q539,394 599,447" fill="none" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="301" y1="411" x2="532" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="301" y1="411" x2="537" y2="867" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="301" y1="411" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="949" y1="411" x2="716" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
+<line x1="949" y1="411" x2="732" y2="622" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
 <line x1="949" y1="411" x2="629" y2="447" stroke="#667" stroke-width="1.3" marker-end="url(#a)" opacity="0.8"/>
-<line x1="549" y1="972" x2="471" y2="411" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="367" y1="1042" x2="549" y2="1006" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="562" y1="622" x2="471" y2="411" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="724" y1="622" x2="724" y2="586" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<line x1="538" y1="394" x2="712" y2="394" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
-<rect x="658.2" y="1042" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="733.2" y="1064" text-anchor="middle">fft</text>
-<rect x="465.5" y="972" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="540.5" y="994" text-anchor="middle">sound</text>
-<rect x="284.1" y="1042" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="359.1" y="1064" text-anchor="middle">units</text>
-<rect x="453.2" y="1042" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="528.2" y="1064" text-anchor="middle">utils</text>
-<rect x="479.3" y="622" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="554.3" y="644" text-anchor="middle">filterbank</text>
-<rect x="528.6" y="692" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="603.6" y="714" text-anchor="middle">frame</text>
-<rect x="641.3" y="622" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="716.3" y="644" text-anchor="middle">gabor</text>
-<rect x="641.3" y="552" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="716.3" y="574" text-anchor="middle">mask</text>
-<rect x="619.3" y="867" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="694.3" y="889" text-anchor="middle">generators</text>
-<rect x="458.1" y="797" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="533.1" y="819" text-anchor="middle">klatt</text>
-<rect x="295.3" y="867" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="370.3" y="889" text-anchor="middle">processing</text>
-<rect x="457.3" y="867" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="532.3" y="889" text-anchor="middle">world</text>
+<line x1="551" y1="972" x2="633" y2="411" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="369" y1="1042" x2="551" y2="1006" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="578" y1="622" x2="633" y2="411" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="740" y1="622" x2="740" y2="586" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<line x1="700" y1="394" x2="712" y2="394" stroke="#d0451b" stroke-width="1.3" stroke-dasharray="5,4" marker-end="url(#r)" opacity="0.8"/>
+<rect x="662.2" y="1042" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="737.2" y="1064" text-anchor="middle">fft</text>
+<rect x="468.5" y="972" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="543.5" y="994" text-anchor="middle">sound</text>
+<rect x="285.6" y="1042" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="360.6" y="1064" text-anchor="middle">units</text>
+<rect x="465.8" y="1042" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="540.8" y="1064" text-anchor="middle">utils</text>
+<rect x="495.4" y="622" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="570.4" y="644" text-anchor="middle">filterbank</text>
+<rect x="540.3" y="692" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="615.3" y="714" text-anchor="middle">frame</text>
+<rect x="657.4" y="622" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="732.4" y="644" text-anchor="middle">gabor</text>
+<rect x="657.4" y="552" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="732.4" y="574" text-anchor="middle">mask</text>
+<rect x="623.6" y="867" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="698.6" y="889" text-anchor="middle">generators</text>
+<rect x="464.0" y="797" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="539.0" y="819" text-anchor="middle">klatt</text>
+<rect x="299.6" y="867" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="374.6" y="889" text-anchor="middle">processing</text>
+<rect x="461.6" y="867" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="536.6" y="889" text-anchor="middle">world</text>
 <rect x="131.1" y="202" width="93.1" height="34" rx="5" fill="#fff" stroke="#556"/>
 <text x="177.7" y="224" text-anchor="middle" font-size="12">binaural</text>
 <rect x="26.0" y="132" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
@@ -104,12 +104,12 @@
 <text x="282.8" y="224" text-anchor="middle" font-size="12">reverb</text>
 <rect x="26.0" y="202" width="93.1" height="34" rx="5" fill="#fff" stroke="#556"/>
 <text x="72.6" y="224" text-anchor="middle" font-size="12">spatialization</text>
-<rect x="478.4" y="202" width="93.1" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="525.0" y="224" text-anchor="middle" font-size="12">channel_vocoder</text>
+<rect x="373.3" y="202" width="93.1" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="419.9" y="224" text-anchor="middle" font-size="12">channel_vocoder</text>
 <rect x="583.6" y="202" width="93.1" height="34" rx="5" fill="#fff" stroke="#556"/>
 <text x="630.1" y="224" text-anchor="middle" font-size="12">phasevocoder</text>
-<rect x="373.3" y="202" width="93.1" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="419.9" y="224" text-anchor="middle" font-size="12">ripples</text>
+<rect x="478.4" y="202" width="93.1" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="525.0" y="224" text-anchor="middle" font-size="12">ripples</text>
 <rect x="720.7" y="132" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
 <text x="795.7" y="154" text-anchor="middle" font-size="12">grad</text>
 <rect x="720.7" y="202" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
@@ -118,14 +118,14 @@
 <text x="795.7" y="84" text-anchor="middle" font-size="12">synth</text>
 <rect x="226.0" y="307" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
 <text x="301.0" y="329" text-anchor="middle">aperiodicity</text>
-<rect x="550.0" y="307" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="625.0" y="329" text-anchor="middle">cepstrum</text>
-<rect x="388.0" y="377" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="463.0" y="399" text-anchor="middle">envelopes</text>
-<rect x="550.0" y="377" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="625.0" y="399" text-anchor="middle">f0</text>
 <rect x="388.0" y="307" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
-<text x="463.0" y="329" text-anchor="middle">mfcc</text>
+<text x="463.0" y="329" text-anchor="middle">cepstrum</text>
+<rect x="550.0" y="377" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="625.0" y="399" text-anchor="middle">envelopes</text>
+<rect x="388.0" y="377" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="463.0" y="399" text-anchor="middle">f0</text>
+<rect x="550.0" y="307" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
+<text x="625.0" y="329" text-anchor="middle">mfcc</text>
 <rect x="712.0" y="307" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>
 <text x="787.0" y="329" text-anchor="middle">modspectrogram</text>
 <rect x="712.0" y="377" width="150.0" height="34" rx="5" fill="#fff" stroke="#556"/>

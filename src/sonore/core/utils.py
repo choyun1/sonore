@@ -72,6 +72,17 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     return np.arange(n) / fs
 
 
+def _parabola_vertex(before: np.ndarray, at: np.ndarray, after: np.ndarray, dip: bool = False) -> np.ndarray:
+    """Offset, in samples, of the vertex of the parabola through three equally
+    spaced values (``at`` in the middle): the usual sub-sample refinement of a
+    peak or a dip. The offset is 0 where the parabola is flat, and with
+    ``dip=True`` also where it opens downward (no dip to refine)."""
+    curvature = before - 2 * at + after
+    curved = curvature > 0 if dip else curvature != 0
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return np.where(curved, 0.5 * (before - after) / curvature, 0.0)
+
+
 def _power_to_db(power: ArrayLike, floor_db: float) -> np.ndarray:
     """Power to decibels, ``10*log10(power)``, with power floored at ``floor_db``."""
     return 10 * np.log10(np.maximum(power, 10 ** (floor_db / 10)))

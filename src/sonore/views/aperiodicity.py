@@ -15,7 +15,7 @@ from collections.abc import Sequence
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import db_to_amp
+from sonore.core.utils import db_to_amp, time_axis
 from sonore.signals.world import (
     _FLOOR_F0,
     _SAFEGUARD,
@@ -273,7 +273,7 @@ def harmonic_aperiodicity(
     n_fft_out = world_fft_size(fs, f0_floor)
     freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
     data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))
-    sample_times = np.arange(sound.n_samples) / fs
+    sample_times = time_axis(sound.n_samples, fs)
     for channel in range(sound.n_channels):
         voiced = f0_values[channel] > 0
         if not voiced.any():

@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
 
-from sonore.core.utils import _fit_length, _resample_poly, amp_to_db
+from sonore.core.utils import _fit_length, _resample_poly, amp_to_db, time_axis
 from sonore.frames.filterbank import _PaddedBands
 from sonore.views.view import View
 
@@ -244,7 +244,7 @@ class Envelopes(_PaddedBands, View):
 
     @property
     def t(self) -> np.ndarray:
-        return np.arange(self.n_samples) / self.fs
+        return time_axis(self.n_samples, self.fs)
 
     @property
     def db(self) -> np.ndarray:

@@ -33,7 +33,7 @@ from sonore.frames.frame import Frame, _check_frame
 
 if TYPE_CHECKING:
     pass
-from sonore.core.utils import amp_to_db, as_rng
+from sonore.core.utils import amp_to_db, as_rng, n_samples
 
 __all__ = ["GaborFrame", "TVGaborFrame", "STFT", "TVSTFT"]
 
@@ -95,7 +95,7 @@ class GaborFrame(_ShortTimeFourierFrame):
 
     def lengths(self, fs: float) -> tuple[int, int, int]:
         """``(window, hop, n_fft)`` in samples at ``fs``."""
-        n_win = int(round(self.win_dur * fs))
+        n_win = n_samples(self.win_dur, fs)
         hop = max(1, int(round((self.hop_dur if self.hop_dur is not None else self.win_dur / 4) * fs)))
         n_fft = n_win if self.n_fft is None else int(self.n_fft)
         if n_win < 1:
@@ -420,7 +420,7 @@ class _TVLayout:
 
 @lru_cache(maxsize=64)
 def _tv_layout(frame: TVGaborFrame, fs: float) -> _TVLayout:
-    lengths = np.array([int(round(dur * fs)) for dur in frame.win_durs])
+    lengths = np.array([n_samples(dur, fs) for dur in frame.win_durs])
     if lengths.min() < 1:
         raise ValueError(f"a window in win_durs is shorter than one sample at {fs:g} Hz")
     n_fft = int(lengths.max()) if frame.n_fft is None else int(frame.n_fft)

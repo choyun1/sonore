@@ -28,7 +28,7 @@ from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
-from sonore.core.utils import _fit_length, db_to_amp
+from sonore.core.utils import _fit_length, db_to_amp, n_samples, time_axis
 from sonore.frames.gabor import _bin_weights
 from sonore.views.view import View
 
@@ -52,7 +52,7 @@ def _inst_freq(phase: np.ndarray, n_win: int, hop: int) -> np.ndarray:
 
 
 def _win_len(win_dur: float, fs: float) -> int:
-    n_win = int(round(win_dur * fs))
+    n_win = n_samples(win_dur, fs)
     return n_win + (n_win % 2)  # even, so the window has a single center sample
 
 
@@ -115,7 +115,7 @@ class PVAnalysis(View):
             map_freqs = lambda freqs: ratio * freqs  # noqa: E731
 
         n_out = int(round(self.n_samples * time_scale))
-        sample_times = np.arange(n_out) / self.fs
+        sample_times = time_axis(n_out, self.fs)
         window_times = self.t * time_scale
         # filterbank-summation gain: sum over bins of |X| equals N*w(center)*amplitude
         gain = _bin_weights(self.n_win) / self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
@@ -154,7 +154,7 @@ def pv_analyze(sound: Sound, win_dur: float = 46e-3, hop_dur: float | None = Non
     of ``hop_dur`` (default: a quarter window, the largest hop at which
     instantaneous frequency is unambiguous across a Hann main lobe)."""
     n_win = _win_len(win_dur, sound.fs)
-    hop = max(1, int(round(hop_dur * sound.fs))) if hop_dur else n_win // 4
+    hop = max(1, n_samples(hop_dur, sound.fs)) if hop_dur else n_win // 4
     sft = _sft(n_win, hop, sound.fs)
     spectrum = sft.stft(sound.data.T, axis=-1)
     phase = np.angle(spectrum)

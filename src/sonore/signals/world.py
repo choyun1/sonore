@@ -18,7 +18,7 @@ from __future__ import annotations
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng
+from sonore.core.utils import as_rng, time_axis
 
 __all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "world_fft_size", "world_synthesize"]
 
@@ -377,7 +377,7 @@ def _synthesize_channel(f0, spectrogram, ratio_windows, hop, fs, n_samples, nois
     coarse_voicing = (coarse_f0 != 0).astype(float)
     coarse_f0 = np.append(coarse_f0, 2 * coarse_f0[-1] - coarse_f0[-2])
     coarse_voicing = np.append(coarse_voicing, 2 * coarse_voicing[-1] - coarse_voicing[-2])
-    sample_times = np.arange(n_samples) / fs
+    sample_times = time_axis(n_samples, fs)
     sample_f0 = np.interp(sample_times, coarse_times, coarse_f0)
     voicing = (np.interp(sample_times, coarse_times, coarse_voicing) > 0.5).astype(float)
     sample_f0 = np.where(voicing == 0, _DEFAULT_F0, sample_f0)
