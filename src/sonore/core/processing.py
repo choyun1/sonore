@@ -189,9 +189,19 @@ def resonator(sound: Sound, f: Track, bw: Track) -> Sound:
     """A formant: Klatt's (1980) second-order digital resonator.
 
     ``y[n] = A x[n] + B y[n-1] + C y[n-2]`` with ``C = -exp(-2 pi bw / fs)``,
-    ``B = 2 exp(-pi bw / fs) cos(2 pi f / fs)`` and ``A = 1 - B - C``: a
-    resonance at ``f`` Hz with a -3 dB bandwidth of ``bw`` Hz, and a gain of
-    exactly 1 at 0 Hz (so ``f = 0`` gives a low-pass filter).
+    ``B = 2 exp(-pi bw / fs) cos(2 pi f / fs)`` and ``A = 1 - B - C``.
+
+    This is the damped harmonic oscillator ``x'' + 2 sigma x' + w0^2 x =
+    w0^2 u`` sampled: its poles are the oscillator's, mapped by ``z =
+    exp(s / fs)``, with ``f`` the ringing frequency and ``bw = sigma / pi``
+    the decay rate, and its gain at 0 Hz is exactly 1, as the oscillator's
+    is (so ``f = 0`` gives a low-pass filter). ``f`` and ``bw`` are the peak
+    and the -3 dB bandwidth only when ``bw`` is much smaller than ``f``, in
+    the oscillator too: ``f = 300, bw = 300`` peaks at 260 Hz and is 397 Hz
+    wide. Above the resonance the gain falls more slowly than the
+    oscillator's (1.8 dB more at 4 kHz for ``f = 500`` at 16 kHz), since a
+    digital response repeats every ``fs``. ``tools/check_resonator_physics.py``
+    has the numbers.
 
     ``f`` and ``bw`` are numbers, or ``(times, values)`` pairs that are
     interpolated linearly to every sample (held beyond their ends), so a
