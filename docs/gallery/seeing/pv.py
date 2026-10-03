@@ -280,4 +280,4 @@ fig, playhead = show(sound)
 #   The sentence, by speakers bdl and slt.
 # - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans.
 #   Speech Audio Process.* 7(3), 323–332. [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/).
-#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L174)
+#   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/stimuli/phasevocoder.py#L175)
