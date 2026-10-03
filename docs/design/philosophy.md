@@ -44,11 +44,14 @@ meant to be readable without them.
   underneath), or not at all. In code, every view is a `View`: its
   `discards` sentence says what it drops, and its `synthesize` raises
   `NotInvertibleError` with that sentence and the route back to sound, if
-  sonore has one. Three one-way analyses are not `View`s, on purpose:
-  `InterauralCues` and `TextureStats` are records of measured numbers
-  rather than pictures of a sound, and the phase vocoder's `PVAnalysis` is
-  neither a frame nor a view. A test lists them, so a new analysis has to
-  be sorted into one kind or the other.
+  sonore has one. Every analysis is one or the other, in the branches
+  too (`InterauralCues`, `TextureStats`, the phase vocoder's
+  `PVAnalysis`), and a test sorts every public class, so a new analysis has
+  to be made a frame or a view. The rule is about what the code returns:
+  an analysis that returns an object (with axes, a plot, something one
+  might try to turn back into sound) is a frame's coefficients or a `View`;
+  a plain number such as `rms` or a mean is a measurement and stays a
+  number.
 - **Keep the simplest representation that loses nothing.** Subbands stay
   real; the complex analytic signal is computed from them exactly when
   envelopes or phase are needed.

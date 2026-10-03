@@ -28,6 +28,7 @@ from scipy.signal import ShortTimeFFT, resample_poly
 from scipy.signal.windows import hann
 
 from sonore.core.sound import Sound
+from sonore.views.view import View
 
 __all__ = ["PVAnalysis", "pv_analyze", "time_stretch", "pitch_shift"]
 
@@ -54,9 +55,20 @@ def _win_len(win_dur: float, fs: float) -> int:
 
 
 @dataclass(frozen=True)
-class PVAnalysis:
+class PVAnalysis(View):
     """Phase-vocoder analysis: per-channel magnitude, phase and instantaneous
-    frequency, all shaped ``(n_channels, n_bins, n_windows)``."""
+    frequency, all shaped ``(n_channels, n_bins, n_windows)``. A view: it
+    reads each bin as one sinusoid, and :meth:`resynthesize` rebuilds a
+    sound from those sinusoids, closely for tonal sounds but not exactly."""
+
+    discards = (
+        "PVAnalysis reads each STFT bin as a single sinusoid, which a sound with more than one component "
+        "per bin (noise, close partials) is not, so its oscillator resynthesis is not an inverse."
+    )
+    back_to_sound = (
+        "PVAnalysis.resynthesize rebuilds an approximation through an oscillator bank; "
+        "so.GaborFrame gives an exact STFT."
+    )
 
     magnitude: np.ndarray
     phase: np.ndarray

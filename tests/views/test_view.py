@@ -19,6 +19,9 @@ VIEW_NAMES = [
     "SpectralEnvelope",
     "Aperiodicity",
     "F0Track",
+    "InterauralCues",
+    "TextureStats",
+    "PVAnalysis",
 ]
 
 
@@ -43,10 +46,6 @@ NOT_ANALYSES = [
     "TextureModel",
     "ModulationFilterbank",
 ]  # ModulationFilterbank: a tool that makes views
-# One-way analyses that are deliberately not Views: they live in the branches
-# and are records of measured numbers rather than pictures of a sound, and
-# PVAnalysis is neither frame nor view (its resynthesis is a procedure).
-ONE_WAY_OUTSIDE_VIEWS = ["InterauralCues", "TextureStats", "PVAnalysis"]
 
 
 def _public_classes():
@@ -63,12 +62,8 @@ def test_every_analysis_that_is_not_a_frame_is_a_view():
     assert {view.__name__ for view in _public_subclasses(View)} == set(VIEW_NAMES)
     classes = _public_classes()
     bases = tuple(classes[name] for name in FRAME_SIDE + NOT_ANALYSES)
-    unsorted = [
-        name
-        for name, cls in classes.items()
-        if not issubclass(cls, (View, *bases)) and name not in ONE_WAY_OUTSIDE_VIEWS
-    ]
-    assert unsorted == [], f"say whether these are views, frames or neither: {unsorted}"
+    unsorted = [name for name, cls in classes.items() if not issubclass(cls, (View, *bases))]
+    assert unsorted == [], f"make these frames or views: {unsorted}"
 
 
 @pytest.mark.parametrize("view", list(_public_subclasses(View)), ids=lambda view: view.__name__)

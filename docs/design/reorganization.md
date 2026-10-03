@@ -220,6 +220,9 @@ GaborFrame` change.
   SciPy's `ShortTimeFFT` directly); its analysis would then be a view, close
   kin to the reassigned spectrogram, and `time_stretch` and `pitch_shift`
   procedures on it. Not now: a change to working code with no new behaviour.
+  *Amended 2026-10-02 (PR #86):* `PVAnalysis` is a `View` after all, so that
+  every analysis is a frame or a view; it stays in `stimuli`, and
+  `resynthesize` is its named, approximate route back to sound.
 - **D5. Where the cepstrum and MFCCs live.** Accepted, 2026-10-02. In `views`, with the other
   one-way analyses. Package and gallery need not mirror each other: the
   gallery groups by what one listens to (its Voices group holds the cepstrum
