@@ -175,7 +175,7 @@ print(f"time windows both call voiced: {both.sum()}; cepstral F0 within 5% of Ha
 # Bottom: the three pitch tracks together. Where the tracker and Harvest both call a time window
 # voiced they agree; Harvest voices more time windows, stretches where the tracker's best score
 # falls below 0.5. Against laryngograph recordings Harvest calls about a third of the unvoiced
-# time windows voiced, which is why the tracker is stricter by default (see `docs/design/f0.md`).
+# time windows voiced, which is why the tracker is stricter by default (see `docs/design/views/f0.md`).
 
 # %% [demo f1] Cepstral F0, a tracker, and Harvest
 track = so.f0_track(sentence)
@@ -275,7 +275,7 @@ sound = finish(whole)
 # less closely: with harmonics further apart, there is less of the envelope to recover. On a
 # database of laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female
 # voice's time windows and none on a male voice's
-# ([`docs/design/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md)).
+# ([`docs/design/views/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/views/female-voices.md)).
 # There is no stored F0 track for this recording, so `so.f0_track` stands in for Harvest.
 
 # %%
@@ -614,11 +614,11 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   resampled to 10 kHz. On the time windows of this sentence that sonore calls voiced, the two peaks
 #   agree within 5% on 98% of them; on every time window Harvest calls voiced, on 81%.
 #
-# See also the design and its numerical checks, `docs/design/cepstrum.md`.
+# See also the design and its numerical checks, `docs/design/views/cepstrum.md`.
 #
 # `so.MFCC` is tested against Kaldi's MFCCs (through kaldi-native-fbank, a re-implementation of
 # Kaldi's feature code) to float32 precision, and against librosa's to 1e-8 of the largest
-# coefficient; see `docs/design/mfcc.md`.
+# coefficient; see `docs/design/views/mfcc.md`.
 
 # %% [markdown]
 # ## What this page leaves out

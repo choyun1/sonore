@@ -16,7 +16,7 @@ Two scales are provided: :class:`ERBFilterbank` (ERB-number, the auditory
 default) and :class:`OctaveFilterbank` (log2 frequency, the axis on which
 spectral modulation is measured in cycles/octave).
 
-Two non-tight shapes (docs/design/frames.md, step 2) share
+Two non-tight shapes (docs/design/frames/frames.md, step 2) share
 :class:`BandpassFilterbank`'s edge filters: :class:`GammatoneFilterbank`
 (4th-order gammatones on the ERB-number scale) and :class:`MorletFilterbank`
 (Morlet wavelets, log spaced). Their synthesis is the canonical dual.

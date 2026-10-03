@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/klatt.md (C1-C6).
+"""Numerical checks for the claims in docs/design/sources/klatt.md (C1-C6).
 
 Like the other claim checkers, this is independent of sonore: only NumPy and
 SciPy, with every step written out from its formula. It holds a small

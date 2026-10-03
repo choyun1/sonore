@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/harmonic-source.md (C1-C7).
+"""Numerical checks for the claims in docs/design/sources/harmonic-source.md (C1-C7).
 
 Like the other claim checkers, this is independent of sonore: only NumPy,
 SciPy and soundfile (to read the gallery sentence's stored F0 track), with
@@ -19,7 +19,7 @@ import numpy as np
 from scipy.signal import hilbert
 
 FS = 16000.0
-HOP = 0.005  # hop of the F0 track [s], as in the stored track and docs/design/f0.md
+HOP = 0.005  # hop of the F0 track [s], as in the stored track and docs/design/views/f0.md
 ROOT = Path(__file__).resolve().parent.parent
 SPEECH = ROOT / "docs" / "speech"
 

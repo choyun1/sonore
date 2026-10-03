@@ -1,4 +1,4 @@
-"""Make the F0 track for the "seeing speech" sentence (docs/design/frames.md, step 3).
+"""Make the F0 track for the "seeing speech" sentence (docs/design/frames/frames.md, step 3).
 
 Runs WORLD's Harvest estimator through pyworld once, at
 development time, and writes a small CSV beside the recording, so the gallery

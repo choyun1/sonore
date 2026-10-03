@@ -48,7 +48,7 @@ for Cho to judge by listening, and nothing here claims it.
 - `so.pitch_shift` (phase vocoder) changes pitch by stretching and
   resampling, which moves the formants with the pitch (C2 measures it).
 - There is no formant shift anywhere in sonore, and no gallery page or
-  section changes a voice with WORLD. `world.md` D9 listed "pitch change,
+  section changes a voice with WORLD. `views/world.md` D9 listed "pitch change,
   formant shift, breathiness" as possible demos; the aperiodicity page did
   not include them.
 - **F0 is already method-agnostic.** `harmonic_complex` takes an
@@ -65,7 +65,7 @@ for Cho to judge by listening, and nothing here claims it.
   `amplitudes(t, f)` point by point (one amplitude per sample and
   harmonic, `t` and `f` the same shape), not on a grid. So sonore has two
   envelope conventions, and the cepstral envelope has neither.
-- **`so.MFCC` (`mfcc.md`) gives an envelope at frequencies only.**
+- **`so.MFCC` (`views/mfcc.md`) gives an envelope at frequencies only.**
   `mfcc.envelope(f)` is the smoothed band power the kept coefficients
   imply (mel bands and a truncated cosine transform discard detail),
   offered for display, on the MFCC's own time windows. It enters here as
@@ -74,7 +74,7 @@ for Cho to judge by listening, and nothing here claims it.
 ## How the claims are verified
 
 `tools/check_voice_change_claims.py` imports sonore (the WORLD ports are
-verified against WORLD in `world.md`) and prototypes the operations
+verified against WORLD in `views/world.md`) and prototypes the operations
 locally:
 
 - pitch change: voiced F0 values times a ratio, 0 stays 0;
@@ -189,7 +189,7 @@ settled by the data.**
   harmonics), warping keeps it in the valleys; keeping it puts noisier
   bands where the shifted formants now are.
 - *D4C shows no such relation on bdl* (median +0.02). At 16 kHz D4C
-  measures a single band (`world.md`), and on the synthetic vowel it gives
+  measures a single band (`views/world.md`), and on the synthetic vowel it gives
   +0.62 where the truth is 0, so its shape follows its own band layout
   rather than the voice.
 - *How much it matters:* at ratio 1.2 the difference between the warped-
@@ -280,7 +280,7 @@ and 2.90 dB). Area-normalized triangles help because `mfcc.envelope` gives
 band powers, sums over triangles that widen with frequency, so with
 height-1 triangles the envelope tilts upward against a spectral density;
 the remaining error is what 26 bands and 13 coefficients smooth away
-(`mfcc.md`, C4).
+(`views/mfcc.md`, C4).
 
 **C9. A wobbling F0 costs more than its median error suggests.** [compare]
 `so.f0_track` has a median F0 error of 0.08%, but on female heed at 250
@@ -290,7 +290,7 @@ harmonics wander with it, up to 50 Hz at 5 kHz, which the fixed-frequency
 score reads as a loss; a listener might hear it as roughness or not at
 all, which only listening can say. On these steady vowels the trackers
 differ in nothing else; their voicing errors on real speech are in
-`f0.md` and `female-voices.md`.
+`views/f0.md` and `views/female-voices.md`.
 
 **C10. WORLD's synthesis needs a smooth envelope: given the exact one it
 does worse than given CheapTrick's estimate.** [compare] With the true
@@ -320,7 +320,7 @@ distance, median over voiced time windows:
 | slt | `Cepstrum.f0` | 2.27 dB | 5.19 dB | 5.25 dB | 3.69 dB |
 
 The cepstral envelope loses most on the higher voice (slt), as
-`female-voices.md` found on synthetic vowels; on slt the area-normalized
+`views/female-voices.md` found on synthetic vowels; on slt the area-normalized
 MFCC envelope does better than the cepstral one (3.5–3.7 dB against
 5.1–5.2), on bdl about the same. There is no ground truth for
 a voice change on a recording, so changes are compared on the synthetic
@@ -384,8 +384,8 @@ on_harmonics = so.harmonic_complex(snd.duration, snd.fs, so.scale_f0(track, 1.53
 ### What these changes are not
 
 They change a description of a voice, so they inherit the limits of
-whichever analysis and synthesis are used; with WORLD's: minimum-phase pulses (`world.md`), CheapTrick's error rising with
-F0 (`female-voices.md`: 0.75 dB at 100 Hz to 3.0 dB at 350 Hz), and D4C's
+whichever analysis and synthesis are used; with WORLD's: minimum-phase pulses (`views/world.md`), CheapTrick's error rising with
+F0 (`views/female-voices.md`: 0.75 dB at 100 Hz to 3.0 dB at 350 Hz), and D4C's
 single band at 16 kHz. A formant shift is a uniform scaling of the whole
 envelope, a first-order model of a longer or shorter vocal tract; it does
 not change the spectral slope or the voice quality, which C6 shows are a
@@ -412,7 +412,7 @@ large part of what separates bdl from slt.
   views the gallery teaches, and every option needs a pass-through. It
   can sit on top of the free functions later.
 - *Keywords on `world_synthesize`*: ties the change to one synthesizer,
-  and `world.md` decided the WORLD-named functions reproduce WORLD.
+  and `views/world.md` decided the WORLD-named functions reproduce WORLD.
 
 **D2. The envelope convention.**
 - *Grid, power: `env(t, f)` gives `(n_channels, len(f), len(t))`*

@@ -13,7 +13,7 @@ built" below), with the gallery page `docs/gallery/voice/formants.py` (Formant s
 ## Why
 
 Cho's observation: once the time-varying harmonic source
-(`harmonic-source.md`) and the F0 tracker (`f0.md`) exist, sonore is close
+(`sources/harmonic-source.md`) and the F0 tracker (`views/f0.md`) exist, sonore is close
 to a Klatt-like synthesizer, and mostly lacks the voiceless parts. That is
 right, and the gap is smaller than it looks: the voiced source is the
 harmonic source with Klatt's glottal spectrum as its amplitudes (C4), and the
@@ -173,7 +173,7 @@ interpretable controls:
 - **LF model** (Fant, Liljencrants & Lin, 1985): the most widely used
   parametric glottal flow derivative; four parameters per period. Either
   this or KLGLOTT88 could replace RGP (D4). Proposed in
-  `glottal-source.md`, which also records what of the citation could be
+  `sources/glottal-source.md`, which also records what of the citation could be
   checked.
 - **KlattGrid** (Weenink, 2009): Praat's reimplementation, with each
   parameter a tier of time–value points rather than fixed 5 ms time windows. That

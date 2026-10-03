@@ -6,7 +6,7 @@ aspiration) and in parallel (frication), and radiation from the lips. Every
 control is something visible on a spectrogram, so the source-filter model
 can be taken apart one parameter at a time, and stimuli such as vowel and
 /ba/-/da/-/ga/ continua are set exactly. The design, and the checks behind
-it, are in ``docs/design/klatt.md``.
+it, are in ``docs/design/sources/klatt.md``.
 """
 
 from __future__ import annotations

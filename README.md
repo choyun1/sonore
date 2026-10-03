@@ -369,10 +369,10 @@ listed at the end.
 - **HRIRs on demand.** `so.load_hrirs()` downloads the PKU-IOA database
   (Qu et al., 2009) on first use, checks each file's checksum and caches it,
   correcting the left-right mirroring of its SOFA copy; see
-  `docs/design/hrir-data.md`.
+  `docs/design/spatial/hrir-data.md`.
 - **Cepstrum.** `Cepstrum` on any STFT: liftering, resynthesis with the
   original or minimum phase, and classic cepstral F0; see
-  `docs/design/cepstrum.md`.
+  `docs/design/views/cepstrum.md`.
 - **The MSM archive.** The experiment code behind Cho & Kidd (2022), written
   with sigtools 0.1, stays a separate archive at
   [choyun1/MSM](https://github.com/choyun1/MSM) rather than being folded in;
@@ -388,7 +388,7 @@ listed at the end.
   0.3.1). A starter notebook runs in Colab with nothing to install.
 - **Modulation spectrogram.** `ModulationSpectrogram`: how strongly each
   band's envelope is modulated at each rate, in every time window, with linked
-  slices and an animation; see `docs/design/modulation-spectrogram.md` and
+  slices and an animation; see `docs/design/views/modulation-spectrogram.md` and
   the [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html) gallery page.
 - **Gallery pages.** Seventeen pages, listed under [Gallery](#gallery), each
   a runnable script shown with its code. The Cepstral analysis page is
@@ -403,7 +403,7 @@ listed at the end.
   a Viterbi voicing decision. Against laryngograph reference F0 (the FDA
   database, Bagshaw et al., 1993) it gets the voicing of 5.6% (male) and
   1.5% (female) of time windows wrong, where WORLD's Harvest gets about 21%; see
-  `docs/design/f0.md`.
+  `docs/design/views/f0.md`.
 - **Harmonic complexes on an F0 contour.** `so.harmonic_complex` takes an
   F0 contour as well as a number: the phase is the contour's exact running
   integral, unvoiced gaps are bridged and switched off with 5 ms ramps (or
@@ -412,7 +412,7 @@ listed at the end.
   complexes follow contours too. With `so.noise_vocode(snd, 16,
   carrier=...)` it puts a sound's band envelopes on harmonics that follow
   its own F0 track. The harmonic half of the pulse-plus-noise synthesis in
-  item 1 of Next; see `docs/design/harmonic-source.md` and the
+  item 1 of Next; see `docs/design/sources/harmonic-source.md` and the
   [Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) gallery page.
 - **Klatt-style formant synthesizer.** `so.klatt_synthesize` after Klatt
   (1980): harmonic voicing with Klatt's glottal spectrum, aspiration and
@@ -421,7 +421,7 @@ listed at the end.
   by 15 dB), radiation, and parameters as tracks interpolated to every
   sample. `so.resonator` and `so.antiresonator` are its formants. A vowel's
   harmonics equal source x formants x radiation to 1e-6 dB; see
-  `docs/design/klatt.md` and the
+  `docs/design/sources/klatt.md` and the
   [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html) gallery page.
 - **WORLD vocoder.** `so.cheaptrick` (spectral envelope; Morise, 2015),
   `so.d4c` (aperiodicity; Morise, 2016) and `so.world_synthesize` reproduce
@@ -431,7 +431,7 @@ listed at the end.
   and the tests compare against stored WORLD output, so pyworld is not a
   dependency. Options that depart from WORLD are listed in
   `so.DIFFERENCES_FROM_WORLD`. `so.harmonic_aperiodicity` measures the
-  share of noise directly, beside D4C. See `docs/design/world.md` and the
+  share of noise directly, beside D4C. See `docs/design/views/world.md` and the
   [Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) gallery page.
 - **LF glottal source.** `so.glottal_source` makes Liljencrants-Fant pulses
   (Fant, Liljencrants & Lin, 1985) from their exact harmonics, whose
@@ -440,7 +440,7 @@ listed at the end.
   moving F0. One control, Fant's (1995) Rd, runs from tense to lax voice
   and may change over time. `so.klatt_synthesize` takes it with `SS = 3`
   and `RD`, as in KLSYN88 (Klatt & Klatt, 1990); the default source is
-  unchanged. See `docs/design/glottal-source.md`.
+  unchanged. See `docs/design/sources/glottal-source.md`.
 - **Moving-sound renderer.** `so.move_sound` takes a path as a function of
   time (`so.hcc_trajectory`, with any coordinate a number, a contour or a
   function, such as the azimuth swing of Cho & Kidd, 2022), a
@@ -451,7 +451,7 @@ listed at the end.
   responses already hold travel time and 1/r level, and beyond the
   measured distances distance acts through both alone. An optional room
   tail keeps its level while the direct sound falls. See
-  `docs/design/moving-sound.md`.
+  `docs/design/spatial/moving-sound.md`.
 - **Moving sounds in the gallery.** The
   [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html)
   page has a talker walking in from 3 m, dry and in a room, and a buzz
@@ -459,7 +459,7 @@ listed at the end.
 - **MFCCs.** `so.MFCC` on a sound or any STFT: mel band powers, their log
   and a DCT, deltas, the mel spectrogram and the smoothed envelope the
   coefficients keep. Tests compare it with Kaldi's and librosa's stored output; see
-  `docs/design/mfcc.md`. The
+  `docs/design/views/mfcc.md`. The
   [Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html#h-mfccs-a-cepstrum-on-the-mel-scale)
   page shows how much a vowel's MFCCs move with its pitch.
 - **Voice changes, any method.** `so.scale_f0` changes the pitch and
@@ -467,7 +467,7 @@ listed at the end.
   Harvest, `Cepstrum.f0`) and any envelope (CheapTrick, the cepstrum,
   MFCCs), and both synthesizers take any envelope.
   `tools/compare_voice_methods.py` compares the trackers and envelopes at
-  resynthesis and voice change; see `docs/design/voice-change.md` and the
+  resynthesis and voice change; see `docs/design/views/voice-change.md` and the
   [Changing a voice](https://choyun1.github.io/sonore/gallery/voice.html) gallery page.
 - **API reference and test layout.** An API reference built from the
   docstrings in CI, and a test folder that mirrors `src/sonore`.
@@ -482,14 +482,14 @@ listed at the end.
 - **Frames and views.** `analysis` split into frames (invertible) and views
   (one-way), and a `View` base class whose `synthesize` raises
   `NotInvertibleError`, saying what the view discards and naming the route
-  back to sound where one exists; see `docs/design/reorganization.md`.
+  back to sound where one exists; see `docs/design/layout/reorganization.md`.
 
 - **Sound first.** Folders follow meaning (`core`, `sources`, `frames`,
   `views`, `spatial`, `texture`), with import order kept module by module.
   A view goes back to sound through `to_sound` where a canonical route
   exists, taking what the view discarded (`Spectrum.to_sound` a carrier,
   `PVAnalysis.to_sound` a time scale and a frequency map), and refuses
-  otherwise; see `docs/design/sound-first.md`. Released as 0.4.0
+  otherwise; see `docs/design/layout/sound-first.md`. Released as 0.4.0
   ([10.5281/zenodo.23114390](https://doi.org/10.5281/zenodo.23114390)).
 </details>
 
@@ -587,10 +587,10 @@ numerically; "consulted" means the code was read for behavior but not copied.
 - [SciPy `ShortTimeFFT`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.ShortTimeFFT.html)
   (BSD-3): wrapped by `GaborFrame`. Its frame operator, bounds and least-squares
   inverse are cross-checked against dense matrices in the tests and in
-  `tools/check_frames_step1_claims.py` (docs/design/frames.md, step 1). [`gabor.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L60) [`gabor.STFT`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L469)
+  `tools/check_frames_step1_claims.py` (docs/design/frames/frames.md, step 1). [`gabor.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L60) [`gabor.STFT`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L469)
 - Gammatone filterbanks in Slaney's Auditory Toolbox and MATLAB's `gammatoneFilterBank` are time-domain IIR
   approximations; `GammatoneFilterbank` uses the exact frequency response instead (derivation in
-  docs/design/frames.md, step 2). Consulted for conventions only. [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L443)
+  docs/design/frames/frames.md, step 2). Consulted for conventions only. [`filterbank.GammatoneFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L443)
 - [SciPy `minimum_phase`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.minimum_phase.html)
   (homomorphic method), the real-cepstrum definition MATLAB's `rceps` documents, and Praat's
   PowerCepstrogram through [parselmouth](https://github.com/YannickJadoul/Parselmouth) (GPLv3):

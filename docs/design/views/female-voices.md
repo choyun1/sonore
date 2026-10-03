@@ -66,7 +66,7 @@ On ARCTIC `slt` (Harvest median 176 Hz, so lower than sb), the tracker
 agrees with Harvest within 5% on 98.6% of the time windows where both
 voice. On `bdl` it is 99.3%. Both voices disagree with Harvest on voicing in about
 24% of time windows, as expected, since Harvest voices many unvoiced ones
-(`f0.md`, C9). The cepstrum disagrees with Harvest by more
+(`views/f0.md`, C9). The cepstrum disagrees with Harvest by more
 than 20% on 53% of the 15 `slt` time windows Harvest puts at 250 to 300 Hz.
 
 **On steady synthetic vowels from 250 Hz up the tracker locked onto a
@@ -76,7 +76,7 @@ returned F0/3 (99 Hz for a 300 Hz vowel) on nearly every time window at
 perfectly periodic sound has a difference-function minimum at every
 multiple of its period, all about equally deep. The tracker kept only the
 four deepest, which could all be multiples, and its subharmonic rule (C10
-in `f0.md`) checked only the octave above a candidate, which says nothing
+in `views/f0.md`) checked only the octave above a candidate, which says nothing
 against F0/3. Real voices have jitter, so this didn't show on sb, but a
 steady synthetic source such as the gallery's Klatt vowels at a female F0
 would hit it. Extending the rule to thirds alone moved the error to F0/5,

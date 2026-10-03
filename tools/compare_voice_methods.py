@@ -1,6 +1,6 @@
 """Which F0 tracker and which spectral envelope resynthesize a voice best,
 and which carry a voice change best? A comparison for
-docs/design/voice-change.md ("Comparing methods").
+docs/design/views/voice-change.md ("Comparing methods").
 
 Every F0 source is mixed with every envelope source and put back together,
 unchanged and changed (pitch x 1.5, formants x 1.2), by the operations the

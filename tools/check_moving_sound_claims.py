@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/moving-sound.md (C1-C7).
+"""Numerical checks for the claims in docs/design/spatial/moving-sound.md (C1-C7).
 
 Like the other claim checkers, this is independent of sonore: only NumPy and
 SciPy, with every step written out from its formula. It holds a small

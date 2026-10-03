@@ -1,6 +1,6 @@
 """Imports between modules never form a cycle, and core stays at the bottom.
 
-The folders follow meaning (docs/design/sound-first.md), not import order:
+The folders follow meaning (docs/design/layout/sound-first.md), not import order:
 ``sources.ripples`` imports frames and views, and views import ``core``.
 What keeps the package from tangling is enforced module by module instead:
 

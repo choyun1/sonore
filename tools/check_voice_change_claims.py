@@ -1,4 +1,4 @@
-"""Claims for docs/design/voice-change.md: changing a voice's pitch and its
+"""Claims for docs/design/views/voice-change.md: changing a voice's pitch and its
 formants with the WORLD pieces already in sonore (so.f0_track, so.cheaptrick,
 so.d4c, so.harmonic_aperiodicity, so.world_synthesize).
 

@@ -1,6 +1,6 @@
 # Sound first: folders by meaning, and the way back to sound
 
-A proposal, following the reorganization (`docs/design/reorganization.md`,
+A proposal, following the reorganization (`docs/design/layout/reorganization.md`,
 merged as PRs #82–#84) and the audit fixes (#86–#90). On 2026-10-03, before
 releasing 0.4.0, Cho asked to rethink the split between `signals`,
 `stimuli` and `generators`: "i don't like generators vs signals vs stimuli
@@ -212,7 +212,7 @@ the vocoder, ripples, the phase vocoder, Klatt, filters) hash identically to
 main; the eight gallery pages that use a moved module build, and their audio
 matches main's build byte for byte; Sphinx gives the same 7 warnings as
 main; the old paths remain only in the changelog's history, this document,
-`reorganization.md` and `tools/count_reorganization_references.py`.
+`layout/reorganization.md` and `tools/count_reorganization_references.py`.
 
 ## Order
 

@@ -6,7 +6,7 @@ An STFT shows how a sound's power spectrum changes over time; a
 time. It is built from :class:`~sonore.views.envelopes.Envelopes` (any
 filterbank) by passing every band's envelope through a
 :class:`~sonore.views.modulation.HannModulationFilterbank` and sampling the
-result every ``hop`` seconds. docs/design/modulation-spectrogram.md has the
+result every ``hop`` seconds. docs/design/views/modulation-spectrogram.md has the
 design and the numbers behind it.
 """
 

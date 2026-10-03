@@ -290,8 +290,8 @@ GaborFrame` change.
   changes and no link in the README, the design docs or elsewhere breaks.
   Apart from each page naming its own script, only 8 other files name a
   moved script's path (`tools/check_moving_trajectories.py`, CHANGELOG.md
-  and the design docs cepstrum.md, mfcc.md, glottal-source.md, klatt.md,
-  voice-change.md and world.md).
+  and the design docs views/cepstrum.md, views/mfcc.md, sources/glottal-source.md, sources/klatt.md,
+  views/voice-change.md and views/world.md).
 - **D10. README.** The "More in the gallery" list (17 entries today, in no
   particular order) is regrouped under the four group names, in the order of
   TOPICS, as short bold lead-ins rather than headings, so the Contents table

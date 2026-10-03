@@ -4,9 +4,9 @@ The design of a source-filter vocoder in the manner of WORLD (Morise,
 Yokomori & Ozawa, 2016): a recording is taken apart into an F0 track, a
 smooth spectral envelope and an aperiodicity, each of which can be changed,
 and put back together as a sound. It is roadmap item "Next 1". It builds on
-`so.f0_track` (`f0.md`), the pitch-adaptive frame
-(`TVGaborFrame.pitch_adaptive`, `frames.md`), `so.Cepstrum`
-(`cepstrum.md`) and the Klatt synthesizer (`klatt.md`).
+`so.f0_track` (`views/f0.md`), the pitch-adaptive frame
+(`TVGaborFrame.pitch_adaptive`, `frames/frames.md`), `so.Cepstrum`
+(`views/cepstrum.md`) and the Klatt synthesizer (`sources/klatt.md`).
 
 Status: accepted. Cho accepted every recommendation on 2026-10-02. The
 first draft proposed several departures from WORLD to fit sonore's own
@@ -28,10 +28,10 @@ numbers. Several pieces it needs exist already:
 
 - the F0 track (`so.f0_track`), which WORLD gets from Harvest or DIO;
 - the cepstrum and its lifter, which CheapTrick uses on a smoothed
-  spectrum (`cepstrum.md` C5 showed the plain lifter sits about 4 dB below
+  spectrum (`views/cepstrum.md` C5 showed the plain lifter sits about 4 dB below
   the harmonic peaks and named CheapTrick as the fix);
 - the pitch-adaptive frame, whose three-period window is CheapTrick's
-  Hann window (`frames.md`, D15), up to rounding of its length.
+  Hann window (`frames/frames.md`, D15), up to rounding of its length.
 
 Missing: the envelope estimator, an aperiodicity estimator, and the
 synthesis that combines a periodic and an aperiodic part by frequency.
@@ -205,7 +205,7 @@ vowel, harmonics below 4 kHz, 40 window positions within one period. The
 envelope sits a constant distance below each harmonic's peak in the
 windowed spectrum (−3.1, −2.9, −2.7 dB at F0 100, 200, 300 Hz) and
 matches the true envelope's shape to 0.41, 0.64 and 0.92 dB RMS once that
-offset is removed; the plain cepstral lifter of `cepstrum.md` C5 sits
+offset is removed; the plain cepstral lifter of `views/cepstrum.md` C5 sits
 4.6–4.8 dB below, with 0.9–1.1 dB RMS shape error. The port matches
 pyworld's CheapTrick within 0.0007 dB on these vowels and within
 0.00003 dB on every voiced time window of the gallery sentence (wherever
@@ -252,7 +252,7 @@ constant factor: 0.1% moves the 2–4 and 4–7 kHz bands by 0.6 and 0.1 dB,
 0.3% by 2.9 and 4.0 dB, 1% by 18 dB. A wrong F0 drifts the high harmonics
 out of phase with the fit within the window, and that reads as noise. The
 tracker's refined F0 is within 0.04% (median) and 0.12% (worst time window) on
-a ±6% vibrato (`f0.md`, C2), so this is enough on clean vowels; on
+a ±6% vibrato (`views/f0.md`, C2), so this is enough on clean vowels; on
 voices with jitter, the cycle-to-cycle irregularity will read as
 aperiodicity, which is arguably right (a resynthesis from a smooth track
 can only carry jitter as noise) but makes the value depend on the
@@ -301,14 +301,14 @@ train through a filter h has, over one period, the DFT H(k F0): it is the
 sum of harmonics k F0 with complex gains H(k F0) (sampling in frequency
 is aliasing in time). So WORLD's pulses through minimum-phase responses
 are the same sound as harmonics with amplitude |H_min(k F0)| and phase
-arg H_min(k F0), the identity `klatt.md` C4 checked numerically for
+arg H_min(k F0), the identity `sources/klatt.md` C4 checked numerically for
 Klatt's source. With a moving F0 the two differ (WORLD rounds pulses to
 samples and shifts by the fraction), which is why the harmonic route is
 not WORLD's synthesis (D5).
 
 **C9. A Klatt breathy vowel has an aperiodicity that rises with
 frequency.** [proof] In Klatt's synthesizer the voiced source falls about
-12 dB/octave (RGP, `klatt.md` C4) and the radiation difference adds
+12 dB/octave (RGP, `sources/klatt.md` C4) and the radiation difference adds
 6 dB/octave, while the aspiration noise is flat after radiation (C5
 there); both go through the same cascade. So with AV and AH fixed, the
 noise share rises about 6 dB per octave until noise dominates, and the
@@ -508,7 +508,7 @@ recommendations follow the reproducibility rule above.
 - *Peak-to-valley ratio* (STRAIGHT's idea; Kawahara et al., 1999): simple
   to show on a spectrum; but with a three-period Hann window a perfectly
   periodic sound already has valleys only about 12 dB below its peaks
-  (`frames.md`, C16), so it needs a calibration table to mean anything.
+  (`frames/frames.md`, C16), so it needs a calibration table to mean anything.
 
 **D4. How aperiodicity and envelope are stored.**
 - *WORLD's arrays* (recommended): power spectra and amplitude ratios on
@@ -535,7 +535,7 @@ recommendations follow the reproducibility rule above.
   `so.d4c`, `so.world_synthesize`, which tell a reader exactly which
   algorithm and which numbers to expect; sonore's own names for what is
   sonore's (`so.harmonic_aperiodicity`, `SpectralEnvelope`,
-  `Aperiodicity`). `klatt.md` D5 kept Klatt's names for the same reason.
+  `Aperiodicity`). `sources/klatt.md` D5 kept Klatt's names for the same reason.
 - *Descriptive names throughout* (`spectral_envelope`, `aperiodicity`):
   sonore's usual style; but they hide which algorithm runs, and a second
   estimator would need a `method=` switch.
@@ -544,7 +544,7 @@ recommendations follow the reproducibility rule above.
 - *Required argument* (recommended): WORLD's numbers depend on the track,
   and sonore's `so.f0_track` is not Harvest, so taking the track
   explicitly keeps the comparison honest; the gallery uses the stored
-  Harvest track for the sentence, as `f0.md` does.
+  Harvest track for the sentence, as `views/f0.md` does.
 - *Default to `so.f0_track` when none is given*: one call from a sound to
   a resynthesis; but the result would silently differ from WORLD's, and
   would have to be listed as a difference.
@@ -574,7 +574,7 @@ synthesis page, which already has the breathy vowel (C9) but no analysis.
 Morise (2015), Morise (2016) and Morise, Yokomori & Ozawa (2016) were read
 in full from PDFs Cho supplied on 2026-10-02; their citation details
 match the Crossref, ScienceDirect and J-STAGE records checked earlier
-that day. Kawahara et al. (1999) was verified for `frames.md`. Kawahara &
+that day. Kawahara et al. (1999) was verified for `frames/frames.md`. Kawahara &
 Morise (2012) is cited as the D4C paper cites it, not read. Röbel & Rodet
 (2005) is cited from memory.
 

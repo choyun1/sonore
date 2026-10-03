@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/cepstrum.md (C1-C7).
+"""Numerical checks for the claims in docs/design/views/cepstrum.md (C1-C7).
 
 Like the Frames checkers, this is deliberately independent of sonore: only
 NumPy, SciPy and soundfile (to read the gallery sentence), with every window,

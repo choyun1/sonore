@@ -14,7 +14,7 @@ Implemented in `src/sonore/views/cepstrum.py`, tested in
 
 ## How the claims are verified
 
-As in `frames.md`, each claim is numbered and tagged:
+As in `frames/frames.md`, each claim is numbered and tagged:
 
 - **[proof]**: a short argument given here.
 - **[check]**: a number printed by `tools/check_cepstrum_claims.py`. The
@@ -234,7 +234,7 @@ class on the sentence and lists the same comparisons.
 
 Noll (1967) was verified by lookup (PubMed 6040805: *JASA* 41(2), 293–309).
 The others are cited from memory and not yet verified; Morise (2015) was
-verified for `frames.md`.
+verified for `frames/frames.md`.
 
 - Bogert, B. P., Healy, M. J. R. & Tukey, J. W. (1963). The quefrency
   alanysis of time series for echoes: cepstrum, pseudo-autocovariance,
@@ -247,7 +247,7 @@ verified for `frames.md`.
   deconvolution). Pearson.
 - Morise, M. (2015). CheapTrick, a spectral envelope estimator for
   high-quality speech synthesis. *Speech Communication* 67, 1–7. Already
-  cited in `frames.md`.
+  cited in `frames/frames.md`.
 - Peterson, G. E. & Barney, H. L. (1952). Control methods used in a study
   of the vowels. *J. Acoust. Soc. Am.* 24(2), 175–184. Source of the
   checker's /a/ formants (rounded male averages).

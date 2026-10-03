@@ -72,7 +72,7 @@ class DelayedGaussianFilterbank(GaussianFilterbank):
 
 
 # ------------------------------------------------ dense-matrix frame oracle
-# docs/design/frames.md: small dense matrices, built from the fast path itself
+# docs/design/frames/frames.md: small dense matrices, built from the fast path itself
 # by analyzing unit impulses, so the oracle tests what the code actually does.
 
 

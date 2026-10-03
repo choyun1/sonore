@@ -1,7 +1,7 @@
 """Frames: invertible analyses with a common contract.
 
 A :class:`Frame` turns a :class:`~sonore.Sound` into coefficients and back.
-The contract (docs/design/frames.md) is:
+The contract (docs/design/frames/frames.md) is:
 
 - ``synthesize(analyze(x)) == x`` to floating-point precision.
 - For modified coefficients, ``synthesize`` returns the least-squares signal:

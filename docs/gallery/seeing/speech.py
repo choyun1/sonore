@@ -483,7 +483,7 @@ sound = sentence
 # - Each formant is drawn by fewer harmonics, so the envelope between harmonics is a guess. This is
 #   why female voices have long been harder to analyze: at an $F_0$ of 200 Hz and above, a formant
 #   peak that falls between two harmonics is simply not in the spectrum.
-#   [`docs/design/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/female-voices.md)
+#   [`docs/design/views/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/views/female-voices.md)
 #   measures how much the envelope estimates suffer.
 #
 # The pitch-adaptive window adjusts by itself: three female periods are about 16 ms. The F0 track

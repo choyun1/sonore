@@ -1,4 +1,4 @@
-"""Runs the "What a user sees" walkthrough of docs/design/reorganization.md (D13) against
+"""Runs the "What a user sees" walkthrough of docs/design/layout/reorganization.md (D13) against
 today's sonore, and prints what each step gives.
 
     python tools/check_reorganization_walkthrough.py

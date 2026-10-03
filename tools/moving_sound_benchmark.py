@@ -1,4 +1,4 @@
-"""Timing behind docs/design/moving-sound.md, D5 (c): a truly time-varying
+"""Timing behind docs/design/spatial/moving-sound.md, D5 (c): a truly time-varying
 convolution, with a fresh interpolated HRIR at every sample, against
 today's switching at 200 points per second.
 

@@ -11,7 +11,7 @@ pass the folder that holds its rl/ and sb/ subfolders:
 The speech is resampled to 16 kHz for the prototype and the cepstral
 baseline. If pyworld is installed (development only), Harvest and DIO +
 StoneMask are run as well, at 16 kHz and Harvest also at the native 20 kHz.
-Prints voicing and F0 accuracy per speaker; see docs/design/f0.md.
+Prints voicing and F0 accuracy per speaker; see docs/design/views/f0.md.
 """
 
 import sys

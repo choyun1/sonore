@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/frames.md, step 1 (C1-C7).
+"""Numerical checks for the claims in docs/design/frames/frames.md, step 1 (C1-C7).
 
 Deliberately independent of sonore: only NumPy and SciPy, with every operator
 built as an explicit dense matrix on a small signal length, so the checks

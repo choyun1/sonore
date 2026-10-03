@@ -25,7 +25,7 @@ what the two carry between them? Most of that already exists:
   multiplies each band's fine structure by the sound's band envelope
   (`src/sonore/frames/filterbank.py`). The envelope half is done.
 - `docs/speech/bdl_arctic_a0131_f0.csv` holds a Harvest track (Morise,
-  2017) of the gallery sentence (CMU ARCTIC `bdl`; Kominek & Black, 2004), and `so.f0_track` (`f0.md`) now tracks any sound.
+  2017) of the gallery sentence (CMU ARCTIC `bdl`; Kominek & Black, 2004), and `so.f0_track` (`views/f0.md`) now tracks any sound.
 
 What is missing is the carrier. `so.harmonic_complex` takes one fixed F0.
 The gallery pages that need a moving F0 (`pv.py`, `resynthesis.py`) each
@@ -37,7 +37,7 @@ let a reader *hear* a track, the quickest way to judge one.
 
 ## How the claims are verified
 
-As in `cepstrum.md` and `f0.md`, each claim is numbered and tagged:
+As in `views/cepstrum.md` and `views/f0.md`, each claim is numbered and tagged:
 
 - **[proof]**: a short argument given here.
 - **[check]**: a number printed by `tools/check_harmonic_source_claims.py`.
@@ -276,7 +276,7 @@ take only a number.
 
 ```python
 snd = so.load("docs/speech/bdl_arctic_a0131.flac")
-trk = so.f0_track(snd)  # f0.md
+trk = so.f0_track(snd)  # views/f0.md
 src = so.harmonic_complex(snd.duration, snd.fs, trk, unvoiced="noise", rng=0)
 so.noise_vocode(snd, 16, carrier=src)  # its envelopes, this pitch
 

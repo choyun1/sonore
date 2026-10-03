@@ -278,7 +278,7 @@ def harmonic_complex(
     ``f_max``, it also takes harmonics only below ``f_max`` by default and
     fades them out as a contour does (below); without it, nothing is faded.
 
-    A contour (``docs/design/harmonic-source.md``) is filled across its
+    A contour (``docs/design/sources/harmonic-source.md``) is filled across its
     unvoiced gaps and interpolated linearly to the sample rate, and the phase
     is its exact running integral, so every harmonic follows ``n`` times the
     contour with no jumps. Each harmonic fades out (``cos^2``) between
@@ -597,7 +597,7 @@ def iterated_ripple_noise(
 
 
 # The Liljencrants-Fant (LF) glottal pulse, and a voiced source made from it
-# (docs/design/glottal-source.md). Names follow the papers, an exception to
+# (docs/design/sources/glottal-source.md). Names follow the papers, an exception to
 # sonore's descriptive names: ``tp``, ``te``, ``ta`` (times of peak flow, of the
 # main excitation and of the return phase's time constant, in fractions of a
 # period), ``alpha``, ``epsilon``, ``omega_g`` and ``e0`` (the waveform's
@@ -837,7 +837,7 @@ def glottal_source(
     pulse, from tense, pressed voice (small Rd: short open phase, abrupt
     closure, strong high harmonics) to lax, breathy voice (large Rd: long open
     phase, gradual closure, a dominant fundamental). The design, and the
-    checks behind it, are in ``docs/design/glottal-source.md``.
+    checks behind it, are in ``docs/design/sources/glottal-source.md``.
 
     The pulses are built from their harmonics (:func:`lf_harmonics`) by
     :func:`harmonic_complex`, so they do not alias, each period takes its
