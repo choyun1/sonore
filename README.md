@@ -306,26 +306,23 @@ Where to go for what sonore leaves out:
 
 ## Roadmap
 
-What is planned comes first, in the order it will be done; finished work is
-listed at the end.
+What is planned comes first; finished work is listed at the end.
 
-**Next, in order**
+**Next**
 
-1. **Cocktail party scenes.** Gallery scenes on the Moving talkers page
-   with three to six talkers walking on slowly bending paths, 10 to 30 s
-   long, with speech from LibriSpeech dev-clean (CC BY 4.0).
-2. **Texture modulation convergence.** Rebalance the objective so
-   modulation power converges (see Texture synthesis below).
+- **Cocktail party scenes.** Gallery scenes on the Moving talkers page
+  with three to six talkers walking on slowly bending paths, 10 to 30 s
+  long, with speech from LibriSpeech dev-clean (CC BY 4.0).
 
 **Texture synthesis**
 
-- Rebalance the objective so modulation power converges (it reaches 30 dB
-  SNR when imposed without the correlation classes, but 18-23 dB in full
-  synthesis); try joint imposition of all channels.
-- Impose several channels at once; the per-channel objective is
-  overhead-bound (about 2 s per iteration for 5 s of sound).
-- Validate against the MATLAB toolbox's published examples by running both
-  on the same original recordings.
+- **Modulation convergence.** Rebalance the objective so modulation power
+  converges: it reaches 30 dB SNR when imposed without the correlation
+  classes, but 18-23 dB in full synthesis.
+- **All channels at once.** Impose the channels jointly; the per-channel
+  objective is overhead-bound (about 2 s per iteration for 5 s of sound).
+- **Validation.** Run the MATLAB toolbox on the same original recordings
+  and compare with its published examples.
 
 **Other**
 
@@ -404,8 +401,8 @@ listed at the end.
   pitch never aliases. The square, sawtooth, pulse train and Schroeder
   complexes follow contours too. With `so.noise_vocode(snd, 16,
   carrier=...)` it puts a sound's band envelopes on harmonics that follow
-  its own F0 track. The harmonic half of the pulse-plus-noise synthesis in
-  item 1 of Next; see `docs/design/harmonic-source.md` and the
+  its own F0 track. The harmonic half of the pulse-plus-noise synthesis
+  that WORLD's vocoder (below) completes; see `docs/design/harmonic-source.md` and the
   [Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) gallery page.
 - **Klatt-style formant synthesizer.** `so.klatt_synthesize` after Klatt
   (1980): harmonic voicing with Klatt's glottal spectrum, aspiration and
