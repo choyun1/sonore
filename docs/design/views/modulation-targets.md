@@ -1,0 +1,341 @@
+# Specifying a modulation spectrum
+
+Cho asked on 2026-10-03 how one could specify a desired modulation
+spectrum: by drawing it, or in other ways. This note answers that, measures
+what such a specification actually pins down, and proposes what sonore
+could offer. It adds no library code; the decisions at the end come first.
+
+Status: proposed 2026-10-03, decisions open. The claims are checked by
+`tools/check_modulation_targets_claims.py` (C1–C5), which uses only NumPy,
+SciPy and soundfile, writes every filter and transform out from its
+formula, and shares no code with sonore. It runs in about 10 s. The numbers
+below come from NumPy 2.4.6 and SciPy 1.17.1, with the seeds in the script.
+
+## How the claims are verified
+
+As in `modulation-spectrogram.md`, each claim is tagged:
+
+- **[proof]**: a short argument given here.
+- **[check]**: a number printed by the checker.
+- **[source]**: a published result (see References, which says how far each
+  source was checked).
+
+Anything else is marked as an estimate or as inferred.
+
+## Which modulation spectrum
+
+sonore already computes three things that go by the name, and a target has
+to say which one it is.
+
+1. **The 2-D modulation power spectrum** (`ModulationSpectrum`): the squared
+   magnitude of the 2-D Fourier transform of a whole envelope array,
+   temporal rate (Hz, signed) against spectral modulation (cycles per octave
+   or per kHz). One number per cell for the whole sound. This is the plane
+   of ripple stimuli and of the speech "modulation transfer function"
+   experiments.
+2. **Per-band modulation power** (`TextureStats.mod_power`): for every
+   audio band, the power of its envelope in each modulation band. Acoustic
+   frequency against rate.
+3. **The modulation spectrogram** (`ModulationSpectrogram`): item 2 for
+   every time window. Its time average is item 2 with slightly different
+   filters (C7 of `modulation-spectrogram.md`).
+
+These are different targets [proof]. Item 1 is a transform over the whole
+frequency axis, so it does not say *where* in frequency a modulation sits:
+a 4 Hz modulation in the low bands and the same one in the high bands give
+the same cell. Item 2 treats each band alone, so it has no spectral
+modulation and no direction: an upward and a downward sweep with the same
+band envelopes up to a delay give the same item 2. Item 3 adds when, and
+still has neither phase nor direction. A drawing on the rate × density
+plane is item 1; a drawing on the frequency × rate plane is item 2.
+
+## What a modulation spectrum leaves free
+
+A power spectrum keeps magnitudes and drops phase [proof]. For item 1, the
+phase of the 2-D transform holds the timing of every event and how the
+bands line up across frequency. Any phase gives the same power spectrum,
+and the inverse transform of each is an envelope array with exactly that
+spectrum, as long as it stays non-negative. Beyond phase, a target leaves
+out three more things, each of which a route back to sound has to supply:
+
+- **the envelope mean**, which is the long-term spectrum (the 2-D transform
+  is taken after the mean is removed, in sonore as in the checker);
+- **the fine structure** under the envelopes, i.e. the carrier;
+- **the analysis it was measured with**: the filterbank, the envelope
+  extraction, compression, and linear or dB envelopes. C10 of
+  `modulation-spectrogram.md` measured that 0.3 compression multiplies depth
+  by 0.45, and C3 below shows the carrier and the filterbank interact.
+
+`docs/design/philosophy.md` ("Views may discard information") already
+says a modulation spectrum is a view whose possible carriers are too many
+for a canonical `to_sound`. The claims below put numbers on how much is
+free.
+
+## Claims
+
+**C1. Two envelope arrays with the same modulation spectrum can be
+unrelated, and only one of them looks like speech.** [proof, check] The
+gallery sentence (`bdl_arctic_a0131`) through 61 half-cosine bands, 12 per
+octave from 200 to 6400 Hz, with Hilbert envelopes at 400 Hz. Its "twin"
+keeps the magnitude of the envelope array's 2-D transform and takes the
+phase of white noise's.
+
+- The two modulation power spectra agree to 4e-16 of the peak.
+- The two envelope arrays correlate −0.08 over all band × time cells.
+- 33% of the twin's cells are negative, which no envelope can be. Clipping
+  them at zero changes the spectrum by a median of 3.1 dB where it is within
+  30 dB of its peak, and puts 8.5% of the power where the original had less
+  than −30 dB.
+- The pauses go. The speech's pooled envelope (summed over bands) is more
+  than 30 dB below its peak 9.6% of the time; the clipped twin's never is.
+  Its kurtosis over time drops from 5.8 to 3.1, the value of a Gaussian.
+- Randomizing phase in dB instead (the log envelope, as Elliott &
+  Theunissen (2009) define the spectrum) always gives a valid envelope, but it keeps the dB
+  spectrum, not the linear one: the linear spectrum moves by a median of
+  7.3 dB.
+
+So a modulation spectrum fixes a sound's *texture of change*, not the
+change itself. Speech's syllables, pauses and onsets are in the phase.
+
+**C2. Non-negativity limits how deep a random-phase pattern can be.**
+[proof, check] A pattern `1 + depth · P / max |P|` is non-negative only for
+`depth ≤ 1`. A random-phase field is close to Gaussian, whose peak is
+several standard deviations, so its rms depth at `depth = 1` is small. For
+a drawn blob at 4 Hz and 0.5 cycle/octave (downward sweeps only, one octave
+wide in rate, 0.25 cycle/octave in density), over 4 s and 5 octaves: rms
+depth 0.28 (median of 20 seeds, lowest 0.20), against 0.71 for one
+full-depth sinusoidal ripple. At that depth the pattern's own spectrum
+matches the target exactly (dB correlation 1.000 inside the blob; the 0.86%
+of power outside it is the drawn blob's own tails). A drawn target sets a
+shape, not a depth: depth has to be specified separately, and a linear
+pattern cannot go past this limit without clipping (C1 shows what clipping
+costs). A dB pattern has no limit but distorts the linear spectrum (C1).
+
+**C3. Whether the sound has the drawn spectrum depends as much on the
+carrier and the analysis as on the pattern.** [check] The C2 pattern on
+four carriers, each analysed with the 12-per-octave bank of C1.
+
+| Carrier | dB correlation with the target, inside the blob | Measured power outside the blob | rms depth of the unmodulated carrier's own envelopes |
+|---|---|---|---|
+| Random-phase tones, 24 per octave | 0.91 | 72% | 0.45 |
+| Noise bands, 24 per octave | 0.83 | 75% | 0.51 |
+| Noise bands with flattened envelopes ("low-noise") | 0.91 | 69% | 0.43 |
+| Tones on the analysis band centres, 12 per octave | 0.98 | 5.2% | 0.03 |
+
+Every carrier but the last brings its own envelope fluctuations, as large as
+the pattern's (0.43–0.51 against 0.28), and most of the measured modulation
+power is the carrier's. Tones beat with their neighbours inside a band
+(adjacent tones 1/24 octave apart beat at 2.9% of their frequency, 5.8 Hz
+at 200 Hz, inferred from the spacing). Even noise bands whose own envelopes
+are flat fluctuate once an analysis band sums several of them. Only tones
+placed at the analysis bands' centres, where both neighbouring filters are
+zero, give each band one tone and so no beats. So "a sound with this
+modulation spectrum" means nothing until the analysis is named, and a
+one-shot synthesis hits its target only if its carrier is built for that
+analysis. sonore's `ripple_sound` defaults (20 tones per octave) and
+`ModulationSpectrum.octave` (12 bands per octave) are not aligned in this
+way; from this claim they should show a floor of beat modulation under the
+ripple (inferred, not measured on sonore's code).
+
+**C4. Editing a measured spectrum and resynthesizing in one step loses
+most of the edit.** [check] The measure-and-edit route as Elliott &
+Theunissen (2009) describe it: the log-magnitude STFT of the sentence
+(32 ms Hann windows, 4 ms hop), a 2-D transform, every temporal modulation
+above 4 Hz removed, and back to a target magnitude. Before the edit, 17.5%
+of the log spectrogram's modulation power is at 6–40 Hz. Re-analysing the
+resynthesized sound:
+
+| Resynthesis | Power left at 6–40 Hz, re the original's | ‖ \|STFT\| − target ‖ / ‖ target ‖ |
+|---|---|---|
+| Target magnitude with the original phase, one inverse STFT | −5.9 dB | 0.27 |
+| Target magnitude with random phase, one inverse STFT | −4.4 dB | 0.73 |
+
+Atlas & Shamma (2003) note that a joint acoustic and modulation
+representation needs "added constraints" to be invertible [source]. Here
+the edited magnitude is not the magnitude of any STFT: overlapping windows
+tie neighbouring frames together, and the inverse STFT returns the nearest
+signal, whose own magnitude puts much of the removed modulation back.
+
+**C5. An iterative search keeps more of the edit, and still does not reach
+it.** [check] Griffin & Lim's (1984) iteration (alternate between the target
+magnitude and the STFT of the nearest signal) from the original phase, on
+the C4 target:
+
+| Iterations | Power left at 6–40 Hz, re the original's | ‖ \|STFT\| − target ‖ / ‖ target ‖ |
+|---|---|---|
+| 10 | −11.6 dB | 0.18 |
+| 50 | −14.1 dB | 0.11 |
+| 200 | −15.1 dB | 0.09 |
+
+The mismatch keeps falling, more and more slowly. Each iteration is one
+STFT and one inverse (the 200 took 4.0 s for this 2.5 s sentence,
+measured in this container, so an estimate elsewhere). A search through
+the modulation analysis itself, with gradients as the texture synthesis
+does, would aim at the modulation spectrum directly instead of at a
+spectrogram; that is not measured here.
+
+## Ways to specify a target
+
+Each way, what it fixes, what it leaves free, and how it gets to a sound.
+
+**1. Parametric shapes (ripples).** A rate, a density, a depth and a
+phase per component; `Ripple`, `RippleSum` and `DynamicRipple` exist. Each
+knob has a meaning, which makes this the didactic starting point, and it
+fixes more than a modulation spectrum: the phase is a parameter. Moving
+ripples are the stimuli of Kowalski, Depireux & Shamma (1996) and Chi et
+al. (1999); the dynamic moving ripple of Escabí & Schreiner (2002) is a
+random path through the same plane. Route to sound: `ripple_sound`, exact
+for the envelope pattern. Free: the carrier (C3).
+
+**2. Drawing the surface.** Paint power over rate × density (item 1),
+on a grid with rate signed (positive for downward sweeps, as in
+`Ripple`) and density non-negative, since the other half-plane mirrors it.
+A drawing also needs, outside the plane: the long-term spectrum, the
+depth (C2), the duration, the carrier, and a seed for the phase. Route to
+sound: random phase gives an envelope pattern with exactly the drawn
+spectrum (C2), which `ripple_sound` already accepts as a function
+`f(t, x)` once it interpolates the grid. Free: the phase (C1), so every
+seed is a different sound with the same drawing.
+
+The closest published precedent found is Hsu, Woolley, Fremouw &
+Theunissen (2004): synthetic log spectrograms built from ripple components
+"with modulation phase randomly assigned", with rates and densities drawn
+from the modulation spectrum of song, then turned into sound with a
+spectrographic inversion [source]. That is ways 1 and 2 combined, with a
+search at the end. No paper was found that draws the phase on the 2-D
+transform grid directly, as the checker does; the search was not
+exhaustive.
+
+Drawing item 2 instead (frequency × rate) is the same route band by band,
+with no spectral modulation: each band gets an envelope with that band's
+row as its power spectrum, and independent phases make the bands
+uncorrelated (inferred). That is what a "modulation-filtered noise" per
+band is.
+
+**3. Measure and edit.** Analyse a real sound, change its modulation
+spectrum (remove a rate band, a density band, a quadrant, or multiply by a
+random mask), and go back. Elliott & Theunissen (2009) did this to speech
+to find which modulations intelligibility needs: comprehension was
+significantly impaired when temporal modulations below 12 Hz or spectral
+modulations below 4 cycles/kHz were removed [source]. Venezia, Hickok &
+Richards (2016) are reported to do the same with random masks ("bubbles");
+that was not checked. The edit keeps the sound's
+own phase, so its timing survives where the edit leaves the spectrum alone.
+Two routes back:
+
+- Edit the *envelopes* (item 1 of the sonore analysis, a 2-D transform of
+  the `Envelopes` array, which is exactly invertible on that array), then
+  put them on a carrier as the vocoder already does,
+  `(edited_envelopes * carrier.tfs()).to_sound()`. One step, exact for
+  the envelopes, and C3 applies to the carrier.
+- Edit a *log spectrogram* and search for a signal (C4, C5). Elliott &
+  Theunissen exponentiate the edited log spectrogram and invert it "using
+  an iterative spectrogram inversion algorithm" [source]; their text, as
+  far as it was read, does not name Griffin & Lim, so C5 stands in for
+  their method rather than reproducing it. Chi, Ru & Shamma (2005) outline
+  several algorithms to resynthesize sound from their cortical (rate ×
+  scale) model output [source], which is the same search one level up.
+
+Filtering a noise carrier in the modulation domain is this route with
+noise as the measured sound.
+
+**4. Statistics instead of a spectrum.** The texture route of McDermott &
+Simoncelli (2011): per-band modulation power (item 2) plus envelope
+moments, correlations across bands and across modulation bands. sonore can
+already do this: `TextureStats.replace(mod_power=...)` and
+`texture.synthesize`, which searches for a sound by gradient steps. It
+pins down more than item 2 (the correlations give some of the phase
+structure across bands), and it is slow, about 0.4 s per iteration per
+second of sound (from the `synthesize` docstring). Not measured here.
+
+## Turning a target into a sound
+
+The choice is one shot or search.
+
+- **One shot** (ways 1, 2 and the envelope route of 3): build an envelope
+  array with the target spectrum, put it on a carrier. Fast and exact on
+  the envelopes (C2), and the phase is either given (ripples, an edited
+  sound) or drawn from a seed. Whether a re-analysis finds the target
+  depends on the carrier being built for that analysis (C3).
+- **Search** (the spectrogram route of 3, and way 4): iterate until a
+  sound's own analysis matches. Closer to the target as measured, never
+  exact, and slow (C5).
+
+`philosophy.md` already decides that a modulation spectrum has no
+`to_sound`, because no carrier is canonical, and that "searching for a
+matching sound stays an experiment until a canonical method is found."
+Nothing here changes that. A target is not a `View` of a sound either: it
+is a specification, like a ripple pattern, so its route to sound belongs
+in `sources`, with the carrier and the seed as explicit arguments.
+
+## Fit with the filterbank redesign
+
+`docs/design/frames/filterbanks.md` makes masks views: gains on a frame's
+coefficients, applied as `(mask * coefficients).to_sound()`. A
+modulation-domain edit is the same idea one level down, gains on the 2-D
+transform of an `Envelopes` array, but that transform is not a frame of the
+sound, so it cannot be a `Mask` on subbands. The consistent form is a
+function from `Envelopes` to `Envelopes`, and the route back is the
+existing one for envelopes (a carrier's `tfs()`, then
+`Subbands.to_sound()`). Ripple patterns already render on an octave-scale
+bank (`bank.scale.name == "octave"` after the redesign), and a drawn
+pattern would use the same check.
+
+TrackDraw, a separate future project that may draw tracks or surfaces and
+call sonore, would need only a grid in, a sound out. That is context, not
+a requirement on this design.
+
+## Decisions
+
+Each has a recommendation.
+
+- **D1. A drawn target is item 1**: modulation power on rate (Hz, signed)
+  × density (cycles/octave, non-negative), in dB, with the long-term
+  spectrum, the depth, the duration, the carrier and a seed given
+  separately. Recommended: it is the plane of ripples and of the
+  intelligibility experiments, and the long-term spectrum is the part
+  people already think about separately. Drawing item 2 is a later option.
+- **D2. A pattern made from a target**: a new pattern type in
+  `sources/ripples.py`, built from a target grid and a seed, that draws
+  the random phase once and works with `render` and `ripple_sound` like
+  `DynamicRipple`. It takes depth as an rms depth and refuses a depth the
+  draw cannot reach without going negative (C2), naming the largest one,
+  rather than clipping silently. Recommended. Name to be chosen (for
+  example `DrawnRipple` or `ModulationPattern`).
+- **D3. The carrier for a drawn target**: tones at the analysis bands'
+  centres by default, so that `ModulationSpectrum.octave` with the same
+  bands per octave finds the drawing (C3). Recommended. Whether
+  `ripple_sound`'s own default carrier should change for the same reason
+  is a separate question: measure the beat floor on sonore's code first.
+- **D4. A modulation filter on envelopes**: gains on the envelope array's
+  2-D transform, `Envelopes` in and `Envelopes` out, for the measure-and-edit
+  route; back to sound through a carrier as today. Recommended, after D2.
+- **D5. Spectrogram search stays out of the library**: Griffin & Lim and
+  any gradient search through the modulation analysis are gallery
+  experiments for now, as `philosophy.md` says. Recommended.
+- **D6. The texture route needs no code**: document
+  `TextureStats.replace(mod_power=...)` as the per-band way to specify
+  modulation. Recommended.
+- **D7. A gallery page** ("Drawing a modulation spectrum") showing C1 (a
+  sentence and its twin, heard), C2 and C3 with a drawn blob, and an edit.
+  Optional; recommended once D2 exists.
+
+## References
+
+Checked on 2026-10-03 through publisher pages and Crossref records; PubMed,
+PMC and the AIP site were not reachable from the project's environment, so
+some rows are partial.
+
+| Source | Status |
+|---|---|
+| Elliott & Theunissen (2009), "The modulation transfer function for speech intelligibility", PLoS Comput. Biol. 5(3), e1000302. doi:10.1371/journal.pcbi.1000302 | Checked against the full text: MPS of the log-amplitude spectrogram, the 12 Hz and 4 cycles/kHz result, iterative spectrogram inversion |
+| Hsu, Woolley, Fremouw & Theunissen (2004), "Modulation power and phase spectrum of natural sounds enhance neural encoding performed by single auditory neurons", J. Neurosci. 24(41), 9201–9211. doi:10.1523/JNEUROSCI.2449-04.2004 | Checked against the journal page: random modulation phase, rates drawn from song's modulation spectrum, spectrographic inversion. DOI not confirmed on Crossref |
+| Chi, Ru & Shamma (2005), "Multiresolution spectrotemporal analysis of complex sounds", JASA 118(2), 887–906. doi:10.1121/1.1945807 | Bibliographic details and abstract checked ("several reconstruction algorithms"); full text not read |
+| Atlas & Shamma (2003), "Joint acoustic and modulation frequency", EURASIP J. Appl. Signal Process. doi:10.1155/S1110865703305013 | Abstract checked ("added constraints ... to provide invertibility"); volume and pages not confirmed (2003(7), 668–675 from memory) |
+| Griffin & Lim (1984), "Signal estimation from modified short-time Fourier transform", IEEE Trans. ASSP 32(2), 236–243. doi:10.1109/TASSP.1984.1164317 | Bibliographic details checked; the paper itself not read. The note uses only the iteration's definition, which C5 implements |
+| Kowalski, Depireux & Shamma (1996), J. Neurophysiol. 76(5), 3503–3523. doi:10.1152/jn.1996.76.5.3503 | Checked (abstract: moving ripples) |
+| Chi, Gao, Guyton, Ru & Shamma (1999), "Spectro-temporal modulation transfer functions and speech intelligibility", JASA 106, 2719–2732 | Volume and pages checked via a citing record; DOI and the use of ripples not confirmed here (already in the README) |
+| Escabí & Schreiner (2002), J. Neurosci. 22(10), 4114–4131. doi:10.1523/JNEUROSCI.22-10-04114.2002 | Checked (abstract: dynamic moving ripple) |
+| McDermott & Simoncelli (2011), Neuron 71, 926–940 | Checked for `filterbanks.md`; this note relies only on sonore's own implementation of it |
+| Venezia, Hickok & Richards (2016), "Auditory 'bubbles' ...", JASA 140(2), 1072– | Title and venue from search results only; the claim about random masks not checked |
+| Singh & Theunissen (2003), JASA 114(6), 3394–3411. doi:10.1121/1.1624067 | Checked (abstract): natural sounds concentrate modulation power at low rates and densities. Not cited above for the log definition, which the abstract does not state |
