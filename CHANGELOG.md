@@ -33,6 +33,10 @@ version (0.x.y) only fixes bugs.
   removed, with and without iterations.
 
 ### Changed
+- `so.correlated_noise` gives exactly the requested interaural correlation and
+  RMS 1 in each channel: the two noises are made orthogonal and equal in power
+  before mixing (Hartmann & Cho, 2011). Before, each draw missed `corr` by
+  chance (SD about 0.2 for 9 spectral components).
 - `so.normalize(sounds, peak=...)` scales each sound to its own peak, as
   `Sound.normalize(peak=...)` does; before, the list version took only `rms`.
 - Clearer errors from the list helpers: an empty list, an unknown `mode` in

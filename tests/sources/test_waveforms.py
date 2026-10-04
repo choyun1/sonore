@@ -77,10 +77,17 @@ class TestGenerators:
         f = np.fft.rfftfreq(len(x), 1 / FS)
         assert X[(f < 490) | (f > 1010)].max() < 1e-9
 
-    def test_correlated_noise(self):
-        for c in (-0.5, 0, 0.8):
-            x = so.correlated_noise(5, FS, corr=c, rng=0)
-            assert np.corrcoef(x.data.T)[0, 1] == pytest.approx(c, abs=0.02)
+    def test_correlated_noise_is_exact(self):
+        """Exact correlation and RMS 1 per channel, even with few components
+        (9 here: 0.1 s, 500-590 Hz), where a plain mix misses by about 0.2."""
+        for c in (-1, -0.5, 0, 0.2, 0.8, 1):
+            for kwargs in ({}, {"band": (500, 590)}):
+                x = so.correlated_noise(0.1, FS, corr=c, rng=0, **kwargs).data
+                zero_lag = (x[:, 0] @ x[:, 1]) / np.sqrt((x[:, 0] @ x[:, 0]) * (x[:, 1] @ x[:, 1]))
+                assert zero_lag == pytest.approx(c, abs=1e-12)
+                np.testing.assert_allclose(np.sqrt(np.mean(x**2, axis=0)), 1, atol=1e-12)
+        with pytest.raises(ValueError, match="corr must be"):
+            so.correlated_noise(0.1, FS, corr=1.5)
 
     def test_irn_pitch(self):
         x = so.iterated_ripple_noise(1, FS, delay=5e-3, iterations=8, rng=0)

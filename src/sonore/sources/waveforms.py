@@ -553,15 +553,27 @@ def gaussian_noise(
 
 
 def correlated_noise(duration: float, fs: float, corr: float = 1.0, rng: RNG = None, **noise_kwargs) -> Sound:
-    """Two-channel noise with interaural correlation ``corr`` (in [-1, 1]).
-    Extra keyword arguments go to :func:`gaussian_noise`."""
+    """Two-channel noise whose interaural correlation is exactly ``corr`` (in
+    [-1, 1]), each channel at RMS 1. Extra keyword arguments go to
+    :func:`gaussian_noise`.
+
+    The symmetric-generator method, made exact as Hartmann and Cho (2011)
+    describe: two independent noises ``x1`` and ``x2`` are made orthogonal
+    (Gram-Schmidt) and equal in power, then mixed as ``a x1 + b x2`` (left)
+    and ``a x1 - b x2`` (right) with ``a^2 - b^2 = corr``. Without those two
+    steps each draw would miss ``corr`` by chance, more so for few spectral
+    components (narrow bands, short sounds). The correlation is the zero-lag
+    one, over the whole sound."""
     if not -1 <= corr <= 1:
         raise ValueError("corr must be in [-1, 1]")
     noise = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
+    first, second = noise[:, 0], noise[:, 1]
+    second = second - (first @ second) / (first @ first) * first
+    second *= np.linalg.norm(first) / np.linalg.norm(second)
     shared_weight, difference_weight = np.sqrt((1 + corr) / 2), np.sqrt((1 - corr) / 2)
-    left = shared_weight * noise[:, 0] + difference_weight * noise[:, 1]
-    right = shared_weight * noise[:, 0] - difference_weight * noise[:, 1]
-    return Sound(np.column_stack([left, right]), fs)
+    left = shared_weight * first + difference_weight * second
+    right = shared_weight * first - difference_weight * second
+    return _finish(np.column_stack([left, right]), fs)
 
 
 def iterated_ripple_noise(
