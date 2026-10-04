@@ -83,7 +83,7 @@ rate = abs(np.polyfit(t[starts], unwrapped, 1)[0]) / (2 * np.pi)
 # the figure's shape depends on 2*theta_y - 3*theta_x; y's phase moves 1/2 as fast as that
 report("C5", "Lissajous A3 + equal E4: y phase drift [cycles/s]", rate)
 report("C5", "predicted |2 f_y - 3 f_x| / 2 [cycles/s]", abs(2 * f_y - 3 * f_x) / 2)
-report("C5", "time for the figure to pass through all its shapes, 1/|2fy-3fx| [s]", 1 / abs(2 * f_y - 3 * f_x))
+report("C5", "time to pass through every shape, 1 / |2 f_y - 3 f_x| [s]", 1 / abs(2 * f_y - 3 * f_x))
 
 # C6: pipe footage is nominal. An open pipe sounds near c / (2 L); 8 ft is low C, C2 = 65.41 Hz.
 c_air = 343.0  # m/s at about 20 degrees C
@@ -99,7 +99,13 @@ for footage, n in [(16, 0.5), (8, 1), (4, 2), (8 / 3, 3), (2, 4), (8 / 5, 5), (4
 # C8: mutations tuned pure against tempered (as on a tonewheel organ): deviation and beat rate
 # against the 8' stop's own partial, played on middle C (C4 = 261.63 Hz)
 C4 = 440 * equal(-9)
-for name, n, semitones in [("twelfth 2 2/3'", 3, 19), ("tierce 1 3/5'", 5, 28), ("larigot 1 1/3'", 6, 31), ("septième 1 1/7'", 7, 34)]:
+MUTATIONS = [
+    ("twelfth 2 2/3'", 3, 19),
+    ("tierce 1 3/5'", 5, 28),
+    ("larigot 1 1/3'", 6, 31),
+    ("septieme 1 1/7'", 7, 34),
+]
+for name, n, semitones in MUTATIONS:
     tempered = C4 * equal(semitones)
     report("C8", f"{name}: tempered minus pure [cents]", cents(tempered / (n * C4)))
     report("C8", f"{name}: beat with the 8' stop's harmonic {n} on C4 [Hz]", abs(tempered - n * C4))
