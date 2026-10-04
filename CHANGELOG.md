@@ -33,6 +33,10 @@ version (0.x.y) only fixes bugs.
   removed, with and without iterations. Renamed "Hearing a modulation
   spectrum" when it gained the sentence and rain trading magnitudes and
   timing, and crickets and a fire with twins on the plane and band by band.
+- `so.cents_scale(reference=440.0)`: cents from a reference frequency,
+  `1200 log2(f / reference)`, as a frequency scale; `scale="cents"` is cents
+  from A4 at 440 Hz. A filterbank on it with `spacing=100` has one band per
+  equal-tempered semitone (the octave bank with `spacing=1/12`).
 
 ### Changed
 - `so.gaussian_noise` loses `tilt_ref`, which had no effect: it scaled the
@@ -60,7 +64,9 @@ version (0.x.y) only fixes bugs.
   `snd.right` on a mono sound and `normalize` of silence raise a sonore
   message instead of NumPy's `IndexError` or a division by zero.
 - One `so.Filterbank` class holds every undecimated bank: a frequency scale
-  (`"erb"`, `"octave"`, `"mel"`, `"linear"` or your own `Scale`), the
+  (`"erb"`, `"octave"`, `"cents"`, `"mel"`, `"linear"` or your own
+  `so.FrequencyScale`, which lives in `core/utils.py` beside the ERB and mel
+  converters), the
   centers as positions on it, and a filter type (`Cosine`, `Gammatone`,
   `Morlet`, or your own `FilterType`). `so.cosine_filterbank`,
   `so.gammatone_filterbank` and `so.morlet_filterbank` build the common
@@ -92,7 +98,7 @@ version (0.x.y) only fixes bugs.
   sitting 8).
 - `Subbands` can be multiplied by a number or by one gain per band (an
   equalizer); gains that change over time still go through a `Mask`.
-- A `Scale` checks that its two conversions invert each other where it is
+- A `FrequencyScale` checks that its two conversions invert each other where it is
   defined, so a mismatched pair raises instead of misplacing every filter.
 - `Subbands.synthesize()` is now `Subbands.to_sound()`, like every other
   set of coefficients.

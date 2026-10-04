@@ -88,3 +88,20 @@ def test_fit_length_cuts_and_pads_at_the_end():
     np.testing.assert_array_equal(_fit_length(data, 7), [1, 2, 3, 4, 5, 0, 0])
     np.testing.assert_array_equal(_fit_length(data, 7, mode="edge"), [1, 2, 3, 4, 5, 5, 5])
     assert _fit_length(np.ones((5, 2)), 7).shape == (7, 2)
+
+
+def test_cents_scale_counts_cents_from_the_reference():
+    scale = so.cents_scale()
+    np.testing.assert_allclose(
+        scale.to_scale([440.0, 880.0, 220.0, 440 * 2 ** (1 / 12)]), [0, 1200, -1200, 100]
+    )
+    np.testing.assert_allclose(scale.from_scale([-1200.0, 0.0, 700.0]), [220.0, 440.0, 440 * 2 ** (7 / 12)])
+    # 432 Hz is 31.8 cents below 440 Hz
+    assert scale.to_scale(432.0) == pytest.approx(-31.77, abs=0.01)
+    assert so.cents_scale(261.63).to_scale(261.63) == 0
+    assert so.cents_scale().name == "cents" and so.cents_scale().unit == "cent"
+
+
+def test_cents_scale_needs_a_positive_reference():
+    with pytest.raises(ValueError, match="above 0 Hz"):
+        so.cents_scale(0.0)

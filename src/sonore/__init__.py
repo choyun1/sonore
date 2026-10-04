@@ -30,7 +30,9 @@ from sonore.core.processing import (
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
 from sonore.core.utils import (
+    FrequencyScale,
     amp_to_db,
+    cents_scale,
     db_to_amp,
     db_to_power,
     erb_to_freq,
@@ -126,7 +128,9 @@ __all__ = [
     "measure_rt60",
     "band_rt60s",
     "cosine_filterbank",
+    "cents_scale",
     "Filterbank",
+    "FrequencyScale",
     "Frame",
     "View",
     "NotInvertibleError",

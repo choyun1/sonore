@@ -1,8 +1,11 @@
-"""Small numerical helpers: levels and decibels, the ERB and mel scales, time
-axes, random generators, and internal array helpers used across sonore."""
+"""Small numerical helpers: levels and decibels, the ERB and mel scales and
+the frequency scales built on them, time axes, random generators, and
+internal array helpers used across sonore."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from fractions import Fraction
 
 import numpy as np
@@ -20,6 +23,9 @@ __all__ = [
     "erb_bandwidth",
     "freq_to_mel",
     "mel_to_freq",
+    "FrequencyScale",
+    "FREQUENCY_SCALES",
+    "cents_scale",
     "n_samples",
     "time_axis",
     "as_rng",
@@ -112,6 +118,74 @@ def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
         above = 1000 * np.exp(_SLANEY_LOG_STEP * (np.maximum(mel, 15) - 15))
         return np.where(mel < 15, mel * _SLANEY_HZ_PER_MEL, above)
     raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
+
+
+def _identity(value):
+    return value
+
+
+@dataclass(frozen=True)
+class FrequencyScale:
+    """A frequency axis, such as the one filterbank centers are equally
+    spaced on: its ``name``, the ``unit`` of one step on it, and the
+    conversions to and from Hz."""
+
+    name: str
+    unit: str
+    to_scale: Callable[[np.ndarray], np.ndarray]
+    from_scale: Callable[[np.ndarray], np.ndarray]
+
+    def __post_init__(self):
+        # A mismatched or mistyped pair would still build a bank, with every
+        # filter in the wrong place; check a round trip where the scale is defined.
+        freqs = np.array([100.0, 1000.0, 10000.0])
+        with np.errstate(all="ignore"):
+            back = np.asarray(self.from_scale(self.to_scale(freqs)), float)
+        defined = np.isfinite(back)
+        if not np.allclose(back[defined], freqs[defined], rtol=1e-9):
+            raise ValueError(
+                f"scale {self.name!r}: from_scale(to_scale(f)) does not give f back "
+                f"({freqs[defined]} Hz -> {back[defined]} Hz): the two conversions must invert each other"
+            )
+
+
+def cents_scale(reference: float = 440.0) -> FrequencyScale:
+    """Cents from ``reference`` [Hz] (A4 by default): ``1200 log2(f / reference)``.
+    A factor of 2 is 1200 cents and an equal-tempered semitone 100, so a
+    filterbank on this scale with ``spacing=100`` has one band per semitone.
+    The reference only shifts the positions: the bank is the one built on
+    octaves with ``spacing=1/12``."""
+    if not reference > 0:
+        raise ValueError(f"reference must be a frequency above 0 Hz, not {reference!r}")
+    return FrequencyScale(
+        "cents",
+        "cent",
+        lambda freq: 1200 * np.log2(np.asarray(freq, float) / reference),
+        lambda cents: reference * np.exp2(np.asarray(cents, float) / 1200),
+    )
+
+
+#: The scales a filterbank can be built on by name: the ERB-number scale
+#: (Glasberg & Moore, 1990), octaves (log2 frequency), cents from A4 at 440 Hz,
+#: the HTK mel scale, and Hz.
+FREQUENCY_SCALES = {
+    "erb": FrequencyScale("erb", "ERB", freq_to_erb, erb_to_freq),
+    "octave": FrequencyScale("octave", "oct", np.log2, np.exp2),
+    "cents": cents_scale(),
+    "mel": FrequencyScale("mel", "mel", freq_to_mel, mel_to_freq),
+    "linear": FrequencyScale("linear", "Hz", _identity, _identity),
+}
+
+
+def _as_frequency_scale(scale: str | FrequencyScale) -> FrequencyScale:
+    if isinstance(scale, FrequencyScale):
+        return scale
+    try:
+        return FREQUENCY_SCALES[scale.lower()]
+    except (KeyError, AttributeError):
+        raise ValueError(
+            f"scale must be one of {sorted(FREQUENCY_SCALES)} or a FrequencyScale, not {scale!r}"
+        ) from None
 
 
 def n_samples(duration: float, fs: float) -> int:
