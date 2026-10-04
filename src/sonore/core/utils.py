@@ -1,5 +1,5 @@
 """Small numerical helpers: levels and decibels, the ERB and mel scales and
-the frequency scales built on them, time axes, random generators, and
+the frequency scales built on them, cents and note names, time axes, random generators, and
 internal array helpers used across sonore."""
 
 from __future__ import annotations
@@ -23,6 +23,9 @@ __all__ = [
     "erb_bandwidth",
     "freq_to_mel",
     "mel_to_freq",
+    "ratio_to_cents",
+    "cents_to_ratio",
+    "note_to_freq",
     "FrequencyScale",
     "FREQUENCY_SCALES",
     "cents_scale",
@@ -120,6 +123,46 @@ def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
     raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
 
 
+def ratio_to_cents(ratio: ArrayLike) -> np.ndarray:
+    """The size of a frequency ratio in cents, ``1200 log2(ratio)``: an
+    octave (2) is 1200 cents, an equal-tempered semitone 100, a just fifth
+    (3/2) 702.0."""
+    return 1200 * np.log2(np.asarray(ratio, float))
+
+
+def cents_to_ratio(cents: ArrayLike) -> np.ndarray:
+    """The frequency ratio of an interval ``cents`` wide, ``2 ** (cents / 1200)``."""
+    return np.exp2(np.asarray(cents, float) / 1200)
+
+
+# Semitones above C within an octave, for note names
+_NOTE_STEPS = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
+_ACCIDENTALS = {"#": 1, "\u266f": 1, "b": -1, "\u266d": -1}
+
+
+def note_to_freq(note: str, a4: float = 440.0) -> float:
+    """The equal-tempered frequency [Hz] of a note name such as ``"A4"``,
+    ``"C#3"`` or ``"Bb2"`` (scientific pitch notation: octave 4 starts at
+    middle C; ``#`` or ``b``, or ♯ and ♭, for sharp and flat, repeatable), with A4 at
+    ``a4`` Hz."""
+    if not a4 > 0:
+        raise ValueError(f"a4 must be a frequency above 0 Hz, not {a4!r}")
+    name = note.strip()
+    letter, rest = name[:1].upper(), name[1:]
+    if letter not in _NOTE_STEPS:
+        raise ValueError(f"note must start with a letter A-G, as in 'A4' or 'C#3', not {note!r}")
+    step = _NOTE_STEPS[letter]
+    while rest[:1] in _ACCIDENTALS:
+        step += _ACCIDENTALS[rest[:1]]
+        rest = rest[1:]
+    try:
+        octave = int(rest)
+    except ValueError:
+        raise ValueError(f"note must end with an octave number, as in 'A4' or 'C#3', not {note!r}") from None
+    semitones_from_a4 = step - 9 + 12 * (octave - 4)
+    return float(a4 * cents_to_ratio(100 * semitones_from_a4))
+
+
 def _identity(value):
     return value
 
@@ -160,8 +203,8 @@ def cents_scale(reference: float = 440.0) -> FrequencyScale:
     return FrequencyScale(
         "cents",
         "cent",
-        lambda freq: 1200 * np.log2(np.asarray(freq, float) / reference),
-        lambda cents: reference * np.exp2(np.asarray(cents, float) / 1200),
+        lambda freq: ratio_to_cents(np.asarray(freq, float) / reference),
+        lambda cents: reference * cents_to_ratio(cents),
     )
 
 
