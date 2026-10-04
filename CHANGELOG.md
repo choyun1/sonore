@@ -110,6 +110,13 @@ version (0.x.y) only fixes bugs.
   ratio masks.
 
 ### Documentation
+- The Colab notebook (`docs/notebooks/start.ipynb`) is now a short tutorial
+  in six steps: sounds, canonical stimuli, glides, ripples, iterated rippled
+  noise and noise vocoding, sound textures, voices (three F0 trackers,
+  WORLD-style pitch and formant changes, a phase vocoder, a Klatt vowel),
+  and spatial hearing (interaural cues, HRTFs, reverberation, a talker
+  walking past). Every sound plays with its overview below it. It runs on
+  sonore 0.4.0 from PyPI.
 - Gammatone: the factor 1.019 is credited to Slaney (1993), who gives it
   as Patterson's recommendation (checked against the report). The
   envelope-peak formula is described as approximate, which it is.

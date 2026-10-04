@@ -28,8 +28,8 @@ meant in the same spirit.
 playable next to its plots, with a playhead that follows the sound.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
-A first tour you can run in the browser, with nothing to install: stimuli, spectrograms, the
-cepstrum, a phase vocoder, ripples and binaural cues.
+A short tutorial you can run in the browser, with nothing to install: sounds, classic and
+complex stimuli, sound textures, voices, and spatial hearing with reverberation and movement.
 
 sonore is a library under active development and verification. Until
 version 1.0, its API may change between releases without warning, and it has
