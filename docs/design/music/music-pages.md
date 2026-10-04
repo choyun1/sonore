@@ -7,7 +7,7 @@ stops as a kind of additive synthesizer, where adding stops changes the timbre o
 rather than adding notes, except in gap registrations. This note proposes both pages and the
 little library code they need. It adds no code; the decisions at the end come first.
 
-Status: proposal, waiting for Cho's answers to D1–D9.
+Status: proposal, waiting for Cho's answers to D1–D10.
 
 ## How the claims are verified
 
@@ -112,13 +112,17 @@ Sections:
    tremulant modulates the wind, and with it level and pitch (rate and depth to be sourced).
 5. **Attack.** Flue pipes speak with a short noisy transient (chiff); a registration without it
    sounds less like a pipe [description, to be sourced or presented as Cho's judgement].
-   The wider point, that the onset carries much of what identifies an instrument, has a
-   literature: removing the first part of recorded tones made instruments harder to identify
-   (Saldanha & Corso, 1964; Berger, 1964) [source, not yet read beyond titles; the details
-   given in the thread are from memory]. Iverson & Krumhansl (1993) qualify it: similarity
-   judgements of onsets alone, of tones with the onset removed, and of whole tones agreed
-   closely, so the cues are not only in the onset [source, same caveat]. The page states both
-   and links to the timbre page (D9) for a demonstration.
+   The wider point, that the onset carries much of what identifies an instrument, is
+   standard: McAdams et al. (2023) left the attack of every tone untouched "as it contributes
+   significantly to instrument identification", citing Saldanha & Corso (1964), and in their
+   own results listeners never confused a sustained instrument with an impulsive one, which
+   they attribute to the temporal envelope and onset [source, read]. The cue is not the onset
+   alone: McAdams et al. (1995) report that in Wedin & Goude (1972) removing the attack
+   "seemed to have only a slight effect on the perceptual structure" of similarity ratings
+   (mean dissimilarities with and without it correlated at .92), and summarize Iverson &
+   Krumhansl (1993) as finding the spectral centroid in spaces built from complete tones,
+   attacks only, and attacks removed alike [source, read at second hand]. The page states
+   both and links to the timbre page (D9).
 
 ## Decisions
 
@@ -158,12 +162,26 @@ Sections:
 - **D8. The 432 Hz paragraph.** Report the Calamassi & Pomponi study's design and result in one
   sentence, state the 31.8-cent difference, and leave it there. Recommended, in line with
   keeping render and perception claims modest.
-- **D9. Timbre page later.** A separate timbre page (spectral envelope, attack, brightness) is
-  left for after these two, and is where an onset-removal demonstration belongs: the same
-  instruments with and without their first part, after Saldanha & Corso (1964). That needs
-  recordings of real instruments under a licence the gallery can publish (none chosen yet);
-  synthetic tones would only show what the synthesis put in. Until then the organ page covers
-  timbre from stops.
+- **D9. Timbre page later, built on timbre spaces.** A separate timbre page comes after these
+  two. Its backbone would be the McGill/IRCAM timbre-space work: listeners rate how different
+  pairs of sounds are, and multidimensional scaling places the sounds in a space. In McAdams
+  et al. (1995) (18 synthesized instrument-like tones at E-flat 4, 311 Hz; 88 listeners) the
+  three shared dimensions correlated with log attack time (r = −.94), spectral centroid
+  (r = −.94) and spectral flux (r = .54) [source, read]. That gives the page a natural shape:
+  synthetic tones that move along one dimension at a time (attack time, then brightness, then
+  how much the spectrum changes over time), which sonore can make with `harmonic_complex` and
+  an `amplitudes(t, f, n)` function. Synthetic tones are fair here because the study itself
+  used synthetic tones. The onset-removal demonstration (Saldanha & Corso, 1964) still needs
+  recordings of real instruments under a licence the gallery can publish; McAdams et al.
+  (2023) used the Vienna Symphonic Library and the McGill University Master Samples, neither
+  of which is known to allow redistribution (not checked).
+- **D10. Timbre descriptors as views.** With D9: `log_attack_time`, `spectral_centroid` and
+  `spectral_flux`, one-way views (philosophy.md "Views may discard information"), defined as
+  McAdams et al. (1995) give them after Krimphoff et al. (1994): attack time from 2% of the
+  envelope's maximum to the maximum, on a log scale; the mean over the tone of the
+  instantaneous centroid in a running 12 ms window; flux as the mean correlation between
+  amplitude spectra in adjacent windows. Not needed for the temperament or organ pages; decide
+  when D9 starts.
 
 ## Patch plan, after the decisions
 
@@ -193,17 +211,30 @@ Each step is its own PR, and images are built locally by Cho if the cloud matplo
 - Fletcher, H., Blackham, E. D., & Christensen, D. A. (1963). Quality of organ tones. *J.
   Acoust. Soc. Am.* 35, 314–325. Cited by Harrison & Thompson-Allen; not yet read.
 - Iverson, P., & Krumhansl, C. L. (1993). Isolating the dynamic attributes of musical timbre.
-  *J. Acoust. Soc. Am.* 94(5), 2595–2603. Not yet read (PubMed entry found; details from
-  memory).
+  *J. Acoust. Soc. Am.* 94(5), 2595–2603. Not read; findings as summarized by McAdams et al.
+  (1995).
 - ISO 16:1975. Acoustics — Standard tuning frequency (standard musical pitch). Checked: title
   and the 440 Hz figure from the ISO catalogue entry.
 - Organ stop (Wikipedia, read 2026-10-04): footages, mutation table, "mutations are always
   tuned pure", mixture breaks. A secondary source; to be replaced by Fletcher & Rossing or an
   organ-building text before the page cites it.
+- McAdams, S., Winsberg, S., Donnadieu, S., De Soete, G., & Krimphoff, J. (1995). Perceptual
+  scaling of synthesized musical timbres: common dimensions, specificities, and latent subject
+  classes. *Psychol. Res.* 58, 177–192. Checked: read (PDF from Cho); Table 7 correlations, the
+  review of earlier MDS work, descriptor definitions. One slip to avoid copying: it attributes
+  the clarinet's odd harmonics to a conical bore; the clarinet's bore is cylindrical.
+- McAdams, S., Thoret, E., Wang, G., & Montrey, M. (2023). Timbral cues for learning to
+  generalize musical instrument identity across pitch register. *J. Acoust. Soc. Am.* 153(2),
+  797–811. doi:10.1121/10.0017100. Checked: read (PDF from Cho); stimuli, the attack sentence,
+  the sustained/impulsive confusions. It also reports that identification is predicted
+  moderately well by spectrograms or modulation spectra.
 - Plomp, R., & Levelt, W. J. M. (1965). Tonal consonance and critical bandwidth. *J. Acoust.
   Soc. Am.* 38(4), 548–560. Already cited on the Classic stimuli page.
+- Siedenburg, K. (2019). Specifying the perceptual relevance of onset transients for musical
+  instrument identification. *J. Acoust. Soc. Am.* 145, 1078–1087. Cited by McAdams et al.
+  (2023); not yet read. The most direct modern study of the onset question.
 - Saldanha, E. L., & Corso, J. F. (1964). Timbre cues and the identification of musical
-  instruments. *J. Acoust. Soc. Am.* 36(11), 2021–2026. Not yet read (title, volume and first
-  page from the publisher's link).
+  instruments. *J. Acoust. Soc. Am.* 36(11), 2021–2026. Not yet read; citation confirmed by
+  McAdams et al. (2023).
 - Wiltshire, T. Technical aspects of the Hammond organ. electricdruid.net, read 2026-10-04:
   nine drawbars, 91 tonewheels, tempered rather than pure ratios. Not a peer-reviewed source.
