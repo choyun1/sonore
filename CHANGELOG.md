@@ -7,6 +7,9 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- `so.ratio_to_cents`, `so.cents_to_ratio` and `so.note_to_freq(note, a4=440.0)`
+  (equal-tempered frequency of a name like "C#3" or "Bb2"), beside `so.cents_scale`,
+  which now uses the same cents formula. Design in `docs/design/music/music-pages.md`.
 - `ModulationSpectrum.to_sound(carrier=...)`: a sound whose envelopes have
   the spectrum, the carrier supplying what it lacks, the modulation phase
   and the fine structure. A `Sound` lends its own (so the spectrum of `x`

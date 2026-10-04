@@ -101,7 +101,7 @@ def test_gallery_reference_lists_are_in_the_readme():
     every source tag a gallery page links is the same form the README uses."""
     readme = (ROOT / "README.md").read_text()
     listed = readme[readme.index("## References") : readme.index("### Reference implementations")]
-    for page in sorted(GALLERY.glob("*.py")):
+    for page in sorted(GALLERY.rglob("*.py")):
         text = page.read_text()
         if "# ## References" not in text:
             continue

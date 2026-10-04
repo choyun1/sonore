@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tuning and temperament</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.ref { margin-left: auto; }
+nav.pages a.ref + a.repo { margin-left: 0; }
+nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
+nav.pages a.repo:hover { color: var(--ink); }
+@media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 2.5rem 1.25rem 2rem 1.75rem;
+    border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  html:not(.side-closed) nav.pages > a:first-child, html:not(.side-closed) nav.pages details { display: none; }
+  .side-closed .layout { grid-template-columns: 3rem minmax(0, 1fr); }
+  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
+  .side-closed .side .home, .side-closed .side-body { display: none; }
+  .side-closed .side-top { justify-content: center; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home, .side-opening .side-body, .side-closing .side .home, .side-closing .side-body { animation: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group here" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li class="has-sections"><a href="temperament.html" aria-current="page">Tuning and temperament</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-intervals-are-ratios">Intervals are ratios</a></li><li><a href="#h-the-commas">The commas</a></li><li><a href="#h-one-tune-four-tunings">One tune, four tunings</a></li><li><a href="#h-where-just-intonation-breaks">Where just intonation breaks</a></li><li><a href="#h-a-reference-pitch-is-a-choice">A reference pitch is a choice</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded unless opened before.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    let open = false; try { open = localStorage.getItem("sonore-side-sections") === "open"; } catch (e) {}
+    sections.style.transition = "none"; showSections(open); sections.offsetHeight; sections.style.transition = "";
+    sectionsToggle.addEventListener("click", () => { const now = !sections.classList.contains("open"); showSections(now);
+      save("sonore-side-sections", now ? "open" : "closed"); }); }
+  let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
+  groups.forEach((group) => { const name = group.dataset.group;
+    if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
+    group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
+      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); });
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="here"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html" aria-current="page">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>Tuning and temperament</h1>
+<p>Two notes sound smooth together when their partials fall on one another, which happens when
+their frequencies stand in a ratio of small whole numbers. Twelve notes to the octave cannot
+all do that at once, so every keyboard tuning is a compromise, and the compromises have
+names. This page plays them, and draws each pair of notes as a Lissajous figure, which stands
+still when the ratio is exact and turns when it is not.</p>
+<ul><li><a href="#h-intervals-are-ratios">Intervals are ratios</a>: a just fifth and third against tempered ones, heard as beats and seen as a figure that turns.</li><li><a href="#h-the-commas">The commas</a>: why twelve notes cannot keep every fifth and third just.</li><li><a href="#h-one-tune-four-tunings">One tune, four tunings</a>: Twinkle, Twinkle, Little Star in equal temperament, just intonation, Pythagorean tuning and quarter-comma meantone.</li><li><a href="#h-where-just-intonation-breaks">Where just intonation breaks</a>: one chord that just intonation fixed on C cannot tune.</li><li><a href="#h-a-reference-pitch-is-a-choice">A reference pitch is a choice</a>: the tune at A4 = 440 Hz and at 432 Hz, and a short history.</li></ul>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
+  Start with your volume low.</p>
+</header>
+<section aria-labelledby="h-code-the-examples-share">
+<h2 id="h-code-the-examples-share">Code the examples share</h2>
+<p>Every note is a harmonic complex tone of eight partials with amplitudes falling as <span class="tex">1/n</span>, so
+that the partials of two notes can meet and beat; the sounds are at 22.05 kHz. An interval is
+measured in cents, 1200 to the octave: <span class="tex">1200 \log_2 r</span> for a frequency ratio <span class="tex">r</span>
+(<code>so.ratio_to_cents</code>). A tuning here is a table of the seven note names of C major as ratios
+to C, and every tuning keeps C4 where equal temperament with A4 = 440 Hz puts it
+(<code>so.note_to_freq</code>), so that the tunings differ only in the other notes.</p>
+<p>Each sound is drawn as a spectrogram on a logarithmic frequency axis, and under it each note
+as its distance in cents from the same note in equal temperament with A4 = 440 Hz. The square
+figure beside it is the Lissajous figure of the lowest note (across) against the highest
+(up): two sine waves at their fundamentals, drawn over the last few hundredths of a second as
+the sound plays. Inner notes of a chord are heard but not drawn.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+from sonore.plotting import plot_lissajous
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+FS = 22050
+C4 = so.note_to_freq(&quot;C4&quot;)
+PARTIALS = np.arange(1, 9)
+
+# The seven notes of C major as frequency ratios to C, in four tunings. Quarter-comma meantone
+# narrows every fifth by a quarter of the syntonic comma, so that four fifths make a just
+# major third: its fifth is the fourth root of 5.
+MEANTONE_FIFTH = 5**0.25
+TUNINGS = {
+    &quot;equal temperament&quot;: {
+        name: 2 ** (steps / 12) for name, steps in zip(&quot;CDEFGAB&quot;, (0, 2, 4, 5, 7, 9, 11), strict=True)
+    },
+    &quot;just intonation&quot;: {&quot;C&quot;: 1, &quot;D&quot;: 9 / 8, &quot;E&quot;: 5 / 4, &quot;F&quot;: 4 / 3, &quot;G&quot;: 3 / 2, &quot;A&quot;: 5 / 3, &quot;B&quot;: 15 / 8},
+    &quot;Pythagorean&quot;: {&quot;C&quot;: 1, &quot;D&quot;: 9 / 8, &quot;E&quot;: 81 / 64, &quot;F&quot;: 4 / 3, &quot;G&quot;: 3 / 2, &quot;A&quot;: 27 / 16, &quot;B&quot;: 243 / 128},
+    &quot;quarter-comma meantone&quot;: {
+        &quot;C&quot;: 1,
+        &quot;D&quot;: MEANTONE_FIFTH**2 / 2,
+        &quot;E&quot;: 5 / 4,
+        &quot;F&quot;: 2 / MEANTONE_FIFTH,
+        &quot;G&quot;: MEANTONE_FIFTH,
+        &quot;A&quot;: MEANTONE_FIFTH**3 / 2,
+        &quot;B&quot;: MEANTONE_FIFTH**5 / 4,
+    },
+}
+
+
+def pitch(note, tuning, c4=C4):
+    &quot;&quot;&quot;Frequency of a note name such as &quot;G4&quot; in one of TUNINGS, with C4 at ``c4``.&quot;&quot;&quot;
+    return c4 * TUNINGS[tuning][note[0]] * 2.0 ** (int(note[1:]) - 4)
+
+
+def tone(f0, duration):
+    &quot;&quot;&quot;One note: eight harmonics falling as 1/n, with 20 ms ramps.&quot;&quot;&quot;
+    return so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS, ramp=20e-3)
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+def play(events, total):
+    &quot;&quot;&quot;Mix ``events``, rows of (start [s], duration [s], frequency [Hz]), into one sound.&quot;&quot;&quot;
+    data = np.zeros(int(round(total * FS)))
+    for start, duration, f0 in events:
+        note = tone(f0, duration).data[:, 0]
+        first = int(round(start * FS))
+        data[first : first + len(note)] += note
+    return so.Sound(data, FS)
+
+
+def figure_notes(chords, label=None):
+    &quot;&quot;&quot;Lissajous rows (start, end, lowest, highest, label) for chords given as
+    (start, duration, frequencies).&quot;&quot;&quot;
+    rows = []
+    for start, duration, freqs in chords:
+        low, high = min(freqs), max(freqs)
+        text = label(low, high) if label else f&quot;{high / low:.3f} : 1&quot;
+        rows.append((start, start + duration, low, high, text))
+    return rows
+
+
+def show(snd, events, fmin=80, fmax=3000, reference=440.0):
+    &quot;&quot;&quot;Spectrogram on a log frequency axis, and each note&#x27;s distance in cents from equal
+    temperament at A4 = ``reference``. Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
+    fig, (ax_s, ax_c) = plt.subplots(
+        2, 1, figsize=(10, 5.4), sharex=True, height_ratios=[1.7, 1], layout=&quot;constrained&quot;
+    )
+    stft = so.STFT(snd, 80e-3, 10e-3)
+    keep = (stft.f &gt;= fmin) &amp; (stft.f &lt;= fmax)
+    level = stft.db[0][keep]
+    ax_s.pcolormesh(stft.t, stft.f[keep], level, vmin=level.max() - 70, vmax=level.max(), cmap=&quot;magma&quot;)
+    ax_s.set(yscale=&quot;log&quot;, ylabel=&quot;Frequency [Hz]&quot;, title=&quot;Spectrogram (Hann 80 ms)&quot;)
+    for start, duration, f0 in events:
+        steps = 12 * np.log2(f0 / reference) + 69  # MIDI note number, equal temperament at A4 = 440
+        offset = 100 * (steps - np.round(steps))
+        ax_c.plot([start, start + duration], [offset, offset], lw=3, solid_capstyle=&quot;butt&quot;, color=&quot;C0&quot;)
+    ax_c.axhline(0, color=&quot;0.5&quot;, lw=0.8)
+    ax_c.set(
+        xlim=(0, snd.duration),
+        ylim=(-36, 26),
+        xlabel=&quot;Time [s]&quot;,
+        ylabel=&quot;Cents&quot;,
+        title=&quot;Each note against equal temperament, A4 = 440 Hz&quot;,
+    )
+    ax_c.grid(ls=&quot;:&quot;)
+    return fig, [ax_s, ax_c]</code></pre></details></div>
+</section>
+<section aria-labelledby="h-intervals-are-ratios">
+<h2 id="h-intervals-are-ratios">Intervals are ratios</h2>
+<p>The partials of a note at <span class="tex">f</span> lie at <span class="tex">f, 2f, 3f, \ldots</span> Raise a second note a fifth, to
+<span class="tex">\tfrac{3}{2}f</span>, and its second partial lands exactly on the first note's third; raise it a
+major third, to <span class="tex">\tfrac{5}{4}f</span>, and its fourth partial lands on the first note's fifth. Those
+are just intervals: the shared partials coincide, and nothing beats. Equal temperament makes
+every semitone the twelfth root of two, 100 cents, so its fifth is
+-1.96 cents narrower than 3:2, and its major third
+13.69 cents wider than 5:4. Near-coinciding partials
+beat at the difference of their frequencies, which the cell prints for intervals above
+A3 = 220 Hz.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">A3 = 220.0
+for name, steps, just_ratio, low_n, high_n in [
+    (&quot;fifth&quot;, 7, 3 / 2, 3, 2),
+    (&quot;major third&quot;, 4, 5 / 4, 5, 4),
+]:
+    upper = A3 * 2 ** (steps / 12)
+    detune = 100 * steps - so.ratio_to_cents(just_ratio)
+    beat = abs(high_n * upper - low_n * A3)
+    print(f&quot;equal {name}: {upper:.2f} Hz, {detune:+.2f} cents from just {just_ratio:.4g}&quot;)
+    print(f&quot;    partial {low_n} of A3 and partial {high_n} of the upper note beat at {beat:.2f} Hz&quot;)</code></pre></details><pre class="out">equal fifth: 329.63 Hz, -1.96 cents from just 1.5
+    partial 3 of A3 and partial 2 of the upper note beat at 0.74 Hz
+equal major third: 277.18 Hz, +13.69 cents from just 1.25
+    partial 5 of A3 and partial 4 of the upper note beat at 8.73 Hz</pre></div>
+<p>A Lissajous figure plots one sine wave against another. When the frequencies stand at
+exactly 3:2 the curve closes on itself and stays put; when they are slightly off, the figure
+slowly turns through every shape it can take and starts again. For two frequencies near 3:2
+that takes <span class="tex">1/|2f_{upper} - 3f_{lower}|</span> seconds, the reciprocal of the beat rate of the
+nearest shared partials: the figure turns once per beat. The still figures below (half a
+second of two pure tones, <code>plot_lissajous</code>) show the same thing as a smear.</p>
+
+<article class="still" id="d-tt0">
+  <div class="about">
+    <h3>Lissajous figures, half a second each</h3>
+    <div class="desc"></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt0_lissajous_figures_half_a_second_each.png" width="1000" height="290" alt="Lissajous figures, half a second each" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">pairs = [
+    (&quot;just fifth, 3:2&quot;, A3 * 3 / 2),
+    (&quot;equal fifth&quot;, A3 * 2 ** (7 / 12)),
+    (&quot;just major third, 5:4&quot;, A3 * 5 / 4),
+    (&quot;equal major third&quot;, A3 * 2 ** (4 / 12)),
+]
+fig, axes = plt.subplots(1, 4, figsize=(10, 2.9), layout=&quot;constrained&quot;)
+for ax, (name, upper) in zip(axes, pairs, strict=True):
+    t = np.arange(int(0.5 * FS)) / FS
+    stereo = so.Sound(np.stack([np.sin(2 * np.pi * A3 * t), np.sin(2 * np.pi * upper * t)], axis=1), FS)
+    plot_lissajous(stereo, ax, lw=0.3)
+    ax.set(title=name, xlabel=&quot;A3, 220 Hz&quot;, ylabel=f&quot;{upper:.2f} Hz&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tt1" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.6}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.6}]">
+  <div class="about">
+    <h3>Just and tempered intervals over A3</h3>
+    <div class="desc"><p>A3 with a fifth above it, just and then equal-tempered, then a major third, just and then
+equal-tempered, three seconds each. The just intervals are smooth; the tempered fifth beats
+slowly, under once a second, and the tempered third flutters at almost 9 beats a second. The
+figure stands still for the just intervals and turns at the beat rate for the tempered ones.</p></div>
+    <audio controls preload="metadata" src="audio/tt1_just_and_tempered_intervals_over_a3.flac"></audio>
+    <p class="file">tt1_just_and_tempered_intervals_over_a3.flac, 12.6 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,3.0,220.0,330.0,&quot;just fifth, 3:2&quot;],[3.2,6.2,220.0,329.6276,&quot;equal fifth&quot;],[6.4,9.4,220.0,275.0,&quot;just major third, 5:4&quot;],[9.6,12.6,220.0,277.1826,&quot;equal major third&quot;]],&quot;window&quot;:0.02,&quot;xlabel&quot;:&quot;A3&quot;,&quot;ylabel&quot;:&quot;upper note&quot;,&quot;title&quot;:&quot;Lowest note against highest&quot;,&quot;start&quot;:4.0}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt1_just_and_tempered_intervals_over_a3.png" width="1000" height="540" alt="Plots of the just and tempered intervals over a3 sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">names = [name for name, _ in pairs]
+uppers = [upper for _, upper in pairs]
+chords = [(3.2 * i, 3.0, (A3, upper)) for i, upper in enumerate(uppers)]
+events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
+sound = finish(play(events, 12.6))
+fig, playhead = show(sound, events)
+lissajous = {
+    &quot;notes&quot;: [(*row[:4], name) for row, name in zip(figure_notes(chords), names, strict=True)],
+    &quot;window&quot;: 0.02,
+    &quot;xlabel&quot;: &quot;A3&quot;,
+    &quot;ylabel&quot;: &quot;upper note&quot;,
+    &quot;title&quot;: &quot;Lowest note against highest&quot;,
+    &quot;start&quot;: 4.0,
+}</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-the-commas">
+<h2 id="h-the-commas">The commas</h2>
+<p>If fifths and thirds can be just, why not tune every one of them so? Because twelve notes
+cannot hold them all. Stack twelve just fifths from C and you come back to a C that
+overshoots seven octaves by the Pythagorean comma, <span class="tex">3^{12}/2^{19}</span>, or
+23.46 cents. Stack four just fifths, C–G–D–A–E, and the E
+overshoots a just major third two octaves up by the syntonic comma, 81:80, or
+21.51 cents. Each tuning decides where those commas go, and
+the cell prints the result for the four tunings of this page: the fifths and major thirds of
+C major's three main chords, and the fifth and minor third of D minor.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">intervals = [(&quot;C&quot;, &quot;G&quot;), (&quot;F&quot;, &quot;C&quot;), (&quot;G&quot;, &quot;D&quot;), (&quot;D&quot;, &quot;A&quot;), (&quot;C&quot;, &quot;E&quot;), (&quot;F&quot;, &quot;A&quot;), (&quot;G&quot;, &quot;B&quot;), (&quot;D&quot;, &quot;F&quot;)]
+print(f&quot;{&#x27;cents&#x27;:24s}&quot; + &quot;&quot;.join(f&quot;{low + &#x27;-&#x27; + high:&gt;6s}&quot; for low, high in intervals))
+for tuning, table in TUNINGS.items():
+    ratios = [table[high] / table[low] * (2 if table[high] &lt; table[low] else 1) for low, high in intervals]
+    sizes = so.ratio_to_cents(ratios)
+    print(f&quot;{tuning:24s}&quot; + &quot;&quot;.join(f&quot;{size:6.1f}&quot; for size in sizes))
+just_sizes = so.ratio_to_cents([3 / 2] * 4 + [5 / 4] * 3 + [6 / 5])
+print(f&quot;{&#x27;just intervals&#x27;:24s}&quot; + &quot;&quot;.join(f&quot;{size:6.1f}&quot; for size in just_sizes))</code></pre></details><pre class="out">cents                      C-G   F-C   G-D   D-A   C-E   F-A   G-B   D-F
+equal temperament        700.0 700.0 700.0 700.0 400.0 400.0 400.0 300.0
+just intonation          702.0 702.0 702.0 680.4 386.3 386.3 386.3 294.1
+Pythagorean              702.0 702.0 702.0 702.0 407.8 407.8 407.8 294.1
+quarter-comma meantone   696.6 696.6 696.6 696.6 386.3 386.3 386.3 310.3
+just intervals           702.0 702.0 702.0 702.0 386.3 386.3 386.3 315.6</pre></div>
+<p>Equal temperament spreads the Pythagorean comma evenly, so every fifth is 700 cents and
+every key is alike, and the thirds pay. Pythagorean tuning keeps the fifths pure and its
+major thirds are 408 cents, a syntonic comma wide. Quarter-comma meantone narrows each fifth
+by a quarter of the syntonic comma, to 696.58 cents,
+so that four of them make a just third; the comma it leaves over goes into one unusable "wolf"
+fifth of 737.6 cents (usually G♯–E♭),
+which this page's tune never plays. Just intonation on C has pure thirds and fifths in its
+three main chords, but one fifth among its white notes, D–A, is a syntonic comma narrow.</p>
+</section>
+<section aria-labelledby="h-one-tune-four-tunings">
+<h2 id="h-one-tune-four-tunings">One tune, four tunings</h2>
+<p>The first line of Twinkle, Twinkle, Little Star, in four parts: the tune in the fourth
+octave, and below it three-note chords in close position (C major, F major, G major) changing
+every two beats. The tune only uses those three chords, which just intonation on C keeps
+exactly just, so this is just intonation at its best; the next section shows where it fails.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">BEAT = 0.45
+MELODY = [&quot;C4&quot;, &quot;C4&quot;, &quot;G4&quot;, &quot;G4&quot;, &quot;A4&quot;, &quot;A4&quot;, &quot;G4&quot;, None, &quot;F4&quot;, &quot;F4&quot;, &quot;E4&quot;, &quot;E4&quot;, &quot;D4&quot;, &quot;D4&quot;, &quot;C4&quot;, None]
+CHORDS = {&quot;I&quot;: [&quot;C3&quot;, &quot;E3&quot;, &quot;G3&quot;], &quot;IV&quot;: [&quot;F3&quot;, &quot;A3&quot;, &quot;C4&quot;], &quot;V&quot;: [&quot;G2&quot;, &quot;B2&quot;, &quot;D3&quot;]}
+HARMONY = [&quot;I&quot;, &quot;I&quot;, &quot;IV&quot;, &quot;I&quot;, &quot;IV&quot;, &quot;I&quot;, &quot;V&quot;, &quot;I&quot;]  # one chord per two beats
+
+
+def twinkle(tuning, c4=C4, beats=16):
+    &quot;&quot;&quot;Events and Lissajous rows for the first ``beats`` beats of the tune in one tuning.&quot;&quot;&quot;
+    events, chords = [], []
+    for beat in range(0, beats, 2):
+        chord = [pitch(note, tuning, c4) for note in CHORDS[HARMONY[beat // 2]]]
+        events += [(beat * BEAT, 2 * BEAT, f) for f in chord]
+    for beat, note in enumerate(MELODY[:beats]):
+        if note is None:  # the note before holds for two beats
+            continue
+        length = 2 if beat + 1 &lt; beats and MELODY[beat + 1] is None else 1
+        melody = pitch(note, tuning, c4)
+        events.append((beat * BEAT, length * BEAT, melody))
+        bass = pitch(CHORDS[HARMONY[beat // 2]][0], tuning, c4)
+        chords.append((beat * BEAT, length * BEAT, (bass, melody)))
+    return events, figure_notes(chords)
+
+
+def twinkle_demo(tuning):
+    &quot;&quot;&quot;The tune in one tuning: sound, figure, playhead and Lissajous data.&quot;&quot;&quot;
+    events, notes = twinkle(tuning)
+    sound = finish(play(events, len(MELODY) * BEAT + 0.3))
+    fig, playhead = show(sound, events)
+    lissajous = {
+        &quot;notes&quot;: notes,
+        &quot;window&quot;: 0.016,
+        &quot;xlabel&quot;: &quot;bass&quot;,
+        &quot;ylabel&quot;: &quot;tune&quot;,
+        &quot;title&quot;: &quot;Bass against tune&quot;,
+        &quot;start&quot;: 2.5,
+    }
+    return sound, fig, playhead, lissajous</code></pre></details></div>
+
+<article class="sound" id="d-tt2" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+  <div class="about">
+    <h3>Twinkle in equal temperament</h3>
+    <div class="desc"><p>Equal temperament. Every note sits on the zero line of the lower panel, by definition. The
+fifths beat slowly and the thirds more than ten times faster, and the figure turns through each
+chord; it stands still only on octaves (C over C, F over F), which every tuning here keeps
+pure.</p></div>
+    <audio controls preload="metadata" src="audio/tt2_twinkle_in_equal_temperament.flac"></audio>
+    <p class="file">tt2_twinkle_in_equal_temperament.flac, 7.5 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.45,0.9,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.9,1.35,130.8128,391.9954,&quot;2.997 : 1&quot;],[1.35,1.8,130.8128,391.9954,&quot;2.997 : 1&quot;],[1.8,2.25,174.6141,440.0,&quot;2.520 : 1&quot;],[2.25,2.7,174.6141,440.0,&quot;2.520 : 1&quot;],[2.7,3.6,130.8128,391.9954,&quot;2.997 : 1&quot;],[3.6,4.05,174.6141,349.2282,&quot;2.000 : 1&quot;],[4.05,4.5,174.6141,349.2282,&quot;2.000 : 1&quot;],[4.5,4.95,130.8128,329.6276,&quot;2.520 : 1&quot;],[4.95,5.4,130.8128,329.6276,&quot;2.520 : 1&quot;],[5.4,5.85,97.9989,293.6648,&quot;2.997 : 1&quot;],[5.85,6.3,97.9989,293.6648,&quot;2.997 : 1&quot;],[6.3,7.2,130.8128,261.6256,&quot;2.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt2_twinkle_in_equal_temperament.png" width="1000" height="540" alt="Plots of the twinkle in equal temperament sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;equal temperament&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tt3" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+  <div class="about">
+    <h3>Twinkle in just intonation</h3>
+    <div class="desc"><p>5-limit just intonation on C. E is 13.7 cents and A 15.6 cents below equal temperament, B
+11.7 cents below; the chords are smooth, and the figure stands still on every note of the
+tune, since each melody note is a just interval above its bass.</p></div>
+    <audio controls preload="metadata" src="audio/tt3_twinkle_in_just_intonation.flac"></audio>
+    <p class="file">tt3_twinkle_in_just_intonation.flac, 7.5 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.45,0.9,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.9,1.35,130.8128,392.4383,&quot;3.000 : 1&quot;],[1.35,1.8,130.8128,392.4383,&quot;3.000 : 1&quot;],[1.8,2.25,174.417,436.0426,&quot;2.500 : 1&quot;],[2.25,2.7,174.417,436.0426,&quot;2.500 : 1&quot;],[2.7,3.6,130.8128,392.4383,&quot;3.000 : 1&quot;],[3.6,4.05,174.417,348.8341,&quot;2.000 : 1&quot;],[4.05,4.5,174.417,348.8341,&quot;2.000 : 1&quot;],[4.5,4.95,130.8128,327.032,&quot;2.500 : 1&quot;],[4.95,5.4,130.8128,327.032,&quot;2.500 : 1&quot;],[5.4,5.85,98.1096,294.3288,&quot;3.000 : 1&quot;],[5.85,6.3,98.1096,294.3288,&quot;3.000 : 1&quot;],[6.3,7.2,130.8128,261.6256,&quot;2.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt3_twinkle_in_just_intonation.png" width="1000" height="540" alt="Plots of the twinkle in just intonation sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;just intonation&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tt4" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+  <div class="about">
+    <h3>Twinkle in Pythagorean tuning</h3>
+    <div class="desc"><p>Pythagorean tuning: every fifth pure, so the figure stands still on C over C, G over C and D
+over G; the major thirds are 408 cents, and the chords beat faster than in equal temperament.</p></div>
+    <audio controls preload="metadata" src="audio/tt4_twinkle_in_pythagorean_tuning.flac"></audio>
+    <p class="file">tt4_twinkle_in_pythagorean_tuning.flac, 7.5 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.45,0.9,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.9,1.35,130.8128,392.4383,&quot;3.000 : 1&quot;],[1.35,1.8,130.8128,392.4383,&quot;3.000 : 1&quot;],[1.8,2.25,174.417,441.4931,&quot;2.531 : 1&quot;],[2.25,2.7,174.417,441.4931,&quot;2.531 : 1&quot;],[2.7,3.6,130.8128,392.4383,&quot;3.000 : 1&quot;],[3.6,4.05,174.417,348.8341,&quot;2.000 : 1&quot;],[4.05,4.5,174.417,348.8341,&quot;2.000 : 1&quot;],[4.5,4.95,130.8128,331.1199,&quot;2.531 : 1&quot;],[4.95,5.4,130.8128,331.1199,&quot;2.531 : 1&quot;],[5.4,5.85,98.1096,294.3288,&quot;3.000 : 1&quot;],[5.85,6.3,98.1096,294.3288,&quot;3.000 : 1&quot;],[6.3,7.2,130.8128,261.6256,&quot;2.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt4_twinkle_in_pythagorean_tuning.png" width="1000" height="540" alt="Plots of the twinkle in pythagorean tuning sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;Pythagorean&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tt5" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+  <div class="about">
+    <h3>Twinkle in quarter-comma meantone</h3>
+    <div class="desc"><p>Quarter-comma meantone: the thirds are just, as in just intonation, and every fifth is
+5.4 cents narrower than just (3.4 narrower than equal temperament's), so the fifths beat a
+little faster than in equal temperament while the thirds are calm.</p></div>
+    <audio controls preload="metadata" src="audio/tt5_twinkle_in_quarter-comma_meantone.flac"></audio>
+    <p class="file">tt5_twinkle_in_quarter-comma_meantone.flac, 7.5 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.45,0.9,130.8128,261.6256,&quot;2.000 : 1&quot;],[0.9,1.35,130.8128,391.2215,&quot;2.991 : 1&quot;],[1.35,1.8,130.8128,391.2215,&quot;2.991 : 1&quot;],[1.8,2.25,174.9596,437.3989,&quot;2.500 : 1&quot;],[2.25,2.7,174.9596,437.3989,&quot;2.500 : 1&quot;],[2.7,3.6,130.8128,391.2215,&quot;2.991 : 1&quot;],[3.6,4.05,174.9596,349.9191,&quot;2.000 : 1&quot;],[4.05,4.5,174.9596,349.9191,&quot;2.000 : 1&quot;],[4.5,4.95,130.8128,327.032,&quot;2.500 : 1&quot;],[4.95,5.4,130.8128,327.032,&quot;2.500 : 1&quot;],[5.4,5.85,97.8054,292.5063,&quot;2.991 : 1&quot;],[5.85,6.3,97.8054,292.5063,&quot;2.991 : 1&quot;],[6.3,7.2,130.8128,261.6256,&quot;2.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt5_twinkle_in_quarter-comma_meantone.png" width="1000" height="540" alt="Plots of the twinkle in quarter-comma meantone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;quarter-comma meantone&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-where-just-intonation-breaks">
+<h2 id="h-where-just-intonation-breaks">Where just intonation breaks</h2>
+<p>Just intonation fixed on C has one bad chord among the white notes: D minor, the ii chord,
+whose fifth D–A is a syntonic comma narrow,
+680.4
+cents, and whose minor third D–F is a Pythagorean 294.1 cents instead of 315.6. Four chords,
+C major, D minor, G major, C major, with the top voice rising G, A, B, C, in just intonation
+and then in equal temperament. In the just version the figure stands still on the first,
+third and fourth chords and spins on the second, where the top A is not quite three times
+the bass D; in equal temperament it turns slowly on every chord.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">PROGRESSION = [
+    [&quot;C3&quot;, &quot;E3&quot;, &quot;G3&quot;, &quot;G4&quot;],
+    [&quot;D3&quot;, &quot;F3&quot;, &quot;A3&quot;, &quot;A4&quot;],
+    [&quot;G2&quot;, &quot;B2&quot;, &quot;D3&quot;, &quot;B4&quot;],
+    [&quot;C3&quot;, &quot;E3&quot;, &quot;G3&quot;, &quot;C5&quot;],
+]
+HOLD = 1.6
+
+
+def progression(tuning):
+    chords = [
+        (i * HOLD, HOLD - 0.05, [pitch(name, tuning) for name in names])
+        for i, names in enumerate(PROGRESSION)
+    ]
+    events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
+    return events, figure_notes(chords)</code></pre></details></div>
+
+<article class="sound" id="d-tt6" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9878330000000001, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9878330000000001, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.0}]">
+  <div class="about">
+    <h3>C, D minor, G, C, just then equal</h3>
+    <div class="desc"><p>Just intonation, then equal temperament, four chords each. In the just version listen for
+the second chord, D minor, which beats roughly where its neighbours are smooth.</p></div>
+    <audio controls preload="metadata" src="audio/tt6_c_d_minor_g_c_just_then_equal.flac"></audio>
+    <p class="file">tt6_c_d_minor_g_c_just_then_equal.flac, 14.0 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,1.55,130.8128,392.4383,&quot;3.000 : 1&quot;],[1.6,3.15,147.1644,436.0426,&quot;2.963 : 1&quot;],[3.2,4.75,98.1096,490.5479,&quot;5.000 : 1&quot;],[4.8,6.35,130.8128,523.2511,&quot;4.000 : 1&quot;],[7.0,8.55,130.8128,391.9954,&quot;2.997 : 1&quot;],[8.6,10.15,146.8324,440.0,&quot;2.997 : 1&quot;],[10.2,11.75,97.9989,493.8833,&quot;5.040 : 1&quot;],[11.8,13.35,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;top voice&quot;,&quot;title&quot;:&quot;Bass against top voice&quot;,&quot;start&quot;:2.4}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt6_c_d_minor_g_c_just_then_equal.png" width="1000" height="540" alt="Plots of the c, d minor, g, c, just then equal sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">just_events, just_notes = progression(&quot;just intonation&quot;)
+equal_events, equal_notes = progression(&quot;equal temperament&quot;)
+gap = len(PROGRESSION) * HOLD + 0.6
+events = just_events + [(start + gap, duration, f) for start, duration, f in equal_events]
+sound = finish(play(events, 2 * gap))
+fig, playhead = show(sound, events)
+lissajous = {
+    &quot;notes&quot;: just_notes + [(t0 + gap, t1 + gap, *rest) for t0, t1, *rest in equal_notes],
+    &quot;window&quot;: 0.016,
+    &quot;xlabel&quot;: &quot;bass&quot;,
+    &quot;ylabel&quot;: &quot;top voice&quot;,
+    &quot;title&quot;: &quot;Bass against top voice&quot;,
+    &quot;start&quot;: 2.4,
+}</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-a-reference-pitch-is-a-choice">
+<h2 id="h-a-reference-pitch-is-a-choice">A reference pitch is a choice</h2>
+<p>All of the above is about the ratios between notes. Which frequency the A above middle C gets
+is a separate choice, the reference pitch. ISO 16 (1975) fixes A4 = 440 Hz; before that,
+reference pitches varied widely between places, periods and kinds of instrument, as Haynes
+(2002) documents at length. A4 = 432 Hz is one more reference: it moves every note down by
+31.8 cents, about a third of an equal-tempered semitone,
+and changes nothing else. The health benefits claimed for 432 Hz rest mainly on one small
+pilot study (Calamassi &amp; Pomponi, 2019: 33 listeners, two 20-minute sessions), which reported
+a mean heart rate 4.79 beats per minute lower with the music at 432 Hz (p = 0.05); a word of
+caution, then: that is one pilot result, not evidence that the tuning affects health.</p>
+
+<article class="sound" id="d-tt7" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.4}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.4}]">
+  <div class="about">
+    <h3>Twinkle at 440 Hz, then at 432 Hz</h3>
+    <div class="desc"><p>The first half of the tune in equal temperament, at A4 = 440 Hz and then at A4 = 432 Hz. In
+the lower panel every note of the second half is 31.8 cents below the zero line; on the
+spectrogram's logarithmic axis the whole picture moves down by the same distance.</p></div>
+    <audio controls preload="metadata" src="audio/tt7_twinkle_at_440_hz_then_at_432_hz.flac"></audio>
+    <p class="file">tt7_twinkle_at_440_hz_then_at_432_hz.flac, 8.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt7_twinkle_at_440_hz_then_at_432_hz.png" width="1000" height="540" alt="Plots of the twinkle at 440 hz, then at 432 hz sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">half = 8
+first, _ = twinkle(&quot;equal temperament&quot;, beats=half)
+second, _ = twinkle(&quot;equal temperament&quot;, c4=so.note_to_freq(&quot;C4&quot;, a4=432.0), beats=half)
+gap = half * BEAT + 0.6
+events = first + [(start + gap, duration, f) for start, duration, f in second]
+sound = finish(play(events, 2 * gap))
+fig, playhead = show(sound, events)</code></pre></details>
+</article>
+<p>Keyboard tunings have a long history: roughly in that order, Pythagorean tuning, meantone
+temperaments, the well temperaments, in which every key is usable but each has its own
+shading, and equal temperament, which became the usual tuning of pianos in the nineteenth
+century. This page does not argue that history; Barbour (1951) surveys the tunings with
+their numbers, and Duffin (2007) makes the case for listening to the older ones.</p>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Barbour (1951). <em>Tuning and Temperament: A Historical Survey</em>. Michigan State College Press.</li><li>Calamassi &amp; Pomponi (2019). Music tuned to 440 Hz versus 432 Hz and the health effects: a double-blind cross-over pilot study. <em>Explore</em> 15(4), 283–290. <a href="https://doi.org/10.1016/j.explore.2019.04.001">doi:10.1016/j.explore.2019.04.001</a>.</li><li>Duffin (2007). <em>How Equal Temperament Ruined Harmony (and Why You Should Care)</em>. W. W. Norton.</li><li>Haynes (2002). <em>A History of Performing Pitch: The Story of "A"</em>. Scarecrow Press.</li><li>ISO 16:1975. Acoustics — Standard tuning frequency (standard musical pitch). <a href="https://www.iso.org/standard/3601.html">ISO</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L143"><code>utils.note_to_freq</code></a> <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L126"><code>utils.ratio_to_cents</code></a></li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/music/temperament.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/music/temperament.py</code>, or a cell at a time.</footer>
+</main>
+</div>
+<script>
+(() => {
+  const items = [...document.querySelectorAll(".sound")].map((el) => {
+    const regions = JSON.parse(el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const canvas = el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const liveCanvas = el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  });
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the colour bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const note = F.notes.find((n) => t >= n[0] && t < n[1]);
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const [t0, , fx, fy, label] = note, steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const tau = t - t0 + (i / steps) * F.window;
+      const x = cx + R * Math.sin(2 * Math.PI * fx * tau), y = cy - R * Math.sin(2 * Math.PI * fy * tau);
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

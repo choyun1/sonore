@@ -105,3 +105,34 @@ def test_cents_scale_counts_cents_from_the_reference():
 def test_cents_scale_needs_a_positive_reference():
     with pytest.raises(ValueError, match="above 0 Hz"):
         so.cents_scale(0.0)
+
+
+def test_ratio_to_cents_and_back():
+    assert so.ratio_to_cents(2.0) == pytest.approx(1200)
+    assert so.ratio_to_cents(1.5) == pytest.approx(701.955, abs=1e-3)
+    assert so.ratio_to_cents(440 / 432) == pytest.approx(31.767, abs=1e-3)
+    ratios = np.array([0.5, 1.0, 5 / 4, 3.0])
+    np.testing.assert_allclose(so.cents_to_ratio(so.ratio_to_cents(ratios)), ratios)
+
+
+def test_cents_scale_uses_the_same_formula():
+    freqs = np.array([110.0, 432.0, 1000.0])
+    np.testing.assert_array_equal(so.cents_scale().to_scale(freqs), so.ratio_to_cents(freqs / 440.0))
+
+
+def test_note_to_freq_is_equal_tempered_from_a4():
+    assert so.note_to_freq("A4") == 440.0
+    assert so.note_to_freq("A4", a4=432.0) == 432.0
+    assert so.note_to_freq("C4") == pytest.approx(261.6256, abs=1e-4)
+    assert so.note_to_freq("A3") == pytest.approx(220.0)
+    assert so.note_to_freq("C#3") == so.note_to_freq("Db3") == pytest.approx(138.5913, abs=1e-4)
+    assert so.note_to_freq("B♭2") == so.note_to_freq("Bb2")
+    # an accidental can carry into the next octave's letter
+    assert so.note_to_freq("B#3") == pytest.approx(so.note_to_freq("C4"))
+    assert so.note_to_freq("Cbb5") == pytest.approx(so.note_to_freq("Bb4"))
+
+
+@pytest.mark.parametrize("note", ["H4", "A", "C#x", ""])
+def test_note_to_freq_refuses_names_it_cannot_read(note):
+    with pytest.raises(ValueError):
+        so.note_to_freq(note)
