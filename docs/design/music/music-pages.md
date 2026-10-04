@@ -41,7 +41,7 @@ cites a source or says it is the page's description of the example, not a tested
 1. Tuning helpers: cents from a ratio and back, and the frequency of a named note for a chosen
    reference A4.
 2. A Lissajous plot.
-3. Scale tables (equal, just, Pythagorean, quarter-comma meantone). Page code, not library code
+3. Tuning tables (equal, just, Pythagorean, quarter-comma meantone). Page code, not library code
    (D3).
 4. Organ pipe spectra. sonore has no pipe models and no organ recordings (D5).
 
@@ -142,7 +142,11 @@ Sections:
 - **D2. Tuning helpers in the library.** `so.ratio_to_cents(ratio)`, `so.cents_to_ratio(cents)`
   and `so.note_to_freq(note, a4=440.0)` (note names like "A4", "C#3", "Bb2", equal temperament),
   in `core/utils.py` beside the ERB and mel converters. Recommended: three short functions the
-  gallery and users would reuse.
+  gallery and users would reuse. Timing: they land only after the "Source audit and API manual
+  plan" PR, which moves the filterbank's frequency scale into `core/utils.py` as
+  `so.FrequencyScale` and adds a `cents_scale(reference=440.0)` helper there. These functions
+  go next to it, and they share one cents formula with it rather than each keeping its own.
+  ("Scale" in this note means a tuning table; the filterbank's is always `FrequencyScale`.)
 - **D3. Scales stay page code.** Just, Pythagorean and meantone tables are a few lines each in
   the temperament script. Recommended: a scale class would be a large addition for one page.
 - **D4. Lissajous plot.** `so.plot_lissajous(sound, ax=None, duration=None, start=0.0)`
