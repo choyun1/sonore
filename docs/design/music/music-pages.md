@@ -7,7 +7,12 @@ stops as a kind of additive synthesizer, where adding stops changes the timbre o
 rather than adding notes, except in gap registrations. This note proposes both pages and the
 little library code they need. It adds no code; the decisions at the end come first.
 
-Status: proposal, waiting for Cho's answers to D1–D10.
+Status: Cho answered on 2026-10-04. Accepted: D1, D3, D6, D7, D10. Changed: D4 (animated
+Lissajous figures, with a short melody and chords in several temperaments), D8 (a paragraph
+on historical temperaments pointing to sources, and one cautionary sentence on 432 Hz), D9
+(the timbre page comes first, as a placeholder to begin with, and mentions vowels as timbres),
+so the pages run timbre, temperament, organ. Taken as the default while unanswered: D2 (after
+the FrequencyScale PR, #123) and D5 (a: synthesis now). The checker covers C1–C10.
 
 ## How the claims are verified
 
@@ -137,8 +142,8 @@ Sections:
 ## Decisions
 
 - **D1. Placement.** A new fourth TOPICS group, "Music", folder `docs/gallery/music/`, with
-  `temperament.html` ("Tuning and temperament") and `organ.html` ("The pipe organ"), in that
-  order. Recommended. Alternative: both pages in Stimuli.
+  `timbre.html` ("Timbre"), `temperament.html` ("Tuning and temperament") and `organ.html`
+  ("The pipe organ"), in that order (order per Cho, D9). Accepted. Recommended. Alternative: both pages in Stimuli.
 - **D2. Tuning helpers in the library.** `so.ratio_to_cents(ratio)`, `so.cents_to_ratio(cents)`
   and `so.note_to_freq(note, a4=440.0)` (note names like "A4", "C#3", "Bb2", equal temperament),
   in `core/utils.py` beside the ERB and mel converters. Recommended: three short functions the
@@ -148,12 +153,20 @@ Sections:
   go next to it, and they share one cents formula with it rather than each keeping its own.
   ("Scale" in this note means a tuning table; the filterbank's is always `FrequencyScale`.)
 - **D3. Scales stay page code.** Just, Pythagorean and meantone tables are a few lines each in
-  the temperament script. Recommended: a scale class would be a large addition for one page.
-- **D4. Lissajous plot.** `so.plot_lissajous(sound, ax=None, duration=None, start=0.0)`
-  in `plotting.py`: left channel against right over a short stretch. A turning figure is shown
-  as a row of snapshots a fraction of a second apart. Recommended. An animated figure that
-  follows the playhead would need a new kind of `live` canvas in build.py (today's draws a
-  colour image); possible later.
+  the temperament script. Recommended: a scale class would be a large addition for one page. Accepted.
+- **D4. Lissajous figures, animated.** Cho wants them to move with the sound. Two parts:
+  `so.plot_lissajous(sound, ax=None, duration=None, start=0.0)` in `plotting.py` for a still
+  figure (left channel against right over a short stretch), and a second kind of `live` canvas
+  in build.py that draws the figure for the stretch under the playhead as the sound plays
+  (today's live canvas draws a colour image, so this is new code in build.py's script and
+  `live_json`). The music is a short public-domain tune with chords, Twinkle, Twinkle, Little
+  Star, played in equal temperament, 5-limit just intonation on C, Pythagorean and
+  quarter-comma meantone. A Lissajous figure takes two signals, so the figure plots the bass
+  (left) against the melody (right), and the page says so; the chord's inner notes are heard
+  but not drawn. Twinkle uses only the I, IV and V chords, and just intonation fixed on C keeps
+  all three exactly just (thirds 386.3 cents, fifths 702.0) [check C10], so the tune shows just
+  intonation at its best; a short extra phrase with the ii chord (D minor) shows the cost, a
+  fifth of 680.4 cents and a minor third of 294.1 [check C10]. Accepted as changed by Cho.
 - **D5. Where the pipe sounds come from.** (a) Synthesis only: each stop a `harmonic_complex`
   with a spectrum per stop family, a chiff from filtered noise, a little wind noise. The
   spectra would come from published measurements where they exist and be labelled estimates
@@ -170,14 +183,18 @@ Sections:
   page analyses next to the synthesis. Recommended: (a) for the page now, and (b) if Cho is
   willing, since recordings would replace the estimates with measurements Cho owns.
 - **D6. Mutations pure by default.** The organ page tunes mutations pure, and shows tempered
-  mutations only as the contrast in section 3. Recommended, following the source.
+  mutations only as the contrast in section 3. Recommended, following the source. Accepted.
 - **D7. Which gap registrations.** 8′ + 2′ and 8′ + 1⅓′ as first examples; Cho to choose or add
-  the ones Cho uses.
-- **D8. The 432 Hz paragraph.** Report the Calamassi & Pomponi study's design and result in one
-  sentence, state the 31.8-cent difference, and leave it there. Recommended, in line with
-  keeping render and perception claims modest.
-- **D9. Timbre page later, built on timbre spaces.** A separate timbre page comes after these
-  two. Its backbone would be the McGill/IRCAM timbre-space work: listeners rate how different
+  the ones Cho uses. Accepted.
+- **D8. History and 432 Hz.** One paragraph on historical temperaments (Pythagorean,
+  meantone, well temperaments, equal temperament), pointing readers to sources rather than
+  arguing them; Haynes (2002) and a temperament history to be chosen and read before the page
+  cites them. Then one sentence on 432 Hz: that it is one more reference pitch, that the
+  health claims made for it rest on a small pilot study (Calamassi & Pomponi, 2019), and that
+  readers should not take that study as establishing health effects. Accepted as changed by Cho.
+- **D9. Timbre page first, built on timbre spaces.** Cho wants timbre as the first page of the
+  group, published first as a placeholder (a short introduction and a "to come" note) and
+  filled in later. Its backbone would be the McGill/IRCAM timbre-space work: listeners rate how different
   pairs of sounds are, and multidimensional scaling places the sounds in a space. In McAdams
   et al. (1995) (18 synthesized instrument-like tones at E-flat 4, 311 Hz; 88 listeners) the
   three shared dimensions correlated with log attack time (r = −.94), spectral centroid
@@ -185,13 +202,16 @@ Sections:
   synthetic tones that move along one dimension at a time (attack time, then brightness, then
   how much the spectrum changes over time), which sonore can make with `harmonic_complex` and
   an `amplitudes(t, f, n)` function. Synthetic tones are fair here because the study itself
-  used synthetic tones. Siedenburg (2019) suggests one more synthetic demonstration: the
+  used synthetic tones. The page also connects timbre to speech: vowels differ by their
+  spectral envelopes, the formants, at the same pitch and level, so different vowels are in
+  effect different timbres, which links to the Formant synthesis and Cepstral analysis pages
+  (a framing, not a perceptual claim of the page's own). Siedenburg (2019) suggests one more synthetic demonstration: the
   same tone with all partials starting together, with them building up at different rates,
   and with a transient burst added, to hear which changes more. The onset-removal demonstration (Saldanha & Corso, 1964) still needs
   recordings of real instruments under a licence the gallery can publish; McAdams et al.
   (2023) used the Vienna Symphonic Library and the McGill University Master Samples, neither
   of which is known to allow redistribution (not checked).
-- **D10. Timbre descriptors as views.** With D9: `log_attack_time`, `spectral_centroid` and
+- **D10. Timbre descriptors as views (accepted).** With D9: `log_attack_time`, `spectral_centroid` and
   `spectral_flux`, one-way views (philosophy.md "Views may discard information"), defined as
   McAdams et al. (1995) give them after Krimphoff et al. (1994): attack time from 2% of the
   envelope's maximum to the maximum, on a log scale; the mean over the tone of the
@@ -201,9 +221,13 @@ Sections:
 
 ## Patch plan, after the decisions
 
-1. D2 helpers and D4 plot with tests; one commit.
-2. `docs/gallery/music/temperament.py`, TITLES and TOPICS entries, README gallery list.
-3. `docs/gallery/music/organ.py`.
+1. The Music group with the Timbre placeholder page: TITLES and TOPICS entries,
+   `docs/gallery/music/timbre.py`, the README gallery list.
+2. After #123 merges: D2 helpers beside `cents_scale` in `core/utils.py`, sharing its formula,
+   and the D4 still plot, with tests.
+3. The animated Lissajous canvas in build.py, then `docs/gallery/music/temperament.py`.
+4. `docs/gallery/music/organ.py`.
+5. The Timbre page proper, with the D10 descriptors.
 
 Each step is its own PR, and images are built locally by Cho if the cloud matplotlib differs.
 

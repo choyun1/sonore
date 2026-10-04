@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/music/music-pages.md (C1-C9).
+"""Numerical checks for the claims in docs/design/music/music-pages.md (C1-C10).
 
 Like the other design checkers, this is independent of sonore: plain Python
 and NumPy, every formula written out. Each line prints the claim number and
@@ -113,3 +113,12 @@ for name, n, semitones in MUTATIONS:
 # C9: a celeste rank tuned a few cents sharp beats with the unison rank at f * (2^(c/1200) - 1)
 for detune in (3, 6, 10):
     report("C9", f"celeste {detune} cents sharp, beat on C4 [Hz]", C4 * (2 ** (detune / 1200) - 1))
+
+# C10: 5-limit just intonation fixed on C (D = 9/8, A = 5/3) keeps I, IV and V just, so a
+# tune that uses only those chords (Twinkle, Twinkle) never meets a bad interval; the fifth
+# D-A of the ii chord is a syntonic comma narrow, and its minor third D-F is Pythagorean
+just_c = {"C": 1, "D": 9 / 8, "E": 5 / 4, "F": 4 / 3, "G": 3 / 2, "A": 5 / 3, "B": 15 / 8}
+for chord, (root, third, fifth) in {"I": "CEG", "IV": "FAC", "V": "GBD", "ii": "DFA"}.items():
+    for name, note in (("third", third), ("fifth", fifth)):
+        upper = just_c[note] * (2 if just_c[note] < just_c[root] else 1)
+        report("C10", f"just-on-C {chord} chord: {name} {root}-{note} [cents]", cents(upper / just_c[root]))
