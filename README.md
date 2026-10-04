@@ -31,6 +31,11 @@ playable next to its plots, with a playhead that follows the sound.
 A first tour you can run in the browser, with nothing to install: stimuli, spectrograms, the
 cepstrum, a phase vocoder, ripples and binaural cues.
 
+sonore is a library under active development and verification. Until
+version 1.0, its API may change between releases without warning, and it has
+not yet been fully validated for research use: check anything you rely on
+against an independent implementation.
+
 <!-- Contents: one entry per ## section, in order (tests/test_docs.py checks it). -->
 <table><tr><td>
 
