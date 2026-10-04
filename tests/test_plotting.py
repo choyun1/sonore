@@ -3,6 +3,7 @@ import matplotlib
 matplotlib.use("Agg")
 import numpy as np
 import pytest
+
 import sonore as so
 from sonore.plotting import plot_lissajous
 

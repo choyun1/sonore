@@ -107,6 +107,9 @@ EXAMPLE_PAGES = [
     "moving",
     "reverb",
     "vocoder",
+    "timbre",
+    "temperament",
+    "organ",
 ]
 ROOT = HERE.parent.parent
 CELL = re.compile(r"# %%(?: \[(\w+)(?: (\w+))?\])?(?: (.*))?")
@@ -609,9 +612,12 @@ TITLES = {
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Synthetic reverberation",
     "moving.html": "Moving talkers",
+    "timbre.html": "Timbre",
+    "temperament.html": "Tuning and temperament",
+    "organ.html": "The pipe organ",
 }
 
-# The topic pages in three groups, for the index and the menus at the top of every page. Each
+# The topic pages in groups, for the index and the menus at the top of every page. Each
 # group's scripts live in their own folder of docs/gallery.
 # Groups and the pages within them run from simple to elaborate, roughly up sonore's layers:
 # stimuli from plain generators (signals) to binaural cues (stimuli) and textures (texture);
@@ -667,6 +673,18 @@ TOPICS = [
             ("binaural.html", "differences between the ears: timing, and correlation that changes."),
             ("reverb.html", "rooms built from the statistics of real ones, and rooms that break them."),
             ("moving.html", "three talkers rendered through measured HRIRs, one of them moving."),
+        ],
+    ),
+    (
+        "Music",
+        "music",
+        [
+            ("timbre.html", "what tells two sounds apart at the same pitch and loudness (a placeholder)."),
+            (
+                "temperament.html",
+                "just intonation, equal temperament and others, heard and drawn as Lissajous figures.",
+            ),
+            ("organ.html", "organ stops as additive synthesis (a template, sounds to come)."),
         ],
     ),
 ]

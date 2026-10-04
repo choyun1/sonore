@@ -11,8 +11,10 @@ Status: Cho answered on 2026-10-04. Accepted: D1, D3, D6, D7, D10. Changed: D4 (
 Lissajous figures, with a short melody and chords in several temperaments), D8 (a paragraph
 on historical temperaments pointing to sources, and one cautionary sentence on 432 Hz), D9
 (the timbre page comes first, as a placeholder to begin with, and mentions vowels as timbres),
-so the pages run timbre, temperament, organ. Taken as the default while unanswered: D2 (after
-the FrequencyScale PR, #123) and D5 (a: synthesis now). The checker covers C1–C10.
+so the pages run timbre, temperament, organ. D2 accepted (after the FrequencyScale PR, #123).
+D5 open: Cho is looking for measured stop spectra, so the organ page is a template for now.
+Patch plan steps 1–4 are built (timbre placeholder, helpers, Lissajous canvas, temperament
+page, organ template); step 5 waits. The checker covers C1–C10.
 
 ## How the claims are verified
 
