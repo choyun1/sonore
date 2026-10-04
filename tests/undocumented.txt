@@ -8,7 +8,6 @@ sonore.plotting.plot_modulation_spectrum
 sonore.plotting.plot_spectrum
 sonore.plotting.plot_stft
 sonore.plotting.plot_waveform
-sonore.sources.waveforms.silence
 sonore.spatial.binaural.InterauralCues.plot
 sonore.spatial.spatialization.hcc_to_rect
 sonore.spatial.spatialization.rect_to_hcc

@@ -51,6 +51,8 @@ def _finish(data: np.ndarray, fs: float) -> Sound:
 
 
 def silence(duration: float, fs: float, n_channels: int = 1) -> Sound:
+    """Zeros, ``duration`` seconds long, in ``n_channels`` channels (RMS 0, the
+    one generator not scaled to 1)."""
     return Sound(np.zeros((n_samples(duration, fs), n_channels)), fs)
 
 
@@ -497,7 +499,6 @@ def _spectral_gain(
     band: tuple[float, float] | None,
     tilt: float,
     spectrum,
-    tilt_ref: float,
 ) -> np.ndarray:
     gain = np.ones_like(freqs)
     if band is not None:
@@ -505,7 +506,8 @@ def _spectral_gain(
         gain[(freqs < f_lo) | (freqs > f_hi)] = 0.0
     if tilt:
         with np.errstate(divide="ignore"):
-            gain *= np.where(freqs > 0, (freqs / tilt_ref) ** (tilt / (20 * np.log10(2))), 0.0)
+            # any reference frequency would do, since the output is scaled to RMS 1
+            gain *= np.where(freqs > 0, (freqs / 1000.0) ** (tilt / (20 * np.log10(2))), 0.0)
     if spectrum is not None:
         if hasattr(spectrum, "level_at"):  # a sonore Spectrum
             level_db = spectrum.level_at(freqs)
@@ -526,26 +528,35 @@ def gaussian_noise(
     spectrum: SpectrumLike | None = None,
     n_channels: int = 1,
     rng: RNG = None,
-    tilt_ref: float = 1000.0,
 ) -> Sound:
     """Gaussian noise, optionally spectrally shaped.
+
+    White Gaussian noise for the whole duration is shaped in the frequency
+    domain: each bin of its FFT is multiplied by ``10^(L(f)/20)``, the target
+    level ``L(f)`` in dB at that bin from ``band``, ``tilt`` and ``spectrum``
+    together, then transformed back, its mean removed, and scaled to RMS 1.
+    The shape is the expected spectrum: the bins of any one draw scatter
+    around it, as they do for any Gaussian noise.
 
     Parameters
     ----------
     band
         ``(f_lo, f_hi)`` passband in Hz (brick-wall).
     tilt
-        Spectral slope in dB/octave (``-3`` = pink, ``-6`` = brown).
+        Spectral slope in dB/octave (``-3`` = pink, power ``1/f``;
+        ``-6`` = brown, power ``1/f^2``).
     spectrum
-        Target spectrum level in dB: a :class:`~sonore.Spectrum`, a
-        function ``f -> dB``, or a ``(freqs, dB)`` pair to interpolate.
+        Target spectrum level in dB (its shape only; the output is scaled to
+        RMS 1): a :class:`~sonore.Spectrum`, a function ``f -> dB``, or a
+        ``(freqs, dB)`` pair, interpolated linearly in Hz and held flat
+        beyond its ends.
     n_channels
         Independent noise in each channel.
     """
     rng = as_rng(rng)
     length = n_samples(duration, fs)
     freqs = np.fft.rfftfreq(length, 1 / fs)
-    gain = _spectral_gain(freqs, band, tilt, spectrum, tilt_ref)
+    gain = _spectral_gain(freqs, band, tilt, spectrum)
     noise_spectrum = np.fft.rfft(rng.standard_normal((length, n_channels)), axis=0) * gain[:, None]
     data = np.fft.irfft(noise_spectrum, n=length, axis=0)
     data -= data.mean(axis=0)
@@ -553,15 +564,27 @@ def gaussian_noise(
 
 
 def correlated_noise(duration: float, fs: float, corr: float = 1.0, rng: RNG = None, **noise_kwargs) -> Sound:
-    """Two-channel noise with interaural correlation ``corr`` (in [-1, 1]).
-    Extra keyword arguments go to :func:`gaussian_noise`."""
+    """Two-channel noise whose interaural correlation is exactly ``corr`` (in
+    [-1, 1]), each channel at RMS 1. Extra keyword arguments go to
+    :func:`gaussian_noise`.
+
+    The symmetric-generator method, made exact as Hartmann and Cho (2011)
+    describe: two independent noises ``x1`` and ``x2`` are made orthogonal
+    (Gram-Schmidt) and equal in power, then mixed as ``a x1 + b x2`` (left)
+    and ``a x1 - b x2`` (right) with ``a^2 - b^2 = corr``. Without those two
+    steps each draw would miss ``corr`` by chance, more so for few spectral
+    components (narrow bands, short sounds). The correlation is the zero-lag
+    one, over the whole sound."""
     if not -1 <= corr <= 1:
         raise ValueError("corr must be in [-1, 1]")
     noise = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
+    first, second = noise[:, 0], noise[:, 1]
+    second = second - (first @ second) / (first @ first) * first
+    second *= np.linalg.norm(first) / np.linalg.norm(second)
     shared_weight, difference_weight = np.sqrt((1 + corr) / 2), np.sqrt((1 - corr) / 2)
-    left = shared_weight * noise[:, 0] + difference_weight * noise[:, 1]
-    right = shared_weight * noise[:, 0] - difference_weight * noise[:, 1]
-    return Sound(np.column_stack([left, right]), fs)
+    left = shared_weight * first + difference_weight * second
+    right = shared_weight * first - difference_weight * second
+    return _finish(np.column_stack([left, right]), fs)
 
 
 def iterated_ripple_noise(

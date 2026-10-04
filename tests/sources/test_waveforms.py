@@ -77,10 +77,17 @@ class TestGenerators:
         f = np.fft.rfftfreq(len(x), 1 / FS)
         assert X[(f < 490) | (f > 1010)].max() < 1e-9
 
-    def test_correlated_noise(self):
-        for c in (-0.5, 0, 0.8):
-            x = so.correlated_noise(5, FS, corr=c, rng=0)
-            assert np.corrcoef(x.data.T)[0, 1] == pytest.approx(c, abs=0.02)
+    def test_correlated_noise_is_exact(self):
+        """Exact correlation and RMS 1 per channel, even with few components
+        (9 here: 0.1 s, 500-590 Hz), where a plain mix misses by about 0.2."""
+        for c in (-1, -0.5, 0, 0.2, 0.8, 1):
+            for kwargs in ({}, {"band": (500, 590)}):
+                x = so.correlated_noise(0.1, FS, corr=c, rng=0, **kwargs).data
+                zero_lag = (x[:, 0] @ x[:, 1]) / np.sqrt((x[:, 0] @ x[:, 0]) * (x[:, 1] @ x[:, 1]))
+                assert zero_lag == pytest.approx(c, abs=1e-12)
+                np.testing.assert_allclose(np.sqrt(np.mean(x**2, axis=0)), 1, atol=1e-12)
+        with pytest.raises(ValueError, match="corr must be"):
+            so.correlated_noise(0.1, FS, corr=1.5)
 
     def test_irn_pitch(self):
         x = so.iterated_ripple_noise(1, FS, delay=5e-3, iterations=8, rng=0)
@@ -234,3 +241,132 @@ class TestNamedWaveforms:
     def test_unbandlimited_needs_a_number(self):
         with pytest.raises(ValueError, match="fixed f0"):
             so.square_wave(0.1, FS, (np.array([0.0, 0.1]), np.array([100.0, 200.0])), bandlimited=False)
+
+
+class TestAuditSitting4:
+    """Claims the sitting 4 audit found untested."""
+
+    def test_silence_has_its_channels(self):
+        s = so.silence(0.01, FS, n_channels=3)
+        assert s.n_channels == 3 and s.rms == 0
+
+    def test_phase_presets(self):
+        t = np.arange(int(0.01 * FS)) / FS
+        sine = so.harmonic_complex(0.01, FS, 1000.0, [1], phases="sine").data[:, 0]
+        np.testing.assert_allclose(sine, np.sqrt(2) * np.sin(2 * np.pi * 1000 * t), atol=1e-9)
+        alternating = so.harmonic_complex(0.01, FS, 1000.0, [1, 2], phases="alternating").data[:, 0]
+        expected = np.cos(2 * np.pi * 1000 * t) + np.sin(2 * np.pi * 2000 * t)
+        np.testing.assert_allclose(alternating, expected / np.sqrt(np.mean(expected**2)), atol=1e-9)
+
+    def test_random_phases_cover_the_circle(self):
+        from sonore.sources.waveforms import _harmonic_phases
+
+        phases = _harmonic_phases(np.arange(1, 2001), "random", 0)
+        assert phases.min() < -0.99 * np.pi and phases.max() > 0.99 * np.pi
+
+    @pytest.mark.parametrize("sign", [1, -1])
+    def test_schroeder_phases(self, sign):
+        n = np.arange(1, 21)
+        want = so.harmonic_complex(0.05, FS, 200.0, n, phases=sign * np.pi * n * (n + 1) / 20)
+        got = so.schroeder_complex(0.05, FS, 200.0, n_harmonics=20, sign=sign)
+        np.testing.assert_allclose(got.data, want.data, atol=1e-10)
+        # the point of Schroeder phases: a far lower peak than cosine phases
+        assert got.peak < 0.5 * so.harmonic_complex(0.05, FS, 200.0, n).peak
+
+    @pytest.mark.parametrize(
+        "times, values, message",
+        [
+            ([0, 0.2, 0.1], [100, 100, 100], "times must increase"),
+            ([0, 0.1, 0.2], [100, -5, 100], "finite and >= 0"),
+            ([0, 0.1], [100, 100, 100], "one value per time"),
+        ],
+    )
+    def test_contour_checks(self, times, values, message):
+        with pytest.raises(ValueError, match=message):
+            so.harmonic_complex(0.2, FS, (np.array(times, float), np.array(values, float)))
+
+    def test_voicing_gate_switches_halfway_with_hann_ramps(self):
+        from sonore.sources.waveforms import _voicing_gate
+
+        fs, ramp = 10000, 0.01
+        t = np.arange(int(0.2 * fs)) / fs
+        gate = _voicing_gate(t, np.array([0.0, 0.1, 0.2]), np.array([True, False, False]), ramp, fs)
+        # nearest window: voiced up to 0.05 s, ramped over 0.01 s centred there
+        assert gate[int(0.04 * fs)] == pytest.approx(1)
+        assert gate[int(0.06 * fs)] == pytest.approx(0, abs=1e-12)
+        assert gate[int(0.05 * fs)] == pytest.approx(0.5, abs=0.05)
+        falling = gate[int(0.044 * fs) : int(0.056 * fs)]
+        assert np.all(np.diff(falling) <= 1e-12)
+        assert 0.6 < gate[int(0.0475 * fs)] < 0.95 and 0.05 < gate[int(0.0525 * fs)] < 0.4
+
+    def test_unvoiced_noise_matches_the_voiced_level(self):
+        t, f = time_windows(lambda t: np.where(t < 0.5, 0.0, 150.0), 1.0)
+        x = so.harmonic_complex(1.0, FAST, (t, f), unvoiced="noise", rng=0).data[:, 0]
+        noise, voiced = x[: int(0.45 * FAST)], x[int(0.55 * FAST) :]
+        assert np.std(noise) / np.std(voiced) == pytest.approx(1, abs=0.05)
+
+    def test_harmonic_at_nyquist_is_dropped(self):
+        with pytest.warns(UserWarning, match="dropping 1 harmonic"):
+            x = so.harmonic_complex(0.01, FS, FS / 4, [1, 2])
+        np.testing.assert_allclose(x.data, so.harmonic_complex(0.01, FS, FS / 4, [1]).data)
+
+    def test_naive_square_and_sawtooth(self):
+        from scipy.signal import sawtooth
+
+        t = np.arange(int(0.05 * FS)) / FS
+        square = so.square_wave(0.05, FS, 100.0, phase=0.3, bandlimited=False).data[:, 0]
+        np.testing.assert_array_equal(square, np.sign(np.sin(2 * np.pi * 100 * t + 0.3)))
+        saw = so.sawtooth_wave(0.05, FS, 100.0, bandlimited=False).data[:, 0]
+        expected = sawtooth(2 * np.pi * 100 * t + np.pi)
+        np.testing.assert_allclose(saw, expected / np.sqrt(np.mean(expected**2)))
+        # rising, and 0 at t = 0 like the band-limited sawtooth
+        assert saw[0] == pytest.approx(0, abs=1e-12) and saw[10] > saw[5] > 0
+
+    def test_naive_pulse_train_phase_shifts_earlier(self):
+        # phase pi/2 moves the pulses a quarter period earlier: 441 Hz at 44.1 kHz has
+        # 100-sample periods, so the first pulse is at sample 75
+        x = so.pulse_train(0.1, FS, 441, phase=np.pi / 2, bandlimited=False).data[:, 0]
+        assert np.flatnonzero(x)[0] == 75
+
+    def test_exponential_chirp_phase(self):
+        duration, f0, f1, phase = 0.05, 200.0, 3200.0, 0.3
+        x = so.exponential_chirp(duration, FS, f0, f1, phase).data[:, 0]
+        t = np.arange(len(x)) / FS
+        k = f1 / f0
+        expected = np.cos(2 * np.pi * f0 * duration * (k ** (t / duration) - 1) / np.log(k) + phase)
+        np.testing.assert_allclose(x, expected / np.sqrt(np.mean(expected**2)), atol=1e-9)
+
+    def test_brown_noise_is_minus_6_db_per_octave(self):
+        spec = so.long_term_spectrum(so.gaussian_noise(20, FS, tilt=-6, rng=0))
+        lo, hi = spec.level_at(np.array([1000, 2000]))
+        assert hi - lo == pytest.approx(-6, abs=0.5)
+
+    def test_noise_mean_is_removed(self):
+        assert abs(so.gaussian_noise(0.1, FS, rng=0).data.mean()) < 1e-12
+
+    def test_spectrum_table_is_a_level_in_db_interpolated_in_hz(self):
+        # 0 dB at 100 Hz to -40 dB at 10 kHz: linear in Hz gives -20 dB at 5050 Hz
+        # (on a log-frequency axis it would be about -35 dB)
+        table = ([100.0, 10000.0], [0.0, -40.0])
+        spec = so.long_term_spectrum(so.gaussian_noise(20, FS, spectrum=table, rng=0))
+        at_100, at_5050 = spec.level_at(np.array([100.0, 5050.0]))
+        assert at_5050 - at_100 == pytest.approx(-20, abs=1)
+        same = so.gaussian_noise(1, FS, spectrum=lambda f: np.interp(f, *table), rng=1)
+        np.testing.assert_allclose(same.data, so.gaussian_noise(1, FS, spectrum=table, rng=1).data)
+
+    @staticmethod
+    def irn_by_iteration(x, delay_samples, gain, iterations, network):
+        """Iterated rippled noise in the time domain, delaying circularly as an FFT does."""
+        y = x.copy()
+        for _ in range(iterations):
+            y = (y if network == "add-same" else x) + gain * np.roll(y, delay_samples)
+        return y
+
+    @pytest.mark.parametrize("network", ["add-same", "add-original"])
+    def test_irn_networks_gain_iterations_and_warm_up(self, network):
+        fs, delay, gain, iterations = 8000, 0.004, 0.5, 4
+        x = so.iterated_ripple_noise(0.1, fs, delay, gain, iterations, network, rng=0).data[:, 0]
+        warmup = int(np.ceil(iterations * delay * fs))
+        source = so.gaussian_noise((len(x) + warmup) / fs, fs, rng=0).data[:, 0]
+        y = self.irn_by_iteration(source, int(round(delay * fs)), gain, iterations, network)[warmup:]
+        np.testing.assert_allclose(x, y / np.sqrt(np.mean(y**2)), atol=1e-9)
