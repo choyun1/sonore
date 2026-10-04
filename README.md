@@ -299,10 +299,6 @@ What is planned comes first; finished work is listed at the end.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - On-demand download of other public HRIR databases.
-- A separate package for Bayesian inference of sound sources, built on
-  sonore (JAX plus a probabilistic-programming layer), using sonore's
-  sources, frames and texture statistics as its differentiable forward
-  model.
 - A block-by-block (streaming) modulation spectrogram, as the reference for a
   live version on a phone: the modulation spectrum of everyday sounds as they happen.
 
