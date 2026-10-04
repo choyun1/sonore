@@ -40,10 +40,18 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # (`so.note_to_freq`), so that the tunings differ only in the other notes.
 #
 # Each sound is drawn as a spectrogram on a logarithmic frequency axis, and under it each note
-# as its distance in cents from the same note in equal temperament with A4 = 440 Hz. The square
-# figure beside it is the Lissajous figure of the lowest note (across) against the highest
-# (up): two sine waves at their fundamentals, drawn over the last few hundredths of a second as
-# the sound plays. Inner notes of a chord are heard but not drawn.
+# as its distance in cents from the same note in equal temperament with A4 = 440 Hz. Every
+# sound starts with half a second of silence.
+#
+# A Lissajous figure (or Lissajous curve) is the path of a point that moves back and forth
+# along two perpendicular axes at once, sinusoidally on each: across as $x = \sin(2\pi f_x t)$
+# and up as $y = \sin(2\pi f_y t)$. Its shape depends only on the ratio $f_y / f_x$ and on how
+# the two phases line up. When the ratio is a fraction of small whole numbers, such as 3/2, the
+# point comes back to where it started and retraces one closed curve; otherwise the curve never
+# quite closes, and the figure slowly changes. The square figure beside each sound is the
+# Lissajous figure of the lowest note (across) against the highest (up), using their
+# fundamentals, drawn over the last few hundredths of a second as the sound plays. Inner notes
+# of a chord are heard but not drawn.
 
 # %%
 import matplotlib.pyplot as plt
@@ -55,6 +63,7 @@ from sonore.plotting import plot_lissajous
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 FS = 22050
 C4 = so.note_to_freq("C4")
+LEAD = 0.5  # silence before every sound [s]
 PARTIALS = np.arange(1, 9)
 
 # The seven notes of C major as frequency ratios to C, in four tunings. Quarter-comma meantone
@@ -102,11 +111,12 @@ def finish(snd):
 
 
 def play(events, total):
-    """Mix ``events``, rows of (start [s], duration [s], frequency [Hz]), into one sound."""
-    data = np.zeros(int(round(total * FS)))
+    """Mix ``events``, rows of (start [s], duration [s], frequency [Hz]), into one sound,
+    after LEAD seconds of silence."""
+    data = np.zeros(int(round((LEAD + total) * FS)))
     for start, duration, f0 in events:
         note = tone(f0, duration).data[:, 0]
-        first = int(round(start * FS))
+        first = int(round((LEAD + start) * FS))
         data[first : first + len(note)] += note
     return so.Sound(data, FS)
 
@@ -118,7 +128,7 @@ def figure_notes(chords, label=None):
     for start, duration, freqs in chords:
         low, high = min(freqs), max(freqs)
         text = label(low, high) if label else f"{high / low:.3f} : 1"
-        rows.append((start, start + duration, low, high, text))
+        rows.append((LEAD + start, LEAD + start + duration, low, high, text))
     return rows
 
 
@@ -136,7 +146,8 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
     for start, duration, f0 in events:
         steps = 12 * np.log2(f0 / reference) + 69  # MIDI note number, equal temperament at A4 = 440
         offset = 100 * (steps - np.round(steps))
-        ax_c.plot([start, start + duration], [offset, offset], lw=3, solid_capstyle="butt", color="C0")
+        span = [LEAD + start, LEAD + start + duration]
+        ax_c.plot(span, [offset, offset], lw=3, solid_capstyle="butt", color="C0")
     ax_c.axhline(0, color="0.5", lw=0.8)
     ax_c.set(
         xlim=(0, snd.duration),
@@ -175,7 +186,7 @@ for name, steps, just_ratio, low_n, high_n in [
     print(f"    partial {low_n} of A3 and partial {high_n} of the upper note beat at {beat:.2f} Hz")
 
 # %% [markdown]
-# A Lissajous figure plots one sine wave against another. When the frequencies stand at
+# Drawn as a Lissajous figure, a pair of notes shows the same thing. When the frequencies stand at
 # exactly 3:2 the curve closes on itself and stays put; when they are slightly off, the figure
 # slowly turns through every shape it can take and starts again. For two frequencies near 3:2
 # that takes $1/|2f_{upper} - 3f_{lower}|$ seconds, the reciprocal of the beat rate of the
@@ -215,7 +226,7 @@ lissajous = {
     "xlabel": "A3",
     "ylabel": "upper note",
     "title": "Lowest note against highest",
-    "start": 4.0,
+    "start": LEAD + 4.0,
 }
 
 # %% [markdown]
@@ -293,7 +304,7 @@ def twinkle_demo(tuning):
         "xlabel": "bass",
         "ylabel": "tune",
         "title": "Bass against tune",
-        "start": 2.5,
+        "start": LEAD + 2.5,
     }
     return sound, fig, playhead, lissajous
 
@@ -378,7 +389,7 @@ lissajous = {
     "xlabel": "bass",
     "ylabel": "top voice",
     "title": "Bass against top voice",
-    "start": 2.4,
+    "start": LEAD + 2.4,
 }
 
 # %% [markdown]

@@ -225,10 +225,17 @@ measured in cents, 1200 to the octave: <span class="tex">1200 \log_2 r</span> fo
 to C, and every tuning keeps C4 where equal temperament with A4 = 440 Hz puts it
 (<code>so.note_to_freq</code>), so that the tunings differ only in the other notes.</p>
 <p>Each sound is drawn as a spectrogram on a logarithmic frequency axis, and under it each note
-as its distance in cents from the same note in equal temperament with A4 = 440 Hz. The square
-figure beside it is the Lissajous figure of the lowest note (across) against the highest
-(up): two sine waves at their fundamentals, drawn over the last few hundredths of a second as
-the sound plays. Inner notes of a chord are heard but not drawn.</p>
+as its distance in cents from the same note in equal temperament with A4 = 440 Hz. Every
+sound starts with half a second of silence.</p>
+<p>A Lissajous figure (or Lissajous curve) is the path of a point that moves back and forth
+along two perpendicular axes at once, sinusoidally on each: across as <span class="tex">x = \sin(2\pi f_x t)</span>
+and up as <span class="tex">y = \sin(2\pi f_y t)</span>. Its shape depends only on the ratio <span class="tex">f_y / f_x</span> and on how
+the two phases line up. When the ratio is a fraction of small whole numbers, such as 3/2, the
+point comes back to where it started and retraces one closed curve; otherwise the curve never
+quite closes, and the figure slowly changes. The square figure beside each sound is the
+Lissajous figure of the lowest note (across) against the highest (up), using their
+fundamentals, drawn over the last few hundredths of a second as the sound plays. Inner notes
+of a chord are heard but not drawn.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
@@ -238,6 +245,7 @@ from sonore.plotting import plot_lissajous
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
 FS = 22050
 C4 = so.note_to_freq(&quot;C4&quot;)
+LEAD = 0.5  # silence before every sound [s]
 PARTIALS = np.arange(1, 9)
 
 # The seven notes of C major as frequency ratios to C, in four tunings. Quarter-comma meantone
@@ -285,11 +293,12 @@ def finish(snd):
 
 
 def play(events, total):
-    &quot;&quot;&quot;Mix ``events``, rows of (start [s], duration [s], frequency [Hz]), into one sound.&quot;&quot;&quot;
-    data = np.zeros(int(round(total * FS)))
+    &quot;&quot;&quot;Mix ``events``, rows of (start [s], duration [s], frequency [Hz]), into one sound,
+    after LEAD seconds of silence.&quot;&quot;&quot;
+    data = np.zeros(int(round((LEAD + total) * FS)))
     for start, duration, f0 in events:
         note = tone(f0, duration).data[:, 0]
-        first = int(round(start * FS))
+        first = int(round((LEAD + start) * FS))
         data[first : first + len(note)] += note
     return so.Sound(data, FS)
 
@@ -301,7 +310,7 @@ def figure_notes(chords, label=None):
     for start, duration, freqs in chords:
         low, high = min(freqs), max(freqs)
         text = label(low, high) if label else f&quot;{high / low:.3f} : 1&quot;
-        rows.append((start, start + duration, low, high, text))
+        rows.append((LEAD + start, LEAD + start + duration, low, high, text))
     return rows
 
 
@@ -319,7 +328,8 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
     for start, duration, f0 in events:
         steps = 12 * np.log2(f0 / reference) + 69  # MIDI note number, equal temperament at A4 = 440
         offset = 100 * (steps - np.round(steps))
-        ax_c.plot([start, start + duration], [offset, offset], lw=3, solid_capstyle=&quot;butt&quot;, color=&quot;C0&quot;)
+        span = [LEAD + start, LEAD + start + duration]
+        ax_c.plot(span, [offset, offset], lw=3, solid_capstyle=&quot;butt&quot;, color=&quot;C0&quot;)
     ax_c.axhline(0, color=&quot;0.5&quot;, lw=0.8)
     ax_c.set(
         xlim=(0, snd.duration),
@@ -355,7 +365,7 @@ for name, steps, just_ratio, low_n, high_n in [
     partial 3 of A3 and partial 2 of the upper note beat at 0.74 Hz
 equal major third: 277.18 Hz, +13.69 cents from just 1.25
     partial 5 of A3 and partial 4 of the upper note beat at 8.73 Hz</pre></div>
-<p>A Lissajous figure plots one sine wave against another. When the frequencies stand at
+<p>Drawn as a Lissajous figure, a pair of notes shows the same thing. When the frequencies stand at
 exactly 3:2 the curve closes on itself and stays put; when they are slightly off, the figure
 slowly turns through every shape it can take and starts again. For two frequencies near 3:2
 that takes <span class="tex">1/|2f_{upper} - 3f_{lower}|</span> seconds, the reciprocal of the beat rate of the
@@ -384,7 +394,7 @@ for ax, (name, upper) in zip(axes, pairs, strict=True):
     ax.set(title=name, xlabel=&quot;A3, 220 Hz&quot;, ylabel=f&quot;{upper:.2f} Hz&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt1" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.6}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.6}]">
+<article class="sound" id="d-tt1" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.1}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.1}]">
   <div class="about">
     <h3>Just and tempered intervals over A3</h3>
     <div class="desc"><p>A3 with a fifth above it, just and then equal-tempered, then a major third, just and then
@@ -392,8 +402,8 @@ equal-tempered, three seconds each. The just intervals are smooth; the tempered 
 slowly, under once a second, and the tempered third flutters at almost 9 beats a second. The
 figure stands still for the just intervals and turns at the beat rate for the tempered ones.</p></div>
     <audio controls preload="metadata" src="audio/tt1_just_and_tempered_intervals_over_a3.flac"></audio>
-    <p class="file">tt1_just_and_tempered_intervals_over_a3.flac, 12.6 s, mono</p>
-    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,3.0,220.0,330.0,&quot;just fifth, 3:2&quot;],[3.2,6.2,220.0,329.6276,&quot;equal fifth&quot;],[6.4,9.4,220.0,275.0,&quot;just major third, 5:4&quot;],[9.6,12.6,220.0,277.1826,&quot;equal major third&quot;]],&quot;window&quot;:0.02,&quot;xlabel&quot;:&quot;A3&quot;,&quot;ylabel&quot;:&quot;upper note&quot;,&quot;title&quot;:&quot;Lowest note against highest&quot;,&quot;start&quot;:4.0}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+    <p class="file">tt1_just_and_tempered_intervals_over_a3.flac, 13.1 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,3.5,220.0,330.0,&quot;just fifth, 3:2&quot;],[3.7,6.7,220.0,329.6276,&quot;equal fifth&quot;],[6.9,9.9,220.0,275.0,&quot;just major third, 5:4&quot;],[10.1,13.1,220.0,277.1826,&quot;equal major third&quot;]],&quot;window&quot;:0.02,&quot;xlabel&quot;:&quot;A3&quot;,&quot;ylabel&quot;:&quot;upper note&quot;,&quot;title&quot;:&quot;Lowest note against highest&quot;,&quot;start&quot;:4.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/tt1_just_and_tempered_intervals_over_a3.png" width="1000" height="540" alt="Plots of the just and tempered intervals over a3 sound" loading="lazy">
@@ -411,7 +421,7 @@ lissajous = {
     &quot;xlabel&quot;: &quot;A3&quot;,
     &quot;ylabel&quot;: &quot;upper note&quot;,
     &quot;title&quot;: &quot;Lowest note against highest&quot;,
-    &quot;start&quot;: 4.0,
+    &quot;start&quot;: LEAD + 4.0,
 }</code></pre></details>
 </article>
 </section>
@@ -487,11 +497,11 @@ def twinkle_demo(tuning):
         &quot;xlabel&quot;: &quot;bass&quot;,
         &quot;ylabel&quot;: &quot;tune&quot;,
         &quot;title&quot;: &quot;Bass against tune&quot;,
-        &quot;start&quot;: 2.5,
+        &quot;start&quot;: LEAD + 2.5,
     }
     return sound, fig, playhead, lissajous</code></pre></details></div>
 
-<article class="sound" id="d-tt2" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+<article class="sound" id="d-tt2" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in equal temperament</h3>
     <div class="desc"><p>Equal temperament. Every note sits on the zero line of the lower panel, by definition. The
@@ -499,8 +509,8 @@ fifths beat slowly and the thirds more than ten times faster, and the figure tur
 chord; it stands still only on octaves (C over C, F over F), which every tuning here keeps
 pure.</p></div>
     <audio controls preload="metadata" src="audio/tt2_twinkle_in_equal_temperament.flac"></audio>
-    <p class="file">tt2_twinkle_in_equal_temperament.flac, 7.5 s, mono</p>
-    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.45,0.9,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.9,1.35,130.8128,783.9909,&quot;5.993 : 1&quot;],[1.35,1.8,130.8128,783.9909,&quot;5.993 : 1&quot;],[1.8,2.25,174.6141,880.0,&quot;5.040 : 1&quot;],[2.25,2.7,174.6141,880.0,&quot;5.040 : 1&quot;],[2.7,3.6,130.8128,783.9909,&quot;5.993 : 1&quot;],[3.6,4.05,174.6141,698.4565,&quot;4.000 : 1&quot;],[4.05,4.5,174.6141,698.4565,&quot;4.000 : 1&quot;],[4.5,4.95,130.8128,659.2551,&quot;5.040 : 1&quot;],[4.95,5.4,130.8128,659.2551,&quot;5.040 : 1&quot;],[5.4,5.85,97.9989,587.3295,&quot;5.993 : 1&quot;],[5.85,6.3,97.9989,587.3295,&quot;5.993 : 1&quot;],[6.3,7.2,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+    <p class="file">tt2_twinkle_in_equal_temperament.flac, 8.0 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,0.95,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.95,1.4,130.8128,523.2511,&quot;4.000 : 1&quot;],[1.4,1.85,130.8128,783.9909,&quot;5.993 : 1&quot;],[1.85,2.3,130.8128,783.9909,&quot;5.993 : 1&quot;],[2.3,2.75,174.6141,880.0,&quot;5.040 : 1&quot;],[2.75,3.2,174.6141,880.0,&quot;5.040 : 1&quot;],[3.2,4.1,130.8128,783.9909,&quot;5.993 : 1&quot;],[4.1,4.55,174.6141,698.4565,&quot;4.000 : 1&quot;],[4.55,5.0,174.6141,698.4565,&quot;4.000 : 1&quot;],[5.0,5.45,130.8128,659.2551,&quot;5.040 : 1&quot;],[5.45,5.9,130.8128,659.2551,&quot;5.040 : 1&quot;],[5.9,6.35,97.9989,587.3295,&quot;5.993 : 1&quot;],[6.35,6.8,97.9989,587.3295,&quot;5.993 : 1&quot;],[6.8,7.7,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:3.0}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/tt2_twinkle_in_equal_temperament.png" width="1000" height="540" alt="Plots of the twinkle in equal temperament sound" loading="lazy">
@@ -509,15 +519,15 @@ pure.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;equal temperament&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt3" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+<article class="sound" id="d-tt3" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in just intonation</h3>
     <div class="desc"><p>5-limit just intonation on C. E is 13.7 cents and A 15.6 cents below equal temperament, B
 11.7 cents below; the chords are smooth, and the figure stands still on every note of the
 tune, since each melody note is a just interval above its bass.</p></div>
     <audio controls preload="metadata" src="audio/tt3_twinkle_in_just_intonation.flac"></audio>
-    <p class="file">tt3_twinkle_in_just_intonation.flac, 7.5 s, mono</p>
-    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.45,0.9,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.9,1.35,130.8128,784.8767,&quot;6.000 : 1&quot;],[1.35,1.8,130.8128,784.8767,&quot;6.000 : 1&quot;],[1.8,2.25,174.417,872.0852,&quot;5.000 : 1&quot;],[2.25,2.7,174.417,872.0852,&quot;5.000 : 1&quot;],[2.7,3.6,130.8128,784.8767,&quot;6.000 : 1&quot;],[3.6,4.05,174.417,697.6682,&quot;4.000 : 1&quot;],[4.05,4.5,174.417,697.6682,&quot;4.000 : 1&quot;],[4.5,4.95,130.8128,654.0639,&quot;5.000 : 1&quot;],[4.95,5.4,130.8128,654.0639,&quot;5.000 : 1&quot;],[5.4,5.85,98.1096,588.6575,&quot;6.000 : 1&quot;],[5.85,6.3,98.1096,588.6575,&quot;6.000 : 1&quot;],[6.3,7.2,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+    <p class="file">tt3_twinkle_in_just_intonation.flac, 8.0 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,0.95,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.95,1.4,130.8128,523.2511,&quot;4.000 : 1&quot;],[1.4,1.85,130.8128,784.8767,&quot;6.000 : 1&quot;],[1.85,2.3,130.8128,784.8767,&quot;6.000 : 1&quot;],[2.3,2.75,174.417,872.0852,&quot;5.000 : 1&quot;],[2.75,3.2,174.417,872.0852,&quot;5.000 : 1&quot;],[3.2,4.1,130.8128,784.8767,&quot;6.000 : 1&quot;],[4.1,4.55,174.417,697.6682,&quot;4.000 : 1&quot;],[4.55,5.0,174.417,697.6682,&quot;4.000 : 1&quot;],[5.0,5.45,130.8128,654.0639,&quot;5.000 : 1&quot;],[5.45,5.9,130.8128,654.0639,&quot;5.000 : 1&quot;],[5.9,6.35,98.1096,588.6575,&quot;6.000 : 1&quot;],[6.35,6.8,98.1096,588.6575,&quot;6.000 : 1&quot;],[6.8,7.7,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:3.0}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/tt3_twinkle_in_just_intonation.png" width="1000" height="540" alt="Plots of the twinkle in just intonation sound" loading="lazy">
@@ -526,14 +536,14 @@ tune, since each melody note is a just interval above its bass.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;just intonation&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt4" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+<article class="sound" id="d-tt4" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in Pythagorean tuning</h3>
     <div class="desc"><p>Pythagorean tuning: every fifth pure, so the figure stands still on C over C, G over C and D
 over G; the major thirds are 408 cents, and the chords beat faster than in equal temperament.</p></div>
     <audio controls preload="metadata" src="audio/tt4_twinkle_in_pythagorean_tuning.flac"></audio>
-    <p class="file">tt4_twinkle_in_pythagorean_tuning.flac, 7.5 s, mono</p>
-    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.45,0.9,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.9,1.35,130.8128,784.8767,&quot;6.000 : 1&quot;],[1.35,1.8,130.8128,784.8767,&quot;6.000 : 1&quot;],[1.8,2.25,174.417,882.9863,&quot;5.063 : 1&quot;],[2.25,2.7,174.417,882.9863,&quot;5.063 : 1&quot;],[2.7,3.6,130.8128,784.8767,&quot;6.000 : 1&quot;],[3.6,4.05,174.417,697.6682,&quot;4.000 : 1&quot;],[4.05,4.5,174.417,697.6682,&quot;4.000 : 1&quot;],[4.5,4.95,130.8128,662.2397,&quot;5.062 : 1&quot;],[4.95,5.4,130.8128,662.2397,&quot;5.062 : 1&quot;],[5.4,5.85,98.1096,588.6575,&quot;6.000 : 1&quot;],[5.85,6.3,98.1096,588.6575,&quot;6.000 : 1&quot;],[6.3,7.2,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+    <p class="file">tt4_twinkle_in_pythagorean_tuning.flac, 8.0 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,0.95,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.95,1.4,130.8128,523.2511,&quot;4.000 : 1&quot;],[1.4,1.85,130.8128,784.8767,&quot;6.000 : 1&quot;],[1.85,2.3,130.8128,784.8767,&quot;6.000 : 1&quot;],[2.3,2.75,174.417,882.9863,&quot;5.063 : 1&quot;],[2.75,3.2,174.417,882.9863,&quot;5.063 : 1&quot;],[3.2,4.1,130.8128,784.8767,&quot;6.000 : 1&quot;],[4.1,4.55,174.417,697.6682,&quot;4.000 : 1&quot;],[4.55,5.0,174.417,697.6682,&quot;4.000 : 1&quot;],[5.0,5.45,130.8128,662.2397,&quot;5.062 : 1&quot;],[5.45,5.9,130.8128,662.2397,&quot;5.062 : 1&quot;],[5.9,6.35,98.1096,588.6575,&quot;6.000 : 1&quot;],[6.35,6.8,98.1096,588.6575,&quot;6.000 : 1&quot;],[6.8,7.7,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:3.0}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/tt4_twinkle_in_pythagorean_tuning.png" width="1000" height="540" alt="Plots of the twinkle in pythagorean tuning sound" loading="lazy">
@@ -542,15 +552,15 @@ over G; the major thirds are 408 cents, and the chords beat faster than in equal
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;Pythagorean&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt5" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.5}]">
+<article class="sound" id="d-tt5" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in quarter-comma meantone</h3>
     <div class="desc"><p>Quarter-comma meantone: the thirds are just, as in just intonation, and every fifth is
 5.4 cents narrower than just (3.4 narrower than equal temperament's), so the fifths beat a
 little faster than in equal temperament while the thirds are calm.</p></div>
     <audio controls preload="metadata" src="audio/tt5_twinkle_in_quarter-comma_meantone.flac"></audio>
-    <p class="file">tt5_twinkle_in_quarter-comma_meantone.flac, 7.5 s, mono</p>
-    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,0.45,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.45,0.9,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.9,1.35,130.8128,782.4429,&quot;5.981 : 1&quot;],[1.35,1.8,130.8128,782.4429,&quot;5.981 : 1&quot;],[1.8,2.25,174.9596,874.7978,&quot;5.000 : 1&quot;],[2.25,2.7,174.9596,874.7978,&quot;5.000 : 1&quot;],[2.7,3.6,130.8128,782.4429,&quot;5.981 : 1&quot;],[3.6,4.05,174.9596,699.8382,&quot;4.000 : 1&quot;],[4.05,4.5,174.9596,699.8382,&quot;4.000 : 1&quot;],[4.5,4.95,130.8128,654.0639,&quot;5.000 : 1&quot;],[4.95,5.4,130.8128,654.0639,&quot;5.000 : 1&quot;],[5.4,5.85,97.8054,585.0125,&quot;5.981 : 1&quot;],[5.85,6.3,97.8054,585.0125,&quot;5.981 : 1&quot;],[6.3,7.2,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:2.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+    <p class="file">tt5_twinkle_in_quarter-comma_meantone.flac, 8.0 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,0.95,130.8128,523.2511,&quot;4.000 : 1&quot;],[0.95,1.4,130.8128,523.2511,&quot;4.000 : 1&quot;],[1.4,1.85,130.8128,782.4429,&quot;5.981 : 1&quot;],[1.85,2.3,130.8128,782.4429,&quot;5.981 : 1&quot;],[2.3,2.75,174.9596,874.7978,&quot;5.000 : 1&quot;],[2.75,3.2,174.9596,874.7978,&quot;5.000 : 1&quot;],[3.2,4.1,130.8128,782.4429,&quot;5.981 : 1&quot;],[4.1,4.55,174.9596,699.8382,&quot;4.000 : 1&quot;],[4.55,5.0,174.9596,699.8382,&quot;4.000 : 1&quot;],[5.0,5.45,130.8128,654.0639,&quot;5.000 : 1&quot;],[5.45,5.9,130.8128,654.0639,&quot;5.000 : 1&quot;],[5.9,6.35,97.8054,585.0125,&quot;5.981 : 1&quot;],[6.35,6.8,97.8054,585.0125,&quot;5.981 : 1&quot;],[6.8,7.7,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;tune&quot;,&quot;title&quot;:&quot;Bass against tune&quot;,&quot;start&quot;:3.0}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/tt5_twinkle_in_quarter-comma_meantone.png" width="1000" height="540" alt="Plots of the twinkle in quarter-comma meantone sound" loading="lazy">
@@ -586,14 +596,14 @@ def progression(tuning):
     events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
     return events, figure_notes(chords)</code></pre></details></div>
 
-<article class="sound" id="d-tt6" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9878330000000001, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9878330000000001, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.0}]">
+<article class="sound" id="d-tt6" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.5}]">
   <div class="about">
     <h3>C, D minor, G, C, just then equal</h3>
     <div class="desc"><p>Just intonation, then equal temperament, four chords each. In the just version listen for
 the second chord, D minor, which beats roughly where its neighbours are smooth.</p></div>
     <audio controls preload="metadata" src="audio/tt6_c_d_minor_g_c_just_then_equal.flac"></audio>
-    <p class="file">tt6_c_d_minor_g_c_just_then_equal.flac, 14.0 s, mono</p>
-    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.0,1.55,130.8128,392.4383,&quot;3.000 : 1&quot;],[1.6,3.15,147.1644,436.0426,&quot;2.963 : 1&quot;],[3.2,4.75,98.1096,490.5479,&quot;5.000 : 1&quot;],[4.8,6.35,130.8128,523.2511,&quot;4.000 : 1&quot;],[7.0,8.55,130.8128,391.9954,&quot;2.997 : 1&quot;],[8.6,10.15,146.8324,440.0,&quot;2.997 : 1&quot;],[10.2,11.75,97.9989,493.8833,&quot;5.040 : 1&quot;],[11.8,13.35,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;top voice&quot;,&quot;title&quot;:&quot;Bass against top voice&quot;,&quot;start&quot;:2.4}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+    <p class="file">tt6_c_d_minor_g_c_just_then_equal.flac, 14.5 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,2.05,130.8128,392.4383,&quot;3.000 : 1&quot;],[2.1,3.65,147.1644,436.0426,&quot;2.963 : 1&quot;],[3.7,5.25,98.1096,490.5479,&quot;5.000 : 1&quot;],[5.3,6.85,130.8128,523.2511,&quot;4.000 : 1&quot;],[7.5,9.05,130.8128,391.9954,&quot;2.997 : 1&quot;],[9.1,10.65,146.8324,440.0,&quot;2.997 : 1&quot;],[10.7,12.25,97.9989,493.8833,&quot;5.040 : 1&quot;],[12.3,13.85,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;top voice&quot;,&quot;title&quot;:&quot;Bass against top voice&quot;,&quot;start&quot;:2.9}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/tt6_c_d_minor_g_c_just_then_equal.png" width="1000" height="540" alt="Plots of the c, d minor, g, c, just then equal sound" loading="lazy">
@@ -611,7 +621,7 @@ lissajous = {
     &quot;xlabel&quot;: &quot;bass&quot;,
     &quot;ylabel&quot;: &quot;top voice&quot;,
     &quot;title&quot;: &quot;Bass against top voice&quot;,
-    &quot;start&quot;: 2.4,
+    &quot;start&quot;: LEAD + 2.4,
 }</code></pre></details>
 </article>
 </section>
@@ -627,14 +637,14 @@ pilot study (Calamassi &amp; Pomponi, 2019: 33 listeners, two 20-minute sessions
 a mean heart rate 4.79 beats per minute lower with the music at 432 Hz (p = 0.05); a word of
 caution, then: that is one pilot result, not evidence that the tuning affects health.</p>
 
-<article class="sound" id="d-tt7" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.4}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.4}]">
+<article class="sound" id="d-tt7" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.9}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.9}]">
   <div class="about">
     <h3>Twinkle at 440 Hz, then at 432 Hz</h3>
     <div class="desc"><p>The first half of the tune in equal temperament, at A4 = 440 Hz and then at A4 = 432 Hz. In
 the lower panel every note of the second half is 31.8 cents below the zero line; on the
 spectrogram's logarithmic axis the whole picture moves down by the same distance.</p></div>
     <audio controls preload="metadata" src="audio/tt7_twinkle_at_440_hz_then_at_432_hz.flac"></audio>
-    <p class="file">tt7_twinkle_at_440_hz_then_at_432_hz.flac, 8.4 s, mono</p>
+    <p class="file">tt7_twinkle_at_440_hz_then_at_432_hz.flac, 8.9 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/tt7_twinkle_at_440_hz_then_at_432_hz.png" width="1000" height="540" alt="Plots of the twinkle at 440 hz, then at 432 hz sound" loading="lazy">
