@@ -24,16 +24,17 @@ sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
 
-**Status.** sonore is a library in development. Its API may change between
-releases without warning, and it has not been validated for research use:
-check anything you rely on against an independent implementation.
-
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
 playable next to its plots, with a playhead that follows the sound.
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
 A first tour you can run in the browser, with nothing to install: stimuli, spectrograms, the
 cepstrum, a phase vocoder, ripples and binaural cues.
+
+sonore is a library in development. Until version 1.0, its API may change
+between releases without warning, and it has not yet been validated for
+research use: check anything you rely on against an independent
+implementation.
 
 <!-- Contents: one entry per ## section, in order (tests/test_docs.py checks it). -->
 <table><tr><td>
