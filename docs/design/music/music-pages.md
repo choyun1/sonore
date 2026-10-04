@@ -50,7 +50,11 @@ cites a source or says it is the page's description of the example, not a tested
    (D3).
 4. Organ pipe spectra. sonore has no pipe models and no organ recordings (D5).
 
-## Page 1: Tuning and temperament
+## Page 1: Timbre (placeholder first)
+
+See D9 for its contents; it opens the group and is published first as a short placeholder.
+
+## Page 2: Tuning and temperament
 
 Sections, each with listening examples:
 
@@ -62,8 +66,8 @@ Sections, each with listening examples:
    for 432 Hz rest mainly on one pilot study: 33 listeners heard the same film music at each
    tuning in two 20-minute sessions, and the authors reported a lower mean heart rate at
    432 Hz, by 4.79 beats per minute with p = 0.05 (Calamassi & Pomponi, 2019) [source]. The
-   page reports that study as it is and says what the two sounds differ by. It does not argue
-   further.
+   page gives this one sentence with a word of caution (D8) and says what the two sounds
+   differ by.
 2. **Intervals are ratios.** The harmonic series of one note; two notes a just fifth (3:2) or
    major third (5:4) apart share partials exactly, so nothing beats [proof].
 3. **The comma.** Twelve just fifths overshoot seven octaves by the Pythagorean comma,
@@ -81,7 +85,7 @@ Sections, each with listening examples:
    shape of the figure once in 1.34 s, the reciprocal of 2 f_upper − 3 f_lower [check C5]; the
    tempered third turns more than ten times faster [check C4, inferred from the beat rate].
 
-## Page 2: The pipe organ
+## Page 3: The pipe organ
 
 The organ's registration is additive synthesis: each stop is a rank of pipes, one per key,
 and drawing stops adds ranks. A stop's footage names its pitch: 8′ sounds the written note,
