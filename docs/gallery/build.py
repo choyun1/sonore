@@ -80,7 +80,8 @@ def file_name(key: str, title: str) -> str:
 #   # %% [about]               the description of the example that follows
 #   # %% [demo KEY] Title      code that leaves `sound`, `fig` and `playhead` (the axes the playhead follows),
 #                              and optionally `scene`, sources to draw from above as the sound plays,
-#                              and `live`, an image that changes frame by frame as the sound plays
+#                              and `live`, an image that changes frame by frame as the sound plays,
+#                              and `lissajous`, two notes drawn against each other as the sound plays
 #   # %% [figure KEY] Title    code that leaves `fig`: a figure without sound
 #   # %%                       any other code; what it prints is shown under it
 #
@@ -224,6 +225,8 @@ def example_page(path: Path) -> dict:
                     part["scene"] = scene_json(ns.pop("scene"))
                 if "live" in ns:
                     part["live"] = live_json(ns.pop("live"))
+                if "lissajous" in ns:
+                    part["lissajous"] = lissajous_json(ns.pop("lissajous"))
             elif cell.kind == "figure":
                 png, _, size = encode_figure(ns.pop("fig"), [])
                 part.update(png=png, size=size)
@@ -296,6 +299,7 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 audio { width: 100%; max-width: 19rem; display: block; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
@@ -399,8 +403,10 @@ JS = """
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
+    const figureCanvas = el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
     return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
-      liveCanvas, live };
+      liveCanvas, live, figureCanvas, figure };
   });
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
@@ -487,9 +493,43 @@ JS = """
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
     g.fillText("dB", bx + bw + 2, top + h / 2);
   }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const note = F.notes.find((n) => t >= n[0] && t < n[1]);
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const [t0, , fx, fy, label] = note, steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const tau = t - t0 + (i / steps) * F.window;
+      const x = cx + R * Math.sin(2 * Math.PI * fx * tau), y = cy - R * Math.sin(2 * Math.PI * fy * tau);
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
   function draw(item) {
     drawScene(item);
     drawLive(item);
+    drawLissajous(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -507,6 +547,11 @@ JS = """
       new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
     }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
@@ -514,6 +559,7 @@ JS = """
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
       if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
@@ -876,11 +922,47 @@ def live_json(live: dict, rate: float = 20.0) -> str:
     )
 
 
+def lissajous_json(lissajous: dict) -> str:
+    """Two notes for the page to draw against each other as the sound plays.
+
+    ``lissajous`` holds ``notes``, rows of (start [s], end [s], x frequency [Hz], y frequency
+    [Hz], label), each pair drawn as sine waves whose phases count from the start; ``window``,
+    the stretch drawn [s]; ``xlabel``, ``ylabel`` and ``title``; and optionally ``start``, the
+    time shown before the sound plays."""
+    notes = [
+        [round(float(t0), 4), round(float(t1), 4), round(float(fx), 4), round(float(fy), 4), str(label)]
+        for t0, t1, fx, fy, label in lissajous["notes"]
+    ]
+    return json.dumps(
+        {
+            "notes": notes,
+            "window": float(lissajous.get("window", 0.03)),
+            "xlabel": lissajous["xlabel"],
+            "ylabel": lissajous["ylabel"],
+            "title": lissajous["title"],
+            "start": float(lissajous.get("start", 0.0)),
+        },
+        separators=(",", ":"),
+    )
+
+
 HEADPHONES = "Headphones required for binaural sounds"
 
 
 def sound_article(
-    key, title, desc_html, snd, audio_src, img_src, regions, size, extra="", code="", scene=None, live=None
+    key,
+    title,
+    desc_html,
+    snd,
+    audio_src,
+    img_src,
+    regions,
+    size,
+    extra="",
+    code="",
+    scene=None,
+    live=None,
+    lissajous=None,
 ) -> str:
     name, (w, h) = file_name(key, title), size
     scene = (
@@ -893,6 +975,11 @@ def sound_article(
         scene += (
             f'\n    <canvas class="live" data-live="{html.escape(live)}" role="img" '
             f'aria-label="An image that changes with the sound as it plays"></canvas>'
+        )
+    if lissajous:
+        scene += (
+            f'\n    <canvas class="lissajous" data-lissajous="{html.escape(lissajous)}" role="img" '
+            f'aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>'
         )
     chan = "stereo" if snd.n_channels == 2 else "mono"
     # Every two-channel demo is binaural: its effect is lost over speakers.
@@ -1012,6 +1099,7 @@ def build_example_page(site: Site, name: str) -> list[str]:
                         code=part["code"],
                         scene=part.get("scene"),
                         live=part.get("live"),
+                        lissajous=part.get("lissajous"),
                     )
                 )
             else:

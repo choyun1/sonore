@@ -28,6 +28,7 @@ __all__ = [
     "plot_f0_track",
     "plot_interaural_cues",
     "plot_ripple_pattern",
+    "plot_lissajous",
     "overview",
 ]
 
@@ -537,6 +538,27 @@ def plot_interaural_cues(cues, ax=None, show_iac=True):
         iac_ax.grid(ls=":")
     else:
         ax.set_xlabel("Time [s]")
+    return ax
+
+
+def plot_lissajous(sound, ax=None, duration=None, start=0.0, **kwargs):
+    """A Lissajous figure: the left channel of a two-channel ``sound`` against
+    the right, over ``duration`` seconds from ``start`` (by default the rest
+    of the sound). Two tones whose frequencies are in a small whole-number
+    ratio p:q draw a closed figure that stands still; a slightly mistuned
+    pair draws a figure that turns, passing through all its shapes once
+    every ``1 / |q f_left - p f_right|`` seconds."""
+    if sound.n_channels != 2:
+        raise ValueError(f"a Lissajous figure needs a two-channel sound, not {sound.n_channels} channel(s)")
+    ax = _ax(ax)
+    first = int(round(start * sound.fs))
+    last = sound.n_samples if duration is None else first + int(round(duration * sound.fs))
+    stretch = sound.data[first:last]
+    kwargs.setdefault("lw", 0.8)
+    ax.plot(stretch[:, 0], stretch[:, 1], **kwargs)
+    peak = max(float(np.max(np.abs(stretch))), 1e-12) * 1.05
+    ax.set(xlim=(-peak, peak), ylim=(-peak, peak), xlabel="Left", ylabel="Right", xticks=[], yticks=[])
+    ax.set_aspect("equal")
     return ax
 
 
