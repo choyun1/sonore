@@ -131,7 +131,16 @@ Sections:
   colour image); possible later.
 - **D5. Where the pipe sounds come from.** (a) Synthesis only: each stop a `harmonic_complex`
   with a spectrum per stop family, a chiff from filtered noise, a little wind noise. The
-  spectra would be estimates read from published pipe spectra and labelled so. (b) Cho records
+  spectra would come from published measurements where they exist and be labelled estimates
+  where they don't. For the principal there are measured numbers: Harrison & Thompson-Allen
+  (1998) give the SPL of each harmonic of the Great No. 1 Diapason of the Newberry organ at C2
+  (7 harmonics), C4 (11) and C6 (7), measured in the hall 29.7 m away. They report that the
+  partials were harmonic within their FFT resolution, that the spectral envelope at C4 to C6
+  differs from the envelope at C2, C3 and C7 to C9, and that wind noise was 0 to 15 dB(C)
+  above the hall's noise [source]. So the principal would use those three spectra,
+  interpolated in dB across the keyboard, rather than one envelope for every key; the room is
+  part of those numbers. Flutes and reeds still need a source (candidate: Fletcher, Blackham
+  & Christensen, 1963, not yet read). (b) Cho records
   single stops on an instrument Cho plays, one note per stop and a few registrations, which the
   page analyses next to the synthesis. Recommended: (a) for the page now, and (b) if Cho is
   willing, since recordings would replace the estimates with measurements Cho owns.
@@ -165,6 +174,11 @@ Each step is its own PR, and images are built locally by Cho if the cloud matplo
   ch. 17 "Pipe organs", pp. 552–580. Springer. Checked: chapter title and pages only.
 - Haynes, B. (2002). *A History of Performing Pitch: The Story of "A"*. Scarecrow Press. Not
   yet checked.
+- Harrison, J. M., & Thompson-Allen, N. (1998). Steady-state spectra of diapason class stops
+  of the Newberry Memorial organ, Yale University. *J. Acoust. Soc. Am.* 103(1), 626–629.
+  doi:10.1121/1.421134. Checked: read in full (PDF from Cho); Tables I–III SPL columns.
+- Fletcher, H., Blackham, E. D., & Christensen, D. A. (1963). Quality of organ tones. *J.
+  Acoust. Soc. Am.* 35, 314–325. Cited by Harrison & Thompson-Allen; not yet read.
 - ISO 16:1975. Acoustics — Standard tuning frequency (standard musical pitch). Checked: title
   and the 440 Hz figure from the ISO catalogue entry.
 - Organ stop (Wikipedia, read 2026-10-04): footages, mutation table, "mutations are always
