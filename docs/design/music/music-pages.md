@@ -121,8 +121,18 @@ Sections:
    "seemed to have only a slight effect on the perceptual structure" of similarity ratings
    (mean dissimilarities with and without it correlated at .92), and summarize Iverson &
    Krumhansl (1993) as finding the spectral centroid in spaces built from complete tones,
-   attacks only, and attacks removed alike [source, read at second hand]. The page states
-   both and links to the timbre page (D9).
+   attacks only, and attacks removed alike [source, read at second hand]. Siedenburg (2019)
+   pins down which part of the onset matters [source, read]. Ten instruments (Vienna
+   Symphonic Library, C4 to B4), 64 ms excerpts, 18 trained listeners, chance 10%: excerpts from
+   the onset were identified 77% of the time, the same with the rapidly varying transient
+   removed 71%, and excerpts from the middle of the tone 52%. So the onset matters (moving the
+   excerpt cost 25 points) but mostly through the slower buildup of the partials; the
+   transient itself (a hammer's knock, a pipe's chiff) cost 6 points. Siedenburg also
+   summarizes Saldanha & Corso (1964): about 40% correct overall, 15 points lower with the
+   onsets cut. The page gives those numbers, and for the organ draws the point that a chiff
+   alone does not make a pipe: how fast each harmonic builds up should be part of the
+   synthesis too (an estimate until a source for pipe onsets is found). It links to the timbre
+   page (D9).
 
 ## Decisions
 
@@ -171,7 +181,9 @@ Sections:
   synthetic tones that move along one dimension at a time (attack time, then brightness, then
   how much the spectrum changes over time), which sonore can make with `harmonic_complex` and
   an `amplitudes(t, f, n)` function. Synthetic tones are fair here because the study itself
-  used synthetic tones. The onset-removal demonstration (Saldanha & Corso, 1964) still needs
+  used synthetic tones. Siedenburg (2019) suggests one more synthetic demonstration: the
+  same tone with all partials starting together, with them building up at different rates,
+  and with a transient burst added, to hear which changes more. The onset-removal demonstration (Saldanha & Corso, 1964) still needs
   recordings of real instruments under a licence the gallery can publish; McAdams et al.
   (2023) used the Vienna Symphonic Library and the McGill University Master Samples, neither
   of which is known to allow redistribution (not checked).
@@ -231,8 +243,11 @@ Each step is its own PR, and images are built locally by Cho if the cloud matplo
 - Plomp, R., & Levelt, W. J. M. (1965). Tonal consonance and critical bandwidth. *J. Acoust.
   Soc. Am.* 38(4), 548–560. Already cited on the Classic stimuli page.
 - Siedenburg, K. (2019). Specifying the perceptual relevance of onset transients for musical
-  instrument identification. *J. Acoust. Soc. Am.* 145, 1078–1087. Cited by McAdams et al.
-  (2023); not yet read. The most direct modern study of the onset question.
+  instrument identification. *J. Acoust. Soc. Am.* 145(2), 1078–1087.
+  doi:10.1121/1.5091778. Checked: read (PDF from Cho); experiment 1 method and scores, the
+  review of Saldanha & Corso, Clark et al., Elliott and Iverson & Krumhansl. Its
+  transient/stationary separation (Siedenburg & Doclo, 2017: two STFT window lengths, 46 ms
+  and 3 ms, with grouped shrinkage) is close to sonore's frames and could be a later demo.
 - Saldanha, E. L., & Corso, J. F. (1964). Timbre cues and the identification of musical
   instruments. *J. Acoust. Soc. Am.* 36(11), 2021–2026. Not yet read; citation confirmed by
   McAdams et al. (2023).
