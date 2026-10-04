@@ -8,7 +8,8 @@ from helpers import FS
 from scipy.signal import hilbert
 
 import sonore as so
-from sonore.frames.filterbank import SCALES, Cosine, FilterType, Scale
+from sonore.core.utils import FREQUENCY_SCALES, FrequencyScale
+from sonore.frames.filterbank import Cosine, FilterType
 
 
 class TestFilterbank:
@@ -222,7 +223,7 @@ class _UniformFormulaAnyway(Cosine):
 
 
 def _random_centers(scale, seed, f_lo=60.0, f_hi=7000.0, n=20):
-    to_scale, from_scale = SCALES[scale].to_scale, SCALES[scale].from_scale
+    to_scale, from_scale = FREQUENCY_SCALES[scale].to_scale, FREQUENCY_SCALES[scale].from_scale
     knots = np.sort(np.random.default_rng(seed).uniform(to_scale(f_lo), to_scale(f_hi), n))
     return from_scale(knots)
 
@@ -237,14 +238,14 @@ def _nudged():
 TIGHTNESS_CASES = {
     **{
         f"cosine {scale}": (lambda scale=scale: so.cosine_filterbank(24, 60, 7000, scale=scale), True)
-        for scale in SCALES
+        for scale in FREQUENCY_SCALES
     },
     **{
         f"cosine {scale} random centers": (
             lambda scale=scale: so.cosine_filterbank(centers=_random_centers(scale, 1), scale=scale),
             True,
         )
-        for scale in SCALES
+        for scale in FREQUENCY_SCALES
     },
     **{
         f"cosine width {width}": (lambda width=width: so.cosine_filterbank(24, 60, 7000, width=width), tight)
@@ -324,11 +325,12 @@ def test_knots_are_stored_on_the_scale():
 
 
 @pytest.mark.parametrize(
-    ("scale", "unit"), [("erb", "ERB"), ("octave", "oct"), ("mel", "mel"), ("linear", "Hz")]
+    ("scale", "unit"),
+    [("erb", "ERB"), ("octave", "oct"), ("cents", "cent"), ("mel", "mel"), ("linear", "Hz")],
 )
 def test_scales_space_the_centers(scale, unit):
     bank = so.cosine_filterbank(10, 100, 6000, scale=scale)
-    assert bank.unit == unit and bank.scale is SCALES[scale]
+    assert bank.unit == unit and bank.scale is FREQUENCY_SCALES[scale]
     np.testing.assert_allclose(np.diff(bank.scale.to_scale(bank.band_cfs)), bank.spacing, rtol=1e-9)
 
 
@@ -478,17 +480,27 @@ def test_centers_are_equally_spaced_on_the_published_scale(scale):
 
 
 def test_scale_names_ignore_case():
-    assert so.cosine_filterbank(scale="ERB").scale is SCALES["erb"]
-    assert so.gammatone_filterbank(scale="Octave").scale is SCALES["octave"]
+    assert so.cosine_filterbank(scale="ERB").scale is FREQUENCY_SCALES["erb"]
+    assert so.gammatone_filterbank(scale="Octave").scale is FREQUENCY_SCALES["octave"]
+
+
+def test_a_cents_bank_is_the_octave_bank_in_other_units():
+    """Spacing 100 cents is one band per equal-tempered semitone, the bank
+    built on octaves with spacing 1/12."""
+    cents = so.cosine_filterbank(f_lo=110, f_hi=1760, spacing=100, scale="cents")
+    octaves = so.cosine_filterbank(f_lo=110, f_hi=1760, spacing=1 / 12, scale="octave")
+    np.testing.assert_allclose(cents.cfs, octaves.cfs, rtol=1e-12)
+    np.testing.assert_allclose(cents.band_cfs[1:] / cents.band_cfs[:-1], 2 ** (1 / 12), rtol=1e-12)
+    assert cents.unit == "cent"
 
 
 def test_a_scale_must_invert_itself():
     with pytest.raises(ValueError, match="invert each other"):
-        Scale("erb", "ERB", so.freq_to_erb, so.mel_to_freq)
+        FrequencyScale("erb", "ERB", so.freq_to_erb, so.mel_to_freq)
     with pytest.raises(ValueError, match="does not give f back"):
-        Scale("log", "nepers", np.log, np.exp2)
+        FrequencyScale("log", "nepers", np.log, np.exp2)
     # a scale undefined at some test frequencies is checked where it is defined
-    Scale("above 500 Hz", "oct", lambda f: np.log2(f - 500), lambda x: np.exp2(x) + 500)
+    FrequencyScale("above 500 Hz", "oct", lambda f: np.log2(f - 500), lambda x: np.exp2(x) + 500)
 
 
 def test_default_edge_centers_stay_at_or_above_zero():
