@@ -112,6 +112,13 @@ Sections:
    tremulant modulates the wind, and with it level and pitch (rate and depth to be sourced).
 5. **Attack.** Flue pipes speak with a short noisy transient (chiff); a registration without it
    sounds less like a pipe [description, to be sourced or presented as Cho's judgement].
+   The wider point, that the onset carries much of what identifies an instrument, has a
+   literature: removing the first part of recorded tones made instruments harder to identify
+   (Saldanha & Corso, 1964; Berger, 1964) [source, not yet read beyond titles; the details
+   given in the thread are from memory]. Iverson & Krumhansl (1993) qualify it: similarity
+   judgements of onsets alone, of tones with the onset removed, and of whole tones agreed
+   closely, so the cues are not only in the onset [source, same caveat]. The page states both
+   and links to the timbre page (D9) for a demonstration.
 
 ## Decisions
 
@@ -152,7 +159,11 @@ Sections:
   sentence, state the 31.8-cent difference, and leave it there. Recommended, in line with
   keeping render and perception claims modest.
 - **D9. Timbre page later.** A separate timbre page (spectral envelope, attack, brightness) is
-  left for after these two; the organ page covers timbre from stops.
+  left for after these two, and is where an onset-removal demonstration belongs: the same
+  instruments with and without their first part, after Saldanha & Corso (1964). That needs
+  recordings of real instruments under a licence the gallery can publish (none chosen yet);
+  synthetic tones would only show what the synthesis put in. Until then the organ page covers
+  timbre from stops.
 
 ## Patch plan, after the decisions
 
@@ -164,6 +175,8 @@ Each step is its own PR, and images are built locally by Cho if the cloud matplo
 
 ## References
 
+- Berger, K. W. (1964). Some factors in the recognition of timbre. *J. Acoust. Soc. Am.* 36,
+  1888–1891. Not yet read (title and year only; volume and pages from memory).
 - Calamassi, D., & Pomponi, G. P. (2019). Music tuned to 440 Hz versus 432 Hz and the health
   effects: a double-blind cross-over pilot study. *Explore* 15(4), 283–290.
   doi:10.1016/j.explore.2019.04.001. Checked: abstract (design, n = 33, heart-rate result).
@@ -179,6 +192,9 @@ Each step is its own PR, and images are built locally by Cho if the cloud matplo
   doi:10.1121/1.421134. Checked: read in full (PDF from Cho); Tables I–III SPL columns.
 - Fletcher, H., Blackham, E. D., & Christensen, D. A. (1963). Quality of organ tones. *J.
   Acoust. Soc. Am.* 35, 314–325. Cited by Harrison & Thompson-Allen; not yet read.
+- Iverson, P., & Krumhansl, C. L. (1993). Isolating the dynamic attributes of musical timbre.
+  *J. Acoust. Soc. Am.* 94(5), 2595–2603. Not yet read (PubMed entry found; details from
+  memory).
 - ISO 16:1975. Acoustics — Standard tuning frequency (standard musical pitch). Checked: title
   and the 440 Hz figure from the ISO catalogue entry.
 - Organ stop (Wikipedia, read 2026-10-04): footages, mutation table, "mutations are always
@@ -186,5 +202,8 @@ Each step is its own PR, and images are built locally by Cho if the cloud matplo
   organ-building text before the page cites it.
 - Plomp, R., & Levelt, W. J. M. (1965). Tonal consonance and critical bandwidth. *J. Acoust.
   Soc. Am.* 38(4), 548–560. Already cited on the Classic stimuli page.
+- Saldanha, E. L., & Corso, J. F. (1964). Timbre cues and the identification of musical
+  instruments. *J. Acoust. Soc. Am.* 36(11), 2021–2026. Not yet read (title, volume and first
+  page from the publisher's link).
 - Wiltshire, T. Technical aspects of the Hammond organ. electricdruid.net, read 2026-10-04:
   nine drawbars, 91 tonewheels, tempered rather than pure ratios. Not a peer-reviewed source.
