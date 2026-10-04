@@ -33,7 +33,7 @@ complex stimuli, sound textures, voices, and spatial hearing with reverberation 
 
 sonore is a library under active development and verification. Until
 version 1.0, its API may change between releases without warning, and it has
-not yet been fully validated for research use: check anything you rely on
+not yet been fully validated for research use. Please check anything you rely on
 against an independent implementation.
 
 <!-- Contents: one entry per ## section, in order (tests/test_docs.py checks it). -->
@@ -43,8 +43,7 @@ against an independent implementation.
 1&ensp;Using it<br>
 &emsp;1.1&ensp;[What it's for](#what-its-for)<br>
 &emsp;1.2&ensp;[Install](#install)<br>
-&emsp;1.3&ensp;[A short tour](#a-short-tour)<br>
-&emsp;1.4&ensp;[Gallery](#gallery)<br>
+&emsp;1.3&ensp;[Gallery](#gallery)<br>
 2&ensp;The library<br>
 &emsp;2.1&ensp;[Conventions](#conventions)<br>
 &emsp;2.2&ensp;[What's in it](#whats-in-it)<br>
@@ -124,43 +123,6 @@ Requires Python ≥ 3.10, numpy, scipy ≥ 1.12, matplotlib, and soundfile.
 To try it without installing anything, open the [starter
 notebook](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
 on Google Colab: its first cell installs sonore from PyPI.
-
-## A short tour
-
-```python
-import sonore as so
-from sonore import dB
-
-fs = 44100
-
-# Stimuli: every generator returns a Sound with RMS = 1
-tone = so.pure_tone(0.5, fs, 1000).ramp(10e-3)
-complex_ = so.harmonic_complex(0.5, fs, f0=200, harmonics=range(1, 21), phases="schroeder+")
-noise = so.gaussian_noise(0.5, fs, band=(100, 8000), tilt=-3, rng=0)  # pink, band-limited
-
-# Levels are dB units: + changes level, + with a Sound mixes
-target_in_noise = tone + (noise + 5 * dB)  # tone at -5 dB SNR
-quieter = complex_ - 12 * dB
-
-# Time is in seconds
-middle = target_in_noise[0.1:0.4]
-
-# Binaural: positive ITD/ILD = toward the right
-lateral = so.apply_itd_ild(noise, itd=300e-6, ild=6)
-cues = so.interaural_cues(lateral, win_dur=20e-3)
-cues.plot()
-
-# Time and pitch (phase vocoder)
-longer = so.time_stretch(complex_, 1.5)  # same pitch, 50% longer
-up_a_fifth = so.pitch_shift(complex_, 7)  # same duration, +7 semitones
-
-# Analysis
-so.overview(target_in_noise)  # waveform, spectrum, spectrogram, modulation spectrum
-target_in_noise  # in a notebook: an audio player
-```
-
-Every example in the [gallery](#gallery) is a runnable script like this one, with its code
-shown beside the sound it makes.
 
 ## Gallery
 
@@ -316,9 +278,9 @@ What is planned comes first; finished work is listed at the end.
 
 **Next**
 
-- **Cocktail party scenes.** Gallery scenes on the Moving talkers page
-  with three to six talkers walking on slowly bending paths, 10 to 30 s
-  long, with speech from LibriSpeech dev-clean (CC BY 4.0).
+- **Code audit.** A line-by-line human read of `src/sonore`, one module per
+  sitting, each closing the gaps in its tests; progress in
+  [issue #48](https://github.com/choyun1/sonore/issues/48).
 
 **Texture synthesis**
 
@@ -334,7 +296,6 @@ What is planned comes first; finished work is listed at the end.
 
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
   open quotient, spectral tilt, flutter, double pulsing, and its KLGLOTT88 source.
-- Free-form modulation patterns: specify a modulation spectrum and synthesize it.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - On-demand download of other public HRIR databases.
@@ -486,6 +447,13 @@ What is planned comes first; finished work is listed at the end.
   `PVAnalysis.to_sound` a time scale and a frequency map), and refuses
   otherwise; see `docs/design/layout/sound-first.md`. Released as 0.4.0
   ([10.5281/zenodo.23114390](https://doi.org/10.5281/zenodo.23114390)).
+- **Cocktail party scenes.** Two to six talkers walking and talking in a
+  room on the [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html)
+  page, 20 to 30 s long, with speech from LibriSpeech dev-clean (CC BY 4.0).
+- **Sound from a modulation spectrum.** `ModulationSpectrum.to_sound(carrier=...)`,
+  spectra edited with `with_gain` or drawn as blobs, and an optional
+  Griffin & Lim style search; see the
+  [Hearing a modulation spectrum](https://choyun1.github.io/sonore/gallery/modtargets.html) page.
 </details>
 
 ## References
