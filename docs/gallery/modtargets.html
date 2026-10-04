@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Drawing a modulation spectrum</title>
+<title>Hearing a modulation spectrum</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 <script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
@@ -129,7 +129,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html" aria-current="page">Drawing a modulation spectrum</a><ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a></li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a></li><li><a href="#h-an-edited-sentence">An edited sentence</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html" aria-current="page">Hearing a modulation spectrum</a><ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a></li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a></li><li><a href="#h-an-edited-sentence">An edited sentence</a></li><li><a href="#h-timing-from-one-sound-magnitudes-from-another">Timing from one sound, magnitudes from another</a></li><li><a href="#h-twins-band-by-band">Twins band by band</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -145,7 +145,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="here"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html" aria-current="page">Drawing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="here"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html" aria-current="page">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -155,7 +155,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
 })();</script></nav>
 <header>
-  <h1>Drawing a modulation spectrum</h1>
+  <h1>Hearing a modulation spectrum</h1>
 <p>A modulation spectrum is the two-dimensional Fourier transform of a sound's envelopes, band by
 band over time: how much of the pattern moves at each rate (Hz, across) and at each density
 (cycles per octave, up), keeping only the magnitude (Singh &amp; Theunissen, 2003). The
@@ -166,7 +166,7 @@ modulations, which says when each event happens, and the fine structure under ea
 envelope. <code>ModulationSpectrum.to_sound(carrier=...)</code> takes both from a <em>carrier</em>, the way an
 envelope is put back on a carrier: a sound lends its own, while <code>&quot;tones&quot;</code> and <code>&quot;noise&quot;</code> draw a
 random modulation phase and put the envelopes on steady tones or on noise.</p>
-<ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a>: a sentence and a sound with the sentence's modulation spectrum and random modulation phase.</li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a>: one patch of modulation, heard on three carriers.</li><li><a href="#h-an-edited-sentence">An edited sentence</a>: a sentence with every modulation faster than 4 Hz removed, and how close the sound comes to that.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: drawing with a mouse, dB targets, and the other modulation spectra.</li></ul>
+<ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a>: a sentence and a sound with the sentence's modulation spectrum and random modulation phase.</li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a>: one patch of modulation, heard on three carriers.</li><li><a href="#h-an-edited-sentence">An edited sentence</a>: a sentence with every modulation faster than 4 Hz removed, and how close the sound comes to that.</li><li><a href="#h-timing-from-one-sound-magnitudes-from-another">Timing from one sound, magnitudes from another</a>: the sentence and rain trade halves.</li><li><a href="#h-twins-band-by-band">Twins band by band</a>: crickets and a fire with their timing randomized, keeping each band's own modulation.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: drawing with a mouse, dB targets, and the other modulation spectra.</li></ul>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
 import numpy as np
 
@@ -210,8 +210,9 @@ def show(snd, target=None, f_lo=250):
 <p>A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
 heard with the sentence's own modulation phase thrown away. <code>to_sound</code> with <code>carrier=&quot;tones&quot;</code>
 draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
-on a steady tone at its band's centre. The magnitudes include the zero-rate column, the
-sentence's long-term spectrum, so the new sound keeps the sentence's overall colour.</p>
+on a steady tone at its band's centre. The random phase leaves the zero-rate column alone,
+since that column (its phase as well as its magnitudes) is the sentence's long-term spectrum:
+which bands are loud.</p>
 
 <article class="sound" id="d-mt1" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.499739581729232, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
   <div class="about">
@@ -239,7 +240,10 @@ fig, playhead = show(sound, f_lo=125)</code></pre></details>
 are gone from the envelopes, which change at the sentence's rates and densities but never at
 its moments. A random phase also asks for envelopes below zero, which no
 envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
-and that is why the measured spectrum is smoother than the target.</p></div>
+and that is why the measured spectrum is smoother than the target. The colour is kept only
+roughly. A two-dimensional modulation spectrum does not say which bands carry which
+modulation, so the random phase spreads the sentence's modulation into bands that were quiet,
+and clipping turns it into level there.</p></div>
     <audio controls preload="metadata" src="audio/mt2_its_modulation_spectrum_random_modulation_phase.flac"></audio>
     <p class="file">mt2_its_modulation_spectrum_random_modulation_phase.flac, 2.5 s, mono</p>
   </div>
@@ -426,11 +430,176 @@ fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
 for name, snd in [(&quot;edit&quot;, edited), (&quot;20 iterations&quot;, searched), (&quot;on tones&quot;, on_tones_edit)]:
     print(f&quot;{name:&gt;13}: {10 * np.log10(fast_share(snd) / fast_share(sentence)):.1f} dB&quot;)</code></pre></details><pre class="out">         edit: -4.1 dB
 20 iterations: -16.3 dB
-     on tones: -13.3 dB</pre></div>
+     on tones: -12.9 dB</pre></div>
 <p>None of them reaches the edit exactly, which removed everything there. A sound's envelopes are
 not free: they come from filtering one waveform, so most arrays of magnitudes belong to no
 sound at all, and the search finds a sound whose spectrum is close, never equal. The design
 note measures the same comparison in C6 and C7.</p>
+</section>
+<section aria-labelledby="h-timing-from-one-sound-magnitudes-from-another">
+<h2 id="h-timing-from-one-sound-magnitudes-from-another">Timing from one sound, magnitudes from another</h2>
+<p>A sound as carrier lends its modulation phase, so one sound's magnitudes can be heard with
+another sound's timing. <code>to_envelopes(carrier=...)</code> gives the envelopes alone, which can then go
+on either sound's fine structure. Here the sentence and 2.5 s of rain trade halves.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">rain = so.load(&quot;docs/textures/rain.flac&quot;).mono().resample(sentence.fs)
+rain = so.Sound(rain.data[: sentence.n_samples], sentence.fs)
+rain_spectrum = measure(rain, f_lo=125)
+bank = spectrum._analysis.filterbank  # the 12-per-octave bank both spectra were measured with</code></pre></details></div>
+
+<article class="sound" id="d-mt9" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+  <div class="about">
+    <h3>Rain magnitudes, sentence timing</h3>
+    <div class="desc"><p>Rain's modulation magnitudes and fine structure, with the sentence's modulation phase. The
+rain now swells and fades with the syllables.</p></div>
+    <audio controls preload="metadata" src="audio/mt9_rain_magnitudes_sentence_timing.flac"></audio>
+    <p class="file">mt9_rain_magnitudes_sentence_timing.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt9_rain_magnitudes_sentence_timing.png" width="1200" height="340" alt="Plots of the rain magnitudes, sentence timing sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = rain_spectrum.to_envelopes(carrier=sentence)
+sound = finish((envelopes * bank.analyze(rain).tfs()).to_sound())
+fig, playhead = show(sound, target=rain_spectrum, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt10" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+  <div class="about">
+    <h3>Sentence magnitudes, rain timing</h3>
+    <div class="desc"><p>The other way round: the sentence's magnitudes and fine structure, with rain's modulation
+phase. The voice is still there, but its events come at rain's moments.</p></div>
+    <audio controls preload="metadata" src="audio/mt10_sentence_magnitudes_rain_timing.flac"></audio>
+    <p class="file">mt10_sentence_magnitudes_rain_timing.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt10_sentence_magnitudes_rain_timing.png" width="1200" height="340" alt="Plots of the sentence magnitudes, rain timing sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = spectrum.to_envelopes(carrier=rain)
+sound = finish((envelopes * bank.analyze(sentence).tfs()).to_sound())
+fig, playhead = show(sound, target=spectrum, f_lo=125)</code></pre></details>
+</article>
+<p>Some of the words can be made out in both: speech carries information in its timing and in
+its modulation spectrum.</p>
+</section>
+<section aria-labelledby="h-twins-band-by-band">
+<h2 id="h-twins-band-by-band">Twins band by band</h2>
+<p>A two-dimensional modulation spectrum says how much modulation there is at each rate and
+density, but not which bands carry it. A random phase therefore spreads modulation into bands
+that were steady or quiet, which is the extra noise heard in the sentence's twin above. A
+narrower description keeps it: each band's own modulation spectrum, the per-band modulation
+power that McDermott &amp; Simoncelli (2011) use among their texture statistics. A twin of that
+keeps each band's envelope magnitudes over rate and randomizes only its phase in time, band by
+band. Both kinds of twin below keep each band's own fine structure, so only the envelopes
+differ.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def band_twin(snd, rng=0):
+    &quot;&quot;&quot;Each band keeps its envelope&#x27;s magnitude spectrum over time (and so its level); the phase is
+    random, band by band. On the sound&#x27;s own fine structure.&quot;&quot;&quot;
+    bank = so.cosine_filterbank(f_lo=125, f_hi=8000, spacing=1 / 12, scale=&quot;octave&quot;)
+    subbands = bank.analyze(snd)
+    envelopes = subbands.envelopes(fs=1000).data[:, :, 0]  # (time, band)
+    magnitude = np.abs(np.fft.rfft(envelopes, axis=0))
+    phase = np.random.default_rng(rng).uniform(0, 2 * np.pi, magnitude.shape)
+    phase[0] = 0  # each band&#x27;s mean stays
+    rebuilt = np.fft.irfft(magnitude * np.exp(1j * phase), n=len(envelopes), axis=0)
+    twin_envelopes = so.Envelopes(np.maximum(rebuilt, 0), 1000, bank)
+    return (twin_envelopes * subbands.tfs()).to_sound()
+
+
+def plane_twin(snd, rng=0):
+    &quot;&quot;&quot;The same modulation spectrum on the plane, a random phase, on the sound&#x27;s own fine structure.&quot;&quot;&quot;
+    plane = measure(snd, f_lo=125)
+    subbands = plane._analysis.filterbank.analyze(snd)
+    return (plane.to_envelopes(rng=rng) * subbands.tfs()).to_sound()
+
+
+def texture(name, seconds=3.5):
+    snd = so.load(f&quot;docs/textures/{name}.flac&quot;).mono()
+    return so.Sound(snd.data[: int(seconds * snd.fs)], snd.fs)</code></pre></details></div>
+
+<article class="sound" id="d-mt11" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+  <div class="about">
+    <h3>Crickets</h3>
+    <div class="desc"><p>3.5 s of crickets, from the <a href="textures.html">sound textures</a> page.</p></div>
+    <audio controls preload="metadata" src="audio/mt11_crickets.flac"></audio>
+    <p class="file">mt11_crickets.flac, 3.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt11_crickets.png" width="800" height="340" alt="Plots of the crickets sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">crickets = texture(&quot;crickets&quot;)
+sound = finish(crickets)
+fig, playhead = show(sound, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt12" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+  <div class="about">
+    <h3>Crickets, twin on the plane</h3>
+    <div class="desc"><p>The crickets' twin on the plane. The long-term spectrum is kept, so the chirps stay at the
+top, but some of their modulation spreads into the bands below, which were nearly silent.</p></div>
+    <audio controls preload="metadata" src="audio/mt12_crickets_twin_on_the_plane.flac"></audio>
+    <p class="file">mt12_crickets_twin_on_the_plane.flac, 3.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt12_crickets_twin_on_the_plane.png" width="800" height="340" alt="Plots of the crickets, twin on the plane sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(plane_twin(crickets))
+fig, playhead = show(sound, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt13" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+  <div class="about">
+    <h3>Crickets, twin band by band</h3>
+    <div class="desc"><p>The crickets' twin band by band. Each band keeps its own modulation, and the chirps stay at
+the top.</p></div>
+    <audio controls preload="metadata" src="audio/mt13_crickets_twin_band_by_band.flac"></audio>
+    <p class="file">mt13_crickets_twin_band_by_band.flac, 3.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt13_crickets_twin_band_by_band.png" width="800" height="340" alt="Plots of the crickets, twin band by band sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(band_twin(crickets))
+fig, playhead = show(sound, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt14" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+  <div class="about">
+    <h3>Fire</h3>
+    <div class="desc"><p>3.5 s of a fire: a low roar with sharp crackles.</p></div>
+    <audio controls preload="metadata" src="audio/mt14_fire.flac"></audio>
+    <p class="file">mt14_fire.flac, 3.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt14_fire.png" width="800" height="340" alt="Plots of the fire sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fire = texture(&quot;fire&quot;)
+sound = finish(fire)
+fig, playhead = show(sound, f_lo=125)</code></pre></details>
+</article>
+
+<article class="sound" id="d-mt15" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+  <div class="about">
+    <h3>Fire, twin band by band</h3>
+    <div class="desc"><p>The fire's twin band by band. Every band keeps its level and its modulation spectrum, but the
+crackles are gone: a crackle is a brief event in many bands at once, and that alignment lives
+in the phase.</p></div>
+    <audio controls preload="metadata" src="audio/mt15_fire_twin_band_by_band.flac"></audio>
+    <p class="file">mt15_fire_twin_band_by_band.flac, 3.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/mt15_fire_twin_band_by_band.png" width="800" height="340" alt="Plots of the fire, twin band by band sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(band_twin(fire))
+fig, playhead = show(sound, f_lo=125)</code></pre></details>
+</article>
+<p>So a band-by-band twin keeps a steady texture such as crickets, rain or wind, but not the
+sparse events of a fire, applause or speech. That is why McDermott &amp; Simoncelli's statistics
+also include each band's envelope skew and kurtosis and the correlations between bands.</p>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
@@ -438,7 +607,7 @@ note measures the same comparison in C6 and C7.</p>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Elliott &amp; Theunissen (2009). The modulation transfer function for speech intelligibility. <em>PLoS Comput. Biol.</em> 5(3), e1000302. <a href="https://doi.org/10.1371/journal.pcbi.1000302">doi:10.1371/journal.pcbi.1000302</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L498"><code>modulation.ModulationSpectrum.with_gain</code></a></li><li>Griffin &amp; Lim (1984). Signal estimation from modified short-time Fourier transform. <em>IEEE Trans. Acoust. Speech Signal Process.</em> 32(2), 236–243. <a href="https://doi.org/10.1109/TASSP.1984.1164317">doi:10.1109/TASSP.1984.1164317</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596"><code>modulation.ModulationSpectrum.to_sound</code></a></li><li>Hsu, Woolley, Fremouw &amp; Theunissen (2004). Modulation power and phase spectrum of natural sounds enhance neural encoding performed by single auditory neurons. <em>J. Neurosci.</em> 24(41), 9201–9211. <a href="https://doi.org/10.1523/JNEUROSCI.2449-04.2004">doi:10.1523/JNEUROSCI.2449-04.2004</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596"><code>modulation.ModulationSpectrum.to_sound</code></a></li><li>Singh &amp; Theunissen (2003). Modulation spectra of natural sounds and ethological theories of auditory processing. <em>J. Acoust. Soc. Am.</em> 114(6), 3394–3411. <a href="https://doi.org/10.1121/1.1624067">doi:10.1121/1.1624067</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L333"><code>modulation.ModulationSpectrum</code></a></li></ul>
+<ul><li>Elliott &amp; Theunissen (2009). The modulation transfer function for speech intelligibility. <em>PLoS Comput. Biol.</em> 5(3), e1000302. <a href="https://doi.org/10.1371/journal.pcbi.1000302">doi:10.1371/journal.pcbi.1000302</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L503"><code>modulation.ModulationSpectrum.with_gain</code></a></li><li>Griffin &amp; Lim (1984). Signal estimation from modified short-time Fourier transform. <em>IEEE Trans. Acoust. Speech Signal Process.</em> 32(2), 236–243. <a href="https://doi.org/10.1109/TASSP.1984.1164317">doi:10.1109/TASSP.1984.1164317</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L605"><code>modulation.ModulationSpectrum.to_sound</code></a></li><li>Hsu, Woolley, Fremouw &amp; Theunissen (2004). Modulation power and phase spectrum of natural sounds enhance neural encoding performed by single auditory neurons. <em>J. Neurosci.</em> 24(41), 9201–9211. <a href="https://doi.org/10.1523/JNEUROSCI.2449-04.2004">doi:10.1523/JNEUROSCI.2449-04.2004</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L605"><code>modulation.ModulationSpectrum.to_sound</code></a></li><li>McDermott &amp; Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. <em>Neuron</em> 71(5), 926–940. <a href="https://doi.org/10.1016/j.neuron.2011.06.032">doi:10.1016/j.neuron.2011.06.032</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py"><code>texture</code></a></li><li>Singh &amp; Theunissen (2003). Modulation spectra of natural sounds and ethological theories of auditory processing. <em>J. Acoust. Soc. Am.</em> 114(6), 3394–3411. <a href="https://doi.org/10.1121/1.1624067">doi:10.1121/1.1624067</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L333"><code>modulation.ModulationSpectrum</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/seeing/modtargets.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/seeing/modtargets.py</code>, or a cell at a time.</footer>
 </main>

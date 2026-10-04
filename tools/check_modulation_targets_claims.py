@@ -61,10 +61,14 @@ def mps(env):
     return np.abs(np.fft.fft2(env - env.mean())) ** 2
 
 
-def randomize_phase(spectrum, rng):
+def randomize_phase(spectrum, rng, keep_long_term=False):
     """Same magnitudes, the phases of white noise's 2-D DFT (which are
-    Hermitian-symmetric, so the inverse is real)."""
+    Hermitian-symmetric, so the inverse is real). With keep_long_term, the
+    zero-rate column (axis 1 index 0) keeps its own phase: its magnitudes
+    alone don't say which band is loud, so this keeps each band's mean."""
     noise_phase = np.angle(np.fft.fft2(rng.standard_normal(spectrum.shape)))
+    if keep_long_term:
+        noise_phase[:, 0] = np.angle(spectrum[:, 0])
     return np.fft.ifft2(np.abs(spectrum) * np.exp(1j * noise_phase)).real
 
 
@@ -125,6 +129,33 @@ def c1():
             f"{name}: kurtosis of the pooled envelope over time",
             np.mean(deviation**4) / np.mean(deviation**2) ** 2,
         )
+
+    # The twin above also scrambles the long-term spectrum, which is set by the
+    # zero-rate column's phase. ModulationSpectrum.to_sound keeps that phase.
+    # The same noise as the first twin (a fresh generator, so the dB twin below is unchanged).
+    kept = np.maximum(
+        env.mean() + randomize_phase(spectrum, np.random.default_rng(1), keep_long_term=True), 0
+    )
+    for name, pattern in (("twin (clipped)", clipped), ("twin keeping the zero-rate phase (clipped)", kept)):
+        level_error = db(pattern.mean(axis=1)) - db(env.mean(axis=1))
+        report(
+            "C1",
+            f"{name}: rms error of the band means (long-term spectrum) [dB], level offset removed",
+            np.sqrt(np.mean((level_error - level_error.mean()) ** 2)),
+        )
+    report("C1", "twin keeping the zero-rate phase: fraction of cells clipped", np.mean(kept == 0))
+    pooled_kept = kept.sum(axis=0)
+    report(
+        "C1",
+        "twin keeping the zero-rate phase: fraction of time the pooled envelope is 30 dB below its peak",
+        np.mean(pooled_kept < pooled_kept.max() * 10 ** (-30 / 20)),
+    )
+    deviation = pooled_kept - pooled_kept.mean()
+    report(
+        "C1",
+        "twin keeping the zero-rate phase: kurtosis of the pooled envelope over time",
+        np.mean(deviation**4) / np.mean(deviation**2) ** 2,
+    )
 
     # The same in dB, as Singh & Theunissen define the MPS: the twin of a log
     # envelope is always a valid envelope, but its linear MPS is not the original's.

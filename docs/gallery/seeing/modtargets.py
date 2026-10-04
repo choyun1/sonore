@@ -1,4 +1,4 @@
-"""Drawing a modulation spectrum: sounds made to order from a target modulation spectrum.
+"""Hearing a modulation spectrum: sounds made from a modulation spectrum, measured, edited or drawn.
 
 This script is the gallery page https://choyun1.github.io/sonore/gallery/modtargets.html:
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
@@ -10,7 +10,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
 
 # %% [markdown]
-# # Drawing a modulation spectrum
+# # Hearing a modulation spectrum
 #
 # A modulation spectrum is the two-dimensional Fourier transform of a sound's envelopes, band by
 # band over time: how much of the pattern moves at each rate (Hz, across) and at each density
@@ -29,6 +29,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [A drawn spectrum](#h-a-drawn-spectrum): one patch of modulation, heard on three carriers.
 # - [An edited sentence](#h-an-edited-sentence): a sentence with every modulation faster than
 #   4 Hz removed, and how close the sound comes to that.
+# - [Timing from one sound, magnitudes from another](#h-timing-from-one-sound-magnitudes-from-another):
+#   the sentence and rain trade halves.
+# - [Twins band by band](#h-twins-band-by-band): crickets and a fire with their timing
+#   randomized, keeping each band's own modulation.
 # - [What this page leaves out](#h-what-this-page-leaves-out): drawing with a mouse, dB targets,
 #   and the other modulation spectra.
 
@@ -75,8 +79,9 @@ def show(snd, target=None, f_lo=250):
 # A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
 # heard with the sentence's own modulation phase thrown away. `to_sound` with `carrier="tones"`
 # draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
-# on a steady tone at its band's centre. The magnitudes include the zero-rate column, the
-# sentence's long-term spectrum, so the new sound keeps the sentence's overall colour.
+# on a steady tone at its band's centre. The random phase leaves the zero-rate column alone,
+# since that column (its phase as well as its magnitudes) is the sentence's long-term spectrum:
+# which bands are loud.
 
 # %% [about]
 # The sentence, a male talker reading one of the CMU ARCTIC prompts. Its modulation spectrum
@@ -94,7 +99,10 @@ fig, playhead = show(sound, f_lo=125)
 # are gone from the envelopes, which change at the sentence's rates and densities but never at
 # its moments. A random phase also asks for envelopes below zero, which no
 # envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
-# and that is why the measured spectrum is smoother than the target.
+# and that is why the measured spectrum is smoother than the target. The colour is kept only
+# roughly. A two-dimensional modulation spectrum does not say which bands carry which
+# modulation, so the random phase spreads the sentence's modulation into bands that were quiet,
+# and clipping turns it into level there.
 
 # %% [demo mt2] Its modulation spectrum, random modulation phase
 twin = spectrum.to_sound(carrier="tones", fs=sentence.fs, rng=0)
@@ -249,6 +257,127 @@ for name, snd in [("edit", edited), ("20 iterations", searched), ("on tones", on
 # note measures the same comparison in C6 and C7.
 
 # %% [markdown]
+# ## Timing from one sound, magnitudes from another
+#
+# A sound as carrier lends its modulation phase, so one sound's magnitudes can be heard with
+# another sound's timing. `to_envelopes(carrier=...)` gives the envelopes alone, which can then go
+# on either sound's fine structure. Here the sentence and 2.5 s of rain trade halves.
+
+# %%
+rain = so.load("docs/textures/rain.flac").mono().resample(sentence.fs)
+rain = so.Sound(rain.data[: sentence.n_samples], sentence.fs)
+rain_spectrum = measure(rain, f_lo=125)
+bank = spectrum._analysis.filterbank  # the 12-per-octave bank both spectra were measured with
+
+# %% [about]
+# Rain's modulation magnitudes and fine structure, with the sentence's modulation phase. The
+# rain now swells and fades with the syllables.
+
+# %% [demo mt9] Rain magnitudes, sentence timing
+envelopes = rain_spectrum.to_envelopes(carrier=sentence)
+sound = finish((envelopes * bank.analyze(rain).tfs()).to_sound())
+fig, playhead = show(sound, target=rain_spectrum, f_lo=125)
+
+# %% [about]
+# The other way round: the sentence's magnitudes and fine structure, with rain's modulation
+# phase. The voice is still there, but its events come at rain's moments.
+
+# %% [demo mt10] Sentence magnitudes, rain timing
+envelopes = spectrum.to_envelopes(carrier=rain)
+sound = finish((envelopes * bank.analyze(sentence).tfs()).to_sound())
+fig, playhead = show(sound, target=spectrum, f_lo=125)
+
+# %% [markdown]
+# Some of the words can be made out in both: speech carries information in its timing and in
+# its modulation spectrum.
+
+# %% [markdown]
+# ## Twins band by band
+#
+# A two-dimensional modulation spectrum says how much modulation there is at each rate and
+# density, but not which bands carry it. A random phase therefore spreads modulation into bands
+# that were steady or quiet, which is the extra noise heard in the sentence's twin above. A
+# narrower description keeps it: each band's own modulation spectrum, the per-band modulation
+# power that McDermott & Simoncelli (2011) use among their texture statistics. A twin of that
+# keeps each band's envelope magnitudes over rate and randomizes only its phase in time, band by
+# band. Both kinds of twin below keep each band's own fine structure, so only the envelopes
+# differ.
+
+
+# %%
+def band_twin(snd, rng=0):
+    """Each band keeps its envelope's magnitude spectrum over time (and so its level); the phase is
+    random, band by band. On the sound's own fine structure."""
+    bank = so.cosine_filterbank(f_lo=125, f_hi=8000, spacing=1 / 12, scale="octave")
+    subbands = bank.analyze(snd)
+    envelopes = subbands.envelopes(fs=1000).data[:, :, 0]  # (time, band)
+    magnitude = np.abs(np.fft.rfft(envelopes, axis=0))
+    phase = np.random.default_rng(rng).uniform(0, 2 * np.pi, magnitude.shape)
+    phase[0] = 0  # each band's mean stays
+    rebuilt = np.fft.irfft(magnitude * np.exp(1j * phase), n=len(envelopes), axis=0)
+    twin_envelopes = so.Envelopes(np.maximum(rebuilt, 0), 1000, bank)
+    return (twin_envelopes * subbands.tfs()).to_sound()
+
+
+def plane_twin(snd, rng=0):
+    """The same modulation spectrum on the plane, a random phase, on the sound's own fine structure."""
+    plane = measure(snd, f_lo=125)
+    subbands = plane._analysis.filterbank.analyze(snd)
+    return (plane.to_envelopes(rng=rng) * subbands.tfs()).to_sound()
+
+
+def texture(name, seconds=3.5):
+    snd = so.load(f"docs/textures/{name}.flac").mono()
+    return so.Sound(snd.data[: int(seconds * snd.fs)], snd.fs)
+
+
+# %% [about]
+# 3.5 s of crickets, from the [sound textures](textures.html) page.
+
+# %% [demo mt11] Crickets
+crickets = texture("crickets")
+sound = finish(crickets)
+fig, playhead = show(sound, f_lo=125)
+
+# %% [about]
+# The crickets' twin on the plane. The long-term spectrum is kept, so the chirps stay at the
+# top, but some of their modulation spreads into the bands below, which were nearly silent.
+
+# %% [demo mt12] Crickets, twin on the plane
+sound = finish(plane_twin(crickets))
+fig, playhead = show(sound, f_lo=125)
+
+# %% [about]
+# The crickets' twin band by band. Each band keeps its own modulation, and the chirps stay at
+# the top.
+
+# %% [demo mt13] Crickets, twin band by band
+sound = finish(band_twin(crickets))
+fig, playhead = show(sound, f_lo=125)
+
+# %% [about]
+# 3.5 s of a fire: a low roar with sharp crackles.
+
+# %% [demo mt14] Fire
+fire = texture("fire")
+sound = finish(fire)
+fig, playhead = show(sound, f_lo=125)
+
+# %% [about]
+# The fire's twin band by band. Every band keeps its level and its modulation spectrum, but the
+# crackles are gone: a crackle is a brief event in many bands at once, and that alignment lives
+# in the phase.
+
+# %% [demo mt15] Fire, twin band by band
+sound = finish(band_twin(fire))
+fig, playhead = show(sound, f_lo=125)
+
+# %% [markdown]
+# So a band-by-band twin keeps a steady texture such as crickets, rain or wind, but not the
+# sparse events of a fire, applause or speech. That is why McDermott & Simoncelli's statistics
+# also include each band's envelope skew and kurtosis and the correlations between bands.
+
+# %% [markdown]
 # ## What this page leaves out
 #
 # - **Drawing with a mouse.** Targets here are written in code, as blobs or as edits; a program
@@ -266,16 +395,20 @@ for name, snd in [("edit", edited), ("20 iterations", searched), ("on tones", on
 # - Elliott & Theunissen (2009). The modulation transfer function for speech intelligibility.
 #   *PLoS Comput. Biol.* 5(3), e1000302.
 #   [doi:10.1371/journal.pcbi.1000302](https://doi.org/10.1371/journal.pcbi.1000302).
-#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L498)
+#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L503)
 # - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE
 #   Trans. Acoust. Speech Signal Process.* 32(2), 236–243.
 #   [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L605)
 # - Hsu, Woolley, Fremouw & Theunissen (2004). Modulation power and phase spectrum of natural
 #   sounds enhance neural encoding performed by single auditory neurons. *J. Neurosci.* 24(41),
 #   9201–9211.
 #   [doi:10.1523/JNEUROSCI.2449-04.2004](https://doi.org/10.1523/JNEUROSCI.2449-04.2004).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L596)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L605)
+# - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
+#   periphery. *Neuron* 71(5), 926–940.
+#   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
+#   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.
 #   [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067).

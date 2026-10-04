@@ -66,7 +66,9 @@ out three more things, which a route back to sound has to supply or store:
 
 - **the overall level**: the 2-D transform is taken after removing one
   number, the mean of the whole envelope array (in sonore as in the
-  checker); the long-term spectrum's shape stays in the zero-rate column;
+  checker); the long-term spectrum's shape stays in the zero-rate column,
+  in its magnitudes *and its phase* (the magnitudes alone don't say which
+  band is loud), so a random draw has to keep that column's phase (C1);
 - **the fine structure** under the envelopes, i.e. the carrier;
 - **the analysis it was measured with**: the filterbank, the envelope
   extraction, compression, and linear or dB envelopes. C10 of
@@ -103,6 +105,23 @@ phase of white noise's.
 
 So a modulation spectrum fixes a sound's *texture of change*, not the
 change itself. Speech's syllables, pauses and onsets are in the phase.
+
+- Correction (2026-10-03, after Cho heard twins of many sounds): the twin
+  above also scrambles the long-term spectrum, because which band is loud
+  is set by the phase of the zero-rate column, not by its magnitudes.
+  Keeping that column's own phase (as `ModulationSpectrum.to_envelopes`
+  now does) halves the error of the twin's band means, from 4.4 to 2.2 dB
+  rms (level offset removed). The rest of what is said above holds for
+  that twin too: 33.8% of its cells are clipped, its pooled envelope is
+  never 30 dB below its peak, and its kurtosis is 3.1. What remains of the
+  error is a limit of the 2-D spectrum, not of the draw: it does not say
+  which bands carry which modulation, so a random draw spreads modulation
+  into steady or quiet bands, where clipping turns it into level. Twins
+  that keep each band's own modulation spectrum (the per-band meaning,
+  `TextureStats.mod_power`, with each band's phase randomized in time)
+  kept the long-term spectrum of rain, crickets, applause and mud within
+  1 dB in a scratch test, and Cho heard the crickets, rain and wind-and-rain
+  twins as close to the originals; that test is not in the checker.
 
 **C2. Non-negativity limits how deep a random-phase pattern can be.**
 [proof, check] A pattern `1 + depth · P / max |P|` is non-negative only for
@@ -328,7 +347,8 @@ both:
    number, the mean over the whole array, so the long-term spectrum is
    kept in the transform's zero-rate column. The spectrum stores that
    number too, and the carrier does not have to supply it (a change made
-   while implementing D2).
+   while implementing D2). A random draw keeps the zero-rate column's own
+   phase, which says which bands are loud (C1).
 
 A person thinks in magnitudes on a time-frequency grid (Cho, 2026-10-03),
 so both phases start random and can then be improved by a search that
@@ -418,7 +438,7 @@ All accepted 2026-10-03.
 - **D8. The texture route needs no code**: document
   `TextureStats.replace(mod_power=...)` as the per-band way to specify
   modulation. Accepted 2026-10-03.
-- **D9. A gallery page** ("Drawing a modulation spectrum") showing C1 (a
+- **D9. A gallery page** ("Drawing a modulation spectrum", since renamed "Hearing a modulation spectrum") showing C1 (a
   sentence and its twin, heard), a drawn blob on the three carriers, and an
   edit. Accepted 2026-10-03, once D2 exists; built as
   `docs/gallery/seeing/modtargets.py`.
