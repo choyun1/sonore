@@ -329,6 +329,27 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
   .side-closed .side .home, .side-closed .side-body { display: none; }
   .side-closed .side-top { justify-content: center; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home, .side-opening .side-body, .side-closing .side .home, .side-closing .side-body { animation: none; }
 }
 .side a { text-decoration: none; }
 .side a:hover { text-decoration: underline; }
@@ -628,8 +649,9 @@ NAV_JS = """(() => { const menus = [...document.querySelectorAll("nav.pages deta
 })();"""
 
 
-# The sidebar folds to a narrow strip and each of its groups folds on its own; both are
-# remembered in the browser between pages. The group holding the page being read always
+# The sidebar folds to a narrow strip, with a short slide and fade either way, and each of
+# its groups slides shut on its own, as does the list of the current page's sections (folded at
+# first); all three are remembered in the browser between pages. The group holding the page being read always
 # starts open. While the sidebar is folded, the menus at the top of the page come back.
 # SIDE_HEAD_JS runs in <head>, so a folded sidebar does not flash open as the page loads.
 SIDE_HEAD_JS = (
@@ -643,13 +665,40 @@ SIDE_JS = """(() => { const root = document.documentElement, side = document.cur
     const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
     toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
   show(root.classList.contains("side-closed"));
-  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed"); show(closed);
-    save("sonore-side", closed ? "closed" : "open"); });
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded unless opened before.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    let open = false; try { open = localStorage.getItem("sonore-side-sections") === "open"; } catch (e) {}
+    sections.style.transition = "none"; showSections(open); sections.offsetHeight; sections.style.transition = "";
+    sectionsToggle.addEventListener("click", () => { const now = !sections.classList.contains("open"); showSections(now);
+      save("sonore-side-sections", now ? "open" : "closed"); }); }
   let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
   groups.forEach((group) => { const name = group.dataset.group;
     if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
     group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
-      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); }); });
+      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); });
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();"""
 
 
@@ -683,10 +732,13 @@ def sidebar(current: str, sections_html: str) -> str:
             sections = re.findall(r'<h2 id="([^"]+)">(.*?)</h2>', sections_html)
             if sections:
                 item += (
-                    "<ul>"
+                    '<button class="sections-toggle" type="button" aria-expanded="false" '
+                    'aria-label="Show this page\'s sections" title="Show this page\'s sections"></button>'
+                    '<div class="sections"><div><ul>'
                     + "".join(f'<li><a href="#{slug}">{title}</a></li>' for slug, title in sections)
-                    + "</ul>"
+                    + "</ul></div></div>"
                 )
+                return f'<li class="has-sections">{item}</li>'
         return f"<li>{item}</li>"
 
     here = ' aria-current="page"' if current == "index.html" else ""
