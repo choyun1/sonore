@@ -100,6 +100,27 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
   .side-closed .side .home, .side-closed .side-body { display: none; }
   .side-closed .side-top { justify-content: center; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home, .side-opening .side-body, .side-closing .side .home, .side-closing .side-body { animation: none; }
 }
 .side a { text-decoration: none; }
 .side a:hover { text-decoration: underline; }
@@ -129,15 +150,31 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html" aria-current="page">Analysis and resynthesis</a><ul><li><a href="#h-perfect-reconstruction">Perfect reconstruction</a></li><li><a href="#h-masking-the-spectrogram">Masking the spectrogram</a></li><li><a href="#h-references">References</a></li></ul></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li class="has-sections"><a href="resynthesis.html" aria-current="page">Analysis and resynthesis</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-perfect-reconstruction">Perfect reconstruction</a></li><li><a href="#h-masking-the-spectrogram">Masking the spectrogram</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
     const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
     toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
   show(root.classList.contains("side-closed"));
-  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed"); show(closed);
-    save("sonore-side", closed ? "closed" : "open"); });
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded unless opened before.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    let open = false; try { open = localStorage.getItem("sonore-side-sections") === "open"; } catch (e) {}
+    sections.style.transition = "none"; showSections(open); sections.offsetHeight; sections.style.transition = "";
+    sectionsToggle.addEventListener("click", () => { const now = !sections.classList.contains("open"); showSections(now);
+      save("sonore-side-sections", now ? "open" : "closed"); }); }
   let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
   groups.forEach((group) => { const name = group.dataset.group;
     if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
