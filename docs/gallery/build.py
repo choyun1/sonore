@@ -650,7 +650,7 @@ NAV_JS = """(() => { const menus = [...document.querySelectorAll("nav.pages deta
 
 
 # The sidebar folds to a narrow strip, with a short slide and fade either way, and each of
-# its groups folds on its own, as does the list of the current page's sections (folded at
+# its groups slides shut on its own, as does the list of the current page's sections (folded at
 # first); all three are remembered in the browser between pages. The group holding the page being read always
 # starts open. While the sidebar is folded, the menus at the top of the page come back.
 # SIDE_HEAD_JS runs in <head>, so a folded sidebar does not flash open as the page loads.
@@ -687,7 +687,18 @@ SIDE_JS = """(() => { const root = document.documentElement, side = document.cur
   groups.forEach((group) => { const name = group.dataset.group;
     if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
     group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
-      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); }); });
+      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); });
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();"""
 
 
