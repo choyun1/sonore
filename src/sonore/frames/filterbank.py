@@ -1,9 +1,9 @@
 """Filterbanks: frames whose filters are given by their responses on the DFT
 grid, and the subband representation they produce.
 
-One class, :class:`Filterbank`, holds any undecimated bank: a frequency
-:class:`Scale`, the filter centers as positions on that scale, and a
-:class:`FilterType` that gives every filter's response. Functions return
+One class, :class:`Filterbank`, holds any undecimated bank: a
+:class:`~sonore.FrequencyScale`, the filter centers as positions on that
+scale, and a :class:`FilterType` that gives every filter's response. Functions return
 the banks in common use, as :func:`~sonore.pure_tone` returns a Sound::
 
     so.cosine_filterbank(30, 50, 8000)                    # ERB-spaced cosines
@@ -37,7 +37,6 @@ their synthesis is the canonical dual.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import KW_ONLY, dataclass
 from functools import lru_cache
 
@@ -48,19 +47,15 @@ from scipy.signal import hilbert
 from sonore.core.fft import fast_padding, threads
 from sonore.core.sound import Sound
 from sonore.core.utils import (
+    FrequencyScale,
+    _as_frequency_scale,
     _parabola_vertex,
     db_to_amp,
     erb_bandwidth,
-    erb_to_freq,
-    freq_to_erb,
-    freq_to_mel,
-    mel_to_freq,
 )
 from sonore.frames.frame import Frame, _check_frame
 
 __all__ = [
-    "Scale",
-    "SCALES",
     "FilterType",
     "Cosine",
     "Gammatone",
@@ -77,55 +72,6 @@ __all__ = [
 # path on a bank whose s ripples loses exactly that ripple, so this bounds the
 # loss to 1e-12 of the signal (docs/design/frames/filterbanks.md, C1 and C9).
 TIGHT_TOLERANCE = 1e-12
-
-
-# ------------------------------------------------------------------ scales
-def _identity(value):
-    return value
-
-
-@dataclass(frozen=True)
-class Scale:
-    """A frequency axis that filter centers are equally spaced on: its
-    ``name``, the ``unit`` of one step on it, and the conversions to and
-    from Hz."""
-
-    name: str
-    unit: str
-    to_scale: Callable[[np.ndarray], np.ndarray]
-    from_scale: Callable[[np.ndarray], np.ndarray]
-
-    def __post_init__(self):
-        # A mismatched or mistyped pair would still build a bank, with every
-        # filter in the wrong place; check a round trip where the scale is defined.
-        freqs = np.array([100.0, 1000.0, 10000.0])
-        with np.errstate(all="ignore"):
-            back = np.asarray(self.from_scale(self.to_scale(freqs)), float)
-        defined = np.isfinite(back)
-        if not np.allclose(back[defined], freqs[defined], rtol=1e-9):
-            raise ValueError(
-                f"scale {self.name!r}: from_scale(to_scale(f)) does not give f back "
-                f"({freqs[defined]} Hz -> {back[defined]} Hz): the two conversions must invert each other"
-            )
-
-
-#: The scales a bank can be built on by name: the ERB-number scale (Glasberg &
-#: Moore, 1990), octaves (log2 frequency), the HTK mel scale, and Hz.
-SCALES = {
-    "erb": Scale("erb", "ERB", freq_to_erb, erb_to_freq),
-    "octave": Scale("octave", "oct", np.log2, np.exp2),
-    "mel": Scale("mel", "mel", freq_to_mel, mel_to_freq),
-    "linear": Scale("linear", "Hz", _identity, _identity),
-}
-
-
-def _as_scale(scale: str | Scale) -> Scale:
-    if isinstance(scale, Scale):
-        return scale
-    try:
-        return SCALES[scale.lower()]
-    except (KeyError, AttributeError):
-        raise ValueError(f"scale must be one of {sorted(SCALES)} or a Scale, not {scale!r}") from None
 
 
 # ------------------------------------------------------------- filter types
@@ -353,14 +299,14 @@ class Filterbank(Frame):
     subbands are real.
     """
 
-    scale: Scale
+    scale: FrequencyScale
     knots: tuple[float, ...]
     filter_type: FilterType
     _: KW_ONLY
     edges: bool = True
 
     def __post_init__(self):
-        object.__setattr__(self, "scale", _as_scale(self.scale))
+        object.__setattr__(self, "scale", _as_frequency_scale(self.scale))
         knots = tuple(float(knot) for knot in self.knots)
         object.__setattr__(self, "knots", knots)
         if len(knots) < 3:
@@ -630,7 +576,7 @@ def _envelope_peak_delays(bank: Filterbank) -> np.ndarray:
 
 # ------------------------------------------------------------- factories
 def _knots(
-    scale: Scale,
+    scale: FrequencyScale,
     n_bands: int | None,
     f_lo: float,
     f_hi: float,
@@ -672,7 +618,7 @@ def cosine_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | Scale = "erb",
+    scale: str | FrequencyScale = "erb",
     spacing: float | None = None,
     centers=None,
     width: float = 1.0,
@@ -688,7 +634,7 @@ def cosine_filterbank(
     over; the cosines then follow the gaps and stay tight. With
     ``edges=True`` the bank has ``n_bands + 2`` filters and its squared
     responses sum to 1 (``width=1``)."""
-    scale = _as_scale(scale)
+    scale = _as_frequency_scale(scale)
     return Filterbank(scale, _knots(scale, n_bands, f_lo, f_hi, spacing, centers), Cosine(width), edges=edges)
 
 
@@ -697,7 +643,7 @@ def gammatone_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | Scale = "erb",
+    scale: str | FrequencyScale = "erb",
     spacing: float | None = None,
     centers=None,
     phase: str = "causal",
@@ -713,7 +659,7 @@ def gammatone_filterbank(
     :func:`cosine_filterbank`. ``edges=False`` gives the bare bank (for
     cochleagrams); it may be badly conditioned or not a frame at all, in
     which case ``analyze`` still works but ``synthesize`` refuses."""
-    scale = _as_scale(scale)
+    scale = _as_frequency_scale(scale)
     filter_type = Gammatone(order, bandwidth_factor, phase, edge_width)
     return Filterbank(scale, _knots(scale, n_bands, f_lo, f_hi, spacing, centers), filter_type, edges=edges)
 
@@ -723,7 +669,7 @@ def morlet_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | Scale = "octave",
+    scale: str | FrequencyScale = "octave",
     spacing: float | None = None,
     centers=None,
     cycles: float = 6.0,
@@ -736,7 +682,7 @@ def morlet_filterbank(
     ``spacing`` and ``centers`` place the filters as in
     :func:`cosine_filterbank`. Without edges the bank is not a frame (A = 0
     at DC)."""
-    scale = _as_scale(scale)
+    scale = _as_frequency_scale(scale)
     filter_type = Morlet(cycles, edge_width)
     return Filterbank(scale, _knots(scale, n_bands, f_lo, f_hi, spacing, centers), filter_type, edges=edges)
 

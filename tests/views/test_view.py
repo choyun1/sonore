@@ -47,6 +47,7 @@ NOT_ANALYSES = [
     "TextureModel",
     "ModulationFilterbank",
     "ModulationBlob",
+    "FrequencyScale",
 ]  # ModulationFilterbank: a tool that makes views
 
 
