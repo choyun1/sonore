@@ -24,6 +24,10 @@ sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
 
+**Status.** sonore is a library in development. Its API may change between
+releases without warning, and it has not been validated for research use:
+check anything you rely on against an independent implementation.
+
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
 playable next to its plots, with a playhead that follows the sound.
 
