@@ -348,7 +348,9 @@ a voice's pitch from its spectral envelope, the part that carries the vowel.</p>
   }
   // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
   // fundamentals with phases counted from the notes' start: x the first, y the second, over a
-  // short stretch. Before the sound has played, the notes at figure.start.
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
   function drawLissajous(item) {
     const c = item.figureCanvas;
     if (!c) return;
@@ -360,17 +362,22 @@ a voice's pitch from its spectral envelope, the part that carries the vowel.</p>
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size, size);
     const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
-    const note = F.notes.find((n) => t >= n[0] && t < n[1]);
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
     const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
     g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
     g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
     if (!note) { g.fillText(F.title, 2, 2); return; }
-    const [t0, , fx, fy, label] = note, steps = 600;
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
     g.fillText(label || F.title, 2, 2);
     g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
     for (let i = 0; i <= steps; i++) {
-      const tau = t - t0 + (i / steps) * F.window;
-      const x = cx + R * Math.sin(2 * Math.PI * fx * tau), y = cy - R * Math.sin(2 * Math.PI * fy * tau);
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
       i ? g.lineTo(x, y) : g.moveTo(x, y);
     }
     g.stroke();
