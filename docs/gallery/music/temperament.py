@@ -32,7 +32,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # ## Code the examples share
 #
 # Every note is a harmonic complex tone of eight partials with amplitudes falling as $1/n$, so
-# that the partials of two notes can meet and beat; the sounds are at 22.05 kHz. An interval is
+# that the partials of two notes can meet and beat. It fades in over 60 ms and out over 120 ms,
+# so notes start and stop softly; the sounds are at 22.05 kHz. An interval is
 # measured in cents, 1200 to the octave: $1200 \log_2 r$ for a frequency ratio $r$
 # (`so.ratio_to_cents`). A tuning here is a table of the seven note names of C major as ratios
 # to C, and every tuning keeps C4 where equal temperament with A4 = 440 Hz puts it
@@ -83,9 +84,15 @@ def pitch(note, tuning, c4=C4):
     return c4 * TUNINGS[tuning][note[0]] * 2.0 ** (int(note[1:]) - 4)
 
 
-def tone(f0, duration):
-    """One note: eight harmonics falling as 1/n, with 20 ms ramps."""
-    return so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS, ramp=20e-3)
+def tone(f0, duration, attack=60e-3, release=120e-3):
+    """One note: eight harmonics falling as 1/n, fading in over ``attack`` and out over
+    ``release`` seconds (raised-cosine ramps), so that notes start and stop softly."""
+    note = so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS, ramp=0)
+    n_attack, n_release = int(attack * FS), int(release * FS)
+    envelope = np.ones(note.n_samples)
+    envelope[:n_attack] = 0.5 - 0.5 * np.cos(np.pi * np.arange(n_attack) / n_attack)
+    envelope[note.n_samples - n_release :] = 0.5 + 0.5 * np.cos(np.pi * np.arange(n_release) / n_release)
+    return note * envelope[:, None]
 
 
 def finish(snd):
@@ -246,15 +253,15 @@ print(f"{'just intervals':24s}" + "".join(f"{size:6.1f}" for size in just_sizes)
 # %% [markdown]
 # ## One tune, four tunings
 #
-# The first line of Twinkle, Twinkle, Little Star, in four parts: the tune in the fourth
-# octave, and below it three-note chords in close position (C major, F major, G major) changing
+# The first line of Twinkle, Twinkle, Little Star, in four parts: the tune in the soprano range
+# (the fifth octave), and below it three-note chords in open position (C major, F major, G major) changing
 # every two beats. The tune only uses those three chords, which just intonation on C keeps
 # exactly just, so this is just intonation at its best; the next section shows where it fails.
 
 # %%
 BEAT = 0.45
-MELODY = ["C4", "C4", "G4", "G4", "A4", "A4", "G4", None, "F4", "F4", "E4", "E4", "D4", "D4", "C4", None]
-CHORDS = {"I": ["C3", "E3", "G3"], "IV": ["F3", "A3", "C4"], "V": ["G2", "B2", "D3"]}
+MELODY = ["C5", "C5", "G5", "G5", "A5", "A5", "G5", None, "F5", "F5", "E5", "E5", "D5", "D5", "C5", None]
+CHORDS = {"I": ["C3", "G3", "E4"], "IV": ["F3", "C4", "A4"], "V": ["G2", "D4", "B4"]}  # open voicing
 HARMONY = ["I", "I", "IV", "I", "IV", "I", "V", "I"]  # one chord per two beats
 
 
