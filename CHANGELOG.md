@@ -33,6 +33,8 @@ version (0.x.y) only fixes bugs.
   removed, with and without iterations.
 
 ### Changed
+- `so.gaussian_noise` loses `tilt_ref`, which had no effect: it scaled the
+  whole spectrum, and the output is scaled to RMS 1 anyway.
 - `so.correlated_noise` gives exactly the requested interaural correlation and
   RMS 1 in each channel: the two noises are made orthogonal and equal in power
   before mixing (Hartmann & Cho, 2011). Before, each draw missed `corr` by
