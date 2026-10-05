@@ -84,28 +84,29 @@ class Spectrum(View):
         interpolation, and every result has RMS 1, as the generators do. None
         is the analysed sound: the spectrum keeps no phase to give back.
         """
-        if isinstance(carrier, str) and carrier == "noise":
-            from sonore.sources.waveforms import gaussian_noise
-
-            return gaussian_noise(duration, fs, spectrum=self, rng=rng, **noise_kwargs)
-        if noise_kwargs or rng is not None:
-            raise TypeError("rng and noise keyword arguments apply only to carrier='noise'")
         length = n_samples(duration, fs)
         magnitude = db_to_amp(self.level_at(np.fft.rfftfreq(length, 1 / fs)))
-        if isinstance(carrier, Sound):
-            if carrier.fs != fs:
-                raise ValueError(f"carrier fs {carrier.fs} differs from fs {fs}")
-            if len(carrier) < length:
-                raise ValueError("carrier is shorter than duration")
-            phase = np.angle(np.fft.rfft(carrier.data[:length], axis=0))
-            data = np.fft.irfft(magnitude[:, None] * np.exp(1j * phase), n=length, axis=0)
-        elif isinstance(carrier, str) and carrier == "minimum":
-            from sonore.views.cepstrum import _minimum_phase
+        match carrier:  # str("...") so that an array is not compared elementwise
+            case str("noise"):
+                from sonore.sources.waveforms import gaussian_noise
 
-            cepstrum = np.fft.irfft(np.log(magnitude), n=length)[: length // 2 + 1]
-            data = np.fft.irfft(_minimum_phase(cepstrum, length, axis=0), n=length)
-        else:
-            raise ValueError(f"carrier must be 'noise', 'minimum' or a Sound, not {carrier!r}")
+                return gaussian_noise(duration, fs, spectrum=self, rng=rng, **noise_kwargs)
+            case _ if noise_kwargs or rng is not None:
+                raise TypeError("rng and noise keyword arguments apply only to carrier='noise'")
+            case Sound():
+                if carrier.fs != fs:
+                    raise ValueError(f"carrier fs {carrier.fs} differs from fs {fs}")
+                if len(carrier) < length:
+                    raise ValueError("carrier is shorter than duration")
+                phase = np.angle(np.fft.rfft(carrier.data[:length], axis=0))
+                data = np.fft.irfft(magnitude[:, None] * np.exp(1j * phase), n=length, axis=0)
+            case str("minimum"):
+                from sonore.views.cepstrum import _minimum_phase
+
+                cepstrum = np.fft.irfft(np.log(magnitude), n=length)[: length // 2 + 1]
+                data = np.fft.irfft(_minimum_phase(cepstrum, length, axis=0), n=length)
+            case _:
+                raise ValueError(f"carrier must be 'noise', 'minimum' or a Sound, not {carrier!r}")
         sound = Sound(data, fs)
         return sound.normalize() if sound.rms > 0 else sound
 
