@@ -6,6 +6,21 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+
+- Every view has `.plot()` (docs/design/layout/plotting.md). A view with no
+  single picture refuses with `NotImplementedError` and its `no_plot`
+  sentence, which names what to plot instead: `ReassignedSpectrogram`
+  (plot `.binned(...)`), `PVAnalysis` (plot the STFT) and `TextureStats`
+  (plot the arrays you need).
+- `so.plotting.plot_descriptor_track`.
+
+### Changed
+
+- `DescriptorTrack.plot()` draws through `plotting.py` and, given no `ax`,
+  opens a new figure as every other `.plot()` does, instead of drawing on the
+  current axes.
+
 ## [0.5.0] - 2026-10-05
 
 Sound from a modulation spectrum: `ModulationSpectrum.to_sound(carrier=...)`,
