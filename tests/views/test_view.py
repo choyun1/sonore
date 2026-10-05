@@ -20,6 +20,7 @@ VIEW_NAMES = [
     "Aperiodicity",
     "Mask",
     "F0Track",
+    "DescriptorTrack",
     "InterauralCues",
     "TextureStats",
     "PVAnalysis",

@@ -7,6 +7,12 @@ version (0.x.y) only fixes bugs.
 ## [Unreleased]
 
 ### Added
+- Timbre descriptors, written from Peeters et al. (2011): `so.log_attack_time`
+  and `so.attack_segment` (the weakest-effort attack on an energy envelope
+  low-passed at 20 Hz, forward and backward), `so.spectral_centroid` and
+  `so.spectral_flux` (spectra 100 ms apart by default), the last two returning
+  a `so.DescriptorTrack` with `.median` and `.iqr`. Design and measurements in
+  `docs/design/music/timbre-page.md`.
 - `so.ratio_to_cents`, `so.cents_to_ratio` and `so.note_to_freq(note, a4=440.0)`
   (equal-tempered frequency of a name like "C#3" or "Bb2"), beside `so.cents_scale`,
   which now uses the same cents formula. Design in `docs/design/music/music-pages.md`.
