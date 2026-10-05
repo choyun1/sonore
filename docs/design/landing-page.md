@@ -14,11 +14,12 @@ it is.
 which held the gallery and the API reference but no `index.html`. The new page is the
 README's opening paragraph, links to the gallery, the Colab tutorial, the API reference
 and GitHub, and one editable cell. The cell is the tutorial's first example: a tone in
-noise, its overview, and a player.
+noise, played with its overview below by the tutorial's `show`.
 
-Run (or Ctrl+Enter) shows what a notebook would, in the same order: printed text, an
-error if there is one, a player for a `Sound` on the last line (or one per sound in a
-list or tuple), then every figure the cell made. The player follows the rule
+Run (or Ctrl+Enter) shows what a notebook would, in the same order: printed text,
+`display(...)` output and figures from `plt.show()` where the cell made them, an error
+if there is one, a player for a `Sound` on the last line (or one per sound in a list or
+tuple), then any figure still open. The player follows the rule
 `Sound._repr_html_` follows: the sound plays at its true level, and a sound peaking
 above full scale gets a note instead of a player. The cells share one namespace, as a
 notebook kernel's do.
@@ -64,17 +65,29 @@ download or script from another site, and the browser's own undo, find and
 accessibility work. Tab moves focus as everywhere else on the page rather than
 indenting, so a keyboard user can leave the cell.
 
-**D6. One short example, from the tutorial's first section.** It runs in 1.5 to 1.7 s
+**D6. One short example, from the tutorial's first section, written as the tutorial
+writes it (with `show`).** It runs in 1.5 to 1.7 s
 in the browser (measured below). Slower things (texture synthesis, the moving talker)
 stay in the Colab tutorial and the gallery, where the reader expects to wait.
 
 **D7. Tracebacks show only the cell's own frames,** with the cell's lines quoted, so an
 error reads like one in a notebook rather than pointing into the runner.
 
-**D8. No browser test in CI.** CI would need the CDN and a headless browser on every
-run. The test runs the runner and the example under CPython and checks that the worker
-loads every dependency in `pyproject.toml`; the page itself was checked in headless
-Chromium as described below.
+**D8. The page runs the tutorial's setup cell before the reader's first cell,** so
+everything a tutorial cell uses (`so`, `dB`, `np`, `plt`, `fs`, `show`, `download`,
+`Html`) is defined, and a cell copied from Colab runs as it is (Cho, 2026-10-05: the
+first thing a reader tries is pasting a cell). The worker fetches the notebook from the
+same Pages site and `runner.prepare` runs its first code cell after the `%pip install`,
+so there is one copy of the setup. For that cell to work, the runner provides
+`display` and makes `plt.show()` show the open figures where it is called, and the
+worker loads `pyodide-http`, which lets `urllib` (and so `download`) fetch files in the
+browser. Magic lines (`%pip ...`, `!...`) are blanked, as there is no shell.
+
+**D9. No browser test in CI.** CI would need the CDN and a headless browser on every
+run. The test runs the runner under CPython after the tutorial's setup cell, on the
+page's example and on tutorial cells that use `%pip`, `show`, `download` and the scene
+player, and checks that the worker loads every dependency in `pyproject.toml`; the
+page itself was checked in headless Chromium as described below.
 
 ## Measured
 
@@ -84,6 +97,12 @@ On the cloud container (4 CPUs), 2026-10-04 and 2026-10-05:
   the CDN) and sonore 0.5.0 fetched from PyPI: first Run ready in 15 to 16 s, the
   example then ran in 1.5 to 1.7 s, the player reported a duration of 0.5 s. Later
   runs of small cells took under 0.1 s.
+- The same, with the tutorial's setup cell (D8), 2026-10-05: ready in 18 s. Pasted
+  tutorial cells, unchanged: the `%pip` cell shows nothing; the noise-vocoding cell
+  downloaded the sentence through `download` (raw.githubusercontent.com served from
+  the checkout, as the container can't reach it; that host does send
+  `Access-Control-Allow-Origin: *`) and showed three players, each above its overview,
+  in 7.8 s; the pink-noise cell, two players and overviews, in 2.4 s.
 - Download size, from the Pyodide 314.0.7 release files: core 13.5 MB (6.3 MB
   gzipped), the 17 packages sonore needs 28.3 MB (scipy 14.0, matplotlib 7.0, numpy
   3.0), the sonore wheel 0.2 MB. About 35 MB in all.
@@ -97,10 +116,10 @@ minute" for a first run. Browsers cache the files, so a second visit skips the d
 
 ## What does not work in the page
 
-- `so.load_hrirs` downloads from sofacoustics.org with `urllib`, which Pyodide does not
-  support without the `pyodide-http` package, and whether that site allows reads from
-  other origins is untested. The HRIR terms allow only the SOFA project's copy, so
-  the page can't host one.
-- Files from the repository (the speech sample, the textures) are reachable with
-  `pyodide.http.pyfetch`, not `urllib`; the example doesn't need them.
+- `so.load_hrirs` downloads from sofacoustics.org. With `pyodide-http` the download
+  itself can run, but whether that site allows reads from other origins is untested
+  (the container can't reach it). The HRIR terms allow only the SOFA project's copy, so
+  the page can't host one, and the page says these cells may not work.
+- The tutorial's moving-talker player draws with a script inside its HTML; the page
+  shows that HTML but does not run scripts in it, so the drawing stays blank.
 - `Sound.play()` (sounddevice) and anything multi-threaded don't exist in the browser.
