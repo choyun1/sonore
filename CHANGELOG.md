@@ -14,7 +14,8 @@ spectra edited with `with_gain` or drawn as Gaussian blobs with
 The filterbanks become one `so.Filterbank` class on any `so.FrequencyScale`
 (ERB, octave, cents, mel, linear), with `so.cents_scale` and helpers for
 cents and note names. Also new: timbre descriptors after Peeters et al.
-(2011), and the fixes from audit sittings 1-5, 7 and 8.
+(2011) with a Timbre gallery page, and the fixes from audit sittings 1-5, 7
+and 8.
 
 Breaking changes since 0.4.0 (each is described under Changed):
 
