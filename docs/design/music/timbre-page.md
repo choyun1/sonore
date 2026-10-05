@@ -154,7 +154,7 @@ matching, because sonore has no loudness model.
 ## References
 
 - Grey, J. M. (1977). Multidimensional perceptual scaling of musical timbres. *J. Acoust.
-  Soc. Am.* 61(5), 1270–1277. doi:10.1121/1.381428 (DOI from memory, not shown in the PDF). Read (PDF from Cho): abstract, stimuli,
+  Soc. Am.* 61(5), 1270–1277. doi:10.1121/1.381428 (not shown in the PDF; confirmed by Cho 2026-10-05). Read (PDF from Cho): abstract, stimuli,
   scaling results.
 - Krimphoff, J., McAdams, S., & Winsberg, S. (1994). Caractérisation du timbre des sons
   complexes. II. Analyses acoustiques et quantification psychophysique. *J. Phys. IV* 4,
