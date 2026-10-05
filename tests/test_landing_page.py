@@ -2,15 +2,21 @@
 
 The page runs Python in the browser through Pyodide, which the tests can't
 start; they run the page's own runner (docs/try/runner.py) under CPython
-instead, on the example code as it stands in the page.
+instead, after the Colab tutorial's setup cell, as the page does, on the
+example code as it stands in the page and on cells copied from the tutorial.
 """
 
 import html
 import importlib.util
+import json
 import re
+import shutil
 from pathlib import Path
 
 import pytest
+from test_notebook import DOWNLOADS, NOTEBOOK, synthetic_hrirs
+
+import sonore as so
 
 ROOT = Path(__file__).parent.parent
 PAGE = ROOT / "docs" / "index.html"
@@ -26,6 +32,7 @@ def runner():
     spec = importlib.util.spec_from_file_location("landing_runner", RUNNER)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    module.prepare(NOTEBOOK.read_text())
     return module
 
 
@@ -39,6 +46,16 @@ def kinds(items):
     return [item[0] for item in items]
 
 
+def tutorial_cells():
+    cells = json.loads(NOTEBOOK.read_text())["cells"]
+    return ["".join(cell["source"]) for cell in cells if cell["cell_type"] == "code"]
+
+
+def test_prepare_runs_the_tutorial_setup_cell(runner):
+    assert callable(runner.namespace["show"]) and callable(runner.namespace["download"])
+    assert runner.namespace["fs"] == 44100
+
+
 def test_example_plays_a_sound_then_shows_its_overview(runner):
     items = runner.run(example_code())
     assert kinds(items) == ["audio", "image"], items
@@ -46,6 +63,26 @@ def test_example_plays_a_sound_then_shows_its_overview(runner):
     assert label.startswith("Sound(0.500 s, 44100 Hz, 1 ch")
     assert wav[:4] == b"RIFF" and wav[8:12] == b"WAVE"
     assert items[1][1][:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_tutorial_cells_paste_in_as_they_are(runner, tmp_path, monkeypatch):
+    """The cells that use each part of the setup: the %pip magic, show, download,
+    and the scene player's HTML. Each player comes before its sound's overview."""
+    for path in DOWNLOADS:
+        shutil.copy(ROOT / path, tmp_path)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(so, "load_hrirs", synthetic_hrirs)
+    cells = tutorial_cells()
+    assert runner.run(cells[0]) == []  # %pip install: nothing to do here
+    two_sounds = next(cell for cell in cells if cell.startswith("tone = "))
+    assert kinds(runner.run(two_sounds)) == ["audio", "image", "audio", "image"]
+    sentence = next(cell for cell in cells if "download(" in cell and "sentence = " in cell)
+    assert kinds(runner.run(sentence)) == ["audio", "image"] * 3
+    for cell in cells:  # what the moving talker needs: pink noise, the HRIRs and the scene player
+        if cell.startswith(("pink = ", "hrirs = ", "# @title")):
+            assert "error" not in kinds(runner.run(cell))
+    moving = runner.run(next(cell for cell in cells if "show_moving(" in cell and "walk_around = " in cell))
+    assert kinds(moving)[:3] == ["html", "image", "html"], kinds(moving)
 
 
 def test_cells_share_one_namespace(runner):
