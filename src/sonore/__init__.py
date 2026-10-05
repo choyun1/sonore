@@ -125,7 +125,7 @@ from sonore.views.spectrum import Spectrum, TFPower, long_term_spectrum, tandem_
 from sonore.views.view import NotInvertibleError, View
 from sonore.views.world import DIFFERENCES_FROM_WORLD, world_synthesize
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 __all__ = [
     "DescriptorTrack",
