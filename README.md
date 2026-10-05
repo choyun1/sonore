@@ -457,6 +457,7 @@ What is planned comes first; finished work is listed at the end.
   spectra edited with `with_gain` or drawn as blobs, and an optional
   Griffin & Lim style search; see the
   [Hearing a modulation spectrum](https://choyun1.github.io/sonore/gallery/modtargets.html) page.
+  Released as 0.5.0 ([10.5281/zenodo.23148920](https://doi.org/10.5281/zenodo.23148920)).
 </details>
 
 ## References
@@ -686,5 +687,6 @@ it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff
 
 Every release is archived on Zenodo. [10.5281/zenodo.23086165](https://doi.org/10.5281/zenodo.23086165)
 always points to the latest version; each version also has its own DOI, listed on that page
-(0.4.0 is [10.5281/zenodo.23114390](https://doi.org/10.5281/zenodo.23114390), 0.3.1 is
+(0.5.0 is [10.5281/zenodo.23148920](https://doi.org/10.5281/zenodo.23148920), 0.4.0 is
+[10.5281/zenodo.23114390](https://doi.org/10.5281/zenodo.23114390), 0.3.1 is
 [10.5281/zenodo.23086166](https://doi.org/10.5281/zenodo.23086166)). Cite the version you used.
