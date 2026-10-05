@@ -14,6 +14,10 @@ docs/design/layout/reorganization.md the earlier step):
 
 `plotting.py` holds the `plot_*` functions and `overview`, and is imported only
 inside `.plot()` methods.
+Every view and every analysis result that is not a view (`Sound`, `STFT`,
+`TVSTFT`, `Subbands`) has `.plot()`; a view with no single picture keeps
+`View.plot`, which refuses with its `no_plot` sentence naming what to plot
+instead (docs/design/layout/plotting.md).
 
 Import order is kept module by module, not by folder: `sources/ripples`
 imports frames and views, and views import `core`. `tests/test_layers.py`

@@ -33,6 +33,10 @@ class ReassignedSpectrogram(View):
         "many cells to one point, so different sounds give the same picture."
     )
     back_to_sound = ""
+    no_plot = (
+        "ReassignedSpectrogram has no plot: its points lie off any grid until one is chosen, so plot "
+        "binned(t_edges, f_edges)."
+    )
 
     t_hat: np.ndarray
     f_hat: np.ndarray

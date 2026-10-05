@@ -111,6 +111,8 @@ class Spectrum(View):
         return sound.normalize() if sound.rms > 0 else sound
 
     def plot(self, ax=None, **kwargs):
+        """Level against frequency, on a log frequency axis and re the peak by
+        default (see :func:`~sonore.plotting.plot_spectrum`)."""
         from sonore.plotting import plot_spectrum
 
         return plot_spectrum(self, ax=ax, **kwargs)

@@ -207,6 +207,7 @@ class Envelope(View):
     __radd__ = __add__
 
     def plot(self, ax=None, **kwargs):
+        """The envelope against time (see :func:`~sonore.plotting.plot_envelope`)."""
         from sonore.plotting import plot_envelope
 
         return plot_envelope(self, ax=ax, **kwargs)
@@ -372,6 +373,8 @@ class Envelopes(_PaddedBands, View):
         return spectrum
 
     def plot(self, ax=None, **kwargs):
+        """The envelopes as a cochleagram, time by band in dB (see
+        :func:`~sonore.plotting.plot_envelopes`)."""
         from sonore.plotting import plot_envelopes
 
         return plot_envelopes(self, ax=ax, **kwargs)

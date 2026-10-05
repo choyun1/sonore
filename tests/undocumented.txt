@@ -8,7 +8,6 @@ sonore.plotting.plot_modulation_spectrum
 sonore.plotting.plot_spectrum
 sonore.plotting.plot_stft
 sonore.plotting.plot_waveform
-sonore.spatial.binaural.InterauralCues.plot
 sonore.spatial.spatialization.hcc_to_rect
 sonore.spatial.spatialization.rect_to_hcc
 sonore.spatial.spatialization.sph_to_rect
@@ -30,19 +29,15 @@ sonore.texture.stats.TextureStats.load
 sonore.texture.stats.TextureStats.save
 sonore.views.envelopes.Envelope.data
 sonore.views.envelopes.Envelope.duration
-sonore.views.envelopes.Envelope.plot
 sonore.views.envelopes.Envelope.resample
 sonore.views.envelopes.Envelope.t
 sonore.views.envelopes.Envelopes.db
 sonore.views.envelopes.Envelopes.duration
 sonore.views.envelopes.Envelopes.lowpass
-sonore.views.envelopes.Envelopes.plot
 sonore.views.envelopes.Envelopes.resample
 sonore.views.envelopes.Envelopes.t
 sonore.views.modulation.ConstantQModulationFilterbank.cfs
 sonore.views.modulation.ConstantQModulationFilterbank.scale
 sonore.views.modulation.HannModulationFilterbank.n_bands
 sonore.views.modulation.ModulationFilterbank.cfs
-sonore.views.modulation.ModulationSpectrum.plot
 sonore.views.modulation.OctaveModulationFilterbank.cfs
-sonore.views.spectrum.Spectrum.plot

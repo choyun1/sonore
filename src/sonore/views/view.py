@@ -12,6 +12,11 @@ arguments are what the view discarded: ``Spectrum.to_sound`` takes a carrier
 for the phase, ``Cepstrum.to_sound`` a phase, ``PVAnalysis.to_sound`` a time
 scale and a frequency map. On any other view, :meth:`View.to_sound` refuses
 as ``synthesize`` does.
+
+Every view has :meth:`View.plot`. A view with one obvious picture overrides
+it with a short call into :mod:`sonore.plotting`, where the drawing lives; a
+view with none keeps the base method, which raises ``NotImplementedError``
+with :attr:`View.no_plot`, a sentence naming what to plot instead.
 """
 
 from __future__ import annotations
@@ -33,11 +38,14 @@ class View:
     Each subclass sets two class attributes: :attr:`discards`, one sentence
     saying what the view drops and so why it cannot be inverted, and
     :attr:`back_to_sound`, one sentence naming the route to a sound that
-    exists, or an empty string if there is none.
+    exists, or an empty string if there is none. A subclass that does not
+    override :meth:`plot` sets :attr:`no_plot`, one sentence saying why it
+    has no picture and what to plot instead.
     """
 
     discards = ""
     back_to_sound = ""
+    no_plot = ""
 
     def _refuse(self):
         raise NotInvertibleError(f"{self.discards} {self.back_to_sound or _NO_ROUTE}")
@@ -51,3 +59,9 @@ class View:
         """Refuse, as :meth:`synthesize` does, on a view with no canonical
         route back to a sound; views that have one override it."""
         self._refuse()
+
+    def plot(self, *args, **kwargs):
+        """Refuse, on a view with no single picture: raise
+        ``NotImplementedError`` with :attr:`no_plot` as the message. Views
+        that have a picture override it."""
+        raise NotImplementedError(self.no_plot or f"{type(self).__name__} has no plot yet.")

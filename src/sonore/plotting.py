@@ -26,6 +26,7 @@ __all__ = [
     "plot_cepstrum",
     "plot_mfcc",
     "plot_f0_track",
+    "plot_descriptor_track",
     "plot_interaural_cues",
     "plot_ripple_pattern",
     "plot_lissajous",
@@ -492,6 +493,15 @@ def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwa
     f0 = np.where(track.voiced[channel], track.f0[channel], np.nan)
     ax.plot(track.t, f0, color=color, zorder=2, **kwargs)
     ax.set(title="F0", xlabel="Time [s]", ylabel="F0 [Hz]")
+    return ax
+
+
+def plot_descriptor_track(track, ax=None, channel=0, **kwargs):
+    """A :class:`~sonore.views.descriptors.DescriptorTrack` against time, one channel."""
+    ax = _ax(ax)
+    ax.plot(track.t, track.values[channel], **kwargs)
+    ylabel = f"{track.name} [{track.unit}]" if track.unit else track.name
+    ax.set(xlabel="Time [s]", ylabel=ylabel)
     return ax
 
 

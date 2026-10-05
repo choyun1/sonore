@@ -119,3 +119,16 @@ def test_invalid_arguments():
         so.spectral_centroid(tone(), scale="decibels")
     with pytest.raises(ValueError, match="shorter"):
         so.spectral_centroid(so.Sound(np.ones(100), FS))
+
+
+def test_track_plot_draws_one_channel_against_time():
+    import matplotlib
+
+    matplotlib.use("Agg")
+    track = so.spectral_centroid(tone())
+    ax = track.plot()
+    line = ax.get_lines()[0]
+    np.testing.assert_array_equal(line.get_xdata(), track.t)
+    np.testing.assert_array_equal(line.get_ydata(), track.values[0])
+    assert ax.get_ylabel() == "spectral centroid [Hz]" and ax.get_xlabel() == "Time [s]"
+    assert so.spectral_flux(tone()).plot().get_ylabel() == "spectral flux"

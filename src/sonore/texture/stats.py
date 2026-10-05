@@ -224,6 +224,10 @@ class TextureStats(View):
         "sonore.texture.synth.synthesize draws a new sound with these statistics, which is not the "
         "measured one."
     )
+    no_plot = (
+        "TextureStats has no plot: it holds several kinds of statistic with no single picture, so plot the "
+        "arrays you need (env_mean, mod_power, c1, ...)."
+    )
 
     model: TextureModel
     env_mean: np.ndarray

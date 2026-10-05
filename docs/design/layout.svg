@@ -116,14 +116,15 @@
 <text x="1110" y="76" text-anchor="middle" font-size="12" fill="#d0451b">called lazily by</text>
 <text x="1110" y="93" text-anchor="middle" font-size="12" fill="#d0451b">aperiodicity,</text>
 <text x="1110" y="110" text-anchor="middle" font-size="12" fill="#d0451b">binaural, cepstrum,</text>
-<text x="1110" y="127" text-anchor="middle" font-size="12" fill="#d0451b">envelopes, f0,</text>
-<text x="1110" y="144" text-anchor="middle" font-size="12" fill="#d0451b">filterbank, gabor,</text>
-<text x="1110" y="161" text-anchor="middle" font-size="12" fill="#d0451b">mask, mfcc,</text>
-<text x="1110" y="178" text-anchor="middle" font-size="12" fill="#d0451b">modspectrogram,</text>
-<text x="1110" y="195" text-anchor="middle" font-size="12" fill="#d0451b">modulation,</text>
-<text x="1110" y="212" text-anchor="middle" font-size="12" fill="#d0451b">ripples, sound,</text>
-<text x="1110" y="229" text-anchor="middle" font-size="12" fill="#d0451b">spectral_envelope,</text>
-<text x="1110" y="246" text-anchor="middle" font-size="12" fill="#d0451b">spectrum (.plot)</text>
+<text x="1110" y="127" text-anchor="middle" font-size="12" fill="#d0451b">descriptors,</text>
+<text x="1110" y="144" text-anchor="middle" font-size="12" fill="#d0451b">envelopes, f0,</text>
+<text x="1110" y="161" text-anchor="middle" font-size="12" fill="#d0451b">filterbank, gabor,</text>
+<text x="1110" y="178" text-anchor="middle" font-size="12" fill="#d0451b">mask, mfcc,</text>
+<text x="1110" y="195" text-anchor="middle" font-size="12" fill="#d0451b">modspectrogram,</text>
+<text x="1110" y="212" text-anchor="middle" font-size="12" fill="#d0451b">modulation,</text>
+<text x="1110" y="229" text-anchor="middle" font-size="12" fill="#d0451b">ripples, sound,</text>
+<text x="1110" y="246" text-anchor="middle" font-size="12" fill="#d0451b">spectral_envelope,</text>
+<text x="1110" y="263" text-anchor="middle" font-size="12" fill="#d0451b">spectrum (.plot)</text>
 <rect x="20" y="622" width="18" height="14" rx="3" fill="#e6e6e6" stroke="#556"/>
 <text x="44" y="634" font-size="12" fill="#444">core/</text>
 <rect x="130" y="622" width="18" height="14" rx="3" fill="#d9f0dd" stroke="#556"/>

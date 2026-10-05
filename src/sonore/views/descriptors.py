@@ -61,14 +61,10 @@ class DescriptorTrack(View):
         return f"DescriptorTrack({self.name}, {n_windows} time windows, {n_channels} ch, {median})"
 
     def plot(self, ax=None, channel: int = 0, **kwargs):
-        """The descriptor against time."""
-        import matplotlib.pyplot as plt
+        """The descriptor against time (see :func:`~sonore.plotting.plot_descriptor_track`)."""
+        from sonore.plotting import plot_descriptor_track
 
-        ax = ax if ax is not None else plt.gca()
-        ax.plot(self.t, self.values[channel], **kwargs)
-        ylabel = f"{self.name} [{self.unit}]" if self.unit else self.name
-        ax.set(xlabel="Time [s]", ylabel=ylabel)
-        return ax
+        return plot_descriptor_track(self, ax=ax, channel=channel, **kwargs)
 
 
 def _energy_envelope(sound: Sound, channel: int, cutoff: float, zero_phase: bool) -> np.ndarray:

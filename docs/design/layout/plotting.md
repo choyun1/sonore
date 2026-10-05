@@ -1,6 +1,7 @@
 # Plotting: where the picture of an object comes from
 
-Status: proposal, 2026-10-05 (audit sitting 9). Nothing here is decided yet.
+Status: decided, 2026-10-05 (audit sitting 9). Cho accepted the recommended
+option of every decision, D1-D5.
 
 Cho asked, while reading `Spectrum.plot` in the views sitting, why a class
 carries a plotting method when `plotting.py` exists, and whether every class
