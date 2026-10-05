@@ -98,6 +98,13 @@ from sonore.spatial.spatialization import (
 )
 from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
 from sonore.views.cepstrum import Cepstrum
+from sonore.views.descriptors import (
+    DescriptorTrack,
+    attack_segment,
+    log_attack_time,
+    spectral_centroid,
+    spectral_flux,
+)
 from sonore.views.envelopes import Envelope, Envelopes, noise_vocode
 from sonore.views.f0 import F0Track, f0_track, scale_f0
 from sonore.views.mask import Mask, ideal_binary_mask, ideal_ratio_mask
@@ -121,6 +128,11 @@ from sonore.views.world import DIFFERENCES_FROM_WORLD, world_synthesize
 __version__ = "0.4.0"
 
 __all__ = [
+    "DescriptorTrack",
+    "attack_segment",
+    "log_attack_time",
+    "spectral_centroid",
+    "spectral_flux",
     "SPEED_OF_SOUND",
     "texture",
     "ConstantQModulationFilterbank",

@@ -7,7 +7,7 @@ to the Timbre Toolbox repository. This note fixes how the three descriptors are 
 what the page plays. It adds no code. The decisions at the end come first; they extend D9 and
 D10 of `music-pages.md`.
 
-Status: draft for Cho.
+Status: Cho merged this note on 2026-10-05 without comment, taken as accepting the recommended D-T2 to D-T5. The descriptors are in `views/descriptors.py`.
 
 ## How the claims are verified
 
