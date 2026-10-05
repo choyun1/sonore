@@ -6,6 +6,36 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-05
+
+Sound from a modulation spectrum: `ModulationSpectrum.to_sound(carrier=...)`,
+spectra edited with `with_gain` or drawn as Gaussian blobs with
+`ModulationSpectrum.from_blobs`, and an optional Griffin & Lim style search.
+The filterbanks become one `so.Filterbank` class on any `so.FrequencyScale`
+(ERB, octave, cents, mel, linear), with `so.cents_scale` and helpers for
+cents and note names. Also new: timbre descriptors after Peeters et al.
+(2011), and the fixes from audit sittings 1-5, 7 and 8.
+
+Breaking changes since 0.4.0 (each is described under Changed):
+
+- `so.ERBFilterbank`, `so.OctaveFilterbank`, `so.CosineFilterbank`,
+  `so.GammatoneFilterbank` and `so.MorletFilterbank` are gone; use
+  `so.cosine_filterbank`, `so.gammatone_filterbank`, `so.morlet_filterbank`
+  or `so.Filterbank`. A bank's `tight` attribute is now `bank.is_tight(n_samples, fs)`.
+- `so.subbands(snd, ...)` is gone (write `so.cosine_filterbank(...).analyze(snd)`),
+  and `Subbands.synthesize()` is `Subbands.to_sound()`.
+- `so.pad` and `so.truncate` are replaced by `so.match_lengths(sounds, mode=...)`.
+- `Mask` moves from `sonore.frames.mask` to `sonore.views.mask` and is a View
+  (`so.Mask` is unchanged).
+- `so.gaussian_noise` loses `tilt_ref`; `Sound.fs` is read-only.
+- The LF source (`so.lf_harmonics`, `so.lf_pulse`, `so.glottal_source`,
+  Klatt's `RD`) refuses Rd outside 0.3-2.7.
+- Output changes for the same arguments: gammatone and Morlet centres move
+  slightly (`f_lo` and `f_hi` are now the outer knots); the default top band
+  edge is the Nyquist frequency rather than 95% of it; `so.correlated_noise`
+  hits the requested correlation exactly; a random-phase
+  `ModulationSpectrum.to_sound` keeps the long-term spectrum.
+
 ### Added
 - Timbre descriptors, written from Peeters et al. (2011): `so.log_attack_time`
   and `so.attack_segment` (the weakest-effort attack on an energy envelope
@@ -450,7 +480,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.4.0...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.5.0...main
+[0.5.0]: https://github.com/choyun1/sonore/releases/tag/v0.5.0
 [0.4.0]: https://github.com/choyun1/sonore/releases/tag/v0.4.0
 [0.3.1]: https://github.com/choyun1/sonore/releases/tag/v0.3.1
 [0.3.0]: https://github.com/choyun1/sonore/releases/tag/v0.3.0
