@@ -42,6 +42,13 @@ version (0.x.y) only fixes bugs.
   equal-tempered semitone (the octave bank with `spacing=1/12`).
 
 ### Changed
+- `so.lf_harmonics`, `so.lf_pulse`, `so.glottal_source` and Klatt's `RD`
+  refuse Rd outside Fant's (1995) range 0.3-2.7, the range his predictions
+  were fitted to (above it the pulse no longer peaks at -1 at the
+  excitation, and near Rd 7 its flow goes negative). Given directly, `rk`
+  must be below 1 (at 1 the pulse blew up silently). An F0 contour that is
+  never voiced gives silence from `so.glottal_source`, as from
+  `so.harmonic_complex`, instead of an error.
 - `so.gaussian_noise` loses `tilt_ref`, which had no effect: it scaled the
   whole spectrum, and the output is scaled to RMS 1 anyway.
 - `so.correlated_noise` gives exactly the requested interaural correlation and

@@ -626,7 +626,10 @@ def iterated_ripple_noise(
 # period), ``alpha``, ``epsilon``, ``omega_g`` and ``e0`` (the waveform's
 # constants), and Fant's normalized parameters ``rd``, ``ra``, ``rg``, ``rk``.
 
-#: Fant's (1995) main range of Rd, from tight, adducted to breathy phonation.
+#: Fant's (1995) main range of Rd, from tight, adducted to breathy phonation:
+#: the range his predictions of Ra, Rg and Rk were fitted to, and the only one
+#: sonore accepts (above it the pulse no longer peaks at -1 at the excitation,
+#: and near 7 its flow goes negative).
 RD_RANGE = (0.3, 2.7)
 
 
@@ -635,15 +638,24 @@ RD_RANGE = (0.3, 2.7)
 _RD_STEP = 0.002
 
 
+def _check_rd(rd_values: ArrayLike) -> None:
+    values = np.atleast_1d(np.asarray(rd_values, float))
+    outside = values[~((values >= RD_RANGE[0]) & (values <= RD_RANGE[1]))]
+    if outside.size:
+        raise ValueError(
+            f"Rd = {outside[0]:g} is outside Fant's (1995) range {RD_RANGE[0]}-{RD_RANGE[1]}, "
+            "the range his predictions of Ra, Rg and Rk were fitted to"
+        )
+
+
 def _r_parameters(rd: float) -> tuple[float, float, float]:
     """Fant's (1995) prediction of (Ra, Rg, Rk) from Rd: his Eqs. 2 and 3 for
     Ra and Rk, and Rg from his Eq. 4 given those."""
+    _check_rd(rd)
     ra = (-1 + 4.8 * rd) / 100
     rk = (22.4 + 11.8 * rd) / 100
-    denominator = 4 * (0.11 * rd - ra * (0.5 + 1.2 * rk))
-    if ra <= 0 or denominator <= 0:
-        raise ValueError(f"Rd = {rd:g} gives no LF pulse; Fant's main range is {RD_RANGE[0]}-{RD_RANGE[1]}")
-    return ra, rk * (0.5 + 1.2 * rk) / denominator, rk
+    rg = rk * (0.5 + 1.2 * rk) / (4 * (0.11 * rd - ra * (0.5 + 1.2 * rk)))
+    return ra, rg, rk
 
 
 class _LFShape:
@@ -663,10 +675,12 @@ class _LFShape:
     """
 
     def __init__(self, tp: float, te: float, ta: float):
-        if not (0 < tp < te < 1 and 0 < ta < 1 - te):
+        # te < 2 tp (Rk < 1): with te any later, the open phase's sine passes zero
+        # again before the excitation, and the pulse blows up or the flow goes negative
+        if not (0 < tp < te < min(1, 2 * tp) and 0 < ta < 1 - te):
             raise ValueError(
                 f"no LF pulse with tp = {tp:g}, te = {te:g}, ta = {ta:g} "
-                "(it needs 0 < tp < te < 1 and 0 < ta < 1 - te)"
+                "(it needs 0 < tp < te < 1, te < 2 tp, that is rk < 1, and 0 < ta < 1 - te)"
             )
         self.tp, self.te, self.ta = tp, te, ta
         self.omega_g = np.pi / tp
@@ -784,16 +798,17 @@ def lf_harmonics(
     They are exact (a closed form), so a source built from them does not
     alias.
 
-    The shape is set by Fant's (1995) ``rd`` (main range 0.3-2.7; 0.7 is
-    close to his typical adult male values), through his prediction of
-    ``ra``, ``rg`` and ``rk`` from it; or directly by ``ra = ta/T0``,
-    ``rg = T0/(2 tp)`` and ``rk = (te - tp)/tp``, given together.
+    The shape is set by Fant's (1995) ``rd`` (0.3-2.7, his main range, the
+    one his predictions were fitted to; 0.7 is close to his typical adult
+    male values), through his prediction of ``ra``, ``rg`` and ``rk`` from
+    it; or directly by ``ra = ta/T0``,
+    ``rg = T0/(2 tp)`` and ``rk = (te - tp)/tp`` (below 1), given together.
     """
-    numbers = np.asarray(harmonics)
-    if np.any(numbers < 1) or np.any(numbers != np.round(numbers)):
+    harmonic_numbers = np.asarray(harmonics)
+    if np.any(harmonic_numbers < 1) or np.any(harmonic_numbers != np.round(harmonic_numbers)):
         raise ValueError("harmonic numbers must be whole numbers >= 1")
-    coefficients = _shape_from(rd, ra, rg, rk).harmonics(numbers)
-    return coefficients / (2j * np.pi * numbers) if flow else coefficients
+    coefficients = _shape_from(rd, ra, rg, rk).harmonics(harmonic_numbers)
+    return coefficients / (2j * np.pi * harmonic_numbers) if flow else coefficients
 
 
 def lf_pulse(
@@ -826,7 +841,9 @@ def _rd_track_gains(rd_times: np.ndarray, rd_values: np.ndarray, harmonic_number
     interpolated in log level and unwrapped phase."""
     low, high = float(rd_values.min()), float(rd_values.max())
     grid = low + _RD_STEP * np.arange(int(np.ceil((high - low) / _RD_STEP)) + 1)
-    table = np.array([lf_harmonics(harmonic_numbers, rd, flow=flow) for rd in grid])
+    # the last row may lie up to one step past high, and so past Fant's range;
+    # it is only interpolated towards, so take it at the range's end there
+    table = np.array([lf_harmonics(harmonic_numbers, min(rd, RD_RANGE[1]), flow=flow) for rd in grid])
     log_levels = np.log(np.abs(table))
     phases = np.unwrap(np.angle(table), axis=0)
     grid_index = np.arange(len(grid))
@@ -865,18 +882,22 @@ def glottal_source(
     The pulses are built from their harmonics (:func:`lf_harmonics`) by
     :func:`harmonic_complex`, so they do not alias, each period takes its
     own length on a moving F0, and ``f0``, ``f_max`` and ``ramp`` work as
-    there (unvoiced time windows are silent). The result is the flow derivative,
-    the source as it excites the vocal tract with radiation folded in, or
-    with ``flow=True`` the flow itself; normalized to RMS 1.
+    there (unvoiced time windows are silent, and a contour that is never
+    voiced gives silence). The result is the flow derivative, the source as
+    it excites the vocal tract with radiation folded in, or with
+    ``flow=True`` the flow itself; normalized to RMS 1.
 
-    ``rd`` is Fant's (1995) shape parameter (main range 0.3-2.7, default 0.7,
-    close to his typical adult male values): a number, or a ``(times,
+    ``rd`` is Fant's (1995) shape parameter (0.3-2.7, default 0.7, close to
+    his typical adult male values): a number, or a ``(times,
     values)`` track for a voice quality that changes, interpolated to every
     sample. LF models the periodic pulse only: breathy voice also needs
     aspiration noise, as in :func:`~sonore.klatt_synthesize`.
     """
     harmonic_numbers = np.arange(1, _n_max(f0, fs, f_max) + 1)
     if harmonic_numbers.size == 0:
+        contour = _contour(f0)
+        if contour is not None and not np.any(contour[1] > 0):  # never voiced, as harmonic_complex
+            return silence(duration, fs, n_channels=contour[1].shape[0])
         raise ValueError("no harmonic of this F0 fits below f_max")
     contour_options = {"f_max": f_max} if isinstance(f0, numbers.Real) else {"f_max": f_max, "ramp": ramp}
     if isinstance(rd, numbers.Real):
@@ -889,5 +910,6 @@ def glottal_source(
         raise ValueError("rd must be a number or a (times, values) pair") from None
     if rd_times.ndim != 1 or rd_times.shape != rd_values.shape or len(rd_times) == 0:
         raise ValueError("an rd track needs one value per time")
+    _check_rd(rd_values)
     gains = _rd_track_gains(rd_times, rd_values, harmonic_numbers, flow)
     return harmonic_complex(duration, fs, f0, harmonic_numbers, gains, **contour_options)
