@@ -2,9 +2,10 @@
 
 For every public class (``so.__all__`` and ``so.texture.__all__``, less the bases ``View`` and
 ``Frame``) it says whether the class has a ``plot`` method and, if so, whether that method
-calls into ``sonore.plotting`` or draws with matplotlib itself. It lists the public ``plot_*`` functions of ``plotting.py`` that no
-class method calls, and counts the calls written as ``<name>.plot(`` in the repository whose
-receiver is not a matplotlib axis, which are the calls a change to ``.plot`` would touch.
+calls into ``sonore.plotting`` or draws with matplotlib itself. It lists the public ``plot_*``
+functions of ``plotting.py`` that no class method calls, and counts the calls written as
+``<name>.plot(`` in the repository whose receiver is not a matplotlib axis, which are the
+calls a change to ``.plot`` would touch.
 Nothing is changed.
 
     python tools/count_plot_methods.py
