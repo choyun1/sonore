@@ -685,9 +685,10 @@ MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). If sono
 it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff); the
 *Cite this repository* button in the GitHub sidebar gives the same citation in APA and BibTeX.
 
-Every release is archived on Zenodo. [10.5281/zenodo.23086165](https://doi.org/10.5281/zenodo.23086165)
+Every release is archived on Zenodo. The all-versions DOI
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 always points to the latest version. Each version also has its own DOI; cite the version you used.
 
-- 0.5.0: [10.5281/zenodo.23148920](https://doi.org/10.5281/zenodo.23148920)
-- 0.4.0: [10.5281/zenodo.23114390](https://doi.org/10.5281/zenodo.23114390)
-- 0.3.1: [10.5281/zenodo.23086166](https://doi.org/10.5281/zenodo.23086166)
+- 0.5.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23148920.svg)](https://doi.org/10.5281/zenodo.23148920)
+- 0.4.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23114390.svg)](https://doi.org/10.5281/zenodo.23114390)
+- 0.3.1: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086166.svg)](https://doi.org/10.5281/zenodo.23086166)
