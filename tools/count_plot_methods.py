@@ -90,7 +90,7 @@ def main():
         for path in (ROOT / folder).rglob("*"):
             if path.suffix not in (".py", ".ipynb", ".md", ".rst") or "__pycache__" in path.parts:
                 continue
-            if path.name == "count_plot_methods.py":
+            if path.name == "count_plot_methods.py" or "design" in path.parts:
                 continue
             for line in path.read_text(errors="ignore").splitlines():
                 count += len(ANY_PLOT_CALL.findall(line)) - len(AXIS_RECEIVER.findall(line))
