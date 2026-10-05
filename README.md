@@ -1,6 +1,6 @@
 # sonore
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165) [![tests](https://github.com/choyun1/sonore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/choyun1/sonore/actions/workflows/tests.yml)
+[![tests](https://github.com/choyun1/sonore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/choyun1/sonore/actions/workflows/tests.yml) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 
 **Signals and stimuli for auditory research, built for Jupyter.**
 
