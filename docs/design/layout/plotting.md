@@ -25,8 +25,8 @@ Counted by `python tools/count_plot_methods.py` on this branch:
   a `plot_*` function from `plotting.py` and call it, as `layout.md` asks.
   The exception is `DescriptorTrack.plot` (from #130), which draws with
   matplotlib itself.
-- **Calls:** about 102 calls of the form `x.plot(` on sonore objects (78 in
-  the gallery and notebook, 16 in tests, 5 in `src`, 3 in `tools`; a text
+- **Calls:** about 95 calls of the form `x.plot(` on sonore objects (71 in `docs`
+  outside the design docs, 16 in tests, 5 in `src`, 3 in `tools`; a text
   match, so an estimate) and 6 mentions in the README.
 
 So the rule in practice is "a `.plot` wherever one picture is the obvious
@@ -69,7 +69,7 @@ matplotlib and `librosa.display` are functions.
   with a reason, a class's options show up where its users look, and no
   existing call changes. (b) `so.plot(x)` dispatching on type with `match`:
   one name to learn and room for multi-object plots, at the cost of
-  rewriting about 102 calls and one long docstring. (c) Both, `so.plot(x)`
+  rewriting about 95 calls and one long docstring. (c) Both, `so.plot(x)`
   calling `x.plot()`: two names for one thing, so not recommended.
 - **D2. Which classes promise a `.plot`.** (a) Every view, plus every
   analysis result that is not a view: `Sound`, `STFT`, `TVSTFT`, `Subbands`
