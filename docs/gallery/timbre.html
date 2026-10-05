@@ -151,7 +151,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group here" data-group="music" open><summary>Music</summary><ul><li class="has-sections"><a href="timbre.html" aria-current="page">Timbre</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-vowels-are-timbres">Vowels are timbres</a></li><li><a href="#h-to-come">To come</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Classic stimuli</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group here" data-group="music" open><summary>Music</summary><ul><li class="has-sections"><a href="timbre.html" aria-current="page">Timbre</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-attack-time">Attack time</a></li><li><a href="#h-brightness">Brightness</a></li><li><a href="#h-spectral-flux">Spectral flux</a></li><li><a href="#h-three-descriptors-at-once">Three descriptors at once</a></li><li><a href="#h-onsets">Onsets</a></li><li><a href="#h-vowels-are-timbres">Vowels are timbres</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -207,29 +207,407 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   <h1>Timbre</h1>
 <p>Timbre is usually defined by what it is not: whatever still tells two sounds apart when they
 have the same pitch, the same loudness and the same duration. A clarinet and a violin playing
-the same note differ in timbre, and so do two vowels sung on the same note. This page is a
-placeholder; the examples are still to be written.</p>
-<ul><li><a href="#h-vowels-are-timbres">Vowels are timbres</a>: the link to speech.</li><li><a href="#h-to-come">To come</a>: timbre spaces, and what the onset of a note carries.</li></ul>
+the same note differ in timbre, and so do two vowels sung on the same note. Grey (1977) made
+the first timbre space: listeners rated how different pairs of 16 resynthesized instrument
+tones sounded, and multidimensional scaling placed the tones in a space of three dimensions.
+Later spaces of the same kind (McAdams et al., 1995) had dimensions that correlated with three
+measurable properties of the sound: how fast it starts, how bright it is, and how much its
+spectrum changes. This page plays synthetic tones that move along one of those at a time, and
+measures each with sonore's timbre descriptors.</p>
+<ul><li><a href="#h-attack-time">Attack time</a>: one tone starting over 5 to 300 ms.</li><li><a href="#h-brightness">Brightness</a>: five spectral slopes, from dull to bright.</li><li><a href="#h-spectral-flux">Spectral flux</a>: a steady spectrum against one that brightens.</li><li><a href="#h-three-descriptors-at-once">Three descriptors at once</a>: every tone of the page placed by its numbers.</li><li><a href="#h-onsets">Onsets</a>: partials starting together, building up at different rates, and with a burst of noise.</li><li><a href="#h-vowels-are-timbres">Vowels are timbres</a>: three vowels sung on one note.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
 </header>
+<section aria-labelledby="h-code-the-examples-share">
+<h2 id="h-code-the-examples-share">Code the examples share</h2>
+<p>Every tone is at E♭4 (311 Hz), the pitch of Grey (1977) and McAdams et al. (1995), and is a
+harmonic complex of 20 partials with amplitudes <span class="tex">n^{-s}</span> for harmonic <span class="tex">n</span>: the larger the
+slope <span class="tex">s</span>, the faster the partials fall and the duller the tone. Each partial rises linearly
+over its attack time and fades out over the last 100 ms. Tones are 1 s long, half a second
+apart, and set to the same RMS level. Equal RMS is not equal loudness: sonore has no loudness
+model, and a bright tone at the same RMS as a dull one usually sounds louder.</p>
+<p>The three descriptors are those of Peeters et al. (2011), written from the paper's equations
+(<code>docs/design/music/timbre-page.md</code> says where sonore's defaults differ from the paper's, and
+why):</p>
+<ul><li><strong>Log attack time</strong> (<code>so.log_attack_time</code>): <span class="tex">\log_{10}</span> of the attack's duration in seconds. The attack is found on the energy envelope (the amplitude of the signal, smoothed by a 20 Hz low-pass filter) by the paper's "weakest effort" method, which looks for where the envelope climbs fastest from one tenth of its maximum to the next. <code>so.attack_segment</code> gives its start and end.</li><li><strong>Spectral centroid</strong> (<code>so.spectral_centroid</code>): the centre of gravity of the power spectrum, <span class="tex">\sum_k f_k p_k / \sum_k p_k</span>, in each 23.2 ms time window, every 5.8 ms. Its median over the tone is the usual measure of brightness.</li><li><strong>Spectral flux</strong> (<code>so.spectral_flux</code>): one minus the correlation of two magnitude spectra 100 ms apart, 0 when the spectrum keeps its shape.</li></ul>
+<p>Each sound is drawn as a spectrogram with its centroid track over it and, under it, the
+waveform with each tone's measured attack shaded. Every sound starts with half a second of silence.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+FS = 44100
+F0 = so.note_to_freq(&quot;Eb4&quot;)
+DUR = 1.0  # every tone [s]
+GAP = 0.5  # silence before and between tones [s]
+RELEASE = 0.1  # fade at the end of every tone [s]
+HARMONICS = np.arange(1, 21)
+
+
+def envelope(t, attack, duration=DUR):
+    &quot;&quot;&quot;A linear rise over ``attack`` seconds and a raised-cosine fade over the last RELEASE.&quot;&quot;&quot;
+    fade = 0.5 - 0.5 * np.cos(np.pi * np.clip((duration - t) / RELEASE, 0, 1))
+    return np.minimum(1, t / attack) * fade
+
+
+def tone(slope=1.0, attack=20e-3, duration=DUR):
+    &quot;&quot;&quot;E-flat 4 with 20 harmonics of amplitude n^-slope. ``slope`` may be a function of time
+    and ``attack`` (the linear rise of each partial, in seconds) a function of the harmonic
+    number.&quot;&quot;&quot;
+
+    def gain(t, f, n):
+        s = slope(t) if callable(slope) else slope
+        rise = attack(n) if callable(attack) else attack
+        power = (HARMONICS[:, None] ** (-2.0 * np.asarray(s))).sum(0)  # keeps the level steady
+        return float(n) ** -s / np.sqrt(power) * envelope(t, rise, duration)
+
+    return so.harmonic_complex(duration, FS, F0, harmonics=HARMONICS, amplitudes=gain)
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+
+
+def describe(snd):
+    &quot;&quot;&quot;Log attack time, median centroid [Hz] and median flux of one tone.&quot;&quot;&quot;
+    return (
+        so.log_attack_time(snd),
+        so.spectral_centroid(snd).median[0],
+        so.spectral_flux(snd).median[0],
+    )
+
+
+def sequence(tones):
+    &quot;&quot;&quot;The tones one after another, each at the same RMS, with GAP seconds before each one.
+    Returns the sound and each tone&#x27;s start time.&quot;&quot;&quot;
+    parts, starts, t = [], [], 0.0
+    for snd in tones:
+        parts += [so.silence(GAP, FS), snd.normalize(rms=0.1)]
+        starts.append(t + GAP)
+        t += GAP + snd.duration
+    return finish(so.concat(parts + [so.silence(0.2, FS)])), starts
+
+
+def show(snd, tones, starts, labels, fmin=150, fmax=8000, lower=&quot;envelope&quot;):
+    &quot;&quot;&quot;Spectrogram with the centroid track, and under it the waveform with each tone&#x27;s
+    measured attack shaded (or, with ``lower=&quot;flux&quot;``, the flux track). Returns the figure and the panels
+    the playhead follows.&quot;&quot;&quot;
+    fig, (ax_s, ax_l) = plt.subplots(
+        2, 1, figsize=(10, 5.4), sharex=True, height_ratios=[1.7, 1], layout=&quot;constrained&quot;
+    )
+    stft = so.STFT(snd, 30e-3, 5e-3)
+    keep = (stft.f &gt;= fmin) &amp; (stft.f &lt;= fmax)
+    level = stft.db[0][keep]
+    ax_s.pcolormesh(stft.t, stft.f[keep], level, vmin=level.max() - 70, vmax=level.max(), cmap=&quot;magma&quot;)
+    centroid = so.spectral_centroid(snd)
+    ax_s.plot(centroid.t, centroid.values[0], color=&quot;c&quot;, lw=1.2, label=&quot;spectral centroid&quot;)
+    ax_s.legend(loc=&quot;upper right&quot;, fontsize=8)
+    ax_s.set(
+        yscale=&quot;log&quot;,
+        ylim=(fmin, fmax),
+        ylabel=&quot;Frequency [Hz]&quot;,
+        title=&quot;Spectrogram (Hann 30 ms) and spectral centroid (power)&quot;,
+    )
+    for start, label in zip(starts, labels, strict=True):
+        ax_s.text(start + 0.02, 0.8 * fmax, label, color=&quot;w&quot;, fontsize=8, va=&quot;top&quot;)
+    if lower == &quot;flux&quot;:
+        flux = so.spectral_flux(snd)
+        ax_l.plot(flux.t, flux.values[0], color=&quot;C0&quot;)
+        ax_l.set(yscale=&quot;log&quot;, ylim=(1e-5, 1), ylabel=&quot;Flux&quot;, title=&quot;Spectral flux, spectra 100 ms apart&quot;)
+    else:
+        t = np.arange(snd.n_samples) / FS
+        ax_l.plot(t, np.abs(snd.data[:, 0]), color=&quot;0.75&quot;, lw=0.3)
+        for start, snd_tone in zip(starts, tones, strict=True):
+            begin, end = so.attack_segment(snd_tone)
+            ax_l.axvspan(start + begin, start + end, color=&quot;C1&quot;, alpha=0.35, lw=0)
+        ax_l.set(ylabel=&quot;Amplitude&quot;, title=&quot;Waveform magnitude, each measured attack shaded&quot;)
+    ax_l.set(xlim=(0, snd.duration), xlabel=&quot;Time [s]&quot;)
+    ax_l.grid(ls=&quot;:&quot;)
+    return fig, [ax_s, ax_l]</code></pre></details></div>
+</section>
+<section aria-labelledby="h-attack-time">
+<h2 id="h-attack-time">Attack time</h2>
+<p>The same tone (<span class="tex">s = 1</span>) with its partials rising together over 5, 20, 80 and 300 ms. In McAdams
+et al. (1995) the first dimension of the timbre space correlated with the logarithm of the
+attack time, which is why it is measured on a log scale: 5 to 20 ms is as large a step as 80 to
+320 ms. The cell prints each tone's true and measured attack.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">ATTACKS = [5e-3, 20e-3, 80e-3, 300e-3]
+attack_tones = [tone(attack=attack) for attack in ATTACKS]
+for attack, snd in zip(ATTACKS, attack_tones, strict=True):
+    start, end = so.attack_segment(snd)
+    lat = so.log_attack_time(snd)
+    print(
+        f&quot;attack {1000 * attack:3.0f} ms: measured {1000 * (end - start):5.1f} ms, log attack time {lat:+.2f}&quot;
+    )</code></pre></details><pre class="out">attack   5 ms: measured  16.1 ms, log attack time -1.79
+attack  20 ms: measured  24.5 ms, log attack time -1.61
+attack  80 ms: measured  87.9 ms, log attack time -1.06
+attack 300 ms: measured 240.8 ms, log attack time -0.62</pre></div>
+<p>The measure is not exact: the envelope has to be smoothed before the attack can be found, and
+the smoothing stretches short attacks and shortens long linear ones, whose last tenth the
+weakest-effort method leaves out. What matters for a timbre space is that the order and the
+steps come out right. The paper's own setting for its descriptors smooths with a 5 Hz filter,
+which measures the 5 ms attack as about 80 ms (<code>so.log_attack_time(snd, cutoff=5,
+zero_phase=False)</code>); sonore uses the 20 Hz filter the paper uses to find onsets.</p>
+
+<article class="sound" id="d-tb1" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}]">
+  <div class="about">
+    <h3>Attacks of 5, 20, 80 and 300 ms</h3>
+    <div class="desc"><p>Four tones, attacks of 5, 20, 80 and 300 ms. The first starts with a click, the second is
+still crisp, the third is soft and the last swells in like a bowed or blown note. The spectrum
+is the same throughout, and so is the centroid once each tone has started.</p></div>
+    <audio controls preload="metadata" src="audio/tb1_attacks_of_5_20_80_and_300_ms.flac"></audio>
+    <p class="file">tb1_attacks_of_5_20_80_and_300_ms.flac, 6.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tb1_attacks_of_5_20_80_and_300_ms.png" width="1000" height="540" alt="Plots of the attacks of 5, 20, 80 and 300 ms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, starts = sequence(attack_tones)
+fig, playhead = show(sound, attack_tones, starts, [f&quot;{1000 * a:.0f} ms&quot; for a in ATTACKS])</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-brightness">
+<h2 id="h-brightness">Brightness</h2>
+<p>The second dimension of most timbre spaces follows the spectral centroid: where the energy sits
+on the frequency axis. Five tones with the same attack (20 ms) and the slope of their partials
+going from <span class="tex">s = 3</span>, where the fundamental dominates, to <span class="tex">s = 0.5</span>, where the high partials are
+almost as strong. The cell prints each one's median centroid over the power spectrum (the
+default), in hertz and in multiples of the fundamental, and over the magnitude spectrum.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">SLOPES = [3.0, 2.0, 1.5, 1.0, 0.5]
+bright_tones = [tone(slope=slope) for slope in SLOPES]
+for slope, snd in zip(SLOPES, bright_tones, strict=True):
+    power = so.spectral_centroid(snd).median[0]
+    magnitude = so.spectral_centroid(snd, scale=&quot;magnitude&quot;).median[0]
+    ratio = power / F0
+    print(
+        f&quot;slope {slope:3.1f}: power centroid {power:5.0f} Hz ({ratio:3.1f} x F0),&quot;
+        f&quot; magnitude centroid {magnitude:4.0f} Hz&quot;
+    )</code></pre></details><pre class="out">slope 3.0: power centroid   317 Hz (1.0 x F0), magnitude centroid  803 Hz
+slope 2.0: power centroid   345 Hz (1.1 x F0), magnitude centroid  952 Hz
+slope 1.5: power centroid   414 Hz (1.3 x F0), magnitude centroid 1237 Hz
+slope 1.0: power centroid   701 Hz (2.3 x F0), magnitude centroid 1792 Hz
+slope 0.5: power centroid  1730 Hz (5.6 x F0), magnitude centroid 2546 Hz</pre></div>
+<p>Which spectrum the centroid is taken over matters. Peeters et al. (2011) offer both, and for
+the same tone they can differ by a factor of more than two, so a centroid means little
+without saying which. The power centroid of a steady tone is exactly the one computed from
+its partials. The magnitude centroid weights weak components more, which spreads the dull
+tones further apart, but it also counts the window's sidelobes, small magnitudes spread over
+every frequency bin up to half the sample rate. For the <span class="tex">s = 3</span> tone those outweigh the weak
+upper partials: its magnitude centroid is almost twice the 414 Hz its partials give, and would
+be lower at a lower sample rate (<code>tools/check_timbre_claims.py</code>).</p>
+
+<article class="sound" id="d-tb2" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.7}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.7}]">
+  <div class="about">
+    <h3>Five tones from dull to bright</h3>
+    <div class="desc"><p>Five tones from dull to bright: slopes 3, 2, 1.5, 1 and 0.5. The pitch stays E♭4 while the
+centroid, the cyan line, climbs from the fundamental to about 1.7 kHz. The brightest tone is
+buzzy, brighter than a sawtooth wave, whose partials fall as <span class="tex">1/n</span>.</p></div>
+    <audio controls preload="metadata" src="audio/tb2_five_tones_from_dull_to_bright.flac"></audio>
+    <p class="file">tb2_five_tones_from_dull_to_bright.flac, 7.7 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tb2_five_tones_from_dull_to_bright.png" width="1000" height="540" alt="Plots of the five tones from dull to bright sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, starts = sequence(bright_tones)
+fig, playhead = show(sound, bright_tones, starts, [f&quot;s = {s:g}&quot; for s in SLOPES])</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-spectral-flux">
+<h2 id="h-spectral-flux">Spectral flux</h2>
+<p>The third dimension in McAdams et al. (1995) correlated, more weakly, with spectral flux: how
+much the spectrum changes over the course of a tone. A steady tone (<span class="tex">s = 1</span> throughout) is
+played next to one whose slope glides from 2 to 0.5 over its second, so that it starts dull
+and ends bright at a steady pitch and level. The cell prints the median flux of each, for
+spectra 100 ms apart and, as in the paper, for successive time windows 5.8 ms apart.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">steady = tone()
+gliding = tone(slope=lambda t: 2.0 - 1.5 * t / DUR)
+flux_tones = [steady, gliding]
+for name, snd in zip([&quot;steady&quot;, &quot;gliding&quot;], flux_tones, strict=True):
+    apart = so.spectral_flux(snd).median[0]
+    hop = so.spectral_flux(snd, spacing=None).median[0]
+    print(f&quot;{name:8s} flux x 1e6, 100 ms apart: {1e6 * apart:5.0f}, one time window apart: {1e6 * hop:4.0f}&quot;)</code></pre></details><pre class="out">steady   flux x 1e6, 100 ms apart:   153, one time window apart:   91
+gliding  flux x 1e6, 100 ms apart:  3272, one time window apart:  109</pre></div>
+<p>At 100 ms the gliding tone's flux is many times the steady one's; one time window apart the
+two are close, because a spectrum that changes slowly hardly changes in 5.8 ms. That is why
+sonore measures flux 100 ms apart by default (<code>spacing=None</code> gives the paper's version). Flux
+is the least settled of the three: published timbre spaces define it in several ways, and its
+correlation with the third dimension (0.54 in McAdams et al., 1995) is weaker than the other
+two (0.94 each).</p>
+
+<article class="sound" id="d-tb3" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}]">
+  <div class="about">
+    <h3>A steady tone and a brightening one</h3>
+    <div class="desc"><p>A steady tone, then one that brightens over its second. The centroid of the second climbs
+steadily, and its flux, in the lower panel (on a logarithmic scale), stays about twenty times
+the steady tone's while it does. The spikes at the start and end of each tone are where one
+of the two spectra compared falls in the silence around it.</p></div>
+    <audio controls preload="metadata" src="audio/tb3_a_steady_tone_and_a_brightening_one.flac"></audio>
+    <p class="file">tb3_a_steady_tone_and_a_brightening_one.flac, 3.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tb3_a_steady_tone_and_a_brightening_one.png" width="1000" height="540" alt="Plots of the a steady tone and a brightening one sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, starts = sequence(flux_tones)
+fig, playhead = show(sound, flux_tones, starts, [&quot;steady&quot;, &quot;gliding slope&quot;], lower=&quot;flux&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-three-descriptors-at-once">
+<h2 id="h-three-descriptors-at-once">Three descriptors at once</h2>
+<p>Every tone of the three sections above, placed by its three numbers: log attack time across,
+centroid up, and flux as the colour. The axes are descriptors computed from the sound, not a
+timbre space built from listeners' ratings; a timbre space would also say how much each axis
+counts, and might bend or merge them. Three of the points are one tone (the 20 ms attack,
+<span class="tex">s = 1</span> and the steady tone), and the centroid axis is logarithmic.</p>
+
+<article class="still" id="d-tb4">
+  <div class="about">
+    <h3>Every tone of the page by its descriptors</h3>
+    <div class="desc"></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tb4_every_tone_of_the_page_by_its_descriptors.png" width="700" height="440" alt="Every tone of the page by its descriptors" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python"># the 20 ms attack, s = 1 and the steady tone are one tone, labelled once
+groups = [
+    (&quot;attack&quot;, attack_tones, [&quot;5 ms&quot;, &quot;&quot;, &quot;80 ms&quot;, &quot;300 ms&quot;], &quot;o&quot;),
+    (&quot;brightness&quot;, bright_tones, [&quot;s = 3&quot;, &quot;s = 2&quot;, &quot;s = 1.5&quot;, &quot;20 ms, s = 1, steady&quot;, &quot;s = 0.5&quot;], &quot;s&quot;),
+    (&quot;flux&quot;, flux_tones, [&quot;&quot;, &quot;gliding&quot;], &quot;^&quot;),
+]
+points = [
+    (name, label, marker, *describe(snd))
+    for name, tones, labels, marker in groups
+    for snd, label in zip(tones, labels, strict=True)
+]
+fluxes = np.array([p[5] for p in points])
+fig, ax = plt.subplots(figsize=(7, 4.4), layout=&quot;constrained&quot;)
+norm = plt.matplotlib.colors.LogNorm(fluxes.min(), fluxes.max())
+for _, label, marker, lat, centroid, flux in points:
+    ax.scatter(lat, centroid, c=[flux], cmap=&quot;viridis&quot;, norm=norm, marker=marker, s=60, edgecolor=&quot;k&quot;, lw=0.5)
+    if label:
+        ax.annotate(label, (lat, centroid), textcoords=&quot;offset points&quot;, xytext=(6, 3), fontsize=8)
+for name, _, _, marker in groups:
+    ax.scatter([], [], marker=marker, color=&quot;0.6&quot;, edgecolor=&quot;k&quot;, lw=0.5, label=name)
+fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=&quot;viridis&quot;), ax=ax, label=&quot;Spectral flux&quot;)
+ax.legend(title=&quot;Section&quot;, loc=&quot;lower right&quot;, fontsize=8)
+ax.set(
+    xlabel=&quot;Log attack time [log10 s]&quot;,
+    ylabel=&quot;Spectral centroid [Hz]&quot;,
+    title=&quot;Descriptors of every tone on the page&quot;,
+)
+ax.set_yscale(&quot;log&quot;)
+ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-onsets">
+<h2 id="h-onsets">Onsets</h2>
+<p>Much of what identifies an instrument is in the first moments of a note. Siedenburg (2019)
+played listeners 64 ms excerpts of ten instruments and asked them to name the instrument
+(chance was 10%). Excerpts from the onset were named 77% of the time, the same excerpts with
+the fast transient at the very start removed 71%, and excerpts from the middle of the tone
+52%. So the onset matters, but mostly through the way the partials build up; the transient
+itself (a hammer's knock, a pipe's chiff) counted for less.</p>
+<p>His sounds were recordings. Three synthetic versions of the idea, on one tone (<span class="tex">s = 1</span>): all
+partials starting together over 20 ms; the partials building up at different rates, from
+20 ms for the fundamental to 200 ms for the 20th harmonic, as brass instruments do (an
+illustration, not a measured brass onset); and the first tone with a 15 ms burst of noise at
+its start, a stand-in for a transient. The cell prints the three descriptors of each, and the
+centroid over the first 100 ms alone.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">together = tone()
+staggered = tone(attack=lambda n: 20e-3 + 180e-3 * (n - 1) / 19)
+rng = np.random.default_rng(1)
+burst_t = np.arange(int(15e-3 * FS)) / FS
+burst = rng.standard_normal(len(burst_t)) * np.exp(-burst_t / 4e-3)
+burst *= 2 * together.rms / np.sqrt(np.mean(burst**2))  # an estimate of a noticeable level
+with_burst = so.Sound(together.data[:, 0] + np.pad(burst, (0, together.n_samples - len(burst))), FS)
+onset_tones = [together, staggered, with_burst]
+onset_labels = [&quot;together&quot;, &quot;staggered&quot;, &quot;with a burst&quot;]
+for name, snd in zip(onset_labels, onset_tones, strict=True):
+    lat, centroid, flux = describe(snd)
+    early = so.spectral_centroid(so.Sound(snd.data[: int(0.1 * FS)], FS)).median[0]
+    print(
+        f&quot;{name:13s} log attack {lat:+.2f}, centroid {centroid:5.0f} Hz (first 100 ms {early:5.0f} Hz),&quot;
+        f&quot; flux {1e6 * flux:4.0f} x 1e-6&quot;
+    )</code></pre></details><pre class="out">together      log attack -1.61, centroid   701 Hz (first 100 ms   701 Hz), flux  153 x 1e-6
+staggered     log attack -1.59, centroid   701 Hz (first 100 ms   530 Hz), flux  240 x 1e-6
+with a burst  log attack -2.72, centroid   701 Hz (first 100 ms   701 Hz), flux  153 x 1e-6</pre></div>
+
+<article class="sound" id="d-tb5" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}]">
+  <div class="about">
+    <h3>Three onsets of one tone</h3>
+    <div class="desc"><p>The same tone three times: partials starting together, the high partials arriving late, and
+a burst of noise added at the start. The second swells into brightness, which shows in the
+centroid line over its first fifth of a second; the third has a sharp tick at the start and
+is otherwise the first tone.</p></div>
+    <audio controls preload="metadata" src="audio/tb5_three_onsets_of_one_tone.flac"></audio>
+    <p class="file">tb5_three_onsets_of_one_tone.flac, 4.7 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tb5_three_onsets_of_one_tone.png" width="1000" height="540" alt="Plots of the three onsets of one tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, starts = sequence(onset_tones)
+fig, playhead = show(sound, onset_tones, starts, onset_labels)</code></pre></details>
+</article>
+<p>Summaries over a whole tone hide most of what happens in its first tenth of a second: the
+median centroids of the three are the same, while the centroid of the first 100 ms is lower
+for the staggered onset. The burst does the opposite to the log attack time: its peak is
+higher than the tone's, so the weakest-effort method finds the burst itself and measures an
+attack of a few milliseconds. A descriptor can weigh a transient far more than listeners
+did in Siedenburg's study, where removing it cost 6 points.</p>
+</section>
 <section aria-labelledby="h-vowels-are-timbres">
 <h2 id="h-vowels-are-timbres">Vowels are timbres</h2>
-<p>Two vowels said on the same pitch and at the same level differ in their spectral envelopes:
+<p>Two vowels sung on the same pitch and at the same level differ in their spectral envelopes:
 the formants, the resonances of the vocal tract, sit at different frequencies. In that sense
 different vowels are different timbres of one voice, and much of what the speech pages show
-applies here. <a href="formants.html">Formant synthesis</a> builds vowels from a source and a few
-resonances and changes one formant at a time, and <a href="cepstrum.html">Cepstral analysis</a> separates
-a voice's pitch from its spectral envelope, the part that carries the vowel.</p>
-</section>
-<section aria-labelledby="h-to-come">
-<h2 id="h-to-come">To come</h2>
-<ul><li><strong>Timbre spaces.</strong> Listeners rate how different pairs of sounds are, and multidimensional scaling places the sounds in a space whose axes can then be named. For 18 synthesized instrument-like tones, McAdams et al. (1995) found three shared dimensions, which correlated with the logarithm of the attack time, the spectral centroid (brightness) and the spectral flux (how much the spectrum changes over the tone). The page will play synthetic tones that move along one of those dimensions at a time.</li><li><strong>Onsets.</strong> Much of what identifies an instrument is in the first moments of a note. In Siedenburg (2019), listeners named ten instruments from 64 ms excerpts 77% of the time when the excerpt came from the onset, 71% when the onset's fast transient was removed, and 52% when it came from the middle of the tone (chance was 10%): the onset matters mostly through the way the partials build up, and the transient itself less. The page will play the same tone with its partials starting together, building up at different rates, and with a burst added.</li></ul>
+applies here. Three vowels from <code>so.klatt_synthesize</code>, with Peterson and Barney's (1952)
+female formants for "heed", "hod" and "who'd", sung on E♭4 like the tones above, with the
+same envelope and RMS. <a href="formants.html">Formant synthesis</a> builds vowels from a source and a
+few resonances, and <a href="cepstrum.html">Cepstral analysis</a> separates a voice's pitch from its
+spectral envelope, the part that carries the vowel.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {&quot;heed&quot;: (310, 2790, 3310), &quot;hod&quot;: (850, 1220, 2810), &quot;who&#x27;d&quot;: (370, 950, 2670)}
+sung = envelope(np.arange(int(DUR * FS)) / FS, 60e-3)
+vowel_tones = []
+for f1, f2, f3 in VOWELS.values():
+    voice = so.klatt_synthesize(DUR, FS, F0=F0, F1=f1, F2=f2, F3=f3, F4=4100, F5=4900)
+    vowel_tones.append(voice * sung[:, None])
+for word, snd in zip(VOWELS, vowel_tones, strict=True):
+    print(f&quot;{word:6s} centroid {so.spectral_centroid(snd).median[0]:5.0f} Hz&quot;)</code></pre></details><pre class="out">heed   centroid   334 Hz
+hod    centroid  1009 Hz
+who&#x27;d  centroid   349 Hz</pre></div>
+
+<article class="sound" id="d-tb6" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}]">
+  <div class="about">
+    <h3>Three vowels on one note</h3>
+    <div class="desc"><p>"Heed", "hod" and "who'd" on one note. The harmonics are the same in all three, 311 Hz apart;
+only their strengths change. The centroid of "hod", whose first formant is high, is about
+three times that of the other two.</p></div>
+    <audio controls preload="metadata" src="audio/tb6_three_vowels_on_one_note.flac"></audio>
+    <p class="file">tb6_three_vowels_on_one_note.flac, 4.7 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tb6_three_vowels_on_one_note.png" width="1000" height="540" alt="Plots of the three vowels on one note sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, starts = sequence(vowel_tones)
+fig, playhead = show(sound, vowel_tones, starts, list(VOWELS))</code></pre></details>
+</article>
+<p>A centroid alone cannot tell vowels apart: "heed" and "who'd" sound nothing alike, yet their
+centroids are within a few percent of each other. Both have their first formant near the
+fundamental, which then dominates the power spectrum, and they differ in their second formant
+(2790 against 950 Hz), where the harmonics are much weaker. The formants, or a spectral
+envelope, describe vowels better than any one number, and the same is true of instruments.</p>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>McAdams, Winsberg, Donnadieu, De Soete &amp; Krimphoff (1995). Perceptual scaling of synthesized musical timbres: common dimensions, specificities, and latent subject classes. <em>Psychol. Res.</em> 58, 177–192. <a href="https://doi.org/10.1007/BF00419633">doi:10.1007/BF00419633</a>.</li><li>Siedenburg (2019). Specifying the perceptual relevance of onset transients for musical instrument identification. <em>J. Acoust. Soc. Am.</em> 145(2), 1078–1087. <a href="https://doi.org/10.1121/1.5091778">doi:10.1121/1.5091778</a>.</li></ul>
+<ul><li>Grey (1977). Multidimensional perceptual scaling of musical timbres. <em>J. Acoust. Soc. Am.</em> 61(5), 1270–1277. <a href="https://doi.org/10.1121/1.381428">doi:10.1121/1.381428</a>.</li><li>McAdams, Winsberg, Donnadieu, De Soete &amp; Krimphoff (1995). Perceptual scaling of synthesized musical timbres: common dimensions, specificities, and latent subject classes. <em>Psychol. Res.</em> 58, 177–192. <a href="https://doi.org/10.1007/BF00419633">doi:10.1007/BF00419633</a>.</li><li>Peeters, Giordano, Susini, Misdariis &amp; McAdams (2011). The Timbre Toolbox: extracting audio descriptors from musical signals. <em>J. Acoust. Soc. Am.</em> 130(5), 2902–2916. <a href="https://doi.org/10.1121/1.3642604">doi:10.1121/1.3642604</a>.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels">ASA</a>.</li><li>Siedenburg (2019). Specifying the perceptual relevance of onset transients for musical instrument identification. <em>J. Acoust. Soc. Am.</em> 145(2), 1078–1087. <a href="https://doi.org/10.1121/1.5091778">doi:10.1121/1.5091778</a>.</li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/music/timbre.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/music/timbre.py</code>, or a cell at a time.</footer>
 </main>
