@@ -27,6 +27,9 @@ meant in the same spirit.
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
 playable next to its plots, with a playhead that follows the sound.
 
+**[▶ Try it in your browser](https://choyun1.github.io/sonore/)**: one editable cell that runs sonore
+on the page, through Pyodide, with nothing to install.
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
 A short tutorial you can run in the browser, with nothing to install: sounds, classic and
 complex stimuli, sound textures, voices, and spatial hearing with reverberation and movement.
@@ -122,7 +125,8 @@ Requires Python ≥ 3.10, numpy, scipy ≥ 1.12, matplotlib, and soundfile.
 
 To try it without installing anything, open the [starter
 notebook](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
-on Google Colab: its first cell installs sonore from PyPI.
+on Google Colab: its first cell installs sonore from PyPI. For a quicker taste, the
+[landing page](https://choyun1.github.io/sonore/) runs one cell in the browser itself.
 
 ## Gallery
 
