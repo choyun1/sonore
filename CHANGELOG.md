@@ -11,8 +11,13 @@ version (0.x.y) only fixes bugs.
   and `so.attack_segment` (the weakest-effort attack on an energy envelope
   low-passed at 20 Hz, forward and backward), `so.spectral_centroid` and
   `so.spectral_flux` (spectra 100 ms apart by default), the last two returning
-  a `so.DescriptorTrack` with `.median` and `.iqr`. Design and measurements in
-  `docs/design/music/timbre-page.md`.
+  a `so.DescriptorTrack` with `.median` and `.iqr`. The centroid is of the power
+  spectrum by default (`scale="magnitude"` for the other), changed from
+  magnitude before release: the magnitude centroid of a dull tone is dominated
+  by the window's sidelobes and changes with the sample rate (n^-3 at E-flat 4:
+  810 Hz at 44.1 kHz, 592 Hz at 22.05 kHz, against 414 Hz from the partials).
+  Design and measurements in `docs/design/music/timbre-page.md`; the Timbre
+  gallery page uses all three.
 - `so.ratio_to_cents`, `so.cents_to_ratio` and `so.note_to_freq(note, a4=440.0)`
   (equal-tempered frequency of a name like "C#3" or "Bb2"), beside `so.cents_scale`,
   which now uses the same cents formula. Design in `docs/design/music/music-pages.md`.

@@ -7,7 +7,8 @@ to the Timbre Toolbox repository. This note fixes how the three descriptors are 
 what the page plays. It adds no code. The decisions at the end come first; they extend D9 and
 D10 of `music-pages.md`.
 
-Status: Cho merged this note on 2026-10-05 without comment, taken as accepting the recommended D-T2 to D-T5. The descriptors are in `views/descriptors.py`.
+Status: Cho merged this note on 2026-10-05 without comment, taken as accepting the recommended D-T2 to D-T5. The descriptors are in `views/descriptors.py`. While building the page, finding 2 turned out larger than first measured, and Cho changed D-T3 on 2026-10-05: the centroid now defaults to the power spectrum (see D-T3
+for why).
 
 ## How the claims are verified
 
@@ -79,10 +80,16 @@ efforts [source].
    sustain is 1812 Hz, 4.7% higher, because the window's sidelobes spread small magnitudes
    over every bin up to Nyquist, and a magnitude centroid weights all of them. The power
    centroid of the same tone is 701 Hz. The two scales differ by a factor of 2.5 here, so the
-   page must say which one it prints (D-T3).
+   page must say which one it prints (D-T3). For a duller tone the floor dominates: with
+   amplitudes n^−3 the magnitude centroid is 810 Hz at 44.1 kHz and 592 Hz at 22.05 kHz,
+   against 414 Hz from the partials, so it also depends on the sample rate. The power
+   centroid matches the partials within 0.1 Hz for both slopes at both rates (317 and 701 Hz)
+   [check T-C2].
 3. **Brightness steps [check T-C3].** Amplitudes n^−s over 20 harmonics put the magnitude
-   centroid at 8.1, 5.6, 3.5, 2.3 and 1.3 times F0 for s = 0.5, 1, 1.5, 2 and 3. Those five
-   tones make the brightness section.
+   centroid, computed from the partials, at 8.1, 5.6, 3.5, 2.3 and 1.3 times F0 for s = 0.5,
+   1, 1.5, 2 and 3. Those five tones make the brightness section. The power centroid of slope
+   s equals the magnitude centroid of slope 2s, so the same five tones give 5.6, 2.3, 1.3, 1.1
+   and 1.0 times F0 [proof: squaring n^−s gives n^−2s].
 4. **Flux at one hop barely moves [check T-C4].** The median variation between frames one
    hop (5.8 ms) apart is 74 × 10⁻⁶ for a steady tone. For a tone whose spectral slope glides
    from 2 to 0.5 over a second (centroid 2.8 to 8.8 times F0), it is 94 × 10⁻⁶. Between
@@ -120,8 +127,20 @@ matching, because sonore has no loudness model.
   paper's text gives it. `cutoff` stays a parameter, so `cutoff=5, zero_phase=False`
   reproduces the paper's descriptor setting. Alternative: the 5 Hz default, which T-C1 shows
   cannot tell 5 ms from 20 ms.
-- **D-T3. Magnitude or power.** Recommended: the magnitude spectrum by default (the paper's
-  STFTmag representation), with `scale="power"` available. Docstrings and the page print which one was used.
+- **D-T3. Magnitude or power (changed by Cho, 2026-10-05: power).** The first
+  recommendation, taken as accepted with the merge of this note, was the magnitude spectrum
+  by default (the paper's STFTmag representation), and #130 shipped it. Building the page then
+  showed that finding 2 was much larger than T-C2 had first measured on the 1/n tone alone:
+  the magnitude centroid of a dull tone is dominated by the window's sidelobe floor (810 Hz
+  against 414 Hz from the partials for n^−3) and changes with the sample rate (592 Hz at
+  22.05 kHz). A brightness measure that doubles for dull tones and depends on the sample rate
+  would mislead on a page about brightness. Cho chose the power spectrum as the default, which
+  matches the partials of a steady harmonic tone at any sample rate; `scale="magnitude"` stays
+  available for comparison with work that uses it. The cost: dull tones crowd together (slopes
+  3 and 2 differ by only 9% in power centroid), and power centroids are lower than the
+  magnitude centroids most published values use, so comparisons must say which scale. The
+  docstring states the default and the measured numbers, and the page prints both scales for
+  the brightness tones.
 - **D-T4. Flux spacing.** Recommended: `spectral_flux(sound, spacing=0.1)`, the variation
   between spectra a set time apart, defaulting to 100 ms, with `spacing=None` meaning one hop,
   as in the paper. The docstring states the T-C4 result. Alternative: one hop only, as
@@ -135,7 +154,7 @@ matching, because sonore has no loudness model.
 ## References
 
 - Grey, J. M. (1977). Multidimensional perceptual scaling of musical timbres. *J. Acoust.
-  Soc. Am.* 61(5), 1270–1277. doi:10.1121/1.381428 (DOI from memory, not shown in the PDF). Read (PDF from Cho): abstract, stimuli,
+  Soc. Am.* 61(5), 1270–1277. doi:10.1121/1.381428 (not shown in the PDF; confirmed by Cho 2026-10-05). Read (PDF from Cho): abstract, stimuli,
   scaling results.
 - Krimphoff, J., McAdams, S., & Winsberg, S. (1994). Caractérisation du timbre des sons
   complexes. II. Analyses acoustiques et quantification psychophysique. *J. Phys. IV* 4,

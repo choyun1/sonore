@@ -686,7 +686,7 @@ TOPICS = [
         "Music",
         "music",
         [
-            ("timbre.html", "what tells two sounds apart at the same pitch and loudness (a placeholder)."),
+            ("timbre.html", "attack time, brightness and spectral flux, heard and measured."),
             (
                 "temperament.html",
                 "just intonation, equal temperament and others, heard and drawn as Lissajous figures.",
