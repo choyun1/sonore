@@ -139,17 +139,21 @@ def _spectra(sound: Sound, win_dur: float, hop_dur: float, scale: str) -> tuple[
 
 
 def spectral_centroid(
-    sound: Sound, scale: str = "magnitude", win_dur: float = WIN_DUR, hop_dur: float = HOP_DUR
+    sound: Sound, scale: str = "power", win_dur: float = WIN_DUR, hop_dur: float = HOP_DUR
 ) -> DescriptorTrack:
     """The centre of gravity of the spectrum in each time window,
     ``sum(f_k a_k) / sum(a_k)`` (Peeters et al., 2011, eq. 7), on a Hamming
     STFT of 23.2 ms windows every 5.8 ms by default.
 
-    ``scale`` is ``"magnitude"`` (the default, the paper's STFTmag) or
-    ``"power"``; the two differ a lot (2.5 times for a tone with harmonics
-    falling as 1/n), so say which one you report. The magnitude centroid also
-    counts the window's sidelobes in every bin up to Nyquist, which puts it a
-    few percent above the value computed from the partials alone.
+    ``scale`` is ``"power"`` (the default) or ``"magnitude"``, the two
+    spectra the paper offers; they differ a lot (2.5 times for a tone with
+    harmonics falling as 1/n), so say which one you report. The power
+    centroid of a steady harmonic tone matches the one computed from its
+    partials. The magnitude centroid also counts the window's sidelobes in
+    every bin up to Nyquist, which for a dull tone can outweigh the weak
+    high partials: for harmonics falling as n^-3 at E-flat 4 it measures
+    810 Hz at 44.1 kHz and 592 Hz at 22.05 kHz, against 414 Hz from the
+    partials (``tools/check_timbre_claims.py``).
     """
     t, freqs, spectra = _spectra(sound, win_dur, hop_dur, scale)
     totals = spectra.sum(-1)

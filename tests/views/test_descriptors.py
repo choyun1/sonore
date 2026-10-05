@@ -45,14 +45,25 @@ def test_power_centroid_matches_the_partials():
     """For a steady harmonic tone the power centroid is sum(n f0 a_n^2) / sum(a_n^2)."""
     amplitudes = np.arange(1, 21) ** -1.0
     expected = (np.arange(1, 21) * F0 * amplitudes**2).sum() / (amplitudes**2).sum()
-    measured = so.spectral_centroid(tone(), scale="power").median[0]
+    measured = so.spectral_centroid(tone()).median[0]
     assert measured == pytest.approx(expected, rel=0.02)
+
+
+def test_power_centroid_of_a_dull_tone_ignores_the_sample_rate():
+    """The window's sidelobes lift a dull tone's magnitude centroid, more at a higher sample
+    rate; its power centroid stays on the partials."""
+    amplitudes = np.arange(1, 21) ** -3.0
+    expected = (np.arange(1, 21) * F0 * amplitudes**2).sum() / (amplitudes**2).sum()
+    dull = tone(slope=3)
+    assert so.spectral_centroid(dull).median[0] == pytest.approx(expected, rel=0.01)
+    assert so.spectral_centroid(dull.resample(22050)).median[0] == pytest.approx(expected, rel=0.01)
+    assert so.spectral_centroid(dull, scale="magnitude").median[0] > 1.5 * expected
 
 
 def test_magnitude_centroid_sits_a_little_above_the_partials():
     amplitudes = np.arange(1, 21) ** -1.0
     expected = (np.arange(1, 21) * F0 * amplitudes).sum() / amplitudes.sum()
-    measured = so.spectral_centroid(tone()).median[0]
+    measured = so.spectral_centroid(tone(), scale="magnitude").median[0]
     assert expected < measured < 1.08 * expected
 
 

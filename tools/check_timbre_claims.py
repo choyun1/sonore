@@ -95,6 +95,28 @@ report("T-C2", "STFT median centroid over the sustain [Hz]", np.median(centroids
 power_analytic = (np.arange(1, 21) * F0 * SAWTOOTH_LIKE**2).sum() / (SAWTOOTH_LIKE**2).sum()
 report("T-C2", "same tone, power-spectrum centroid instead [Hz]", power_analytic)
 
+# The sidelobe floor matters more the duller the tone and the higher the sample rate: for
+# amplitudes n^-3 the magnitude centroid nearly doubles, while the power centroid stays put.
+for rate in (44100, 22050):
+    t_rate = np.arange(rate) / rate
+    n_window_rate, n_hop_rate = round(0.0232 * rate), round(0.0058 * rate)
+    freqs_rate = np.fft.rfftfreq(n_window_rate, 1 / rate)
+    for slope in (3.0, 1.0):
+        amplitudes = np.arange(1, 21) ** -slope
+        partials_rate = np.cos(2 * np.pi * F0 * np.arange(1, 21)[:, None] * t_rate)
+        steady_tone = (amplitudes[:, None] * partials_rate).sum(0)
+        frames_rate = np.lib.stride_tricks.sliding_window_view(steady_tone, n_window_rate)[::n_hop_rate]
+        spectrum = np.abs(np.fft.rfft(frames_rate * np.hamming(n_window_rate), axis=1))
+        for name, weights, analytic_weights in (
+            ("magnitude", spectrum, amplitudes),
+            ("power", spectrum**2, amplitudes**2),
+        ):
+            measured = np.median((weights * freqs_rate).sum(1) / weights.sum(1))
+            analytic_value = (np.arange(1, 21) * F0 * analytic_weights).sum() / analytic_weights.sum()
+            label = f"n^-{slope:g} at {rate} Hz, {name} centroid: STFT [Hz]"
+            report("T-C2", label, measured)
+            report("T-C2", "  from the partials alone [Hz]", analytic_value)
+
 # T-C3: brightness steps for the page. Amplitudes n^(-slope) over 20 harmonics; the magnitude
 # centroid in multiples of F0 for a few slopes.
 for slope in (0.5, 1.0, 1.5, 2.0, 3.0):
