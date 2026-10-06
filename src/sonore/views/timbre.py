@@ -36,7 +36,10 @@ class DescriptorTrack(View):
     standard deviation meaningless; both skip NaN.
     """
 
-    discards = "DescriptorTrack keeps one number per time window."
+    discards = (
+        "DescriptorTrack keeps one number per time window: it discards the rest of the spectrum or "
+        "envelope, so many sounds share one track."
+    )
 
     t: np.ndarray
     values: np.ndarray
@@ -70,9 +73,15 @@ class DescriptorTrack(View):
 def _energy_envelope(sound: Sound, channel: int, cutoff: float, zero_phase: bool) -> np.ndarray:
     """Peeters et al. (2011) II B 1: the amplitude of the analytic signal,
     low-passed by a third-order Butterworth filter at ``cutoff`` Hz, forward
-    and backward when ``zero_phase``."""
+    and backward when ``zero_phase``.
+
+    The Hilbert transform works on the FFT, so it treats the sound as one
+    period of a loop: a sound that ends loud would wrap round and raise the
+    envelope at its start. Zero-padding to twice the length first stops
+    that."""
     b, a = butter(3, cutoff / (sound.fs / 2))
-    amplitude = np.abs(hilbert(sound.data[:, channel]))
+    samples = sound.data[:, channel]
+    amplitude = np.abs(hilbert(samples, N=2 * len(samples)))[: len(samples)]
     return filtfilt(b, a, amplitude) if zero_phase else lfilter(b, a, amplitude)
 
 
@@ -86,8 +95,11 @@ def attack_segment(
     a third-order Butterworth filter at ``cutoff`` Hz) is cut at 0.1, 0.2,
     ..., 1 times its maximum, and the "efforts" are the times it takes to
     climb from one level to the next. The attack starts within the first
-    effort shorter than three times the mean effort and ends within the last
+    effort at most three times the mean effort and ends within the last
     one, at the envelope's minimum and maximum inside those two efforts.
+    It measures one channel, ``channel``, where the spectral descriptors
+    measure every channel. The envelope filter sets how short an attack it
+    can resolve, as the next paragraph measures.
 
     The paper computes its descriptors with a 5 Hz filter applied once
     (``cutoff=5, zero_phase=False``), which measures a 5 ms attack as

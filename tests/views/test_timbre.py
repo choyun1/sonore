@@ -132,3 +132,81 @@ def test_track_plot_draws_one_channel_against_time():
     np.testing.assert_array_equal(line.get_ydata(), track.values[0])
     assert ax.get_ylabel() == "spectral centroid [Hz]" and ax.get_xlabel() == "Time [s]"
     assert so.spectral_flux(tone()).plot().get_ylabel() == "spectral flux"
+
+
+def test_attack_of_a_sound_that_ends_loud():
+    """Silence, a 10 ms rise, then a tone to the very end: the end must not wrap round to the start."""
+    t = np.arange(FS) / FS
+    envelope = np.interp(t, [0, 0.5, 0.51, 1.0], [0, 0, 1, 1])
+    start, end = so.attack_segment(so.Sound(envelope * np.sin(2 * np.pi * F0 * t), FS))
+    assert 0.45 < start < 0.51 and end < 0.55
+
+
+def _shaped_sine(times, levels, f_carrier=2000.0):
+    """A sine whose amplitude follows the piecewise-linear (times, levels), so the envelope is known."""
+    t = np.arange(FS) / FS
+    return so.Sound(np.interp(t, times, levels) * np.sin(2 * np.pi * f_carrier * t), FS)
+
+
+def test_attack_follows_the_weakest_effort_rule():
+    """A first effort of 38 ms against a mean of 15 ms is weak (at most three times the mean) but
+    would not be at twice; the attack starts at the envelope's dip inside it, 125 ms, not at the
+    0.1 crossing (108 ms) or the 0.2 crossing (146 ms), and ends at the peak, 242 ms, not at the
+    0.9 crossing (230 ms)."""
+    rise = [0.146 + 0.012 * step for step in range(1, 9)]
+    sound = _shaped_sine(
+        [0, 0.1, 0.110, 0.125, 0.146, *rise, 0.35, 0.9, 1.0],
+        [0, 0, 0.13, 0.05, 0.2, *(0.2 + 0.1 * np.arange(1, 9)), 0.8, 0.8, 0],
+    )
+    start, end = so.attack_segment(sound, cutoff=200)
+    assert start == pytest.approx(0.125, abs=0.002)
+    assert end == pytest.approx(0.242, abs=0.002)
+
+
+def test_attack_skips_a_slow_lead_in():
+    """A 400 ms swell to 15% before a 10 ms rise: the first effort is far above three times the
+    mean, so the attack starts after it, not at the 0.1 crossing near 270 ms."""
+    t = np.arange(FS) / FS
+    envelope = np.interp(t, [0, 0.4, 0.41, 0.95, 1.0], [0, 0.15, 1, 1, 0])
+    start, end = so.attack_segment(so.Sound(envelope * np.sin(2 * np.pi * F0 * t), FS))
+    assert 0.38 < start < 0.41 and end < 0.45
+
+
+def test_attack_time_is_at_least_one_sample():
+    impulse = np.zeros(FS)
+    impulse[0] = 1.0
+    assert so.log_attack_time(so.Sound(impulse, FS)) == pytest.approx(np.log10(1 / FS))
+
+
+def test_envelope_is_a_third_order_butterworth_of_the_padded_hilbert_amplitude():
+    from scipy.signal import butter, filtfilt, hilbert
+
+    from sonore.views.timbre import _energy_envelope
+
+    sound = tone(0.05, duration=0.3)
+    samples = sound.data[:, 0]
+    b, a = butter(3, 20 / (FS / 2))
+    expected = filtfilt(b, a, np.abs(hilbert(samples, N=2 * len(samples)))[: len(samples)])
+    np.testing.assert_allclose(_energy_envelope(sound, 0, 20.0, True), expected)
+
+
+def test_track_summaries_are_median_and_interquartile_range():
+    track = so.spectral_flux(tone(slope=1.5))
+    np.testing.assert_allclose(track.median, np.nanmedian(track.values, axis=1))
+    upper, lower = np.nanpercentile(track.values, [75, 25], axis=1)
+    np.testing.assert_allclose(track.iqr, upper - lower)
+    assert track.median[0] != pytest.approx(np.nanmean(track.values))
+
+
+def test_track_times_are_window_centres():
+    centroid = so.spectral_centroid(tone())
+    n_window, n_hop = round(0.0232 * FS), round(0.0058 * FS)
+    assert centroid.t[0] == pytest.approx(n_window / 2 / FS)
+    assert np.diff(centroid.t)[0] == pytest.approx(n_hop / FS)
+    # the paper's flux, one hop apart, starts one window later
+    assert so.spectral_flux(tone(), spacing=None).t[0] == pytest.approx(centroid.t[1])
+
+
+def test_flux_needs_two_windows_spacing_apart():
+    with pytest.raises(ValueError, match="too short"):
+        so.spectral_flux(so.Sound(np.ones(round(0.05 * FS)), FS))
