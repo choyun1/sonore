@@ -619,6 +619,9 @@ fig, playhead = show(sound, "Rd from 0.6 to 2.4, with aspiration rising", [730, 
 #   envelope instead.
 # - **Rules.** Text-to-speech systems drive formant synthesizers from phonetic rules, which
 #   generate the tracks from a transcription. Here every track is set by hand.
+# - **Drawing the tracks.** Every track here is written in code. [sonore-sketch](https://choyun1.github.io/sonore-sketch/),
+#   a separate browser app built on sonore, draws formant, $F_0$, voicing and bandwidth tracks
+#   with a mouse and plays what the synthesizer makes of them.
 
 # %% [markdown]
 # ## References
