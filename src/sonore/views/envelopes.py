@@ -167,46 +167,54 @@ class Envelope(View):
         return _upsample_to(self._data, self.fs, len(sound), sound.fs)
 
     def _other(self, other):
-        if isinstance(other, Envelope):
-            if other.fs != self.fs or len(other) != len(self):
-                raise ValueError("envelopes must share fs and length")
-            return other._data
-        if isinstance(other, numbers.Real) and not isinstance(other, bool):
-            return float(other)
-        return NotImplemented
+        match other:
+            case Envelope():
+                if other.fs != self.fs or len(other) != len(self):
+                    raise ValueError("envelopes must share fs and length")
+                return other._data
+            case bool():
+                return NotImplemented
+            case numbers.Real():
+                return float(other)
+            case _:
+                return NotImplemented
 
     def __mul__(self, other):
         from sonore.core.sound import Sound
 
-        if isinstance(other, Sound):
-            return Sound(other.data * self._values_for(other), other.fs)
-        other_values = self._other(other)
-        return (
-            NotImplemented if other_values is NotImplemented else Envelope(self._data * other_values, self.fs)
-        )
+        match other:
+            case Sound():
+                return Sound(other.data * self._values_for(other), other.fs)
+            case _:
+                other_values = self._other(other)
+                if other_values is NotImplemented:
+                    return NotImplemented
+                return Envelope(self._data * other_values, self.fs)
 
     __rmul__ = __mul__
 
     def __truediv__(self, other):
         other_values = self._other(other)
-        return (
-            NotImplemented if other_values is NotImplemented else Envelope(self._data / other_values, self.fs)
-        )
+        if other_values is NotImplemented:
+            return NotImplemented
+        return Envelope(self._data / other_values, self.fs)
 
     def __rtruediv__(self, other):
         from sonore.core.sound import Sound
 
-        if isinstance(other, Sound):
-            env_values = self._values_for(other)
-            floor = 1e-12 * (np.max(env_values) or 1.0)
-            return Sound(other.data / np.maximum(env_values, floor), other.fs)
-        return NotImplemented
+        match other:
+            case Sound():
+                env_values = self._values_for(other)
+                floor = 1e-12 * (np.max(env_values) or 1.0)
+                return Sound(other.data / np.maximum(env_values, floor), other.fs)
+            case _:
+                return NotImplemented
 
     def __add__(self, other):
         other_values = self._other(other)
-        return (
-            NotImplemented if other_values is NotImplemented else Envelope(self._data + other_values, self.fs)
-        )
+        if other_values is NotImplemented:
+            return NotImplemented
+        return Envelope(self._data + other_values, self.fs)
 
     __radd__ = __add__
 
@@ -331,33 +339,35 @@ class Envelopes(_PaddedBands, View):
         return on_grid
 
     def __mul__(self, other):
-        from sonore.frames.filterbank import Subbands
-
-        if isinstance(other, Subbands):
-            if len(other) != len(self):
-                raise ValueError(f"band counts differ ({len(self)} vs {len(other)})")
-            _check_duration(self.n_samples, self.fs, other.n_samples, other.fs)
-            pad = max(other.pad, int(round(self.pad * other.fs / self.fs)))
-            extra = pad - other.pad
-            bands = np.pad(other._full, ((extra, extra), (0, 0), (0, 0))) if extra else other._full
-            env_on_grid = self._on_grid(other.fs, other.n_samples, pad)
-            return Subbands(bands * env_on_grid, other.fs, other.filterbank, pad=pad)
-        if isinstance(other, Envelopes):
-            if other.fs != self.fs or other.n_samples != self.n_samples or len(other) != len(self):
-                raise ValueError("Envelopes must share fs, length and band count")
-            pad = max(self.pad, other.pad)
-            own_values = self._on_grid(self.fs, self.n_samples, pad)
-            other_values = other._on_grid(self.fs, self.n_samples, pad)
-            return self._new(own_values * other_values, pad=pad)
-        if isinstance(other, Envelope):
-            if other.fs != self.fs or len(other) != self.n_samples:
-                raise ValueError("Envelope must share fs and length")
-            gain = np.zeros((self._full.shape[0], 1, other.data.shape[1]))
-            gain[self.pad : self.pad + self.n_samples, 0, :] = other.data
-            return self._new(self._full * gain)
-        if isinstance(other, numbers.Real) and not isinstance(other, bool):
-            return self._new(self._full * float(other))
-        return NotImplemented
+        match other:
+            case Subbands():
+                if len(other) != len(self):
+                    raise ValueError(f"band counts differ ({len(self)} vs {len(other)})")
+                _check_duration(self.n_samples, self.fs, other.n_samples, other.fs)
+                pad = max(other.pad, int(round(self.pad * other.fs / self.fs)))
+                extra = pad - other.pad
+                bands = np.pad(other._full, ((extra, extra), (0, 0), (0, 0))) if extra else other._full
+                env_on_grid = self._on_grid(other.fs, other.n_samples, pad)
+                return Subbands(bands * env_on_grid, other.fs, other.filterbank, pad=pad)
+            case Envelopes():
+                if other.fs != self.fs or other.n_samples != self.n_samples or len(other) != len(self):
+                    raise ValueError("Envelopes must share fs, length and band count")
+                pad = max(self.pad, other.pad)
+                own_values = self._on_grid(self.fs, self.n_samples, pad)
+                other_values = other._on_grid(self.fs, self.n_samples, pad)
+                return self._new(own_values * other_values, pad=pad)
+            case Envelope():
+                if other.fs != self.fs or len(other) != self.n_samples:
+                    raise ValueError("Envelope must share fs and length")
+                gain = np.zeros((self._full.shape[0], 1, other.data.shape[1]))
+                gain[self.pad : self.pad + self.n_samples, 0, :] = other.data
+                return self._new(self._full * gain)
+            case bool():
+                return NotImplemented
+            case numbers.Real():
+                return self._new(self._full * float(other))
+            case _:
+                return NotImplemented
 
     __rmul__ = __mul__
 
