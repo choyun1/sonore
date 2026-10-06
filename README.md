@@ -30,6 +30,10 @@ playable next to its plots, with a playhead that follows the sound.
 **[▶ Try it in your browser](https://choyun1.github.io/sonore/)**: one editable cell that runs sonore
 on the page, through Pyodide, with nothing to install.
 
+**[▶ Draw sounds with sonore-sketch](https://choyun1.github.io/sonore-sketch/)**: to hear sounds synthesized by
+sonore, draw formant tracks, spectrograms or modulation spectra with a mouse
+and listen to the result, in your browser.
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/notebooks/start.ipynb)
 A short tutorial you can run in the browser, with nothing to install: sounds, classic and
 complex stimuli, sound textures, voices, and spatial hearing with reverberation and movement.
@@ -282,6 +286,10 @@ Where to go for what sonore leaves out:
 - [librosa](https://librosa.org/): music and audio analysis.
 - [pyroomacoustics](https://github.com/LCAV/pyroomacoustics): geometric room simulation.
 - [pyfar](https://pyfar.org/) / [sofar](https://github.com/pyfar/sofar): acoustics and SOFA files.
+- [sonore-sketch](https://choyun1.github.io/sonore-sketch/) ([source](https://github.com/choyun1/sonore-sketch)):
+  drawing formant tracks, spectrograms and modulation spectra with a mouse and
+  hearing the result. It runs sonore in the browser, with nothing to install.
+  Still in progress: one of its five tabs is not built yet.
 
 ## Roadmap
 
