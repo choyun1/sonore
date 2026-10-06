@@ -454,8 +454,109 @@ major thirds are 408 cents, a syntonic comma wide. Quarter-comma meantone narrow
 by a quarter of the syntonic comma, to 696.58 cents,
 so that four of them make a just third; the comma it leaves over goes into one unusable "wolf"
 fifth of 737.6 cents (usually G♯–E♭),
-which this page's tune never plays. Just intonation on C has pure thirds and fifths in its
-three main chords, but one fifth among its white notes, D–A, is a syntonic comma narrow.</p>
+which this page's tune never plays but the two sounds below do. Just intonation on C has pure
+thirds and fifths in its three main chords, but one fifth among its white notes, D–A, is a
+syntonic comma narrow.</p>
+<p>The wolf is easy to hear. A keyboard in quarter-comma meantone usually has C♯, E♭, F♯, G♯
+and B♭ as its black keys, each reached by meantone fifths from C (up for the sharps, down for
+the flats). Eleven of its twelve fifths are then the narrow meantone fifth, and the twelfth,
+from G♯ up to E♭, takes up what is left of the seven octaves: it is wider than a just fifth by
+more than a third of a semitone. The cell prints the two fifths and how fast the nearest
+partials beat, over G♯3 and over C4.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># Each note&#x27;s distance from C in fifths, flats being fifths down, on a meantone keyboard.
+FIFTHS_FROM_C = {
+    **{name: steps for steps, name in enumerate([&quot;C&quot;, &quot;G&quot;, &quot;D&quot;, &quot;A&quot;, &quot;E&quot;, &quot;B&quot;, &quot;F#&quot;, &quot;C#&quot;, &quot;G#&quot;])},
+    **{&quot;F&quot;: -1, &quot;Bb&quot;: -2, &quot;Eb&quot;: -3},
+}
+
+
+def meantone(note, c4=C4):
+    &quot;&quot;&quot;Frequency of a note name such as &quot;G#3&quot; or &quot;Eb4&quot; on a quarter-comma meantone keyboard.&quot;&quot;&quot;
+    ratio = MEANTONE_FIFTH ** FIFTHS_FROM_C[note[:-1]]
+    ratio /= 2 ** np.floor(np.log2(ratio))  # brought into the octave above C
+    return c4 * ratio * 2.0 ** (int(note[-1]) - 4)
+
+
+for low, high in [(&quot;C4&quot;, &quot;G4&quot;), (&quot;G#3&quot;, &quot;Eb4&quot;)]:
+    lower, upper = meantone(low), meantone(high)
+    beat = abs(2 * upper - 3 * lower)
+    print(f&quot;meantone {low[:-1]}-{high[:-1]}: {so.ratio_to_cents(upper / lower):6.1f} cents,&quot;, end=&quot; &quot;)
+    print(f&quot;partial 3 of {low} and partial 2 of {high} beat at {beat:5.2f} Hz&quot;)</code></pre></details><pre class="out">meantone C-G:  696.6 cents, partial 3 of C4 and partial 2 of G4 beat at  2.43 Hz
+meantone G#-Eb:  737.6 cents, partial 3 of G#3 and partial 2 of Eb4 beat at 12.77 Hz</pre></div>
+
+<article class="sound" id="d-tt8" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.1}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.1}]">
+  <div class="about">
+    <h3>The meantone wolf fifth</h3>
+    <div class="desc"><p>Three fifths: C4–G4 in meantone, then G♯3–E♭4 on the same meantone keyboard, the wolf, then
+G♯3–E♭4 in equal temperament. The meantone fifth beats gently, about twice a second; the wolf
+beats so fast that it sounds rough and sour, and its figure never settles; the equal fifth on
+the same two keys is smooth again.</p></div>
+    <audio controls preload="metadata" src="audio/tt8_the_meantone_wolf_fifth.flac"></audio>
+    <p class="file">tt8_the_meantone_wolf_fifth.flac, 10.1 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,3.5,261.6256,391.2215,&quot;meantone C-G&quot;],[3.7,6.7,204.395,312.9772,&quot;wolf G#-Eb&quot;],[6.9,9.9,207.6523,311.127,&quot;equal G#-Eb&quot;]],&quot;window&quot;:0.02,&quot;xlabel&quot;:&quot;lower note&quot;,&quot;ylabel&quot;:&quot;upper note&quot;,&quot;title&quot;:&quot;Lower note against upper&quot;,&quot;start&quot;:4.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt8_the_meantone_wolf_fifth.png" width="1000" height="540" alt="Plots of the the meantone wolf fifth sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">wolf_pairs = [
+    (&quot;meantone C-G&quot;, (meantone(&quot;C4&quot;), meantone(&quot;G4&quot;))),
+    (&quot;wolf G#-Eb&quot;, (meantone(&quot;G#3&quot;), meantone(&quot;Eb4&quot;))),
+    (&quot;equal G#-Eb&quot;, (so.note_to_freq(&quot;G#3&quot;), so.note_to_freq(&quot;Eb4&quot;))),
+]
+chords = [(3.2 * i, 3.0, freqs) for i, (_, freqs) in enumerate(wolf_pairs)]
+events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
+sound = finish(play(events, 9.6))
+fig, playhead = show(sound, events)
+lissajous = {
+    &quot;notes&quot;: [(*row[:4], name) for row, (name, _) in zip(figure_notes(chords), wolf_pairs, strict=True)],
+    &quot;window&quot;: 0.02,
+    &quot;xlabel&quot;: &quot;lower note&quot;,
+    &quot;ylabel&quot;: &quot;upper note&quot;,
+    &quot;title&quot;: &quot;Lower note against upper&quot;,
+    &quot;start&quot;: LEAD + 4.0,
+}</code></pre></details>
+</article>
+<p>In a piece the wolf turns up as a chord. A♭ major needs A♭, C and E♭, but the keyboard has
+G♯ where A♭ should be, so the chord is G♯–C–E♭: its fifth is the wolf, and its "major third"
+G♯–C is 427.4 cents, a diminished
+fourth, wider even than a Pythagorean third. This is why music for meantone keyboards keeps
+to keys near C, and why some old organs and harpsichords had split black keys, with separate
+G♯ and A♭ (or D♯ and E♭).</p>
+
+<article class="sound" id="d-tt9" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.3}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.3}]">
+  <div class="about">
+    <h3>C major and A-flat major in meantone</h3>
+    <div class="desc"><p>C major, then A♭ major on the same meantone keyboard, then A♭ major in equal temperament. The
+C major chord is calm; the meantone A♭ chord howls, its third and fifth both beating fast;
+equal temperament makes it an ordinary major chord again.</p></div>
+    <audio controls preload="metadata" src="audio/tt9_c_major_and_a-flat_major_in_meantone.flac"></audio>
+    <p class="file">tt9_c_major_and_a-flat_major_in_meantone.flac, 8.3 s, mono</p>
+    <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,2.9,130.8128,391.2215,&quot;C major, meantone&quot;],[3.1,5.5,102.1975,312.9772,&quot;A-flat major, meantone&quot;],[5.7,8.1,103.8262,311.127,&quot;A-flat major, equal&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;top voice&quot;,&quot;title&quot;:&quot;Bass against top voice&quot;,&quot;start&quot;:3.5}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tt9_c_major_and_a-flat_major_in_meantone.png" width="1000" height="540" alt="Plots of the c major and a-flat major in meantone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">VOICINGS = {&quot;C major&quot;: [&quot;C3&quot;, &quot;G3&quot;, &quot;E4&quot;, &quot;G4&quot;], &quot;A-flat major&quot;: [&quot;G#2&quot;, &quot;Eb3&quot;, &quot;C4&quot;, &quot;Eb4&quot;]}
+wolf_chords = [
+    (&quot;C major, meantone&quot;, [meantone(n) for n in VOICINGS[&quot;C major&quot;]]),
+    (&quot;A-flat major, meantone&quot;, [meantone(n) for n in VOICINGS[&quot;A-flat major&quot;]]),
+    (&quot;A-flat major, equal&quot;, [so.note_to_freq(n) for n in VOICINGS[&quot;A-flat major&quot;]]),
+]
+chords = [(2.6 * i, 2.4, freqs) for i, (_, freqs) in enumerate(wolf_chords)]
+events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
+sound = finish(play(events, 7.8))
+fig, playhead = show(sound, events)
+lissajous = {
+    &quot;notes&quot;: [(*row[:4], name) for row, (name, _) in zip(figure_notes(chords), wolf_chords, strict=True)],
+    &quot;window&quot;: 0.016,
+    &quot;xlabel&quot;: &quot;bass&quot;,
+    &quot;ylabel&quot;: &quot;top voice&quot;,
+    &quot;title&quot;: &quot;Bass against top voice&quot;,
+    &quot;start&quot;: LEAD + 3.0,
+}</code></pre></details>
+</article>
 </section>
 <section aria-labelledby="h-one-tune-four-tunings">
 <h2 id="h-one-tune-four-tunings">One tune, four tunings</h2>

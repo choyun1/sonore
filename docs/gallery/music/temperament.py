@@ -258,8 +258,96 @@ print(f"{'just intervals':24s}" + "".join(f"{size:6.1f}" for size in just_sizes)
 # by a quarter of the syntonic comma, to {{ f"{so.ratio_to_cents(MEANTONE_FIFTH):.2f}" }} cents,
 # so that four of them make a just third; the comma it leaves over goes into one unusable "wolf"
 # fifth of {{ f"{8400 - 11 * so.ratio_to_cents(MEANTONE_FIFTH):.1f}" }} cents (usually G♯–E♭),
-# which this page's tune never plays. Just intonation on C has pure thirds and fifths in its
-# three main chords, but one fifth among its white notes, D–A, is a syntonic comma narrow.
+# which this page's tune never plays but the two sounds below do. Just intonation on C has pure
+# thirds and fifths in its three main chords, but one fifth among its white notes, D–A, is a
+# syntonic comma narrow.
+
+# %% [markdown]
+# The wolf is easy to hear. A keyboard in quarter-comma meantone usually has C♯, E♭, F♯, G♯
+# and B♭ as its black keys, each reached by meantone fifths from C (up for the sharps, down for
+# the flats). Eleven of its twelve fifths are then the narrow meantone fifth, and the twelfth,
+# from G♯ up to E♭, takes up what is left of the seven octaves: it is wider than a just fifth by
+# more than a third of a semitone. The cell prints the two fifths and how fast the nearest
+# partials beat, over G♯3 and over C4.
+
+# %%
+# Each note's distance from C in fifths, flats being fifths down, on a meantone keyboard.
+FIFTHS_FROM_C = {
+    **{name: steps for steps, name in enumerate(["C", "G", "D", "A", "E", "B", "F#", "C#", "G#"])},
+    **{"F": -1, "Bb": -2, "Eb": -3},
+}
+
+
+def meantone(note, c4=C4):
+    """Frequency of a note name such as "G#3" or "Eb4" on a quarter-comma meantone keyboard."""
+    ratio = MEANTONE_FIFTH ** FIFTHS_FROM_C[note[:-1]]
+    ratio /= 2 ** np.floor(np.log2(ratio))  # brought into the octave above C
+    return c4 * ratio * 2.0 ** (int(note[-1]) - 4)
+
+
+for low, high in [("C4", "G4"), ("G#3", "Eb4")]:
+    lower, upper = meantone(low), meantone(high)
+    beat = abs(2 * upper - 3 * lower)
+    print(f"meantone {low[:-1]}-{high[:-1]}: {so.ratio_to_cents(upper / lower):6.1f} cents,", end=" ")
+    print(f"partial 3 of {low} and partial 2 of {high} beat at {beat:5.2f} Hz")
+
+# %% [about]
+# Three fifths: C4–G4 in meantone, then G♯3–E♭4 on the same meantone keyboard, the wolf, then
+# G♯3–E♭4 in equal temperament. The meantone fifth beats gently, about twice a second; the wolf
+# beats so fast that it sounds rough and sour, and its figure never settles; the equal fifth on
+# the same two keys is smooth again.
+
+# %% [demo tt8] The meantone wolf fifth
+wolf_pairs = [
+    ("meantone C-G", (meantone("C4"), meantone("G4"))),
+    ("wolf G#-Eb", (meantone("G#3"), meantone("Eb4"))),
+    ("equal G#-Eb", (so.note_to_freq("G#3"), so.note_to_freq("Eb4"))),
+]
+chords = [(3.2 * i, 3.0, freqs) for i, (_, freqs) in enumerate(wolf_pairs)]
+events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
+sound = finish(play(events, 9.6))
+fig, playhead = show(sound, events)
+lissajous = {
+    "notes": [(*row[:4], name) for row, (name, _) in zip(figure_notes(chords), wolf_pairs, strict=True)],
+    "window": 0.02,
+    "xlabel": "lower note",
+    "ylabel": "upper note",
+    "title": "Lower note against upper",
+    "start": LEAD + 4.0,
+}
+
+# %% [markdown]
+# In a piece the wolf turns up as a chord. A♭ major needs A♭, C and E♭, but the keyboard has
+# G♯ where A♭ should be, so the chord is G♯–C–E♭: its fifth is the wolf, and its "major third"
+# G♯–C is {{ f"{so.ratio_to_cents(meantone('C4') / meantone('G#3')):.1f}" }} cents, a diminished
+# fourth, wider even than a Pythagorean third. This is why music for meantone keyboards keeps
+# to keys near C, and why some old organs and harpsichords had split black keys, with separate
+# G♯ and A♭ (or D♯ and E♭).
+
+# %% [about]
+# C major, then A♭ major on the same meantone keyboard, then A♭ major in equal temperament. The
+# C major chord is calm; the meantone A♭ chord howls, its third and fifth both beating fast;
+# equal temperament makes it an ordinary major chord again.
+
+# %% [demo tt9] C major and A-flat major in meantone
+VOICINGS = {"C major": ["C3", "G3", "E4", "G4"], "A-flat major": ["G#2", "Eb3", "C4", "Eb4"]}
+wolf_chords = [
+    ("C major, meantone", [meantone(n) for n in VOICINGS["C major"]]),
+    ("A-flat major, meantone", [meantone(n) for n in VOICINGS["A-flat major"]]),
+    ("A-flat major, equal", [so.note_to_freq(n) for n in VOICINGS["A-flat major"]]),
+]
+chords = [(2.6 * i, 2.4, freqs) for i, (_, freqs) in enumerate(wolf_chords)]
+events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
+sound = finish(play(events, 7.8))
+fig, playhead = show(sound, events)
+lissajous = {
+    "notes": [(*row[:4], name) for row, (name, _) in zip(figure_notes(chords), wolf_chords, strict=True)],
+    "window": 0.016,
+    "xlabel": "bass",
+    "ylabel": "top voice",
+    "title": "Bass against top voice",
+    "start": LEAD + 3.0,
+}
 
 # %% [markdown]
 # ## One tune, four tunings
