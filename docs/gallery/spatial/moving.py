@@ -16,8 +16,7 @@ time it runs.
 #
 # Three male talkers speak at once, one straight ahead and one 40° to each side. Which one do you
 # follow? If one of them moves, does that help? Cho & Kidd (2022) asked this with stimuli like the
-# ones on this page; the experiment's code, written with sonore's predecessor sigtools, is archived
-# at [github.com/choyun1/MSM](https://github.com/choyun1/MSM).
+# ones on this page, made with sonore's predecessor sigtools.
 #
 # - [The talkers and the trajectories](#h-the-talkers-and-the-trajectories): three sentences, and
 #   the paths the target takes.
@@ -1002,8 +1001,7 @@ sound = finish(mix)
 #   [doi:10.1177/2331216516644254](https://doi.org/10.1177/2331216516644254).
 # - Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail
 #   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
-#   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Experiment code:
-#   [choyun1/MSM](https://github.com/choyun1/MSM).
+#   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990).
 #   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L520)
 #   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L107)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
