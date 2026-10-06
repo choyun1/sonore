@@ -17,12 +17,14 @@ The Hilbert decomposition of a band is then literal::
     band == band.envelope() * (band / band.envelope())      # envelope x fine structure
     sb == sb.envelopes() * sb.tfs()                          # for every band at once
 
-Envelopes resampled to a lower rate are upsampled automatically (band-limited
-polyphase interpolation, clipped at zero) when applied to a sound.
+Envelopes resampled to a lower rate are upsampled automatically (band-limited:
+polyphase, or the FFT for unusual rate ratios; clipped at zero) when applied
+to a sound.
 
-:func:`noise_vocode` is the channel vocoder (Shannon et al., 1995): the band
-envelopes of one sound imposed on the fine structure of another, as in
-simulations of cochlear-implant hearing.
+``to_sound(carrier)`` is the route back: the envelopes imposed on a carrier.
+:func:`noise_vocode` is the noise vocoder after Shannon et al. (1995): a
+sound's own band envelopes imposed on bands of noise, as in simulations of
+cochlear-implant hearing.
 """
 
 from __future__ import annotations
@@ -33,9 +35,9 @@ from fractions import Fraction
 from typing import TYPE_CHECKING
 
 import numpy as np
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import butter, resample, resample_poly, sosfiltfilt
 
-from sonore.core.utils import _fit_length, _resample_poly, amp_to_db, as_rng, time_axis
+from sonore.core.utils import _fit_length, amp_to_db, as_rng, time_axis
 from sonore.frames.filterbank import Subbands, _PaddedBands, cosine_filterbank
 from sonore.views.view import View
 
@@ -61,7 +63,10 @@ class _EnvelopeAnalysis:
 
 
 def _nonnegative(values: np.ndarray) -> np.ndarray:
-    """Clip round-off negatives; reject genuinely negative envelopes."""
+    """Clip round-off negatives (within 1e-9 of the largest magnitude); reject
+    genuinely negative or non-finite envelopes."""
+    if not np.all(np.isfinite(values)):
+        raise ValueError("envelopes must be finite (a division by zero?)")
     if values.size and np.min(values) < 0:
         scale = np.max(np.abs(values)) or 1.0
         if np.min(values) < -1e-9 * scale:
@@ -75,25 +80,46 @@ def _lowpass(data: np.ndarray, cutoff: float, fs: float, order: int) -> np.ndarr
     return np.maximum(sosfiltfilt(sos, data, axis=0), 0.0)
 
 
+# A polyphase filter grows with the up and down factors of the rate ratio (a
+# 1 s envelope at 314.16 Hz brought to 44.1 kHz, 464219/3307, took 3.6 s
+# against 3 ms at 1000 Hz), so ratios that need larger factors go through the
+# FFT instead, which is band-limited too.
+_MAX_FACTOR = 1000
+
+
+def _simple_ratio(fs_old: float, fs_new: float) -> Fraction | None:
+    """``fs_new / fs_old`` as a fraction with both terms at most _MAX_FACTOR,
+    or None when no such fraction is exact to 1e-9."""
+    ratio = Fraction(fs_new / fs_old).limit_denominator(_MAX_FACTOR)
+    exact = abs(float(ratio) - fs_new / fs_old) <= 1e-9 * fs_new / fs_old
+    return ratio if exact and ratio.numerator <= _MAX_FACTOR else None
+
+
 def _resample(data: np.ndarray, fs_old: float, fs_new: float) -> np.ndarray:
-    # padtype="line": extend the envelope at its ends instead of padding with
-    # zeros, which would drag the first and last few ms toward zero
-    return np.maximum(_resample_poly(data, fs_old, fs_new, padtype="line"), 0.0)
+    """Band-limited resampling along axis 0, clipped at zero. The ends are
+    extended along a line rather than padded with zeros, which would drag the
+    first and last few ms toward zero."""
+    ratio = _simple_ratio(fs_old, fs_new)
+    if ratio is not None:
+        resampled = resample_poly(data, ratio.numerator, ratio.denominator, axis=0, padtype="line")
+        return np.maximum(resampled, 0.0)
+    # FFT resampling treats the signal as periodic: take out the line through
+    # the end samples first, so the wrap from last to first sample is smooth
+    n_old = data.shape[0]
+    n_new = int(round(n_old * fs_new / fs_old))
+    line_shape = (-1,) + (1,) * (data.ndim - 1)
+    first, rise = data[:1], data[-1:] - data[:1]
+    old_position = np.arange(n_old).reshape(line_shape) / max(n_old - 1, 1)
+    new_position = (np.arange(n_new) * n_old / n_new).reshape(line_shape) / max(n_old - 1, 1)
+    resampled = resample(data - first - rise * old_position, n_new, axis=0)
+    return np.maximum(resampled + first + rise * new_position, 0.0)
 
 
 def _upsample_to(data: np.ndarray, fs: float, n: int, fs_new: float) -> np.ndarray:
-    """Envelope (axis 0) onto ``n`` samples at ``fs_new``.
-
-    Band-limited polyphase resampling (an envelope that was lowpassed and
-    downsampled is band-limited, so this is the accurate choice), clipped at
-    zero, then trimmed or edge-padded to exactly ``n`` samples.
-    """
-    ratio = Fraction(fs_new / fs).limit_denominator(10000)
-    if abs(float(ratio) - fs_new / fs) > 1e-9 * fs_new / fs:  # irrational ratio: fall back
-        t_old, t_new = np.arange(data.shape[0]) / fs, np.arange(n) / fs_new
-        columns = data.reshape(data.shape[0], -1)
-        upsampled = np.column_stack([np.interp(t_new, t_old, column) for column in columns.T])
-        return upsampled.reshape((n,) + data.shape[1:])
+    """Envelope (axis 0) onto ``n`` samples at ``fs_new``: band-limited
+    resampling (an envelope that was lowpassed and downsampled is
+    band-limited, so this is the accurate choice), clipped at zero, then
+    trimmed or edge-padded to exactly ``n`` samples."""
     return _fit_length(_resample(data, fs, fs_new), n, mode="edge")
 
 
@@ -109,6 +135,8 @@ class Envelope(View):
     Arithmetic: ``*``, ``/`` and ``+`` with numbers and other Envelopes (so
     ``1 + 0.5 * env`` works), and ``env * snd`` / ``snd * env`` modulate a
     :class:`~sonore.Sound`. ``snd / env`` divides the envelope out of a sound.
+    A one-channel envelope applies to every channel of a sound; otherwise the
+    channel counts must match.
     :meth:`to_sound` puts it on another sound's fine structure.
     """
 
@@ -132,6 +160,7 @@ class Envelope(View):
 
     @property
     def data(self) -> np.ndarray:
+        """The envelope values, shape ``(n_samples, n_channels)``, read-only."""
         return self._data
 
     def __len__(self) -> int:
@@ -139,10 +168,12 @@ class Envelope(View):
 
     @property
     def duration(self) -> float:
+        """Length in seconds."""
         return len(self) / self.fs
 
     @property
     def t(self) -> np.ndarray:
+        """Sample times in seconds, starting at 0."""
         return np.arange(len(self)) / self.fs
 
     @property
@@ -154,10 +185,12 @@ class Envelope(View):
         return f"Envelope({self.duration:.3f} s, {self.fs:g} Hz, {self._data.shape[1]} ch)"
 
     def lowpass(self, cutoff: float, order: int = 4) -> Envelope:
-        """Zero-phase lowpass (result clipped at 0)."""
+        """Zero-phase Butterworth lowpass at ``cutoff`` Hz (result clipped at 0)."""
         return Envelope(_lowpass(self._data, cutoff, self.fs, order), self.fs)
 
     def resample(self, fs: float) -> Envelope:
+        """The envelope at rate ``fs``: band-limited, clipped at zero, with the
+        ends extended along a line rather than dragged toward zero."""
         return self if fs == self.fs else Envelope(_resample(self._data, self.fs, fs), fs)
 
     def _values_for(self, sound: Sound) -> np.ndarray:
@@ -197,7 +230,9 @@ class Envelope(View):
         other_values = self._other(other)
         if other_values is NotImplemented:
             return NotImplemented
-        return Envelope(self._data / other_values, self.fs)
+        with np.errstate(divide="ignore", invalid="ignore"):  # a zero divisor is refused below
+            quotient = self._data / other_values
+        return Envelope(quotient, self.fs)
 
     def __rtruediv__(self, other):
         from sonore.core.sound import Sound
@@ -283,14 +318,17 @@ class Envelopes(_PaddedBands, View):
 
     @property
     def duration(self) -> float:
+        """Length in seconds (without the padding)."""
         return self.n_samples / self.fs
 
     @property
     def t(self) -> np.ndarray:
+        """Sample times in seconds, starting at 0."""
         return time_axis(self.n_samples, self.fs)
 
     @property
     def db(self) -> np.ndarray:
+        """Envelopes in dB (``20*log10``), shape ``(n_samples, n_bands, n_channels)``."""
         return amp_to_db(self.data)
 
     def _new(self, full, fs=None, pad=None) -> Envelopes:
@@ -299,19 +337,30 @@ class Envelopes(_PaddedBands, View):
         )
 
     def lowpass(self, cutoff: float, order: int = 4) -> Envelopes:
+        """Zero-phase Butterworth lowpass of every band at ``cutoff`` Hz,
+        padding included (result clipped at 0)."""
         return self._new(_lowpass(self._full, cutoff, self.fs, order))
 
     def resample(self, fs: float) -> Envelopes:
+        """The envelopes at rate ``fs``, padding included, as
+        :meth:`Envelope.resample`. When the rate ratio is a small fraction the
+        inner signal starts exactly on a sample; otherwise within half of
+        one."""
         if fs == self.fs:
             return self
-        ratio = Fraction(fs / self.fs).limit_denominator(10000)
-        # extend the front padding so it maps to a whole number of samples at
-        # the new rate: the inner signal then starts exactly on a sample
-        extra = (-self.pad) % ratio.denominator
-        full = np.pad(self._full, ((extra, 0), (0, 0), (0, 0))) if extra else self._full
-        full = _resample(full, self.fs, fs)
-        pad = (self.pad + extra) * ratio.numerator // ratio.denominator
-        n_total = pad + int(round(self.n_samples * float(ratio))) + pad
+        ratio = _simple_ratio(self.fs, fs)
+        if ratio is None:
+            # no small fraction: the inner signal starts within half a sample
+            pad = int(round(self.pad * fs / self.fs))
+            full = _resample(self._full, self.fs, fs)
+        else:
+            # extend the front padding so it maps to a whole number of samples at
+            # the new rate: the inner signal then starts exactly on a sample
+            extra = (-self.pad) % ratio.denominator
+            full = np.pad(self._full, ((extra, 0), (0, 0), (0, 0))) if extra else self._full
+            full = _resample(full, self.fs, fs)
+            pad = (self.pad + extra) * ratio.numerator // ratio.denominator
+        n_total = pad + int(round(self.n_samples * fs / self.fs)) + pad
         return self._new(_fit_length(full, n_total, mode="edge"), fs, pad)
 
     def without_edges(self) -> Envelopes:
@@ -375,7 +424,8 @@ class Envelopes(_PaddedBands, View):
         """2-D modulation spectrum (temporal Hz x spectral cycles per scale unit).
 
         ``scale="db"`` transforms log envelopes. The edge bands are dropped by
-        default, since they aren't evenly spaced with the others.
+        default, since they aren't evenly spaced with the others; a bank built
+        with ``edges=False`` has none to drop, and all its bands are kept.
         """
         from sonore.views.modulation import ModulationSpectrum
 
@@ -386,6 +436,7 @@ class Envelopes(_PaddedBands, View):
                 "this filterbank's centers are not"
             )
         band_env = self.data.mean(axis=2)  # (n, B), channels averaged
+        drop_edges = drop_edges and getattr(filterbank, "edges", True) is not False
         if drop_edges:
             band_env = band_env[:, 1:-1]
         if scale == "db":
@@ -399,15 +450,20 @@ class Envelopes(_PaddedBands, View):
         return spectrum
 
     def to_sound(self, carrier: Sound | str = "noise", fs: float | None = None, rng=None) -> Sound:
-        """These envelopes on a carrier's fine structure, synthesized with
-        their filterbank: :meth:`Envelope.to_sound` in every band.
+        """These envelopes imposed on a carrier, band by band, and synthesized
+        with their filterbank.
 
-        ``carrier`` is ``"noise"`` (Gaussian noise, from ``rng``), ``"tone"``
-        (a cosine at each band's center) or a Sound lasting as long as the
-        envelopes, analyzed with the same filterbank. ``fs`` is the output
-        rate for ``"noise"`` and ``"tone"`` (by default the envelopes' own);
-        a Sound carrier sets its own. The edge bands are kept (see
-        :meth:`without_edges`) and the level is the envelopes' own.
+        - ``"noise"``: each band of a Gaussian noise (from ``rng``), scaled
+          to a mean-square envelope of 1. The bands keep their own random
+          envelope fluctuations, as in the classic noise vocoder.
+        - ``"tone"``: a cosine at each band's center.
+        - a Sound lasting as long as the envelopes, analyzed with the same
+          filterbank. Only its fine structure is used, so this is
+          :meth:`Envelope.to_sound` in every band.
+
+        ``fs`` is the output rate for ``"noise"`` and ``"tone"`` (by default
+        the envelopes' own); a Sound carrier sets its own. The edge bands are
+        kept (see :meth:`without_edges`) and the level is the envelopes' own.
         """
         from sonore.core.sound import Sound
 
@@ -422,7 +478,9 @@ class Envelopes(_PaddedBands, View):
                 fs = self.fs if fs is None else fs
                 noise = gaussian_noise(self.duration, fs, n_channels=self.data.shape[2], rng=as_rng(rng))
                 # generated noise is periodic, so circular analysis is exact
-                fine = self.filterbank.analyze(noise, pad=0).tfs()
+                bands = self.filterbank.analyze(noise, pad=0)
+                envelope_power = np.mean(np.abs(bands._analytic()) ** 2, axis=0, keepdims=True)
+                fine = bands._new(bands._full / np.sqrt(np.maximum(envelope_power, 1e-300)))
             case str("tone"):
                 if rng is not None:
                     raise TypeError("rng applies only to the 'noise' carrier")
@@ -456,20 +514,32 @@ def noise_vocode(
     env_lowpass: float | None = 50.0,
     rng=None,
 ) -> Sound:
-    """Channel vocoder (Shannon et al., 1995).
+    """A noise vocoder, after Shannon et al. (1995), with Hilbert envelopes.
 
-    Band envelopes of ``sound`` (lowpassed at ``env_lowpass`` Hz) on the
-    fine structure of the ``carrier``: ``"noise"``, ``"tone"`` (sinusoids at
-    the band centers), or any Sound at least as long. The edge bands
-    (outside ``f_lo..f_hi``) are silenced. The output matches the input's
-    RMS. This is :meth:`Envelopes.to_sound` on the sound's own envelopes.
+    The sound is split by a ``cosine_filterbank`` of ``n_bands`` bands from
+    ``f_lo`` to ``f_hi`` (capped at Nyquist), each band's Hilbert envelope is
+    lowpassed at ``env_lowpass`` Hz, and the envelopes are imposed on the
+    ``carrier`` with :meth:`Envelopes.to_sound`: ``"noise"`` (bands of
+    noise), ``"tone"`` (sinusoids at the band centers), or a Sound at the
+    same rate and at least as long, whose fine structure carries them. The
+    edge bands (outside ``f_lo..f_hi``) are silenced. The output matches the
+    input's RMS.
     """
     from sonore.core.sound import Sound
 
     filterbank = cosine_filterbank(n_bands, f_lo, min(f_hi, sound.fs / 2))
     envelopes = filterbank.analyze(sound).envelopes(lowpass=env_lowpass).without_edges()
-    if isinstance(carrier, Sound):
-        if len(carrier) < len(sound):
-            raise ValueError("carrier is shorter than the sound")
-        return envelopes.to_sound(Sound(carrier.data[: len(sound)], carrier.fs)).normalize(sound.rms)
-    return envelopes.to_sound(carrier, rng=rng).normalize(sound.rms)
+    match carrier:
+        case Sound():
+            if carrier.fs != sound.fs:
+                raise ValueError(f"sample rates differ ({carrier.fs:g} Hz carrier vs {sound.fs:g} Hz sound)")
+            if len(carrier) < len(sound):
+                raise ValueError("carrier is shorter than the sound")
+            vocoded = envelopes.to_sound(Sound(carrier.data[: len(sound)], carrier.fs))
+        case str("noise"):
+            vocoded = envelopes.to_sound("noise", rng=rng)
+        case str("tone"):
+            vocoded = envelopes.to_sound("tone")
+        case _:
+            raise ValueError("carrier must be 'noise', 'tone', or a Sound")
+    return vocoded.normalize(sound.rms)

@@ -159,6 +159,9 @@ class TestToSound:
         np.testing.assert_array_equal(noise.data, env.to_sound("noise", fs=FS, rng=1).data)
         assert not np.array_equal(noise.data, env.to_sound("noise", fs=FS, rng=2).data)
         assert env.to_sound("noise", rng=1).fs == 1000  # the envelopes' own rate by default
+        # bands of noise scaled to a mean-square envelope of 1 keep the envelopes' level
+        tone_level = env.to_sound("tone", fs=FS).rms
+        assert noise.rms == pytest.approx(tone_level, rel=0.1)
         tone = env.without_edges().to_sound("tone", fs=FS)
         power = np.abs(np.fft.rfft(tone.data[:, 0])) ** 2
         freqs = np.fft.rfftfreq(len(tone), 1 / FS)
@@ -176,6 +179,199 @@ class TestToSound:
             env.to_sound(np.zeros(10))
 
     def test_stereo_noise_has_a_noise_per_channel(self):
-        stereo = so.Sound(np.column_stack([self.x.data[:, 0], self.x.data[::-1, 0]]), FS)
+        stereo = so.Sound(np.column_stack([self.x.data[:, 0], self.x.data[:, 0]]), FS)
         out = so.cosine_filterbank(8).analyze(stereo).envelopes().to_sound("noise", rng=0)
         assert out.n_channels == 2 and not np.allclose(out.data[:, 0], out.data[:, 1])
+
+
+class TestEnvelope:
+    t = np.arange(FS // 2) / FS
+    am = so.Envelope(1 + 0.5 * np.sin(2 * np.pi * 4 * np.arange(FS // 2) / FS), FS)
+
+    def test_round_off_negatives_are_clipped_and_real_ones_refused(self):
+        values = np.ones(10)
+        values[3] = -1e-10  # within 1e-9 of the largest value: round-off
+        env = so.Envelope(values, FS)
+        assert env.data[3, 0] == 0.0
+        values[3] = -1e-6
+        with pytest.raises(ValueError, match="non-negative"):
+            so.Envelope(values, FS)
+
+    def test_non_finite_values_are_refused(self):
+        with pytest.raises(ValueError, match="finite"):
+            so.Envelope([1.0, 0.0, 1.0], FS) / 0
+        with pytest.raises(ValueError, match="finite"):
+            so.Envelope([1.0, np.nan], FS)
+
+    def test_shape_and_axes(self):
+        assert self.am.data.shape == (FS // 2, 1) and not self.am.data.flags.writeable
+        assert self.am.t[0] == 0 and self.am.t[-1] == pytest.approx((FS // 2 - 1) / FS)
+        assert self.am.duration == pytest.approx(0.5)
+        np.testing.assert_allclose(self.am.db, 20 * np.log10(self.am.data))
+        with pytest.raises(ValueError, match="1-D or 2-D"):
+            so.Envelope(np.ones((4, 2, 2)), FS)
+
+    def test_arithmetic_values(self):
+        other = so.Envelope(np.full(FS // 2, 2.0), FS)
+        np.testing.assert_allclose((self.am / 2).data, self.am.data / 2)
+        np.testing.assert_allclose((self.am / other).data, self.am.data / 2)
+        np.testing.assert_allclose((self.am + 1).data, self.am.data + 1)
+        np.testing.assert_allclose((1 + self.am).data, self.am.data + 1)
+        np.testing.assert_allclose((self.am * other).data, 2 * self.am.data)
+        with pytest.raises(ValueError, match="share fs and length"):
+            self.am * so.Envelope(np.ones(FS // 4), FS)
+        with pytest.raises(TypeError):
+            self.am * True
+
+    def test_lowpass_is_zero_phase_butterworth(self):
+        from scipy.signal import butter, sosfiltfilt
+
+        noisy = so.gaussian_noise(0.5, FS, rng=0).envelope()
+        expected = sosfiltfilt(butter(4, 30, fs=FS, output="sos"), noisy.data, axis=0)
+        np.testing.assert_allclose(noisy.lowpass(30).data, np.maximum(expected, 0), atol=1e-12)
+        # a zero-phase filter leaves a slow modulation where it was
+        # (a causal 4th-order filter at 20 Hz would delay it by about 30 ms)
+        smoothed = self.am.lowpass(20)
+        shift = np.argmax(smoothed.data[: FS // 4, 0]) - np.argmax(self.am.data[: FS // 4, 0])
+        assert abs(shift) < 1e-3 * FS
+
+    def test_resample_keeps_the_shape(self):
+        coarse = self.am.resample(1000)
+        assert coarse.fs == 1000 and len(coarse) == 500
+        expected = 1 + 0.5 * np.sin(2 * np.pi * 4 * np.arange(500) / 1000)
+        np.testing.assert_allclose(coarse.data[:, 0], expected, atol=2e-3)
+
+    def test_upsampled_envelope_is_band_limited_to_its_last_sample(self):
+        coarse = self.am.resample(1000)
+        sound = so.Sound(np.ones(FS // 2), FS)
+        applied = (coarse * sound).data[:, 0]
+        before_end = slice(0, -FS // 200)  # the last few ms rest on the last coarse samples
+        np.testing.assert_allclose(applied[before_end], self.am.data[before_end, 0], atol=2e-3)
+        assert applied[-1] == pytest.approx(self.am.data[-1, 0], abs=0.02)
+        # an envelope one sample shorter at the same rate is held at its end
+        short = so.Envelope(self.am.data[:-1], FS)
+        assert (short * sound).data[-1, 0] == pytest.approx(self.am.data[-2, 0])
+
+    def test_duration_must_agree_within_a_sample_and_a_half(self):
+        sound = so.Sound(np.ones(FS // 2), FS)
+        coarse = self.am.resample(1000)
+        so.Envelope(np.ones(501), 1000) * sound  # one sample over: fine
+        with pytest.raises(ValueError, match="durations differ"):
+            so.Envelope(np.ones(502), 1000) * sound
+        assert len(coarse * sound) == len(sound)
+
+    def test_dividing_a_silent_envelope_out_stays_finite(self):
+        silent = so.Envelope(np.zeros(FS // 2), FS)
+        divided = so.Sound(np.ones(FS // 2), FS) / silent
+        assert np.all(np.isfinite(divided.data))
+
+    def test_odd_rates_are_quick_and_band_limited(self):
+        import time
+
+        # 44100 / 1234.567 is 29400/823 to 1e-9: a polyphase filter that size took seconds
+        fs_odd = 1234.567
+        n = int(round(0.5 * fs_odd))
+        k = np.arange(n)
+        # different values at the two ends, which the FFT would otherwise wrap
+        ramp = so.Envelope(1 + k / (n - 1) + 0.5 * np.sin(2 * np.pi * 4 * k / fs_odd), fs_odd)
+        sound = so.Sound(np.ones(FS // 2), FS)
+        start = time.perf_counter()
+        applied = (ramp * sound).data[:, 0]
+        assert time.perf_counter() - start < 0.5
+        t = np.arange(FS // 2) / FS
+        expected = 1 + t * fs_odd / (n - 1) + 0.5 * np.sin(2 * np.pi * 4 * t)
+        middle = slice(FS // 10, 4 * FS // 10)
+        np.testing.assert_allclose(applied[middle], expected[middle], atol=1e-3)
+
+
+class TestEnvelopesBank:
+    x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 30), phases="random", rng=0)
+    sb = so.cosine_filterbank(8).analyze(x)
+
+    def test_axes_and_levels(self):
+        env = self.sb.envelopes()
+        assert env.duration == pytest.approx(0.5) and env.t[0] == 0
+        assert env.t[-1] == pytest.approx((len(self.x) - 1) / FS)
+        np.testing.assert_allclose(env.db, 20 * np.log10(np.maximum(env.data, 1e-300)), atol=1e-9)
+        assert env.resample(FS) is env
+
+    def test_lowpass_is_the_single_envelope_lowpass_in_every_band(self):
+        env = so.cosine_filterbank(8).analyze(self.x, pad=0).envelopes()
+        for order in (2, 4):
+            np.testing.assert_allclose(env.lowpass(40, order).data[:, 3], env[3].lowpass(40, order).data)
+
+    def test_products(self):
+        env = self.sb.envelopes()
+        np.testing.assert_allclose((env * 2).data, 2 * env.data)
+        smooth = env.lowpass(20)
+        np.testing.assert_allclose((env * smooth).data, env.data * smooth.data)
+        with pytest.raises(ValueError, match="share fs, length and band count"):
+            env * env.resample(1000)
+        gain = so.Envelope(np.linspace(0, 1, len(self.x)), FS)
+        weighted = env * gain
+        np.testing.assert_allclose(weighted.data, env.data * gain.data[:, None, :])
+        # outside the gain's own extent (the padding) it is zero
+        assert not np.any(weighted._full[: weighted.pad])
+        with pytest.raises(ValueError, match="share fs and length"):
+            env * so.Envelope(np.ones(10), FS)
+
+    def test_modulation_spectrum_averages_channels(self):
+        stereo = so.Sound(np.column_stack([self.x.data[:, 0], 0.5 * self.x.data[:, 0]]), FS)
+        fb = so.cosine_filterbank(8)
+        both = fb.analyze(stereo).envelopes(fs=1000).modulation_spectrum()
+        mean = fb.analyze(0.75 * self.x).envelopes(fs=1000).modulation_spectrum()
+        np.testing.assert_allclose(both.level, mean.level, atol=1e-6)
+        with pytest.raises(ValueError, match="'linear' or 'db'"):
+            fb.analyze(self.x).envelopes().modulation_spectrum(scale="log")
+
+    def test_bank_without_edges_keeps_every_band(self):
+        x = so.harmonic_complex(0.5, FAST, 150, np.arange(1, 30), phases="random", rng=0)
+        bank = so.cosine_filterbank(f_lo=125, f_hi=FAST_HI, spacing=1 / 12, scale="octave", edges=False)
+        with_edges = so.cosine_filterbank(f_lo=125, f_hi=FAST_HI, spacing=1 / 12, scale="octave")
+        kept = bank.analyze(x).envelopes(fs=1000).modulation_spectrum()
+        dropped = with_edges.analyze(x).envelopes(fs=1000).modulation_spectrum()
+        # the same inner bands either way
+        np.testing.assert_allclose(kept.level, dropped.level, atol=1e-9)
+
+
+class TestNoiseVocode:
+    x = so.harmonic_complex(0.5, FS, 120, np.arange(1, 50), phases="sine")
+
+    def test_noise_bands_keep_their_own_fluctuations(self):
+        fb = so.cosine_filterbank(16, 80, 7600)
+
+        def fluctuation(sound):
+            env = fb.analyze(sound).envelopes().data[FS // 10 : -FS // 10, 1:-1, 0]
+            return np.median(env.std(0) / env.mean(0))
+
+        noise = so.noise_vocode(self.x, 16, 80, 7600, rng=1)
+        tone = so.noise_vocode(self.x, 16, 80, 7600, carrier="tone")
+        # a steady input: tones carry its steady envelopes, noise bands add their own
+        # fluctuations (measured 0.52; the noise's fine structure alone gave 0.32)
+        assert fluctuation(tone) < 0.01 and fluctuation(noise) > 0.45
+
+    def test_options(self):
+        a = so.noise_vocode(self.x, 8, rng=1)
+        np.testing.assert_array_equal(a.data, so.noise_vocode(self.x, 8, rng=1).data)
+        assert not np.array_equal(a.data, so.noise_vocode(self.x, 8, rng=2).data)
+        # f_hi above Nyquist is the same as Nyquist
+        above = so.noise_vocode(self.x, 8, 80, 2 * FS, rng=1)
+        np.testing.assert_array_equal(above.data, so.noise_vocode(self.x, 8, 80, FS / 2, rng=1).data)
+        # the envelope lowpass smooths the envelopes the tones carry
+        fb = so.cosine_filterbank(8)
+        smooth = so.noise_vocode(self.x, 8, carrier="tone", env_lowpass=20)
+        rough = so.noise_vocode(self.x, 8, carrier="tone", env_lowpass=None)
+        fast = [np.abs(np.fft.rfft(fb.analyze(s).envelopes().data[:, 4, 0])) for s in (smooth, rough)]
+        freqs = np.fft.rfftfreq(len(self.x), 1 / FS)
+        band = (freqs > 60) & (freqs < 200)  # the 120 Hz periodicity
+        assert fast[0][band].sum() < 0.3 * fast[1][band].sum()  # measured 0.15
+
+    def test_carrier_checks(self):
+        with pytest.raises(ValueError, match="shorter"):
+            so.noise_vocode(self.x, 8, carrier=so.gaussian_noise(0.2, FS, rng=0))
+        with pytest.raises(ValueError, match="sample rates differ"):
+            so.noise_vocode(self.x, 8, carrier=so.gaussian_noise(1.0, 22050, rng=0))
+        with pytest.raises(ValueError, match="carrier must be"):
+            so.noise_vocode(self.x, 8, carrier="pink")
+        with pytest.raises(ValueError, match="carrier must be"):
+            so.noise_vocode(self.x, 8, carrier=np.zeros(10))
