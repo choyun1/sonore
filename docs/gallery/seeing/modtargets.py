@@ -380,8 +380,9 @@ fig, playhead = show(sound, f_lo=125)
 # %% [markdown]
 # ## What this page leaves out
 #
-# - **Drawing with a mouse.** Targets here are written in code, as blobs or as edits; a program
-#   for painting them is left to a separate project.
+# - **Drawing with a mouse.** Targets here are written in code, as blobs or as edits.
+#   [sonore sketch](https://choyun1.github.io/sonore-sketch/), a separate browser app built on sonore, draws
+#   them with a mouse: blobs on the plane, or cuts on a sound's measured spectrum.
 # - **dB targets.** A spectrum measured with `scale="db"` (of the log envelope, as Elliott &
 #   Theunissen, 2009, define it) also goes back to sound, and never needs clipping, but the
 #   linear spectrum of the result is not the one drawn.

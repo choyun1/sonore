@@ -282,6 +282,10 @@ Where to go for what sonore leaves out:
 - [librosa](https://librosa.org/): music and audio analysis.
 - [pyroomacoustics](https://github.com/LCAV/pyroomacoustics): geometric room simulation.
 - [pyfar](https://pyfar.org/) / [sofar](https://github.com/pyfar/sofar): acoustics and SOFA files.
+- [sonore sketch](https://choyun1.github.io/sonore-sketch/) ([source](https://github.com/choyun1/sonore-sketch)):
+  drawing formant tracks, spectrograms and modulation spectra with a mouse and
+  hearing the result. It runs sonore in the browser, with nothing to install.
+  Still in progress: one of its five tabs is not built yet.
 
 ## Roadmap
 
