@@ -24,10 +24,6 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
 - **Cepstrum.** `Cepstrum` on any STFT: liftering, resynthesis with the
   original or minimum phase, and classic cepstral F0; see
   `docs/design/views/cepstrum.md`.
-- **The MSM archive.** The experiment code behind Cho & Kidd (2022), written
-  with sigtools 0.1, stays a separate archive at
-  [choyun1/MSM](https://github.com/choyun1/MSM) rather than being folded in;
-  the Moving talkers page carries its stimuli forward.
 - **JAX trial, decided against for now.** A JAX port of the texture channel
   objective matched the NumPy gradient to about 1e-15 but ran no faster
   (about 2 ms per call either way, plus compile time), and float32 would
