@@ -475,4 +475,4 @@ sound = resynthesis_female
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
-#   [`envelopes.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L383)
+#   [`envelopes.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L440)

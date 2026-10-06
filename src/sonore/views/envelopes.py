@@ -109,10 +109,14 @@ class Envelope(View):
     Arithmetic: ``*``, ``/`` and ``+`` with numbers and other Envelopes (so
     ``1 + 0.5 * env`` works), and ``env * snd`` / ``snd * env`` modulate a
     :class:`~sonore.Sound`. ``snd / env`` divides the envelope out of a sound.
+    :meth:`to_sound` puts it on another sound's fine structure.
     """
 
     discards = "Envelope discards the fine structure: only a magnitude over time is kept."
-    back_to_sound = "To hear it, impose it on a sound (envelope * sound)."
+    back_to_sound = (
+        "Envelope.to_sound puts it on the fine structure of a carrier sound, which is not the analysed "
+        "sound's fine structure."
+    )
 
     __array_ufunc__ = None
 
@@ -206,6 +210,18 @@ class Envelope(View):
 
     __radd__ = __add__
 
+    def to_sound(self, carrier: Sound) -> Sound:
+        """This envelope on the fine structure of ``carrier``: the carrier is
+        divided by its own Hilbert envelope (``carrier / carrier.envelope()``)
+        and multiplied by this one. ``carrier`` must last as long as the
+        envelope; it sets the sampling rate. Plain ``envelope * sound`` keeps
+        the sound's own envelope as well (amplitude modulation)."""
+        from sonore.core.sound import Sound
+
+        if not isinstance(carrier, Sound):
+            raise TypeError("carrier must be a Sound")
+        return self * (carrier / carrier.envelope())
+
     def plot(self, ax=None, **kwargs):
         """The envelope against time (see :func:`~sonore.plotting.plot_envelope`)."""
         from sonore.plotting import plot_envelope
@@ -241,8 +257,8 @@ class Envelopes(_PaddedBands, View):
         "smoothed further when a lowpass was asked for."
     )
     back_to_sound = (
-        "To hear them, impose them on a carrier's subbands (envelopes * subbands) and synthesize those, as "
-        "the noise vocoder does."
+        "Envelopes.to_sound puts them on the fine structure of a carrier (a new noise, tones at the band "
+        "centers, or another sound) and synthesizes the bands, as the noise vocoder does."
     )
 
     __array_ufunc__ = None
@@ -372,6 +388,47 @@ class Envelopes(_PaddedBands, View):
         spectrum._analysis = _EnvelopeAnalysis(filterbank, self.fs, self.n_samples, scale, drop_edges)
         return spectrum
 
+    def to_sound(self, carrier: Sound | str = "noise", fs: float | None = None, rng=None) -> Sound:
+        """These envelopes on a carrier's fine structure, synthesized with
+        their filterbank: :meth:`Envelope.to_sound` in every band.
+
+        ``carrier`` is ``"noise"`` (Gaussian noise, from ``rng``), ``"tone"``
+        (a cosine at each band's center) or a Sound lasting as long as the
+        envelopes, analyzed with the same filterbank. ``fs`` is the output
+        rate for ``"noise"`` and ``"tone"`` (by default the envelopes' own);
+        a Sound carrier sets its own. The edge bands are kept (see
+        :meth:`without_edges`) and the level is the envelopes' own.
+        """
+        from sonore.core.sound import Sound
+
+        match carrier:
+            case Sound():
+                if fs is not None or rng is not None:
+                    raise TypeError("fs and rng apply only to the 'noise' and 'tone' carriers")
+                fine = self.filterbank.analyze(carrier).tfs()
+            case str("noise"):
+                from sonore.sources.waveforms import gaussian_noise
+
+                fs = self.fs if fs is None else fs
+                noise = gaussian_noise(self.duration, fs, n_channels=self.data.shape[2], rng=as_rng(rng))
+                # generated noise is periodic, so circular analysis is exact
+                fine = self.filterbank.analyze(noise, pad=0).tfs()
+            case str("tone"):
+                if rng is not None:
+                    raise TypeError("rng applies only to the 'noise' carrier")
+                fs = self.fs if fs is None else fs
+                n_out = int(round(self.duration * fs))
+                t = np.arange(n_out) / fs
+                tones = np.cos(2 * np.pi * self.filterbank.cfs[None, :, None] * t[:, None, None])
+                fine = Subbands(
+                    np.broadcast_to(tones, (n_out, len(self.filterbank.cfs), self.data.shape[2])).copy(),
+                    fs,
+                    self.filterbank,
+                )
+            case _:
+                raise ValueError("carrier must be 'noise', 'tone', or a Sound")
+        return (self * fine).to_sound()
+
     def plot(self, ax=None, **kwargs):
         """The envelopes as a cochleagram, time by band in dB (see
         :func:`~sonore.plotting.plot_envelopes`)."""
@@ -391,10 +448,11 @@ def noise_vocode(
 ) -> Sound:
     """Channel vocoder (Shannon et al., 1995).
 
-    Band envelopes of ``sound`` (lowpassed at ``env_lowpass`` Hz) modulate the
-    fine structure of the ``carrier``: ``"noise"``, ``"tone"`` (sinusoids at the
-    band centers), or any Sound at least as long. The edge bands (outside
-    ``f_lo..f_hi``) are silenced. The output matches the input's RMS.
+    Band envelopes of ``sound`` (lowpassed at ``env_lowpass`` Hz) on the
+    fine structure of the ``carrier``: ``"noise"``, ``"tone"`` (sinusoids at
+    the band centers), or any Sound at least as long. The edge bands
+    (outside ``f_lo..f_hi``) are silenced. The output matches the input's
+    RMS. This is :meth:`Envelopes.to_sound` on the sound's own envelopes.
     """
     from sonore.core.sound import Sound
 
@@ -403,19 +461,5 @@ def noise_vocode(
     if isinstance(carrier, Sound):
         if len(carrier) < len(sound):
             raise ValueError("carrier is shorter than the sound")
-        fine = filterbank.analyze(Sound(carrier.data[: len(sound)], carrier.fs)).tfs()
-    elif carrier == "noise":
-        from sonore.sources.waveforms import gaussian_noise
-
-        noise = gaussian_noise(sound.duration, sound.fs, n_channels=sound.n_channels, rng=as_rng(rng))
-        fine = filterbank.analyze(noise, pad=0).tfs()  # generated noise is periodic: circular is exact
-    elif carrier == "tone":
-        tones = np.cos(2 * np.pi * filterbank.cfs[None, :, None] * sound.t[:, None, None])
-        fine = Subbands(
-            np.broadcast_to(tones, (len(sound), len(filterbank.cfs), sound.n_channels)).copy(),
-            sound.fs,
-            filterbank,
-        )
-    else:
-        raise ValueError("carrier must be 'noise', 'tone', or a Sound")
-    return (envelopes * fine).to_sound().normalize(sound.rms)
+        return envelopes.to_sound(Sound(carrier.data[: len(sound)], carrier.fs)).normalize(sound.rms)
+    return envelopes.to_sound(carrier, rng=rng).normalize(sound.rms)

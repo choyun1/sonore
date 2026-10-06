@@ -22,6 +22,12 @@ Breaking changes since 0.5.0 (each is described under Changed):
   (plot `.binned(...)`), `PVAnalysis` (plot the STFT) and `TextureStats`
   (plot the arrays you need).
 - `so.plotting.plot_descriptor_track`.
+- `Envelopes.to_sound(carrier)` and `Envelope.to_sound(carrier)`: the
+  envelopes on a carrier's fine structure (`"noise"`, `"tone"` or a Sound
+  for `Envelopes`; a Sound for `Envelope`). `Envelopes.to_sound` is
+  `Envelope.to_sound` in every band followed by the filterbank's synthesis.
+  `noise_vocode` is now a recipe over `Envelopes.to_sound`; its output is
+  bit-for-bit unchanged.
 
 ### Changed
 
