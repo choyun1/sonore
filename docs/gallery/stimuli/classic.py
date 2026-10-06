@@ -287,7 +287,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)
 # - Byrne et al. (1994). An international comparison of long-term average speech spectra.
 #   *J. Acoust. Soc. Am.* 96(4), 2108–2120.
 #   [doi:10.1121/1.410152](https://doi.org/10.1121/1.410152).
-#   [`spectrum.long_term_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectrum.py#L119)
+#   [`spectra.long_term_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L158)
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data.
 #   *Hearing Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955(90)90170-T).

@@ -1005,7 +1005,7 @@ sound = finish(mix)
 #   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990). Experiment code:
 #   [choyun1/MSM](https://github.com/choyun1/MSM).
 #   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L520)
-#   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L105)
+#   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L107)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
 #   library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899.
 #   [doi:10.1371/journal.pone.0211899](https://doi.org/10.1371/journal.pone.0211899).

@@ -6,6 +6,51 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+Breaking changes since 0.5.0 (each is described under Changed):
+
+- `sonore.views.spectrum` and `sonore.views.reassigned` are one module,
+  `sonore.views.spectra`; `sonore.views.descriptors` is `sonore.views.timbre`.
+  The `so.` names are unchanged.
+- `Spectrum.from_sound` levels are a power spectral density in dB re 1 per Hz
+  (they were dB of the unnormalized FFT magnitude).
+
+### Added
+
+- Every view has `.plot()` (docs/design/layout/plotting.md). A view with no
+  single picture refuses with `NotImplementedError` and its `no_plot`
+  sentence, which names what to plot instead: `ReassignedSpectrogram`
+  (plot `.binned(...)`), `PVAnalysis` (plot the STFT) and `TextureStats`
+  (plot the arrays you need).
+- `so.plotting.plot_descriptor_track`.
+
+### Changed
+
+- `Spectrum.from_sound` gives the one-sided power spectral density,
+  `|X|^2 / (fs N)` with every bin but 0 Hz and Nyquist counted twice, in dB
+  re 1 per Hz: the scale of `long_term_spectrum`, so the two agree for a
+  steady noise. They were about 80 dB apart for one second of noise at
+  16 kHz. `Spectrum.to_sound` reads levels on this scale.
+- A sound made from a `Spectrum` (`Spectrum.to_sound`, or
+  `gaussian_noise(spectrum=...)`) is silent outside the spectrum's
+  frequencies; it held the last level up to the new Nyquist, so a spectrum
+  measured at 16 kHz gave a 44.1 kHz noise energy above 8 kHz.
+  `Spectrum.level_at` still holds the end values.
+- `long_term_spectrum` zero-pads a sound shorter than `win_dur` onto the same
+  frequencies (it raised a numpy broadcasting error when mixed with longer
+  sounds) and refuses an empty list.
+- `DescriptorTrack.plot()` draws through `plotting.py` and, given no `ax`,
+  opens a new figure as every other `.plot()` does, instead of drawing on the
+  current axes.
+- Modules: `views/spectrum.py` and `views/reassigned.py` merged into
+  `views/spectra.py`; `views/descriptors.py` renamed `views/timbre.py`.
+
+### Fixed
+
+- `attack_segment` and `log_attack_time` zero-pad before the Hilbert
+  transform. A sound that ended loud wrapped round to its start, so its
+  attack started at 0 s: 0.5 s of silence and a 10 ms rise measured as
+  531 ms. It now measures 494-531 ms; tones that fade out are unchanged.
+
 ## [0.5.0] - 2026-10-05
 
 Sound from a modulation spectrum: `ModulationSpectrum.to_sound(carrier=...)`,

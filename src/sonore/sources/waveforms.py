@@ -509,8 +509,8 @@ def _spectral_gain(
             # any reference frequency would do, since the output is scaled to RMS 1
             gain *= np.where(freqs > 0, (freqs / 1000.0) ** (tilt / (20 * np.log10(2))), 0.0)
     if spectrum is not None:
-        if hasattr(spectrum, "level_at"):  # a sonore Spectrum
-            level_db = spectrum.level_at(freqs)
+        if hasattr(spectrum, "_level_in_range"):  # a sonore Spectrum: silent outside its frequencies
+            level_db = spectrum._level_in_range(freqs)
         elif callable(spectrum):
             level_db = spectrum(freqs)
         else:
@@ -548,8 +548,9 @@ def gaussian_noise(
     spectrum
         Target spectrum level in dB (its shape only; the output is scaled to
         RMS 1): a :class:`~sonore.Spectrum`, a function ``f -> dB``, or a
-        ``(freqs, dB)`` pair, interpolated linearly in Hz and held flat
-        beyond its ends.
+        ``(freqs, dB)`` pair, interpolated linearly in Hz. A ``Spectrum`` is
+        silent outside its frequencies, since it was measured only there; a
+        pair is held flat beyond its ends.
     n_channels
         Independent noise in each channel.
     """

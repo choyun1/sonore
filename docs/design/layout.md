@@ -8,12 +8,16 @@ docs/design/layout/reorganization.md the earlier step):
 | `core` | `sound`, `units`, `utils`, `fft`, `processing` | `Sound`, decibels, numeric helpers and frequency scales, FFT sizes and threads, and processing that needs no analysis (padding, mixing, filters, level changes) |
 | `sources` | `waveforms`, `klatt`, `ripples` | sounds made from parameters alone: tones, noises, chirps and the LF source, Klatt's formant synthesizer, spectrotemporal ripples |
 | `frames` | `frame`, `filterbank`, `gabor` | invertible analyses and their coefficients, with exact least-squares resynthesis of changed coefficients |
-| `views` | `view`, `spectrum`, `reassigned`, `envelopes`, `mask`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `f0`, `spectral_envelope`, `aperiodicity`, `world`, `phasevocoder` | one-way analyses, each saying what it drops, with the routes back to sound they have: the channel vocoder (in `envelopes`), WORLD's synthesis, the phase vocoder |
+| `views` | `view`, `spectra`, `timbre`, `envelopes`, `mask`, `modulation`, `modspectrogram`, `cepstrum`, `mfcc`, `f0`, `spectral_envelope`, `aperiodicity`, `world`, `phasevocoder` | one-way analyses, each saying what it drops, with the routes back to sound they have: the channel vocoder (in `envelopes`), WORLD's synthesis, the phase vocoder |
 | `spatial` | `binaural`, `spatialization`, `hrir_data`, `reverb` | two ears, heads and rooms |
 | `texture` | `stats`, `grad`, `synth` | sound texture statistics and synthesis |
 
 `plotting.py` holds the `plot_*` functions and `overview`, and is imported only
 inside `.plot()` methods.
+Every view and every analysis result that is not a view (`Sound`, `STFT`,
+`TVSTFT`, `Subbands`) has `.plot()`; a view with no single picture keeps
+`View.plot`, which refuses with its `no_plot` sentence naming what to plot
+instead (docs/design/layout/plotting.md).
 
 Import order is kept module by module, not by folder: `sources/ripples`
 imports frames and views, and views import `core`. `tests/test_layers.py`

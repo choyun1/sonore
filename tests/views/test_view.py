@@ -110,3 +110,20 @@ def test_to_sound_exists_only_where_a_route_does(view):
         instance.to_sound()
     assert view.discards in str(refusal.value)
     assert (view.back_to_sound or "no canonical route") in str(refusal.value)
+
+
+@pytest.mark.parametrize("view", list(_public_subclasses(View)), ids=lambda view: view.__name__)
+def test_view_draws_or_says_why_not(view):
+    if view.plot is not View.plot:
+        assert view.no_plot == "", f"{view.__name__} draws, so it needs no no_plot sentence"
+        return
+    assert view.no_plot.startswith(f"{view.__name__} has no plot: "), f"{view.__name__}: draw, or set no_plot"
+    assert view.no_plot.endswith(".")
+    with pytest.raises(NotImplementedError) as refusal:
+        object.__new__(view).plot()
+    assert str(refusal.value) == view.no_plot
+
+
+@pytest.mark.parametrize("name", ["Sound", "STFT", "TVSTFT", "Subbands"])
+def test_analysis_results_that_are_not_views_draw(name):
+    assert callable(getattr(getattr(so, name), "plot", None)), f"{name} lost its plot"

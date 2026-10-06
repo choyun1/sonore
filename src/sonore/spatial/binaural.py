@@ -97,6 +97,8 @@ class InterauralCues(View):
     cfs: np.ndarray | None = None
 
     def plot(self, ax=None, **kwargs):
+        """ITD and ILD on twin axes, with IAC underneath (see
+        :func:`~sonore.plotting.plot_interaural_cues`)."""
         from sonore.plotting import plot_interaural_cues
 
         return plot_interaural_cues(self, ax=ax, **kwargs)

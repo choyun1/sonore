@@ -26,6 +26,7 @@ __all__ = [
     "plot_cepstrum",
     "plot_mfcc",
     "plot_f0_track",
+    "plot_descriptor_track",
     "plot_interaural_cues",
     "plot_ripple_pattern",
     "plot_lissajous",
@@ -495,6 +496,15 @@ def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwa
     return ax
 
 
+def plot_descriptor_track(track, ax=None, channel=0, **kwargs):
+    """A :class:`~sonore.views.timbre.DescriptorTrack` against time, one channel."""
+    ax = _ax(ax)
+    ax.plot(track.t, track.values[channel], **kwargs)
+    ylabel = f"{track.name} [{track.unit}]" if track.unit else track.name
+    ax.set(xlabel="Time [s]", ylabel=ylabel)
+    return ax
+
+
 def plot_interaural_cues(cues, ax=None, show_iac=True):
     """Broadband cues: ITD and ILD on twin axes (plus IAC underneath).
     Per-band cues: ITD as an image."""
@@ -590,7 +600,7 @@ def overview(sound, win_dur=20e-3, figsize=(12, 8), fmax=None):
 
     from sonore.frames.gabor import STFT
     from sonore.views.modulation import ModulationSpectrum
-    from sonore.views.spectrum import long_term_spectrum
+    from sonore.views.spectra import long_term_spectrum
 
     stft = STFT(sound.mono(), win_dur)
     fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")

@@ -7,7 +7,7 @@ to the Timbre Toolbox repository. This note fixes how the three descriptors are 
 what the page plays. It adds no code. The decisions at the end come first; they extend D9 and
 D10 of `music-pages.md`.
 
-Status: Cho merged this note on 2026-10-05 without comment, taken as accepting the recommended D-T2 to D-T5. The descriptors are in `views/descriptors.py`. While building the page, finding 2 turned out larger than first measured, and Cho changed D-T3 on 2026-10-05: the centroid now defaults to the power spectrum (see D-T3
+Status: Cho merged this note on 2026-10-05 without comment, taken as accepting the recommended D-T2 to D-T5. The descriptors are in `views/descriptors.py` (renamed `views/timbre.py` on 2026-10-06). While building the page, finding 2 turned out larger than first measured, and Cho changed D-T3 on 2026-10-05: the centroid now defaults to the power spectrum (see D-T3
 for why).
 
 ## How the claims are verified

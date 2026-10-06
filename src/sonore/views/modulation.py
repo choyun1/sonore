@@ -694,6 +694,8 @@ class ModulationSpectrum(View):
         return (abs(rate) if self.w_f[i] == 0 else rate), float(self.w_f[i])
 
     def plot(self, ax=None, **kwargs):
+        """The modulation spectrum as an image in dB (see
+        :func:`~sonore.plotting.plot_modulation_spectrum`)."""
         from sonore.plotting import plot_modulation_spectrum
 
         return plot_modulation_spectrum(self, ax=ax, **kwargs)

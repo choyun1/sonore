@@ -142,4 +142,4 @@ fig, playhead = show(sound)
 #
 # - Yost (1996). Pitch of iterated rippled noise. *J. Acoust. Soc. Am.* 100(1), 511–518.
 #   [JASA (PDF)](https://pubs.aip.org/asa/jasa/article-pdf/100/1/511/11401642/511_1_online.pdf).
-#   [`waveforms.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L590)
+#   [`waveforms.iterated_ripple_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L591)

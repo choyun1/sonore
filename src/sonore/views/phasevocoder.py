@@ -71,6 +71,10 @@ class PVAnalysis(View):
         "PVAnalysis.to_sound rebuilds an approximation through an oscillator bank; "
         "so.GaborFrame gives an exact STFT."
     )
+    no_plot = (
+        "PVAnalysis has no plot: its magnitudes are those of an STFT, so plot "
+        "so.GaborFrame(...).analyze(sound)."
+    )
 
     magnitude: np.ndarray
     phase: np.ndarray
