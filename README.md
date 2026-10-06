@@ -30,8 +30,8 @@ playable next to its plots, with a playhead that follows the sound.
 **[▶ Try it in your browser](https://choyun1.github.io/sonore/)**: one editable cell that runs sonore
 on the page, through Pyodide, with nothing to install.
 
-**[▶ Draw sounds with sonore-sketch](https://choyun1.github.io/sonore-sketch/)**: draw formant tracks,
-spectrograms or modulation spectra with a mouse, or erase parts of a
+**[▶ Draw sounds with sonore-sketch](https://choyun1.github.io/sonore-sketch/)**: draw speech, paint a
+spectrogram or draw a modulation spectrum with a mouse, or erase parts of a
 recording's spectrogram or modulation spectrum, and hear what sonore makes
 of it, in your browser.
 
@@ -297,10 +297,10 @@ Where to go for what sonore leaves out:
 - [pyfar](https://pyfar.org/) / [sofar](https://github.com/pyfar/sofar): acoustics and SOFA files.
 - [sonore-sketch](https://choyun1.github.io/sonore-sketch/) ([source](https://github.com/choyun1/sonore-sketch)):
   five tabs, each one of sonore's routes back to sound with a surface to
-  draw on: formant tracks for the Klatt synthesizer, a painted spectrogram,
-  erasures on a recording's spectrogram, blobs on a modulation spectrum, and
-  cuts in a recording's modulation spectrum. It runs sonore in the browser,
-  with nothing to install.
+  draw on. Draw speech (formant tracks for the Klatt synthesizer), Paint
+  spectrogram, Erase spectrogram (of a recording), Draw modulation (blobs on
+  a modulation spectrum) and Erase modulation (of a recording). It runs
+  sonore in the browser, with nothing to install.
 
 ## Roadmap
 
