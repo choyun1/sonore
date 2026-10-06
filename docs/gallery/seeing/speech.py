@@ -16,7 +16,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # ARCTIC, speaker bdl, 16 kHz), drawn by each time-frequency analysis in sonore. The pictures differ
 # a great deal, and this page explains why:
 #
-# - [Why it matters](#h-motivation): pitch, spectral envelope and glottal pulses are all measured
+# - [Motivation](#h-motivation): pitch, spectral envelope and glottal pulses are all measured
 #   from a time-frequency picture, and inherit whatever it smears.
 # - [One window, two views](#h-one-window-two-views): the short-time Fourier transform, and the
 #   tradeoff between resolution in time and in frequency.

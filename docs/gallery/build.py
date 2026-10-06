@@ -830,9 +830,11 @@ def sidebar(current: str, sections_html: str) -> str:
     return f'<aside class="side" aria-label="All gallery pages">{top}{body}<script>{SIDE_JS}</script></aside>'
 
 
-HOW = """<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
-  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
-  Start with your volume low.</p>"""
+def how(binaural: bool) -> str:
+    """The note on playing a page's sounds; the lossless remark only where it matters."""
+    lossless = " The audio is lossless, since compression would alter the binaural sounds." if binaural else ""
+    return f"""<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point.{lossless} Start with your volume low.</p>"""
 
 
 def page(title: str, current: str, header: str, sections_html: str, head: str = "", footer: str = "") -> str:
@@ -1132,11 +1134,17 @@ def build_example_page(site: Site, name: str) -> list[str]:
         rendered[id(part)] = variants
         print(f"  {name}: {file_name(key, title)}")
 
+    # Every two-channel demo is binaural, as in sound_article.
+    binaural = any(
+        isinstance(p, dict) and "sound" in p and p["sound"].n_channels == 2
+        for p in [p for s in content["sections"] for p in s["parts"]] + content["intro"]
+    )
+
     def make(variant):
         def show(p):
             return rendered[id(p)][variant] if isinstance(p, dict) else p
 
-        header = "\n".join(show(p) for p in content["intro"]) + "\n" + HOW
+        header = "\n".join(show(p) for p in content["intro"]) + "\n" + how(binaural)
         sections = "\n".join(
             section_html(s["title"], [show(p) for p in s["parts"]]) for s in content["sections"]
         )
