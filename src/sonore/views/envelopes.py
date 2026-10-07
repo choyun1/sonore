@@ -206,9 +206,7 @@ class Envelope(View):
                 if other.fs != self.fs or len(other) != len(self):
                     raise ValueError("envelopes must share fs and length")
                 return other._data
-            case bool():
-                return NotImplemented
-            case numbers.Real():
+            case numbers.Real() if not isinstance(other, bool):
                 return float(other)
             case _:
                 return NotImplemented
@@ -399,22 +397,7 @@ class Envelopes(_PaddedBands, View):
                 bands = np.pad(other._full, ((extra, extra), (0, 0), (0, 0))) if extra else other._full
                 env_on_grid = self._on_grid(other.fs, other.n_samples, pad)
                 return Subbands(bands * env_on_grid, other.fs, other.filterbank, pad=pad)
-            case Envelopes():
-                if other.fs != self.fs or other.n_samples != self.n_samples or len(other) != len(self):
-                    raise ValueError("Envelopes must share fs, length and band count")
-                pad = max(self.pad, other.pad)
-                own_values = self._on_grid(self.fs, self.n_samples, pad)
-                other_values = other._on_grid(self.fs, self.n_samples, pad)
-                return self._new(own_values * other_values, pad=pad)
-            case Envelope():
-                if other.fs != self.fs or len(other) != self.n_samples:
-                    raise ValueError("Envelope must share fs and length")
-                gain = np.zeros((self._full.shape[0], 1, other.data.shape[1]))
-                gain[self.pad : self.pad + self.n_samples, 0, :] = other.data
-                return self._new(self._full * gain)
-            case bool():
-                return NotImplemented
-            case numbers.Real():
+            case numbers.Real() if not isinstance(other, bool):
                 return self._new(self._full * float(other))
             case _:
                 return NotImplemented

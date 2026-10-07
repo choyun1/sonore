@@ -303,17 +303,12 @@ class TestEnvelopesBank:
     def test_products(self):
         env = self.sb.envelopes()
         np.testing.assert_allclose((env * 2).data, 2 * env.data)
-        smooth = env.lowpass(20)
-        np.testing.assert_allclose((env * smooth).data, env.data * smooth.data)
-        with pytest.raises(ValueError, match="share fs, length and band count"):
-            env * env.resample(1000)
-        gain = so.Envelope(np.linspace(0, 1, len(self.x)), FS)
-        weighted = env * gain
-        np.testing.assert_allclose(weighted.data, env.data * gain.data[:, None, :])
-        # outside the gain's own extent (the padding) it is zero
-        assert not np.any(weighted._full[: weighted.pad])
-        with pytest.raises(ValueError, match="share fs and length"):
-            env * so.Envelope(np.ones(10), FS)
+        np.testing.assert_allclose((2 * env).data, 2 * env.data)
+        for other in (True, env, so.Envelope(np.ones(len(self.x)), FS)):
+            with pytest.raises(TypeError):
+                env * other
+            with pytest.raises(TypeError):
+                other * env
 
     def test_modulation_spectrum_averages_channels(self):
         stereo = so.Sound(np.column_stack([self.x.data[:, 0], 0.5 * self.x.data[:, 0]]), FS)

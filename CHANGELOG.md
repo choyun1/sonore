@@ -17,6 +17,10 @@ Breaking changes since 0.5.0 (each is described under Changed):
   and the noise vocoder of Shannon et al. (1995) is its default
   `carrier="noise"`. The old name is gone.
 - `channel_vocode` with the noise carrier sounds different (see Changed).
+- `Envelopes * Envelopes` and `Envelopes * Envelope` are gone: nothing used
+  them, a `Mask` on `Subbands` gives each band its own gain over time, and
+  `envelope * sound` before the analysis gives every band the same one.
+  `Envelopes` multiply `Subbands` and numbers.
 
 ### Added
 
