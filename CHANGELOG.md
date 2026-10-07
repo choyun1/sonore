@@ -13,6 +13,7 @@ Breaking changes since 0.5.0 (each is described under Changed):
   The `so.` names are unchanged.
 - `Spectrum.from_sound` levels are a power spectral density in dB re 1 per Hz
   (they were dB of the unnormalized FFT magnitude).
+- `noise_vocode` with the noise carrier sounds different (see Changed).
 
 ### Added
 
@@ -22,6 +23,11 @@ Breaking changes since 0.5.0 (each is described under Changed):
   (plot `.binned(...)`), `PVAnalysis` (plot the STFT) and `TextureStats`
   (plot the arrays you need).
 - `so.plotting.plot_descriptor_track`.
+- `Envelopes.to_sound(carrier)` and `Envelope.to_sound(carrier)`: the
+  envelopes on a carrier's fine structure (`"noise"`, `"tone"` or a Sound
+  for `Envelopes`; a Sound for `Envelope`). `Envelopes.to_sound` is
+  `Envelope.to_sound` in every band followed by the filterbank's synthesis.
+  `noise_vocode` is now a recipe over `Envelopes.to_sound`.
 
 ### Changed
 
@@ -38,6 +44,17 @@ Breaking changes since 0.5.0 (each is described under Changed):
 - `long_term_spectrum` zero-pads a sound shorter than `win_dur` onto the same
   frequencies (it raised a numpy broadcasting error when mixed with longer
   sounds) and refuses an empty list.
+- `noise_vocode` (and `Envelopes.to_sound("noise")`) puts each envelope on a
+  band of noise, which keeps its own random envelope fluctuations, as in the
+  classic noise vocoder and as the vocoder gallery page describes. It used
+  the noise's fine structure, which flattened those fluctuations (the median
+  envelope standard deviation over mean of a steady harmonic complex's
+  output bands was 0.32; it is now 0.51). The vocoder and harmonics gallery
+  pages' noise-vocoded sounds are rebuilt. A carrier Sound at another sample
+  rate is refused with "sample rates differ"; the docstring describes the
+  vocoder as after Shannon et al. (1995), with Hilbert envelopes.
+- Envelopes refuse non-finite values, so dividing an `Envelope` by zero
+  raises instead of holding `inf` and `nan`.
 - `DescriptorTrack.plot()` draws through `plotting.py` and, given no `ax`,
   opens a new figure as every other `.plot()` does, instead of drawing on the
   current axes.
@@ -50,6 +67,14 @@ Breaking changes since 0.5.0 (each is described under Changed):
   transform. A sound that ended loud wrapped round to its start, so its
   attack started at 0 s: 0.5 s of silence and a 10 ms rise measured as
   531 ms. It now measures 494-531 ms; tones that fade out are unchanged.
+- `Envelopes.modulation_spectrum` dropped the first and last bands of a
+  filterbank built with `edges=False`, which has no edge bands, so two real
+  bands were lost. It now drops edge bands only where they exist.
+- Envelopes at a rate whose ratio to the target is not a small fraction are
+  resampled through the FFT instead of a huge polyphase filter: a 1 s band
+  at 314.16 Hz brought to 44.1 kHz took 3.6 s and now takes about 10 ms.
+  Ratios that need factors above 1000 also used linear interpolation when
+  the fraction was inexact; they are now band-limited.
 
 ## [0.5.0] - 2026-10-05
 

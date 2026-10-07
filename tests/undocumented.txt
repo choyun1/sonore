@@ -27,15 +27,6 @@ sonore.texture.stats.TextureStats.from_subbands
 sonore.texture.stats.TextureStats.get
 sonore.texture.stats.TextureStats.load
 sonore.texture.stats.TextureStats.save
-sonore.views.envelopes.Envelope.data
-sonore.views.envelopes.Envelope.duration
-sonore.views.envelopes.Envelope.resample
-sonore.views.envelopes.Envelope.t
-sonore.views.envelopes.Envelopes.db
-sonore.views.envelopes.Envelopes.duration
-sonore.views.envelopes.Envelopes.lowpass
-sonore.views.envelopes.Envelopes.resample
-sonore.views.envelopes.Envelopes.t
 sonore.views.modulation.ConstantQModulationFilterbank.cfs
 sonore.views.modulation.ConstantQModulationFilterbank.scale
 sonore.views.modulation.HannModulationFilterbank.n_bands
