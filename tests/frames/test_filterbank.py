@@ -24,7 +24,7 @@ class TestFilterbank:
 
     def test_vocoder_runs_and_keeps_level(self):
         x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 20))
-        v = so.noise_vocode(x, 8, rng=0)
+        v = so.channel_vocode(x, 8, rng=0)
         assert len(v) == len(x) and v.rms == pytest.approx(x.rms)
 
 

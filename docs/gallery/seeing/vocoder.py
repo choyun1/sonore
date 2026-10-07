@@ -20,7 +20,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # band's envelope modulates a band of noise in its place (Shannon et al., 1995). It is the
 # standard way to let a listener with normal hearing hear roughly what an implant passes on.
 #
-# Everything on this page is one function, `so.noise_vocode`, applied to the sentence from
+# Everything on this page is one function, `so.channel_vocode`, applied to the sentence from
 # [Seeing speech](speech.html) and to a short melody:
 #
 # - [How many bands](#h-how-many-bands): from a coarse picture of the spectrum to a fine one.
@@ -130,7 +130,7 @@ sound = sentence
 # there; the words are not.
 
 # %% [demo ci1] One band
-vocoded = finish(so.noise_vocode(sentence, 1, F_LO, F_HI, rng=1))
+vocoded = finish(so.channel_vocode(sentence, 1, F_LO, F_HI, rng=1))
 fig, playhead = show(vocoded, bands(sentence, 1), "one band")
 sound = vocoded
 
@@ -139,7 +139,7 @@ sound = vocoded
 # quiet. The spectrogram shows four broad blocks, switching on and off with the syllables.
 
 # %% [demo ci4] Four bands
-vocoded = finish(so.noise_vocode(sentence, 4, F_LO, F_HI, rng=4))
+vocoded = finish(so.channel_vocode(sentence, 4, F_LO, F_HI, rng=4))
 fig, playhead = show(vocoded, bands(sentence, 4), "four bands")
 sound = vocoded
 
@@ -148,7 +148,7 @@ sound = vocoded
 # visible as energy moving from band to band.
 
 # %% [demo ci8] Eight bands
-vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, rng=8))
+vocoded = finish(so.channel_vocode(sentence, 8, F_LO, F_HI, rng=8))
 fig, playhead = show(vocoded, bands(sentence, 8), "eight bands")
 sound = vocoded
 
@@ -157,7 +157,7 @@ sound = vocoded
 # pitch, so the talker's intonation is gone.
 
 # %% [demo ci16] Sixteen bands
-vocoded = finish(so.noise_vocode(sentence, 16, F_LO, F_HI, rng=16))
+vocoded = finish(so.channel_vocode(sentence, 16, F_LO, F_HI, rng=16))
 fig, playhead = show(vocoded, bands(sentence, 16), "sixteen bands")
 sound = vocoded
 
@@ -174,7 +174,7 @@ sound = vocoded
 # The sentence through eight tones, at the same eight band centers as the noise vocoder above.
 
 # %% [demo ct8] Eight tones
-vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, carrier="tone"))
+vocoded = finish(so.channel_vocode(sentence, 8, F_LO, F_HI, carrier="tone"))
 fig, playhead = show(vocoded, bands(sentence, 8), "eight tones")
 sound = vocoded
 
@@ -213,7 +213,7 @@ ax.grid(ls=":")
 # faint but back. The wideband spectrogram shows the pulses as vertical striations again.
 
 # %% [demo cp8] Eight bands, 300 Hz envelopes
-vocoded = finish(so.noise_vocode(sentence, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+vocoded = finish(so.channel_vocode(sentence, 8, F_LO, F_HI, env_lowpass=300, rng=8))
 fig, playhead = show(vocoded, bands(sentence, 8, env_lowpass=300), "eight bands, 300 Hz envelopes")
 sound = vocoded
 
@@ -241,7 +241,7 @@ sound = sentence_female
 # vocoded voices is where their formants sit.
 
 # %% [demo cf8] Female talker, eight bands
-vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, rng=8))
+vocoded = finish(so.channel_vocode(sentence_female, 8, F_LO, F_HI, rng=8))
 fig, playhead = show(vocoded, bands(sentence_female, 8), "eight bands")
 sound = vocoded
 
@@ -251,7 +251,7 @@ sound = vocoded
 # the male talker's above.
 
 # %% [demo cf8p] Female talker, eight bands, 300 Hz envelopes
-vocoded = finish(so.noise_vocode(sentence_female, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+vocoded = finish(so.channel_vocode(sentence_female, 8, F_LO, F_HI, env_lowpass=300, rng=8))
 fig, playhead = show(vocoded, bands(sentence_female, 8, env_lowpass=300), "eight bands, 300 Hz envelopes")
 sound = vocoded
 
@@ -282,7 +282,7 @@ sound = melody
 # little, and the tune is close to gone.
 
 # %% [demo cm8] Eight bands, 50 Hz envelopes
-vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, rng=8))
+vocoded = finish(so.channel_vocode(melody, 8, F_LO, F_HI, rng=8))
 fig, playhead = show(vocoded, bands(melody, 8), "eight bands, 50 Hz envelopes")
 sound = vocoded
 
@@ -291,7 +291,7 @@ sound = vocoded
 # comes back as a rough, buzzy pitch.
 
 # %% [demo cm8p] Eight bands, 300 Hz envelopes
-vocoded = finish(so.noise_vocode(melody, 8, F_LO, F_HI, env_lowpass=300, rng=8))
+vocoded = finish(so.channel_vocode(melody, 8, F_LO, F_HI, env_lowpass=300, rng=8))
 fig, playhead = show(vocoded, bands(melody, 8, env_lowpass=300), "eight bands, 300 Hz envelopes")
 sound = vocoded
 
@@ -316,18 +316,18 @@ sound = vocoded
 # - Dorman, Loizou & Rainey (1997). Speech intelligibility as a function of the number of channels
 #   of stimulation for signal processors using sine-wave and noise-band outputs. *J. Acoust. Soc.
 #   Am.* 102(4), 2403–2411. [doi:10.1121/1.420354](https://doi.org/10.1121/1.420354).
-#   [`envelopes.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L508)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
 # - Friesen, Shannon, Baskent & Wang (2001). Speech recognition in noise as a function of the number
 #   of spectral channels: comparison of acoustic hearing and cochlear implants. *J. Acoust. Soc.
 #   Am.* 110(2), 1150–1163. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11519582/).
-#   [`envelopes.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L508)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
-#   [`envelopes.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L508)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
 # - Wilson, Finley, Lawson, Wolford, Eddington & Rabinowitz (1991). Better speech recognition with
 #   cochlear implants. *Nature* 352, 236–238. [PubMed](https://pubmed.ncbi.nlm.nih.gov/1857418/).
-#   [`envelopes.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L508)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)

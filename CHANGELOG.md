@@ -13,7 +13,14 @@ Breaking changes since 0.5.0 (each is described under Changed):
   The `so.` names are unchanged.
 - `Spectrum.from_sound` levels are a power spectral density in dB re 1 per Hz
   (they were dB of the unnormalized FFT magnitude).
-- `noise_vocode` with the noise carrier sounds different (see Changed).
+- `noise_vocode` is `channel_vocode`: its carrier can be noise, tones or any Sound,
+  and the noise vocoder of Shannon et al. (1995) is its default
+  `carrier="noise"`. The old name is gone.
+- `channel_vocode` with the noise carrier sounds different (see Changed).
+- `Envelopes * Envelopes` and `Envelopes * Envelope` are gone: nothing used
+  them, a `Mask` on `Subbands` gives each band its own gain over time, and
+  `envelope * sound` before the analysis gives every band the same one.
+  `Envelopes` multiply `Subbands` and numbers.
 
 ### Added
 
@@ -27,7 +34,7 @@ Breaking changes since 0.5.0 (each is described under Changed):
   envelopes on a carrier's fine structure (`"noise"`, `"tone"` or a Sound
   for `Envelopes`; a Sound for `Envelope`). `Envelopes.to_sound` is
   `Envelope.to_sound` in every band followed by the filterbank's synthesis.
-  `noise_vocode` is now a recipe over `Envelopes.to_sound`.
+  `channel_vocode` is now a recipe over `Envelopes.to_sound`.
 
 ### Changed
 
@@ -44,7 +51,7 @@ Breaking changes since 0.5.0 (each is described under Changed):
 - `long_term_spectrum` zero-pads a sound shorter than `win_dur` onto the same
   frequencies (it raised a numpy broadcasting error when mixed with longer
   sounds) and refuses an empty list.
-- `noise_vocode` (and `Envelopes.to_sound("noise")`) puts each envelope on a
+- `channel_vocode` (and `Envelopes.to_sound("noise")`) puts each envelope on a
   band of noise, which keeps its own random envelope fluctuations, as in the
   classic noise vocoder and as the vocoder gallery page describes. It used
   the noise's fine structure, which flattened those fluctuations (the median
