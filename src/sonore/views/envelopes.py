@@ -22,9 +22,10 @@ polyphase, or the FFT for unusual rate ratios; clipped at zero) when applied
 to a sound.
 
 ``to_sound(carrier)`` is the route back: the envelopes imposed on a carrier.
-:func:`noise_vocode` is the noise vocoder after Shannon et al. (1995): a
-sound's own band envelopes imposed on bands of noise, as in simulations of
-cochlear-implant hearing.
+:func:`channel_vocode` is a channel vocoder: a sound's own band envelopes imposed
+on a carrier. With bands of noise as the carrier (the default) it is the
+noise vocoder of Shannon et al. (1995), as in simulations of cochlear-implant
+hearing.
 """
 
 from __future__ import annotations
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
     from sonore.frames.filterbank import Filterbank
     from sonore.views.modulation import ModulationSpectrum
 
-__all__ = ["Envelope", "Envelopes", "noise_vocode"]
+__all__ = ["Envelope", "Envelopes", "channel_vocode"]
 
 
 @dataclass(frozen=True)
@@ -505,7 +506,7 @@ class Envelopes(_PaddedBands, View):
         return plot_envelopes(self, ax=ax, **kwargs)
 
 
-def noise_vocode(
+def channel_vocode(
     sound: Sound,
     n_bands: int = 16,
     f_lo: float = 80.0,
@@ -514,7 +515,9 @@ def noise_vocode(
     env_lowpass: float | None = 50.0,
     rng=None,
 ) -> Sound:
-    """A noise vocoder, after Shannon et al. (1995), with Hilbert envelopes.
+    """A channel vocoder with Hilbert envelopes: the sound's band envelopes on
+    a ``carrier``. The default, ``carrier="noise"``, is the noise vocoder of
+    Shannon et al. (1995).
 
     The sound is split by a ``cosine_filterbank`` of ``n_bands`` bands from
     ``f_lo`` to ``f_hi`` (capped at Nyquist), each band's Hilbert envelope is

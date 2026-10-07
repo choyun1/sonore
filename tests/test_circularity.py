@@ -49,7 +49,7 @@ def far_end_db(y):
         ("fractional ITD", lambda: so.apply_itd_ild(click(), itd=123.4e-6).data, -90),
         ("Sound.envelope", lambda: burst().envelope().data, -70),
         ("band envelopes", lambda: ERB.analyze(burst()).envelopes().data[:, 1:-1], -76),
-        ("noise vocoder", lambda: so.noise_vocode(burst(), 8, rng=0).data, -75),
+        ("noise vocoder", lambda: so.channel_vocode(burst(), 8, rng=0).data, -75),
     ],
 )
 def test_no_wraparound_by_default(name, op, limit):

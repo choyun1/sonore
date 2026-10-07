@@ -344,23 +344,23 @@ class TestNoiseVocode:
             env = fb.analyze(sound).envelopes().data[FS // 10 : -FS // 10, 1:-1, 0]
             return np.median(env.std(0) / env.mean(0))
 
-        noise = so.noise_vocode(self.x, 16, 80, 7600, rng=1)
-        tone = so.noise_vocode(self.x, 16, 80, 7600, carrier="tone")
+        noise = so.channel_vocode(self.x, 16, 80, 7600, rng=1)
+        tone = so.channel_vocode(self.x, 16, 80, 7600, carrier="tone")
         # a steady input: tones carry its steady envelopes, noise bands add their own
         # fluctuations (measured 0.52; the noise's fine structure alone gave 0.32)
         assert fluctuation(tone) < 0.01 and fluctuation(noise) > 0.45
 
     def test_options(self):
-        a = so.noise_vocode(self.x, 8, rng=1)
-        np.testing.assert_array_equal(a.data, so.noise_vocode(self.x, 8, rng=1).data)
-        assert not np.array_equal(a.data, so.noise_vocode(self.x, 8, rng=2).data)
+        a = so.channel_vocode(self.x, 8, rng=1)
+        np.testing.assert_array_equal(a.data, so.channel_vocode(self.x, 8, rng=1).data)
+        assert not np.array_equal(a.data, so.channel_vocode(self.x, 8, rng=2).data)
         # f_hi above Nyquist is the same as Nyquist
-        above = so.noise_vocode(self.x, 8, 80, 2 * FS, rng=1)
-        np.testing.assert_array_equal(above.data, so.noise_vocode(self.x, 8, 80, FS / 2, rng=1).data)
+        above = so.channel_vocode(self.x, 8, 80, 2 * FS, rng=1)
+        np.testing.assert_array_equal(above.data, so.channel_vocode(self.x, 8, 80, FS / 2, rng=1).data)
         # the envelope lowpass smooths the envelopes the tones carry
         fb = so.cosine_filterbank(8)
-        smooth = so.noise_vocode(self.x, 8, carrier="tone", env_lowpass=20)
-        rough = so.noise_vocode(self.x, 8, carrier="tone", env_lowpass=None)
+        smooth = so.channel_vocode(self.x, 8, carrier="tone", env_lowpass=20)
+        rough = so.channel_vocode(self.x, 8, carrier="tone", env_lowpass=None)
         fast = [np.abs(np.fft.rfft(fb.analyze(s).envelopes().data[:, 4, 0])) for s in (smooth, rough)]
         freqs = np.fft.rfftfreq(len(self.x), 1 / FS)
         band = (freqs > 60) & (freqs < 200)  # the 120 Hz periodicity
@@ -368,10 +368,10 @@ class TestNoiseVocode:
 
     def test_carrier_checks(self):
         with pytest.raises(ValueError, match="shorter"):
-            so.noise_vocode(self.x, 8, carrier=so.gaussian_noise(0.2, FS, rng=0))
+            so.channel_vocode(self.x, 8, carrier=so.gaussian_noise(0.2, FS, rng=0))
         with pytest.raises(ValueError, match="sample rates differ"):
-            so.noise_vocode(self.x, 8, carrier=so.gaussian_noise(1.0, 22050, rng=0))
+            so.channel_vocode(self.x, 8, carrier=so.gaussian_noise(1.0, 22050, rng=0))
         with pytest.raises(ValueError, match="carrier must be"):
-            so.noise_vocode(self.x, 8, carrier="pink")
+            so.channel_vocode(self.x, 8, carrier="pink")
         with pytest.raises(ValueError, match="carrier must be"):
-            so.noise_vocode(self.x, 8, carrier=np.zeros(10))
+            so.channel_vocode(self.x, 8, carrier=np.zeros(10))
