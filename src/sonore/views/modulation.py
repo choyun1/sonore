@@ -643,34 +643,36 @@ class ModulationSpectrum(View):
         from sonore.frames.filterbank import Subbands
         from sonore.sources.waveforms import gaussian_noise
 
-        if isinstance(carrier, Sound):
-            if rng is not None:
-                raise TypeError("rng applies only to carrier='tones' or 'noise'")
-            if fs is not None and fs != carrier.fs:
-                raise ValueError(f"fs {fs} differs from the carrier's {carrier.fs}")
-            envelopes = self.to_envelopes(carrier)
-            fs = carrier.fs
-        elif carrier in ("tones", "noise"):
-            if fs is None:
-                raise TypeError("fs is needed for carrier='tones' or 'noise'")
-            rng = as_rng(rng)
-            envelopes = self.to_envelopes(rng=rng)
-        else:
-            raise ValueError(f"carrier must be 'tones', 'noise' or a Sound, not {carrier!r}")
+        match carrier:
+            case Sound():
+                if rng is not None:
+                    raise TypeError("rng applies only to carrier='tones' or 'noise'")
+                if fs is not None and fs != carrier.fs:
+                    raise ValueError(f"fs {fs} differs from the carrier's {carrier.fs}")
+                envelopes = self.to_envelopes(carrier)
+                fs = carrier.fs
+            case "tones" | "noise":
+                if fs is None:
+                    raise TypeError("fs is needed for carrier='tones' or 'noise'")
+                rng = as_rng(rng)
+                envelopes = self.to_envelopes(rng=rng)
+            case _:
+                raise ValueError(f"carrier must be 'tones', 'noise' or a Sound, not {carrier!r}")
         analysis = self._analysis
         bank = analysis.filterbank
         n_audio = int(round(analysis.n_samples * fs / analysis.fs))
 
-        if isinstance(carrier, Sound):
-            fine = bank.analyze(Sound(carrier.mono().data[:n_audio], fs)).tfs()
-            sound = (envelopes * fine).to_sound()
-        elif carrier == "noise":
-            fine = bank.analyze(gaussian_noise(n_audio / fs, fs, rng=rng)).tfs()
-            sound = (envelopes * fine).to_sound()
-        else:
-            t = np.arange(n_audio)[:, None] / fs
-            tones = np.cos(2 * np.pi * bank.cfs[None, :] * t + rng.uniform(0, 2 * np.pi, bank.n_filters))
-            sound = (envelopes * Subbands(tones[:, :, None], fs, bank)).sum()
+        match carrier:
+            case Sound():
+                fine = bank.analyze(Sound(carrier.mono().data[:n_audio], fs)).tfs()
+                sound = (envelopes * fine).to_sound()
+            case "noise":
+                fine = bank.analyze(gaussian_noise(n_audio / fs, fs, rng=rng)).tfs()
+                sound = (envelopes * fine).to_sound()
+            case "tones":
+                t = np.arange(n_audio)[:, None] / fs
+                tones = np.cos(2 * np.pi * bank.cfs[None, :] * t + rng.uniform(0, 2 * np.pi, bank.n_filters))
+                sound = (envelopes * Subbands(tones[:, :, None], fs, bank)).sum()
         sound = Sound(sound.data[:n_audio], fs)
         for _ in range(int(iterations)):
             subbands = bank.analyze(sound)

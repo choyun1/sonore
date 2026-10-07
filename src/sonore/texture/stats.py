@@ -263,12 +263,13 @@ class TextureStats(View):
 
     @staticmethod
     def _window(model: TextureModel, n_env: int, window: str) -> np.ndarray:
-        if window == "ramped":
-            weights = measurement_window(n_env, int(round(n_env / model.env_fs)))
-        elif window == "uniform":
-            weights = np.full(n_env, 1.0 / n_env)
-        else:
-            raise ValueError("window must be 'ramped' or 'uniform'")
+        match window:
+            case "ramped":
+                weights = measurement_window(n_env, int(round(n_env / model.env_fs)))
+            case "uniform":
+                weights = np.full(n_env, 1.0 / n_env)
+            case _:
+                raise ValueError("window must be 'ramped' or 'uniform'")
         return weights
 
     @classmethod

@@ -42,30 +42,38 @@ class Decibels:
     # scaling: 6*dB, -3*dB, 2*(6*dB), (6*dB)/2. The number comes first, as it is
     # written and read; dB*6 is refused rather than quietly meaning the same.
     def __rmul__(self, other):
-        if isinstance(other, numbers.Real) and not isinstance(other, bool):
-            return Decibels(self.value * float(other))
-        return self._refuse(other)
+        match other:
+            case numbers.Real() if not isinstance(other, bool):
+                return Decibels(self.value * float(other))
+            case _:
+                return self._refuse(other)
 
     def __mul__(self, other):
-        if isinstance(other, numbers.Real) and not isinstance(other, bool):
-            level = "dB" if self.value == 1 else f"({self!r})".replace(" dB", "*dB")
-            raise TypeError(f"write the number first: did you mean {other:g}*{level}?")
-        return self._refuse(other)
+        match other:
+            case numbers.Real() if not isinstance(other, bool):
+                level = "dB" if self.value == 1 else f"({self!r})".replace(" dB", "*dB")
+                raise TypeError(f"write the number first: did you mean {other:g}*{level}?")
+            case _:
+                return self._refuse(other)
 
     def _refuse(self, other):
         from sonore.core.sound import Sound
 
-        if isinstance(other, Sound):
-            raise TypeError(
-                "multiplying a Sound by dB is ambiguous; write snd + 6*dB for a gain "
-                "(note that snd * 6*dB parses as (snd * 6) * dB)"
-            )
-        return NotImplemented
+        match other:
+            case Sound():
+                raise TypeError(
+                    "multiplying a Sound by dB is ambiguous; write snd + 6*dB for a gain "
+                    "(note that snd * 6*dB parses as (snd * 6) * dB)"
+                )
+            case _:
+                return NotImplemented
 
     def __truediv__(self, other):
-        if isinstance(other, numbers.Real) and not isinstance(other, bool):
-            return Decibels(self.value / float(other))
-        return NotImplemented
+        match other:
+            case numbers.Real() if not isinstance(other, bool):
+                return Decibels(self.value / float(other))
+            case _:
+                return NotImplemented
 
     def __neg__(self):
         return Decibels(-self.value)
@@ -75,24 +83,32 @@ class Decibels:
 
     # combining levels: 6*dB + 3*dB == 9*dB
     def __add__(self, other):
-        if isinstance(other, Decibels):
-            return Decibels(self.value + other.value)
-        return NotImplemented
+        match other:
+            case Decibels():
+                return Decibels(self.value + other.value)
+            case _:
+                return NotImplemented
 
     def __sub__(self, other):
-        if isinstance(other, Decibels):
-            return Decibels(self.value - other.value)
-        return NotImplemented
+        match other:
+            case Decibels():
+                return Decibels(self.value - other.value)
+            case _:
+                return NotImplemented
 
     def __lt__(self, other):
-        if isinstance(other, Decibels):
-            return self.value < other.value
-        return NotImplemented
+        match other:
+            case Decibels():
+                return self.value < other.value
+            case _:
+                return NotImplemented
 
     def __le__(self, other):
-        if isinstance(other, Decibels):
-            return self.value <= other.value
-        return NotImplemented
+        match other:
+            case Decibels():
+                return self.value <= other.value
+            case _:
+                return NotImplemented
 
 
 dB = Decibels(1.0)

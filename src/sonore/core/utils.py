@@ -104,23 +104,27 @@ def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
     Slaney's Auditory Toolbox and librosa: linear below 1 kHz (15 mel at
     1000 Hz) and logarithmic above it (27 mel per factor of 6.4)."""
     freq = np.asarray(freq, dtype=float)
-    if scale == "htk":
-        return 2595 * np.log10(1 + freq / 700)
-    if scale == "slaney":
-        above = 15 + np.log(np.maximum(freq, 1000) / 1000) / _SLANEY_LOG_STEP
-        return np.where(freq < 1000, freq / _SLANEY_HZ_PER_MEL, above)
-    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
+    match scale:
+        case "htk":
+            return 2595 * np.log10(1 + freq / 700)
+        case "slaney":
+            above = 15 + np.log(np.maximum(freq, 1000) / 1000) / _SLANEY_LOG_STEP
+            return np.where(freq < 1000, freq / _SLANEY_HZ_PER_MEL, above)
+        case _:
+            raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
 
 
 def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
     """Mel to frequency [Hz]; the inverse of :func:`freq_to_mel`."""
     mel = np.asarray(mel, dtype=float)
-    if scale == "htk":
-        return 700 * (10 ** (mel / 2595) - 1)
-    if scale == "slaney":
-        above = 1000 * np.exp(_SLANEY_LOG_STEP * (np.maximum(mel, 15) - 15))
-        return np.where(mel < 15, mel * _SLANEY_HZ_PER_MEL, above)
-    raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
+    match scale:
+        case "htk":
+            return 700 * (10 ** (mel / 2595) - 1)
+        case "slaney":
+            above = 1000 * np.exp(_SLANEY_LOG_STEP * (np.maximum(mel, 15) - 15))
+            return np.where(mel < 15, mel * _SLANEY_HZ_PER_MEL, above)
+        case _:
+            raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
 
 
 def ratio_to_cents(ratio: ArrayLike) -> np.ndarray:

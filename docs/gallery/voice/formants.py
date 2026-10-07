@@ -629,12 +629,12 @@ fig, playhead = show(sound, "Rd from 0.6 to 2.4, with aspiration rising", [730, 
 # - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
 #   [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py#L103)
-#   [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L230)
+#   [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L232)
 # - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis.
 #   *STL-QPSR* 36(2–3), 119–156. The Rd parameter.
-#   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L862)
+#   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L863)
 # - Fant, Liljencrants & Lin (1985). A four-parameter model of glottal flow. *STL-QPSR* 26(4),
-#   1–13. [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L783)
+#   1–13. [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L784)
 # - Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among
 #   female and male talkers. *J. Acoust. Soc. Am.* 87(2), 820–857.
 #   [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894). The `SS` source switch.

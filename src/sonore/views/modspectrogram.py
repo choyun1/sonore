@@ -215,11 +215,13 @@ class ModulationSpectrogram(View):
         return animate_modulation_spectrogram(self, path=path, sound=sound, fps=fps, **kwargs)
 
     def _kind(self, kind: str) -> np.ndarray:
-        if kind == "depth":
-            return self.depth
-        if kind == "power":
-            return self.power
-        raise ValueError("kind must be 'depth' or 'power'")
+        match kind:
+            case "depth":
+                return self.depth
+            case "power":
+                return self.power
+            case _:
+                raise ValueError("kind must be 'depth' or 'power'")
 
 
 def _band_widths(fb) -> np.ndarray:

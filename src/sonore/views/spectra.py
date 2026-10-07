@@ -349,11 +349,13 @@ def reassigned_spectrogram(
 
 def _window_from_formula(spec, n: int) -> np.ndarray:
     k = np.arange(n)
-    if spec == "hann":
-        return 0.5 - 0.5 * np.cos(2 * np.pi * k / n)
-    if isinstance(spec, tuple) and len(spec) == 2 and spec[0] == "gaussian":
-        return np.exp(-0.5 * ((k - n / 2) / spec[1]) ** 2)
-    raise ValueError(f"reassignment needs a 'hann' or ('gaussian', std) window, not {spec!r}")
+    match spec:
+        case "hann":
+            return 0.5 - 0.5 * np.cos(2 * np.pi * k / n)
+        case tuple(("gaussian", std)):
+            return np.exp(-0.5 * ((k - n / 2) / std) ** 2)
+        case _:
+            raise ValueError(f"reassignment needs a 'hann' or ('gaussian', std) window, not {spec!r}")
 
 
 def _window_tau_and_derivative(spec, n: int, fs: float) -> tuple[np.ndarray, np.ndarray]:
@@ -362,8 +364,9 @@ def _window_tau_and_derivative(spec, n: int, fs: float) -> tuple[np.ndarray, np.
     k = np.arange(n)
     tau = (k - n // 2) / fs
     window = _window_from_formula(spec, n)
-    if spec == "hann":
-        derivative = 0.5 * (2 * np.pi / n) * np.sin(2 * np.pi * k / n) * fs
-    else:
-        derivative = -(k - n / 2) / spec[1] ** 2 * window * fs
+    match spec:
+        case "hann":
+            derivative = 0.5 * (2 * np.pi / n) * np.sin(2 * np.pi * k / n) * fs
+        case ("gaussian", std):
+            derivative = -(k - n / 2) / std**2 * window * fs
     return tau, derivative
