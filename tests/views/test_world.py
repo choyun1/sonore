@@ -20,7 +20,7 @@ def reference():
 
 
 def case(reference, name):
-    """The sound and F0 track WORLD analysed, and its stored outputs."""
+    """The sound and F0 track WORLD analyzed, and its stored outputs."""
     sound = so.Sound(reference[f"{name}_sound"], FS)
     return sound, (reference[f"{name}_t"], reference[f"{name}_f0"])
 
@@ -100,7 +100,7 @@ def test_fresh_noise_changes_only_the_noise(reference):
     assert so.rms(difference.data) < 0.01 * so.rms(world.data)
 
 
-def test_channels_are_analysed_separately(reference):
+def test_channels_are_analyzed_separately(reference):
     sound, track = case(reference, "vowel")
     stereo = so.Sound(np.column_stack([sound.data[:, 0], 0.5 * sound.data[:, 0]]), FS)
     envelope = so.cheaptrick(stereo, track)

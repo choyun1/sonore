@@ -2,7 +2,7 @@
 
 Like the other design checkers, this shares no code with sonore: NumPy and SciPy, every
 formula written out from Peeters et al. (2011), not from the Timbre Toolbox source (whose
-licence forbids redistribution). Each line prints the claim number and the number that
+license forbids redistribution). Each line prints the claim number and the number that
 supports it.
 
     python tools/check_timbre_claims.py

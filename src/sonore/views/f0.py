@@ -127,7 +127,7 @@ def f0_track(
     On synthetic vowels the refined F0 is within 0.12% of the truth on a one
     octave per second glide and a 5.5 Hz vibrato. Against laryngograph
     reference F0 (a male and a female speaker), it gets the voicing of 5.6%
-    and 1.5% of time windows wrong, where WORLD's Harvest, which leans towards
+    and 1.5% of time windows wrong, where WORLD's Harvest, which leans toward
     calling time windows voiced, gets about 21% wrong; where both it and the
     reference say voiced, 98% and 95% of time windows are within 5%. Lower ``threshold`` to voice
     more weak or creaky stretches, for example before resynthesis.
@@ -245,7 +245,7 @@ def _candidates(x, t, fs, f_lo, f_hi):
 
 def _blackman(n, length):
     """A Blackman window of (odd) `length` samples evaluated at offsets n from
-    its centre; zero outside."""
+    its center; zero outside."""
     half = (length - 1) / 2
     phase = 2 * np.pi * (n + half) / (length - 1)
     window = 0.42 - 0.5 * np.cos(phase) + 0.08 * np.cos(2 * phase)
@@ -295,7 +295,7 @@ def _refine(samples, candidate_times, candidate_f0s, fs, iters=2):
 
 
 def _periodicity(samples, candidate_times, candidate_f0s, fs):
-    """Normalized correlation between a stretch PERIODS periods long, centred
+    """Normalized correlation between a stretch PERIODS periods long, centered
     half a period before the candidate time, and the same stretch one period later. The
     fractional part of the period is done with a Kaiser-windowed sinc."""
     out = np.zeros(len(candidate_f0s))
@@ -442,7 +442,7 @@ def scale_f0(contour, ratio: float, *, range: float = 1.0):
 
 def _scaled_candidates(track: F0Track, ratio: float, spread: float) -> np.ndarray:
     """The candidates moved by the same map as the chosen F0 (each channel's
-    median of voiced F0 as the centre)."""
+    median of voiced F0 as the center)."""
     if spread == 1:
         return track.candidates * ratio
     out = track.candidates.copy()

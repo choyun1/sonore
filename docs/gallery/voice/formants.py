@@ -124,7 +124,7 @@ fig, playhead = show(sound, "the source through F1", [730])
 
 # %% [about]
 # Through the first two formants. F1 and F2 are what tells most vowels apart, and with both, the
-# sound is recognisably the vowel of "hod", if thin.
+# sound is recognizably the vowel of "hod", if thin.
 
 # %% [demo fv3] Two formants
 two = so.resonator(one, *HOD[1])
@@ -454,7 +454,7 @@ fig, playhead = show(sound, "breathy: aspiration 6 dB below voicing", [730, 1090
 #
 # In the cascade, formants run one after another and their levels follow from their
 # frequencies. In the parallel branch each formant gets the source separately and is added at a
-# level of its own. Added with the same sign, neighbouring formants partly cancel between their
+# level of its own. Added with the same sign, neighboring formants partly cancel between their
 # peaks, because their phases differ by about half a cycle there. Klatt adds them with
 # alternating signs, and then the sum follows the cascade closely, given the right levels.
 

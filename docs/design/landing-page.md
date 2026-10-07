@@ -31,7 +31,7 @@ web worker so the page stays responsive while Python loads. Pyodide brings its o
 builds of numpy, scipy, matplotlib and soundfile; sonore is a pure-Python wheel, which
 micropip installs from PyPI. Files:
 
-- `docs/index.html`: the page, hand-written, with the gallery's colours and fonts.
+- `docs/index.html`: the page, hand-written, with the gallery's colors and fonts.
 - `docs/try/worker.js`: loads Pyodide and sonore on the first Run, then runs cells.
 - `docs/try/runner.py`: the Python side, which runs a cell and turns what it shows into
   text, WAV bytes and PNGs. It is plain Python, so `tests/test_landing_page.py` runs it
@@ -60,7 +60,7 @@ repository, so a release that breaks it fails the test first.
 a reader who only reads the page shouldn't pay for it. The status line says what is
 loading.
 
-**D5. A plain text area, no code editor library.** No syntax colours, but no extra
+**D5. A plain text area, no code editor library.** No syntax colors, but no extra
 download or script from another site, and the browser's own undo, find and
 accessibility work. Tab moves focus as everywhere else on the page rather than
 indenting, so a keyboard user can leave the cell.

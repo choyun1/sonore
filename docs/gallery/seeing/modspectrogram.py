@@ -56,7 +56,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # its cycles: 6 s at 0.5 Hz, 0.75 s at 4 Hz, 47 ms at 64 Hz, so slow rates are resolved finely
 # and fast rates are placed precisely in time. Rates are half an octave apart. A window of six
 # cycles, with rates a quarter-octave apart, separates rates twice as finely and follows changes
-# half as quickly; the examples show both. Cells drawn grey are ones the analysis cannot trust:
+# half as quickly; the examples show both. Cells drawn gray are ones the analysis cannot trust:
 # where the window runs past either end of the sound, or where the rate is faster than the band
 # is wide (a band's envelope can't change faster than that).
 #
@@ -240,7 +240,7 @@ fig, playhead, live = show(sound, marks=[3.5, 7.0], start=1.75)
 # %% [markdown]
 # ## Three cuts through the cube
 #
-# `msg.slices(t, rate)` draws three cuts through the cube at once, on one colour scale: rate
+# `msg.slices(t, rate)` draws three cuts through the cube at once, on one color scale: rate
 # against time pooled over bands, frequency against time at one rate, and frequency against
 # rate at one moment. Here they are for the sentences, at 4 Hz and at 2 s.
 
@@ -248,8 +248,8 @@ fig, playhead, live = show(sound, marks=[3.5, 7.0], start=1.75)
 # The middle panel shows which bands carry the 4 Hz rhythm and when: nearly all of them, in
 # step with the syllables, since a syllable's onset raises the level across the spectrum. On the
 # right, the moment at 2 s: depth is high from 1 to about 5 Hz in most bands and falls off above
-# 10 Hz, most steeply in the low bands. The grey column is 0.5 Hz, whose 6 s window runs past
-# the start; the grey cell at the bottom right is 64 Hz in the lowest band, faster than that band
+# 10 Hz, most steeply in the low bands. The gray column is 0.5 Hz, whose 6 s window runs past
+# the start; the gray cell at the bottom right is 64 Hz in the lowest band, faster than that band
 # is wide.
 
 # %% [figure s2] Three cuts through the sentences

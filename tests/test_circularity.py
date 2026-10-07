@@ -2,7 +2,7 @@
 
 FFT-based operations are circular: energy near one end of a signal can wrap
 around to the other. sonore pads by default so this doesn't happen, and keeps
-circular behaviour available (``pad=0``) for periodic signals and texture
+circular behavior available (``pad=0``) for periodic signals and texture
 synthesis. Each probe puts an event near the start of 1 s of silence and
 measures what appears in the last 5% of the output. With linear edge handling
 there is nothing there; with wrap-around there is. Thresholds sit about 10 dB
@@ -62,8 +62,8 @@ def test_circular_mode_is_still_circular():
 
 
 def test_circular_mode_is_exact_for_periodic_signals():
-    # A periodic signal analysed circularly == the middle period of the same
-    # signal tiled and analysed with padding.
+    # A periodic signal analyzed circularly == the middle period of the same
+    # signal tiled and analyzed with padding.
     x = so.gaussian_noise(0.5, FS, rng=0)  # FFT-generated noise is exactly periodic
     circular = ERB.analyze(x, pad=0).data
     tiled = so.Sound(np.tile(x.data, (9, 1)), FS)

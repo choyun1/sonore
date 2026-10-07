@@ -148,7 +148,7 @@ def _blob_target(rms_depth=0.2):
     )
 
 
-def test_blob_power_peaks_at_its_centre_on_its_side_only():
+def test_blob_power_peaks_at_its_center_on_its_side_only():
     blob = so.ModulationBlob(-8, 1.0, level=-6)
     rate = np.array([[-8.0, 8.0, -16.0]])
     density = np.array([[1.0]])

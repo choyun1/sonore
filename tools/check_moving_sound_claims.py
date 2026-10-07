@@ -267,7 +267,7 @@ def claim_retarded_time():
 
 def claim_switching_fails_for_distance():
     """C4: switching between fixed delays at 200 points/s cannot follow a
-    changing distance: neighbouring windows hold copies of the sound at
+    changing distance: neighboring windows hold copies of the sound at
     different delays, which comb-filter."""
     position = pass_by(15.0)
     duration = 3.0

@@ -30,13 +30,13 @@ def report(claim, text, value):
 # ------------------------------------------------------------------ kernels
 def hann(n_len):
     """Hann window sampled at the midpoints of n_len equal steps, so its
-    centre falls between samples for even n_len and on one for odd n_len."""
+    center falls between samples for even n_len and on one for odd n_len."""
     return np.sin(np.pi * (np.arange(n_len) + 0.5) / n_len) ** 2
 
 
 def kernel(f_mod, n_len):
     """Complex modulation kernel: a Hann window times exp(+i 2 pi f t),
-    referenced to the window's centre, normalized to sum(window) = 1."""
+    referenced to the window's center, normalized to sum(window) = 1."""
     w = hann(n_len)
     w = w / w.sum()
     tc = (np.arange(n_len) - (n_len - 1) / 2) / FE
@@ -62,7 +62,7 @@ def response(h, freqs):
 def sliding(env, h, w, centered=True):
     """Depth and modulation power of an envelope (1-D, at FE) for one kernel,
     at every sample. Correlation with the kernel over a window that ends at
-    the sample (causal) or is centred on it. Returns (y, mean): y the complex
+    the sample (causal) or is centered on it. Returns (y, mean): y the complex
     output, mean the windowed mean of the envelope."""
     n_len = len(h)
     pad = np.concatenate([np.zeros(n_len - 1), env])
@@ -96,7 +96,7 @@ def erb_freq(e):
 
 def erb_bank(n_bands, f_lo, f_hi, n):
     """Half-cosine filters equally spaced on the ERB-number scale, each
-    spanning one spacing either side of its centre (the shape sonore's
+    spanning one spacing either side of its center (the shape sonore's
     cosine banks use). Returns (cfs, responses on rfft bins)."""
     knots = np.linspace(erb_number(f_lo), erb_number(f_hi), n_bands + 2)
     e = erb_number(np.fft.rfftfreq(n, 1 / FS))
@@ -109,8 +109,8 @@ def erb_bank(n_bands, f_lo, f_hi, n):
 
 
 def gammatone_bank(n_bands, f_lo, f_hi, n):
-    """4th-order gammatone filters (b = 1.019 ERB) at the same centres as
-    erb_bank, causal phase, unit gain at the centre: the Fourier transform of
+    """4th-order gammatone filters (b = 1.019 ERB) at the same centers as
+    erb_bank, causal phase, unit gain at the center: the Fourier transform of
     t**3 exp(-2 pi b t) exp(i 2 pi cf t), kept for positive frequencies.
     Returns (cfs, complex responses on rfft bins)."""
     knots = np.linspace(erb_number(f_lo), erb_number(f_hi), n_bands + 2)
@@ -201,7 +201,7 @@ def c3():
     tf = t[window_index]
     mid = (tf > 1.5) & (tf < 2.5)
     b, j = np.unravel_index(np.argmax(P[mid].mean(0)), P.shape[1:])
-    report("C3", "largest modulation power: audio band centre [Hz]", cfs[b])
+    report("C3", "largest modulation power: audio band center [Hz]", cfs[b])
     report("C3", "largest modulation power: modulation band [Hz]", fr[j])
     report("C3", "depth in that cell, 1.5-2.5 s [dB] (20 log10 0.5 = -6.02)", db(D[mid, b, j].mean()))
     report("C3", "  its spread over 1.5-2.5 s [dB, max - min]", np.ptp(db(D[mid, b, j])))
@@ -342,7 +342,7 @@ def c7():
 # ===================================================================== C8
 def c8():
     """Block processing with a carried buffer equals the offline causal result,
-    which is the centred result delayed by (L - 1) / 2 samples."""
+    which is the centered result delayed by (L - 1) / 2 samples."""
     n = int(10 * FE)
     e = 1 + 0.4 * np.sin(2 * np.pi * 3 * np.arange(n) / FE) + 0.05 * rng.standard_normal(n)
     worst_block = worst_shift = 0.0
@@ -367,7 +367,7 @@ def c8():
         d = (L - 1) // 2
         worst_shift = max(worst_shift, np.max(np.abs(y_off[d:] - y_c[: n - d])))
     report("C8", "block-wise (64 samples) vs offline causal, worst difference", worst_block)
-    report("C8", "causal vs centred shifted by (L-1)/2, worst difference", worst_shift)
+    report("C8", "causal vs centered shifted by (L-1)/2, worst difference", worst_shift)
     for f in (0.5, 4.0, 64.0):
         report("C8", f"causal latency (half the kernel) at {f:g} Hz [s]", (cq_length(f) - 1) / 2 / FE)
     # per time window and band: a complex kernel (2 real multiply-adds per tap) and
@@ -411,8 +411,8 @@ FRONT_ENDS = (
 )
 
 
-def analyse(env, rates):
-    """y and local mean for every band and rate, centred, at time windows 10 ms apart:
+def analyze(env, rates):
+    """y and local mean for every band and rate, centered, at time windows 10 ms apart:
     shapes (n_windows, n_bands, n_rates). Also a mask of time windows at least half
     a kernel from either end."""
     window_index = np.arange(0, env.shape[0], int(HOP * FE))
@@ -448,7 +448,7 @@ def c10():
     x, _ = sam_tone(1000.0, 4.0, 0.5, 3.0)
     for label, shape, pw in FRONT_ENDS:
         cfs, env = band_envelopes(x, shape=shape, power=pw)
-        Y, M, ok = analyse(env, [4.0])
+        Y, M, ok = analyze(env, [4.0])
         sel = ok[:, 0]
         P = np.mean(np.abs(2 * Y[sel, :, 0]) ** 2, axis=0)
         b = int(np.argmax(P))
@@ -463,7 +463,7 @@ def c10():
     res = {}
     for label, shape, pw in FRONT_ENDS:
         _, env = band_envelopes(x, shape=shape, power=pw)
-        res[label] = analyse(env, rates)
+        res[label] = analyze(env, rates)
     ok = res[FRONT_ENDS[0][0]][2]
     for label, _, _ in FRONT_ENDS:
         Y, M, _ = res[label]

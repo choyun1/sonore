@@ -35,7 +35,7 @@ class ModulationSpectrogram(View):
     :class:`~sonore.views.modulation.HannModulationFilterbank`), at each
     time window::
 
-        y    = sum_j e_b[n + j - c] conj(h_k[j])     (c: centred or causal)
+        y    = sum_j e_b[n + j - c] conj(h_k[j])     (c: centered or causal)
         mean = sum_j e_b[n + j - c] w_k[j]
 
     and the stored arrays are ``power = |2 y|**2`` and ``mean``, both of shape
@@ -73,7 +73,7 @@ class ModulationSpectrogram(View):
     hop
         Spacing between time windows [s], independent of the window, as in an STFT.
     align
-        ``"center"`` (windows centred on the window times) or ``"causal"`` (windows
+        ``"center"`` (windows centered on the window times) or ``"causal"`` (windows
         ending at them: what a live analysis would see).
     bank
         A ready-made bank, instead of ``f_lo`` .. ``window``.
@@ -188,7 +188,7 @@ class ModulationSpectrogram(View):
             return np.where(mean_sq_sum > tiny, np.sqrt(power_sum / mean_sq_sum), np.nan)
 
     def plot(self, ax=None, band: float | None = None, rate: float | None = None, **kwargs):
-        """Depth in dB as an image, invalid cells in grey. By default,
+        """Depth in dB as an image, invalid cells in gray. By default,
         modulation rate against time, pooled over bands
         (:meth:`pooled_depth`); ``band=`` [Hz] shows the acoustic band
         nearest that frequency instead; ``rate=`` [Hz] shows acoustic band
@@ -227,7 +227,7 @@ class ModulationSpectrogram(View):
 def _band_widths(fb) -> np.ndarray:
     """-3 dB width [Hz] of every filter of ``fb``, from its own responses."""
     cfs = np.asarray(fb.cfs, float)
-    # a log-spaced grid: fine steps (0.03%) at every centre frequency
+    # a log-spaced grid: fine steps (0.03%) at every center frequency
     freqs = np.geomspace(max(cfs.min(), 1.0) / 4, 2.0 * cfs.max(), 20001)
     freq_step = np.gradient(freqs)
     magnitude = np.abs(np.asarray(fb.response(freqs)))  # (F, n_filters)

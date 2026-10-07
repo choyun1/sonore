@@ -180,7 +180,7 @@ ax.legend(loc="lower right", fontsize=8)
 # across the window.
 
 # %%
-centre = int(0.5 * FS)  # the time window at 0.5 s
+center = int(0.5 * FS)  # the time window at 0.5 s
 half = int(round(2 * FS / F0))  # half of four periods
 offsets = np.arange(-half, half + 1)
 window = 0.5 + 0.5 * np.cos(np.pi * offsets / (half + 1))
@@ -191,8 +191,8 @@ columns = np.column_stack(
     [np.ones(len(offsets)), np.cos(harmonic_phases), np.sin(harmonic_phases)]
     + [ramp * np.cos(harmonic_phases), ramp * np.sin(harmonic_phases)]
 )
-segment = vowel.data[centre + offsets, 0]
-root_window = np.sqrt(window)  # weighted least squares: minimise the windowed residual
+segment = vowel.data[center + offsets, 0]
+root_window = np.sqrt(window)  # weighted least squares: minimize the windowed residual
 weights, *_ = np.linalg.lstsq(columns * root_window[:, None], segment * root_window, rcond=None)
 residual = segment - columns @ weights
 print(f"{columns.shape[1]} columns fitted to {len(offsets)} samples")

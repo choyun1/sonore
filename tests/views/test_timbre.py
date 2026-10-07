@@ -198,7 +198,7 @@ def test_track_summaries_are_median_and_interquartile_range():
     assert track.median[0] != pytest.approx(np.nanmean(track.values))
 
 
-def test_track_times_are_window_centres():
+def test_track_times_are_window_centers():
     centroid = so.spectral_centroid(tone())
     n_window, n_hop = round(0.0232 * FS), round(0.0058 * FS)
     assert centroid.t[0] == pytest.approx(n_window / 2 / FS)

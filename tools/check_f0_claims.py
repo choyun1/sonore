@@ -191,7 +191,7 @@ def padded(x, pad):
 
 def refine(x, tc, f, periods=3.0, K=6, iters=2):
     """Instantaneous-frequency refinement. A Blackman window `periods` periods
-    of f long, centred at tc; the DTFT at the harmonics k f (k = 1..K) of the
+    of f long, centered at tc; the DTFT at the harmonics k f (k = 1..K) of the
     segment and of the segment one sample later; each harmonic's
     instantaneous frequency is its phase advance per sample. The new F0 is
     the power-weighted mean of IF_k / k. Repeated `iters` times."""
@@ -217,7 +217,7 @@ def refine(x, tc, f, periods=3.0, K=6, iters=2):
 
 
 def periodicity(x, tc, f, periods=3.0):
-    """Normalized correlation between a stretch `periods` periods long centred
+    """Normalized correlation between a stretch `periods` periods long centered
     half a period before tc and the same stretch one period later (fractional
     shifts by linear interpolation)."""
     T = FS / f

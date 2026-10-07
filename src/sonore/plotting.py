@@ -154,7 +154,7 @@ def plot_modulation_spectrum(
 
 
 def _depth_db(depth, valid=None):
-    """Depth in dB with invalid or undefined cells as NaN (drawn grey)."""
+    """Depth in dB with invalid or undefined cells as NaN (drawn gray)."""
     with np.errstate(divide="ignore", invalid="ignore"):
         db = 20 * np.log10(depth)
     if valid is not None:
@@ -200,7 +200,7 @@ def plot_modulation_spectrogram(
     msg, ax=None, channel=0, band=None, rate=None, db_range=30.0, cmap="magma", colorbar=True
 ):
     """Modulation depth in dB as an image; cells the analysis marks invalid
-    (rate above the band's width, window past either end) are grey. The
+    (rate above the band's width, window past either end) are gray. The
     default view is modulation rate against time, pooled over bands;
     ``band=`` [Hz] picks one acoustic band, ``rate=`` [Hz] shows acoustic
     band against time at one modulation rate. 0 dB is 100% modulation."""
@@ -226,7 +226,7 @@ def plot_modulation_slices(msg, t, rate=4.0, channel=0, db_range=30.0, cmap="mag
     """Three linked cuts through a modulation spectrogram's time x band x
     rate cube, with a cursor at ``t`` [s]: rate against time (pooled over
     bands), band against time at ``rate`` [Hz], and band against rate at
-    ``t`` (Atlas and Shamma's joint display). One colour scale for all
+    ``t`` (Atlas and Shamma's joint display). One color scale for all
     three. Returns the figure."""
     import matplotlib.pyplot as plt
 
@@ -311,7 +311,7 @@ def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None)
     """One trace per band, lowest at the bottom. With ``sharey=True`` (default)
     all traces share one amplitude scale, so relative band levels are visible.
     The bottom and top traces are the lowpass and highpass edge filters
-    (labelled ``< f_lo`` and ``> f_hi``).
+    (labeled ``< f_lo`` and ``> f_hi``).
 
     ``bands`` selects which bands to show (indices), e.g.
     ``range(1, len(sb) - 1, 5)`` for every fifth band of a fine filterbank.
@@ -447,7 +447,7 @@ def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, d
     the color scale), on a diverging color scale symmetric about 0 and
     clipped at the 99th percentile of the magnitudes. ``kind="mel"``: the
     floored mel spectrogram in dB, one row per band, equally spaced so the
-    rows read as the mel scale, labelled with their centre frequencies, over
+    rows read as the mel scale, labeled with their center frequencies, over
     ``db_range`` dB."""
     ax = _ax(ax)
     match kind:
@@ -464,7 +464,7 @@ def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, d
             _image(ax, mfcc.t, rows, values, cmap or "magma", *_db_limits(values, db_range), colorbar, "dB")
             ticks = np.unique(np.linspace(0, len(rows) - 1, 6).round().astype(int))
             ax.set_yticks(ticks, [f"{mfcc.cfs[tick]:.0f}" for tick in ticks])
-            ax.set(title="Mel spectrogram", xlabel="Time [s]", ylabel="Band centre [Hz]")
+            ax.set(title="Mel spectrogram", xlabel="Time [s]", ylabel="Band center [Hz]")
         case _:
             raise ValueError(f"kind must be 'mfcc' or 'mel', not {kind!r}")
     return ax
@@ -473,7 +473,7 @@ def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, d
 def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwargs):
     """An F0 track: F0 [Hz] against time [s], broken where unvoiced. With
     ``candidates=True``, every refined candidate the tracker weighed is drawn
-    as a grey dot, darker for a higher periodicity score."""
+    as a gray dot, darker for a higher periodicity score."""
     ax = _ax(ax)
     if candidates:
         cand_f0, cand_score = track.candidates[channel], track.candidate_scores[channel]

@@ -115,6 +115,13 @@ meant to be readable without them.
   frames". In prose, the classes are always set as code (`Frame`,
   `GaborFrame`, `TVGaborFrame`), so a capital-F "Frame" in plain text never
   stands for the class.
+- **American spelling throughout:** "behavior", "color", "center",
+  "analyze", "normalize", "gray", "modeling", "labeled", "license". This
+  covers prose, docstrings, comments and names. Outside text keeps its own
+  spelling: paper titles and quotations (Cuevas-Rodríguez et al.'s "binaural
+  spatialisation"), authors' names (Grey, 1977), third-party license notices,
+  file names in other repositories, and outside API names such as
+  matplotlib's `Greys_r` colormap and HTML's `aria-labelledby`.
 
 ## Verification and records
 

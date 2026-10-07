@@ -258,7 +258,7 @@ hop, gaps and hops longer than the window included, using a
 dual, so the coefficients are the ones the frame's own object gives).
 `synthesize`, `STFT.to_sound` and `griffin_lim` use the canonical dual and
 refuse with the bounds. The implementation note below describes the
-behaviour before this amendment.
+behavior before this amendment.
 
 *Implementation note:* `GaborFrame` is defined in seconds, so "construction"
 of the SciPy object happens per sampling rate, at the frame's first use at
@@ -282,7 +282,7 @@ class Filterbank(Frame):              # frequency-domain, undecimated (C4)
     n_filters: int
     cfs: np.ndarray
 
-class CosineFilterbank(Filterbank):   # unchanged behaviour; tight = True
+class CosineFilterbank(Filterbank):   # unchanged behavior; tight = True
     ...
 
 @dataclass(frozen=True)
@@ -347,7 +347,7 @@ stereo, at N = 64–128:
   squares:
   - Gabor, all paddings.
   - Filterbanks with `pad=0`.
-  - For a padded non-tight bank, it matches the documented D1 behaviour
+  - For a padded non-tight bank, it matches the documented D1 behavior
     (circular least squares, then crop), and the test states explicitly that
     this is not the canonical dual.
 - Negative cases:
@@ -1046,7 +1046,7 @@ in the repo.
   also makes the narrowband panel's resolution limit visible (C16: 17.6 dB at
   100 Hz). A falling F0 through the sentence shows C16's point best.
 - Recommended: one utterance from **CMU ARCTIC** (Kominek & Black, 2004),
-  speaker `bdl` (US male), 16 kHz. Its licence is a permissive CMU notice:
+  speaker `bdl` (US male), 16 kHz. Its license is a permissive CMU notice:
   use, copy and modify for any purpose, provided the copyright notice,
   conditions and disclaimer are kept, modifications are marked, and the
   authors' names stay. That text was read from a copy redistributed in
@@ -1057,9 +1057,9 @@ in the repo.
 - Alternatives: LibriSpeech (CC BY 4.0, verified), VCTK (commonly given as
   CC BY 4.0, not verified), the Open Speech Repository's Harvard sentences
   (free for "any reasonable application" with credit, verified); or Cho
-  records one sentence himself and dedicates it CC0, the simplest licence.
+  records one sentence himself and dedicates it CC0, the simplest license.
 - It goes in `docs/speech/` with a `SOURCES.md` like `docs/textures/`:
-  source, licence, the exact processing (mono, kept at its native rate,
+  source, license, the exact processing (mono, kept at its native rate,
   peak-normalized, 16-bit FLAC).
 - The gallery keeps it at its native rate. Upsampling to the gallery's
   44.1 kHz would add an empty band to every panel.
@@ -1077,7 +1077,7 @@ an F0 track; sonore has no F0 estimator.
   the ARCTIC `bdl` recording, if the download confirms it, by picking the
   glottal closures in the differentiated EGG; this measures the vocal folds
   directly rather than estimating from the sound. (b) Otherwise WORLD's
-  Harvest estimator through `pyworld` (MIT licence, from its LICENSE file;
+  Harvest estimator through `pyworld` (MIT license, from its LICENSE file;
   WORLD itself is modified BSD), run once at dev time.
 - Not recommended now: writing a sonore F0 estimator (YIN-style) inside
   step 3. It is a real feature with its own design questions.
@@ -1131,7 +1131,7 @@ points (t̂, f̂, power) and draws them by summing power into the display grid.
   5 ms and the 33.3 ms windows, drawn beside their plain spectrograms, so a
   reader sees that reassignment sharpens pulses with a short window and
   harmonics with a long one, but does not escape the choice.
-- librosa has a reassigned spectrogram (ISC licence). It is a possible
+- librosa has a reassigned spectrogram (ISC license). It is a possible
   dev-time cross-check; status: not yet checked.
 
 **D18. A shared display. (Frequency axis accepted 2026-10-01.)** Every panel in the
@@ -1238,7 +1238,7 @@ The sentence and its F0 track live under `docs/`, not in the package.
   cleanest (no octave jumps in the 100 ms overview; F0 about 95–150 Hz,
   falling at the end) and it is the shortest. The files supplied are the
   single-channel versions, without EGG, so the F0 track uses D13's Harvest
-  fallback. Details and the licence status are in docs/speech/SOURCES.md.
+  fallback. Details and the license status are in docs/speech/SOURCES.md.
 - **Patch 3, schedules.** `TVGaborFrame.pitch_adaptive(f0_times, f0,
   t_end, periods=3, overlap=4)` and `tandem_power(sound, f0_times, f0,
   periods=2.5, overlap=4, window="blackman")`, which returns a new
@@ -1371,7 +1371,7 @@ and title were seen together on an index or reference page, as noted.
   MIT, verified from the repository's LICENSE file; the PyPI metadata was
   not checked. Would be a dev-time dependency of one `tools/` script only.
   Status: not yet used.
-- **librosa** `reassigned_spectrogram` (ISC licence, verified): a possible
+- **librosa** `reassigned_spectrogram` (ISC license, verified): a possible
   dev-time cross-check for D17. Status: not yet checked.
 - **TANDEM-STRAIGHT:** its own code was not looked for. The pair in D16 is
   implemented from the published description. Status: not checked against

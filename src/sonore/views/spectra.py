@@ -45,7 +45,7 @@ class Spectrum(View):
     )
     back_to_sound = (
         "Spectrum.to_sound makes a sound with this spectrum from a carrier that supplies the phase "
-        "(a new noise, another sound's phase, or the minimum phase), which is not the analysed sound."
+        "(a new noise, another sound's phase, or the minimum phase), which is not the analyzed sound."
     )
 
     f: np.ndarray
@@ -108,7 +108,7 @@ class Spectrum(View):
         The level is read at the FFT bins of ``duration`` by linear
         interpolation, and is silent outside the spectrum's frequencies (a
         spectrum measured at 16 kHz gives nothing above 8 kHz at any ``fs``).
-        Every result has RMS 1, as the generators do. None is the analysed
+        Every result has RMS 1, as the generators do. None is the analyzed
         sound: the spectrum keeps no phase to give back.
         """
         length = n_samples(duration, fs)

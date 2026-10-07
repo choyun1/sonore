@@ -50,7 +50,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   20 Hz low-pass filter) by the paper's "weakest effort" method, which looks for where the
 #   envelope climbs fastest from one tenth of its maximum to the next. `so.attack_segment` gives
 #   its start and end.
-# - **Spectral centroid** (`so.spectral_centroid`): the centre of gravity of the power
+# - **Spectral centroid** (`so.spectral_centroid`): the center of gravity of the power
 #   spectrum, $\sum_k f_k p_k / \sum_k p_k$, in each 23.2 ms time window, every 5.8 ms. Its median
 #   over the tone is the usual measure of brightness.
 # - **Spectral flux** (`so.spectral_flux`): one minus the correlation of two magnitude spectra
@@ -273,13 +273,13 @@ fig, playhead = show(sound, flux_tones, starts, ["steady", "gliding slope"], low
 # ## Three descriptors at once
 #
 # Every tone of the three sections above, placed by its three numbers: log attack time across,
-# centroid up, and flux as the colour. The axes are descriptors computed from the sound, not a
+# centroid up, and flux as the color. The axes are descriptors computed from the sound, not a
 # timbre space built from listeners' ratings; a timbre space would also say how much each axis
 # counts, and might bend or merge them. Three of the points are one tone (the 20 ms attack,
 # $s = 1$ and the steady tone), and the centroid axis is logarithmic.
 
 # %% [figure tb4] Every tone of the page by its descriptors
-# the 20 ms attack, s = 1 and the steady tone are one tone, labelled once
+# the 20 ms attack, s = 1 and the steady tone are one tone, labeled once
 groups = [
     ("attack", attack_tones, ["5 ms", "", "80 ms", "300 ms"], "o"),
     ("brightness", bright_tones, ["s = 3", "s = 2", "s = 1.5", "20 ms, s = 1, steady", "s = 0.5"], "s"),

@@ -138,7 +138,7 @@ def _s_floor(bank: Filterbank) -> float:
 @dataclass(frozen=True)
 class Cosine(FilterType):
     """Half-cycle cosines on the bank's scale, each ``width`` gaps to either
-    side of its center (``width=1``: zero at the neighbouring centers). The
+    side of its center (``width=1``: zero at the neighboring centers). The
     lowpass and highpass are the cosines beyond the edges summed in power, so
     they are flat outside ``f_lo..f_hi``.
 

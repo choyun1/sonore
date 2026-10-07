@@ -462,7 +462,7 @@ def progression(tuning):
 
 # %% [about]
 # Just intonation, then equal temperament, four chords each. In the just version listen for
-# the second chord, D minor, which beats roughly where its neighbours are smooth.
+# the second chord, D minor, which beats roughly where its neighbors are smooth.
 
 # %% [demo tt6] C, D minor, G, C, just then equal
 just_events, just_notes = progression("just intonation")

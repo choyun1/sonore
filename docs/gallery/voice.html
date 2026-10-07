@@ -661,7 +661,7 @@ area 1 removes most of the rise.</p>
 <p>A recording has no true envelope to score against, so the score is a distance between the
 original's and the resynthesis's 40-band log mel spectrograms: the RMS of their difference in
 dB per time window with the level removed, median over voiced time windows. It smooths the way
-the MFCC envelope does, so it favours that envelope; read it as a check, not a ranking.
+the MFCC envelope does, so it favors that envelope; read it as a check, not a ranking.
 <code>tools/compare_voice_methods.py</code> also scores synthetic vowels against their true envelopes.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">cepstral_times, cepstral_f0, _ = so.Cepstrum(so.STFT(sentence, win_dur=0.040, hop_dur=0.005)).f0(
     f_lo=75, f_hi=400
@@ -844,7 +844,7 @@ harmonics there, and <code>so.harmonic_complex</code> is the better route for it
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -875,7 +875,7 @@ harmonics there, and <code>so.harmonic_complex</code> is the better route for it
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

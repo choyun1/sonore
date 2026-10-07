@@ -208,7 +208,7 @@ def c2_pitch(sentence, track, envelope, aperiodicity, reference_out):
         out = so.world_synthesize(changed, envelope, aperiodicity)
         tracked = so.f0_track(out)
         median, within, kept = voiced_ratio(track, (tracked.t, tracked.f0[0]))
-        # the formants of the output, analysed with the imposed track
+        # the formants of the output, analyzed with the imposed track
         out_env = so.cheaptrick(out, changed)
         warp, _ = fitted_warp(in_db, mean_db(out_env, voiced), envelope.f)
         # the phase vocoder's pitch shift, for contrast
@@ -412,7 +412,7 @@ def pointwise_amplitude(envelope, times, freqs):
 
 def contour_on_grid(times, f0_values, grid):
     """Any F0 contour read at the grid's times: linear between voiced
-    neighbours, 0 where the nearest time window is unvoiced."""
+    neighbors, 0 where the nearest time window is unvoiced."""
     f0_values = np.asarray(f0_values, float)
     voiced = f0_values > 0
     nearest = np.clip(np.searchsorted(times, grid), 0, len(times) - 1)

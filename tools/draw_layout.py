@@ -3,8 +3,8 @@
     python tools/draw_layout.py
 
 The folders follow meaning, so the picture is drawn by import order and
-coloured by folder. Each module sits one row above the highest module it
-imports at module level, so grey arrows always point down and core is at the
+colored by folder. Each module sits one row above the highest module it
+imports at module level, so gray arrows always point down and core is at the
 bottom. Arrows into core from outside it are left out, since nearly every
 module imports sound and utils, and so are arrows into view, the base class
 of every view. Red dashed arrows are the imports inside a
@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT / "tests"))
 
 from test_layers import FOLDERS, folder, module_graph, reachable  # noqa: E402
 
-FOLDER_COLOURS = {
+FOLDER_COLORS = {
     "core": "#e6e6e6",
     "sources": "#d9f0dd",
     "frames": "#d5eeee",
@@ -32,7 +32,7 @@ FOLDER_COLOURS = {
     "spatial": "#f8dbe3",
     "texture": "#e8dcf8",
 }
-GREY, RED = "#667", "#d0451b"
+GRAY, RED = "#667", "#d0451b"
 
 WIDTH, LEFT, RIGHT = 1180, 20, 1040  # the boxes use LEFT..RIGHT; plotting sits to the right
 BOX_HEIGHT, ROW_HEIGHT, TOP = 34, 74, 20
@@ -79,11 +79,11 @@ def render() -> str:
         sorted((name for name in known if row[name] == level), key=lambda n: (FOLDERS.index(folder(n)), n))
         for level in range(n_rows)
     ]
-    x_centre, box_width = {}, {}
+    x_center, box_width = {}, {}
     for members in by_row:
         spacing = (RIGHT - LEFT) / max(len(members), 1)
         for index, name in enumerate(members):
-            x_centre[name] = LEFT + spacing * (index + 0.5)
+            x_center[name] = LEFT + spacing * (index + 0.5)
             box_width[name] = min(150.0, spacing - 10)
 
     def box_y(name: str) -> float:
@@ -92,8 +92,8 @@ def render() -> str:
     legend_y = TOP + n_rows * ROW_HEIGHT + 10
     height = legend_y + 60
 
-    def edge(source: str, target: str, colour: str, dashed: bool) -> str:
-        sx, sy, tx, ty = x_centre[source], box_y(source), x_centre[target], box_y(target)
+    def edge(source: str, target: str, color: str, dashed: bool) -> str:
+        sx, sy, tx, ty = x_center[source], box_y(source), x_center[target], box_y(target)
         if abs(sy - ty) < 1:  # same row: side to side
             direction = 1 if tx > sx else -1
             x1, x2 = sx + direction * box_width[source] / 2, tx - direction * box_width[target] / 2
@@ -104,7 +104,7 @@ def render() -> str:
             x1, y1, x2, y2 = sx + 8, sy, tx + 8, ty + BOX_HEIGHT
         style = 'stroke-dasharray="5,4" marker-end="url(#r)"' if dashed else 'marker-end="url(#a)"'
         return (
-            f'<line x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" stroke="{colour}" '
+            f'<line x1="{x1:.0f}" y1="{y1:.0f}" x2="{x2:.0f}" y2="{y2:.0f}" stroke="{color}" '
             f'stroke-width="1.2" {style} opacity="0.7"/>'
         )
 
@@ -112,7 +112,7 @@ def render() -> str:
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {WIDTH} {height:.0f}" '
         'font-family="Helvetica,Arial,sans-serif" font-size="13">',
         '<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
-        f'orient="auto"><path d="M0,0L10,5L0,10z" fill="{GREY}"/></marker>',
+        f'orient="auto"><path d="M0,0L10,5L0,10z" fill="{GRAY}"/></marker>',
         '<marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" '
         f'orient="auto"><path d="M0,0L10,5L0,10z" fill="{RED}"/></marker></defs>',
         f'<rect width="{WIDTH}" height="{height:.0f}" fill="#ffffff"/>',
@@ -121,18 +121,18 @@ def render() -> str:
         for target in sorted(down[name]):
             if (folder(target) == "core" and folder(name) != "core") or target == "views.view":
                 continue
-            parts.append(edge(name, target, GREY, dashed=False))
+            parts.append(edge(name, target, GRAY, dashed=False))
     for name, target in sorted(back):
         parts.append(edge(name, target, RED, dashed=True))
     for name in known:
         width = box_width[name]
-        x, y = x_centre[name] - width / 2, box_y(name)
+        x, y = x_center[name] - width / 2, box_y(name)
         parts.append(
             f'<rect x="{x:.1f}" y="{y:.0f}" width="{width:.1f}" height="{BOX_HEIGHT}" rx="5" '
-            f'fill="{FOLDER_COLOURS[folder(name)]}" stroke="#556"/>'
+            f'fill="{FOLDER_COLORS[folder(name)]}" stroke="#556"/>'
         )
         parts.append(
-            f'<text x="{x_centre[name]:.1f}" y="{y + 22:.0f}" text-anchor="middle" font-size="12">'
+            f'<text x="{x_center[name]:.1f}" y="{y + 22:.0f}" text-anchor="middle" font-size="12">'
             f"{name.split('.')[1]}</text>"
         )
 
@@ -157,14 +157,14 @@ def render() -> str:
         )
 
     # Legend: one swatch per folder, then the two kinds of arrow.
-    for index, name in enumerate(FOLDER_COLOURS):
+    for index, name in enumerate(FOLDER_COLORS):
         x = LEFT + 110 * index
         parts.append(
-            f'<rect x="{x}" y="{legend_y}" width="18" height="14" rx="3" fill="{FOLDER_COLOURS[name]}" stroke="#556"/>'
+            f'<rect x="{x}" y="{legend_y}" width="18" height="14" rx="3" fill="{FOLDER_COLORS[name]}" stroke="#556"/>'
         )
         parts.append(f'<text x="{x + 24}" y="{legend_y + 12}" font-size="12" fill="#444">{name}/</text>')
     parts.append(
-        f'<text x="{LEFT}" y="{legend_y + 34}" font-size="12" fill="#444">grey arrow: module-level import (A uses B); '
+        f'<text x="{LEFT}" y="{legend_y + 34}" font-size="12" fill="#444">gray arrow: module-level import (A uses B); '
         "arrows into core/ from outside it, and into view (the base of every view), are omitted.</text>"
     )
     parts.append(

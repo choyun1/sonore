@@ -695,7 +695,7 @@ sound = finish(rendered)
 #   coming at the head faster than sound, whose sound would arrive in reverse order. It also
 #   refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances
 #   the HRIR onsets change a little faster than the travel time does.
-# - Not modelled at all is the noise a body moving through air that fast would make itself.
+# - Not modeled at all is the noise a body moving through air that fast would make itself.
 
 # %% [markdown]
 # ## A "cocktail party"
@@ -982,7 +982,7 @@ sound = finish(mix)
 # way to filter with a filter that changes; crossfading the outputs of the old and new filter and
 # swapping parts of a partitioned convolution are the others (Brandtsegg et al., 2018, review all
 # three). That is accurate while the source keeps its distance, as in the swings above. When the
-# distance changes, neighbouring responses hold different travel times, and cross-fading two
+# distance changes, neighboring responses hold different travel times, and cross-fading two
 # copies of a sound a fraction of a millisecond apart comb-filters it: passing at 15 m/s, copies
 # 5 ms apart in the path differ by 0.2 ms, with the first notch near 2.3 kHz.
 

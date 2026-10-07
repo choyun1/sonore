@@ -36,10 +36,10 @@ outermost measured distance (1.6 m for PKU-IOA) changes at all.
 `move_sound(sound, trajectory, hrirs)` takes an `(N, 3)` array of
 Cartesian points and spreads them evenly over the sound's duration. Each
 point gets a raised-cosine window on the input, centered on its moment;
-neighbouring windows overlap and sum to one. Each windowed piece is
+neighboring windows overlap and sum to one. Each windowed piece is
 convolved with the HRIR interpolated at that point, and the outputs are
 added. The HRIRs are interpolated with their onsets aligned and the onset
-delays interpolated separately, so neighbouring directions do not
+delays interpolated separately, so neighboring directions do not
 comb-filter when averaged. The Moving talkers gallery page uses 200 points
 per second.
 
@@ -47,7 +47,7 @@ This is filter switching on the input side, smoothed (Brandtsegg et al.,
 2018, review it with output crossfading and partitioned-convolution
 updates). Within one time window the filter is fixed, so a delay that
 changes continuously is approximated by a staircase of fixed delays,
-cross-faded. That is harmless while neighbouring delays differ by a small
+cross-faded. That is harmless while neighboring delays differ by a small
 fraction of a period, and fails when they do not (C4).
 
 Distance enters only through `distance_gain_db`, which the caller applies
@@ -154,7 +154,7 @@ directions, so each ear hears a slightly different pitch (C2).
 ## Claims
 
 **C1. Doppler shifts are small but audible at street speeds; the
-convective level change is not worth modelling.** [check] Straight toward
+convective level change is not worth modeling.** [check] Straight toward
 the head the pitch rises by 7.1 cents at walking speed (1.4 m/s), 25 cents
 running (5 m/s) and 77 cents for a car in town (15 m/s); receding, it falls
 by about as much, so a pass-by at 15 m/s glides about 150 cents. The
@@ -190,7 +190,7 @@ takes about 1.8 s for 3 s of sound and two ears.
 **C4. Switching between fixed filters cannot follow a changing
 distance.** [check] Rendering the same pass-by the way `move_sound` does
 today, with 200 points per second and each point's filter an exact delay
-r/c with gain 1/r, neighbouring delays differ by up to 218 µs. Two copies
+r/c with gain 1/r, neighboring delays differ by up to 218 µs. Two copies
 of a sound 218 µs apart cross-fading is a comb filter with its first notch
 near 2.3 kHz. Against the closed form the error is −26 dB at 500 Hz,
 −9 dB at 2 kHz and +1 dB at 8 kHz (as much error as signal). With the

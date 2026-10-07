@@ -37,7 +37,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   heard separately.
 # - [A higher voice](#h-a-higher-voice): the same analysis on a female voice.
 # - [MFCCs: a cepstrum on the mel scale](#h-mfccs-a-cepstrum-on-the-mel-scale): the speech
-#   recogniser's version, how much pitch leaks into it, and what it cannot tell apart.
+#   recognizer's version, how much pitch leaks into it, and what it cannot tell apart.
 # - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
 #   and Praat.
 # - [What this page leaves out](#h-what-this-page-leaves-out): tracking from the cepstrum, better
@@ -168,7 +168,7 @@ print(f"time windows both call voiced: {both.sum()}; cepstral F0 within 5% of Ha
 # rarely jumps and a time window is voiced only when some candidate repeats well (a score above 0.5).
 
 # %% [about]
-# Top: the tracker's candidates in grey, darker for a higher score, and the path it chose. The
+# Top: the tracker's candidates in gray, darker for a higher score, and the path it chose. The
 # darkest row, an octave below the path, is the subharmonic: anything that repeats every period
 # also repeats every two, so it scores as well, and the tracker never chooses a candidate when
 # another at a whole multiple of its frequency scores about as well (`subharmonic_margin`).
@@ -371,7 +371,7 @@ print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 # %% [markdown]
 # ## MFCCs: a cepstrum on the mel scale
 #
-# Speech recognisers have long described each time window by its *mel-frequency cepstral
+# Speech recognizers have long described each time window by its *mel-frequency cepstral
 # coefficients* (Davis & Mermelstein, 1980). The recipe is the cepstrum's, with one step put in
 # front: the power spectrum is first summed into a few dozen triangular bands spaced evenly on
 # the mel scale, a frequency scale that is roughly linear below 1 kHz and logarithmic above, as
@@ -383,8 +383,8 @@ print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 #
 # The aim is to keep the vocal tract and drop the pitch. The bands and the lifter both smooth over
 # the harmonics, but not completely: the lowest bands are narrower than the gap between
-# harmonics of a higher voice, so some sit on a harmonic and their neighbours between two, and
-# the pitch leaks back into the coefficients. A vowel synthesised with a known vocal tract shows how much.
+# harmonics of a higher voice, so some sit on a harmonic and their neighbors between two, and
+# the pitch leaks back into the coefficients. A vowel synthesized with a known vocal tract shows how much.
 
 # %%
 # Two vowels as sums of harmonics, each harmonic weighted by a vocal tract of four resonances
@@ -400,9 +400,9 @@ def tract_gain(freqs, vowel):
     """The vocal tract's |H(f)|: a cascade of second-order resonators."""
     z = np.exp(-2j * np.pi * np.asarray(freqs, dtype=float) / fs)
     denominator = np.ones_like(z)
-    for centre, bandwidth in FORMANTS[vowel]:
+    for center, bandwidth in FORMANTS[vowel]:
         radius = np.exp(-np.pi * bandwidth / fs)
-        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * centre / fs) * z + radius**2 * z**2
+        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * center / fs) * z + radius**2 * z**2
     return 1 / np.abs(denominator)
 
 
@@ -445,7 +445,7 @@ true_db = 20 * np.log10(tract_gain(f_plot, "a"))
 
 
 def on_plot_axis(log_power):
-    """13-coefficient log band powers in dB, drawn between the band centres as so.MFCC.envelope
+    """13-coefficient log band powers in dB, drawn between the band centers as so.MFCC.envelope
     does (linear in mel), and shifted to the true envelope's mean level from 100 Hz up."""
     level_db = 10 / np.log(10) * np.interp(freq_to_mel(f_plot), band_mels, log_power)
     above_100 = f_plot >= 100
@@ -453,7 +453,7 @@ def on_plot_axis(log_power):
 
 
 # %% [about]
-# The vowel /a/ at three pitches, each analysed in one 25 ms time window. Left: the 13 MFCCs of
+# The vowel /a/ at three pitches, each analyzed in one 25 ms time window. Left: the 13 MFCCs of
 # its power spectrum, drawn back as an envelope (as `mfcc.envelope(f)` does). Right: the same 13
 # coefficients taken from CheapTrick's envelope instead, summed into the same mel bands. Dashed:
 # the vocal tract the harmonics were weighted by. Levels are matched to it, since only the
@@ -502,11 +502,11 @@ for source_name in ("power spectrum", "CheapTrick envelope"):
     )
 
 # %% [about]
-# The sentence, analysed with `so.MFCC(sentence)`. From the top: the 26 log band powers (the mel
+# The sentence, analyzed with `so.MFCC(sentence)`. From the top: the 26 log band powers (the mel
 # spectrogram, `mfcc.plot(kind="mel")`); the 13 coefficients, without `c0`, the level
 # (`mfcc.plot()`); the band powers the 13 coefficients keep, drawn back from them; and
 # CheapTrick's envelope on the same bands, from the `so.f0_track` pitch track above (unvoiced
-# time windows are analysed as if at 500 Hz). The coefficients are hard to read by eye; drawn
+# time windows are analyzed as if at 500 Hz). The coefficients are hard to read by eye; drawn
 # back, they are a mel spectrogram smoothed across the bands.
 
 # %% [demo m2] The sentence as MFCCs
@@ -524,7 +524,7 @@ def band_image(ax, times, band_db, title):
         times, band_rows, band_db, cmap="magma", vmin=vmax - 60, vmax=vmax, shading="auto", rasterized=True
     )
     ax.set_yticks(row_ticks, [f"{mfcc.cfs[row]:.0f}" for row in row_ticks])
-    ax.set(title=title, xlabel="", ylabel="Band centre [Hz]")
+    ax.set(title=title, xlabel="", ylabel="Band center [Hz]")
 
 
 fig, axes = plt.subplots(4, 1, figsize=(10, 9), sharex=True, layout="constrained")
@@ -628,7 +628,7 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   peaks as the candidates.
 # - **Better envelopes.** A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick
 #   smooths the spectrum over one $F_0$ first and corrects the lifter.
-# - **Other cepstra on a warped axis.** The mel-generalised cepstra of speech synthesis warp the
+# - **Other cepstra on a warped axis.** The mel-generalized cepstra of speech synthesis warp the
 #   frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other
 #   auditory bands. MFCC deltas (`mfcc.deltas()`) are not shown.
 # - **The complex cepstrum.** It keeps the phase as well, but needs phase unwrapping, which is

@@ -97,11 +97,11 @@ edge_bins = np.floor((n_fft + 1) * htk_mel_to_hz(np.linspace(0, htk_mel(fs / 2),
 bin_index = np.arange(n_fft // 2 + 1)
 rounded_weights = np.zeros((n_mels, n_fft // 2 + 1))
 for band in range(n_mels):
-    low, centre, high = edge_bins[band : band + 3]
+    low, center, high = edge_bins[band : band + 3]
     rounded_weights[band] = np.where(
-        (bin_index >= low) & (bin_index < centre),
-        (bin_index - low) / (centre - low),
-        np.where((bin_index >= centre) & (bin_index < high), (high - bin_index) / (high - centre), 0.0),
+        (bin_index >= low) & (bin_index < center),
+        (bin_index - low) / (center - low),
+        np.where((bin_index >= center) & (bin_index < high), (high - bin_index) / (high - center), 0.0),
     )
 
 
@@ -179,7 +179,7 @@ for name, shapes in (("power spectrum", raw), ("CheapTrick envelope", smooth)):
 # exact: sonore's Hann STFT has librosa's time windows (plus one before and
 # two after), and the formulas on its power reproduce the stored output.
 reference = np.load(Path(__file__).resolve().parents[1] / "tests" / "data" / "librosa_mfcc_reference.npz")
-speech = reference["samples_int16"] / 32768.0  # the excerpt the fixture analysed
+speech = reference["samples_int16"] / 32768.0  # the excerpt the fixture analyzed
 sentence = so.Sound(speech, fs)
 settings = {
     "defaults": (2048, 512, 2048, 128, 20, "slaney"),
@@ -191,7 +191,7 @@ for name, (win_len, hop_len, n_fft, n_mels, n_mfcc, scale) in settings.items():
     sonore_power = np.abs(so.STFT(sentence, frame=frame).data[0]) ** 2
     librosa_power = np.abs(librosa.stft(speech, n_fft=n_fft, hop_length=hop_len, win_length=win_len)) ** 2
     n_windows = librosa_power.shape[1]
-    sonore_power = sonore_power[:, 1 : 1 + n_windows]  # drop the time window centred before the first sample
+    sonore_power = sonore_power[:, 1 : 1 + n_windows]  # drop the time window centered before the first sample
     report(
         f"{name}: sonore STFT power vs librosa.stft, max abs diff / max",
         np.abs(sonore_power - librosa_power).max() / librosa_power.max(),

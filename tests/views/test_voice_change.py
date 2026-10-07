@@ -10,15 +10,15 @@ FS = 16000
 HOP = 0.005
 
 
-def bump_power(freqs, centre, width=150.0):
+def bump_power(freqs, center, width=150.0):
     """A smooth one-formant envelope: a Gaussian bump in dB on a floor."""
-    return 10 ** ((-40 + 40 * np.exp(-0.5 * ((freqs - centre) / width) ** 2)) / 10)
+    return 10 ** ((-40 + 40 * np.exp(-0.5 * ((freqs - center) / width) ** 2)) / 10)
 
 
-def bump_envelope(centre=1000.0, n_windows=20):
+def bump_envelope(center=1000.0, n_windows=20):
     freqs = np.linspace(0, FS / 2, 513)
     times = np.arange(n_windows) * HOP
-    power = np.repeat(bump_power(freqs, centre)[:, None], n_windows, axis=1)
+    power = np.repeat(bump_power(freqs, center)[:, None], n_windows, axis=1)
     return so.GridEnvelope(power, times, freqs)
 
 

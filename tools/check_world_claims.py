@@ -128,7 +128,7 @@ def fold_below_f0(p, f0, fs=FS):
 
 
 def windowed(x, t, f0, periods=3.0, fs=FS):
-    """x under a Hann window `periods` F0 periods long, centred at t, scaled
+    """x under a Hann window `periods` F0 periods long, centered at t, scaled
     to unit energy, minus its weighted mean (as CheapTrick)."""
     h = mround(periods / 2 * fs / f0)
     i = np.arange(-h, h + 1)
@@ -248,9 +248,9 @@ def d4c_band(x, t, f0, n_fft, nuttall, rng):
     boundary = mround(n_fft * 8.0 / wl)
     out = []
     for b in range(n_bands):
-        centre = int(D4C_BAND * (b + 1) * n_fft / FS)
+        center = int(D4C_BAND * (b + 1) * n_fft / FS)
         buf = np.zeros(n_fft)
-        buf[:wl] = delay[centre - wl // 2 : centre - wl // 2 + wl] * nuttall
+        buf[:wl] = delay[center - wl // 2 : center - wl // 2 + wl] * nuttall
         cum = np.cumsum(np.sort(np.abs(np.fft.rfft(buf)) ** 2))
         out.append(10 * np.log10(cum[n_fft // 2 - boundary - 1] / cum[n_fft // 2]))
     return np.minimum(0.0, np.array(out) + (f0 - 100) / 50)

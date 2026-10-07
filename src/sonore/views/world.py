@@ -38,7 +38,7 @@ floating-point precision.
    is WORLD's stream, restarted at every call as WORLD does.
 4. harmonic_aperiodicity is not part of WORLD. It measures the share of
    noise by fitting the harmonics; D4C is WORLD's measure.
-5. Multichannel sounds are analysed one channel at a time; WORLD takes one
+5. Multichannel sounds are analyzed one channel at a time; WORLD takes one
    channel.
 """
 
@@ -52,7 +52,7 @@ _SAFEGUARD = 1e-12  # WORLD's kMySafeGuardMinimum
 _EPS = 2.2204460492503131e-16  # WORLD's kEps
 
 
-_DEFAULT_F0 = 500.0  # WORLD's kDefaultF0: unvoiced time windows are analysed at this F0
+_DEFAULT_F0 = 500.0  # WORLD's kDefaultF0: unvoiced time windows are analyzed at this F0
 
 
 _FLOOR_F0 = 71.0  # WORLD's kFloorF0, which sets CheapTrick's FFT size
@@ -359,7 +359,7 @@ def _minimum_phase(log_amplitude: np.ndarray, n_fft: int) -> np.ndarray:
     return np.exp(np.fft.fft(folded)[: n_fft // 2 + 1] / n_fft)
 
 
-def _inverse_centred(spectrum: np.ndarray, n_fft: int) -> np.ndarray:
+def _inverse_centered(spectrum: np.ndarray, n_fft: int) -> np.ndarray:
     """FFTW's unnormalized complex-to-real inverse, then fftshift."""
     waveform = np.fft.irfft(spectrum, n_fft) * n_fft
     return np.concatenate([waveform[n_fft // 2 :], waveform[: n_fft // 2]])
@@ -417,7 +417,7 @@ def _synthesize_channel(f0, spectrogram, ratio_windows, hop, fs, n_samples, nois
             spectrum = (spectrum.real * shift_cos + spectrum.imag * shift_sin) + 1j * (
                 spectrum.imag * shift_cos - spectrum.real * shift_sin
             )
-            periodic = _inverse_centred(spectrum, n_fft)
+            periodic = _inverse_centered(spectrum, n_fft)
             dc = periodic[n_fft // 2 :].sum()
             # WORLD sets the first half (before the pulse) to the correction
             # alone rather than subtracting it
@@ -431,7 +431,9 @@ def _synthesize_channel(f0, spectrogram, ratio_windows, hop, fs, n_samples, nois
             log_amplitude = np.log(envelope * noise_share) / 2
         else:
             log_amplitude = np.log(envelope) / 2
-        aperiodic = _inverse_centred(_minimum_phase(log_amplitude, n_fft) * np.fft.rfft(noise_segment), n_fft)
+        aperiodic = _inverse_centered(
+            _minimum_phase(log_amplitude, n_fft) * np.fft.rfft(noise_segment), n_fft
+        )
         response = (periodic * np.sqrt(noise_size) + aperiodic) / n_fft
         offset = sample - n_fft // 2 + 1
         first, last = max(0, -offset), min(n_fft, n_samples - offset)

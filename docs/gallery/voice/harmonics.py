@@ -214,9 +214,9 @@ sound = vocoded
 
 # %%
 noise = so.gaussian_noise(duration, fs, rng=2)
-coloured = so.STFT(noise, win_dur=0.040, hop_dur=0.005)
-coloured.data = envelope[None] * np.exp(1j * np.angle(coloured.data))
-breath = coloured.to_sound().data[: len(sentence), 0]
+colored = so.STFT(noise, win_dur=0.040, hop_dur=0.005)
+colored.data = envelope[None] * np.exp(1j * np.angle(colored.data))
+breath = colored.to_sound().data[: len(sentence), 0]
 
 # Voicing between time windows, 1 where voiced; the harmonics are switched at the same time windows.
 t_samples = np.arange(len(sentence)) / fs
@@ -443,7 +443,7 @@ sound = resynthesis_female
 #   band and time window (D4C). The [Source, filter and aperiodicity](aperiodicity.html) page does.
 # - **The glottal pulse.** The harmonics' phases here are fixed numbers. A voice's phases come from
 #   the shape of each glottal pulse and the vocal tract's phase response; a minimum-phase envelope
-#   (as in the [envelope only](cepstrum.html#d-c3) example) is one step towards it.
+#   (as in the [envelope only](cepstrum.html#d-c3) example) is one step toward it.
 
 # %% [markdown]
 # ## References

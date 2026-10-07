@@ -291,7 +291,7 @@ class TestAuditSitting4:
         fs, ramp = 10000, 0.01
         t = np.arange(int(0.2 * fs)) / fs
         gate = _voicing_gate(t, np.array([0.0, 0.1, 0.2]), np.array([True, False, False]), ramp, fs)
-        # nearest window: voiced up to 0.05 s, ramped over 0.01 s centred there
+        # nearest window: voiced up to 0.05 s, ramped over 0.01 s centered there
         assert gate[int(0.04 * fs)] == pytest.approx(1)
         assert gate[int(0.06 * fs)] == pytest.approx(0, abs=1e-12)
         assert gate[int(0.05 * fs)] == pytest.approx(0.5, abs=0.05)

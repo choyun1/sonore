@@ -223,8 +223,8 @@ def _d4c_bands(samples, fs, time, f0, n_fft, n_bands, nuttall, noise):
     boundary = _matlab_round(n_fft * 8.0 / window_length)
     bands = np.empty(n_bands)
     for band in range(n_bands):
-        centre = int(_D4C_BAND_SPACING * (band + 1) * n_fft / fs)
-        start = centre - window_length // 2
+        center = int(_D4C_BAND_SPACING * (band + 1) * n_fft / fs)
+        start = center - window_length // 2
         buffer = np.zeros(n_fft)
         buffer[:window_length] = group_delay[start : start + window_length] * nuttall
         cumulative = np.cumsum(np.sort(np.abs(np.fft.rfft(buffer)) ** 2))
@@ -300,13 +300,13 @@ def harmonic_aperiodicity(
 
 
 def _residual_share(samples, phase, fs, time, f0, periods, padding, cell_harmonics):
-    """One time window: the noise share per cell and the cells' centre frequencies."""
-    centre = int(np.round(time * fs)) + padding
+    """One time window: the noise share per cell and the cells' center frequencies."""
+    center = int(np.round(time * fs)) + padding
     half_length = int(np.round(periods / 2 * fs / f0))
     offsets = np.arange(-half_length, half_length + 1)
     window = 0.5 + 0.5 * np.cos(np.pi * offsets / (half_length + 1))
     harmonic_numbers = np.arange(1, int((fs / 2) / f0 - 1e-9) + 1)
-    harmonic_phases = np.outer(phase[centre + offsets], harmonic_numbers)
+    harmonic_phases = np.outer(phase[center + offsets], harmonic_numbers)
     ramp = (offsets / half_length)[:, None]
     columns = np.column_stack(
         [
@@ -319,7 +319,7 @@ def _residual_share(samples, phase, fs, time, f0, periods, padding, cell_harmoni
     )
     root_window = np.sqrt(window)
     basis, _ = np.linalg.qr(columns * root_window[:, None])
-    weighted = samples[centre + offsets] * root_window
+    weighted = samples[center + offsets] * root_window
     residual = (weighted - basis @ (basis.T @ weighted)) * root_window
     # white noise e becomes (W - S B B' S) e in the windowed residual (S the
     # root window, B the fit's basis); its power at each frequency, over the
@@ -327,7 +327,7 @@ def _residual_share(samples, phase, fs, time, f0, periods, padding, cell_harmoni
     n_fft = int(2 ** np.ceil(np.log2(len(offsets))))
     residual_operator = np.diag(window) - (root_window[:, None] * basis) @ (basis.T * root_window[None, :])
     kept = np.sum(np.abs(np.fft.rfft(residual_operator, n_fft, axis=0)) ** 2, axis=1) / np.sum(window**2)
-    signal_power = np.abs(np.fft.rfft(window * samples[centre + offsets], n_fft)) ** 2
+    signal_power = np.abs(np.fft.rfft(window * samples[center + offsets], n_fft)) ** 2
     residual_power = np.abs(np.fft.rfft(residual, n_fft)) ** 2
     freqs = np.arange(n_fft // 2 + 1) * fs / n_fft
     cell = (freqs // (cell_harmonics * f0)).astype(int)

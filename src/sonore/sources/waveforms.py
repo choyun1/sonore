@@ -844,7 +844,7 @@ def _rd_track_gains(rd_times: np.ndarray, rd_values: np.ndarray, harmonic_number
     low, high = float(rd_values.min()), float(rd_values.max())
     grid = low + _RD_STEP * np.arange(int(np.ceil((high - low) / _RD_STEP)) + 1)
     # the last row may lie up to one step past high, and so past Fant's range;
-    # it is only interpolated towards, so take it at the range's end there
+    # it is only interpolated toward, so take it at the range's end there
     table = np.array([lf_harmonics(harmonic_numbers, min(rd, RD_RANGE[1]), flow=flow) for rd in grid])
     log_levels = np.log(np.abs(table))
     phases = np.unwrap(np.angle(table), axis=0)

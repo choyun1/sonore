@@ -383,7 +383,7 @@ harmonics whose phases follow the running phase <span class="tex">\Phi(t) = 2\pi
 and a phase to be found. That is a linear least-squares fit. Here is one time window, under a Hann
 window four periods long, with each harmonic also allowed an amplitude that changes linearly
 across the window.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">centre = int(0.5 * FS)  # the time window at 0.5 s
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">center = int(0.5 * FS)  # the time window at 0.5 s
 half = int(round(2 * FS / F0))  # half of four periods
 offsets = np.arange(-half, half + 1)
 window = 0.5 + 0.5 * np.cos(np.pi * offsets / (half + 1))
@@ -394,8 +394,8 @@ columns = np.column_stack(
     [np.ones(len(offsets)), np.cos(harmonic_phases), np.sin(harmonic_phases)]
     + [ramp * np.cos(harmonic_phases), ramp * np.sin(harmonic_phases)]
 )
-segment = vowel.data[centre + offsets, 0]
-root_window = np.sqrt(window)  # weighted least squares: minimise the windowed residual
+segment = vowel.data[center + offsets, 0]
+root_window = np.sqrt(window)  # weighted least squares: minimize the windowed residual
 weights, *_ = np.linalg.lstsq(columns * root_window[:, None], segment * root_window, rcond=None)
 residual = segment - columns @ weights
 print(f&quot;{columns.shape[1]} columns fitted to {len(offsets)} samples&quot;)
@@ -851,7 +851,7 @@ fig, playhead = show(sound, &quot;so.world_synthesize with so.d4c, slt&quot;, fm
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -882,7 +882,7 @@ fig, playhead = show(sound, &quot;so.world_synthesize with so.d4c, slt&quot;, fm
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

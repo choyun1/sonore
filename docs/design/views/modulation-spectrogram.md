@@ -48,7 +48,7 @@ should say which one it computes.
    modulations in subband channels following critical-band frequency
    analysis", with automatic gain control. It is a spectrogram seen through
    one modulation band, not a modulation spectrum over time. The exact
-   filter (from memory, a band centred near 4 Hz) is not verified.
+   filter (from memory, a band centered near 4 Hz) is not verified.
 2. **Atlas & Shamma (2003), "joint acoustic and modulation frequency".** For
    a stretch of sound, acoustic frequency against modulation frequency: the
    modulation spectrum of every band at once. Computed over sliding windows
@@ -67,7 +67,7 @@ offers each display as a view of it (D7).
 
 The input is a set of band envelopes e_b[n] at an envelope rate f_E (sonore's
 `Envelopes`, for example from an `ERBFilterbank` resampled to 1000 Hz). For a
-modulation band with centre f_k, the analysis uses a **complex kernel**: a
+modulation band with center f_k, the analysis uses a **complex kernel**: a
 Hann window w_k of length L_k samples times a complex exponential,
 
     h_k[j] = w_k[j] exp(i 2π f_k (j − (L_k − 1)/2) / f_E),   Σ_j w_k[j] = 1,
@@ -75,7 +75,7 @@ Hann window w_k of length L_k samples times a complex exponential,
 and for every time window n correlates it with the envelope over the kernel's
 support:
 
-    y_bk[n] = Σ_j e_b[n + j − (L_k − 1)/2] conj(h_k[j])     (centred)
+    y_bk[n] = Σ_j e_b[n + j − (L_k − 1)/2] conj(h_k[j])     (centered)
     μ_bk[n] = Σ_j e_b[n + j − (L_k − 1)/2] w_k[j]           (local mean)
 
 |y_bk| is the local amplitude of the envelope's component near f_k, μ_bk the
@@ -117,7 +117,7 @@ texture bank and of Dau et al.'s filters above 10 Hz. Kernel lengths: 6 s at
 
 **C2. A kernel holding a whole number (≥ 2) of cycles ignores the envelope's
 mean exactly.** [proof, check] The DC response of h_k is the Hann window's
-transform at c bins from its centre, and the Hann transform is zero at every
+transform at c bins from its center, and the Hann transform is zero at every
 integer bin from 2 on. This matters because the mean is the largest part of
 any envelope (an envelope is non-negative), so any DC leakage would show up
 as modulation. Checker: DC gain 3e-17 for 2, 3 and 4 cycles, against −6.0 dB
@@ -132,21 +132,21 @@ only. Envelopes from 24 half-cosine ERB-spaced bands (100–7000 Hz) at
 1000 Hz; half-octave modulation bands 0.5–64 Hz; 10 ms hop.
 
 - The largest modulation power, averaged over 1.5–2.5 s, is in the audio
-  band centred at 1052 Hz and the 4 Hz modulation band.
+  band centered at 1052 Hz and the 4 Hz modulation band.
 - The depth there is −6.03 dB (20 log10 0.5 = −6.02), constant to 3e-11 dB.
-  The neighbouring modulation bands read −10.6 dB (5.66 Hz) and −15.8 dB
+  The neighboring modulation bands read −10.6 dB (5.66 Hz) and −15.8 dB
   (2.83 Hz): with Q ≈ 2, half-octave bands overlap, so a pure modulation
-  spreads into its neighbours, as a pure tone does in a ⅓-octave analysis.
+  spreads into its neighbors, as a pure tone does in a ⅓-octave analysis.
 - Outside the modulated stretch, the depth is below −160 dB.
 - The depth reaches half its value at 1.01 s and falls back at 3.01 s: the
-  centred kernel puts the onset and offset where they are.
+  centered kernel puts the onset and offset where they are.
 - The band below (903 Hz) also passes the tone, through its skirt. It reads
   the same depth (−6.03 dB) at 4.7 dB less power. Depth says how modulated a
   band is; power says how much of the sound that is. Both are needed (D3).
 
 Both ends of the sound are abrupt (the envelope jumps from zero), and within
 half a kernel of either end every band reads strong modulation. That is
-true of the signal as analysed, but rarely what one wants to see (D5).
+true of the signal as analyzed, but rarely what one wants to see (D5).
 
 **C4. A gliding modulation rate is tracked to within a few hundredths of an
 octave.** [check] The same carrier with an AM rate gliding exponentially from
@@ -187,13 +187,13 @@ the new representation is the per-band modulation power spectrum, the same
 kind of quantity as the texture statistics' `mod_power`, with slightly
 different filter shapes. The spectrogram unfolds that statistic in time.
 
-**C8. A causal version is the centred one delayed by half a kernel, and
+**C8. A causal version is the centered one delayed by half a kernel, and
 block-by-block processing reproduces it exactly.** [proof, check] The
 causal output uses the kernel's support ending at the current sample, which
-is the centred one shifted by (L_k − 1) / 2. A block processor keeps the last
+is the centered one shifted by (L_k − 1) / 2. A block processor keeps the last
 L_k − 1 envelope samples and evaluates the kernel at each window time.
 Checker: 64-sample blocks against the offline causal result, worst
-difference 2e-16; causal against shifted centred, 0. The causal latency is
+difference 2e-16; causal against shifted centered, 0. The causal latency is
 half the kernel: 3.0 s at 0.5 Hz, 0.37 s at 4 Hz, 23 ms at 64 Hz. Evaluated
 directly every 10 ms, the 15 half-octave bands cost 6.1 million
 multiply-adds per second per audio band, or about 150 million for 24 bands:
@@ -219,7 +219,7 @@ constraints a joint representation needs to be invertible.
 changes its scale.** [check] There is no standard front end for a modulation
 spectrogram, so the checker runs the same analysis through four: the
 half-cosine ERB bank (sonore's `ERBFilterbank`) and 4th-order gammatone
-filters (b = 1.019 ERB, causal phase) at the same 24 centres, each with
+filters (b = 1.019 ERB, causal phase) at the same 24 centers, each with
 linear Hilbert envelopes and with envelopes raised to the power 0.3 (the
 compression McDermott & Simoncelli use).
 
@@ -250,8 +250,8 @@ to be stated with any number read off the picture.
 from `Envelopes`: `so.ModulationSpectrogram(env, f_lo=0.5, f_hi=64,
 per_octave=2, cycles=3, hop=0.010)`. It keeps the envelopes' filterbank (for
 the acoustic axis) and stores `power` and `mean` of shape
-`(n_channels, n_bands, n_mod, n_windows)`, with `f` the acoustic band centres,
-`fm` the modulation band centres and `t` the window times. One way in, as for
+`(n_channels, n_bands, n_mod, n_windows)`, with `f` the acoustic band centers,
+`fm` the modulation band centers and `t` the window times. One way in, as for
 `Cepstrum`. Recommended over a method on `Envelopes`
 (`env.modulation_spectrogram()`), to keep `envelopes.py` (371 lines) about
 envelopes; a thin method can be added later if notebooks want the chain.
@@ -276,7 +276,7 @@ window ignores the envelope's mean (C2). `window=T` gives every band the same T 
 spacing of the time windows, `hop` (10 ms), is separate from the window, as in an STFT. By
 default, Hann
 kernels with 3 cycles (Q ≈ 2.1, C1), whole cycles so the mean is ignored
-(C2), half-octave centres from 0.5 to 64 Hz (15 bands). `window=T` [s]
+(C2), half-octave centers from 0.5 to 64 Hz (15 bands). `window=T` [s]
 switches to fixed-length kernels on a linear grid from 2/T (the first rate
 clear of the mean's lobe, C1) to `f_hi` in steps of 1/T: the STFT of each
 envelope, the didactic contrast of C5. Three cycles is the same rule the
@@ -291,7 +291,7 @@ and `mean` are stored; `depth` is a property, 2|y| / mean, with 0 dB = 100%
 sinusoidal modulation (C3). Plots default to depth in dB, because it is
 comparable across bands and sounds; power is what to use when loud and quiet
 bands should count differently (C3's 903 Hz band). Linear envelopes are
-analysed as they are; `Envelopes` already offers dB conversion where wanted.
+analyzed as they are; `Envelopes` already offers dB conversion where wanted.
 
 **D4. Acoustic bands from any filterbank; unmeasurable cells marked. (accepted 2026-10-01)** Any
 `Envelopes` works, so the acoustic axis is whatever bank made them (ERB,
@@ -304,12 +304,12 @@ is 0 dB). Compressed envelopes are a documented alternative, with C10's
 factor stated, not a default. A
 boolean `valid` of shape `(n_bands, n_mod, n_windows)` is False where the
 modulation rate exceeds the band's width (C6) and within half a kernel of
-either end of the envelopes (C3), and plots grey those cells. The band
+either end of the envelopes (C3), and plots gray those cells. The band
 width comes from the filterbank's own responses (its −3 dB width), not from
 a formula, so it is right for every bank.
 
-**D5. Centred time windows offline; ends not padded away. (accepted 2026-10-01)** Offline analysis is
-centred (`align="center"`), so a modulation shows up where it happens (C3)
+**D5. Centered time windows offline; ends not padded away. (accepted 2026-10-01)** Offline analysis is
+centered (`align="center"`), so a modulation shows up where it happens (C3)
 and bands with different kernel lengths line up. `align="causal"` gives what
 a live analysis would see (C8). Outside its extent the envelope is taken to
 be zero, so the abrupt start and end of a sound read as modulation; those
@@ -355,7 +355,7 @@ complex y is the route, and C9 says it would work for the envelope.
 **D9. Docs. (accepted 2026-10-01)** A README module-table row and a reference entry for each
 source. A gallery page (the chirped AM of C4, the 4 Hz AM of C3, the gallery
 sentence with its syllables showing at 2–8 Hz) comes in a follow-up PR once
-the class exists. Its centrepiece is the three linked slices of D7 with the
+the class exists. Its centerpiece is the three linked slices of D7 with the
 cursor following the page's audio player, so the band × rate image changes
 as the sound plays. The gallery pages are static HTML, so this needs a small
 piece of JavaScript that swaps precomputed band × rate frames as the player

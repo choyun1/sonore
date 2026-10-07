@@ -277,7 +277,7 @@ def contour(t):
 
 def bridged(t):
     """The same contour with F0 carried through the unvoiced stretches:
-    log-linear between voiced neighbours, held constant before the first and
+    log-linear between voiced neighbors, held constant before the first and
     after the last voiced time window."""
     tv = np.linspace(0, 2, 2001)
     fv = np.array([contour(u) for u in tv])

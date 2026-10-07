@@ -1,7 +1,7 @@
 # Mel-frequency cepstral coefficients (MFCCs)
 
 The design of an MFCC view in sonore: the standard speech feature that
-summarises the spectral envelope of each time window in about thirteen
+summarizes the spectral envelope of each time window in about thirteen
 numbers. Cho asked on 2026-10-02 whether sonore has MFCCs. It does not:
 there is no mel scale, mel filterbank, DCT feature or delta feature in
 `src/` (searched for `mfcc`, `mel`, `dct`, `htk` and `slaney`; the only
@@ -52,7 +52,7 @@ As in the other design documents, each claim is numbered and tagged:
 - **[cross]**: a number printed by `tools/crosscheck_mfcc.py`, which uses
   librosa 0.11.0 and python_speech_features 0.6 (development-time only,
   never dependencies) and `so.cheaptrick`.
-- **[source]**: a published result or a library's documented behaviour
+- **[source]**: a published result or a library's documented behavior
   (see References; which ones were checked is said there).
 
 The sentence is `docs/speech/bdl_arctic_a0131.flac` (16 kHz). "The speech
@@ -81,7 +81,7 @@ cross]:
 
 | Step | HTK (Young et al.) | python_speech_features 0.6 | librosa 0.11 (`feature.mfcc`) |
 |---|---|---|---|
-| Time windows | 25 ms Hamming, 10 ms hop | 25 ms **rectangular**, 10 ms, zero-padded end | 2048-point Hann every 512 samples, centred with zero padding |
+| Time windows | 25 ms Hamming, 10 ms hop | 25 ms **rectangular**, 10 ms, zero-padded end | 2048-point Hann every 512 samples, centered with zero padding |
 | Pre-emphasis | 0.97 | 0.97 | none |
 | Spectrum | magnitude by default (`USEPOWER=F`) | power / n_fft | power |
 | Mel scale | 2595 log10(1 + f/700) | same | Slaney: linear below 1 kHz, log above |
@@ -103,7 +103,7 @@ checked).
 check] Mirror the M log band powers to 2M values (L, then L reversed).
 That sequence is real and even about a half sample, as a real log
 spectrum is even about 0 and Nyquist, and its DFT, shifted by half a
-sample, is exactly the (unnormalised) DCT-II of L. So the DCT is the
+sample, is exactly the (unnormalized) DCT-II of L. So the DCT is the
 cepstrum's inverse DFT for a log spectrum sampled on M mel bands, and
 low-order coefficients are the slow ripples of that log spectrum, as in
 `so.Cepstrum` (`views/cepstrum.md` C5). Checker: the two agree to 3.6e-15, with
@@ -112,13 +112,13 @@ is orthogonal (error 4.4e-16), so sums of squared coefficient differences
 equal sums of squared log-band differences (used in C4 and C5).
 
 **C2. The HTK mel scale is ERB-like with a higher break frequency; the
-two mel scales differ by up to about 260 Hz in band centres.** [proof,
+two mel scales differ by up to about 260 Hz in band centers.** [proof,
 check] HTK's mel is 2595 log10(1 + f / 700) and the ERB number is
 21.4 log10(1 + f / 228.8): both are linear well below their break
 frequency and logarithmic well above it, so the mel scale stays linear up
-to a higher frequency. Normalised to 0..1 over 0–8 kHz, they differ by at
+to a higher frequency. Normalized to 0..1 over 0–8 kHz, they differ by at
 most 0.12; HTK's and Slaney's mel differ by at most 0.048, and with 26
-bands from 0 to 8 kHz their band centres differ by up to 262 Hz. A
+bands from 0 to 8 kHz their band centers differ by up to 262 Hz. A
 height-1 triangle has an equivalent rectangular width of half its base;
 for 26 HTK bands over 0–8 kHz this is 1.76 ERB at 226 Hz, 1.41 at 525 Hz,
 1.22 at 921 Hz, 1.06 at 1.9 kHz and 0.97 at 3.8 kHz. So the speech recipe
@@ -127,9 +127,9 @@ above 2 kHz.
 
 **C3. Height-1 triangles sum to one; the choice between height-1 and
 area-1 triangles only adds a fixed vector to the MFCCs.** [proof, check]
-Between the first and last band centres, each frequency lies on the
+Between the first and last band centers, each frequency lies on the
 falling side of one triangle and the rising side of the next, and the two
-weights add to 1 (checker: exactly 0 error). Area normalisation multiplies
+weights add to 1 (checker: exactly 0 error). Area normalization multiplies
 band m by a constant 2 / (f_{m+2} − f_m); after the log that is a constant
 added to L[m], and after the DCT a constant vector added to every time
 window's coefficients. Checker on the sentence: the shift's standard
@@ -158,7 +158,7 @@ the rms over the 26 bands of the difference between the 13-coefficient
 smoothed log mel spectra, c0 (level) excluded, in dB (C1 makes this a
 coefficient distance). /a/ and /i/ at the same F0 are 15.4–16.0 dB apart.
 The same vowel at two F0s is 5.6 dB apart in the median and up to 9.2 dB.
-The lowest HTK band centres are 68 Hz apart and stay closer than 200 Hz
+The lowest HTK band centers are 68 Hz apart and stay closer than 200 Hz
 up to 1.4 kHz, so below that each band catches zero, one or two harmonics
 depending on F0. Taking the band powers from `so.cheaptrick`'s envelope
 instead of the power spectrum (crosscheck), the same-vowel distances fall
@@ -199,9 +199,9 @@ by 13% rms (weights differ by up to 0.25).
 **C9. sonore's STFT has librosa's time windows, so the whole pipeline
 can be tested against librosa's output, deltas included.** [cross] A
 `GaborFrame` with a Hann window of librosa's `win_length`, its hop and its
-`n_fft` gives the same power spectra as `librosa.stft` (centred, zero
+`n_fft` gives the same power spectra as `librosa.stft` (centered, zero
 padding) with a difference of exactly 0, for all three stored settings.
-sonore's grid has one more time window, centred one hop before the first
+sonore's grid has one more time window, centered one hop before the first
 sample, and one or two more at the end; dropping those leaves librosa's
 grid. On that grid the checker's formulas reproduce the stored mel power
 to at most 5.1e-8 of its maximum (librosa's float32 filter weights) and the
@@ -222,7 +222,7 @@ MFCCs to float32 precision; straight-in-Hz triangles change them by
 kaldi-native-fbank 1.22.3, a C++ re-implementation of Kaldi's feature
 code) on the fixture's excerpt at 16-bit integer scale, dither off.
 Kaldi's time windows start at multiples of the hop (`snip-edges`) where
-sonore's are centred on them, so the sound is trimmed by 40 samples (half
+sonore's are centered on them, so the sound is trimmed by 40 samples (half
 the 400-sample window, modulo the 160-sample hop) and Kaldi's first time
 window, which needs the trimmed samples, is left out. With no DC removal,
 no pre-emphasis, a Hamming window, 26 bins from 0 Hz, no lifter and c0
@@ -270,7 +270,7 @@ module `sonore/analysis/mfcc.py` with `MFCC(source, ...)`:
   rounded up to a power of two), so `so.MFCC(snd)` gives the familiar
   numbers in one line;
 - `source` an `STFT` or `TVSTFT`: uses its power, so any window, hop or
-  pitch-adaptive analysis can be summarised, as `so.Cepstrum(coefs)`
+  pitch-adaptive analysis can be summarized, as `so.Cepstrum(coefs)`
   does. Dispatch by `match` on type, as `noise_vocode(carrier=...)`
   already does.
 
@@ -319,7 +319,7 @@ docstring.
 **D3. Pre-emphasis is not an argument. (accepted 2026-10-02)** It is a fixed first-order
 filter on the sound, y[n] = x[n] − 0.97 x[n−1], so it is applied to the
 sound (one `scipy.signal.lfilter` line in the docstring's recipe; sonore
-has no filter method on `Sound` today), and the class analyses what it is
+has no filter method on `Sound` today), and the class analyzes what it is
 given. Alternative: a `preemphasis=0.97` argument as in
 python_speech_features. Convenient, but it hides a change to the sound
 inside a view, and librosa does without it.
@@ -355,13 +355,13 @@ option.
   edges, and matching librosa, which Cho asked for, decides it.
 - No `to_sound` (see "Views"). `mfcc.envelope(f)` returns the smoothed
   power implied by the kept coefficients (inverse DCT, then linear in mel
-  between band centres) at frequencies `f`, for plotting next to an
+  between band centers) at frequencies `f`, for plotting next to an
   envelope; its docstring says it is a display, not a spectrum estimate
   (C4).
 
 **D7. Display. (accepted 2026-10-02)** `mfcc.plot()` draws coefficient index against time;
-`mfcc.plot(kind="mel")` draws the log mel spectrogram with band centres
-labelled in Hz. Both via `sonore.plotting`. README: a module-table row,
+`mfcc.plot(kind="mel")` draws the log mel spectrogram with band centers
+labeled in Hz. Both via `sonore.plotting`. README: a module-table row,
 a short recipe, Davis & Mermelstein (1980) in the references.
 
 **D8. Gallery. (accepted 2026-10-02; built 2026-10-02, all three parts)** A section "MFCCs: a
@@ -381,7 +381,7 @@ spectrum with the 13 MFCCs of CheapTrick's envelope summed into the same
 bands, which is what C5 measures, rather than the raw CheapTrick envelope;
 the page prints C5's distances (median 5.6 dB, largest 9.2, against 1.9 and
 3.4 from CheapTrick; /a/ to /i/ 15.4 to 18.4 dB). Part 2 adds the band
-powers the 13 coefficients keep (`envelope` at the band centres). Part 3
+powers the 13 coefficients keep (`envelope` at the band centers). Part 3
 uses a different random direction in the null space from the checker's, so
 30% of the bins change by more than 3 dB (median 1.9 dB) instead of 43%;
 the MFCCs still agree to 9e-16.
@@ -435,7 +435,7 @@ reference changed two defaults, both small (C10):
   straight-in-Hz triangles as the default and add the mel option. That
   would make the default reproduce librosa and not the reference Cho
   chose.
-- a `Sound` is analysed with the symmetric Hamming window HTK and Kaldi
+- a `Sound` is analyzed with the symmetric Hamming window HTK and Kaldi
   use (`sonore.views.mfcc.symmetric_hamming`), not SciPy's periodic one.
 
 The tests compare with Kaldi in two settings (plain, and Kaldi's window,
@@ -469,7 +469,7 @@ mfcc.envelope(env.f)  # for plotting against env
   three settings.
 - Against Kaldi's stored output (D11, C10): MFCCs and log mel energies.
 - The mel weights, log and DCT against the checker's formulas for both
-  scales and both triangle normalisations (C3, C8).
+  scales and both triangle normalizations (C3, C8).
 - `MFCC(snd)` equals the formula pipeline on the same power spectra.
 - Scaling a sound moves only c0 (D4); a silent channel is finite.
 - Area against height triangles: a constant shift, identical deltas (C3).
@@ -487,7 +487,7 @@ mfcc.envelope(env.f)  # for plotting against env
 
 ## Out of scope
 
-- Other cepstral features: PLP, gammatone cepstra (GFCC), mel-generalised
+- Other cepstral features: PLP, gammatone cepstra (GFCC), mel-generalized
   cepstra used in speech synthesis.
 - Resynthesis from MFCCs (D6).
 - Speaker or speech recognition, and any listener model (`philosophy.md`;
@@ -496,7 +496,7 @@ mfcc.envelope(env.f)  # for plotting against env
 ## References
 
 None of these was verified by lookup for this document; they are cited
-from memory, apart from the library behaviour, which the crosscheck
+from memory, apart from the library behavior, which the crosscheck
 measures (C8).
 
 - Davis, S. B. & Mermelstein, P. (1980). Comparison of parametric
@@ -511,7 +511,7 @@ measures (C8).
   earlier source; the 1987 first edition is the one usually cited (not read).
 - Slaney, M. (1998). *Auditory Toolbox*, version 2. Technical Report
   1998-010, Interval Research Corporation. The linear-then-log mel and
-  area-normalised triangles used by librosa.
+  area-normalized triangles used by librosa.
 - Young, S. et al. (2006). *The HTK Book* (version 3.4). Cambridge
   University Engineering Department. HTK's defaults in the table.
 - Furui, S. (1986). Speaker-independent isolated word recognition using

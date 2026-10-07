@@ -234,7 +234,7 @@ level, which is what makes a quiet band's rhythm as visible as a loud one's.</p>
 its cycles: 6 s at 0.5 Hz, 0.75 s at 4 Hz, 47 ms at 64 Hz, so slow rates are resolved finely
 and fast rates are placed precisely in time. Rates are half an octave apart. A window of six
 cycles, with rates a quarter-octave apart, separates rates twice as finely and follows changes
-half as quickly; the examples show both. Cells drawn grey are ones the analysis cannot trust:
+half as quickly; the examples show both. Cells drawn gray are ones the analysis cannot trust:
 where the window runs past either end of the sound, or where the rate is faster than the band
 is wide (a band's envelope can't change faster than that).</p>
 <p>The image beside each player is the default analysis at one moment, band by band. It is
@@ -440,7 +440,7 @@ fig, playhead, live = show(sound, marks=[3.5, 7.0], start=1.75)</code></pre></de
 </section>
 <section aria-labelledby="h-three-cuts-through-the-cube">
 <h2 id="h-three-cuts-through-the-cube">Three cuts through the cube</h2>
-<p><code>msg.slices(t, rate)</code> draws three cuts through the cube at once, on one colour scale: rate
+<p><code>msg.slices(t, rate)</code> draws three cuts through the cube at once, on one color scale: rate
 against time pooled over bands, frequency against time at one rate, and frequency against
 rate at one moment. Here they are for the sentences, at 4 Hz and at 2 s.</p>
 
@@ -450,8 +450,8 @@ rate at one moment. Here they are for the sentences, at 4 Hz and at 2 s.</p>
     <div class="desc"><p>The middle panel shows which bands carry the 4 Hz rhythm and when: nearly all of them, in
 step with the syllables, since a syllable's onset raises the level across the spectrum. On the
 right, the moment at 2 s: depth is high from 1 to about 5 Hz in most bands and falls off above
-10 Hz, most steeply in the low bands. The grey column is 0.5 Hz, whose 6 s window runs past
-the start; the grey cell at the bottom right is 64 Hz in the lowest band, faster than that band
+10 Hz, most steeply in the low bands. The gray column is 0.5 Hz, whose 6 s window runs past
+the start; the gray cell at the bottom right is 64 Hz in the lowest band, faster than that band
 is wide.</p></div>
   </div>
   <figure class="plot"><div class="plate">
@@ -537,7 +537,7 @@ fig = msg.slices(2.0, rate=4.0)</code></pre></details>
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -568,7 +568,7 @@ fig = msg.slices(2.0, rate=4.0)</code></pre></details>
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

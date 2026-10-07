@@ -220,7 +220,7 @@ def test_tandem_power_db_and_schedule():
     track_t = np.arange(0, 0.5, 0.005)
     power = so.tandem_power(snd, track_t, np.full_like(track_t, f0))
     np.testing.assert_allclose(power.db, np.maximum(10 * np.log10(power.power), -200.0))
-    # the windows run past the end of the sound, so its last samples are analysed
+    # the windows run past the end of the sound, so its last samples are analyzed
     assert power.t[-1] >= snd.duration
 
 
@@ -234,7 +234,7 @@ def test_reassignment_threshold_is_per_channel_and_drops_silence():
     assert np.isfinite(r.t_hat[r.keep]).all() and np.isfinite(r.f_hat[r.keep]).all()
 
 
-def test_binned_centres_follow_the_edges():
+def test_binned_centers_follow_the_edges():
     r = so.reassigned_spectrogram(so.gaussian_noise(0.2, _RFS, rng=0), so.GaborFrame(0.016, 0.002))
     grid = r.binned(np.array([0.0, 0.1, 0.2]), np.array([0.0, 2000.0, 4000.0, 8000.0]))
     np.testing.assert_allclose(grid.t, [0.05, 0.15])

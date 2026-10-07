@@ -54,7 +54,7 @@ def test_filter_matches_response():
         assert np.allclose(np.abs(y[len(t) // 2]), bank.response([f])[0], atol=5e-3)
 
 
-def test_causal_is_centred_delayed():
+def test_causal_is_centered_delayed():
     bank = so.HannModulationFilterbank(f_lo=2.0, f_hi=32.0)
     x = np.random.default_rng(0).random(3000)
     c = bank.filter(x, FE, analytic=True, align="causal")
@@ -163,7 +163,7 @@ def test_plots(tone_msg):
     with pytest.raises(ValueError, match="not both"):
         msg.plot(band=1000, rate=4)
     fig = msg.slices(1.5)
-    assert len(fig.axes) == 4  # three cuts and the colour bar
+    assert len(fig.axes) == 4  # three cuts and the color bar
     anim = msg.animate(fps=10)
     assert isinstance(anim, FuncAnimation)
     del anim  # unrendered: let it go while the warning filter applies

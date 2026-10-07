@@ -98,7 +98,7 @@ numbers, and sonore does not depend on pyworld. In detail:
    platforms' floating point (to be set when the tests are written, from
    CI's numbers).
 6. **Synthesis is held to WORLD, then to consistency.** The synthesis
-   port must give WORLD's samples (C10). Whether analysing a synthesized
+   port must give WORLD's samples (C10). Whether analyzing a synthesized
    sound returns what it was made from is then a property of WORLD
    itself, which C11 measures and the documentation states, rather than a
    standard sonore sets on its own.
@@ -128,7 +128,7 @@ and back. Unvoiced time windows use F0 = 500 Hz.
 
 **D4C (aperiodicity).** At each time window, a "static group delay" from two
 Blackman-windowed spectra (four periods long) a quarter period either
-side of the window centre, divided by a smoothed power spectrum, smoothed
+side of the window center, divided by a smoothed power spectrum, smoothed
 over F0/2, minus a version of itself smoothed over F0. Around
 every multiple of 3 kHz up to min(15 kHz, fs/2 − 3 kHz), a Nuttall window
 over a 3 kHz span of that group delay is transformed, its power sorted,
@@ -164,10 +164,10 @@ and the code differ:
   quefrency. On the test vowels the paper's value fits the envelope's
   shape better (C3). The paper also explains the 2F0/3 smoothing as
   ensuring the power spectrum "has no zeros" before the log, with
-  neighbouring harmonics' influence below 30 dB. The folding below F0 and
+  neighboring harmonics' influence below 30 dB. The folding below F0 and
   the weighted-mean removal are in the code only.
 - **D4C's bands and anchors.** The paper evaluates at 48 kHz with five
-  centre frequencies (3, 6, 9, 12, 15 kHz) and a 6 kHz window. The
+  center frequencies (3, 6, 9, 12, 15 kHz) and a 6 kHz window. The
   −60 dB at 0 Hz is described as added for interpolation in the
   subjective evaluation, "on the basis of our past research (Kawahara and
   Morise, 2012)". The paper concludes that "only one estimated
@@ -189,7 +189,7 @@ and the code differ:
   "cannot manipulate the aperiodic parameter as well as" STRAIGHT. Current
   WORLD uses D4C. The paper also says that "an approximation using the
   minimum phase is inappropriate for low-pitch speech", since phase
-  differences are easier to hear at low F0, and names phase modelling as
+  differences are easier to hear at low F0, and names phase modeling as
   future work.
 
 So WORLD's aperiodicity has a plain meaning in synthesis: **the share of
@@ -331,8 +331,8 @@ where its 0.00003 dB comes from; the library's port includes it and gets
 within 4e-9 dB on the whole sentence.
 
 **C11. WORLD's own round trip is not tight on real speech.** [crosscheck]
-The gallery sentence analysed with its stored Harvest track, synthesized,
-and the result analysed again with the same track: on voiced time windows,
+The gallery sentence analyzed with its stored Harvest track, synthesized,
+and the result analyzed again with the same track: on voiced time windows,
 wherever the envelope is within 40 dB of the time window's peak, the second
 envelope differs from the first by 1.2 dB (median) and 7.4 dB (95th
 percentile); D4C at 3 kHz differs by 1.6 and 5.2 dB. So the consistency
@@ -598,4 +598,4 @@ Morise (2012) is cited as the D4C paper cites it, not read. Röbel & Rodet
   its application to pitch shifting and envelope preservation. *Proc.
   DAFx 2005*.
 - WORLD source code, github.com/mmorise/World, commit d625e76
-  (2025-02-21), modified BSD licence.
+  (2025-02-21), modified BSD license.

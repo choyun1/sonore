@@ -118,9 +118,9 @@ class GaborFrame(_ShortTimeFourierFrame):
         n_samples = int(n_samples)
         window_power = np.abs(self.window_samples(fs)) ** 2
         n_win, hop, n_fft = self.lengths(fs)
-        centre_index = n_win // 2
-        window_indices = np.arange((centre_index - n_win) // hop + 1, -(-(n_samples + centre_index) // hop))
-        positions = window_indices[:, None] * hop - centre_index + np.arange(n_win)[None, :]
+        center_index = n_win // 2
+        window_indices = np.arange((center_index - n_win) // hop + 1, -(-(n_samples + center_index) // hop))
+        positions = window_indices[:, None] * hop - center_index + np.arange(n_win)[None, :]
         inside = (positions >= 0) & (positions < n_samples)
         weights = np.broadcast_to(window_power, positions.shape)[inside]
         return n_fft * np.bincount(positions[inside], weights=weights, minlength=n_samples)

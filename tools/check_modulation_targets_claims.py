@@ -16,7 +16,7 @@ from scipy.signal import istft, resample_poly, stft
 
 FS = 16000  # audio rate [Hz]
 FE = 400  # envelope rate [Hz]
-F_LO = 200.0  # lowest band centre [Hz]
+F_LO = 200.0  # lowest band center [Hz]
 N_OCTAVES = 5  # bands span F_LO .. F_LO * 2**N_OCTAVES = 6400 Hz
 SPEECH = Path(__file__).resolve().parent.parent / "docs" / "speech" / "bdl_arctic_a0131.flac"
 
@@ -26,28 +26,28 @@ def report(claim, text, value):
 
 
 # ------------------------------------------------------------- front end
-def band_centres(per_octave, offset=0.0):
-    """Centres [octaves above F_LO], ``per_octave`` to the octave."""
+def band_centers(per_octave, offset=0.0):
+    """Centers [octaves above F_LO], ``per_octave`` to the octave."""
     return (np.arange(int(N_OCTAVES * per_octave) + 1) + offset) / per_octave
 
 
-def cosine_responses(n_samples, centres, per_octave):
+def cosine_responses(n_samples, centers, per_octave):
     """Half-cosine filters on log2 frequency, one spacing wide on each side:
     filter k is cos(pi/2 * (x - c_k) * per_octave) for |x - c_k| < 1/per_octave.
-    Their squares sum to 1 between the outermost centres. Shape (F, K)."""
+    Their squares sum to 1 between the outermost centers. Shape (F, K)."""
     freqs = np.fft.rfftfreq(n_samples, 1 / FS)
     with np.errstate(divide="ignore"):
         octaves = np.log2(freqs / F_LO)
-    distance = (octaves[:, None] - centres[None, :]) * per_octave
+    distance = (octaves[:, None] - centers[None, :]) * per_octave
     return np.where(np.abs(distance) < 1, np.cos(np.pi / 2 * np.clip(distance, -1, 1)), 0.0)
 
 
-def envelopes(x, centres, per_octave):
+def envelopes(x, centers, per_octave):
     """Hilbert envelopes of each band at FE, shape (K, T)."""
     n_samples = len(x)
-    transfer = cosine_responses(n_samples, centres, per_octave)
+    transfer = cosine_responses(n_samples, centers, per_octave)
     spectrum = np.fft.rfft(x)[:, None] * transfer
-    full = np.zeros((n_samples, len(centres)), complex)  # analytic signal: positive frequencies doubled
+    full = np.zeros((n_samples, len(centers)), complex)  # analytic signal: positive frequencies doubled
     full[: spectrum.shape[0]] = spectrum
     full[1 : (n_samples + 1) // 2] *= 2
     env = np.abs(np.fft.ifft(full, axis=0))
@@ -87,8 +87,8 @@ def c1():
     """Two envelope patterns with the same MPS: speech and its phase-randomized twin."""
     rng = np.random.default_rng(1)
     per_octave = 12
-    centres = band_centres(per_octave)
-    env = envelopes(speech(), centres, per_octave)
+    centers = band_centers(per_octave)
+    env = envelopes(speech(), centers, per_octave)
     spectrum = np.fft.fft2(env - env.mean())
     twin = env.mean() + randomize_phase(spectrum, rng)
 
@@ -193,19 +193,19 @@ def pattern_from_target(amplitude, rng, depth):
     return 1 + depth * p / np.max(np.abs(p))
 
 
-def tone_carrier(pattern, centres_oct, rng, duration):
-    """One random-phase tone at each centre, its amplitude the pattern's row
+def tone_carrier(pattern, centers_oct, rng, duration):
+    """One random-phase tone at each center, its amplitude the pattern's row
     (linearly interpolated to FS), weighted for equal energy per octave."""
     t = np.arange(int(duration * FS)) / FS
     t_env = np.arange(pattern.shape[1]) / FE
     out = np.zeros_like(t)
-    for row, x in zip(pattern, centres_oct, strict=True):
+    for row, x in zip(pattern, centers_oct, strict=True):
         f = F_LO * 2**x
         out += np.interp(t, t_env, row) * np.sin(2 * np.pi * f * t + rng.uniform(0, 2 * np.pi))
     return out
 
 
-def noise_carrier(pattern, centres_oct, per_octave, rng, duration, flatten):
+def noise_carrier(pattern, centers_oct, per_octave, rng, duration, flatten):
     """Noise bands (filtered by the squared responses, which sum to one, so the
     bands add to flat noise) times the pattern's rows. ``flatten`` divides each
     noise band by its own Hilbert envelope first, so the carrier adds no
@@ -213,7 +213,7 @@ def noise_carrier(pattern, centres_oct, per_octave, rng, duration, flatten):
     n_samples = int(duration * FS)
     t = np.arange(n_samples) / FS
     t_env = np.arange(pattern.shape[1]) / FE
-    transfer = cosine_responses(n_samples, centres_oct, per_octave)
+    transfer = cosine_responses(n_samples, centers_oct, per_octave)
     noise_spectrum = np.fft.rfft(rng.standard_normal(n_samples))
     out = np.zeros(n_samples)
     for k, row in enumerate(pattern):
@@ -240,9 +240,9 @@ def c2_c3():
     rng = np.random.default_rng(2)
     duration = 4.0
     per_octave = 12
-    centres = band_centres(per_octave)
+    centers = band_centers(per_octave)
     n_times = int(duration * FE)
-    amplitude = drawn_target(len(centres), n_times, per_octave)
+    amplitude = drawn_target(len(centers), n_times, per_octave)
     target_power = amplitude**2
     mask = target_power > target_power.max() * 1e-2  # the drawn blob, down to -20 dB
 
@@ -275,38 +275,38 @@ def c2_c3():
     )
 
     # C3: does one-shot synthesis put the target's MPS into the sound?
-    # Carriers on a 24 per octave grid (finer than the analysis), analysed at 12 per octave.
+    # Carriers on a 24 per octave grid (finer than the analysis), analyzed at 12 per octave.
     # The pattern is drawn at 12 per octave and interpolated in frequency to the carrier grid.
     carrier_per_octave = 24
-    carrier_centres = band_centres(carrier_per_octave)
-    fine_pattern = np.array([np.interp(carrier_centres, centres, column) for column in pattern.T]).T
+    carrier_centers = band_centers(carrier_per_octave)
+    fine_pattern = np.array([np.interp(carrier_centers, centers, column) for column in pattern.T]).T
     carriers = {
-        "tones, 24 per octave": tone_carrier(fine_pattern, carrier_centres, rng, duration),
-        "noise bands": noise_carrier(fine_pattern, carrier_centres, carrier_per_octave, rng, duration, False),
+        "tones, 24 per octave": tone_carrier(fine_pattern, carrier_centers, rng, duration),
+        "noise bands": noise_carrier(fine_pattern, carrier_centers, carrier_per_octave, rng, duration, False),
         "noise bands, envelopes flattened": noise_carrier(
-            fine_pattern, carrier_centres, carrier_per_octave, rng, duration, True
+            fine_pattern, carrier_centers, carrier_per_octave, rng, duration, True
         ),
     }
-    # Tones on the analysis grid itself: each tone sits at its band's centre,
-    # where both neighbouring filters are zero, so no band hears two tones.
-    carriers["tones on the analysis band centres"] = tone_carrier(pattern, centres, rng, duration)
+    # Tones on the analysis grid itself: each tone sits at its band's center,
+    # where both neighboring filters are zero, so no band hears two tones.
+    carriers["tones on the analysis band centers"] = tone_carrier(pattern, centers, rng, duration)
     flat = np.ones_like(fine_pattern)
     for name, sound in carriers.items():
-        measured = mps(envelopes(sound, centres, per_octave))
+        measured = mps(envelopes(sound, centers, per_octave))
         inside, outside = compare(measured, target_power, mask)
         report("C3", f"{name}: dB correlation with the target inside the blob", inside)
         report("C3", f"{name}: power outside the blob, re total", outside)
     for name, sound in (
-        ("tones", tone_carrier(flat, carrier_centres, rng, duration)),
-        ("tones on the band centres", tone_carrier(np.ones_like(pattern), centres, rng, duration)),
-        ("noise bands", noise_carrier(flat, carrier_centres, carrier_per_octave, rng, duration, False)),
-        ("noise, flattened", noise_carrier(flat, carrier_centres, carrier_per_octave, rng, duration, True)),
+        ("tones", tone_carrier(flat, carrier_centers, rng, duration)),
+        ("tones on the band centers", tone_carrier(np.ones_like(pattern), centers, rng, duration)),
+        ("noise bands", noise_carrier(flat, carrier_centers, carrier_per_octave, rng, duration, False)),
+        ("noise, flattened", noise_carrier(flat, carrier_centers, carrier_per_octave, rng, duration, True)),
     ):
-        env = envelopes(sound, centres, per_octave)
+        env = envelopes(sound, centers, per_octave)
         report(
             "C3", f"unmodulated {name} carrier: rms depth of its own envelopes", np.std(env) / np.mean(env)
         )
-    env = envelopes(carriers["tones, 24 per octave"], centres, per_octave)
+    env = envelopes(carriers["tones, 24 per octave"], centers, per_octave)
     report("C3", "modulated tone carrier: rms depth of measured envelopes", np.std(env) / np.mean(env))
 
 
@@ -415,14 +415,14 @@ def c6():
     """The edit of C4 (temporal modulations above 4 Hz removed), made on the
     filterbank envelopes instead: the envelope array's 2-D transform keeps
     the sentence's own modulation phase, so the edited envelopes are exact.
-    They then go on three fine structures, and the sound is re-analysed."""
+    They then go on three fine structures, and the sound is re-analyzed."""
     rng = np.random.default_rng(5)
     per_octave = 12
-    centres = band_centres(per_octave)
+    centers = band_centers(per_octave)
     x = speech()
     n_samples = len(x)
-    transfer = cosine_responses(n_samples, centres, per_octave)
-    env = envelopes(x, centres, per_octave)
+    transfer = cosine_responses(n_samples, centers, per_octave)
+    env = envelopes(x, centers, per_octave)
     original = band_share(env)
     report("C6", "speech: share of envelope modulation power at 6-40 Hz", original)
 
@@ -441,8 +441,8 @@ def c6():
     fine_structures = {
         "speech's own fine structure": np.cos(np.angle(analytic_bands(x, transfer))),
         "noise fine structure": np.cos(np.angle(analytic_bands(rng.standard_normal(n_samples), transfer))),
-        "steady tones at the band centres": np.cos(
-            2 * np.pi * (F_LO * 2**centres)[None, :] * t[:, None] + rng.uniform(0, 2 * np.pi, len(centres))
+        "steady tones at the band centers": np.cos(
+            2 * np.pi * (F_LO * 2**centers)[None, :] * t[:, None] + rng.uniform(0, 2 * np.pi, len(centers))
         ),
     }
     for name, fine in fine_structures.items():
@@ -451,9 +451,9 @@ def c6():
             y = bands.sum(axis=1)  # each tone sits where only its own band responds
         else:  # back through the bank (tight: squared responses sum to one)
             y = np.fft.irfft(np.sum(np.fft.rfft(bands, axis=0) * transfer, axis=1), n=n_samples)
-        share = band_share(envelopes(y, centres, per_octave))
+        share = band_share(envelopes(y, centers, per_octave))
         report(
-            "C6", f"{name}: re-analysed share at 6-40 Hz re speech's [dB]", 10 * np.log10(share / original)
+            "C6", f"{name}: re-analyzed share at 6-40 Hz re speech's [dB]", 10 * np.log10(share / original)
         )
 
 
@@ -466,11 +466,11 @@ def c7():
     from the sentence's own phases, or from noise's."""
     rng = np.random.default_rng(5)
     per_octave = 12
-    centres = band_centres(per_octave)
+    centers = band_centers(per_octave)
     x = speech()
     n_samples = len(x)
-    transfer = cosine_responses(n_samples, centres, per_octave)
-    env = envelopes(x, centres, per_octave)
+    transfer = cosine_responses(n_samples, centers, per_octave)
+    env = envelopes(x, centers, per_octave)
     original = band_share(env)
     rate = np.abs(np.fft.fftfreq(env.shape[1], 1 / FE))[None, :]
     target = np.abs(np.fft.fft2(env - env.mean())) * (rate <= 4.0)
@@ -491,7 +491,7 @@ def c7():
             bands = rebuilt_full * fine
             y = np.fft.irfft(np.sum(np.fft.rfft(bands, axis=0) * transfer, axis=1), n=n_samples)
             fine = np.cos(np.angle(analytic_bands(y, transfer)))
-            measured = envelopes(y, centres, per_octave)
+            measured = envelopes(y, centers, per_octave)
             phase = np.angle(np.fft.fft2(measured - measured.mean()))
             if iteration in (0, 5, 20):
                 share = band_share(measured)

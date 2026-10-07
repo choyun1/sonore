@@ -1,7 +1,7 @@
 """Frames: the ``Frame``/``Filterbank`` contract (docs/design/frames/frames.md).
 
 The first sections cover the interface, the tight/general equivalence and the
-non-frame behaviour; the last checks every frame against the dense-matrix
+non-frame behavior; the last checks every frame against the dense-matrix
 oracle in tests/helpers.py (bounds as eigenvalues, masked coefficients vs.
 canonical least squares, the documented exception for padded non-tight
 filterbanks, and the adjoint as the weighted transpose). Step 2
@@ -329,7 +329,7 @@ def test_tvstft_container():
 # Every frame against dense matrices built from its own fast path (helpers):
 # bounds are the extreme eigenvalues of the weighted S, and synthesis of
 # masked coefficients is the canonical weighted least squares, except for the
-# documented behaviour of padded non-tight filterbanks (least squares on the
+# documented behavior of padded non-tight filterbanks (least squares on the
 # padded circular grid).
 
 ORACLE = {

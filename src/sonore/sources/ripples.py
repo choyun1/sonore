@@ -53,7 +53,7 @@ _SCALES = ("linear", "db")
 
 
 class _Pattern:
-    """Shared behaviour: addition into sums, and plotting."""
+    """Shared behavior: addition into sums, and plotting."""
 
     def __add__(self, other):
         match other:

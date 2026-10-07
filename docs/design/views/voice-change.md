@@ -255,7 +255,7 @@ heed, hod and who'd with male formants at F0 110 and 150 Hz and with
 female ones at 200 and 250 Hz. On recordings there is no truth; the score is
 the level-free distance between the original's and the output's 40-band
 log mel spectra (median over voiced time windows), which smooths the way
-the MFCC envelope does and so favours it. It is a sanity check, not a
+the MFCC envelope does and so favors it. It is a sanity check, not a
 ranking.
 
 **C8. The envelope decides the result; the F0 source and the synthesizer
@@ -307,7 +307,7 @@ a larger FFT or smoothing before WORLD's synthesis, which D4 has to
 handle.
 
 **C11. On the recordings CheapTrick still resynthesizes best, even under a
-score that favours the MFCC envelope.** [compare] Level-free log mel
+score that favors the MFCC envelope.** [compare] Level-free log mel
 distance, median over voiced time windows:
 
 | speaker | F0 from | CheapTrick | cepstral | MFCC (13) | MFCC, area |
@@ -378,7 +378,7 @@ on_harmonics = so.harmonic_complex(snd.duration, snd.fs, so.scale_f0(track, 1.53
   own `SpectralEnvelope` as it is (so the exact port is untouched) and
   samples any other envelope at its time windows and frequencies, which
   it already knows from the aperiodicity; it reads an F0 contour that is
-  not on its grid onto it. `harmonic_complex` recognises a grid envelope
+  not on its grid onto it. `harmonic_complex` recognizes a grid envelope
   and reads it point by point itself, as amplitude.
 
 ### What these changes are not
@@ -422,7 +422,7 @@ large part of what separates bdl from slt.
   f)`: natural for oscillators, which need one value per sample and
   harmonic, but it would change both merged views.
 - Either way, the other side gets an adapter, not a second convention: in
-  the recommendation, `harmonic_complex` recognises a grid envelope (D4).
+  the recommendation, `harmonic_complex` recognizes a grid envelope (D4).
 
 **D3. A general grid envelope.**
 - *`so.GridEnvelope(power, t, f)`* (recommended; name open): power on any
@@ -475,7 +475,7 @@ large part of what separates bdl from slt.
 - *Piecewise linear*, the same ratio up to a cut-off and then a line to
   fs/2 that keeps the top fixed: no held values above fs/2 when lowering
   (C4), at the price of a second parameter.
-- *Bilinear (all-pass) warping*, as in vocal-tract-length normalisation
+- *Bilinear (all-pass) warping*, as in vocal-tract-length normalization
   and mel-cepstral analysis: smooth, maps 0 to 0 and fs/2 to fs/2, but its
   parameter is not a formant ratio and it shifts low formants more than
   high ones.
