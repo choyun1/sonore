@@ -71,7 +71,7 @@ meant to be readable without them.
 - **Synthesis lives in `to_sound`.** A function next to a view either
   builds the view from a sound (`f0_track`, `pv_analyze`) or is a recipe
   that analyzes, changes the view and calls its `to_sound` (`time_stretch`,
-  `noise_vocode`); it holds no synthesis code of its own. Where two views
+  `channel_vocode`); it holds no synthesis code of its own. Where two views
   share a route, the bigger one is the smaller one applied piece by piece:
   `Envelopes.to_sound` is `Envelope.to_sound` in every band, then the
   filterbank's synthesis, and a test holds them to that.

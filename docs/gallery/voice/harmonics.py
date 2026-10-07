@@ -187,7 +187,7 @@ sound = shaped
 # the pitch is not, and it sounds whispered.
 
 # %% [demo he2] Sixteen noise bands
-vocoded = finish(so.noise_vocode(sentence, 16, 80, 7600, rng=1))
+vocoded = finish(so.channel_vocode(sentence, 16, 80, 7600, rng=1))
 fig, playhead = show(vocoded, "16-band noise vocoder")
 sound = vocoded
 
@@ -199,7 +199,7 @@ sound = vocoded
 
 # %% [demo he3] Sixteen bands on harmonics
 carrier = so.harmonic_complex(duration, fs, track, unvoiced="noise", rng=1)
-vocoded = finish(so.noise_vocode(sentence, 16, 80, 7600, carrier=carrier))
+vocoded = finish(so.channel_vocode(sentence, 16, 80, 7600, carrier=carrier))
 fig, playhead = show(vocoded, "16-band vocoder, harmonic carrier on so.f0_track", contours["so.f0_track"])
 sound = vocoded
 
@@ -475,4 +475,4 @@ sound = resynthesis_female
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
-#   [`envelopes.noise_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L508)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)

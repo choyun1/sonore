@@ -22,9 +22,10 @@ polyphase, or the FFT for unusual rate ratios; clipped at zero) when applied
 to a sound.
 
 ``to_sound(carrier)`` is the route back: the envelopes imposed on a carrier.
-:func:`noise_vocode` is the noise vocoder after Shannon et al. (1995): a
-sound's own band envelopes imposed on bands of noise, as in simulations of
-cochlear-implant hearing.
+:func:`channel_vocode` is a channel vocoder: a sound's own band envelopes imposed
+on a carrier. With bands of noise as the carrier (the default) it is the
+noise vocoder of Shannon et al. (1995), as in simulations of cochlear-implant
+hearing.
 """
 
 from __future__ import annotations
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
     from sonore.frames.filterbank import Filterbank
     from sonore.views.modulation import ModulationSpectrum
 
-__all__ = ["Envelope", "Envelopes", "noise_vocode"]
+__all__ = ["Envelope", "Envelopes", "channel_vocode"]
 
 
 @dataclass(frozen=True)
@@ -205,9 +206,7 @@ class Envelope(View):
                 if other.fs != self.fs or len(other) != len(self):
                     raise ValueError("envelopes must share fs and length")
                 return other._data
-            case bool():
-                return NotImplemented
-            case numbers.Real():
+            case numbers.Real() if not isinstance(other, bool):
                 return float(other)
             case _:
                 return NotImplemented
@@ -398,22 +397,7 @@ class Envelopes(_PaddedBands, View):
                 bands = np.pad(other._full, ((extra, extra), (0, 0), (0, 0))) if extra else other._full
                 env_on_grid = self._on_grid(other.fs, other.n_samples, pad)
                 return Subbands(bands * env_on_grid, other.fs, other.filterbank, pad=pad)
-            case Envelopes():
-                if other.fs != self.fs or other.n_samples != self.n_samples or len(other) != len(self):
-                    raise ValueError("Envelopes must share fs, length and band count")
-                pad = max(self.pad, other.pad)
-                own_values = self._on_grid(self.fs, self.n_samples, pad)
-                other_values = other._on_grid(self.fs, self.n_samples, pad)
-                return self._new(own_values * other_values, pad=pad)
-            case Envelope():
-                if other.fs != self.fs or len(other) != self.n_samples:
-                    raise ValueError("Envelope must share fs and length")
-                gain = np.zeros((self._full.shape[0], 1, other.data.shape[1]))
-                gain[self.pad : self.pad + self.n_samples, 0, :] = other.data
-                return self._new(self._full * gain)
-            case bool():
-                return NotImplemented
-            case numbers.Real():
+            case numbers.Real() if not isinstance(other, bool):
                 return self._new(self._full * float(other))
             case _:
                 return NotImplemented
@@ -505,7 +489,7 @@ class Envelopes(_PaddedBands, View):
         return plot_envelopes(self, ax=ax, **kwargs)
 
 
-def noise_vocode(
+def channel_vocode(
     sound: Sound,
     n_bands: int = 16,
     f_lo: float = 80.0,
@@ -514,7 +498,9 @@ def noise_vocode(
     env_lowpass: float | None = 50.0,
     rng=None,
 ) -> Sound:
-    """A noise vocoder, after Shannon et al. (1995), with Hilbert envelopes.
+    """A channel vocoder with Hilbert envelopes: the sound's band envelopes on
+    a ``carrier``. The default, ``carrier="noise"``, is the noise vocoder of
+    Shannon et al. (1995).
 
     The sound is split by a ``cosine_filterbank`` of ``n_bands`` bands from
     ``f_lo`` to ``f_hi`` (capped at Nyquist), each band's Hilbert envelope is
