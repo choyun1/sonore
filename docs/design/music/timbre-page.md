@@ -20,7 +20,7 @@ As in the other design notes, each claim is tagged:
   (2011) as printed.
 - **[source]** is a published work. The References section says how far each was read.
 
-## Licence of the Timbre Toolbox
+## License of the Timbre Toolbox
 
 The Timbre Toolbox (MATLAB) is licensed for non-profit research only and forbids
 sub-licensing (`_licence.txt` in the repository). sonore is MIT-licensed, so it cannot carry
@@ -163,5 +163,5 @@ matching, because sonore has no loudness model.
 - Peeters, G., Giordano, B. L., Susini, P., Misdariis, N., & McAdams, S. (2011). The Timbre
   Toolbox: Extracting audio descriptors from musical signals. *J. Acoust. Soc. Am.* 130(5),
   2902–2916. doi:10.1121/1.3642604. Read (PDF from Cho): sections II and III in full, IV A.
-- Timbre Toolbox, github.com/VincentPerreault0/timbretoolbox. Read for its licence and its
+- Timbre Toolbox, github.com/VincentPerreault0/timbretoolbox. Read for its license and its
   default settings (`TEE.m` cutoff 5 Hz, `Att.m`); no code used.

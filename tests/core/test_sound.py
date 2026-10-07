@@ -115,13 +115,13 @@ class TestHandWrittenValues:
                 self.sound([0.0, 0.0]).normalize(**kwargs)
 
     def test_ramp_shapes(self):
-        """Four ramp samples sample the curve at their centres, 1/8, 3/8, 5/8 and 7/8."""
+        """Four ramp samples sample the curve at their centers, 1/8, 3/8, 5/8 and 7/8."""
         snd = self.sound(np.ones(10))
-        centres = np.array([1, 3, 5, 7]) / 8
-        cosine = (1 - np.cos(np.pi * centres)) / 2  # 0.038, 0.309, 0.691, 0.962
+        centers = np.array([1, 3, 5, 7]) / 8
+        cosine = (1 - np.cos(np.pi * centers)) / 2  # 0.038, 0.309, 0.691, 0.962
         np.testing.assert_allclose(snd.ramp(0.004).data[:, 0], [*cosine, 1, 1, *cosine[::-1]], rtol=1e-12)
         np.testing.assert_allclose(
-            snd.ramp(0.004, shape="linear").data[:, 0], [*centres, 1, 1, *centres[::-1]], rtol=1e-12
+            snd.ramp(0.004, shape="linear").data[:, 0], [*centers, 1, 1, *centers[::-1]], rtol=1e-12
         )
 
     def test_pad_adds_silence_before_and_after(self):
@@ -161,7 +161,7 @@ class TestHandWrittenValues:
 
 
 class TestAuditFixes:
-    """Behaviour Cho chose in audit sitting 2 (2026-10-03)."""
+    """Behavior Cho chose in audit sitting 2 (2026-10-03)."""
 
     def test_fs_is_read_only(self):
         snd = so.silence(0.01, FS)

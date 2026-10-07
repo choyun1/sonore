@@ -16,7 +16,7 @@ no `voice` subpackage, synthesizers go to `signals` and analyses of a voice
 to `views`. Every count below is printed by `python
 tools/count_reorganization_references.py`, run on 2026-10-02 at main
 `b08063c` (before the move; the script runs only on that tree); numbers
-that are not are labelled estimates.
+that are not are labeled estimates.
 
 Migration: step 3, the gallery (PR #82), and step 4, the source move
 (PR #83), are merged. D13's `View` base class and `NotInvertibleError`
@@ -152,7 +152,7 @@ file, design docs, tools and tests. The tests mirror `src/`, so all 10 files
 in `tests/analysis` move, `test_glottal.py` joins `test_generators.py`, and
 5 more move (klatt and the four spatial ones).
 
-Estimates from today's line ranges (labelled, not measured as built):
+Estimates from today's line ranges (labeled, not measured as built):
 `signals/generators.py` about 870 lines (589 plus glottal.py's 287, less
 its imports); `signals/world.py` about 460 (`world_synthesize`, 236, plus
 WORLD's shared helpers, about 220); `views/f0.py` about 420;
@@ -219,7 +219,7 @@ GaborFrame` change.
   nothing). (b) Later, rebuild `PVAnalysis` on `GaborFrame` (today it uses
   SciPy's `ShortTimeFFT` directly); its analysis would then be a view, close
   kin to the reassigned spectrogram, and `time_stretch` and `pitch_shift`
-  procedures on it. Not now: a change to working code with no new behaviour.
+  procedures on it. Not now: a change to working code with no new behavior.
   *Amended 2026-10-03 (Cho, PR #86):* `PVAnalysis` is a `View` after all, so that
   every analysis is a frame or a view; it stays in `stimuli`, and
   `resynthesize` is its named, approximate route back to sound.
@@ -493,7 +493,7 @@ A folder move and an edit to the same script in two open PRs conflict, so:
    README module table and References tags
    (`tools/update_readme_source_links.py` rewrites line anchors but not file
    paths, so the paths are edited first). D13's `View` base class and error
-   come in a separate PR after this one, since they add behaviour and the
+   come in a separate PR after this one, since they add behavior and the
    move should add none. Checks: the full test suite, the
    texture bit-for-bit hash against the previous commit, WORLD's stored
    pyworld comparison and the Klatt and LF tests unchanged, every gallery

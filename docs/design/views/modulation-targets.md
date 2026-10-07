@@ -139,22 +139,22 @@ costs). A dB pattern has no limit but distorts the linear spectrum (C1).
 
 **C3. Whether the sound has the drawn spectrum depends as much on the
 carrier and the analysis as on the pattern.** [check] The C2 pattern on
-four carriers, each analysed with the 12-per-octave bank of C1.
+four carriers, each analyzed with the 12-per-octave bank of C1.
 
 | Carrier | dB correlation with the target, inside the blob | Measured power outside the blob | rms depth of the unmodulated carrier's own envelopes |
 |---|---|---|---|
 | Random-phase tones, 24 per octave | 0.91 | 72% | 0.45 |
 | Noise bands, 24 per octave | 0.83 | 75% | 0.51 |
 | Noise bands with flattened envelopes ("low-noise") | 0.91 | 69% | 0.43 |
-| Tones on the analysis band centres, 12 per octave | 0.98 | 5.2% | 0.03 |
+| Tones on the analysis band centers, 12 per octave | 0.98 | 5.2% | 0.03 |
 
 Every carrier but the last brings its own envelope fluctuations, as large as
 the pattern's (0.43–0.51 against 0.28), and most of the measured modulation
-power is the carrier's. Tones beat with their neighbours inside a band
+power is the carrier's. Tones beat with their neighbors inside a band
 (adjacent tones 1/24 octave apart beat at 2.9% of their frequency, 5.8 Hz
 at 200 Hz, inferred from the spacing). Even noise bands whose own envelopes
 are flat fluctuate once an analysis band sums several of them. Only tones
-placed at the analysis bands' centres, where both neighbouring filters are
+placed at the analysis bands' centers, where both neighboring filters are
 zero, give each band one tone and so no beats. So "a sound with this
 modulation spectrum" means nothing until the analysis is named, and a
 one-shot synthesis hits its target only if its carrier is built for that
@@ -168,7 +168,7 @@ most of the edit.** [check] The measure-and-edit route as Elliott &
 Theunissen (2009) describe it: the log-magnitude STFT of the sentence
 (32 ms Hann windows, 4 ms hop), a 2-D transform, every temporal modulation
 above 4 Hz removed, and back to a target magnitude. Before the edit, 17.5%
-of the log spectrogram's modulation power is at 6–40 Hz. Re-analysing the
+of the log spectrogram's modulation power is at 6–40 Hz. Re-analyzing the
 resynthesized sound:
 
 | Resynthesis | Power left at 6–40 Hz, re the original's | ‖ \|STFT\| − target ‖ / ‖ target ‖ |
@@ -179,7 +179,7 @@ resynthesized sound:
 Atlas & Shamma (2003) note that a joint acoustic and modulation
 representation needs "added constraints" to be invertible [source]. Here
 the edited magnitude is not the magnitude of any STFT: overlapping windows
-tie neighbouring frames together, and the inverse STFT returns the nearest
+tie neighboring frames together, and the inverse STFT returns the nearest
 signal, whose own magnitude puts much of the removed modulation back.
 
 **C5. An iterative search keeps more of the edit, and still does not reach
@@ -212,13 +212,13 @@ filterbank envelopes of C1 instead of the spectrogram. The envelope array's
 2-D transform keeps the sentence's own modulation phase, so the edited
 envelopes are exact: their 6–40 Hz share is 21.5 dB below the sentence's
 (after clipping the 15% of cells the edit pushed below zero). The envelopes
-then go on three fine structures and the sound is re-analysed:
+then go on three fine structures and the sound is re-analyzed:
 
 | Fine structure under the edited envelopes | Share at 6–40 Hz, re the sentence's |
 |---|---|
 | The sentence's own (`tfs()` of its bands) | −3.5 dB |
 | Noise's | −4.5 dB |
-| Steady tones at the band centres | −14.9 dB |
+| Steady tones at the band centers | −14.9 dB |
 
 The first two lose most of the edit, as badly as the one-shot STFT route of
 C4. A band's fine structure is not free of envelope: its phase changes as
@@ -286,7 +286,7 @@ row as its power spectrum, and independent phases make the bands
 uncorrelated (inferred). That is what a "modulation-filtered noise" per
 band is.
 
-**3. Measure and edit.** Analyse a real sound, change its modulation
+**3. Measure and edit.** Analyze a real sound, change its modulation
 spectrum (remove a rate band, a density band, a quadrant, or multiply by a
 random mask), and go back. Elliott & Theunissen (2009) did this to speech
 to find which modulations intelligibility needs: comprehension was
@@ -366,7 +366,7 @@ What the measurements say about the defaults:
 
 - One shot keeps the target exactly on the envelopes (C2) but not in the
   sound: a re-analysis finds it only if the fine structure is steady in each
-  band (C3, C6). Steady tones at the analysis band centres are the only
+  band (C3, C6). Steady tones at the analysis band centers are the only
   fine structure measured here that keeps it (−14.9 dB against −3.5 and
   −4.5 dB for speech and noise fine structure).
 - A search improves agreement with the analysis it searches through (C5),
@@ -375,7 +375,7 @@ What the measurements say about the defaults:
   and envelope settings the target was measured or drawn on. The
   `ModulationSpectrum` would have to keep those (today it keeps only the dB
   level of half the plane, after a Hann taper), and `to_sound` would refuse
-  a carrier analysed differently.
+  a carrier analyzed differently.
 
 ## Fit with the filterbank redesign
 
@@ -400,7 +400,7 @@ a requirement on this design.
 All accepted 2026-10-03.
 
 - **D1. How a target is specified**: in code, as a few blobs on the rate
-  (Hz, signed) × density (cycles/octave) plane, each with a centre, two
+  (Hz, signed) × density (cycles/octave) plane, each with a center, two
   widths, a direction and a level; a ripple is a blob of zero width. Or
   as a measured spectrum, edited. A painted grid is accepted too, but a GUI
   for drawing is left to TrackDraw, which would hand over the same blob list
@@ -410,7 +410,7 @@ All accepted 2026-10-03.
   as above (the mean is stored with the spectrum). `iterations` comes
   with D7. `carrier` is a `Sound`, `"noise"` (random
   modulation phase and noise fine structure) or `"tones"` (random
-  modulation phase, steady tones at the band centres). Accepted
+  modulation phase, steady tones at the band centers). Accepted
   2026-10-03 (Cho's proposal). It needs `ModulationSpectrum` to keep the untapered magnitude
   on the full plane and its analysis settings (D4).
 - **D3. `philosophy.md` changes**: the modulation spectrum moves from
@@ -420,7 +420,7 @@ All accepted 2026-10-03.
   rate, compression and linear or dB scale, and the untapered magnitude, so
   `to_sound` can rebuild envelopes on the same grid and refuse a mismatched
   carrier. The display keeps its Hann taper. Accepted 2026-10-03.
-- **D5. Default carrier `"tones"`**: steady tones at the band centres, the
+- **D5. Default carrier `"tones"`**: steady tones at the band centers, the
   only fine structure measured here that keeps the target in the sound
   (C3, C6). Accepted 2026-10-03. Whether `ripple_sound`'s own default carrier
   should change for the same reason is separate: measure the beat floor on
@@ -431,7 +431,7 @@ All accepted 2026-10-03.
   `rms_depth` argument scales the spectrum and refuses a depth that cannot
   be reached without clipping (C2). Accepted 2026-10-03.
 - **D7. The consistency search** (`iterations > 0`): Griffin–Lim through
-  the filterbank (impose the target envelopes, re-analyse, keep the new
+  the filterbank (impose the target envelopes, re-analyze, keep the new
   fine structure and modulation phase, repeat). Accepted 2026-10-03,
   as a second step after measuring it; measured in C7 and implemented as
   `to_sound(iterations=...)`.

@@ -209,7 +209,7 @@ report(
 
 # ---------------------------------------------------------------- C5
 # Voicing. Interpolating straight through the unvoiced zeros sweeps the pitch
-# down towards 0 Hz at every voicing boundary; filling the gaps first keeps
+# down toward 0 Hz at every voicing boundary; filling the gaps first keeps
 # it in the voiced range. Ramped gates switch on without clicks.
 f_through = to_samples(t_c, f0_c, n)
 on = gate > 0.01

@@ -73,7 +73,7 @@ def impulse_vowel(f0, dur=0.5):
 
 def cepstral_f0(segment, n_fft, f_lo=60.0, f_hi=400.0):
     """F0 from the largest real-cepstrum peak in 1/f_hi..1/f_lo s, refined by
-    a parabola through the peak and its neighbours. Returns (f0, peak height)."""
+    a parabola through the peak and its neighbors. Returns (f0, peak height)."""
     c = np.real(real_cepstrum(segment, n_fft))
     q_lo, q_hi = int(np.floor(FS / f_hi)), int(np.ceil(FS / f_lo))
     k = q_lo + int(np.argmax(c[q_lo : q_hi + 1]))

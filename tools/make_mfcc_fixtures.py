@@ -3,7 +3,7 @@
 Runs librosa 0.11.0 on 0.8 s of the gallery sentence (0.5 to 1.3 s, stored
 in the file as 16-bit samples, so the tests need no docs folder) with three
 settings: librosa's
-defaults (Slaney mel, area-normalised triangles, 2048-point windows,
+defaults (Slaney mel, area-normalized triangles, 2048-point windows,
 128 bands, 20 coefficients, dB with an 80 dB floor below the loudest cell),
 the speech recipe's sizes with HTK mel and height-1 triangles (400-sample
 Hann window, 160-sample hop, 512-point FFT, 26 bands, 13 coefficients), and

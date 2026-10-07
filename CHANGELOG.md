@@ -1,7 +1,7 @@
 # Changelog
 
 Notable changes to sonore. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Until 1.0, a minor version (0.x.0) may change import paths or behaviour; a patch
+Until 1.0, a minor version (0.x.0) may change import paths or behavior; a patch
 version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
@@ -67,6 +67,8 @@ Breaking changes since 0.5.0 (each is described under Changed):
   current axes.
 - Modules: `views/spectrum.py` and `views/reassigned.py` merged into
   `views/spectra.py`; `views/descriptors.py` renamed `views/timbre.py`.
+- Docs, docstrings, comments and messages use American spelling ("behavior",
+  "center", "analyze"); no public name changes.
 
 ### Fixed
 
@@ -108,7 +110,7 @@ Breaking changes since 0.4.0 (each is described under Changed):
 - `so.gaussian_noise` loses `tilt_ref`; `Sound.fs` is read-only.
 - The LF source (`so.lf_harmonics`, `so.lf_pulse`, `so.glottal_source`,
   Klatt's `RD`) refuses Rd outside 0.3-2.7.
-- Output changes for the same arguments: gammatone and Morlet centres move
+- Output changes for the same arguments: gammatone and Morlet centers move
   slightly (`f_lo` and `f_hi` are now the outer knots); the default top band
   edge is the Nyquist frequency rather than 95% of it; `so.correlated_noise`
   hits the requested correlation exactly; a random-phase
@@ -133,7 +135,7 @@ Breaking changes since 0.4.0 (each is described under Changed):
   the spectrum, the carrier supplying what it lacks, the modulation phase
   and the fine structure. A `Sound` lends its own (so the spectrum of `x`
   with `carrier=x` gives `x`'s envelopes back); `"tones"` (steady tones at
-  the band centres, the default) and `"noise"` draw a random modulation
+  the band centers, the default) and `"noise"` draw a random modulation
   phase. `ModulationSpectrum.with_gain(g)` edits a spectrum, for example
   `g = lambda rate, density: abs(rate) <= 4`, and `to_envelopes` gives the
   rebuilt envelopes. Spectra made from envelopes keep how they were made
@@ -326,7 +328,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
   pitch (Doppler) instead of comb-filtering; HRIRs are interpolated between
   measured distances and travel time and 1/r carry it beyond them; an
   optional `room` tail with `drr_db`. A path can be a function of time;
-  `so.hcc_trajectory` builds one in head-centred coordinates, and
+  `so.hcc_trajectory` builds one in head-centered coordinates, and
   `so.SPEED_OF_SOUND` is the default 343 m/s. See
   `docs/design/spatial/moving-sound.md` and the gallery page "Moving talkers".
 - `so.scale_f0` and `so.warp_frequency`: a pitch change (voiced F0 times a
@@ -341,7 +343,7 @@ and LF voice synthesis, voice changes and a moving-sound renderer.
 - `so.MFCC`: mel-frequency cepstral coefficients (Davis & Mermelstein,
   1980) of a sound, with the usual speech settings (25 ms Hamming window,
   10 ms hop, 26 HTK mel bands, 13 coefficients), or of any `STFT` or
-  `TVSTFT`. Options for the Slaney mel scale, area-normalised triangles, a
+  `TVSTFT`. Options for the Slaney mel scale, area-normalized triangles, a
   floor and HTK's lifter; triangles straight in mel (HTK, Kaldi; the
   default) or in Hz (librosa); `.mel_power` (the mel spectrogram), `.db`,
   `.deltas()` (computed as librosa's), `.envelope(f)` and `.plot()`. Tests

@@ -1,5 +1,5 @@
 """Mel-frequency cepstral coefficients (MFCCs): the log power in triangular
-bands on a mel scale, summarised by a discrete cosine transform."""
+bands on a mel scale, summarized by a discrete cosine transform."""
 
 from __future__ import annotations
 
@@ -36,9 +36,9 @@ def mel_filterbank(
     ``triangle_axis="mel"``, as HTK and Kaldi build them, and in Hz with
     ``"hz"``, as librosa does; the two differ inside each band, most in the
     wide high bands. With ``triangles="height"`` each peak is 1, and between
-    the first and last centres the weights sum to 1.
+    the first and last centers the weights sum to 1.
     With ``"area"`` band ``m`` is scaled by ``2 / (edge[m+2] - edge[m])``
-    (Slaney's normalisation), which after the log only adds a constant to
+    (Slaney's normalization), which after the log only adds a constant to
     each band. The triangles are evaluated at the exact frequencies, not
     rounded to FFT bins.
 
@@ -57,9 +57,9 @@ def mel_filterbank(
         positions, edge_positions = freqs, edges
     weights = np.zeros((n_mels, len(freqs)))
     for band in range(n_mels):
-        left, centre, right = edge_positions[band : band + 3]
-        rising = (positions - left) / (centre - left)
-        falling = (right - positions) / (right - centre)
+        left, center, right = edge_positions[band : band + 3]
+        rising = (positions - left) / (center - left)
+        falling = (right - positions) / (right - center)
         weights[band] = np.maximum(0, np.minimum(rising, falling))
         if triangles == "area":
             weights[band] *= 2 / (edges[band + 2] - edges[band])
@@ -110,12 +110,12 @@ class MFCC(View):
     ``source`` is a :class:`~sonore.core.sound.Sound` or the coefficients of
     an analysis:
 
-    - a ``Sound`` is analysed with the usual speech settings: a symmetric
+    - a ``Sound`` is analyzed with the usual speech settings: a symmetric
       Hamming window ``win_dur`` long (25 ms), as HTK and Kaldi use, a hop of
       ``hop_dur`` (10 ms), and an FFT length of the next power of two;
     - an :class:`~sonore.frames.gabor.STFT` or
       :class:`~sonore.frames.gabor.TVSTFT` is used as it is, so
-      any window, hop or pitch-adaptive analysis can be summarised.
+      any window, hop or pitch-adaptive analysis can be summarized.
 
     This is a view that discards information: the phase, everything inside
     each mel band, the faster ripples of the log mel spectrum beyond
@@ -136,17 +136,17 @@ class MFCC(View):
     to float32 precision; Kaldi's own lifter, ``low-freq`` of 20 Hz, 23 bins
     and "povey" window (a Hann window to the power 0.85, as a callable
     ``window`` of the ``GaborFrame``) are all available. Kaldi's time windows
-    start at the first sample (``snip-edges``) where sonore's are centred
+    start at the first sample (``snip-edges``) where sonore's are centered
     on multiples of the hop, so the grids line up only after trimming the
     sound by half a window modulo the hop.
 
-    To reproduce librosa's ``feature.mfcc`` (Slaney mel, area-normalised
+    To reproduce librosa's ``feature.mfcc`` (Slaney mel, area-normalized
     triangles straight in Hz, power in dB floored 80 dB below the loudest
-    cell), analyse with ``so.GaborFrame(n_fft / fs, hop / fs, window="hann",
+    cell), analyze with ``so.GaborFrame(n_fft / fs, hop / fs, window="hann",
     n_fft=n_fft)`` and use ``mel_scale="slaney"``, ``triangles="area"``,
     ``triangle_axis="hz"``, ``n_mels=128``,
     ``n_mfcc=20``, ``floor_db=-80`` and :attr:`db`. sonore's grid has one
-    more time window, centred one hop before the first sample, and one or two
+    more time window, centered one hop before the first sample, and one or two
     more at the end; the others are librosa's. librosa also floors the
     power at an absolute 1e-10, which matters only for sounds far quieter than
     any recording, and takes the loudest cell over all channels rather than
@@ -162,7 +162,7 @@ class MFCC(View):
     Parameters
     ----------
     source
-        A sound, or the STFT or TVSTFT to summarise.
+        A sound, or the STFT or TVSTFT to summarize.
     n_mfcc
         Coefficients kept, ``c0`` included.
     n_mels
@@ -174,7 +174,7 @@ class MFCC(View):
         ``"htk"`` or ``"slaney"`` (see :func:`freq_to_mel`).
     triangles
         ``"height"`` (peaks of 1, as HTK and Kaldi) or ``"area"`` (Slaney's and
-        librosa's area normalisation).
+        librosa's area normalization).
     triangle_axis
         ``"mel"``: the triangles are straight lines in mel (HTK, Kaldi);
         ``"hz"``: straight in Hz (librosa).
@@ -196,9 +196,9 @@ class MFCC(View):
         Band powers before the floor, shape ``(n_channels, n_mels, n_windows)``:
         the mel spectrogram.
     edges
-        Band edges [Hz], ``n_mels + 2`` of them; :attr:`cfs` are the centres.
+        Band edges [Hz], ``n_mels + 2`` of them; :attr:`cfs` are the centers.
     source
-        The STFT or TVSTFT analysed.
+        The STFT or TVSTFT analyzed.
     """
 
     discards = (
@@ -236,7 +236,7 @@ class MFCC(View):
                 coefs = STFT(source, frame=frame)
             case STFT() | TVSTFT():
                 if win_dur is not None or hop_dur is not None:
-                    raise TypeError("win_dur and hop_dur apply only when analysing a Sound")
+                    raise TypeError("win_dur and hop_dur apply only when analyzing a Sound")
                 coefs = source
             case _:
                 raise TypeError(f"expected a Sound, STFT or TVSTFT, not {type(source).__name__}")
@@ -288,7 +288,7 @@ class MFCC(View):
 
     @property
     def cfs(self) -> np.ndarray:
-        """Band centres [Hz]."""
+        """Band centers [Hz]."""
         return self.edges[1:-1]
 
     @property
@@ -317,24 +317,24 @@ class MFCC(View):
         frequencies ``f`` [Hz], shape ``(n_channels, len(f), n_windows)``.
 
         The lifter is undone, the missing coefficients are taken as zero, and
-        the inverse DCT gives a smoothed log band power at each band centre;
-        between centres it is interpolated linearly in mel, and held constant
+        the inverse DCT gives a smoothed log band power at each band center;
+        between centers it is interpolated linearly in mel, and held constant
         beyond the first and last. It is a display of what the coefficients
         keep, for plotting against a spectrum or envelope, not an estimate of
         the spectrum: with as many coefficients as bands it returns the
-        floored band powers at the centres, which are sums over bands, not
+        floored band powers at the centers, which are sums over bands, not
         spectral densities."""
         n_channels, n_mfcc, n_windows = self.data.shape
         n_mels = len(self.cfs)
         padded = np.zeros((n_channels, n_mels, n_windows))
         padded[:, :n_mfcc] = self.data / self._lifter_gains(n_mfcc)[:, None]
         smoothed_log_power = idct(padded, type=2, norm="ortho", axis=1)
-        centre_mels = freq_to_mel(self.cfs, self.mel_scale)
+        center_mels = freq_to_mel(self.cfs, self.mel_scale)
         query_mels = freq_to_mel(np.asarray(f, dtype=float), self.mel_scale)
         # Linear interpolation is linear in the values, so it is a matrix:
         # column m interpolates the m-th unit vector.
         interpolation = np.stack(
-            [np.interp(query_mels, centre_mels, unit) for unit in np.eye(n_mels)], axis=1
+            [np.interp(query_mels, center_mels, unit) for unit in np.eye(n_mels)], axis=1
         )
         log_power = np.einsum("qm,cmw->cqw", interpolation, smoothed_log_power)
         return np.exp(log_power)

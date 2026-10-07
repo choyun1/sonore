@@ -596,7 +596,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)</code></pre></details>
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -627,7 +627,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)</code></pre></details>
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

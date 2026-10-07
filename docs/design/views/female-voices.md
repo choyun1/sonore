@@ -27,7 +27,7 @@ numbers below are with it.
    measures are given the true F0.
 2. **The FDA database** (Bagshaw, CSTR Edinburgh): 50 sentences each from a
    male (`rl`, median F0 121 Hz) and a female (`sb`, median 253 Hz)
-   speaker, with a laryngograph reference F0. It has no stated licence, so
+   speaker, with a laryngograph reference F0. It has no stated license, so
    it is not in the repository.
 3. **CMU ARCTIC**: `bdl` (3 sentences) and `slt` (4, including
    `docs/speech/slt_arctic_a0131.flac`). Their single-channel release has

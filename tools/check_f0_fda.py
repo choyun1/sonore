@@ -3,7 +3,7 @@
 The FDA evaluation database (Bagshaw, CSTR, University of Edinburgh) has 50
 sentences from a male (rl) and a female (sb) speaker, speech and
 laryngograph at 20 kHz, and an F0 contour derived from the laryngograph's
-pitch marks. It has no stated licence, so it is not in this repository;
+pitch marks. It has no stated license, so it is not in this repository;
 pass the folder that holds its rl/ and sb/ subfolders:
 
     python tools/check_f0_fda.py path/to/fda_eval

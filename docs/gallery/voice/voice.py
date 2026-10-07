@@ -372,7 +372,7 @@ ax.legend(loc="upper right", fontsize=8)
 # A recording has no true envelope to score against, so the score is a distance between the
 # original's and the resynthesis's 40-band log mel spectrograms: the RMS of their difference in
 # dB per time window with the level removed, median over voiced time windows. It smooths the way
-# the MFCC envelope does, so it favours that envelope; read it as a check, not a ranking.
+# the MFCC envelope does, so it favors that envelope; read it as a check, not a ranking.
 # `tools/compare_voice_methods.py` also scores synthetic vowels against their true envelopes.
 
 # %%

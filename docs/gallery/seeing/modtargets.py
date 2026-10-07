@@ -79,7 +79,7 @@ def show(snd, target=None, f_lo=250):
 # A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
 # heard with the sentence's own modulation phase thrown away. `to_sound` with `carrier="tones"`
 # draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
-# on a steady tone at its band's centre. The random phase leaves the zero-rate column alone,
+# on a steady tone at its band's center. The random phase leaves the zero-rate column alone,
 # since that column (its phase as well as its magnitudes) is the sentence's long-term spectrum:
 # which bands are loud.
 
@@ -99,7 +99,7 @@ fig, playhead = show(sound, f_lo=125)
 # are gone from the envelopes, which change at the sentence's rates and densities but never at
 # its moments. A random phase also asks for envelopes below zero, which no
 # envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
-# and that is why the measured spectrum is smoother than the target. The colour is kept only
+# and that is why the measured spectrum is smoother than the target. The color is kept only
 # roughly. A two-dimensional modulation spectrum does not say which bands carry which
 # modulation, so the random phase spreads the sentence's modulation into bands that were quiet,
 # and clipping turns it into level there.
@@ -133,7 +133,7 @@ fig, playhead = show(sound, target=spectrum, f_lo=125)
 # target that would need clipping is refused, with the largest depth that fits.
 
 # %% [about]
-# Downward sweeps around 4 Hz and half a cycle per octave, on steady tones at the band centres.
+# Downward sweeps around 4 Hz and half a cycle per octave, on steady tones at the band centers.
 # Unlike a ripple, the sweeps come at irregular moments and with varying slopes, since the blob
 # spreads over a range of rates and densities and the phase is random. The faint patch at
 # negative rates along the bottom is the tail of the blob's mirror image at (−4 Hz, −0.5
@@ -189,7 +189,7 @@ for name, snd, drawn in [
     print(f"{name:>8}: {share_in_target(snd, drawn):.0%}")
 
 # %% [markdown]
-# The carrier matters as much as the target. A steady tone at each band's centre adds almost no
+# The carrier matters as much as the target. A steady tone at each band's center adds almost no
 # modulation of its own, so the target survives. Noise and speech fluctuate inside every band,
 # and those fluctuations land in the measured spectrum on top of the drawn one. That is why
 # `"tones"` is the default carrier (C3 of the design note).
@@ -216,7 +216,7 @@ sound = finish(edited)
 fig, playhead = show(sound, target=slow, f_lo=125)
 
 # %% [about]
-# The same edit with 20 rounds of a search in the manner of Griffin & Lim (1984): analyse the
+# The same edit with 20 rounds of a search in the manner of Griffin & Lim (1984): analyze the
 # sound, keep its fine structure and modulation phase, impose the edited magnitudes again, and
 # resynthesize. Each round brings the sound's own spectrum closer to the edit.
 

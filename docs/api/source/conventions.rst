@@ -19,7 +19,7 @@ short everywhere:
    * - ``f0``
      - fundamental frequency [Hz]; 0 where unvoiced
    * - ``cf``, ``cfs``
-     - centre frequency, centre frequencies of a filterbank [Hz]
+     - center frequency, center frequencies of a filterbank [Hz]
    * - ``f_lo``, ``f_hi``, ``f_max``
      - band edges and upper limits [Hz]
    * - ``n_fft``
@@ -43,7 +43,7 @@ short everywhere:
 ``TVGaborFrame``: an analysis with an exact inverse). One point of an
 analysis's time grid, and the stretch of sound under the window there, is a
 *time window*; arrays over them have ``n_windows`` entries, and ``t`` holds
-the window centre times. In prose the frame classes are always set as code.
+the window center times. In prose the frame classes are always set as code.
 
 Counts start with ``n_`` (``n_samples``, ``n_channels``); a plural is an array
 of the singular (``freqs``, ``harmonics``). Sounds are ``(n_samples,

@@ -258,7 +258,7 @@ def show(snd, target=None, f_lo=250):
 <p>A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
 heard with the sentence's own modulation phase thrown away. <code>to_sound</code> with <code>carrier=&quot;tones&quot;</code>
 draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
-on a steady tone at its band's centre. The random phase leaves the zero-rate column alone,
+on a steady tone at its band's center. The random phase leaves the zero-rate column alone,
 since that column (its phase as well as its magnitudes) is the sentence's long-term spectrum:
 which bands are loud.</p>
 
@@ -288,7 +288,7 @@ fig, playhead = show(sound, f_lo=125)</code></pre></details>
 are gone from the envelopes, which change at the sentence's rates and densities but never at
 its moments. A random phase also asks for envelopes below zero, which no
 envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
-and that is why the measured spectrum is smoother than the target. The colour is kept only
+and that is why the measured spectrum is smoother than the target. The color is kept only
 roughly. A two-dimensional modulation spectrum does not say which bands carry which
 modulation, so the random phase spreads the sentence's modulation into bands that were quiet,
 and clipping turns it into level there.</p></div>
@@ -326,7 +326,7 @@ target that would need clipping is refused, with the largest depth that fits.</p
 <article class="sound" id="d-mt3" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.3380707098765435, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}]">
   <div class="about">
     <h3>A drawn blob, on tones</h3>
-    <div class="desc"><p>Downward sweeps around 4 Hz and half a cycle per octave, on steady tones at the band centres.
+    <div class="desc"><p>Downward sweeps around 4 Hz and half a cycle per octave, on steady tones at the band centers.
 Unlike a ripple, the sweeps come at irregular moments and with varying slopes, since the blob
 spreads over a range of rates and densities and the phase is random. The faint patch at
 negative rates along the bottom is the tail of the blob's mirror image at (−4 Hz, −0.5
@@ -399,7 +399,7 @@ for name, snd, drawn in [
     print(f&quot;{name:&gt;8}: {share_in_target(snd, drawn):.0%}&quot;)</code></pre></details><pre class="out">   tones: 98%
    noise: 31%
 sentence: 24%</pre></div>
-<p>The carrier matters as much as the target. A steady tone at each band's centre adds almost no
+<p>The carrier matters as much as the target. A steady tone at each band's center adds almost no
 modulation of its own, so the target survives. Noise and speech fluctuate inside every band,
 and those fluctuations land in the measured spectrum on top of the drawn one. That is why
 <code>&quot;tones&quot;</code> is the default carrier (C3 of the design note).</p>
@@ -435,7 +435,7 @@ fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
 <article class="sound" id="d-mt7" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
   <div class="about">
     <h3>The same edit, after 20 iterations</h3>
-    <div class="desc"><p>The same edit with 20 rounds of a search in the manner of Griffin &amp; Lim (1984): analyse the
+    <div class="desc"><p>The same edit with 20 rounds of a search in the manner of Griffin &amp; Lim (1984): analyze the
 sound, keep its fine structure and modulation phase, impose the edited magnitudes again, and
 resynthesize. Each round brings the sound's own spectrum closer to the edit.</p></div>
     <audio controls preload="metadata" src="audio/mt7_the_same_edit_after_20_iterations.flac"></audio>
@@ -733,7 +733,7 @@ also include each band's envelope skew and kurtosis and the correlations between
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -764,7 +764,7 @@ also include each band's envelope skew and kurtosis and the correlations between
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

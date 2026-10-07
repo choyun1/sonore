@@ -125,9 +125,9 @@ def vowel_gain(freqs, vowel, fs):
     """|H(f)| of an all-pole cascade of second-order resonators."""
     z = np.exp(-2j * np.pi * np.asarray(freqs, float) / fs)
     denominator = np.ones_like(z)
-    for centre, bandwidth in VOWELS[vowel]:
+    for center, bandwidth in VOWELS[vowel]:
         radius = np.exp(-np.pi * bandwidth / fs)
-        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * centre / fs) * z + radius**2 * z**2
+        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * center / fs) * z + radius**2 * z**2
     return 1 / np.abs(denominator)
 
 
@@ -182,23 +182,23 @@ def main():
     slaney_edges = mel_edges(n_mels, 0, 8000, "slaney")
     report(
         "C2",
-        "26 bands 0-8 kHz: max |HTK centre - Slaney centre| [Hz]",
+        "26 bands 0-8 kHz: max |HTK center - Slaney center| [Hz]",
         np.abs(htk_edges[1:-1] - slaney_edges[1:-1]).max(),
     )
-    centres = htk_edges[1:-1]
+    centers = htk_edges[1:-1]
     triangle_widths = (
         htk_edges[2:] - htk_edges[:-2]
     ) / 2  # equivalent rectangular width of a unit-height triangle
     for target in (250, 500, 1000, 2000, 4000):
-        band = np.argmin(np.abs(centres - target))
+        band = np.argmin(np.abs(centers - target))
         report(
             "C2",
-            f"  HTK band at {centres[band]:6.0f} Hz: triangle width / ERB",
-            triangle_widths[band] / erb_bandwidth(centres[band]),
+            f"  HTK band at {centers[band]:6.0f} Hz: triangle width / ERB",
+            triangle_widths[band] / erb_bandwidth(centers[band]),
         )
     report("C2", "  lowest HTK band: triangle base [Hz]", htk_edges[2] - htk_edges[0])
 
-    # C3. Unit-height triangles sum to 1 between the first and last centre;
+    # C3. Unit-height triangles sum to 1 between the first and last center;
     # Slaney's area normalization adds a per-band constant to the log, so a
     # constant vector to the MFCCs, the same for every time window.
     weights, edges = mel_matrix(n_mels, n_fft, fs, scale="htk")
@@ -206,7 +206,7 @@ def main():
     inside = (bin_freqs >= edges[1]) & (bin_freqs <= edges[-2])
     report(
         "C3",
-        "unit-height triangles: max |sum - 1| between first and last centre",
+        "unit-height triangles: max |sum - 1| between first and last center",
         np.abs(weights.sum(0)[inside] - 1).max(),
     )
 
@@ -306,11 +306,11 @@ def main():
     report("C5", "same vowel at two F0s in 100-300 Hz (/a/ and /i/): largest distance [dB]", max(same_vowel))
     report("C5", "  median distance [dB]", np.median(same_vowel))
     lowest_spacing = htk_edges[1] - htk_edges[0]
-    report("C5", "spacing of the lowest HTK band centres [Hz]", lowest_spacing)
+    report("C5", "spacing of the lowest HTK band centers [Hz]", lowest_spacing)
     report(
         "C5",
-        "band centres are closer than 200 Hz up to [Hz]",
-        centres[np.nonzero(np.diff(htk_edges)[:-1] < 200)[0].max()],
+        "band centers are closer than 200 Hz up to [Hz]",
+        centers[np.nonzero(np.diff(htk_edges)[:-1] < 200)[0].max()],
     )
 
     # C6. Deltas: the regression slope over +-2 time windows is a bandpass

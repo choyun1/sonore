@@ -143,7 +143,7 @@ class Envelope(View):
 
     discards = "Envelope discards the fine structure: only a magnitude over time is kept."
     back_to_sound = (
-        "Envelope.to_sound puts it on the fine structure of a carrier sound, which is not the analysed "
+        "Envelope.to_sound puts it on the fine structure of a carrier sound, which is not the analyzed "
         "sound's fine structure."
     )
 

@@ -82,7 +82,7 @@ def _dc_correction(spectrum: np.ndarray, f0: float, fs: int, n_fft: int) -> np.n
 
 
 def _windowed_waveform(samples, fs, f0, time, window, periods, noise, noise_scale):
-    """An F0-adaptive Hann or Blackman window ``periods`` long, centred at
+    """An F0-adaptive Hann or Blackman window ``periods`` long, centered at
     ``time`` (WORLD's rounding), samples beyond the ends repeated; plus
     WORLD's safety noise; less the window times the weighted mean."""
     half_length = _matlab_round(periods / 2 * fs / f0)
@@ -226,7 +226,7 @@ def cheaptrick(sound: Sound, f0, *, q1: float = -0.15, f0_floor: float = _FLOOR_
     shape of the harmonic peaks a few dB below them and, because of the
     smoothing over 2 F0 / 3, barely changes with the time window's position
     within a period. Time windows with F0 at or below the floor
-    ``3 fs / (n_fft - 3)`` (unvoiced ones included) are analysed at 500 Hz.
+    ``3 fs / (n_fft - 3)`` (unvoiced ones included) are analyzed at 500 Hz.
 
     Parameters
     ----------

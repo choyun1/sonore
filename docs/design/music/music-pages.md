@@ -122,7 +122,7 @@ Sections:
    for illustration, not a survey of organs], the same beats as on the Classic page. A
    tremulant modulates the wind, and with it level and pitch (rate and depth to be sourced).
 5. **Attack.** Flue pipes speak with a short noisy transient (chiff); a registration without it
-   sounds less like a pipe [description, to be sourced or presented as Cho's judgement].
+   sounds less like a pipe [description, to be sourced or presented as Cho's judgment].
    The wider point, that the onset carries much of what identifies an instrument, is
    standard: McAdams et al. (2023) left the attack of every tone untouched "as it contributes
    significantly to instrument identification", citing Saldanha & Corso (1964), and in their
@@ -164,7 +164,7 @@ Sections:
   `so.plot_lissajous(sound, ax=None, duration=None, start=0.0)` in `plotting.py` for a still
   figure (left channel against right over a short stretch), and a second kind of `live` canvas
   in build.py that draws the figure for the stretch under the playhead as the sound plays
-  (today's live canvas draws a colour image, so this is new code in build.py's script and
+  (today's live canvas draws a color image, so this is new code in build.py's script and
   `live_json`). The music is a short public-domain tune with chords, Twinkle, Twinkle, Little
   Star, played in equal temperament, 5-limit just intonation on C, Pythagorean and
   quarter-comma meantone. A Lissajous figure takes two signals, so the figure plots the bass
@@ -175,7 +175,7 @@ Sections:
   fifth of 680.4 cents and a minor third of 294.1 [check C10]. Accepted as changed by Cho.
 - **D5. Where the pipe sounds come from.** (a) Synthesis only: each stop a `harmonic_complex`
   with a spectrum per stop family, a chiff from filtered noise, a little wind noise. The
-  spectra would come from published measurements where they exist and be labelled estimates
+  spectra would come from published measurements where they exist and be labeled estimates
   where they don't. For the principal there are measured numbers: Harrison & Thompson-Allen
   (1998) give the SPL of each harmonic of the Great No. 1 Diapason of the Newberry organ at C2
   (7 harmonics), C4 (11) and C6 (7), measured in the hall 29.7 m away. They report that the
@@ -186,7 +186,7 @@ Sections:
   part of those numbers. Flutes and reeds still need a source (candidate: Fletcher, Blackham
   & Christensen, 1963, not yet read). (b) Cho records
   single stops on an instrument Cho plays, one note per stop and a few registrations, which the
-  page analyses next to the synthesis. Recommended: (a) for the page now, and (b) if Cho is
+  page analyzes next to the synthesis. Recommended: (a) for the page now, and (b) if Cho is
   willing, since recordings would replace the estimates with measurements Cho owns.
 - **D6. Mutations pure by default.** The organ page tunes mutations pure, and shows tempered
   mutations only as the contrast in section 3. Recommended, following the source. Accepted.
@@ -214,7 +214,7 @@ Sections:
   (a framing, not a perceptual claim of the page's own). Siedenburg (2019) suggests one more synthetic demonstration: the
   same tone with all partials starting together, with them building up at different rates,
   and with a transient burst added, to hear which changes more. The onset-removal demonstration (Saldanha & Corso, 1964) still needs
-  recordings of real instruments under a licence the gallery can publish; McAdams et al.
+  recordings of real instruments under a license the gallery can publish; McAdams et al.
   (2023) used the Vienna Symphonic Library and the McGill University Master Samples, neither
   of which is known to allow redistribution (not checked).
 - **D10. Timbre descriptors as views (accepted).** With D9: `log_attack_time`, `spectral_centroid` and
@@ -260,7 +260,7 @@ Each step is its own PR, and images are built locally by Cho if the cloud matplo
   *J. Acoust. Soc. Am.* 94(5), 2595–2603. Not read; findings as summarized by McAdams et al.
   (1995).
 - ISO 16:1975. Acoustics — Standard tuning frequency (standard musical pitch). Checked: title
-  and the 440 Hz figure from the ISO catalogue entry.
+  and the 440 Hz figure from the ISO catalog entry.
 - Organ stop (Wikipedia, read 2026-10-04): footages, mutation table, "mutations are always
   tuned pure", mixture breaks. A secondary source; to be replaced by Fletcher & Rossing or an
   organ-building text before the page cites it.

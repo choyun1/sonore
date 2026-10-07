@@ -35,7 +35,7 @@ add_module_names = False
 autodoc_default_options = {"members": True, "undoc-members": True, "show-inheritance": True}
 
 html_theme = "furo"
-# Colours and fonts from the listening gallery (docs/gallery/build.py), so the
+# Colors and fonts from the listening gallery (docs/gallery/build.py), so the
 # two read as one site.
 _SANS = '"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif'
 _MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace'

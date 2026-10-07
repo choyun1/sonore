@@ -36,7 +36,7 @@ plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 
 # ------------------------------------------------------------------- figures
 def encode_figure(fig, time_axes) -> tuple[bytes, list[dict], tuple[int, int]]:
-    """The figure as a 256-colour PNG, and where each time axis sits (for the playhead)."""
+    """The figure as a 256-color PNG, and where each time axis sits (for the playhead)."""
     # Constrained layout moves the axes a little on its second pass, so lay the figure out once without
     # drawing anything, then draw it for real: the pixels and the playhead regions below then come from
     # the same, settled layout, and the figure is rendered only once.
@@ -459,7 +459,7 @@ JS = """
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -490,7 +490,7 @@ JS = """
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
@@ -696,7 +696,7 @@ TOPICS = [
     ),
 ]
 
-# GitHub's mark (Octicons, MIT licence), so the repository link reads as a link out, not a page.
+# GitHub's mark (Octicons, MIT license), so the repository link reads as a link out, not a page.
 GITHUB_MARK = (
     '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 '
     "0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23"
@@ -907,10 +907,10 @@ def live_json(live: dict, rate: float = 20.0) -> str:
     """An image for the page to show frame by frame as the sound plays.
 
     ``live`` holds ``t`` (frame times [s]), ``image`` (rows x columns x frames, NaN drawn
-    grey), ``x`` and ``y`` (the column and row centres, log-spaced), ``range`` (the values
-    at the two ends of the colour map ``cmap``), ``xlabel``, ``ylabel`` and ``title``, and
+    gray), ``x`` and ``y`` (the column and row centers, log-spaced), ``range`` (the values
+    at the two ends of the color map ``cmap``), ``xlabel``, ``ylabel`` and ``title``, and
     optionally ``start``, the time shown before the sound plays. The frames are resampled
-    to ``rate`` Hz and quantised to 255 levels to keep the page small."""
+    to ``rate`` Hz and quantized to 255 levels to keep the page small."""
     t = np.asarray(live["t"], float)
     image = np.asarray(live["image"], float)
     grid = np.arange(0.0, t[-1] + 0.5 / rate, 1 / rate)
@@ -922,12 +922,12 @@ def live_json(live: dict, rate: float = 20.0) -> str:
     cmap = matplotlib.colormaps[live.get("cmap", "magma")]
     colors = [matplotlib.colors.to_hex(cmap(i / 254)) for i in range(255)]
 
-    def ticks(centres):  # (fractional cell position, label) for round values inside the axis
-        lc = np.log(np.asarray(centres, float))
+    def ticks(centers):  # (fractional cell position, label) for round values inside the axis
+        lc = np.log(np.asarray(centers, float))
         return [
             [round(float(np.interp(np.log(v), lc, np.arange(len(lc)))), 3), f"{v:g}"]
             for v in LIVE_TICKS
-            if centres[0] <= v <= centres[-1]
+            if centers[0] <= v <= centers[-1]
         ]
 
     return json.dumps(

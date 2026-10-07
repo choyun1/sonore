@@ -28,8 +28,8 @@ anything outside `core` at module level.
 
 The diagram is drawn from the source by `python tools/draw_layout.py`, and
 `tests/test_layers.py` fails when it is out of date. Each module sits one row
-above the highest module it imports at module level, so grey arrows point
-down; the colour is its folder.
+above the highest module it imports at module level, so gray arrows point
+down; the color is its folder.
 
 The red dashed arrows are imports inside a function that point back up. They
 exist so that calls chain in a notebook: `Sound.envelope()` returns an
@@ -41,7 +41,7 @@ so a new one has to be added there on purpose. Every `.plot()` reaches into
 `plotting` the same way.
 
 WORLD's synthesis sits in `views` beside its analysis, so CheapTrick and D4C
-take WORLD's internals from a neighbour. It reads an F0 track as `.t` and
+take WORLD's internals from a neighbor. It reads an F0 track as `.t` and
 `.f0`, an envelope as `env(t, f)` and an aperiodicity as its grid, rather
 than checking their types, as `harmonic_complex` and `klatt_synthesize` do.
 

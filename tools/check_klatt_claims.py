@@ -220,7 +220,7 @@ def c5_noise():
     k0 = np.argmin(np.abs(fe - f0))
     report(
         "C5",
-        "50% F0-synchronous modulation: envelope line at F0 vs neighbours [dB]",
+        "50% F0-synchronous modulation: envelope line at F0 vs neighbors [dB]",
         20 * np.log10(env[k0] / np.median(env[k0 + 5 : k0 + 200])),
     )
 

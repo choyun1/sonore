@@ -23,7 +23,7 @@ every IR matches exactly, and only then does a source on the right reach the
 right ear first and louder (+15 dB, 39 samples earlier at 1 m). The registry
 marks the copy, and the loader flips it back.
 
-## Behaviour
+## Behavior
 
 - `load_hrirs("pku-ioa", distances=(100,))` returns one `HRIRSet`. Distances
   are in cm, as in head-centered coordinates. The default is 1 m only (13 MB);

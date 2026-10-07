@@ -16,7 +16,7 @@ cepstral lifter, and the aperiodicity error of D4C and the harmonic residual.
 
 Part 2, the FDA evaluation database (Bagshaw, CSTR, University of
 Edinburgh): 50 sentences from a male (rl) and a female (sb) speaker with a
-laryngograph reference F0. It has no stated licence, so it is not in this
+laryngograph reference F0. It has no stated license, so it is not in this
 repository; pass the folder that holds its rl/ and sb/ subfolders. Prints F0
 accuracy by reference F0, and, where there is no ground truth, how the
 envelope and aperiodicity behave on each voice.

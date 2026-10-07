@@ -217,7 +217,7 @@ spectrum once every <span class="tex">F_0</span> hertz, so they land at one peri
 The two parts of the voice that were tangled in the spectrum come apart, and can be measured
 or edited separately.</p>
 <p>This page applies <code>so.Cepstrum</code> to the sentence from <a href="speech.html">Seeing speech</a>:</p>
-<ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same analysis on a female voice.</li><li><a href="#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</a>: the speech recogniser's version, how much pitch leaks into it, and what it cannot tell apart.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
+<ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same analysis on a female voice.</li><li><a href="#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</a>: the speech recognizer's version, how much pitch leaks into it, and what it cannot tell apart.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 </header>
@@ -353,7 +353,7 @@ rarely jumps and a time window is voiced only when some candidate repeats well (
 <article class="sound" id="d-f1" data-regions="[{&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951268513524227, &quot;top&quot;: 0.041964880952380934, &quot;bottom&quot;: 0.45180730484250975, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05644770746527778, &quot;x1&quot;: 0.9951268513524227, &quot;top&quot;: 0.5098938127790176, &quot;bottom&quot;: 0.9197362366691468, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>Cepstral F0, a tracker, and Harvest</h3>
-    <div class="desc"><p>Top: the tracker's candidates in grey, darker for a higher score, and the path it chose. The
+    <div class="desc"><p>Top: the tracker's candidates in gray, darker for a higher score, and the path it chose. The
 darkest row, an octave below the path, is the subharmonic: anything that repeats every period
 also repeats every two, so it scores as well, and the tracker never chooses a candidate when
 another at a whole multiple of its frequency scores about as well (<code>subharmonic_margin</code>).
@@ -594,7 +594,7 @@ an octave below on 0.9%</pre></div>
 </section>
 <section aria-labelledby="h-mfccs-a-cepstrum-on-the-mel-scale">
 <h2 id="h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</h2>
-<p>Speech recognisers have long described each time window by its <em>mel-frequency cepstral
+<p>Speech recognizers have long described each time window by its <em>mel-frequency cepstral
 coefficients</em> (Davis &amp; Mermelstein, 1980). The recipe is the cepstrum's, with one step put in
 front: the power spectrum is first summed into a few dozen triangular bands spaced evenly on
 the mel scale, a frequency scale that is roughly linear below 1 kHz and logarithmic above, as
@@ -605,8 +605,8 @@ fine detail. <code>so.MFCC</code> follows the HTK and Kaldi speech recipe by def
 windows every 10 ms, 26 bands up to half the sampling rate, 13 coefficients.</p>
 <p>The aim is to keep the vocal tract and drop the pitch. The bands and the lifter both smooth over
 the harmonics, but not completely: the lowest bands are narrower than the gap between
-harmonics of a higher voice, so some sit on a harmonic and their neighbours between two, and
-the pitch leaks back into the coefficients. A vowel synthesised with a known vocal tract shows how much.</p>
+harmonics of a higher voice, so some sit on a harmonic and their neighbors between two, and
+the pitch leaks back into the coefficients. A vowel synthesized with a known vocal tract shows how much.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># Two vowels as sums of harmonics, each harmonic weighted by a vocal tract of four resonances
 # (rounded Peterson &amp; Barney, 1952, male averages; bandwidths chosen here), so the true
 # envelope is known exactly.
@@ -620,9 +620,9 @@ def tract_gain(freqs, vowel):
     &quot;&quot;&quot;The vocal tract&#x27;s |H(f)|: a cascade of second-order resonators.&quot;&quot;&quot;
     z = np.exp(-2j * np.pi * np.asarray(freqs, dtype=float) / fs)
     denominator = np.ones_like(z)
-    for centre, bandwidth in FORMANTS[vowel]:
+    for center, bandwidth in FORMANTS[vowel]:
         radius = np.exp(-np.pi * bandwidth / fs)
-        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * centre / fs) * z + radius**2 * z**2
+        denominator *= 1 - 2 * radius * np.cos(2 * np.pi * center / fs) * z + radius**2 * z**2
     return 1 / np.abs(denominator)
 
 
@@ -665,7 +665,7 @@ true_db = 20 * np.log10(tract_gain(f_plot, &quot;a&quot;))
 
 
 def on_plot_axis(log_power):
-    &quot;&quot;&quot;13-coefficient log band powers in dB, drawn between the band centres as so.MFCC.envelope
+    &quot;&quot;&quot;13-coefficient log band powers in dB, drawn between the band centers as so.MFCC.envelope
     does (linear in mel), and shifted to the true envelope&#x27;s mean level from 100 Hz up.&quot;&quot;&quot;
     level_db = 10 / np.log(10) * np.interp(freq_to_mel(f_plot), band_mels, log_power)
     above_100 = f_plot &gt;= 100
@@ -674,7 +674,7 @@ def on_plot_axis(log_power):
 <article class="still" id="d-m1">
   <div class="about">
     <h3>One vowel at three pitches</h3>
-    <div class="desc"><p>The vowel /a/ at three pitches, each analysed in one 25 ms time window. Left: the 13 MFCCs of
+    <div class="desc"><p>The vowel /a/ at three pitches, each analyzed in one 25 ms time window. Left: the 13 MFCCs of
 its power spectrum, drawn back as an envelope (as <code>mfcc.envelope(f)</code> does). Right: the same 13
 coefficients taken from CheapTrick's envelope instead, summed into the same mel bands. Dashed:
 the vocal tract the harmonics were weighted by. Levels are matched to it, since only the
@@ -724,11 +724,11 @@ from the CheapTrick envelope: same vowel at two F0s, median 1.9 dB (largest 3.4)
 <article class="sound" id="d-m2" data-regions="[{&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.02611148148148157, &quot;bottom&quot;: 0.22999109977816357, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.26613381582754636, &quot;bottom&quot;: 0.4700134341242289, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.5061561501736116, &quot;bottom&quot;: 0.7100357684702938, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06544770746527778, &quot;x1&quot;: 0.9950368514397758, &quot;top&quot;: 0.7461784845196762, &quot;bottom&quot;: 0.950058102816358, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>The sentence as MFCCs</h3>
-    <div class="desc"><p>The sentence, analysed with <code>so.MFCC(sentence)</code>. From the top: the 26 log band powers (the mel
+    <div class="desc"><p>The sentence, analyzed with <code>so.MFCC(sentence)</code>. From the top: the 26 log band powers (the mel
 spectrogram, <code>mfcc.plot(kind=&quot;mel&quot;)</code>); the 13 coefficients, without <code>c0</code>, the level
 (<code>mfcc.plot()</code>); the band powers the 13 coefficients keep, drawn back from them; and
 CheapTrick's envelope on the same bands, from the <code>so.f0_track</code> pitch track above (unvoiced
-time windows are analysed as if at 500 Hz). The coefficients are hard to read by eye; drawn
+time windows are analyzed as if at 500 Hz). The coefficients are hard to read by eye; drawn
 back, they are a mel spectrogram smoothed across the bands.</p></div>
     <audio controls preload="metadata" src="audio/m2_the_sentence_as_mfccs.flac"></audio>
     <p class="file">m2_the_sentence_as_mfccs.flac, 2.5 s, mono</p>
@@ -751,7 +751,7 @@ def band_image(ax, times, band_db, title):
         times, band_rows, band_db, cmap=&quot;magma&quot;, vmin=vmax - 60, vmax=vmax, shading=&quot;auto&quot;, rasterized=True
     )
     ax.set_yticks(row_ticks, [f&quot;{mfcc.cfs[row]:.0f}&quot; for row in row_ticks])
-    ax.set(title=title, xlabel=&quot;&quot;, ylabel=&quot;Band centre [Hz]&quot;)
+    ax.set(title=title, xlabel=&quot;&quot;, ylabel=&quot;Band center [Hz]&quot;)
 
 
 fig, axes = plt.subplots(4, 1, figsize=(10, 9), sharex=True, layout=&quot;constrained&quot;)
@@ -839,7 +839,7 @@ coefficient; see <code>docs/design/views/mfcc.md</code>.</p>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>Tracking from the cepstrum.</strong> Cepstral F0 judges each time window alone. The tracker above chooses a path through candidates from the waveform; the same could be done with cepstral peaks as the candidates.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter.</li><li><strong>Other cepstra on a warped axis.</strong> The mel-generalised cepstra of speech synthesis warp the frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other auditory bands. MFCC deltas (<code>mfcc.deltas()</code>) are not shown.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
+<ul><li><strong>Tracking from the cepstrum.</strong> Cepstral F0 judges each time window alone. The tracker above chooses a path through candidates from the waveform; the same could be done with cepstral peaks as the candidates.</li><li><strong>Better envelopes.</strong> A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick smooths the spectrum over one <span class="tex">F_0</span> first and corrects the lifter.</li><li><strong>Other cepstra on a warped axis.</strong> The mel-generalized cepstra of speech synthesis warp the frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other auditory bands. MFCC deltas (<code>mfcc.deltas()</code>) are not shown.</li><li><strong>The complex cepstrum.</strong> It keeps the phase as well, but needs phase unwrapping, which is fragile on real sounds; sonore provides the real cepstrum and takes phase from the STFT or from the minimum-phase fold.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
@@ -921,7 +921,7 @@ coefficient; see <code>docs/design/views/mfcc.md</code>.</p>
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -952,7 +952,7 @@ coefficient; see <code>docs/design/views/mfcc.md</code>.</p>
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

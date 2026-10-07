@@ -2,7 +2,7 @@
 log attack time, the spectral centroid and the spectral flux.
 
 Written from the paper's equations, not from the Timbre Toolbox's code,
-whose licence forbids redistribution. Where the defaults differ from the
+whose license forbids redistribution. Where the defaults differ from the
 paper's, the reason is measured in ``tools/check_timbre_claims.py`` and set
 out in ``docs/design/music/timbre-page.md``.
 """
@@ -149,7 +149,7 @@ def _spectra(sound: Sound, win_dur: float, hop_dur: float, scale: str) -> tuple[
 def spectral_centroid(
     sound: Sound, scale: str = "power", win_dur: float = WIN_DUR, hop_dur: float = HOP_DUR
 ) -> DescriptorTrack:
-    """The centre of gravity of the spectrum in each time window,
+    """The center of gravity of the spectrum in each time window,
     ``sum(f_k a_k) / sum(a_k)`` (Peeters et al., 2011, eq. 7), on a Hamming
     STFT of 23.2 ms windows every 5.8 ms by default.
 

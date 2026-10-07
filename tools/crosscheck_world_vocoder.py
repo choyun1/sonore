@@ -181,8 +181,8 @@ def main():
             np.abs(y_world - y_ours).max() / np.abs(y_world).max(),
         )
 
-    # C11: WORLD's own round trip on the sentence: analyse, synthesize,
-    # analyse the result with the same F0 track
+    # C11: WORLD's own round trip on the sentence: analyze, synthesize,
+    # analyze the result with the same F0 track
     x, _ = sf.read(SPEECH / "bdl_arctic_a0131.flac")
     sp = pyworld.cheaptrick(x, f0, t, fs)
     ap = pyworld.d4c(x, f0, t, fs)

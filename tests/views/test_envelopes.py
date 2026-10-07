@@ -165,10 +165,10 @@ class TestToSound:
         tone = env.without_edges().to_sound("tone", fs=FS)
         power = np.abs(np.fft.rfft(tone.data[:, 0])) ** 2
         freqs = np.fft.rfftfreq(len(tone), 1 / FS)
-        # the power sits within the 50 Hz envelope bandwidth of the band centres,
+        # the power sits within the 50 Hz envelope bandwidth of the band centers,
         # not at the harmonics of 150 Hz
-        near_centre = np.min(np.abs(freqs[:, None] - fb.cfs[None, 1:-1]), axis=1) < 60
-        assert power[near_centre].sum() / power.sum() > 0.95
+        near_center = np.min(np.abs(freqs[:, None] - fb.cfs[None, 1:-1]), axis=1) < 60
+        assert power[near_center].sum() / power.sum() > 0.95
         with pytest.raises(TypeError, match="rng"):
             env.to_sound("tone", rng=0)
         with pytest.raises(TypeError, match="fs and rng"):

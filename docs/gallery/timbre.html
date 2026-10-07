@@ -229,7 +229,7 @@ model, and a bright tone at the same RMS as a dull one usually sounds louder.</p
 <p>The three descriptors are those of Peeters et al. (2011), written from the paper's equations
 (<code>docs/design/music/timbre-page.md</code> says where sonore's defaults differ from the paper's, and
 why):</p>
-<ul><li><strong>Log attack time</strong> (<code>so.log_attack_time</code>): <span class="tex">\log_{10}</span> of the attack's duration in seconds. The attack is found on the energy envelope (the amplitude of the signal, smoothed by a 20 Hz low-pass filter) by the paper's "weakest effort" method, which looks for where the envelope climbs fastest from one tenth of its maximum to the next. <code>so.attack_segment</code> gives its start and end.</li><li><strong>Spectral centroid</strong> (<code>so.spectral_centroid</code>): the centre of gravity of the power spectrum, <span class="tex">\sum_k f_k p_k / \sum_k p_k</span>, in each 23.2 ms time window, every 5.8 ms. Its median over the tone is the usual measure of brightness.</li><li><strong>Spectral flux</strong> (<code>so.spectral_flux</code>): one minus the correlation of two magnitude spectra 100 ms apart, 0 when the spectrum keeps its shape.</li></ul>
+<ul><li><strong>Log attack time</strong> (<code>so.log_attack_time</code>): <span class="tex">\log_{10}</span> of the attack's duration in seconds. The attack is found on the energy envelope (the amplitude of the signal, smoothed by a 20 Hz low-pass filter) by the paper's "weakest effort" method, which looks for where the envelope climbs fastest from one tenth of its maximum to the next. <code>so.attack_segment</code> gives its start and end.</li><li><strong>Spectral centroid</strong> (<code>so.spectral_centroid</code>): the center of gravity of the power spectrum, <span class="tex">\sum_k f_k p_k / \sum_k p_k</span>, in each 23.2 ms time window, every 5.8 ms. Its median over the tone is the usual measure of brightness.</li><li><strong>Spectral flux</strong> (<code>so.spectral_flux</code>): one minus the correlation of two magnitude spectra 100 ms apart, 0 when the spectrum keeps its shape.</li></ul>
 <p>Each sound is drawn as a spectrogram with its centroid track over it and, under it, the
 waveform with each tone's measured attack shaded. Every sound starts with half a second of silence.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
@@ -460,7 +460,7 @@ fig, playhead = show(sound, flux_tones, starts, [&quot;steady&quot;, &quot;glidi
 <section aria-labelledby="h-three-descriptors-at-once">
 <h2 id="h-three-descriptors-at-once">Three descriptors at once</h2>
 <p>Every tone of the three sections above, placed by its three numbers: log attack time across,
-centroid up, and flux as the colour. The axes are descriptors computed from the sound, not a
+centroid up, and flux as the color. The axes are descriptors computed from the sound, not a
 timbre space built from listeners' ratings; a timbre space would also say how much each axis
 counts, and might bend or merge them. Three of the points are one tone (the 20 ms attack,
 <span class="tex">s = 1</span> and the steady tone), and the centroid axis is logarithmic.</p>
@@ -473,7 +473,7 @@ counts, and might bend or merge them. Three of the points are one tone (the 20 m
   <figure class="plot"><div class="plate">
     <img src="img/tb4_every_tone_of_the_page_by_its_descriptors.png" width="700" height="440" alt="Every tone of the page by its descriptors" loading="lazy">
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python"># the 20 ms attack, s = 1 and the steady tone are one tone, labelled once
+  <details class="code"><summary>Code</summary><pre><code class="language-python"># the 20 ms attack, s = 1 and the steady tone are one tone, labeled once
 groups = [
     (&quot;attack&quot;, attack_tones, [&quot;5 ms&quot;, &quot;&quot;, &quot;80 ms&quot;, &quot;300 ms&quot;], &quot;o&quot;),
     (&quot;brightness&quot;, bright_tones, [&quot;s = 3&quot;, &quot;s = 2&quot;, &quot;s = 1.5&quot;, &quot;20 ms, s = 1, steady&quot;, &quot;s = 0.5&quot;], &quot;s&quot;),
@@ -686,7 +686,7 @@ envelope, describe vowels better than any one number, and the same is true of in
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -717,7 +717,7 @@ envelope, describe vowels better than any one number, and the same is true of in
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

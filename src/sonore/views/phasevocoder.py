@@ -105,7 +105,7 @@ class PVAnalysis(View):
         bin are skipped, and partials mapped above Nyquist are dropped.
 
         This is designed for tonal sounds, which it reconstructs closely
-        (r > 0.999 for harmonic complexes). For noise, neighbouring channels
+        (r > 0.999 for harmonic complexes). For noise, neighboring channels
         drift out of phase and partially cancel (about 2 dB low, r about 0.93);
         use :func:`time_stretch` for noisy material. Both figures are measured
         by tools/measure_docstring_numbers.py.
@@ -125,7 +125,7 @@ class PVAnalysis(View):
         gain = _bin_weights(self.n_win) / self.n_win * hann(self.n_win, sym=False)[self.n_win // 2]
         # Anchor each oscillator's phase at the first time window that lies
         # fully inside the signal; edge time windows are truncated, which scrambles
-        # the phase relationship between neighbouring bins.
+        # the phase relationship between neighboring bins.
         half = self.n_win / 2 / self.fs
         interior = np.flatnonzero((self.t - half >= 0) & (self.t + half <= self.n_samples / self.fs))
         anchor_window = int(interior[0]) if len(interior) else int(np.argmin(np.abs(self.t)))

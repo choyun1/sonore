@@ -20,7 +20,7 @@ unchanged. There is no truth, so the score is the distance between the
 original's and the output's log mel spectra (40 HTK bands, 25 ms Hamming
 time windows, 10 ms hop, level removed per time window, median over windows
 the stored or tracked F0 calls voiced). A mel spectrum smooths in the way
-the MFCC envelope does, so it favours that envelope; it is a sanity check,
+the MFCC envelope does, so it favors that envelope; it is a sanity check,
 not a ranking.
 
 Sources compared:
@@ -311,9 +311,9 @@ def log_mel_spectrogram(sound, n_mels=40):
     edges = htk_mel_to_hz(np.linspace(0, htk_mel(FS / 2), n_mels + 2))
     weights = np.zeros((n_mels, len(bin_freqs)))
     for band in range(n_mels):
-        lower, centre, upper = edges[band : band + 3]
+        lower, center, upper = edges[band : band + 3]
         weights[band] = np.maximum(
-            0, np.minimum((bin_freqs - lower) / (centre - lower), (upper - bin_freqs) / (upper - centre))
+            0, np.minimum((bin_freqs - lower) / (center - lower), (upper - bin_freqs) / (upper - center))
         )
     return (starts + win / 2) / FS, 10 * np.log10(np.maximum(power @ weights.T, 1e-20))
 

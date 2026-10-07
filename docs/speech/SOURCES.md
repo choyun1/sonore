@@ -9,18 +9,18 @@ from LibriSpeech for the cocktail-party scenes on the moving talkers page.
 
 ## Sources
 
-| File | Recording | Speaker | Source | Licence | Original |
+| File | Recording | Speaker | Source | License | Original |
 |---|---|---|---|---|---|
-| `bdl_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `bdl` (US English, male) | CMU ARCTIC `bdl` database, file `arctic_a0131.wav`, downloaded by Cho from festvox.org/cmu_arctic (2026-10-01) | CMU ARCTIC licence (CMU, permissive; see below) | 2.53 s, 16 kHz, 16-bit, mono |
-| `rms_arctic_a0132.flac` | CMU ARCTIC utterance `arctic_a0132` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0132.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC licence (see below) | 2.81 s, 16 kHz, 16-bit, mono |
-| `rms_arctic_a0133.flac` | CMU ARCTIC utterance `arctic_a0133` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0133.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC licence (see below) | 4.82 s, 16 kHz, 16-bit, mono |
-| `slt_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `slt` (US English, female) | CMU ARCTIC `slt` database, file `arctic_a0131.wav`, supplied by Cho (2026-10-02) | CMU ARCTIC licence (see below) | 2.64 s, 16 kHz, 16-bit, mono |
+| `bdl_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `bdl` (US English, male) | CMU ARCTIC `bdl` database, file `arctic_a0131.wav`, downloaded by Cho from festvox.org/cmu_arctic (2026-10-01) | CMU ARCTIC license (CMU, permissive; see below) | 2.53 s, 16 kHz, 16-bit, mono |
+| `rms_arctic_a0132.flac` | CMU ARCTIC utterance `arctic_a0132` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0132.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC license (see below) | 2.81 s, 16 kHz, 16-bit, mono |
+| `rms_arctic_a0133.flac` | CMU ARCTIC utterance `arctic_a0133` | `rms` (US English, male) | CMU ARCTIC `rms` database, file `arctic_a0133.wav`, supplied by Cho (2026-10-01) | CMU ARCTIC license (see below) | 4.82 s, 16 kHz, 16-bit, mono |
+| `slt_arctic_a0131.flac` | CMU ARCTIC utterance `arctic_a0131` | `slt` (US English, female) | CMU ARCTIC `slt` database, file `arctic_a0131.wav`, supplied by Cho (2026-10-02) | CMU ARCTIC license (see below) | 2.64 s, 16 kHz, 16-bit, mono |
 
 Citation: Kominek, J. & Black, A. W. (2004). The CMU Arctic speech databases.
 *Proc. 5th ISCA Speech Synthesis Workshop (SSW5)*, 223–224.
 https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html
 
-**Licence.** The CMU ARCTIC notice is reproduced verbatim in
+**License.** The CMU ARCTIC notice is reproduced verbatim in
 [`COPYING_CMU_ARCTIC`](COPYING_CMU_ARCTIC), copied from the `COPYING` file
 of the `bdl` release Cho downloaded (supplied 2026-10-01). It grants use,
 copying and modification for any purpose, without fee, on three conditions:
@@ -44,7 +44,7 @@ utterances has not been copied here.
 is byte for byte the `bdl` one, so [`COPYING_CMU_ARCTIC`](COPYING_CMU_ARCTIC)
 covers it too. It reads the same sentence as `bdl_arctic_a0131.flac`.
 
-**Modifications** (marked as the licence requires):
+**Modifications** (marked as the license requires):
 `bdl_arctic_a0131.flac` is the original `arctic_a0131.wav` re-encoded
 losslessly as FLAC. The samples are identical (checked sample for sample);
 there is no trimming, resampling or level change, and the gallery keeps
@@ -87,7 +87,7 @@ python tools/make_speech_f0.py docs/speech/bdl_arctic_a0131.flac
   s, cycle-to-cycle jumps such as 154, 89, 154 Hz), which Harvest's smooth
   track averages over. How the release made its pitch marks (from the
   speech or from an EGG channel) has not been checked.
-- Licences: WORLD is modified BSD; `pyworld` is MIT (from its repository's
+- Licenses: WORLD is modified BSD; `pyworld` is MIT (from its repository's
   LICENSE file). Neither is redistributed here, and only the track they
   produced is.
 
@@ -120,7 +120,7 @@ Citation: Panayotov, V., Chen, G., Povey, D. & Khudanpur, S. (2015).
 LibriSpeech: an ASR corpus based on public domain audio books. *Proc. IEEE
 ICASSP 2015*, 5206–5210. https://doi.org/10.1109/ICASSP.2015.7178964
 
-**Licence.** "LibriSpeech (c) 2014 by Vassil Panayotov. LibriSpeech ASR
+**License.** "LibriSpeech (c) 2014 by Vassil Panayotov. LibriSpeech ASR
 corpus is licensed under a Creative Commons Attribution 4.0 International
 License" (the corpus's `LICENSE.TXT`;
 https://creativecommons.org/licenses/by/4.0/). Attribution is the citation

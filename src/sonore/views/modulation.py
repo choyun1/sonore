@@ -16,7 +16,7 @@ texture synthesis (seamless loops); for other uses pad the envelope first.
 
 A third bank, :class:`HannModulationFilterbank`, is defined in time instead:
 Hann-windowed complex exponentials of finite length, applied by direct
-(zero-padded, not circular) correlation, centred or causal. It is the bank
+(zero-padded, not circular) correlation, centered or causal. It is the bank
 behind :class:`~sonore.views.modspectrogram.ModulationSpectrogram`, and
 its finite kernels are what make a causal, block-by-block version possible.
 """
@@ -163,11 +163,11 @@ class HannModulationFilterbank(ModulationFilterbank):
     samples normalized to sum 1. Two ways to set the window:
 
     * ``cycles`` (the default, 3): every window holds that many cycles of its
-      own rate, ``L_k = cycles * fs / f_k``, with centres ``per_octave`` to
+      own rate, ``L_k = cycles * fs / f_k``, with centers ``per_octave`` to
       the octave from ``f_lo`` to ``f_hi``. A constant-Q bank (Q = cycles /
       1.44, about 2.1 for 3 cycles), long windows for slow rates and short
       ones for fast rates.
-    * ``window`` [s]: every band uses the same window T, with centres on the
+    * ``window`` [s]: every band uses the same window T, with centers on the
       linear grid ``k / T`` from the first one at or above ``max(f_lo, 2/T)``
       to ``f_hi``. This is the STFT of the envelope.
 
@@ -203,7 +203,7 @@ class HannModulationFilterbank(ModulationFilterbank):
 
     @property
     def cfs(self) -> np.ndarray:
-        """Centre rates [Hz]."""
+        """Center rates [Hz]."""
         if self.window is None:
             n_cfs = int(np.floor(np.log2(self.f_hi / self.f_lo) * self.per_octave + 1e-9)) + 1
             return self.f_lo * 2.0 ** (np.arange(n_cfs) / self.per_octave)
@@ -237,8 +237,8 @@ class HannModulationFilterbank(ModulationFilterbank):
         for rate, length in zip(self.cfs, self.lengths(fs), strict=True):
             hann = np.sin(np.pi * (np.arange(length) + 0.5) / length) ** 2
             hann = hann / hann.sum()
-            t_centred = (np.arange(length) - (length - 1) / 2) / fs
-            kernels.append((hann * np.exp(2j * np.pi * rate * t_centred), hann))
+            t_centered = (np.arange(length) - (length - 1) / 2) / fs
+            kernels.append((hann * np.exp(2j * np.pi * rate * t_centered), hann))
         return kernels
 
     def response(self, freqs) -> np.ndarray:
@@ -256,7 +256,7 @@ class HannModulationFilterbank(ModulationFilterbank):
 
         The band index is appended as a new *last* axis. ``align="center"``
         puts each window's middle on the output sample; ``"causal"`` ends it
-        there, which is the centred output delayed by ``(L_k - 1) // 2``
+        there, which is the centered output delayed by ``(L_k - 1) // 2``
         samples and is what a live, block-by-block analysis would produce.
         """
         if align not in ("center", "causal"):
@@ -281,7 +281,7 @@ def _hann_ft(u: np.ndarray) -> np.ndarray:
 def _correlate(x: np.ndarray, h: np.ndarray, align: str) -> np.ndarray:
     """``y[n] = sum_j x[n + j - c] conj(h[j])`` along axis 0, with ``x`` zero
     outside its extent; ``c = L - 1`` (causal) or ``L - 1 - (L - 1) // 2``
-    (centred)."""
+    (centered)."""
     n_samples, L = x.shape[0], len(h)
     reversed_conj_kernel = np.conj(h)[::-1].reshape((L,) + (1,) * (x.ndim - 1))
     with threads():
@@ -296,7 +296,7 @@ class ModulationBlob:
     """A patch of modulation power, for drawing a target spectrum in code
     (:meth:`ModulationSpectrum.from_blobs`).
 
-    A Gaussian bump centred on ``rate`` [Hz] and ``density`` [cycles/octave]:
+    A Gaussian bump centered on ``rate`` [Hz] and ``density`` [cycles/octave]:
     ``rate_width`` is its standard deviation in octaves of rate,
     ``density_width`` in cycles/octave, and ``level`` its peak power [dB]
     relative to the other blobs. The signs follow :class:`~sonore.Ripple`:
@@ -533,7 +533,7 @@ class ModulationSpectrum(View):
         The stored magnitudes and mean fix everything but the phase of the
         2-D transform, which holds when each event happens and how the bands
         line up. A :class:`~sonore.Sound` ``carrier`` lends the phase of its
-        own envelopes (analysed as this spectrum's were), so the spectrum of
+        own envelopes (analyzed as this spectrum's were), so the spectrum of
         ``x`` with ``carrier=x`` gives back ``x``'s envelopes; with no carrier
         the phase is drawn at random from ``rng`` at every nonzero rate, while
         the zero-rate column keeps its own phase, so each band keeps its
@@ -554,20 +554,20 @@ class ModulationSpectrum(View):
             n_audio = int(round(analysis.n_samples * carrier.fs / analysis.fs))
             if carrier.n_samples < n_audio:
                 raise ValueError(
-                    f"the carrier is shorter than the analysed {analysis.n_samples / analysis.fs:g} s"
+                    f"the carrier is shorter than the analyzed {analysis.n_samples / analysis.fs:g} s"
                 )
             own_sound = Sound(carrier.mono().data[:n_audio], carrier.fs)
             phase = self._modulation_phase(analysis.filterbank.analyze(own_sound))
         return self._rebuild(phase)
 
     def _modulation_phase(self, subbands) -> np.ndarray:
-        """Phase of the 2-D transform of these subbands' envelopes, analysed
+        """Phase of the 2-D transform of these subbands' envelopes, analyzed
         as this spectrum's were."""
         analysis = self._analysis
         kept = slice(1, -1) if analysis.drop_edges else slice(None)
         own = subbands.envelopes(fs=analysis.fs).data.mean(axis=2)[:, kept]
         if own.shape[0] != analysis.n_samples:
-            raise ValueError("the carrier's envelopes do not fit the analysed grid")
+            raise ValueError("the carrier's envelopes do not fit the analyzed grid")
         if analysis.scale == "db":
             own = amp_to_db(own + 1e-12 * (own.max() or 1.0))
         return np.angle(np.fft.fft2(own.T - own.mean()))
@@ -617,16 +617,16 @@ class ModulationSpectrum(View):
         * the **fine structure** under each band's envelope: a Sound's own
           (``(envelopes * subbands.tfs()).to_sound()``, the vocoder's route),
           narrowband noise (``"noise"``, the same route), or a steady tone at
-          each band's centre (``"tones"``), added without re-filtering.
+          each band's center (``"tones"``), added without re-filtering.
 
         ``to_sound(carrier=x)`` on the spectrum of ``x`` itself rebuilds
         ``x``'s envelopes, so an edit made with :meth:`with_gain` keeps the
         sound's timing wherever the gain is 1. ``fs`` is the audio rate,
         needed unless the carrier is a Sound, which must be at least as long
-        as the analysed envelopes. The result has RMS 1.
+        as the analyzed envelopes. The result has RMS 1.
 
         A fine structure that fluctuates within a band (a sound's own, or
-        noise) adds modulation of its own when the result is analysed again,
+        noise) adds modulation of its own when the result is analyzed again,
         so an edit survives best on ``"tones"``: removing every rate above
         4 Hz from a sentence leaves about 15 dB less power at 6-40 Hz on
         tones, but only 3-5 dB less on noise or the sentence's own fine
@@ -634,7 +634,7 @@ class ModulationSpectrum(View):
 
         ``iterations`` then searches for a sound whose own envelopes come
         closer to the spectrum, as Griffin & Lim (1984) do for a
-        spectrogram: analyse the sound, keep its fine structure and its
+        spectrogram: analyze the sound, keep its fine structure and its
         modulation phase, impose the stored magnitudes again, and go back.
         On the same sentence edit, 20 iterations from the sentence's own
         fine structure leave 16.5 dB less power at 6-40 Hz (C7 of the design

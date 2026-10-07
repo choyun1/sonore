@@ -315,7 +315,7 @@ fig, playhead = show(sound, &quot;the source through F1&quot;, [730])</code></pr
   <div class="about">
     <h3>Two formants</h3>
     <div class="desc"><p>Through the first two formants. F1 and F2 are what tells most vowels apart, and with both, the
-sound is recognisably the vowel of "hod", if thin.</p></div>
+sound is recognizably the vowel of "hod", if thin.</p></div>
     <audio controls preload="metadata" src="audio/fv3_two_formants.flac"></audio>
     <p class="file">fv3_two_formants.flac, 1.0 s, mono</p>
   </div>
@@ -752,7 +752,7 @@ fig, playhead = show(sound, &quot;breathy: aspiration 6 dB below voicing&quot;, 
 <h2 id="h-cascade-and-parallel">Cascade and parallel</h2>
 <p>In the cascade, formants run one after another and their levels follow from their
 frequencies. In the parallel branch each formant gets the source separately and is added at a
-level of its own. Added with the same sign, neighbouring formants partly cancel between their
+level of its own. Added with the same sign, neighboring formants partly cancel between their
 peaks, because their phases differ by about half a cycle there. Klatt adds them with
 alternating signs, and then the sum follows the cascade closely, given the right levels.</p>
 
@@ -1018,7 +1018,7 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -1049,7 +1049,7 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

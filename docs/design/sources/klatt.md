@@ -122,7 +122,7 @@ harmonic source has none. So sonore needs no impulse-train source.
 from the 1–2 kHz octave to the 2–4 kHz octave; the radiation difference
 brings it back to 0.02 dB. While voiced, 50% square-wave modulation at F0
 puts a line at F0 in the noise's power envelope 43 dB above its
-neighbours: the noise carries the pitch, as breathy voice does.
+neighbors: the noise carries the pitch, as breathy voice does.
 
 **C6. Source and filter separate exactly.** [check] A 100 Hz harmonic
 source with RGP amplitudes, through five cascade /a/ formants and the

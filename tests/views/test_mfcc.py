@@ -1,6 +1,6 @@
 """MFCCs against librosa's own output, stored by tools/make_mfcc_fixtures.py
 (librosa is not needed here) together with the 0.8 s of the gallery sentence
-it analysed, and the properties the design relies on."""
+it analyzed, and the properties the design relies on."""
 
 from pathlib import Path
 
@@ -128,7 +128,7 @@ def test_mel_scale_round_trip_and_landmarks(scale):
     assert freq_to_mel(1000.0, scale) == pytest.approx(1000.0 if scale == "htk" else 15.0, rel=1e-3)
 
 
-def test_height_triangles_sum_to_one_between_the_outer_centres():
+def test_height_triangles_sum_to_one_between_the_outer_centers():
     mfcc = so.MFCC(SENTENCE)
     bin_freqs = np.arange(mfcc.n_fft // 2 + 1) * mfcc.fs / mfcc.n_fft
     inside = (bin_freqs >= mfcc.cfs[0]) & (bin_freqs <= mfcc.cfs[-1])
@@ -163,7 +163,7 @@ def kaldi_like(window, **settings):
     """so.MFCC on Kaldi's time windows and the matching slices of both.
 
     Kaldi's time windows start at multiples of the hop (160 samples); sonore's
-    are centred on them. Trimming 40 samples (half the 400-sample window,
+    are centered on them. Trimming 40 samples (half the 400-sample window,
     modulo the hop) makes sonore's window 3 cover Kaldi's window 1; Kaldi's
     window 0 would need the trimmed samples, so it is left out."""
     sound = so.Sound(KALDI_SAMPLES[40:], SENTENCE.fs)

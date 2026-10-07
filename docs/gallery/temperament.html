@@ -700,7 +700,7 @@ def progression(tuning):
   <div class="about">
     <h3>C, D minor, G, C, just then equal</h3>
     <div class="desc"><p>Just intonation, then equal temperament, four chords each. In the just version listen for
-the second chord, D minor, which beats roughly where its neighbours are smooth.</p></div>
+the second chord, D minor, which beats roughly where its neighbors are smooth.</p></div>
     <audio controls preload="metadata" src="audio/tt6_c_d_minor_g_c_just_then_equal.flac"></audio>
     <p class="file">tt6_c_d_minor_g_c_just_then_equal.flac, 14.5 s, mono</p>
     <canvas class="lissajous" data-lissajous="{&quot;notes&quot;:[[0.5,2.05,130.8128,392.4383,&quot;3.000 : 1&quot;],[2.1,3.65,147.1644,436.0426,&quot;2.963 : 1&quot;],[3.7,5.25,98.1096,490.5479,&quot;5.000 : 1&quot;],[5.3,6.85,130.8128,523.2511,&quot;4.000 : 1&quot;],[7.5,9.05,130.8128,391.9954,&quot;2.997 : 1&quot;],[9.1,10.65,146.8324,440.0,&quot;2.997 : 1&quot;],[10.7,12.25,97.9989,493.8833,&quot;5.040 : 1&quot;],[12.3,13.85,130.8128,523.2511,&quot;4.000 : 1&quot;]],&quot;window&quot;:0.016,&quot;xlabel&quot;:&quot;bass&quot;,&quot;ylabel&quot;:&quot;top voice&quot;,&quot;title&quot;:&quot;Bass against top voice&quot;,&quot;start&quot;:2.9}" role="img" aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>
@@ -846,7 +846,7 @@ their numbers, and Duffin (2007) makes the case for listening to the older ones.
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -877,7 +877,7 @@ their numbers, and Duffin (2007) makes the case for listening to the older ones.
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);

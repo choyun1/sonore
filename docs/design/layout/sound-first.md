@@ -13,7 +13,7 @@ this is resolved, and asked for `philosophy.md` to say what was decided in
 discussion (its "Sound first" section and the `to_sound` principle). The table of every
 module in three hierarchies (folder, import rank, meaning) is in the
 project notes (`notes/layout/module-hierarchies.md`). Counts below come
-from `grep` on main `67b3ba5`; they are labelled where they are estimates.
+from `grep` on main `67b3ba5`; they are labeled where they are estimates.
 
 ## What Cho has decided in discussion
 
@@ -170,7 +170,7 @@ it imports.
   `views/envelopes.py` gains `noise_vocode` (its one function), and
   `views/phasevocoder.py` keeps its name. (b) Keep `channel_vocoder.py` as
   its own file in `views`.
-- **D7. Ripples.** A ripple pattern describes a sound; it analyses none.
+- **D7. Ripples.** A ripple pattern describes a sound; it analyzes none.
   (a) `sources/ripples.py` (recommended), with `ripple_sound` unchanged
   and, if D5 (b), `Ripple.to_sound`. (b) `views`, beside `Envelopes`,
   since `render` returns one: but a pattern is not a view of any sound.

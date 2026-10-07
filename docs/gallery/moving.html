@@ -959,7 +959,7 @@ sound = finish(rendered)</code></pre></details>
 </article>
 <p>What the renderer does with this, measured by <code>tools/check_moving_trajectories.py</code> (nobody has
 listened for these artifacts yet):</p>
-<ul><li>While the buzz holds still, the pitch the tracker finds is the buzz's own, to within 3 cents (95th percentile). During the jumps, where the tracker finds none, the shift was checked on a 1 kHz tone instead: its frequency at each ear follows the shift computed from the distance to that ear to within 9 cents (median) and 48 cents (95th percentile), while the shift itself spans more than ±500 cents. The rest of the difference is not yet explained; the HRIRs' phase, changing with direction, is one candidate.</li><li>Switching HRIR shapes at the usual 5 ms leaves an error 13 dB below the signal in the worst 20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 29 dB below.</li><li>Nothing aliases, by design: the largest upward shift, a factor of 1.35, takes the top harmonic to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, which is what <code>so.harmonic_complex</code> makes without <code>f_max</code>, does alias: coming straight at the listener at 15 m/s, its top three harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB below the harmonics.</li><li>The source comes toward the head at up to 130 m/s here. <code>so.move_sound</code> refuses a source coming at the head faster than sound, whose sound would arrive in reverse order. It also refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances the HRIR onsets change a little faster than the travel time does.</li><li>Not modelled at all is the noise a body moving through air that fast would make itself.</li></ul>
+<ul><li>While the buzz holds still, the pitch the tracker finds is the buzz's own, to within 3 cents (95th percentile). During the jumps, where the tracker finds none, the shift was checked on a 1 kHz tone instead: its frequency at each ear follows the shift computed from the distance to that ear to within 9 cents (median) and 48 cents (95th percentile), while the shift itself spans more than ±500 cents. The rest of the difference is not yet explained; the HRIRs' phase, changing with direction, is one candidate.</li><li>Switching HRIR shapes at the usual 5 ms leaves an error 13 dB below the signal in the worst 20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 29 dB below.</li><li>Nothing aliases, by design: the largest upward shift, a factor of 1.35, takes the top harmonic to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, which is what <code>so.harmonic_complex</code> makes without <code>f_max</code>, does alias: coming straight at the listener at 15 m/s, its top three harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB below the harmonics.</li><li>The source comes toward the head at up to 130 m/s here. <code>so.move_sound</code> refuses a source coming at the head faster than sound, whose sound would arrive in reverse order. It also refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances the HRIR onsets change a little faster than the travel time does.</li><li>Not modeled at all is the noise a body moving through air that fast would make itself.</li></ul>
 </section>
 <section aria-labelledby="h-a-cocktail-party">
 <h2 id="h-a-cocktail-party">A "cocktail party"</h2>
@@ -1283,7 +1283,7 @@ interaural delay before interpolating for the same reason (Cuevas-Rodríguez et 
 way to filter with a filter that changes; crossfading the outputs of the old and new filter and
 swapping parts of a partitioned convolution are the others (Brandtsegg et al., 2018, review all
 three). That is accurate while the source keeps its distance, as in the swings above. When the
-distance changes, neighbouring responses hold different travel times, and cross-fading two
+distance changes, neighboring responses hold different travel times, and cross-fading two
 copies of a sound a fraction of a millisecond apart comb-filters it: passing at 15 m/s, copies
 5 ms apart in the path differ by 0.2 ms, with the first notch near 2.3 kHz.</p>
 </section>
@@ -1367,7 +1367,7 @@ copies of a sound a fraction of a millisecond apart comb-filters it: passing at 
     });
   }
   // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
-  // marked on each axis, and a colour bar. Before the sound has played, the frame at live.start.
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
   function drawLive(item) {
     const c = item.liveCanvas;
     if (!c) return;
@@ -1398,7 +1398,7 @@ copies of a sound a fraction of a millisecond apart comb-filters it: passing at 
     g.fillText(L.ylabel, 0, 0); g.restore();
     g.textAlign = "left"; g.textBaseline = "top";
     g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
-    const bx = left + w + 8, bw = 8;  // the colour bar
+    const bx = left + w + 8, bw = 8;  // the color bar
     for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
     g.fillStyle = ink; g.textBaseline = "middle";
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
