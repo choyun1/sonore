@@ -134,22 +134,23 @@ def _as_path(trajectory, duration: float) -> SourcePath:
     """Any trajectory form as a path: a function of time, a ``(times, points)``
     pair, or an ``(N, 3)`` array of points spread evenly over ``duration``.
     Points are interpolated linearly in Cartesian coordinates."""
-    if callable(trajectory):
-        return lambda t: np.atleast_2d(np.asarray(trajectory(np.atleast_1d(np.asarray(t, float))), float))
-    if isinstance(trajectory, tuple) and len(trajectory) == 2 and np.ndim(trajectory[1]) == 2:
-        times, points = (np.asarray(part, float) for part in trajectory)
-        if times.ndim != 1 or points.shape != (len(times), 3):
-            raise ValueError(
-                "a (times, points) trajectory needs (N,) times and (N, 3) points, "
-                f"got {times.shape} and {points.shape}"
-            )
-        if np.any(np.diff(times) <= 0):
-            raise ValueError("the trajectory's times must increase")
-    else:
-        points = np.atleast_2d(np.asarray(trajectory, float))
-        if points.ndim != 2 or points.shape[1] != 3:
-            raise ValueError(f"trajectory points must have shape (N, 3), got {points.shape}")
-        times = np.linspace(0, duration, len(points))
+    match trajectory:
+        case Callable():
+            return lambda t: np.atleast_2d(np.asarray(trajectory(np.atleast_1d(np.asarray(t, float))), float))
+        case tuple((times, points)) if np.ndim(points) == 2:
+            times, points = np.asarray(times, float), np.asarray(points, float)
+            if times.ndim != 1 or points.shape != (len(times), 3):
+                raise ValueError(
+                    "a (times, points) trajectory needs (N,) times and (N, 3) points, "
+                    f"got {times.shape} and {points.shape}"
+                )
+            if np.any(np.diff(times) <= 0):
+                raise ValueError("the trajectory's times must increase")
+        case _:
+            points = np.atleast_2d(np.asarray(trajectory, float))
+            if points.ndim != 2 or points.shape[1] != 3:
+                raise ValueError(f"trajectory points must have shape (N, 3), got {points.shape}")
+            times = np.linspace(0, duration, len(points))
 
     def path(t: ArrayLike) -> np.ndarray:
         t = np.atleast_1d(np.asarray(t, float))

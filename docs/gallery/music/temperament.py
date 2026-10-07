@@ -526,5 +526,5 @@ fig, playhead = show(sound, events)
 # - Haynes (2002). *A History of Performing Pitch: The Story of "A"*. Scarecrow Press.
 # - ISO 16:1975. Acoustics — Standard tuning frequency (standard musical pitch).
 #   [ISO](https://www.iso.org/standard/3601.html).
-#   [`utils.note_to_freq`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L143)
-#   [`utils.ratio_to_cents`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L126)
+#   [`utils.note_to_freq`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L147)
+#   [`utils.ratio_to_cents`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L130)

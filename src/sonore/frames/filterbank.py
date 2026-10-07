@@ -787,11 +787,13 @@ class Subbands(_PaddedBands):
         for these subbands' grid, which also handles the padding."""
         from sonore.views.mask import Mask  # views.mask imports Subbands from here
 
-        if isinstance(other, Mask):
-            return other.apply(self)
-        if not isinstance(other, (int, float, list, tuple, np.ndarray, np.number)):
-            return NotImplemented
-        gains = np.asarray(other, float)
+        match other:
+            case Mask():
+                return other.apply(self)
+            case int() | float() | list() | tuple() | np.ndarray() | np.number():
+                gains = np.asarray(other, float)
+            case _:
+                return NotImplemented
         if gains.ndim == 0:
             return self._new(self._full * gains)
         if gains.shape == (len(self),):

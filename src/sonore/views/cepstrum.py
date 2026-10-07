@@ -121,12 +121,13 @@ class Cepstrum(View):
         if cutoffs.ndim > 1 or (cutoffs.ndim == 1 and len(cutoffs) != n_windows):
             raise ValueError(f"cutoff must be a scalar or have one value per time window ({n_windows})")
         below = self.q[:, None] < np.broadcast_to(cutoffs, (n_windows,))[None, :]
-        if keep == "low":
-            mask = below
-        elif keep == "high":
-            mask = ~below
-        else:
-            raise ValueError(f"keep must be 'low' or 'high', not {keep!r}")
+        match keep:
+            case "low":
+                mask = below
+            case "high":
+                mask = ~below
+            case _:
+                raise ValueError(f"keep must be 'low' or 'high', not {keep!r}")
         return Cepstrum._from(self, self.data * mask)
 
     def envelope(self) -> np.ndarray:
@@ -160,12 +161,13 @@ class Cepstrum(View):
         the cepstrum on ``n_fft`` bins, which is negligible once ``n_fft``
         is several times the response's length.
         """
-        if phase == "original":
-            data = self.envelope() * np.exp(1j * np.angle(self.source.data))
-        elif phase == "minimum":
-            data = _minimum_phase(self.data, self.n_fft, axis=1)
-        else:
-            raise ValueError(f"phase must be 'original' or 'minimum', not {phase!r}")
+        match phase:
+            case "original":
+                data = self.envelope() * np.exp(1j * np.angle(self.source.data))
+            case "minimum":
+                data = _minimum_phase(self.data, self.n_fft, axis=1)
+            case _:
+                raise ValueError(f"phase must be 'original' or 'minimum', not {phase!r}")
         return type(self.source)._from(self.source, data)
 
     def to_sound(self, phase: str = "original") -> Sound:

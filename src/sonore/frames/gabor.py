@@ -535,9 +535,11 @@ class STFT(_ShortTimeCoefficients):
     def __mul__(self, other):
         from sonore.views.mask import Mask  # views.mask imports STFT from here
 
-        if isinstance(other, Mask):
-            return other.apply(self)
-        return STFT._from(self, self.data * other)
+        match other:
+            case Mask():
+                return other.apply(self)
+            case _:
+                return STFT._from(self, self.data * other)
 
     __rmul__ = __mul__
 
@@ -612,9 +614,11 @@ class TVSTFT(_ShortTimeCoefficients):
     def __mul__(self, other):
         from sonore.views.mask import Mask  # views.mask imports TVSTFT from here
 
-        if isinstance(other, Mask):
-            return other.apply(self)
-        return TVSTFT._from(self, self.data * other)
+        match other:
+            case Mask():
+                return other.apply(self)
+            case _:
+                return TVSTFT._from(self, self.data * other)
 
     __rmul__ = __mul__
 

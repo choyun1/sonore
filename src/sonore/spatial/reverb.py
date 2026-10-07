@@ -45,16 +45,18 @@ def band_rt60s(rt60: float, freqs: np.ndarray, profile: str = "ecological") -> n
     def eco(median_rt60):
         return np.interp(freqs, fit_freqs, 10 ** (fit_rt60[:, 0] * np.log10(median_rt60) + fit_rt60[:, 1]))
 
-    if profile == "ecological":
-        return eco(rt60)
-    if profile == "inverted":
-        eco_rt60s = eco(rt60)
-        return eco_rt60s.max() + eco_rt60s.min() - eco_rt60s
-    if profile == "exaggerated":
-        return eco(2 * rt60) / 2
-    if profile == "reduced":
-        return eco(rt60 / 2) * 2
-    raise ValueError(f"rt60_profile must be one of {RT60_PROFILES}")
+    match profile:
+        case "ecological":
+            return eco(rt60)
+        case "inverted":
+            eco_rt60s = eco(rt60)
+            return eco_rt60s.max() + eco_rt60s.min() - eco_rt60s
+        case "exaggerated":
+            return eco(2 * rt60) / 2
+        case "reduced":
+            return eco(rt60 / 2) * 2
+        case _:
+            raise ValueError(f"rt60_profile must be one of {RT60_PROFILES}")
 
 
 def _decay_envelopes(t, onset_db, taus, shape):
@@ -62,16 +64,18 @@ def _decay_envelopes(t, onset_db, taus, shape):
     to that of the exponential decay they replace (Traer & McDermott, Eq. S14)."""
     onset_amp = db_to_amp(onset_db)[None, :]
     exp_env = onset_amp * 10 ** (-3 * t[:, None] / taus[None, :])  # -60 dB per RT60
-    if shape in ("exponential", "time_reversed"):
-        return exp_env
     energy = onset_amp**2 * taus[None, :] / (6 * np.log(10))  # integral of exp_env^2
-    if shape == "linear_matched_start":
-        t0 = 3 * energy / onset_amp**2  # same starting level; linear energy is onset_amp^2 t0 / 3
-        return np.maximum(onset_amp * (1 - t[:, None] / t0), 0.0)
-    if shape == "linear_matched_end":
-        t0 = taus[None, :]  # reaches zero when the exponential is 60 dB down
-        return np.maximum(np.sqrt(3 * energy / t0) * (1 - t[:, None] / t0), 0.0)
-    raise ValueError(f"decay_shape must be one of {DECAY_SHAPES}")
+    match shape:
+        case "exponential" | "time_reversed":
+            return exp_env
+        case "linear_matched_start":
+            t0 = 3 * energy / onset_amp**2  # same starting level; linear energy is onset_amp^2 t0 / 3
+            return np.maximum(onset_amp * (1 - t[:, None] / t0), 0.0)
+        case "linear_matched_end":
+            t0 = taus[None, :]  # reaches zero when the exponential is 60 dB down
+            return np.maximum(np.sqrt(3 * energy / t0) * (1 - t[:, None] / t0), 0.0)
+        case _:
+            raise ValueError(f"decay_shape must be one of {DECAY_SHAPES}")
 
 
 def synth_ir(
@@ -135,20 +139,22 @@ def synth_ir(
     cfs = filterbank.cfs
 
     taus = band_rt60s(rt60, cfs, rt60_profile)
-    if drr_profile == "ecological":
-        onset_db = fit_drr[:, 0] * np.log10(rt60) + fit_drr[:, 1]
-        onset_db = np.interp(cfs, fit_freqs, onset_db - np.median(onset_db))
-    elif drr_profile == "constant":
-        onset_db = np.zeros(len(cfs))
-    else:
-        raise ValueError(f"drr_profile must be one of {DRR_PROFILES}")
+    match drr_profile:
+        case "ecological":
+            onset_db = fit_drr[:, 0] * np.log10(rt60) + fit_drr[:, 1]
+            onset_db = np.interp(cfs, fit_freqs, onset_db - np.median(onset_db))
+        case "constant":
+            onset_db = np.zeros(len(cfs))
+        case _:
+            raise ValueError(f"drr_profile must be one of {DRR_PROFILES}")
 
-    if decay_shape in ("exponential", "time_reversed"):
-        duration = decay_db * taus.max() / 60
-    elif decay_shape == "linear_matched_start":
-        duration = taus.max() / (2 * np.log(10))
-    else:
-        duration = taus.max()
+    match decay_shape:
+        case "exponential" | "time_reversed":
+            duration = decay_db * taus.max() / 60
+        case "linear_matched_start":
+            duration = taus.max() / (2 * np.log(10))
+        case _:  # linear_matched_end; anything else is refused by _decay_envelopes
+            duration = taus.max()
     noise = gaussian_noise(duration, fs, n_channels=n_channels, rng=rng)
     envelopes = _decay_envelopes(noise.t, onset_db, taus, decay_shape)
     if decay_shape == "time_reversed":

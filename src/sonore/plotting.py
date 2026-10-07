@@ -450,22 +450,23 @@ def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, d
     rows read as the mel scale, labelled with their centre frequencies, over
     ``db_range`` dB."""
     ax = _ax(ax)
-    if kind == "mfcc":
-        values = mfcc.data[channel][1:]
-        limit = np.percentile(np.abs(values), 99) or 1.0
-        rows = np.arange(1, values.shape[0] + 1)
-        label = "MFCC (natural log units)"
-        _image(ax, mfcc.t, rows, values, cmap or "RdBu_r", -limit, limit, colorbar, label)
-        ax.set(title="MFCCs", xlabel="Time [s]", ylabel="Coefficient")
-    elif kind == "mel":
-        values = mfcc.mel_db[channel]
-        rows = np.arange(len(mfcc.cfs))
-        _image(ax, mfcc.t, rows, values, cmap or "magma", *_db_limits(values, db_range), colorbar, "dB")
-        ticks = np.unique(np.linspace(0, len(rows) - 1, 6).round().astype(int))
-        ax.set_yticks(ticks, [f"{mfcc.cfs[tick]:.0f}" for tick in ticks])
-        ax.set(title="Mel spectrogram", xlabel="Time [s]", ylabel="Band centre [Hz]")
-    else:
-        raise ValueError(f"kind must be 'mfcc' or 'mel', not {kind!r}")
+    match kind:
+        case "mfcc":
+            values = mfcc.data[channel][1:]
+            limit = np.percentile(np.abs(values), 99) or 1.0
+            rows = np.arange(1, values.shape[0] + 1)
+            label = "MFCC (natural log units)"
+            _image(ax, mfcc.t, rows, values, cmap or "RdBu_r", -limit, limit, colorbar, label)
+            ax.set(title="MFCCs", xlabel="Time [s]", ylabel="Coefficient")
+        case "mel":
+            values = mfcc.mel_db[channel]
+            rows = np.arange(len(mfcc.cfs))
+            _image(ax, mfcc.t, rows, values, cmap or "magma", *_db_limits(values, db_range), colorbar, "dB")
+            ticks = np.unique(np.linspace(0, len(rows) - 1, 6).round().astype(int))
+            ax.set_yticks(ticks, [f"{mfcc.cfs[tick]:.0f}" for tick in ticks])
+            ax.set(title="Mel spectrogram", xlabel="Time [s]", ylabel="Band centre [Hz]")
+        case _:
+            raise ValueError(f"kind must be 'mfcc' or 'mel', not {kind!r}")
     return ax
 
 

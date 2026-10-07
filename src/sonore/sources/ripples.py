@@ -56,11 +56,13 @@ class _Pattern:
     """Shared behaviour: addition into sums, and plotting."""
 
     def __add__(self, other):
-        if isinstance(other, int | float) and other == 0:  # lets sum() work
-            return self
-        if isinstance(other, Ripple | RippleSum) and isinstance(self, Ripple | RippleSum):
-            return RippleSum(_components(self) + _components(other))
-        return NotImplemented
+        match other:
+            case int() | float() if other == 0:  # lets sum() work
+                return self
+            case Ripple() | RippleSum() if isinstance(self, Ripple | RippleSum):
+                return RippleSum(_components(self) + _components(other))
+            case _:
+                return NotImplemented
 
     __radd__ = __add__
 
@@ -242,19 +244,23 @@ def _evaluate(pattern: Pattern, t: np.ndarray, x: np.ndarray) -> np.ndarray:
 
 
 def _max_density(pattern: Pattern) -> float | None:
-    if isinstance(pattern, Ripple | RippleSum):
-        return max(abs(ripple.density) for ripple in _components(pattern))
-    if isinstance(pattern, DynamicRipple):
-        return max(abs(bound) for bound in pattern.density_range)
-    return None
+    match pattern:
+        case Ripple() | RippleSum():
+            return max(abs(ripple.density) for ripple in _components(pattern))
+        case DynamicRipple():
+            return max(abs(bound) for bound in pattern.density_range)
+        case _:
+            return None
 
 
 def _max_rate(pattern: Pattern) -> float | None:
-    if isinstance(pattern, Ripple | RippleSum):
-        return max(abs(ripple.rate) for ripple in _components(pattern))
-    if isinstance(pattern, DynamicRipple):
-        return max(abs(bound) for bound in pattern.rate_range)
-    return None
+    match pattern:
+        case Ripple() | RippleSum():
+            return max(abs(ripple.rate) for ripple in _components(pattern))
+        case DynamicRipple():
+            return max(abs(bound) for bound in pattern.rate_range)
+        case _:
+            return None
 
 
 def _check_resolution(pattern: Pattern, per_octave: float, what: str) -> None:
@@ -368,16 +374,17 @@ def ripple_sound(
     # channel carriers: pattern envelopes x the carrier's band fine structure
     _check_resolution(pattern, bands_per_octave, "channel carrier")
     filterbank = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
-    if isinstance(carrier, Sound):
-        if carrier.fs != fs or len(carrier) < length:
-            raise ValueError("carrier sound must have the same fs and be at least as long")
-        fine = filterbank.analyze(Sound(carrier.mono().data[:length], fs)).tfs()
-    elif carrier == "low-noise":
-        # our own noise is periodic, so circular analysis (pad=0) is exact here
-        fine = filterbank.analyze(gaussian_noise(duration, fs, rng=rng), pad=0).tfs()
-    elif carrier == "noise":
-        fine = _flat_noise_bands(gaussian_noise(duration, fs, rng=rng), filterbank)
-    else:
-        raise ValueError("carrier must be 'tones', 'harmonic', 'noise', 'low-noise', or a Sound")
+    match carrier:
+        case Sound():
+            if carrier.fs != fs or len(carrier) < length:
+                raise ValueError("carrier sound must have the same fs and be at least as long")
+            fine = filterbank.analyze(Sound(carrier.mono().data[:length], fs)).tfs()
+        case "low-noise":
+            # our own noise is periodic, so circular analysis (pad=0) is exact here
+            fine = filterbank.analyze(gaussian_noise(duration, fs, rng=rng), pad=0).tfs()
+        case "noise":
+            fine = _flat_noise_bands(gaussian_noise(duration, fs, rng=rng), filterbank)
+        case _:
+            raise ValueError("carrier must be 'tones', 'harmonic', 'noise', 'low-noise', or a Sound")
     envelopes = render(pattern, filterbank, duration, fs).without_edges()  # edges lie outside f_lo..f_hi
     return (envelopes * fine).sum().normalize()

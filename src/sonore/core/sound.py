@@ -244,33 +244,39 @@ class Sound:
         return Sound(op(other_data, self._data) if reflected else op(self._data, other_data), self.fs)
 
     def __add__(self, other):
-        if isinstance(other, Decibels):
-            return self * other.gain
-        if isinstance(other, numbers.Real) and not isinstance(other, bool):
-            if other == 0:  # lets built-in sum() work
-                return self
-            raise TypeError(
-                f"adding a bare number to a Sound is ambiguous; write snd + {other!r}*dB "
-                "for a level change (from sonore import dB), or add an array for a DC offset"
-            )
-        return self._binary(other, np.add)
+        match other:
+            case Decibels():
+                return self * other.gain
+            case numbers.Real() if not isinstance(other, bool):
+                if other == 0:  # lets built-in sum() work
+                    return self
+                raise TypeError(
+                    f"adding a bare number to a Sound is ambiguous; write snd + {other!r}*dB "
+                    "for a level change (from sonore import dB), or add an array for a DC offset"
+                )
+            case _:
+                return self._binary(other, np.add)
 
     __radd__ = __add__
 
     def __sub__(self, other):
-        if isinstance(other, Decibels | numbers.Real) and not isinstance(other, bool):
-            return self + (-other)
-        return self._binary(other, np.subtract)
+        match other:
+            case Decibels() | numbers.Real() if not isinstance(other, bool):
+                return self + (-other)
+            case _:
+                return self._binary(other, np.subtract)
 
     def __rsub__(self, other):
-        if isinstance(other, Decibels):
-            raise TypeError("dB - Sound is undefined; did you mean snd - x*dB?")
-        if isinstance(other, numbers.Real) and not isinstance(other, bool) and other != 0:
-            raise TypeError(
-                f"subtracting a Sound from a bare number is ambiguous; write -snd to invert the sound, "
-                f"or {other!r} * np.ones(len(snd)) - snd for a DC offset"
-            )
-        return (-self) + other
+        match other:
+            case Decibels():
+                raise TypeError("dB - Sound is undefined; did you mean snd - x*dB?")
+            case numbers.Real() if not isinstance(other, bool) and other != 0:
+                raise TypeError(
+                    f"subtracting a Sound from a bare number is ambiguous; write -snd to invert the sound, "
+                    f"or {other!r} * np.ones(len(snd)) - snd for a DC offset"
+                )
+            case _:
+                return (-self) + other
 
     def __neg__(self):
         return Sound(-self._data, self.fs)
@@ -325,12 +331,13 @@ class Sound:
         if 2 * n_ramp > self.n_samples:
             raise ValueError("ramps are longer than the sound")
         phase = np.linspace(0, 1, n_ramp, endpoint=False) + 0.5 / n_ramp
-        if shape == "cosine":
-            ramp_up = (1 - np.cos(np.pi * phase)) / 2
-        elif shape == "linear":
-            ramp_up = phase
-        else:
-            raise ValueError("shape must be 'cosine' or 'linear'")
+        match shape:
+            case "cosine":
+                ramp_up = (1 - np.cos(np.pi * phase)) / 2
+            case "linear":
+                ramp_up = phase
+            case _:
+                raise ValueError("shape must be 'cosine' or 'linear'")
         gain = np.ones(self.n_samples)
         gain[:n_ramp] = ramp_up
         gain[-n_ramp:] = ramp_up[::-1]

@@ -610,12 +610,13 @@ def iterated_ripple_noise(
     noise = gaussian_noise((length + warmup) / fs, fs, rng=rng, **noise_kwargs).data[:, 0]
     freqs = np.fft.rfftfreq(len(noise), 1 / fs)
     one_pass = gain * np.exp(-2j * np.pi * freqs * delay)
-    if network == "add-same":
-        transfer = (1 + one_pass) ** iterations
-    elif network == "add-original":
-        transfer = sum(one_pass**i for i in range(iterations + 1))
-    else:
-        raise ValueError("network must be 'add-same' or 'add-original'")
+    match network:
+        case "add-same":
+            transfer = (1 + one_pass) ** iterations
+        case "add-original":
+            transfer = sum(one_pass**i for i in range(iterations + 1))
+        case _:
+            raise ValueError("network must be 'add-same' or 'add-original'")
     output = np.fft.irfft(np.fft.rfft(noise) * transfer, n=len(noise))[warmup:]
     return _finish(output, fs)
 

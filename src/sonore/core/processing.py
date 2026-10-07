@@ -61,19 +61,21 @@ def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "star
     _check_not_empty(sounds)
     if align not in ("start", "center", "end"):
         raise ValueError(f"align must be 'start', 'center' or 'end', not {align!r}")
-    if mode == "pad":
-        length = max(len(s) for s in sounds)
-        return [s.pad_to(length, align) for s in sounds]
-    if mode == "truncate":
-        length = min(len(s) for s in sounds)
+    match mode:
+        case "pad":
+            length = max(len(s) for s in sounds)
+            return [s.pad_to(length, align) for s in sounds]
+        case "truncate":
+            length = min(len(s) for s in sounds)
 
-        def keep(sound: Sound) -> Sound:
-            extra = len(sound) - length
-            start = {"start": 0, "center": extra // 2, "end": extra}[align]
-            return Sound(sound.data[start : start + length], sound.fs)
+            def keep(sound: Sound) -> Sound:
+                extra = len(sound) - length
+                start = {"start": 0, "center": extra // 2, "end": extra}[align]
+                return Sound(sound.data[start : start + length], sound.fs)
 
-        return [keep(s) for s in sounds]
-    raise ValueError(f"mode must be 'pad' or 'truncate', not {mode!r}")
+            return [keep(s) for s in sounds]
+        case _:
+            raise ValueError(f"mode must be 'pad' or 'truncate', not {mode!r}")
 
 
 def normalize(sounds: Sequence[Sound], rms: float | None = 1.0, peak: float | None = None) -> list[Sound]:

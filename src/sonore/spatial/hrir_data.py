@@ -146,14 +146,15 @@ def load_hrirs(
         database = HRIR_DATABASES[name]
     except KeyError:
         raise ValueError(f"unknown HRIR database {name!r}; known: {sorted(HRIR_DATABASES)}") from None
-    if distances is None:
-        distances = database.default
-    elif isinstance(distances, str) and distances == "all":
-        distances = tuple(database.files)
-    else:
-        distances = tuple(
-            float(distance) for distance in (distances if hasattr(distances, "__iter__") else [distances])
-        )
+    match distances:
+        case None:
+            distances = database.default
+        case str("all"):
+            distances = tuple(database.files)
+        case _:
+            distances = tuple(
+                float(distance) for distance in (distances if hasattr(distances, "__iter__") else [distances])
+            )
     missing = [distance for distance in distances if distance not in database.files]
     if missing:
         raise ValueError(f"{name} has no distance {missing} cm; available: {sorted(database.files)}")
