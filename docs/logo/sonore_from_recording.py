@@ -18,9 +18,11 @@ The script goes through four steps:
 3. Synthesis: so.klatt_synthesize gets those tracks directly. Where the word is voiced, the
    voicing level follows the recording's level. Where it is unvoiced, the noise follows that
    level too: frication through the high parallel formants where most of the power is above
-   3.5 kHz (the /s/), and aspiration through the tracked formants elsewhere (the /ʁ/). The copy
-   is made twice, the second time with each setting moved by how far the first copy's level
-   missed the recording's, since the three sources come out at different levels.
+   3.5 kHz (the /s/), and aspiration elsewhere (the /ʁ/), through each unvoiced stretch's median
+   formants, since the formants measured in noise jump about. Windows within 20 dB of the loudest
+   are voiced even where the F0 tracker says not, so a vowel does not start with a burst of
+   breath. The copy is made twice, the second time with each setting moved by how far the first
+   copy's level missed the recording's, since the three sources come out at different levels.
 4. Comparison: the two level profiles side by side, both spectrograms with the formant tracks
    drawn on them (sonore_from_recording.png), and the recording followed by the copy
    (sonore_from_recording.wav), both written next to the recording, since they contain it.
@@ -31,7 +33,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.ndimage import median_filter
+from scipy.ndimage import label, median_filter
 
 import sonore as so
 
@@ -94,16 +96,29 @@ def main(path):
 
     # 3. Synthesis: the measured tracks, every 5 ms, straight into the synthesizer. Levels are
     # in dB with 60 as the loudest; nothing more than 40 dB down is synthesized.
+    # The F0 tracker calls the first few milliseconds of a vowel unvoiced. Made as noise, those
+    # loud windows are a burst of breath at the start of the vowel, so windows within 20 dB of
+    # the loudest are voiced anyway, at the nearest measured F0.
+    voicing = voiced | (level > -20)
+    measured = np.flatnonzero(voiced)
+    nearest = measured[np.abs(measured[None, :] - np.arange(len(times))[:, None]).argmin(axis=1)]
+    f0 = np.where(voiced, f0, f0[nearest])
     audible = level > -40
-    fricative = ~voiced & audible & (high > -6)
-    aspirated = ~voiced & audible & ~fricative
+    fricative = ~voicing & audible & (high > -6)
+    aspirated = ~voicing & audible & ~fricative
+    # Noise has no steady resonances for LPC to find, so the formants jump from window to window
+    # in the /ʁ/. Each unvoiced stretch keeps its median formants instead.
+    stretches, count = label(~voicing)
+    for stretch in range(1, count + 1):
+        inside = stretches == stretch
+        tracks[:, inside] = np.median(tracks[:, inside], axis=1, keepdims=True)
 
     def synthesize(level):
         return so.klatt_synthesize(
             word.duration,
             FS,
             F0=(times, f0),
-            AV=(times, np.where(voiced, 60 + level, 0)),
+            AV=(times, np.where(voicing, 60 + level, 0)),
             AF=(times, np.where(fricative, 60 + level, 0)),
             AH=(times, np.where(aspirated, 60 + level, 0)),
             F1=(times, tracks[0]),
@@ -140,7 +155,7 @@ def main(path):
     for ax, (title, sound) in zip(axes, {"Recording": word, "Automatic copy": copy}.items(), strict=True):
         so.STFT(sound, win_dur=0.006, hop_dur=0.001).plot(ax, db_range=60, colorbar=False, fmax=8000)
         for track in tracks:
-            ax.plot(times, np.where(voiced | aspirated, track, np.nan) / 1000, "c-", lw=0.8)  # kHz
+            ax.plot(times, np.where(voicing | aspirated, track, np.nan) / 1000, "c-", lw=0.8)  # kHz
         ax.set_title(title)
     out = Path(path).parent
     fig.savefig(out / "sonore_from_recording.png", dpi=100)
