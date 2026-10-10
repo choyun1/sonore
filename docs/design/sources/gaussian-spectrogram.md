@@ -9,8 +9,9 @@ them the stimuli for the source-repetition experiments, and later for
 source-and-room separation (Traer & McDermott, 2016). This document sets out
 the model, how it fits sonore, and the decisions for Cho.
 
-Status: proposed 2026-10-10, nothing built. Cho asked for the stimulus on
-2026-10-10, after reading Cho's own 2017 prototype (see "Prior code").
+Status: D1-D6 accepted by Cho 2026-10-10, all as recommended. Built as
+`so.gaussian_spectrogram` (see "As built"). D7, the gallery page, is open:
+Cho is considering renaming the "Classic stimuli" page instead.
 
 ## How the claims are verified, and what was read
 
@@ -18,6 +19,9 @@ Status: proposed 2026-10-10, nothing built. Cho asked for the stimulus on
   (main text and SI Materials and Methods, 11 pages).
 - **[check]**: printed by `tools/check_gaussian_spectrogram_claims.py`. It
   uses NumPy only, shares no code with sonore, and runs in under a second.
+- **[sound]**: printed by `tools/check_gaussian_spectrogram_sound.py`,
+  which uses sonore itself to measure what the built function does.
+- **[math]**: follows in one line from the formulas shown.
 - **[prior]**: measured on Cho's 2017 prototype, outside this repository
   (the archive is private; the scripts are kept with the project's notes).
 
@@ -69,6 +73,22 @@ Status: proposed 2026-10-10, nothing built. Cho asked for the stimulus on
   output correlated 0.72 with the intended grid; dividing gives 0.97. The
   prototype also used other constants (0.065 for frequency, 0.109 for
   time), of unknown origin.
+
+- **G5 [sound].** How well a sound keeps the drawn cells, for 20 seeds:
+  re-analyze it with the same filterbank and windows and compare cell
+  levels in dB with those of the drawn envelopes. On the fine structure of
+  a noise (D5 a): correlation 0.970, slope 0.947, rms difference 3.1 dB.
+  On `to_sound("noise")` (D5 b), whose bands keep their own fluctuations:
+  0.941, 0.937 and 4.4 dB.
+- **G6 [sound].** Over 200 draws, the drawn cells' lag-1 correlations are
+  0.931 across bands (intended 0.928 on sonore's ERB scale, whose spacing
+  is 0.656 ERB) and 0.939 across windows (intended 0.937). The standard
+  deviation is held to 14.1 dB within 5% by a test.
+- **G7 [math].** Whether "flat on average" means flat in expected power or
+  in mean level (D4) makes no difference to the shape: with the same
+  standard deviation in every band, the lognormal correction
+  `exp((sd ln10 / 10)^2 / 2)` is the same factor for all of them, so only
+  the overall level changes, and that is set by the carrier anyway.
 
 ## Proposed design
 
@@ -141,6 +161,20 @@ Spectrotemporal ripples page or the Classic stimuli page (D7).
 - **D7. Gallery page.** The Spectrotemporal ripples page (sounds defined
   by their spectrotemporal envelope) or the Classic stimuli page.
   *Recommended: the ripples page.*
+
+## As built
+
+`src/sonore/sources/gaussian_spectrogram.py`:
+`gaussian_spectrogram(duration, fs, band_correlation_erb=8.78,
+time_correlation=0.154, sd_db=14.1, n_bands=39, f_lo=20, f_hi=4000,
+window=0.020, rng=None)` returns `Envelopes` on
+`so.cosine_filterbank(39, 20, 4000)`, edge bands zero. The field is drawn
+by the recursion of G2. Each band's mean level is `10 log10` of its width
+in Hz, relative to the mean width. Windows are centered every `window / 2`
+from t = 0 until they cover the sound. Tests are in
+`tests/sources/test_gaussian_spectrogram.py`: the recursion's covariance
+against the Kronecker one, reproducibility, cell statistics (G6), the
+flat-on-average slope, and a sound that keeps its drawn levels.
 
 ## Prior code
 

@@ -24,6 +24,10 @@ Breaking changes since 0.5.0 (each is described under Changed):
 
 ### Added
 
+- `so.gaussian_spectrogram`: random spectrograms whose levels correlate
+  exponentially in time and frequency (McDermott, Wrobleski & Oxenham, 2011),
+  returned as `Envelopes` and heard through `to_sound`
+  (docs/design/sources/gaussian-spectrogram.md).
 - Every view has `.plot()` (docs/design/layout/plotting.md). A view with no
   single picture refuses with `NotImplementedError` and its `no_plot`
   sentence, which names what to plot instead: `ReassignedSpectrogram`
