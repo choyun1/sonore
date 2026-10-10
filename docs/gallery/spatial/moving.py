@@ -414,9 +414,11 @@ sound = finish(rendered)
 # way in the second around the moment of passing; the cell below prints the shift at the start
 # and at the end. Nothing makes the shift happen but the delay changing from sample to sample.
 #
-# Doppler is a weak cue for people: at speeds like these, listeners judge motion mostly from the
-# change in level and in interaural differences, and the rising pitch people report as a source
-# approaches comes largely from its rising loudness (reviewed by Carlile & Leung, 2016).
+# How much listeners use the Doppler shift depends on speed. In the studies reviewed by Carlile &
+# Leung (2016), judgments of a source passing at 10 m/s went with its changes in level and ITD,
+# and Doppler cues dominated only at 50 m/s. Listeners also report the pitch of an approaching
+# source rising, though the Doppler shift holds it steady or lowers it; the rising loudness is
+# what they hear as rising pitch (Neuhoff & McBeath, 1997).
 
 # %%
 SPEED, CLOSEST, BUZZ_F0 = 15.0, 3.0, 120.0  # m/s, m, Hz
@@ -1115,6 +1117,9 @@ sound = finish(mix)
 # - Monson, Hunter & Story (2012). Horizontal directivity of low- and high-frequency energy in
 #   speech and singing. *J. Acoust. Soc. Am.* 132(1), 433–441.
 #   [doi:10.1121/1.4725963](https://doi.org/10.1121/1.4725963).
+# - Neuhoff & McBeath (1997). Overcoming naïve mental models in explaining the Doppler shift: an
+#   illusion creates confusion. *Am. J. Phys.* 65(7), 618–621.
+#   [PDF](https://www.public.asu.edu/~mmcbeath/mcbeath.research/pdf/AJP000618.pdf).
 # - Panayotov, Chen, Povey & Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain
 #   audio books. *Proc. ICASSP 2015*, 5206–5210.
 #   [doi:10.1109/ICASSP.2015.7178964](https://doi.org/10.1109/ICASSP.2015.7178964). The
