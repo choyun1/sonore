@@ -95,9 +95,10 @@ are trimmed.
 
 1. Stimuli: Synthetic sounds (beats and roughness, tone sequences, band-limited waveforms,
    speech-shaped noise), IRN, Ripples, Textures.
-2. Time and frequency: Seeing speech, Analysis and resynthesis (takes "Nothing is lost"), Phase
-   vocoder.
-3. Voices: Two talkers (new, the reference page), Formant synthesis, Pitch (new, from the tracker
+2. Analysis and resynthesis: Analysis and resynthesis (takes "Nothing is lost" from Seeing
+   speech), Phase vocoder.
+3. Voices: Two talkers (new, the reference page), Seeing speech (moved here, see D14), Formant
+   synthesis, Pitch (new, from the tracker
    parts of Cepstrum, Harmonics and Seeing speech), Spectral envelope (Cepstrum plus MFCCs),
    Source and aperiodicity, Rebuilding and changing a voice (Harmonics and Changing a voice
    merged).
@@ -176,9 +177,38 @@ here. Options: (a) accept cloud-built images for rewritten pages; (b) Cho rebuil
 before each merge. Recommendation: (a) for rewritten pages only, since the old images go away
 anyway; the README images stay untouched.
 
-**D13. Rollout.** One PR per group, Voices first (it carries most of the female-talker work and
+**D13. Rollout.** One PR per group, Voices first (with Seeing speech in it, D14) (it carries most of the female-talker work and
 most repeats), then Time and frequency, Spatial, Stimuli, Music. Each PR fixes the pitch
 statements it touches to the measured ratio. Recommendation: yes.
+
+**D14. Seeing speech joins Voices.** Cho suggested it (2026-10-10). The page teaches
+time-frequency analysis, but always on speech, and its motivation is measuring a voice (pitch,
+envelope, glottal pulses). In Voices it comes right after Two talkers, so the pair is introduced
+and then seen; the two spectrograms show the tradeoff differently (the female talker's harmonics
+are resolved by a shorter window). The old group keeps Analysis and resynthesis and Phase
+vocoder. Recommendation: yes.
+
+**D15. A prose pass on every page.** Each group's PR also corrects and clarifies the prose it
+touches: wrong or inconsistent claims (the pitch ratios above), uncited claims (for example
+"octave errors are the most common", the ba/da/ga transition cues), statements the demo does not
+show (Harmonics says the contour marks a question, but the sentence is a statement), and passages
+that are hard to follow. Every correction is listed in the PR description with what was checked,
+and a new number is measured by a checker or labeled an estimate. Recommendation: yes, folded
+into the group PRs rather than a separate sweep, so each page is rewritten once.
+
+**D16. Cross-links between demos.** As the Synthetic sounds page and Tuning and temperament now
+do for the just major third (b3 and tt1), a demo that illustrates a point made on another page
+links to that page's demo anchor (`page.html#d-KEY`), and the other page links back, in the
+sentence that makes the point. This is in addition to D5: D5 says where an idea is taught, D16
+connects sounds that show the same thing. Candidates found in the audit: beats (Synthetic sounds
+b1/b2, Tuning tt1/tt8, Organ celeste); binaural beats and interaural correlation (b4, Binaural
+07/08); rippled noise and ripples (IRN 09, Ripples 01); speech-shaped noise and the modulation
+spectrum (k1, Hearing a modulation spectrum mt1); wideband striations and envelope pitch (Seeing
+speech 27, Vocoder cp8); pitch moved with formants fixed (Harmonics hm2, Changing a voice vc3,
+Phase vocoder p3); breathy voice (Formants fq5, Aperiodicity ap3); vowels as timbre (Timbre tb6,
+Formants fw1); distance (Reverb r2, Moving talkers m5); envelopes and fine structure (Vocoder,
+Hearing a modulation spectrum mt5). The existing test that checks gallery anchors covers the new
+links. Recommendation: yes, added page by page in each group PR.
 
 ## Not changing
 
