@@ -27,6 +27,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Same spectrum, different sound](#h-same-spectrum-different-sound): a sentence and a sound
 #   with the sentence's modulation spectrum and random modulation phase.
 # - [A drawn spectrum](#h-a-drawn-spectrum): one patch of modulation, heard on three carriers.
+# - [Random spectrograms](#h-random-spectrograms): noise shaped by a spectrogram drawn at
+#   random with the coarse correlations of natural sounds.
 # - [An edited sentence](#h-an-edited-sentence): a sentence with every modulation faster than
 #   4 Hz removed, and how close the sound comes to that.
 # - [Timing from one sound, magnitudes from another](#h-timing-from-one-sound-magnitudes-from-another):
@@ -193,6 +195,66 @@ for name, snd, drawn in [
 # modulation of its own, so the target survives. Noise and speech fluctuate inside every band,
 # and those fluctuations land in the measured spectrum on top of the drawn one. That is why
 # `"tones"` is the default carrier (C3 of the design note).
+
+# %% [markdown]
+# ## Random spectrograms
+#
+# To study how listeners pick out a sound they have never heard before, McDermott, Wrobleski &
+# Oxenham (2011) needed sounds that were novel yet shared the coarse statistics of natural
+# sources. They drew spectrograms, one level in dB per ERB band and 20 ms window, from a
+# Gaussian whose correlations fall off exponentially in time and in frequency, as those of
+# spoken words and animal calls roughly do, and imposed them on noise. That is a drawn
+# modulation spectrum too: a random phase on a spectrum makes a Gaussian field, and exponential
+# correlations make a spectrum peaked at zero rate and density, a single blob at the origin,
+# drawn in dB. `so.gaussian_spectrogram` draws such a spectrogram as `Envelopes`, and `to_sound`
+# puts it on the fine structure of a noise. The defaults are the paper's: 39 bands from 20 Hz to
+# 4 kHz and correlation lengths of about 8.8 ERB and 154 ms. The paper gives no spread for the
+# levels; the default standard deviation of 14.1 dB is carried over from an earlier
+# implementation, not from the paper. Each figure shows the spectrogram that was drawn above the
+# envelopes measured on the sound.
+#
+# Drawing in dB is also what lets these go deep: any level in dB is a positive envelope, so
+# nothing is clipped. Blobs can be drawn the same way, with
+# `from_blobs(..., scale="db", sd_db=...)` in place of `rms_depth`.
+
+
+# %%
+def random_spectrogram_sound(seed, **kwargs):
+    """A drawn spectrogram, and the sound made by putting it on a noise's fine structure."""
+    env = so.gaussian_spectrogram(1.0, FS, rng=seed, **kwargs)
+    sound = finish(env.to_sound(so.gaussian_noise(1.0, FS, rng=100 + seed)))
+    return env, sound
+
+
+def show_spectrograms(env, sound):
+    fig, axes = plt.subplots(2, 1, figsize=(10, 5.2), sharex=True, layout="constrained")
+    env.plot(axes[0])
+    axes[0].set_title("Drawn spectrogram")
+    env.filterbank.analyze(sound).envelopes().plot(axes[1])
+    axes[1].set_title("Envelopes of the sound")
+    return fig, list(axes)
+
+
+# %% [about]
+# The paper's settings. Each draw is a new sound; this one is seed 1.
+
+# %% [demo rs1] A random spectrogram
+env, sound = random_spectrogram_sound(1)
+fig, playhead = show_spectrograms(env, sound)
+
+# %% [about]
+# Longer correlations, 500 ms in time and 20 ERB in frequency: slower, broader shapes.
+
+# %% [demo rs2] Longer correlations
+env, sound = random_spectrogram_sound(2, time_correlation=0.5, band_correlation_erb=20)
+fig, playhead = show_spectrograms(env, sound)
+
+# %% [about]
+# Shorter correlations, 40 ms and 3 ERB: closer to noise with a lumpy spectrum.
+
+# %% [demo rs3] Shorter correlations
+env, sound = random_spectrogram_sound(3, time_correlation=0.04, band_correlation_erb=3)
+fig, playhead = show_spectrograms(env, sound)
 
 # %% [markdown]
 # ## An edited sentence
@@ -384,8 +446,9 @@ fig, playhead = show(sound, f_lo=125)
 #   [sonore-sketch](https://choyun1.github.io/sonore-sketch/), a separate browser app built on sonore, draws
 #   them with a mouse: blobs on the plane, or cuts on a sound's measured spectrum.
 # - **dB targets.** A spectrum measured with `scale="db"` (of the log envelope, as Elliott &
-#   Theunissen, 2009, define it) also goes back to sound, and never needs clipping, but the
-#   linear spectrum of the result is not the one drawn.
+#   Theunissen, 2009, define it), or blobs drawn with `scale="db"`, also goes back to sound and
+#   never needs clipping, but the linear spectrum of the result is not the one drawn. Apart from
+#   the random spectrograms above, none is heard here.
 # - **The other modulation spectra.** A [modulation spectrogram](modspectrogram.html) changes
 #   over time and has no route back to sound, and a [sound texture](textures.html)'s per-band
 #   modulation power is set through its statistics, not here.
@@ -410,6 +473,9 @@ fig, playhead = show(sound, f_lo=125)
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
 #   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
+# - McDermott, Wrobleski & Oxenham (2011). Recovering sound sources from embedded repetition.
+#   *PNAS* 108(3), 1188–1193. [doi:10.1073/pnas.1004765108](https://doi.org/10.1073/pnas.1004765108).
+#   [`gaussian_spectrogram.gaussian_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/gaussian_spectrogram.py#L42)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.
 #   [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067).

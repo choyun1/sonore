@@ -1,4 +1,4 @@
-"""Synthetic sounds: speech-shaped noise, beats, tone sequences and random spectrograms.
+"""Synthetic sounds: speech-shaped noise, beats, tone sequences and band-limited waveforms.
 
 This script is the gallery page https://choyun1.github.io/sonore/gallery/classic.html:
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
@@ -26,8 +26,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   frequencies.
 # - [Band-limited waveforms](#h-band-limited-waveforms): a sawtooth gliding up four octaves,
 #   with and without aliasing.
-# - [Random spectrograms](#h-random-spectrograms): noise shaped by a spectrogram drawn at
-#   random with the coarse correlations of natural sounds.
+#
+# Random spectrograms with the coarse correlations of natural sounds are on
+# [Hearing a modulation spectrum](modtargets.html#h-random-spectrograms), beside the other
+# envelopes drawn from a modulation spectrum.
 
 # %%
 import matplotlib.pyplot as plt
@@ -285,59 +287,6 @@ sound = finish(so.Sound(sawtooth(running_phase), glide_fs))
 fig, playhead = show(sound, fmax=8000, win_dur=25e-3)
 
 # %% [markdown]
-# ## Random spectrograms
-#
-# To study how listeners pick out a sound they have never heard before, McDermott, Wrobleski &
-# Oxenham (2011) needed sounds that were novel yet shared the coarse statistics of natural
-# sources. They drew spectrograms, one level in dB per ERB band and 20 ms window, from a
-# Gaussian whose correlations fall off exponentially in time and in frequency, as those of
-# spoken words and animal calls roughly do, and imposed them on noise. `so.gaussian_spectrogram`
-# draws such a spectrogram as `Envelopes`, and `to_sound` puts it on the fine structure of a
-# noise. The defaults are the paper's: 39 bands from 20 Hz to 4 kHz and correlation lengths of
-# about 8.8 ERB and 154 ms. The paper gives no spread for the levels; the default standard
-# deviation of 14.1 dB is carried over from an earlier implementation, not from the paper.
-# Each figure shows the spectrogram that was drawn above the envelopes measured on the sound.
-
-
-# %%
-def random_spectrogram_sound(seed, **kwargs):
-    """A drawn spectrogram, and the sound made by putting it on a noise's fine structure."""
-    env = so.gaussian_spectrogram(1.0, FS, rng=seed, **kwargs)
-    sound = finish(env.to_sound(so.gaussian_noise(1.0, FS, rng=100 + seed)))
-    return env, sound
-
-
-def show_spectrograms(env, sound):
-    fig, axes = plt.subplots(2, 1, figsize=(10, 5.2), sharex=True, layout="constrained")
-    env.plot(axes[0])
-    axes[0].set_title("Drawn spectrogram")
-    env.filterbank.analyze(sound).envelopes().plot(axes[1])
-    axes[1].set_title("Envelopes of the sound")
-    return fig, list(axes)
-
-
-# %% [about]
-# The paper's settings. Each draw is a new sound; this one is seed 1.
-
-# %% [demo rs1] A random spectrogram
-env, sound = random_spectrogram_sound(1)
-fig, playhead = show_spectrograms(env, sound)
-
-# %% [about]
-# Longer correlations, 500 ms in time and 20 ERB in frequency: slower, broader shapes.
-
-# %% [demo rs2] Longer correlations
-env, sound = random_spectrogram_sound(2, time_correlation=0.5, band_correlation_erb=20)
-fig, playhead = show_spectrograms(env, sound)
-
-# %% [about]
-# Shorter correlations, 40 ms and 3 ERB: closer to noise with a lumpy spectrum.
-
-# %% [demo rs3] Shorter correlations
-env, sound = random_spectrogram_sound(3, time_correlation=0.04, band_correlation_erb=3)
-fig, playhead = show_spectrograms(env, sound)
-
-# %% [markdown]
 # ## References
 #
 # - Byrne et al. (1994). An international comparison of long-term average speech spectra.
@@ -350,9 +299,6 @@ fig, playhead = show_spectrograms(env, sound)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentences, by speakers bdl, rms and slt.
-# - McDermott, Wrobleski & Oxenham (2011). Recovering sound sources from embedded repetition.
-#   *PNAS* 108(3), 1188–1193. [doi:10.1073/pnas.1004765108](https://doi.org/10.1073/pnas.1004765108).
-#   [`gaussian_spectrogram.gaussian_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/gaussian_spectrogram.py#L42)
 # - Licklider, Webster & Hedlun (1950). On the frequency limits of binaural beats. *J. Acoust.
 #   Soc. Am.* 22(4), 468–473. [doi:10.1121/1.1906629](https://doi.org/10.1121/1.1906629).
 # - Plomp & Levelt (1965). Tonal consonance and critical bandwidth. *J. Acoust. Soc. Am.* 38(4),

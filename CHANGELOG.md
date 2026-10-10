@@ -28,8 +28,8 @@ Breaking changes since 0.5.0 (each is described under Changed):
   exponentially in time and frequency (McDermott, Wrobleski & Oxenham, 2011),
   returned as `Envelopes` and heard through `to_sound`
   (docs/design/sources/gaussian-spectrogram.md).
-  The gallery's "Classic stimuli" page is now "Synthetic sounds" and has a
-  section on them.
+  The gallery's "Hearing a modulation spectrum" page has a section on them,
+  and its "Classic stimuli" page is now "Synthetic sounds".
 - `ModulationSpectrum.from_blobs(..., scale="db", sd_db=6)` draws blobs as the
   modulation spectrum of envelopes in dB. Nothing has to be clipped, so the
   modulation can go deeper than a linear draw's limit of about 0.28. The

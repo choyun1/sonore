@@ -637,8 +637,7 @@ TOPICS = [
         [
             (
                 "classic.html",
-                "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms,"
-                " random spectrograms.",
+                "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms.",
             ),
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
@@ -655,7 +654,8 @@ TOPICS = [
             ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
             (
                 "modtargets.html",
-                "sounds made from a modulation spectrum: measured, edited, drawn, or traded between sounds.",
+                "sounds made from a modulation spectrum: measured, edited, drawn, random spectrograms, or traded"
+                " between sounds.",
             ),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
         ],
