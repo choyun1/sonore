@@ -168,7 +168,7 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
 # major third, to $\tfrac{5}{4}f$, and its fourth partial lands on the first note's fifth. Those
 # are just intervals: the shared partials coincide, and nothing beats. Equal temperament makes
 # every semitone the twelfth root of two, 100 cents, so its fifth is
-# {{ f"{700 - so.ratio_to_cents(3 / 2):.2f}" }} cents narrower than 3:2, and its major third
+# {{ f"{so.ratio_to_cents(3 / 2) - 700:.2f}" }} cents narrower than 3:2, and its major third
 # {{ f"{400 - so.ratio_to_cents(5 / 4):.2f}" }} cents wider than 5:4. Near-coinciding partials
 # beat at the difference of their frequencies, which the cell prints for intervals above
 # A3 = 220 Hz. Two pure tones a just major third apart have no partials to beat and sound
