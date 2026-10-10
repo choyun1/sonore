@@ -913,22 +913,23 @@ sounds = {label: finish(snd) for label, snd in pair.items()}
 # %% [markdown]
 # ## sonore says its name
 #
-# A whole word from tracks set by hand: "sonore" as /soʊˈnɔɹ/. The /s/ is frication through the
-# high parallel formants, with the voicing starting under its tail, as in /sa/. For the /n/, F1
-# drops, F2 rises toward where the tongue touches the ridge behind the teeth, and the nasal zero
-# opens. For the /ɹ/, F3 falls to about 1650 Hz, close to F2. The pitch, in a female talker's
-# range, stays level through the first vowel and falls through the second. sonore's logo is drawn
-# from this spectrogram: a few short strokes for the /s/, a rise in the middle line for the /n/
-# and a step down in the top line for the /ɹ/. It is a picture of the sound rather than a plot of
-# it.
+# A whole word from tracks set by hand: "sonore" as /soʊˈnɔɹ/, said by a female voice. The /s/ is
+# frication through the high parallel formants, with the voicing starting under its tail, as in
+# /sa/. For the /n/, F1 drops, F2 rises toward where the tongue touches the ridge behind the
+# teeth, and the nasal zero opens. For the /ɹ/, F3 falls to about 1900 Hz, close to F2. The
+# formants sit about 15 percent above where a male talker's would, as in the female averages
+# above, and the pitch stays level near 220 Hz through the first vowel and falls through the
+# second. sonore's logo is drawn from this spectrogram: a few short strokes for the /s/, a rise in
+# the middle line for the /n/ and a step down in the top line for the /ɹ/. It is a picture of the
+# sound rather than a plot of it.
 
 # %% [demo fl1] sonore says its name
 dur = 0.9
 times = [0.12, 0.16, 0.23, 0.28, 0.33, 0.38, 0.53, 0.65, 0.80]  # o, n, o, r
 tracks = dict(
-    F1=(times, [400, 520, 430, 280, 280, 600, 600, 460, 440]),
-    F2=(times, [1400, 1000, 830, 1500, 1500, 950, 950, 1100, 1100]),
-    F3=(times, [2600, 2450, 2450, 2500, 2500, 2600, 2550, 1650, 1600]),
+    F1=(times, [460, 600, 490, 320, 320, 690, 690, 530, 510]),
+    F2=(times, [1610, 1150, 950, 1730, 1730, 1090, 1090, 1270, 1270]),
+    F3=(times, [2990, 2820, 2820, 2880, 2880, 2990, 2930, 1900, 1840]),
 )
 sound = finish(
     so.klatt_synthesize(
@@ -937,6 +938,8 @@ sound = finish(
         F0=([0.10, 0.105, 0.24, 0.36, 0.65, 0.85], [0, 225, 220, 212, 170, 155]),
         AV=([0.10, 0.105, 0.14, 0.24, 0.27, 0.33, 0.37, 0.73, 0.85], [0, 48, 60, 60, 52, 52, 60, 58, 0]),
         AF=([0.01, 0.025, 0.105, 0.125], [0, 58, 58, 0]),
+        F4=4100,
+        F5=4900,
         A4=40,
         A5=56,
         A6=60,
