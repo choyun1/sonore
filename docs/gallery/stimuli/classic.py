@@ -113,38 +113,9 @@ sound = finish(ssn)
 fig, playhead = show(sound, fmax=8000, win_dur=20e-3)
 
 # %% [markdown]
-# Those sentences are all by male talkers. Averaged over many talkers, Byrne et al. (1994) found
-# male and female long-term spectra nearly the same from 250 Hz to 5 kHz, with male ones higher at
-# 160 Hz and below, where their fundamentals lie. Two single sentences, the same words read by one
-# male talker (bdl) and one female talker (slt), can differ by more. The cell prints how each
-# sentence's power divides among octave bands.
-
-# %%
-pair = [so.load(fetch(f"docs/speech/{name}_arctic_a0131.flac")).normalize(rms=0.1) for name in ("bdl", "slt")]
-pair_spectra = [so.long_term_spectrum([sentence]) for sentence in pair]
-octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
-print("octave from [Hz]     " + "".join(f"{low:>6}" for low in octave_edges[:-1]))
-for speaker, spectrum in zip(("bdl", "slt"), pair_spectra, strict=True):
-    power = 10 ** (spectrum.level / 10)
-    shares = [
-        10 * np.log10(power[(spectrum.f >= low) & (spectrum.f < high)].sum() / power.sum())
-        for low, high in zip(octave_edges[:-1], octave_edges[1:], strict=True)
-    ]
-    print(f"{speaker}, share [dB]      " + "".join(f"{share:6.1f}" for share in shares))
-
-# %% [about]
-# The two long-term spectra, smoothed to a third of an octave, each relative to its own peak. Below
-# 125 Hz the female talker's sentence has almost nothing, since the female fundamental never goes that
-# low, and the octave from 125 to 250 Hz, where the female fundamental lies, holds most of its power.
-# In this pair the female spectrum is also lower from 2 to 4 kHz and higher from 4 to 8 kHz.
-
-# %% [figure k2] Long-term spectra of a male and a female talker
-fig, ax = plt.subplots(figsize=(10, 3.6), layout="constrained")
-for speaker, spectrum in zip(("male (bdl)", "female (slt)"), pair_spectra, strict=True):
-    spectrum.smooth(1 / 3).plot(ax, label=speaker)
-ax.set_xlim(50, 8000)
-ax.legend()
-ax.grid(ls=":", which="both")
+# Those sentences are all by male talkers. How the long-term spectra of the gallery's male and
+# female talker differ, reading the same sentence, is measured on [Two
+# talkers](talkers.html#h-long-term-spectra).
 
 # %% [markdown]
 # ## Beats and roughness

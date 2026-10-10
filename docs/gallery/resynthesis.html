@@ -65,6 +65,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -151,7 +155,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li class="has-sections"><a href="resynthesis.html" aria-current="page">Analysis and resynthesis</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-perfect-reconstruction">Perfect reconstruction</a></li><li><a href="#h-masking-the-spectrogram">Masking the spectrogram</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group here" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li class="has-sections"><a href="resynthesis.html" aria-current="page">Analysis and resynthesis</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-perfect-reconstruction">Perfect reconstruction</a></li><li><a href="#h-nothing-is-lost">Nothing is lost</a></li><li><a href="#h-masking-the-spectrogram">Masking the spectrogram</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -194,7 +198,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="here"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html" aria-current="page">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="here"><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html" aria-current="page">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -208,10 +212,10 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 <p>Many of sonore's analyses can be run backwards: split a sound into bands or time-frequency
 cells, change what you find there, and synthesize a sound from the result. This page goes from
 doing nothing to removing the noise from a mixture.</p>
-<ul><li><a href="#h-perfect-reconstruction">Perfect reconstruction</a>: a filterbank whose bands sum back to the original exactly.</li><li><a href="#h-masking-the-spectrogram">Masking the spectrogram</a>: switching off the cells where noise dominates, the ideal binary mask.</li></ul>
+<ul><li><a href="#h-perfect-reconstruction">Perfect reconstruction</a>: a filterbank whose bands sum back to the original exactly.</li><li><a href="#h-nothing-is-lost">Nothing is lost</a>: every short-time Fourier transform and filterbank drawn on <a href="speech.html">Seeing speech</a> gives the sentence back, and why overlap-add works.</li><li><a href="#h-masking-the-spectrogram">Masking the spectrogram</a>: switching off the cells where noise dominates, the ideal binary mask.</li></ul>
 <p>Three other pages go further: the <a href="pv.html">Phase vocoder</a> changes a sound's duration, pitch or
-partials, <a href="vocoder.html">Hearing through a vocoder</a> keeps only band envelopes, and <a href="cepstrum.html">Cepstral
-analysis</a> splits a voice into its vocal tract and its source.</p>
+partials, <a href="vocoder.html">Hearing through a vocoder</a> keeps only band envelopes, and <a href="cepstrum.html">Spectral
+envelope</a> separates a voice's spectral envelope from its source.</p>
 <div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
 import urllib.request
 
@@ -235,7 +239,8 @@ def fetch(path):
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from sonore import dB
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from sonore import dB
 
 FS = 44100</code></pre></details></div>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
@@ -271,7 +276,7 @@ the original, up to floating-point rounding.</p>
     r[2].grid(ls=&quot;:&quot;)
     return fig, list(band_axes) + list(r)</code></pre></details></div>
 
-<article class="sound" id="d-26" data-regions="[{&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.03306505376344093, &quot;bottom&quot;: 0.1261475358422951, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.147429973118281, &quot;bottom&quot;: 0.2405124551971326, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.26179489247311827, &quot;bottom&quot;: 0.35487737455197166, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.37615981182795744, &quot;bottom&quot;: 0.4692422939068104, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.49052473118279605, &quot;bottom&quot;: 0.5836072132616492, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.6048896505376349, &quot;bottom&quot;: 0.6979721326164873, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.7192545698924729, &quot;bottom&quot;: 0.8123370519713262, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.05047255555555544, &quot;x1&quot;: 0.550618904255319, &quot;top&quot;: 0.8336194892473119, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.2991930107526879, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.35165824372759824, &quot;bottom&quot;: 0.6129474910394264, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.629543182033097, &quot;x1&quot;: 0.9818954999999999, &quot;top&quot;: 0.6654127240143368, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-26" data-regions="[{&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.0338715053763442, &quot;bottom&quot;: 0.12599652305247633, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.147278960328462, &quot;bottom&quot;: 0.23940397800459223, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.260686415280578, &quot;bottom&quot;: 0.35281143295670947, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.37409387023269514, &quot;bottom&quot;: 0.46621888790882615, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.4875013251848118, &quot;bottom&quot;: 0.5796263428609434, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.600908780136929, &quot;bottom&quot;: 0.6930337978130596, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.7143162350890453, &quot;bottom&quot;: 0.806441252765177, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.8277236900411626, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628761443751847, &quot;x1&quot;: 0.9824892499999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.29690858954973076, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628761443751847, &quot;x1&quot;: 0.9824892499999999, &quot;top&quot;: 0.35333327592965913, &quot;bottom&quot;: 0.6083786486335123, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628761443751847, &quot;x1&quot;: 0.9824892499999999, &quot;top&quot;: 0.6648033350134408, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Perfect reconstruction</h3>
     <div class="desc"><p>An exponential sweep split into 6 ERB-spaced bands plus the lowpass and highpass edge filters,
@@ -289,10 +294,69 @@ sound = finish(so.cosine_filterbank(6, 100, 6000).analyze(sweep).to_sound())
 fig, playhead = show_bands(sweep)</code></pre></details>
 </article>
 </section>
+<section aria-labelledby="h-nothing-is-lost">
+<h2 id="h-nothing-is-lost">Nothing is lost</h2>
+<p>The cosine filterbank is one <em>frame</em>: a set of analysis functions whose coefficients determine
+the signal, so that synthesis recovers it. The short-time Fourier transform (STFT) is another.
+For the STFT with window <span class="tex">w</span> and hop <span class="tex">H</span>, overlap-adding the windowed inverse transforms of the
+coefficients gives back the signal multiplied by</p>
+<div class="tex display">s(t) = K \sum_q \bigl|w(t - qH)\bigr|^2,</div>
+<p>with <span class="tex">K</span> the FFT length, so synthesis divides by <span class="tex">s(t)</span>, which works wherever the windows leave
+no gap. A filterbank's analogue is <span class="tex">s(f) = \sum_k |H_k(f)|^2</span>, divided out in frequency; for the
+cosine filterbank above it is 1. The time-varying windows of a pitch-adaptive frame work the
+same way, each with its own <span class="tex">w_q</span>.</p>
+<p><a href="speech.html">Seeing speech</a> draws one sentence through many analyses, with pictures that differ
+a great deal. The cells below load that sentence, read by each of the <a href="talkers.html">Two talkers</a>,
+and take each recording through each of those analyses and back.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {&quot;Male talker&quot;: &quot;bdl&quot;, &quot;Female talker&quot;: &quot;slt&quot;}
+talkers = {
+    label: finish(so.load(fetch(f&quot;docs/speech/{speaker}_arctic_a0131.flac&quot;)))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">frames = {
+    &quot;Hann 2 ms&quot;: so.GaborFrame(0.002, 0.0005, n_fft=2048),
+    &quot;Hann 5 ms&quot;: so.GaborFrame(0.005, 0.001, n_fft=1024),
+    &quot;Hann 33.3 ms&quot;: so.GaborFrame(0.0333, 0.001, n_fft=1024),
+    &quot;Hann 100 ms&quot;: so.GaborFrame(0.1, 0.0005, n_fft=2048),
+    &quot;Morlet, 6 cycles&quot;: so.morlet_filterbank(54, 70, 7000, cycles=6),
+    &quot;gammatone&quot;: so.gammatone_filterbank(60, 70, 7000),
+}
+for label, snd in talkers.items():
+    track = tracks[label]
+    f0 = np.where(track.voiced[0], track.f0[0], 0)  # 0 where unvoiced
+    frames[&quot;pitch-adaptive, 3 periods&quot;] = so.TVGaborFrame.pitch_adaptive(
+        track.t, f0, t_end=snd.duration + 0.02, periods=3
+    )
+    for name, frame in frames.items():
+        back = frame.synthesize(frame.analyze(snd))
+        error = np.max(np.abs(back.data - snd.data)) / snd.peak
+        print(f&quot;{label}, {name}: largest error {error:.1e} of the peak&quot;)</code></pre></details><pre class="out">Male talker, Hann 2 ms: largest error 2.7e-16 of the peak
+Male talker, Hann 5 ms: largest error 2.7e-16 of the peak
+Male talker, Hann 33.3 ms: largest error 4.0e-16 of the peak
+Male talker, Hann 100 ms: largest error 1.2e-15 of the peak
+Male talker, Morlet, 6 cycles: largest error 6.7e-16 of the peak
+Male talker, gammatone: largest error 6.7e-16 of the peak
+Male talker, pitch-adaptive, 3 periods: largest error 4.0e-16 of the peak
+Female talker, Hann 2 ms: largest error 3.0e-16 of the peak
+Female talker, Hann 5 ms: largest error 3.0e-16 of the peak
+Female talker, Hann 33.3 ms: largest error 6.0e-16 of the peak
+Female talker, Hann 100 ms: largest error 1.3e-15 of the peak
+Female talker, Morlet, 6 cycles: largest error 6.0e-16 of the peak
+Female talker, gammatone: largest error 6.0e-16 of the peak
+Female talker, pitch-adaptive, 3 periods: largest error 4.5e-16 of the peak</pre></div>
+<p>Every frame gives each recording back to within floating-point rounding. However differently
+the pictures on Seeing speech look, no analysis there loses anything: the tradeoff between
+resolution in time and in frequency appears only once the phase is discarded and the magnitudes
+are drawn. Two pictures on that page are not frames, the TANDEM-style power spectrum and the
+reassigned spectrogram: they keep only magnitudes, and have no synthesis.</p>
+</section>
 <section aria-labelledby="h-masking-the-spectrogram">
 <h2 id="h-masking-the-spectrogram">Masking the spectrogram</h2>
-<p>The STFT is invertible too, so a spectrogram with some of its cells switched off is still a
-sound. Wang (2005) proposed the <em>ideal binary mask</em> as the goal of separating speech from
+<p>Since the STFT is invertible, a spectrogram with some of its cells switched off is still a
+sound: synthesis gives the sound whose STFT is closest, in the least-squares sense, to the
+masked coefficients. Wang (2005) proposed the <em>ideal binary mask</em> as the goal of separating speech from
 noise: keep every cell where the target is louder than the noise, discard the rest. It is
 ideal because computing it needs the target and the noise separately, which a listener never
 has; what a listener hears through it shows how much a perfect separation would leave.</p>
@@ -323,12 +387,15 @@ target = gliding_target()
 masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
 mixture = target + (masker + 5 * dB)
 S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
-mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)</code></pre></details></div>
+mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)
+snr = 20 * np.log10(target.rms / (masker + 5 * dB).rms)
+print(f&quot;signal-to-noise ratio: {snr:.1f} dB&quot;)</code></pre></details><pre class="out">signal-to-noise ratio: -8.6 dB</pre></div>
 
-<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.44110609318996397, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.5234996415770609, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.49137499999999984, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.49137499999999984, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Target in noise</h3>
-    <div class="desc"><p>A gliding harmonic target (a stand-in for a voice) in pink noise at −5 dB SNR.</p></div>
+    <div class="desc"><p>A gliding harmonic target (a stand-in for a voice) in pink noise, at a signal-to-noise ratio of
+-8.6 dB.</p></div>
     <audio controls preload="metadata" src="audio/24_target_in_noise.flac"></audio>
     <p class="file">24_target_in_noise.flac, 2.0 s, mono</p>
   </div>
@@ -340,12 +407,12 @@ mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)</code></pre></details></div>
 fig, playhead = show_mask(sound, target, mask)</code></pre></details>
 </article>
 
-<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.44110609318996397, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.4922500000000001, &quot;top&quot;: 0.5234996415770609, &quot;bottom&quot;: 0.9267019713261648, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.49114843750000015, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.49114843750000015, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Ideal binary mask</h3>
     <div class="desc"><p>The same mixture with every time-frequency cell where the noise dominates switched off. The
 mask is computed from the separate target and noise, which is what makes it ideal; the
-resynthesis is exact.</p></div>
+resynthesis is the least-squares one described above.</p></div>
     <audio controls preload="metadata" src="audio/25_ideal_binary_mask.flac"></audio>
     <p class="file">25_ideal_binary_mask.flac, 2.0 s, mono</p>
   </div>
@@ -366,8 +433,10 @@ fig, playhead = show_mask(sound, target, mask)</code></pre></details>
 </div>
 <script>
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -377,10 +446,21 @@ fig, playhead = show_mask(sound, target, mask)</code></pre></details>
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
+    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
+    const canvas = extras && el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene };
-  });
+    const liveCanvas = extras && el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -392,36 +472,124 @@ fig, playhead = show_mask(sound, target, mask)</code></pre></details>
     const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size, size);
-    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
     g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
-    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
     g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
-    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
     g.strokeStyle = ink; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
     g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
-    const at = (src, time) => {
-      if (!src.t) return src.az[0];
-      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
-      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
     };
-    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
     item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
       if (src.t) {  // the path it travels, faintly
-        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
-        const lo = Math.min(...src.az), hi = Math.max(...src.az);
-        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
         g.globalAlpha = 1;
       }
-      const [x, y] = xy(at(src, t));
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
       g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
   }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the color bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
   function draw(item) {
     drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -434,27 +602,49 @@ fig, playhead = show_mask(sound, target, mask)</code></pre></details>
   function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
   items.forEach((item) => {
     drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();

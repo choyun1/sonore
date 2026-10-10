@@ -384,8 +384,8 @@ fig, playhead = show(sound, onset_tones, starts, onset_labels)
 # different vowels are different timbres of one voice, and much of what the speech pages show
 # applies here. Three vowels from `so.klatt_synthesize`, with Peterson and Barney's (1952)
 # female formants for "heed", "hod" and "who'd", sung on E♭4 like the tones above, with the
-# same envelope and RMS. [Formant synthesis](formants.html) builds vowels from a source and a
-# few resonances, and [Cepstral analysis](cepstrum.html) separates a voice's pitch from its
+# same envelope and RMS. [Formant synthesis](formants.html#d-fw1) builds vowels from a source and a
+# few resonances, and [Spectral envelope](cepstrum.html) separates a voice's pitch from its
 # spectral envelope, the part that carries the vowel.
 
 # %%

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two talkers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+nav.pages a.ref { margin-left: auto; }
+nav.pages a.ref + a.repo { margin-left: 0; }
+nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
+nav.pages a.repo:hover { color: var(--ink); }
+@media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 2.5rem 1.25rem 2rem 1.75rem;
+    border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  html:not(.side-closed) nav.pages > a:first-child, html:not(.side-closed) nav.pages details { display: none; }
+  .side-closed .layout { grid-template-columns: 3rem minmax(0, 1fr); }
+  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
+  .side-closed .side .home, .side-closed .side-body { display: none; }
+  .side-closed .side-top { justify-content: center; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home, .side-opening .side-body, .side-closing .side .home, .side-closing .side-body { animation: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group here" data-group="voices" open><summary>Voices</summary><ul><li class="has-sections"><a href="talkers.html" aria-current="page">Two talkers</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-sentence-read-twice">The sentence, read twice</a></li><li><a href="#h-pitch">Pitch</a></li><li><a href="#h-spectral-envelopes">Spectral envelopes</a></li><li><a href="#h-long-term-spectra">Long-term spectra</a></li><li><a href="#h-harmonics-sample-the-envelope">Harmonics sample the envelope</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded unless opened before.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    let open = false; try { open = localStorage.getItem("sonore-side-sections") === "open"; } catch (e) {}
+    sections.style.transition = "none"; showSections(open); sections.offsetHeight; sections.style.transition = "";
+    sectionsToggle.addEventListener("click", () => { const now = !sections.classList.contains("open"); showSections(now);
+      save("sonore-side-sections", now ? "open" : "closed"); }); }
+  let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
+  groups.forEach((group) => { const name = group.dataset.group;
+    if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
+    group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
+      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); });
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="here"><summary>Voices</summary><ul><li><a href="talkers.html" aria-current="page">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>Two talkers</h1>
+<p>Every page about speech in this gallery uses one sentence, "Providence had delivered him
+through the maelstrom," read by two talkers from the CMU ARCTIC corpus (Kominek and Black,
+2004): a male talker (speaker bdl) and a female talker (speaker slt), both recorded at 16 kHz.
+Each analysis is shown on both, because what an analysis gets right on one voice it can get
+wrong on another, and the most common reason is pitch.</p>
+<p>This page measures how the two recordings differ, once, so that the other pages can refer to
+it. Each talker is one person: the numbers describe these two recordings, not men and women in
+general. Where a page needs averages over many talkers, it cites them.</p>
+<ul><li><a href="#h-the-sentence-read-twice">The sentence, read twice</a>: both recordings and their pitch.</li><li><a href="#h-pitch">Pitch</a>: how high each voice is and how far it moves.</li><li><a href="#h-spectral-envelopes">Spectral envelopes</a>: the formants, on average, and how far apart.</li><li><a href="#h-long-term-spectra">Long-term spectra</a>: where each sentence puts its power.</li><li><a href="#h-harmonics-sample-the-envelope">Harmonics sample the envelope</a>: what a higher pitch does to every analysis on the other pages.</li></ul>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/talkers.ipynb">in Colab</a> or <a href="notebooks/talkers.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
+</header>
+<section aria-labelledby="h-the-sentence-read-twice">
+<h2 id="h-the-sentence-read-twice">The sentence, read twice</h2>
+<p>The code every speech page starts from: the two recordings, each with the pitch track that
+<code>so.f0_track</code> measures (see <a href="pitch.html">Pitch tracking</a>), and a figure with one column per
+talker.</p>
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {&quot;Male talker&quot;: &quot;bdl&quot;, &quot;Female talker&quot;: &quot;slt&quot;}
+talkers = {
+    label: finish(so.load(fetch(f&quot;docs/speech/{speaker}_arctic_a0131.flac&quot;)))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}
+
+
+def show_pair(sounds, title, contours=None, fmax=5000):
+    &quot;&quot;&quot;One column per talker: the waveform, and a narrowband spectrogram (Hann 33 ms, which
+    resolves the harmonics of both voices) with the pitch track over it if one is given.
+    Returns the figure and, for each talker, the panels the playhead follows.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 4.4), layout=&quot;constrained&quot;)
+    columns = fig.subfigures(1, 2)
+    playhead = {}
+    for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+        top, bottom = column.subplots(2, 1, sharex=True, height_ratios=[0.4, 1])
+        snd.plot(top, color=&quot;k&quot;, lw=0.4)
+        top.set(title=f&quot;{label}: {title}&quot;, xlabel=&quot;&quot;, ylabel=&quot;&quot;)
+        so.STFT(snd, win_dur=0.0333, hop_dur=0.002).plot(bottom, db_range=70, colorbar=False, fmax=fmax)
+        bottom.set_title(&quot;Spectrogram (Hann 33 ms)&quot;)
+        if contours is not None:
+            track = contours[label]
+            bottom.plot(track.t, np.where(track.voiced[0], track.f0[0] / 1000, np.nan), color=&quot;c&quot;, lw=1.2)
+        for ax in (top, bottom):
+            ax.set_xlim(0, snd.duration)
+        playhead[label] = [top, bottom]
+    return fig, playhead</code></pre></details></div>
+
+<article class="sound pair" id="d-tk1">
+  <div class="about">
+    <h3>The sentence, read by each talker</h3>
+    <div class="desc"><p>The sentence, read by each talker. The words line up closely: the female talker's reading is
+0.1 s longer. The female talker's harmonics, the horizontal
+lines, are visibly farther apart.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">tk1_the_sentence_read_by_each_talker_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">tk1_the_sentence_read_by_each_talker_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tk1_the_sentence_read_by_each_talker.png" width="1000" height="440" alt="Plots of the the sentence, read by each talker sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = talkers
+fig, playhead = show_pair(sounds, &quot;the sentence&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-pitch">
+<h2 id="h-pitch">Pitch</h2>
+<p>The median of the pitch track over its voiced time windows, and the range that holds the
+middle 90% of them. A ratio of pitches is also given in semitones, twelve to the octave.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">voiced_f0 = {label: track.f0[0][track.voiced[0]] for label, track in tracks.items()}
+for label, f0 in voiced_f0.items():
+    low, middle, high = np.percentile(f0, [5, 50, 95])
+    span = 12 * np.log2(high / low)
+    print(f&quot;{label}: median {middle:.0f} Hz, middle 90% {low:.0f} to {high:.0f} Hz ({span:.1f} semitones)&quot;)
+ratio = np.median(voiced_f0[&quot;Female talker&quot;]) / np.median(voiced_f0[&quot;Male talker&quot;])
+print(f&quot;female / male median: {ratio:.2f}, {12 * np.log2(ratio):.1f} semitones&quot;)</code></pre></details><pre class="out">Male talker: median 119 Hz, middle 90% 95 to 142 Hz (7.0 semitones)
+Female talker: median 183 Hz, middle 90% 164 to 211 Hz (4.3 semitones)
+female / male median: 1.53, 7.4 semitones</pre></div>
+<p>The female talker's voice is about half as high again as the male talker's: a ratio of
+1.53, a little more than a fifth (seven semitones, 1.50), and well short of an
+octave.</p>
+
+<article class="still" id="d-tk2">
+  <div class="about">
+    <h3>The two pitch tracks</h3>
+    <div class="desc"><p>Both pitch tracks against time, on a logarithmic frequency axis, where equal intervals are
+equal distances, and the share of voiced time windows at each pitch. The dashed lines are the
+medians.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tk2_the_two_pitch_tracks.png" width="1000" height="320" alt="The two pitch tracks" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, (left, right) = plt.subplots(
+    1, 2, figsize=(10, 3.2), layout=&quot;constrained&quot;, width_ratios=[3, 1], sharey=True
+)
+bins = np.geomspace(70, 300, 41)
+for color, (label, track) in zip((&quot;C0&quot;, &quot;C3&quot;), tracks.items(), strict=True):
+    left.plot(track.t, np.where(track.voiced[0], track.f0[0], np.nan), color=color, lw=1.2, label=label)
+    right.hist(voiced_f0[label], bins=bins, orientation=&quot;horizontal&quot;, color=color, alpha=0.6, density=True)
+    for ax in (left, right):
+        ax.axhline(np.median(voiced_f0[label]), color=color, ls=&quot;--&quot;, lw=0.8)
+left.set(yscale=&quot;log&quot;, xlabel=&quot;Time (s)&quot;, ylabel=&quot;F0 (Hz)&quot;, title=&quot;so.f0_track, voiced time windows&quot;)
+left.set_yticks([80, 100, 125, 160, 200, 250], [&quot;80&quot;, &quot;100&quot;, &quot;125&quot;, &quot;160&quot;, &quot;200&quot;, &quot;250&quot;])
+left.set_yticks([], minor=True)
+left.legend(loc=&quot;upper right&quot;, fontsize=8)
+right.set(xlabel=&quot;Share of voiced windows&quot;, title=&quot;Distribution&quot;)
+right.set_xticks([])</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-spectral-envelopes">
+<h2 id="h-spectral-envelopes">Spectral envelopes</h2>
+<p>The formants are the peaks of the spectral envelope, the shape the vocal tract gives the
+harmonics. CheapTrick (Morise, 2015), which <a href="cepstrum.html">Spectral envelope</a> explains,
+estimates it every 5 ms; averaging it in dB over each talker's voiced time windows gives one
+curve per talker. Shorter vocal tracts have higher formants, so a simple model of the
+difference reads the male envelope at <span class="tex">f/r</span>: every formant moved up by the same ratio <span class="tex">r</span>.
+The cell finds the <span class="tex">r</span> that brings the male average closest to the female one, with the
+overall level left free, and again with a tilt (a straight line in dB over log frequency)
+left free as well.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = {label: so.cheaptrick(talkers[label], tracks[label]) for label in talkers}
+frequencies = envelopes[&quot;Male talker&quot;].f
+scored = (frequencies &gt;= 100) &amp; (frequencies &lt;= 5000)
+average_db = {
+    label: np.mean(10 * np.log10(env(tracks[label].t[tracks[label].voiced[0]], frequencies)[0]), axis=1)
+    for label, env in envelopes.items()
+}
+
+
+def misfit(ratio, tilt=False):
+    &quot;&quot;&quot;RMS dB between the female average and the male one read at f / ratio, 100 to 5000 Hz,
+    with the level (and, if tilt is True, a tilt) left free.&quot;&quot;&quot;
+    male_read = np.interp(frequencies[scored] / ratio, frequencies, average_db[&quot;Male talker&quot;])
+    difference = average_db[&quot;Female talker&quot;][scored] - male_read
+    columns = [np.ones(scored.sum())] + ([np.log2(frequencies[scored])] if tilt else [])
+    basis = np.column_stack(columns)
+    return np.sqrt(np.mean((difference - basis @ np.linalg.lstsq(basis, difference, rcond=None)[0]) ** 2))
+
+
+ratios = np.arange(0.80, 1.60, 0.005)
+for tilt in (False, True):
+    errors = [misfit(r, tilt) for r in ratios]
+    best = ratios[np.argmin(errors)]
+    print(f&quot;{&#x27;level and tilt free&#x27; if tilt else &#x27;level free&#x27;:20}: r = {best:.3f}, {min(errors):.2f} dB RMS&quot;)
+warp = ratios[np.argmin([misfit(r, True) for r in ratios])]</code></pre></details><pre class="out">level free          : r = 1.595, 4.52 dB RMS
+level and tilt free : r = 1.220, 2.99 dB RMS</pre></div>
+<p>With only the level free, the best ratio is large, because the female talker's average
+envelope is also tilted differently, and moving formants is the only thing the fit can do
+about it. With the tilt free too, the ratio falls to 1.22. Changing a voice
+toward the other (<a href="voice.html#h-toward-another-talker">Rebuilding and changing a voice</a>) has to
+move the formants and the tilt separately.</p>
+
+<article class="still" id="d-tk3">
+  <div class="about">
+    <h3>The two average envelopes</h3>
+    <div class="desc"><p>The two average envelopes, and the male one read at f / r with the r just fitted with the tilt
+free, its level and tilt then matched to the female one over 100 to 5000 Hz.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tk3_the_two_average_envelopes.png" width="1000" height="340" alt="The two average envelopes" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+male_read = np.interp(frequencies / warp, frequencies, average_db[&quot;Male talker&quot;])
+basis = np.column_stack([np.ones(scored.sum()), np.log2(frequencies[scored])])
+level, tilt = np.linalg.lstsq(basis, average_db[&quot;Female talker&quot;][scored] - male_read[scored], rcond=None)[0]
+male_level = np.mean(average_db[&quot;Female talker&quot;][scored] - average_db[&quot;Male talker&quot;][scored])
+ax.plot(frequencies, average_db[&quot;Male talker&quot;] + male_level, color=&quot;C0&quot;, label=&quot;Male talker&quot;)
+ax.plot(frequencies, average_db[&quot;Female talker&quot;], color=&quot;C3&quot;, label=&quot;Female talker&quot;)
+ax.plot(
+    frequencies[1:],
+    male_read[1:] + level + tilt * np.log2(frequencies[1:]),
+    color=&quot;C0&quot;,
+    ls=&quot;--&quot;,
+    label=f&quot;Male talker at f / {warp:.2f}, tilt matched&quot;,
+)
+ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Level (dB)&quot;, xlim=(0, 6000))
+ax.set_title(&quot;CheapTrick envelope, mean over voiced time windows&quot;)
+ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-long-term-spectra">
+<h2 id="h-long-term-spectra">Long-term spectra</h2>
+<p>Averaged over the whole sentence, silences included, the spectrum shows where each reading puts
+its power (<code>so.long_term_spectrum</code>, as for the speech-shaped noise on <a href="classic.html#h-speech-shaped-noise">Synthetic
+sounds</a>). Averaged over many talkers, Byrne et al. (1994)
+found male and female long-term spectra nearly the same from 250 Hz to 5 kHz, with the male ones
+higher at 160 Hz and below, where their fundamentals lie. One sentence from each of two talkers
+can differ by more. The cell prints how each sentence's power divides among octave bands.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">spectra = {label: so.long_term_spectrum([snd]) for label, snd in talkers.items()}
+octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
+print(&quot;octave from [Hz]        &quot; + &quot;&quot;.join(f&quot;{low:&gt;6}&quot; for low in octave_edges[:-1]))
+for label, spectrum in spectra.items():
+    power = 10 ** (spectrum.level / 10)
+    shares = [
+        10 * np.log10(power[(spectrum.f &gt;= low) &amp; (spectrum.f &lt; high)].sum() / power.sum())
+        for low, high in zip(octave_edges[:-1], octave_edges[1:], strict=True)
+    ]
+    print(f&quot;{label + &#x27;, share [dB]&#x27;:24}&quot; + &quot;&quot;.join(f&quot;{share:6.1f}&quot; for share in shares))</code></pre></details><pre class="out">octave from [Hz]            63   125   250   500  1000  2000  4000
+Male talker, share [dB]  -14.5  -8.5  -5.0  -4.7  -9.3 -14.3 -21.8
+Female talker, share [dB] -41.1  -3.5  -7.9  -5.0 -12.6 -25.8 -18.6</pre></div>
+
+<article class="still" id="d-tk4">
+  <div class="about">
+    <h3>Long-term spectra of the two talkers</h3>
+    <div class="desc"><p>The two long-term spectra, smoothed to a third of an octave. Below 125 Hz the female talker's
+sentence has almost nothing, since the female talker's pitch never goes that low, and the octave
+from 125 to 250 Hz, where it lies, holds most of the power. In this pair the female spectrum is
+also lower from 2 to 4 kHz and higher from 4 to 8 kHz.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tk4_long-term_spectra_of_the_two_talkers.png" width="1000" height="340" alt="Long-term spectra of the two talkers" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+for color, (label, spectrum) in zip((&quot;C0&quot;, &quot;C3&quot;), spectra.items(), strict=True):
+    spectrum.smooth(1 / 3).plot(ax, label=label, color=color)
+ax.set_xlim(50, 8000)
+ax.legend()
+ax.grid(ls=&quot;:&quot;, which=&quot;both&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-harmonics-sample-the-envelope">
+<h2 id="h-harmonics-sample-the-envelope">Harmonics sample the envelope</h2>
+<p>A voiced sound has energy only at the harmonics, multiples of <span class="tex">F_0</span>. The envelope, and with it
+the formants, is seen only where a harmonic falls: the harmonics <em>sample</em> it, once every <span class="tex">F_0</span>
+hertz. To see that alone, the cell makes one vowel twice with <code>so.klatt_synthesize</code> (see
+<a href="formants.html">Formant synthesis</a>), with the same formants, those of a male "hod", at each
+talker's median pitch.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 16000
+HOD = {&quot;F1&quot;: 730, &quot;F2&quot;: 1090, &quot;F3&quot;: 2440, &quot;F4&quot;: 3500, &quot;F5&quot;: 4500}  # Peterson and Barney&#x27;s male &quot;hod&quot;
+medians = {label: float(np.median(f0)) for label, f0 in voiced_f0.items()}
+vowels = {label: so.klatt_synthesize(0.6, FS, F0=f0, **HOD) for label, f0 in medians.items()}
+for label, f0 in medians.items():
+    print(f&quot;{label}: F0 {f0:.0f} Hz, {int(1000 // f0)} harmonics below 1 kHz&quot;)</code></pre></details><pre class="out">Male talker: F0 119 Hz, 8 harmonics below 1 kHz
+Female talker: F0 183 Hz, 5 harmonics below 1 kHz</pre></div>
+
+<article class="sound pair" id="d-tk5">
+  <div class="about">
+    <h3>One vowel at the two pitches</h3>
+    <div class="desc"><p>The vowel at each pitch: the same formants, and so the same vowel, sampled by harmonics at
+different spacings. Left, the spectrum of the middle 400 ms, with the five formants dashed.
+The female talker's pitch puts fewer harmonics under each formant peak, so the peaks are drawn
+by fewer points, and a harmonic can miss a peak by up to half the spacing.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/tk5_one_vowel_at_the_two_pitches_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05880366449652779, &quot;x1&quot;: 0.4749580000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.24645791508838388, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]"></audio>
+    <p class="file">tk5_one_vowel_at_the_two_pitches_male_talker.flac, 0.6 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/tk5_one_vowel_at_the_two_pitches_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5638036644965277, &quot;x1&quot;: 0.9799580000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.24645791508838388, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]"></audio>
+    <p class="file">tk5_one_vowel_at_the_two_pitches_female_talker.flac, 0.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tk5_one_vowel_at_the_two_pitches.png" width="1000" height="440" alt="Plots of the one vowel at the two pitches sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(v) for label, v in vowels.items()}
+fig = plt.figure(figsize=(10, 4.4), layout=&quot;constrained&quot;)
+columns = fig.subfigures(1, 2)
+playhead = {}
+for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+    top, bottom = column.subplots(2, 1, height_ratios=[0.4, 1])
+    snd.plot(top, color=&quot;k&quot;, lw=0.4)
+    top.set(
+        title=f&quot;{label}&#x27;s pitch, {medians[label]:.0f} Hz&quot;,
+        xlabel=&quot;Time (s)&quot;,
+        ylabel=&quot;&quot;,
+        xlim=(0, snd.duration),
+    )
+    middle = snd.data[int(0.1 * FS) : int(0.5 * FS), 0] * np.hanning(int(0.4 * FS))
+    spectrum = 20 * np.log10(np.abs(np.fft.rfft(middle, 8 * len(middle))) + 1e-9)
+    bottom.plot(np.fft.rfftfreq(8 * len(middle), 1 / FS), spectrum - spectrum.max(), color=&quot;k&quot;, lw=0.6)
+    for f in HOD.values():
+        bottom.axvline(f, color=&quot;C3&quot;, ls=&quot;--&quot;, lw=0.8)
+    bottom.set(xlim=(0, 4000), ylim=(-70, 3), xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;dB re maximum&quot;)
+    bottom.set_title(&quot;Spectrum, middle 400 ms&quot;)
+    playhead[label] = [top]</code></pre></details>
+</article>
+<p>The same sampling sets limits on every page that follows, a little tighter for the female
+talker:</p>
+<ul><li><a href="speech.html#d-27">Seeing speech</a>: harmonics farther apart are easier to resolve, and a narrowband spectrogram can use a shorter window.</li><li><a href="pitch.html">Pitch tracking</a>: a window of fixed length holds more periods of the higher voice, but the cepstrum's second peak, at two periods, then falls inside the range searched for the pitch, and can be taken for it.</li><li><a href="cepstrum.html">Spectral envelope</a>: the envelope has to be read between fewer samples, so a cepstral lifter has to cut lower and CheapTrick's error grows.</li><li><a href="aperiodicity.html">Source and aperiodicity</a>: fewer harmonics are left to measure the noise between.</li><li><a href="formants.html#h-six-vowels">Formant synthesis</a>: the female vowels, made with female formants.</li></ul>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Byrne et al. (1994). An international comparison of long-term average speech spectra. <em>JASA</em> 96(4), 2108–2120. <a href="https://doi.org/10.1121/1.410152">doi:10.1121/1.410152</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>JASA</em> 24(2), 175–184. <a href="https://doi.org/10.1121/1.1906875">doi:10.1121/1.1906875</a>.</li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/voice/talkers.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/voice/talkers.py</code>, or a cell at a time.</footer>
+</main>
+</div>
+<script>
+(() => {
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
+    const canvas = extras && el.querySelector(".scene");
+    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const liveCanvas = extras && el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the color bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

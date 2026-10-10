@@ -3,8 +3,10 @@
 The spoken sentences used by the gallery: the "seeing speech" sentence
 (docs/design/frames/frames.md, step 3: decisions D12 and D13), which is also the
 target on the moving talkers page, and that page's two masker sentences;
-and the same sentence read by a female speaker, for checking the analyses on
-a voice an octave higher (tools/check_female_voices.py); and four passages
+and the same sentence read by a female talker, whose voice is about a fifth
+higher (median F0 183 Hz against 119 Hz by `so.f0_track`; the gallery's Two
+talkers page measures both), used beside the male talker on every speech page
+of the gallery and in tools/check_female_voices.py; and four passages
 from LibriSpeech for the cocktail-party scenes on the moving talkers page.
 
 ## Sources
@@ -57,18 +59,23 @@ unmodified.
 `.wav` files re-encoded losslessly as FLAC, identical sample for sample, with
 no trimming, resampling or level change.
 
-## F0 track
+## F0 tracks
 
-`bdl_arctic_a0131_f0.csv`: F0 every 5 ms (`time` [s], `f0` [Hz], 0 where
+`bdl_arctic_a0131_f0.csv` and `slt_arctic_a0131_f0.csv`: F0 every 5 ms (`time` [s], `f0` [Hz], 0 where
 unvoiced), from WORLD's Harvest estimator through `pyworld` 0.3.5 with its
 default search range (71–800 Hz). Regenerate it with
 
 ```bash
 pip install pyworld   # development only; not a sonore dependency
 python tools/make_speech_f0.py docs/speech/bdl_arctic_a0131.flac
+python tools/make_speech_f0.py docs/speech/slt_arctic_a0131.flac
 ```
 
-- 506 time windows, 85% voiced, F0 88–193 Hz (median about 120 Hz).
+Regenerating the bdl track on 2026-10-10 gave the committed file byte for byte.
+
+- bdl: 506 time windows, 85% voiced, F0 88–193 Hz (median about 120 Hz).
+- slt (made 2026-10-10): 528 time windows, 90% voiced, F0 113–337 Hz. The
+  highest values are Harvest's, not checked against the recording.
 - Why Harvest: D13 preferred an F0 track from the corpus's EGG channel.
   These files are the single-channel `wav/` versions, which carry no EGG
   channel, so D13's fallback applies.

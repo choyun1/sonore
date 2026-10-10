@@ -1,4 +1,4 @@
-"""Cepstral analysis: separating a voice's pitch from its timbre with the cepstrum.
+"""Spectral envelope: a voice's timbre without its pitch, from the cepstrum, CheapTrick and MFCCs.
 
 This script is the gallery page https://choyun1.github.io/sonore/gallery/cepstrum.html:
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
@@ -10,45 +10,42 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
 
 # %% [markdown]
-# # Cepstral analysis
+# # Spectral envelope
 #
 # A voiced sound is, to a first approximation, a train of glottal pulses filtered by the vocal
-# tract. In the spectrum the two multiply: the pulses give a comb of harmonics at multiples of
-# $F_0$, and the tract shapes their heights into formants. Take the logarithm and the product
-# becomes a sum. The *cepstrum* is the Fourier transform of that log spectrum (Bogert et al.,
-# 1963):
+# tract (see [Formant synthesis](formants.html)). In the spectrum the two multiply: the pulses
+# give a comb of harmonics at multiples of $F_0$, and the tract shapes their heights into
+# formants. The shape is the *spectral envelope*, and it is what this page measures. Take the
+# logarithm and the product becomes a sum. The *cepstrum* is the Fourier transform of that log
+# spectrum (Bogert et al., 1963):
 #
 # $$c(q) = \mathcal{F}^{-1}\{\ln |X(f)|\}(q)$$
 #
-# Its variable $q$, the *quefrency*, is a time. The formants vary slowly along frequency, so
-# they land at low quefrencies, the first millisecond or two. The harmonics ripple the log
-# spectrum once every $F_0$ hertz, so they land at one period, $q = 1/F_0$, as a single peak.
-# The two parts of the voice that were tangled in the spectrum come apart, and can be measured
-# or edited separately.
+# Its variable $q$, the *quefrency*, is a time. The envelope varies slowly along frequency, so it
+# lands at low quefrencies, the first few milliseconds. The harmonics ripple the log spectrum
+# once every $F_0$ hertz, so they land at one period, $q = 1/F_0$, as a peak. The two parts of
+# the voice that were tangled in the spectrum come apart, and can be measured or edited
+# separately. The peak is a pitch estimate, which [Pitch tracking](pitch.html#h-pitch-from-the-cepstrum)
+# takes up; this page keeps the rest.
 #
-# This page applies `so.Cepstrum` to the sentence from [Seeing speech](speech.html):
-#
-# - [One time window](#h-one-time-window): a log spectrum, its cepstrum, and the envelope a lifter recovers.
-# - [Pitch from the cepstrum](#h-pitch-from-the-cepstrum): the cepstrogram, and the pitch read off
-#   its peaks.
-# - [A tracker beside the cepstrum](#h-a-tracker-beside-the-cepstrum): `so.f0_track` and Harvest
-#   on the same sentence.
+# - [One time window](#h-one-time-window): a log spectrum, its cepstrum, the envelope a lifter
+#   recovers, and CheapTrick's.
 # - [Splitting the voice in two](#h-splitting-the-voice-in-two): the vocal tract and the source,
 #   heard separately.
-# - [A higher voice](#h-a-higher-voice): the same analysis on a female voice.
 # - [MFCCs: a cepstrum on the mel scale](#h-mfccs-a-cepstrum-on-the-mel-scale): the speech
 #   recognizer's version, how much pitch leaks into it, and what it cannot tell apart.
 # - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
 #   and Praat.
-# - [What this page leaves out](#h-what-this-page-leaves-out): tracking from the cepstrum, better
-#   envelopes, and the complex cepstrum.
+# - [What this page leaves out](#h-what-this-page-leaves-out): other cepstra and the complex
+#   cepstrum.
 
 # %% [markdown]
 # ## The sentence, and code the examples share
 #
-# Every cepstrum below is taken from an STFT with Hann windows 40 ms long, every 5 ms. A window
-# must hold about three periods for the harmonics to show as a ripple, and 40 ms is three periods
-# at 75 Hz, below this speaker's lowest pitch.
+# Both talkers of [Two talkers](talkers.html). Every cepstrum below is taken from an STFT with
+# Hann windows 40 ms long, every 5 ms, long enough to hold several periods of either voice (see
+# [Pitch tracking](pitch.html#h-pitch-from-the-cepstrum)). Where a lifter needs each time
+# window's pitch, it comes from WORLD's Harvest track (Morise, 2017), stored with each recording.
 
 # %% [setup]
 import os
@@ -83,305 +80,199 @@ from scipy.fft import dct, idct
 from sonore.core.utils import freq_to_mel
 from sonore.views.mfcc import mel_filterbank
 
-# The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
-# Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
-f0_times, f0_harvest = np.loadtxt(fetch("docs/speech/bdl_arctic_a0131_f0.csv"), delimiter=",", skiprows=2).T
-fs = sentence.fs
+# The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {"Male talker": "bdl", "Female talker": "slt"}
+talkers = {
+    label: finish(so.load(fetch(f"docs/speech/{speaker}_arctic_a0131.flac")))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}
 
-stft = so.STFT(sentence, win_dur=0.040, hop_dur=0.005)
-cep = so.Cepstrum(stft)
+# WORLD's Harvest track of each recording: times and F0, every 5 ms, 0 where unvoiced.
+harvest = {
+    label: np.loadtxt(fetch(f"docs/speech/{speaker}_arctic_a0131_f0.csv"), delimiter=",", skiprows=2).T
+    for label, speaker in SPEAKERS.items()
+}
+fs = talkers["Male talker"].fs
+stfts = {label: so.STFT(snd, win_dur=0.040, hop_dur=0.005) for label, snd in talkers.items()}
+cepstra = {label: so.Cepstrum(stft) for label, stft in stfts.items()}
 FMAX = 5000
+
+
+def show_pair(sounds, title, win_dur=0.005):
+    """One spectrogram per talker, side by side; returns the figure and the playhead's panels."""
+    fig = plt.figure(figsize=(10, 3.2), layout="constrained")
+    playhead = {}
+    for column, (label, snd) in zip(fig.subfigures(1, 2), sounds.items(), strict=True):
+        ax = column.subplots()
+        so.STFT(snd, win_dur=win_dur, hop_dur=0.001).plot(ax, db_range=60, colorbar=False, fmax=FMAX)
+        ax.set(xlim=(0, snd.duration), title=f"{label}: {title}")
+        playhead[label] = [ax]
+    return fig, playhead
+
 
 # %% [markdown]
 # ## One time window
 #
-# Take one time window in the middle of a vowel. Its log spectrum is a comb of harmonics riding on the
-# formant envelope. Its cepstrum has most of its weight in the first couple of milliseconds, and
+# Take one time window in the middle of a vowel. Its log spectrum is a comb of harmonics riding
+# on the formant envelope. Its cepstrum has most of its weight in the first few milliseconds, and
 # one clear peak at the pitch period. Keeping only the quefrencies below half a period (a
-# *lifter*, the cepstral counterpart of a filter) and transforming back gives the smooth
-# envelope.
+# *lifter*, the cepstral counterpart of a filter) and transforming back gives a smooth envelope.
+#
+# The female talker's voice is higher (see [Two talkers](talkers.html#h-pitch)), and that moves
+# both marks. The cepstral peak sits at a shorter quefrency, closer to the envelope's part of the
+# cepstrum, though still clear of it. And the lifter at half a period has to cut lower, so it
+# keeps fewer quefrencies, and the envelope it recovers is smoother: with the harmonics farther
+# apart, the spectrum samples the envelope less often (see [Harmonics sample the
+# envelope](talkers.html#h-harmonics-sample-the-envelope)), and there is less of it to recover.
+
+# %%
+TIMES = {"Male talker": 0.50, "Female talker": 0.60}  # one time window in a vowel of each sentence
+window = {}
+for label, cep in cepstra.items():
+    t, f0, peak = cep.f0()
+    i = int(np.argmin(np.abs(t - TIMES[label])))
+    window[label] = {"i": i, "t": t[i], "f0": f0[0, i], "peak": peak[0, i], "cutoff": 0.5 / f0[0, i]}
+    print(
+        f"{label}: time window at {t[i]:.3f} s, cepstral peak at {1e3 / f0[0, i]:.2f} ms "
+        f"(F0 {f0[0, i]:.0f} Hz), lifter cutoff {0.5e3 / f0[0, i]:.2f} ms"
+    )
+
+# %% [markdown]
+# The lifter's envelope runs under the harmonic peaks, since it averages the peaks with the dips
+# between them, and the farther apart the harmonics, the more dip there is to average in.
+# *CheapTrick* (Morise, 2015), WORLD's spectral envelope estimator, is built to avoid that.
+# It analyzes each time window with a window three periods long, so that it adapts to the pitch;
+# smooths the power spectrum over $2F_0/3$, which fills the dips between harmonics; and then
+# lifters the log spectrum with a lifter matched to $F_0$, one that both smooths over one
+# harmonic spacing and lifts the peaks back up (`so.cheaptrick`). The cell measures how far
+# below each harmonic peak, up to 4 kHz, each envelope runs: the median, and how much that
+# varies from harmonic to harmonic. CheapTrick normalizes its window to unit energy, so its
+# level is not comparable with the STFT's; only its spread is.
+
+# %%
+envelopes = {label: so.cheaptrick(snd, tracks[label]) for label, snd in talkers.items()}
+
+
+def below_peaks(label, envelope_db):
+    """How far each harmonic peak up to 4 kHz rises above an envelope (dB), in one time window."""
+    stft, w = stfts[label], window[label]
+    spectrum_db = 20 * np.log10(np.abs(stft.data[0, :, w["i"]]))
+    gaps = []
+    for k in range(1, int(4000 / w["f0"]) + 1):
+        near = np.nonzero(np.abs(stft.f - k * w["f0"]) < w["f0"] / 2)[0]
+        top = near[np.argmax(spectrum_db[near])]
+        gaps.append(spectrum_db[top] - envelope_db[top])
+    return np.array(gaps)
+
+
+lifted, cheaptrick_db = {}, {}
+for label, cep in cepstra.items():
+    w = window[label]
+    lifted[label] = 20 * np.log10(cep.lifter(w["cutoff"]).envelope()[0, :, w["i"]])
+    cheaptrick_db[label] = 10 * np.log10(envelopes[label](np.array([w["t"]]), stfts[label].f)[0, :, 0])
+    for name, envelope_db in (("lifter", lifted[label]), ("CheapTrick", cheaptrick_db[label])):
+        gaps = below_peaks(label, envelope_db)
+        level = f"median {np.median(gaps):5.1f} dB below, " if name == "lifter" else " " * 21
+        print(f"{label:14} {name:11}: {level}spread (SD) {np.std(gaps):.1f} dB")
 
 # %% [about]
-# Top: the time window's log spectrum and the liftered envelope. Bottom: its cepstrum, with the peak
-# at one period. The envelope runs a few dB under the harmonic peaks because the lifter averages
-# the peaks with the dips between them; spectral-envelope estimators such as WORLD's CheapTrick
-# correct for this (Morise, 2015).
+# One time window of each talker's sentence. Top: the log spectrum, the envelope liftered below
+# half a period, and CheapTrick's envelope, its level matched to the harmonic peaks (by the
+# median above). Bottom: the cepstrum, with the peak at one period and the lifter's cutoff. The
+# female talker's peak is at a shorter quefrency and the cutoff is lower; the female talker's
+# liftered envelope runs farther below the harmonic peaks.
 
 # %% [figure c1] One time window
-i = int(np.argmin(np.abs(cep.t - 0.50)))
-_, f0_all, peak_all = cep.f0()
-t_window, f0_window, peak_window = cep.t[i], f0_all[0, i], peak_all[0, i]
-cutoff = 0.5 / f0_window  # half a period
-envelope = cep.lifter(cutoff).envelope()[0, :, i]
-
-fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), layout="constrained")
-ax0.plot(stft.f, 20 * np.log10(np.abs(stft.data[0, :, i])), color="0.4", lw=0.8, label="spectrum")
-ax0.plot(stft.f, 20 * np.log10(envelope), color="tab:red", lw=1.6, label="liftered below half a period")
-ax0.set(
-    xlim=(0, FMAX),
-    xlabel="Frequency [Hz]",
-    ylabel="Level [dB]",
-    title=f"Time window at {t_window:.3f} s: log spectrum and envelope",
-)
-ax0.legend(loc="upper right", fontsize=8)
-q_ms = cep.q * 1e3
-ax1.plot(q_ms, cep.data[0, :, i], color="k", lw=0.8)
-ax1.axvline(cutoff * 1e3, color="tab:red", ls="--", lw=1, label=f"lifter cutoff, {cutoff * 1e3:.1f} ms")
-peak_label = f"peak at {1e3 / f0_window:.2f} ms: F0 = {f0_window:.0f} Hz"
-ax1.plot(1e3 / f0_window, peak_window, "o", color="tab:blue", label=peak_label)
-ax1.set(xlim=(0, 15), ylim=(-0.2, 0.6), xlabel="Quefrency [ms]", ylabel="Cepstrum", title="Its cepstrum")
-ax1.legend(loc="upper right", fontsize=8)
-for ax in (ax0, ax1):
-    ax.grid(ls=":")
-
-# %% [markdown]
-# ## Pitch from the cepstrum
-#
-# Doing this for every time window gives a *cepstrogram*: time across, quefrency up. Wherever the
-# voice is voiced, a bright line runs at one period, falling as the pitch rises. Picking the
-# largest peak between 2.5 and 13.3 ms (400 and 75 Hz) in each time window is classic cepstral pitch
-# estimation (Noll, 1967). A time window counts as voiced when its peak is taller than 0.1.
-
-# %% [about]
-# Top: the cepstrogram, with Harvest's pitch period drawn over it. Bottom: the cepstral F0 next
-# to Harvest's. Each time window is judged on its own, with no continuity from one to the next,
-# so the occasional time window jumps an octave.
-
-# %% [demo c2] The cepstrogram and its pitch
-t, f0_cep, peak = cep.f0(f_lo=75, f_hi=400)
-voiced = f0_harvest > 0
-fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout="constrained")
-cep.plot(ax0, colorbar=False)
-ax0.set_xlabel("")
-ax0.plot(f0_times[voiced], 1e3 / f0_harvest[voiced], ".", ms=1.5, color="c", label="Harvest period")
-ax0.legend(loc="upper right", fontsize=8, markerscale=4)
-ax1.plot(f0_times[voiced], f0_harvest[voiced], ".", ms=3, color="0.6", label="Harvest")
-ax1.plot(t[f0_cep[0] > 0], f0_cep[0][f0_cep[0] > 0], ".", ms=3, color="tab:blue", label="cepstral peak > 0.1")
-ax1.set(ylim=(60, 260), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
-ax1.legend(loc="upper right", fontsize=8, markerscale=2)
-ax1.grid(ls=":")
-for ax in (ax0, ax1):
-    ax.set_xlim(0, sentence.duration)
-playhead = [ax0, ax1]
-sound = sentence
-
-# %%
-harvest_at = np.interp(t, f0_times, f0_harvest)
-both = (harvest_at > 0) & (f0_cep[0] > 0)
-agree = np.mean(np.abs(f0_cep[0][both] / harvest_at[both] - 1) < 0.05)
-print(f"time windows both call voiced: {both.sum()}; cepstral F0 within 5% of Harvest on {agree:.0%}")
+fig = plt.figure(figsize=(10, 5.6), layout="constrained")
+for column, (label, cep) in zip(fig.subfigures(1, 2), cepstra.items(), strict=True):
+    top, bottom = column.subplots(2, 1)
+    stft, w = stfts[label], window[label]
+    spectrum_db = 20 * np.log10(np.abs(stft.data[0, :, w["i"]]))
+    matched = cheaptrick_db[label] + np.median(below_peaks(label, cheaptrick_db[label]))
+    top.plot(stft.f, spectrum_db, color="0.55", lw=0.8, label="spectrum")
+    top.plot(stft.f, lifted[label], color="tab:red", lw=1.6, label="liftered below half a period")
+    top.plot(stft.f, matched, color="tab:blue", lw=1.2, label="CheapTrick, level matched")
+    top.set(xlim=(0, FMAX), ylim=(spectrum_db.max() - 75, spectrum_db.max() + 8), xlabel="Frequency [Hz]")
+    top.set(ylabel="Level [dB]", title=f"{label}: time window at {w['t']:.3f} s")
+    top.legend(loc="upper right", fontsize=7)
+    bottom.plot(cep.q * 1e3, cep.data[0, :, w["i"]], color="k", lw=0.8)
+    bottom.axvline(
+        w["cutoff"] * 1e3, color="tab:red", ls="--", lw=1, label=f"cutoff {w['cutoff'] * 1e3:.1f} ms"
+    )
+    peak_label = f"peak {1e3 / w['f0']:.2f} ms: F0 {w['f0']:.0f} Hz"
+    bottom.plot(1e3 / w["f0"], w["peak"], "o", color="tab:blue", label=peak_label)
+    bottom.set(
+        xlim=(0, 15), ylim=(-0.2, 0.6), xlabel="Quefrency [ms]", ylabel="Cepstrum", title="Its cepstrum"
+    )
+    bottom.legend(loc="upper right", fontsize=7)
+    for ax in (top, bottom):
+        ax.grid(ls=":")
 
 # %% [markdown]
-# ## A tracker beside the cepstrum
-#
-# `so.f0_track` works the other way round. It looks for the period in the waveform rather than
-# the log spectrum, with YIN's difference function (de Cheveigné & Kawahara, 2002): up to eight
-# candidate periods per time window, each sharpened from the instantaneous frequencies of the first six
-# harmonics, as WORLD does. Each candidate is scored by how well the waveform repeats one period
-# later, and a single pass picks the cheapest path through the candidates, so that the pitch
-# rarely jumps and a time window is voiced only when some candidate repeats well (a score above 0.5).
-
-# %% [about]
-# Top: the tracker's candidates in gray, darker for a higher score, and the path it chose. The
-# darkest row, an octave below the path, is the subharmonic: anything that repeats every period
-# also repeats every two, so it scores as well, and the tracker never chooses a candidate when
-# another at a whole multiple of its frequency scores about as well (`subharmonic_margin`).
-# Bottom: the three pitch tracks together. Where the tracker and Harvest both call a time window
-# voiced they agree; Harvest voices more time windows, stretches where the tracker's best score
-# falls below 0.5. Against laryngograph recordings Harvest calls about a third of the unvoiced
-# time windows voiced, which is why the tracker is stricter by default (see `docs/design/views/f0.md`).
-
-# %% [demo f1] Cepstral F0, a tracker, and Harvest
-track = so.f0_track(sentence)
-fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout="constrained")
-track.plot(ax0, candidates=True, color="tab:orange")
-ax0.set(ylim=(50, 500), yscale="log", xlabel="", title="so.f0_track: candidates and chosen path")
-ax0.set_yticks([60, 100, 150, 200, 300, 400], labels=["60", "100", "150", "200", "300", "400"])
-ax0.minorticks_off()
-ax1.plot(f0_times[voiced], f0_harvest[voiced], ".", ms=3, color="0.6", label="Harvest")
-ax1.plot(t[f0_cep[0] > 0], f0_cep[0][f0_cep[0] > 0], ".", ms=3, color="tab:blue", label="cepstral")
-tracked = np.where(track.voiced[0], track.f0[0], np.nan)
-ax1.plot(track.t, tracked, color="tab:orange", lw=1.5, label="so.f0_track")
-ax1.set(ylim=(60, 260), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
-ax1.legend(loc="upper right", fontsize=8, markerscale=2)
-ax1.grid(ls=":")
-for ax in (ax0, ax1):
-    ax.set_xlim(0, sentence.duration)
-playhead = [ax0, ax1]
-sound = sentence
-
-# %%
-# Compare at every time window of the tracker; the cepstrogram's time windows include them.
-at = np.searchsorted(np.round(t, 6), np.round(track.t, 6))
-pitch = {
-    "Harvest": np.interp(track.t, f0_times, f0_harvest),
-    "cepstral": f0_cep[0][at],
-    "so.f0_track": np.where(track.voiced[0], track.f0[0], 0.0),
-}
-for name, f in pitch.items():
-    print(f"{name:12s} voiced on {np.mean(f > 0):.0%} of time windows")
-for a, b in [("cepstral", "Harvest"), ("so.f0_track", "Harvest"), ("cepstral", "so.f0_track")]:
-    both = (pitch[a] > 0) & (pitch[b] > 0)
-    agree = np.mean(np.abs(pitch[a][both] / pitch[b][both] - 1) < 0.05)
-    print(f"{a} and {b}: both voiced on {both.sum()} time windows, within 5% on {agree:.0%}")
+# For both talkers CheapTrick's envelope follows the harmonic peaks more evenly than the lifter's
+# does, and the lifter's falls farther behind for the higher voice. CheapTrick is the envelope
+# the other voice pages use: [Two talkers](talkers.html#h-spectral-envelopes) averages it over
+# each sentence, and [Source and aperiodicity](aperiodicity.html) and [Rebuilding and changing a
+# voice](voice.html) synthesize from it.
 
 # %% [markdown]
 # ## Splitting the voice in two
 #
 # Lifter the other way and the two parts can be heard separately. Each time window keeps its own
 # lifter cutoff, half of its pitch period, following Harvest's track (bridged across unvoiced
-# stretches). Low quefrencies keep the vocal tract; high quefrencies keep the source.
+# stretches), so the female talker's cutoffs are mostly lower. Low quefrencies keep the vocal
+# tract; high quefrencies keep the source.
 
 # %%
-voiced_t, voiced_f0 = f0_times[voiced], f0_harvest[voiced]
-cutoffs = 0.5 / np.exp(np.interp(cep.t, voiced_t, np.log(voiced_f0)))  # half a period, per time window
-tract = cep.lifter(cutoffs)  # low quefrencies: the envelope
-source = cep.lifter(cutoffs, keep="high")  # high quefrencies: the harmonics
-source.data[:, 0] = cep.data[:, 0]  # but keep each time window's mean log level, so pauses stay quiet
-
-
-def show(snd, title, win_dur=0.005):
-    fig, ax = plt.subplots(figsize=(10, 3.0), layout="constrained")
-    so.STFT(snd, win_dur=win_dur, hop_dur=0.001).plot(ax, db_range=60, colorbar=False, fmax=FMAX)
-    ax.set(xlim=(0, sentence.duration), title=f"{title} (Hann {win_dur * 1e3:g} ms spectrogram)")
-    return fig, [ax]
-
+tract, source = {}, {}
+for label, cep in cepstra.items():
+    harvest_t, harvest_f0 = harvest[label]
+    voiced = harvest_f0 > 0
+    cutoffs = 0.5 / np.exp(np.interp(cep.t, harvest_t[voiced], np.log(harvest_f0[voiced])))  # half a period
+    tract[label] = cep.lifter(cutoffs)  # low quefrencies: the envelope
+    source[label] = cep.lifter(cutoffs, keep="high")  # high quefrencies: the harmonics
+    source[label].data[:, 0] = cep.data[
+        :, 0
+    ]  # but keep each time window's mean log level, so pauses stay quiet
+    low, middle, high = 1e3 * np.percentile(cutoffs, [5, 50, 95])
+    print(f"{label}: lifter cutoffs median {middle:.1f} ms, middle 90% {low:.1f} to {high:.1f} ms")
 
 # %% [about]
-# The vocal tract alone: every time window's envelope given its minimum phase, so that each time window
-# becomes one short pulse at its center. The time windows are 5 ms apart, so the pulses make
-# a steady 200 Hz buzz. The words survive; the intonation does not.
+# The vocal tract alone: every time window's envelope given its minimum phase, the phase that
+# packs a filter's response as early as it can go, so that each time window becomes one short
+# pulse at its center. The time windows are 5 ms apart, so for both talkers the pulses make the
+# same steady 200 Hz buzz. The words survive; the intonation, and much of what tells the two
+# talkers apart, does not.
 
 # %% [demo c3] Envelope only, on a 200 Hz pulse train
-robot = finish(tract.to_sound(phase="minimum"))
-fig, playhead = show(robot, "Envelope only, minimum phase")
-sound = robot
+sounds = {label: finish(tract[label].to_sound(phase="minimum")) for label in talkers}
+fig, playhead = show_pair(sounds, "envelope only, minimum phase")
 
 # %% [about]
-# The source alone: the high quefrencies, plus each time window's overall level, with the original
-# phase. The formants are flattened away, leaving the harmonics at roughly equal level, a buzzy
-# voice that still carries the talker's intonation. The narrowband spectrogram shows the
-# harmonics running flat across frequency.
+# The source alone: the high quefrencies, plus each time window's overall level, with the
+# original phase. The formants are flattened away, leaving the harmonics at roughly equal level,
+# a buzzy voice that still carries each talker's intonation. The narrowband spectrograms show
+# the harmonics running flat across frequency, farther apart for the female talker.
 
 # %% [demo c4] Harmonics only, the envelope flattened
-flat = finish(source.to_sound(phase="original"))
-fig, playhead = show(flat, "Harmonics only, original phase", win_dur=0.0333)
-sound = flat
+sounds = {label: finish(source[label].to_sound(phase="original")) for label in talkers}
+fig, playhead = show_pair(sounds, "harmonics only", win_dur=0.0333)
 
 # %% [about]
-# For comparison, both parts put back together: an unliftered cepstrum resynthesizes the
+# For comparison, both parts put back together: an unliftered cepstrum resynthesizes each
 # sentence to rounding error.
 
 # %% [demo c5] Both parts together
-whole = cep.to_sound()
-print(f"largest difference from the sentence: {np.abs(whole.data - sentence.data).max():.1e}")
-fig, playhead = show(whole, "Unliftered, original phase")
-sound = finish(whole)
-
-# %% [markdown]
-# ## A higher voice
-#
-# The same sentence read by a female talker (CMU ARCTIC, speaker slt), whose pitch sits around 180
-# to 210 Hz, half as high again as the male talker's. Two things change in the cepstrum. The pitch
-# peak moves down to about 5 ms, closer to the envelope's first couple of milliseconds, though still
-# clear of them. And a lifter at half a period now keeps only the quefrencies below about 2.5 ms,
-# against 4 ms for the male talker, so the envelope it recovers is smoother and follows the formants
-# less closely: with harmonics further apart, there is less of the envelope to recover. On a
-# database of laryngograph recordings, cepstral F0 made octave-down errors on 1.5% of a female
-# voice's time windows and none on a male voice's
-# ([`docs/design/views/female-voices.md`](https://github.com/choyun1/sonore/blob/main/docs/design/views/female-voices.md)).
-# There is no stored F0 track for this recording, so `so.f0_track` stands in for Harvest.
+wholes = {label: cep.to_sound() for label, cep in cepstra.items()}
+sounds = {label: finish(whole) for label, whole in wholes.items()}
+fig, playhead = show_pair(sounds, "unliftered, original phase")
 
 # %%
-sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
-stft_female = so.STFT(sentence_female, win_dur=0.040, hop_dur=0.005)
-cep_female = so.Cepstrum(stft_female)
-t_female, f0_cep_female, peak_female = cep_female.f0(f_lo=75, f_hi=400)
-track_female = so.f0_track(sentence_female)
-
-# %% [about]
-# One time window of the female talker's sentence, drawn as for the male talker's above. The
-# harmonics are further apart, so the log spectrum ripples less often, and the cepstral peak sits
-# at a shorter quefrency. The lifter cutoff, at half the female period, is lower too.
-
-# %% [figure c6] One time window, a higher voice
-i_female = int(np.argmin(np.abs(t_female - 0.60)))
-f0_window_female = f0_cep_female[0, i_female]
-cutoff_female = 0.5 / f0_window_female
-envelope_female = cep_female.lifter(cutoff_female).envelope()[0, :, i_female]
-
-fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), layout="constrained")
-spectrum_db = 20 * np.log10(np.abs(stft_female.data[0, :, i_female]))
-ax0.plot(stft_female.f, spectrum_db, color="0.4", lw=0.8, label="spectrum")
-ax0.plot(
-    stft_female.f,
-    20 * np.log10(envelope_female),
-    color="tab:red",
-    lw=1.6,
-    label="liftered below half a period",
-)
-ax0.set(
-    xlim=(0, FMAX),
-    xlabel="Frequency [Hz]",
-    ylabel="Level [dB]",
-    title=f"slt, time window at {t_female[i_female]:.3f} s: log spectrum and envelope",
-)
-ax0.legend(loc="upper right", fontsize=8)
-ax1.plot(cep_female.q * 1e3, cep_female.data[0, :, i_female], color="k", lw=0.8)
-ax1.axvline(
-    cutoff_female * 1e3, color="tab:red", ls="--", lw=1, label=f"lifter cutoff, {cutoff_female * 1e3:.1f} ms"
-)
-peak_label = f"peak at {1e3 / f0_window_female:.2f} ms: F0 = {f0_window_female:.0f} Hz"
-ax1.plot(1e3 / f0_window_female, peak_female[0, i_female], "o", color="tab:blue", label=peak_label)
-ax1.set(xlim=(0, 15), ylim=(-0.2, 0.6), xlabel="Quefrency [ms]", ylabel="Cepstrum", title="Its cepstrum")
-ax1.legend(loc="upper right", fontsize=8)
-for ax in (ax0, ax1):
-    ax.grid(ls=":")
-
-# %% [about]
-# Top: the female talker's cepstrogram, with the tracker's pitch period drawn over it; the bright
-# line runs lower than the male talker's. Bottom: cepstral F0 beside `so.f0_track`.
-
-# %% [demo c7] The cepstrogram of a higher voice
-voiced_female = track_female.voiced[0]
-fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(10, 5.6), sharex=True, layout="constrained")
-cep_female.plot(ax0, colorbar=False)
-ax0.set_xlabel("")
-period_ms = 1e3 / track_female.f0[0][voiced_female]
-ax0.plot(track_female.t[voiced_female], period_ms, ".", ms=1.5, color="c", label="so.f0_track period")
-ax0.legend(loc="upper right", fontsize=8, markerscale=4)
-tracked_female = np.where(voiced_female, track_female.f0[0], np.nan)
-cep_voiced = f0_cep_female[0] > 0
-ax1.plot(track_female.t, tracked_female, color="tab:orange", lw=1.5, label="so.f0_track")
-ax1.plot(
-    t_female[cep_voiced],
-    f0_cep_female[0][cep_voiced],
-    ".",
-    ms=3,
-    color="tab:blue",
-    label="cepstral peak > 0.1",
-)
-ax1.set(ylim=(60, 400), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
-ax1.legend(loc="upper right", fontsize=8, markerscale=2)
-ax1.grid(ls=":")
-for ax in (ax0, ax1):
-    ax.set_xlim(0, sentence_female.duration)
-playhead = [ax0, ax1]
-sound = sentence_female
-
-# %%
-at_female = np.searchsorted(np.round(t_female, 6), np.round(track_female.t, 6))
-cep_at_track = f0_cep_female[0][np.minimum(at_female, len(t_female) - 1)]
-tracked_hz = np.where(voiced_female, track_female.f0[0], 0.0)
-both = (cep_at_track > 0) & (tracked_hz > 0)
-ratio = cep_at_track[both] / tracked_hz[both]
-print(f"median F0 (so.f0_track): {np.median(tracked_hz[tracked_hz > 0]):.0f} Hz")
-agree_female = np.mean(np.abs(ratio - 1) < 0.05)
-print(
-    f"both voiced on {both.sum()} time windows; cepstral F0 within 5% of the tracker on {agree_female:.0%},"
-)
-print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
+for label, whole in wholes.items():
+    print(
+        f"{label}: largest difference from the sentence {np.abs(whole.data - talkers[label].data).max():.1e}"
+    )
 
 # %% [markdown]
 # ## MFCCs: a cepstrum on the mel scale
@@ -399,7 +290,8 @@ print(f"an octave below on {np.mean(np.abs(ratio - 0.5) < 0.05):.1%}")
 # The aim is to keep the vocal tract and drop the pitch. The bands and the lifter both smooth over
 # the harmonics, but not completely: the lowest bands are narrower than the gap between
 # harmonics of a higher voice, so some sit on a harmonic and their neighbors between two, and
-# the pitch leaks back into the coefficients. A vowel synthesized with a known vocal tract shows how much.
+# the pitch leaks back into the coefficients. A vowel synthesized with a known vocal tract shows
+# how much.
 
 # %%
 # Two vowels as sums of harmonics, each harmonic weighted by a vocal tract of four resonances
@@ -473,10 +365,10 @@ def on_plot_axis(log_power):
 # coefficients taken from CheapTrick's envelope instead, summed into the same mel bands. Dashed:
 # the vocal tract the harmonics were weighted by. Levels are matched to it, since only the
 # shape matters here (the level is `c0`). From the power spectrum, the lowest bands, below the
-# first harmonic of the 200 and 300 Hz voices, drop by 30 dB and more, and the first formant
-# changes shape with the pitch. CheapTrick has already smoothed over one harmonic spacing, so
-# the three curves nearly coincide. The 13 coefficients cannot follow the formant peaks at
-# any of the pitches: that is the lifter, and it is the same for all three.
+# first harmonic of the 200 and 300 Hz voices, drop far below the vocal tract, and the first
+# formant changes shape with the pitch. CheapTrick has already smoothed over one harmonic
+# spacing, so the three curves nearly coincide. The 13 coefficients cannot follow the formant
+# peaks at any of the pitches: that is the lifter, and it is the same for all three.
 
 # %% [figure m1] One vowel at three pitches
 fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True, layout="constrained")
@@ -493,8 +385,8 @@ axes[0].set_ylabel("Level [dB]")
 
 # %% [markdown]
 # The distance between two such curves, the rms difference over the 26 bands in dB, puts a
-# number on it. Between F0s of 100 to 300 Hz the same vowel moves about a third as far as the
-# change from /a/ to /i/; taken from CheapTrick's envelope, about a tenth as far.
+# number on it: the cell compares the same vowel at two F0s between 100 and 300 Hz with /a/
+# against /i/ at one F0.
 
 
 # %%
@@ -502,6 +394,7 @@ def distance_db(first, second):
     return 10 / np.log(10) * np.sqrt(np.mean((first - second) ** 2))
 
 
+pitch_share = {}
 for source_name in ("power spectrum", "CheapTrick envelope"):
     same_vowel = [
         distance_db(smoothed[source_name, vowel, low], smoothed[source_name, vowel, high])
@@ -511,55 +404,66 @@ for source_name in ("power spectrum", "CheapTrick envelope"):
         if low < high
     ]
     across = [distance_db(smoothed[source_name, "a", f0], smoothed[source_name, "i", f0]) for f0 in f0s]
+    pitch_share[source_name] = np.median(same_vowel) / np.median(across)
     print(
         f"from the {source_name}: same vowel at two F0s, median {np.median(same_vowel):.1f} dB "
-        f"(largest {max(same_vowel):.1f}); /a/ vs /i/ at one F0, {min(across):.1f} to {max(across):.1f} dB"
+        f"(largest {max(same_vowel):.1f}); /a/ vs /i/ at one F0, {min(across):.1f} to {max(across):.1f} dB "
+        f"(median {np.median(across):.1f}); ratio of medians {pitch_share[source_name]:.2f}"
     )
+
+# %% [markdown]
+# Taken from the power spectrum, a change of pitch alone moves the coefficients
+# {{ f"{pitch_share['power spectrum']:.2f}" }} times as far as the change from /a/ to /i/ (the
+# ratio of the medians); taken from CheapTrick's envelope,
+# {{ f"{pitch_share['CheapTrick envelope']:.2f}" }} times as far. Since the two talkers differ
+# in pitch (see [Two talkers](talkers.html#h-pitch)), part of what separates their MFCCs is
+# pitch rather than vocal tract.
 
 # %% [about]
-# The sentence, analyzed with `so.MFCC(sentence)`. From the top: the 26 log band powers (the mel
-# spectrogram, `mfcc.plot(kind="mel")`); the 13 coefficients, without `c0`, the level
+# Each talker's sentence, analyzed with `so.MFCC`. From the top: the 26 log band powers (the
+# mel spectrogram, `mfcc.plot(kind="mel")`); the 13 coefficients, without `c0`, the level
 # (`mfcc.plot()`); the band powers the 13 coefficients keep, drawn back from them; and
-# CheapTrick's envelope on the same bands, from the `so.f0_track` pitch track above (unvoiced
-# time windows are analyzed as if at 500 Hz). The coefficients are hard to read by eye; drawn
-# back, they are a mel spectrogram smoothed across the bands.
+# CheapTrick's envelope on the same bands, from the `so.f0_track` pitch track (unvoiced time
+# windows are analyzed as if at 500 Hz). The coefficients are hard to read by eye; drawn back,
+# they are a mel spectrogram smoothed across the bands. In the female talker's mel spectrogram
+# the lowest band, centered below the female talker's pitch, is nearly empty; CheapTrick's
+# envelope, smoothed across the harmonics, fills it in.
 
 # %% [demo m2] The sentence as MFCCs
-mfcc = so.MFCC(sentence)
-envelope = so.cheaptrick(sentence, track)
-envelope_freqs = np.arange(envelope.n_fft // 2 + 1) * fs / envelope.n_fft
-envelope_weights, _ = mel_filterbank(26, envelope_freqs, 0, fs / 2)
-band_rows = np.arange(len(mfcc.cfs))
-row_ticks = band_rows[::5]
+mfccs = {label: so.MFCC(snd) for label, snd in talkers.items()}
 
 
-def band_image(ax, times, band_db, title):
+def band_image(ax, mfcc, times, band_db, title):
+    """Band powers in dB as an image, one row per mel band, over 60 dB."""
+    rows = np.arange(len(mfcc.cfs))
     vmax = band_db.max()
     ax.pcolormesh(
-        times, band_rows, band_db, cmap="magma", vmin=vmax - 60, vmax=vmax, shading="auto", rasterized=True
+        times, rows, band_db, cmap="magma", vmin=vmax - 60, vmax=vmax, shading="auto", rasterized=True
     )
-    ax.set_yticks(row_ticks, [f"{mfcc.cfs[row]:.0f}" for row in row_ticks])
+    ax.set_yticks(rows[::5], [f"{mfcc.cfs[row]:.0f}" for row in rows[::5]])
     ax.set(title=title, xlabel="", ylabel="Band center [Hz]")
 
 
-fig, axes = plt.subplots(4, 1, figsize=(10, 9), sharex=True, layout="constrained")
-mfcc.plot(axes[0], kind="mel", colorbar=False)
-axes[0].set(title="Mel spectrogram: 26 log band powers", xlabel="")
-mfcc.plot(axes[1], colorbar=False)
-axes[1].set(title="MFCCs c1 to c12 (c0, the level, left out)", xlabel="")
-kept_db = 10 * np.log10(mfcc.envelope(mfcc.cfs)[0])
-band_image(axes[2], mfcc.t, kept_db, "The band powers 13 coefficients keep")
-band_image(
-    axes[3],
-    envelope.t,
-    10 * np.log10(envelope_weights @ envelope.data[0]),
-    "CheapTrick's envelope in the same bands",
-)
-axes[3].set_xlabel("Time [s]")
-for ax in axes:
-    ax.set_xlim(0, sentence.duration)
-playhead = list(axes)
-sound = sentence
+sounds = talkers
+fig = plt.figure(figsize=(10, 9), layout="constrained")
+playhead = {}
+for column, (label, snd) in zip(fig.subfigures(1, 2), sounds.items(), strict=True):
+    axes = column.subplots(4, 1, sharex=True)
+    mfcc, envelope = mfccs[label], envelopes[label]
+    envelope_freqs = np.arange(envelope.n_fft // 2 + 1) * fs / envelope.n_fft
+    envelope_weights, _ = mel_filterbank(26, envelope_freqs, 0, fs / 2)
+    mfcc.plot(axes[0], kind="mel", colorbar=False)
+    axes[0].set(title=f"{label}: mel spectrogram, 26 bands", xlabel="")
+    mfcc.plot(axes[1], colorbar=False)
+    axes[1].set(title="MFCCs c1 to c12 (c0, the level, left out)", xlabel="")
+    kept_db = 10 * np.log10(mfcc.envelope(mfcc.cfs)[0])
+    band_image(axes[2], mfcc, mfcc.t, kept_db, "The band powers 13 coefficients keep")
+    cheaptrick_bands = 10 * np.log10(envelope_weights @ envelope.data[0])
+    band_image(axes[3], mfcc, envelope.t, cheaptrick_bands, "CheapTrick's envelope in the same bands")
+    axes[3].set_xlabel("Time [s]")
+    for ax in axes:
+        ax.set_xlim(0, snd.duration)
+    playhead[label] = list(axes)
 
 # %% [markdown]
 # The mel bands and the cut to 13 coefficients both discard information, so MFCCs are a one-way
@@ -568,49 +472,54 @@ sound = sentence
 # changing; with 257 bins and 26 bands there are 231 independent ways to do it.
 
 # %% [about]
-# The loudest time window of the sentence, and the same spectrum with every bin's power changed
+# The loudest time window of each sentence, and the same spectrum with every bin's power changed
 # by a factor between 0.1 and 1.9, in a direction that leaves all 26 band powers unchanged.
-# Middle: the change in each bin. Bottom: the mel bands. The two spectra have the
-# same MFCCs to rounding error.
+# Middle: the change in each bin. Bottom: the mel bands. The two spectra have the same MFCCs to
+# rounding error.
 
 # %% [figure m3] Two spectra, one set of MFCCs
-loudest = int(np.argmax(mfcc.mel_power[0].sum(0)))
-power = np.abs(mfcc.source.data[0, :, loudest]) ** 2
-# A relative change of each bin, at most 0.9, that no band sees: it lies in the null space of the
-# band weights times the spectrum.
-_, _, right_vectors = np.linalg.svd(mfcc.weights * power[None, :])
-null_space = right_vectors[len(mfcc.cfs) :]
-random_signs = np.random.default_rng(0).choice([-1.0, 1.0], power.size)
-relative_change = null_space.T @ (null_space @ random_signs)
-relative_change *= 0.9 / np.abs(relative_change).max()
-gains = np.ones(mfcc.source.data.shape[1:])
-gains[:, loudest] = np.sqrt(1 + relative_change)
-mfcc_altered = so.MFCC(mfcc.source * gains)
+fig = plt.figure(figsize=(10, 6), layout="constrained")
+changes = {}
+for column, (label, mfcc) in zip(fig.subfigures(1, 2), mfccs.items(), strict=True):
+    loudest = int(np.argmax(mfcc.mel_power[0].sum(0)))
+    power = np.abs(mfcc.source.data[0, :, loudest]) ** 2
+    # A relative change of each bin, at most 0.9, that no band sees: it lies in the null space of
+    # the band weights times the spectrum.
+    _, _, right_vectors = np.linalg.svd(mfcc.weights * power[None, :])
+    null_space = right_vectors[len(mfcc.cfs) :]
+    random_signs = np.random.default_rng(0).choice([-1.0, 1.0], power.size)
+    relative_change = null_space.T @ (null_space @ random_signs)
+    relative_change *= 0.9 / np.abs(relative_change).max()
+    gains = np.ones(mfcc.source.data.shape[1:])
+    gains[:, loudest] = np.sqrt(1 + relative_change)
+    mfcc_altered = so.MFCC(mfcc.source * gains)
+    altered_power = np.abs(mfcc_altered.source.data[0, :, loudest]) ** 2
+    changes[label] = (
+        np.abs(10 * np.log10(altered_power / power)),
+        np.abs(mfcc_altered.data[0, :, loudest] - mfcc.data[0, :, loudest]).max(),
+    )
 
-bin_freqs = np.arange(mfcc.n_fft // 2 + 1) * fs / mfcc.n_fft
-altered_power = np.abs(mfcc_altered.source.data[0, :, loudest]) ** 2
-fig, (ax0, ax1, ax2) = plt.subplots(
-    3, 1, figsize=(10, 6), sharex=True, height_ratios=[3, 1.4, 1], layout="constrained"
-)
-ax0.plot(bin_freqs, 10 * np.log10(power), color="0.3", lw=1, label="the sentence")
-ax0.plot(bin_freqs, 10 * np.log10(altered_power), color="tab:red", lw=1, label="changed, same band powers")
-ax0.set(ylabel="Level [dB]", title=f"Time window at {mfcc.t[loudest]:.2f} s: two spectra with the same MFCCs")
-ax0.legend(loc="upper right", fontsize=8)
-ax1.vlines(bin_freqs, 0, 10 * np.log10(altered_power / power), color="tab:red", lw=1)
-ax1.set(ylim=(-11, 4), ylabel="Change [dB]", title="The change in each bin")
-ax2.plot(bin_freqs, mfcc.weights.T, color="0.5", lw=0.6)
-ax2.set(xlim=(0, FMAX), xlabel="Frequency [Hz]", ylabel="Weight", title="The 26 mel bands")
-for ax in (ax0, ax1):
-    ax.grid(ls=":")
+    bin_freqs = np.arange(mfcc.n_fft // 2 + 1) * fs / mfcc.n_fft
+    ax0, ax1, ax2 = column.subplots(3, 1, sharex=True, height_ratios=[3, 1.4, 1])
+    ax0.plot(bin_freqs, 10 * np.log10(power), color="0.3", lw=1, label="the sentence")
+    ax0.plot(
+        bin_freqs, 10 * np.log10(altered_power), color="tab:red", lw=1, label="changed, same band powers"
+    )
+    ax0.set(ylabel="Level [dB]", title=f"{label}: time window at {mfcc.t[loudest]:.2f} s")
+    ax0.legend(loc="upper right", fontsize=7)
+    ax1.vlines(bin_freqs, 0, 10 * np.log10(altered_power / power), color="tab:red", lw=1)
+    ax1.set(ylim=(-11, 4), ylabel="Change [dB]", title="The change in each bin")
+    ax2.plot(bin_freqs, mfcc.weights.T, color="0.5", lw=0.6)
+    ax2.set(xlim=(0, FMAX), xlabel="Frequency [Hz]", ylabel="Weight", title="The 26 mel bands")
+    for ax in (ax0, ax1):
+        ax.grid(ls=":")
 
 # %%
-change_db = np.abs(10 * np.log10(altered_power / power))
-coefficient_change = np.abs(mfcc_altered.data[0, :, loudest] - mfcc.data[0, :, loudest]).max()
-print(
-    f"bins changed by more than 3 dB: {np.mean(change_db > 3):.0%}; "
-    f"median change {np.median(change_db):.1f} dB"
-)
-print(f"largest change of any MFCC: {coefficient_change:.1e}")
+for label, (change_db, coefficient_change) in changes.items():
+    print(
+        f"{label}: bins changed by more than 3 dB: {np.mean(change_db > 3):.0%}; "
+        f"median change {np.median(change_db):.1f} dB; largest change of any MFCC: {coefficient_change:.1e}"
+    )
 
 # %% [markdown]
 # ## Reference implementations
@@ -626,8 +535,9 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   magnitude before the log, which is the whole difference.
 # - **Praat's PowerCepstrogram** (Boersma & Weenink), through `parselmouth`, measures the same
 #   peak by a different route: a Gaussian window, the power spectrum in dB, and the sound
-#   resampled to 10 kHz. On the time windows of this sentence that sonore calls voiced, the two peaks
-#   agree within 5% on 98% of them; on every time window Harvest calls voiced, on 81%.
+#   resampled to 10 kHz. On the time windows of the male talker's sentence that sonore calls
+#   voiced, the two peaks agree within 5% on 98% of them; on every time window Harvest calls
+#   voiced, on 81%.
 #
 # See also the design and its numerical checks, `docs/design/views/cepstrum.md`.
 #
@@ -638,11 +548,8 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 # %% [markdown]
 # ## What this page leaves out
 #
-# - **Tracking from the cepstrum.** Cepstral F0 judges each time window alone. The tracker above
-#   chooses a path through candidates from the waveform; the same could be done with cepstral
-#   peaks as the candidates.
-# - **Better envelopes.** A plain low lifter sits under the harmonic peaks; WORLD's CheapTrick
-#   smooths the spectrum over one $F_0$ first and corrects the lifter.
+# - **Pitch.** The cepstral peak as a pitch estimate, and how it fails on the female talker's
+#   voice, are on [Pitch tracking](pitch.html#h-pitch-from-the-cepstrum).
 # - **Other cepstra on a warped axis.** The mel-generalized cepstra of speech synthesis warp the
 #   frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other
 #   auditory bands. MFCC deltas (`mfcc.deltas()`) are not shown.
@@ -662,22 +569,17 @@ print(f"largest change of any MFCC: {coefficient_change:.1e}")
 #   recognition in continuously spoken sentences. *IEEE Trans. Acoust., Speech, Signal Process.*
 #   28(4), 357–366.
 #   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L99)
-# - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
-#   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
-#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L80)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`gabor.TVGaborFrame.pitch_adaptive`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L285)
-# - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
-#   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
-#   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). Harvest.
+#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L217)
+# - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
+#   signals. *Proc. Interspeech 2017*, 2321–2325.
+#   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
+#   F0 tracks.
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
 #   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The formants of the synthetic vowels.
-# - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
-#   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
-#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L181)
