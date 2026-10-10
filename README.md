@@ -28,7 +28,7 @@ than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
 The logo is drawn from the spectrogram of
 [sonore saying its own name](https://choyun1.github.io/sonore/gallery/formants.html#d-fl1)
-with the formant synthesizer.
+with a formant synthesizer.
 
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
 playable next to its plots, with a playhead that follows the sound.
