@@ -439,6 +439,8 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 .side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
   letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
 .side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home .logo { display: block; width: 2.6rem; height: 2.6rem; margin: -0.4rem 0 0.1rem -0.35rem; }
+.logo .logo-ink { stroke: var(--ink); } .logo .logo-accent { stroke: var(--accent); }
 .side .home[aria-current] { font-weight: 600; }
 .side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
   border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
@@ -798,6 +800,11 @@ TOPICS = [
     ),
 ]
 
+# sonore's own mark (docs/logo/make_logo.py draws it), inline in the sidebar so it takes the
+# page's ink and accent colors rather than the browser's light or dark setting.
+LOGO_MARK = re.sub(r"<title>.*?</title>|<style>.*?</style>", "", (HERE.parent / "logo" / "sonore-mark.svg").read_text().strip())
+LOGO_MARK = LOGO_MARK.replace('role="img" aria-label="sonore"', 'class="logo" aria-hidden="true"')
+
 # GitHub's mark (Octicons, MIT license), so the repository link reads as a link out, not a page.
 GITHUB_MARK = (
     '<svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 '
@@ -916,7 +923,7 @@ def sidebar(current: str, sections_html: str) -> str:
 
     here = ' aria-current="page"' if current == "index.html" else ""
     top = (
-        f'<div class="side-top"><a class="home" href="index.html"{here}>{TITLES["index.html"]}</a>'
+        f'<div class="side-top"><a class="home" href="index.html"{here}>{LOGO_MARK}{TITLES["index.html"]}</a>'
         '<button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" '
         'title="Hide the menu">&laquo;</button></div>'
     )
@@ -957,6 +964,7 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{html.escape(title)}</title>
+<link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
 {fonts}
 {head}
 <script>{SIDE_HEAD_JS}</script>

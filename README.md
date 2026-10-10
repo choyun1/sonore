@@ -1,4 +1,7 @@
-# sonore
+<h1><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/choyun1/sonore/main/docs/logo/sonore-banner-dark.svg">
+  <img alt="sonore" src="https://raw.githubusercontent.com/choyun1/sonore/main/docs/logo/sonore-banner-light.svg" height="56">
+</picture></h1>
 
 [![tests](https://github.com/choyun1/sonore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/choyun1/sonore/actions/workflows/tests.yml) [![PyPI](https://img.shields.io/pypi/v/sonore)](https://pypi.org/project/sonore/) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/sonore/) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 
@@ -23,6 +26,10 @@ The name comes from Pierre Schaeffer's *objet sonore*, the "sound object": a
 sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
+The logo is drawn from the spectrogram of sonore saying its own name with the
+formant synthesizer ([the last example on the Formant synthesis page](https://choyun1.github.io/sonore/gallery/formants.html#d-fl1)):
+a few strokes for the s, a rise in the middle line for the n, and a step down
+in the top line for the r.
 
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
 playable next to its plots, with a playhead that follows the sound.
