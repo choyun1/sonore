@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/views/lpc.md (C1-C9).
+"""Numerical checks for the claims in docs/design/views/lpc.md (C1-C12).
 
 Like the other claim checkers, this is independent of sonore: only NumPy,
 SciPy and soundfile (to read the gallery sentences), with the vowels, windows,
@@ -9,12 +9,14 @@ supports it.
     python tools/check_lpc_claims.py
 """
 
+from fractions import Fraction
+from itertools import combinations
 from pathlib import Path
 
 import numpy as np
 import soundfile as sf
 from scipy.linalg import solve_toeplitz
-from scipy.signal import lfilter
+from scipy.signal import lfilter, resample_poly
 
 FS = 16000
 ROOT = Path(__file__).resolve().parent.parent
@@ -40,6 +42,8 @@ FEMALE = {
 # Klatt's default bandwidths of F1 to F5 and the higher formants of each set.
 BANDWIDTHS = (60, 90, 150, 200, 250)
 HIGHER = {"male": (3500, 4500), "female": (4100, 4900)}
+# Formant ceilings, Praat's advice for a male and a female voice.
+CEILINGS = {"male": 5000, "female": 5500}
 
 
 def report(claim, text, value):
@@ -104,6 +108,20 @@ def lpc(segment, order):
     return a, errors[-1]
 
 
+def burg(segment, order):
+    """Burg's method: the predictor whose reflection coefficients minimize the summed forward and
+    backward prediction errors, one order at a time."""
+    forward = segment.astype(float).copy()
+    backward = segment.astype(float).copy()
+    a = np.array([1.0])
+    for m in range(order):
+        f, b = forward[m + 1 :], backward[m:-1]
+        k = -2 * (f @ b) / (f @ f + b @ b)
+        a = np.r_[a, 0.0] + k * np.r_[a, 0.0][::-1]
+        forward[m + 1 :], backward[m + 1 :] = f + k * b, b + k * f
+    return a
+
+
 def formants_from_roots(a, max_bandwidth=400.0, min_freq=90.0):
     """Frequencies and bandwidths [Hz] of the roots of A(z) in the upper half plane, narrower than
     max_bandwidth and above min_freq, sorted by frequency."""
@@ -121,7 +139,7 @@ def preemphasize(signal, coefficient=0.97):
 
 
 def recovery_errors(
-    formants, f0, order, win_dur=0.025, preemphasis=0.97, positions=20, window_function=hamming
+    formants, f0, order, win_dur=0.025, preemphasis=0.97, positions=20, window_function=hamming, method=lpc
 ):
     """For one vowel: the error [Hz] of the root nearest each of F1-F3, and of its bandwidth, at
     `positions` window offsets spread over one period (the estimate depends on where the window
@@ -137,7 +155,9 @@ def recovery_errors(
     bandwidth_errors = np.full((positions, 3), np.nan)
     for position in range(positions):
         start = start0 + round(position * period / positions)
-        a, _ = lpc(signal[start : start + length] * window, order)
+        a = method(signal[start : start + length] * window, order)
+        if isinstance(a, tuple):
+            a = a[0]
         freqs, bandwidths = formants_from_roots(a)
         for index, (target, target_bandwidth) in enumerate(zip(formants[:3], BANDWIDTHS[:3], strict=True)):
             if len(freqs):
@@ -168,6 +188,164 @@ def voiced_windows(speaker, win_dur=0.025, hop=0.005):
         if f0 > 0 and start >= 0 and start + length <= len(signal):
             segments.append(signal[start : start + length] * window)
     return segments
+
+
+# Formant tracking: an utterance with moving formants, and a tracker over LPC candidates.
+
+STEADY = 0.20  # seconds each vowel is held
+TRANSITION = 0.06  # seconds of linear glide between vowels
+NOMINAL = (500.0, 1500.0, 2500.0)  # a uniform 17.5 cm tube closed at one end
+
+
+def formant_tracks(vowels, n_samples):
+    """F1-F5 per sample for the vowels in turn, held STEADY seconds each and joined by linear
+    TRANSITION-second glides, plus the label's higher formants. Shape (5, n_samples)."""
+    times = np.arange(n_samples) / FS
+    knots_t, knots_f = [], []
+    for index, formants in enumerate(vowels):
+        start = index * (STEADY + TRANSITION)
+        knots_t += [start, start + STEADY]
+        knots_f += [formants, formants]
+    knots_f = np.array(knots_f, dtype=float)
+    return np.array([np.interp(times, knots_t, knots_f[:, k]) for k in range(knots_f.shape[1])])
+
+
+def moving_resonator(signal, freqs, bandwidth):
+    """Klatt's resonator with its frequency changing every sample."""
+    output = np.zeros_like(signal)
+    previous, before = 0.0, 0.0
+    for n, (x, freq) in enumerate(zip(signal, freqs, strict=True)):
+        (gain,), (_, minus_b, minus_c) = resonator_coefficients(freq, bandwidth)
+        y = gain * x - minus_b * previous - minus_c * before
+        output[n], before, previous = y, previous, y
+    return output
+
+
+def utterance(label):
+    """Six Peterson and Barney vowels in a row with no silence ("heed head had hod hawed who'd"),
+    the pitch falling linearly (130 to 100 Hz male, 240 to 200 Hz female). Returns the signal and
+    its true F1-F3 per sample."""
+    vowels, f0_range = (MALE, (130, 100)) if label == "male" else (FEMALE, (240, 200))
+    vowels = [(*f123, *HIGHER[label]) for f123 in vowels.values()]
+    n_samples = round((len(vowels) * (STEADY + TRANSITION) - TRANSITION) * FS)
+    f0 = np.linspace(*f0_range, n_samples)
+    phase = np.cumsum(f0) / FS
+    source = np.diff(np.floor(phase), prepend=0.0)  # one impulse per period
+    signal = np.diff(lfilter(*resonator_coefficients(0, 100), source), prepend=0.0)
+    tracks = formant_tracks(vowels, n_samples)
+    for k, bandwidth in enumerate(BANDWIDTHS):
+        signal = moving_resonator(signal, tracks[k], bandwidth)
+    return signal, tracks[:3]
+
+
+def candidates(signal, times, order=18, win_dur=0.025, fmax=5000.0):
+    """LPC candidates (frequencies, bandwidths) below fmax at each time, pre-emphasized,
+    Hamming window."""
+    emphasized = preemphasize(signal)
+    length = round(win_dur * FS)
+    window = hamming(length)
+    found = []
+    for time in times:
+        start = round(time * FS) - length // 2
+        freqs, bandwidths = formants_from_roots(lpc(emphasized[start : start + length] * window, order)[0])
+        keep = freqs < fmax
+        found.append((freqs[keep], bandwidths[keep]))
+    return found
+
+
+def ceiling_candidates(signal, times, ceiling, n_formants=5, win_dur=0.025):
+    """Praat's recipe for formants: resample to twice the ceiling, fit 2 n_formants poles, and keep
+    every root between 50 Hz and 50 Hz below the ceiling, whatever its bandwidth. Returns
+    (frequencies, bandwidths) at each time, at the original times."""
+    ratio = Fraction(int(2 * ceiling), FS)
+    resampled = resample_poly(signal, ratio.numerator, ratio.denominator)
+    fs = 2 * ceiling
+    emphasized = preemphasize(resampled)
+    length = round(win_dur * fs)
+    window = hamming(length)
+    found = []
+    for time in times:
+        start = round(time * fs) - length // 2
+        a, _ = lpc(emphasized[start : start + length] * window, 2 * n_formants)
+        roots = np.roots(a)
+        roots = roots[roots.imag > 0]
+        freqs = np.angle(roots) * fs / (2 * np.pi)
+        bandwidths = -np.log(np.abs(roots)) * fs / np.pi
+        keep = (freqs > 50) & (freqs < ceiling - 50)
+        order = np.argsort(freqs[keep])
+        found.append((freqs[keep][order], bandwidths[keep][order]))
+    return found
+
+
+def by_count(found, n_formants=3):
+    """The k-th candidate as Fk, NaN where there are fewer than n_formants."""
+    out = np.full((len(found), n_formants), np.nan)
+    for index, (freqs, _) in enumerate(found):
+        out[index, : min(n_formants, len(freqs))] = freqs[:n_formants]
+    return out
+
+
+def track(
+    found,
+    nominal=NOMINAL,
+    nominal_weight=1.0,
+    bandwidth_weight=1.0,
+    transition_weight=5.0,
+    missing_cost=3.0,
+    skip_cost=2.0,
+):
+    """F1-F3 for every time window by dynamic programming (Viterbi) over assignments of candidates
+    to formants. A state is an increasing choice of three candidates; a formant may be missing only
+    when there are fewer candidates than formants.
+    Its cost in one window is, per formant, nominal_weight |ln(f / nominal)| plus
+    bandwidth_weight * bandwidth / f, or missing_cost if missing; moving from one window to the
+    next costs transition_weight |ln(f_now / f_before)| per formant present in both. Returns
+    (n_windows, 3) frequencies, NaN where missing."""
+    n_formants = len(nominal)
+    nominal = np.asarray(nominal)
+    state_freqs, state_costs = [], []
+    for freqs, bandwidths in found:
+        options = []
+        for n_present in range(min(n_formants, len(freqs)), min(n_formants, len(freqs)) + 1):
+            for chosen in combinations(range(len(freqs)), n_present):
+                for slots in combinations(range(n_formants), n_present):
+                    values = np.full(n_formants, np.nan)
+                    values[list(slots)] = freqs[list(chosen)]
+                    widths = np.full(n_formants, np.nan)
+                    widths[list(slots)] = bandwidths[list(chosen)]
+                    top = values[~np.isnan(values)].max() if n_present else 0.0
+                    skipped = sum(1 for c in range(len(freqs)) if c not in chosen and freqs[c] < top)
+                    options.append((values, widths, skipped))
+        values = np.array([v for v, _, _ in options])
+        widths = np.array([w for _, w, _ in options])
+        skipped = np.array([k for _, _, k in options])
+        present = ~np.isnan(values)
+        local = (
+            np.where(
+                present,
+                nominal_weight * np.abs(np.log(np.where(present, values, 1) / nominal))
+                + bandwidth_weight * np.where(present, widths, 0) / np.where(present, values, 1),
+                missing_cost,
+            ).sum(axis=1)
+            + skip_cost * skipped
+        )
+        state_freqs.append(values)
+        state_costs.append(local)
+    total = state_costs[0]
+    back = []
+    for index in range(1, len(found)):
+        before, now = state_freqs[index - 1], state_freqs[index]
+        jump = np.abs(np.log(now[:, None, :] / before[None, :, :]))
+        jump = np.nan_to_num(jump, nan=0.0).sum(axis=2)  # (now, before)
+        candidates_total = total[None, :] + transition_weight * jump
+        best = np.argmin(candidates_total, axis=1)
+        back.append(best)
+        total = candidates_total[np.arange(len(now)), best] + state_costs[index]
+    path = [int(np.argmin(total))]
+    for best in reversed(back):
+        path.append(int(best[path[-1]]))
+    path.reverse()
+    return np.array([state_freqs[index][state] for index, state in enumerate(path)])
 
 
 def main():
@@ -342,6 +520,53 @@ def main():
     for name, envelope in (("LPC", model), ("cepstral lifter", cepstral)):
         gap = 10 * np.log10(power[peaks] / envelope[peaks])
         report("C9", f"{name}: mean harmonic level above the envelope [dB]", gap.mean())
+
+    # C10: Praat's recipe (resample to twice a ceiling, 2 n_formants poles, every root kept) on the
+    # static vowels: ceiling 5000 Hz male, 5500 Hz female, 20 window positions per vowel.
+    for label, vowels, f0 in (("male", MALE, 120), ("female", FEMALE, 220)):
+        errors = []
+        for f123 in vowels.values():
+            signal, true_f0 = vowel((*f123, *HIGHER[label]), f0, duration=0.6)
+            times = 0.3 + np.arange(20) / 20 / true_f0
+            for freqs, _ in ceiling_candidates(signal, times, CEILINGS[label]):
+                errors.append([np.min(np.abs(freqs - target)) for target in f123])
+        errors = np.array(errors)
+        for index in range(3):
+            report("C10", f"{label} F{index + 1}: median |error| [Hz]", np.median(errors[:, index]))
+        report("C10", f"{label}: largest |F1-F3 error| [Hz]", errors.max())
+
+    # C11: tracking the utterance with moving formants, F1-F3 every 5 ms, against the formants
+    # given to the synthesizer: labeling the k-th candidate as Fk, and the tracker. Gross: missing
+    # or more than 10% off. Clean, and with white noise 30 dB below the signal.
+    noise_rng = np.random.default_rng(1)
+    for label in ("male", "female"):
+        signal, truth = utterance(label)
+        times = np.arange(0.03, len(signal) / FS - 0.03, 0.005)
+        true = truth[:, np.round(times * FS).astype(int)].T
+        for noise_name, noise_level in (("clean", 0.0), ("noise -30 dB", 10 ** (-30 / 20))):
+            noisy = signal + noise_rng.standard_normal(len(signal)) * np.std(signal) * noise_level
+            found = ceiling_candidates(noisy, times, CEILINGS[label])
+            for method, estimate in (("by count", by_count(found)), ("tracker", track(found))):
+                errors = np.abs(estimate - true)
+                gross = np.isnan(errors) | (errors > 0.1 * true)
+                report(
+                    "C11", f"{label}, {noise_name}, {method}: median |F1-F3 error| [Hz]", np.nanmedian(errors)
+                )
+                report("C11", f"{label}, {noise_name}, {method}: gross errors, fraction", gross.mean())
+
+    # C12: Burg's method recovers the same formants as the autocorrelation method on the static
+    # vowels (root nearest each given formant, order 18, 25 ms Hamming, pre-emphasis).
+    for name, method in (("autocorrelation", lpc), ("Burg", burg)):
+        for label in ("male", "female"):
+            errors = np.concatenate(
+                [
+                    recovery_errors(formants, f0, order, method=method)[0]
+                    for s, _, formants, f0 in vowel_sets()
+                    if s == label
+                ]
+            )
+            report("C12", f"{name}, {label}: median |F1-F3 error| [Hz]", np.median(np.abs(errors)))
+            report("C12", f"{name}, {label}: largest |F1-F3 error| [Hz]", np.abs(errors).max())
 
 
 if __name__ == "__main__":

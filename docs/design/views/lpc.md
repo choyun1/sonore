@@ -1,14 +1,18 @@
 # Linear prediction (LPC)
 
-The design of a linear prediction view in sonore: an all-pole model of each
-time window, its smooth spectral envelope, and formant frequencies read from
-the roots of its polynomial. Cho asked on 2026-10-10 for an LPC demo, perhaps
+The design of linear prediction in sonore: an all-pole model of each time
+window, its smooth spectral envelope, the formant frequencies read from the
+roots of its polynomial, and a formant tracker that links them into F1, F2
+and F3 over time. Cho asked on 2026-10-10 for an LPC demo, perhaps
 on the Formant synthesis page. sonore has no LPC today: nothing in `src/`
 matches `lpc`, `levinson` or `linear predict`, and the only mentions are
 `views/world.md` and `views/voice-change.md`, which name LPC as a possible
 envelope "later, under its own name".
 
-Status: draft, waiting for Cho's decisions D1–D8. No library code yet.
+Status: draft, waiting for Cho's decisions D1–D9. No library code yet.
+Revised 2026-10-10 after Cho asked that the formant tracker be part of this
+work rather than out of scope, and that LPC be compared with the other
+envelope methods (C11–C14).
 
 ## Why
 
@@ -20,7 +24,14 @@ oldest of the envelope estimators and the one that explains the source–filter
 picture most directly: the predictor *is* the filter, and what it cannot
 predict, the residual, is the source. Next to the cepstral envelope and
 CheapTrick on the Spectral envelope page, it is the third way of drawing the
-same curve, with a different bias (C9).
+same curve, with a different bias (C9), and the only one of the four that
+gives formant frequencies directly rather than as peaks to be found (C14).
+
+The tracker is the point of the exercise. With formant tracks, the Formant
+synthesis page can run backward on a recording: measure a talker's F1–F3 and
+F0, hand them to `so.klatt_synthesize`, and listen to the copy next to the
+original. The page lists that, "copying a recording", among the things it
+leaves out, for want of a formant tracker.
 
 ## How the claims are verified
 
@@ -31,11 +42,14 @@ As in the other design documents, each claim is numbered and tagged:
   uses only NumPy, SciPy and soundfile, synthesizes its vowels with its own
   impulse train and Klatt resonators, writes the autocorrelation, the
   Levinson–Durbin recursion and the root picking out from their formulas,
-  and shares no code with sonore. It runs in about 2 s. The numbers below
+  and shares no code with sonore. It also builds an utterance with moving
+  formants from its own time-varying resonators, and a formant tracker. It
+  runs in about 3 s. The numbers below
   come from NumPy 2.5.3 and SciPy 1.18.1.
 - **[crosscheck]**: a number printed by `tools/crosscheck_lpc.py`, which
   compares the same formula-level LPC with Praat's `To Formant (burg)`
-  through parselmouth (a development-time dependency only).
+  through parselmouth (a development-time dependency only), and reads
+  formants off sonore's cepstral, CheapTrick and MFCC envelopes.
 - **[source]**: a published result (see References).
 
 The synthesized vowels are Peterson and Barney's six male and six female
@@ -146,29 +160,16 @@ Gray, 1976; cited from memory). Median over the twelve vowels of the median
 
 Below 12 formants merge; above 20 the extra poles start fitting harmonics.
 
-**C7. On the recordings, the estimates agree with Praat's for most of the
-male talker's voiced frames and for about half to two thirds of the female
-talker's.** [crosscheck] Praat's Burg formants (ceiling 5000 Hz male,
-5500 Hz female, 5 formants, 25 ms) against the k-th narrow root (bandwidth
-under 400 Hz, above 90 Hz) at order 18, at the voiced times both report
-three formants:
-
-| | F1 median diff. | F2 | F3 | within 10%: F1, F2, F3 |
-|---|---|---|---|---|
-| male (424 times) | 7 Hz | 38 Hz | 81 Hz | 92%, 81%, 63% |
-| female (445 times) | 27 Hz | 72 Hz | 149 Hz | 67%, 59%, 53% |
-
-Neither side is the truth, and the two methods differ in more than the
-algorithm (Praat resamples to twice the ceiling and uses a Gaussian
-window). The disagreement comes mostly from *picking*, not from the model:
-calling the k-th narrow root "Fk" breaks whenever one root's bandwidth
-crosses the threshold or a spurious narrow root appears. The crosscheck
-also prints the F2 agreement at other orders: the male median difference
-is 11 Hz at order 16, 38 Hz at 18 and 31 Hz at 20, but 1193 Hz at order 14,
-and the female one 693, 104, 72 and 101 Hz at orders 14 to 20. A jump of
-a thousand hertz is a label off by one formant, not a poor fit (inferred
-from its size; which root went missing was not checked). So the view
-should return all candidate roots and leave labeling to a tracker (D4).
+**C7. On the recordings, the textbook recipe disagrees with Praat, mostly
+because of how roots are picked.** [crosscheck] At order 18 on the 16 kHz
+sound, keeping roots narrower than 400 Hz and calling the k-th one Fk, the
+median difference from Praat's F1, F2 and F3 is 7, 35 and 74 Hz for the male
+talker and 27, 53 and 65 Hz for the female one, and the tracks jump by more
+than 20% between neighboring time windows far more often than Praat's (F3:
+24% against 0.9% of voiced neighbors, male; 42% against 5.5%, female). C13
+shows that the cause is the bandwidth threshold: a root that widens past
+400 Hz for one time window drops out and every label above it shifts by
+one.
 
 **C8. The window's shape and length matter little.** [check] Median over
 vowels of the median |F1–F3 error|, and the worst vowel's median:
@@ -187,8 +188,96 @@ precision. On male "hod" at 120 Hz (40 ms Hamming), the harmonics below
 4 kHz stand on average 5.3 dB above the LPC envelope and 13.5 dB above the
 cepstral envelope liftered at half a period, which is the log-domain
 average and so runs through the middle of the harmonic comb. CheapTrick is
-built to sit on the peaks by another route; comparing it here is left to
-the gallery.
+built to sit on the peaks by another route; C14 compares all four as ways
+of finding formants.
+
+**C10. Praat's recipe for formants recovers the synthesized vowels as well
+as the textbook one.** [check] Praat resamples the sound to twice a formant
+ceiling (Praat's advice: 5000 Hz for a male voice, 5500 Hz for a female
+one), fits 2 × 5 poles, and keeps *every* root between 50 Hz and 50 Hz below
+the ceiling, whatever its bandwidth. Done with the autocorrelation method
+on a 25 ms Hamming window, the root nearest each given formant is off by a
+median of 6.0, 7.4 and 9.9 Hz (F1–F3, male, at most 21 Hz) and 29, 28 and
+15 Hz (female, at most 44 Hz): the same accuracy as C4.
+
+**C11. On synthesized speech with moving formants, labeling the k-th root
+as Fk is already right, so a tracker has nothing to fix.** [check] The test
+utterance is the six vowels in a row, each held 200 ms and joined by 60 ms
+glides, the pitch falling from 130 to 100 Hz (male) or 240 to 200 Hz
+(female), made by time-varying resonators so the true formants are known
+every sample. Every 5 ms, with Praat's recipe:
+
+| | median F1–F3 error | gross errors (missing or > 10% off) |
+|---|---|---|
+| male, clean | 8.3 Hz | 0% |
+| male, white noise 30 dB down | 12 Hz | 7.5% |
+| female, clean | 20 Hz | 0.6% |
+| female, white noise 30 dB down | 22 Hz | 8.9% |
+
+The tracker (D5) gives exactly the same numbers in all four cases. The
+errors in noise are roots in the wrong place, not roots with the wrong
+label: looked at by hand in the male utterance (not printed by the
+checker), the weak F3 of "who'd" comes out 230 to 420 Hz high, and no
+labeling can move it. So a synthesized utterance cannot show what a tracker is for;
+the recordings can (C13).
+
+**C12. Burg's method gives the same formants as the autocorrelation
+method.** [check] Root nearest each given formant, order 18, 25 ms Hamming,
+pre-emphasis, over the static vowels: autocorrelation 5.5 Hz median (at most
+16 Hz) male, 31 Hz (46 Hz) female; Burg 4.7 Hz (14 Hz) male, 32 Hz (45 Hz)
+female. The method is not what separates sonore's recipe from Praat's.
+
+**C13. With Praat's recipe the LPC formants of the recordings match Praat's
+to a few hertz, and the tracker makes the female talker's tracks smoother
+than Praat's.** [crosscheck] Median difference from Praat's F1, F2, F3, and
+the fraction of voiced neighbors where a track jumps by more than 20%:
+
+| | median diff. F1, F2, F3 | jumps F1, F2, F3 |
+|---|---|---|
+| male, Praat | | 7.0%, 4.2%, 0.9% |
+| male, Praat's recipe, by count | 1.1, 2.9, 7.3 Hz | 6.3%, 4.4%, 1.6% |
+| male, Praat's recipe, tracker | 1.1, 2.9, 7.3 Hz | 6.5%, 4.4%, 1.4% |
+| female, Praat | | 16%, 9.4%, 5.5% |
+| female, Praat's recipe, by count | 1.9, 4.1, 4.6 Hz | 16%, 10%, 6.4% |
+| female, Praat's recipe, tracker | 2.0, 4.4, 5.2 Hz | 12%, 7.2%, 3.2% |
+
+So the autocorrelation method on a Hamming window reproduces Praat's Burg
+method on its Gaussian window to within a few hertz once the roots are
+picked the same way (C12 says the method hardly matters). For the male
+talker the tracker changes almost nothing; for the female talker it halves
+the F3 jumps without moving the median agreement by more than 0.6 Hz.
+Jumps are a symptom, not a measure of error: some are real (a consonant
+release), and with no hand-labeled formants for these sentences the
+tracker's gain on recordings is shown as smoothness only. The tracker
+applied to the textbook recipe (16 kHz, bandwidth under 400 Hz) cuts the
+F3 jumps from 24% to 14% (male) and from 42% to 30% (female), but not to
+Praat's level: picking all roots matters more than tracking.
+
+**C14. Of the four envelopes, only LPC gives the formants directly; reading
+peaks off the others is less accurate, and off the cepstral and MFCC
+envelopes it needs to know where to look.** [crosscheck] F1–F3 of the
+synthesized vowels at 40 time windows each, taken as the k-th peak of each
+envelope ("by count") and, as a best case no real use could reach, as the
+peak nearest each true formant; the sound pre-emphasized for every method:
+
+| | male, by count | male, nearest | female, by count | female, nearest |
+|---|---|---|---|---|
+| LPC roots (Praat's recipe) | 7.5 Hz, 0% | 7.5 Hz, 0% | 25 Hz, 5.6% | 25 Hz, 5.6% |
+| CheapTrick peaks | 27 Hz, 11% | 27 Hz, 11% | 71 Hz, 39% | 67 Hz, 28% |
+| cepstral envelope peaks | 690 Hz, 100% | 27 Hz, 18% | 520 Hz, 83% | 80 Hz, 26% |
+| MFCC envelope peaks | 76 Hz, 66% | 93 Hz, 50% | 290 Hz, 76% | 190 Hz, 48% |
+
+(median F1–F3 error, then the fraction of gross errors: missing or more than
+10% off; a missing formant counts as gross but stays out of the median,
+which is why a median by count can be lower than the nearest-peak one.)
+The cepstral envelope liftered at half a period keeps a ripple
+that makes extra peaks, so its k-th peak is rarely Fk, though a peak lies
+near each formant. Thirteen MFCCs smooth too much to separate close
+formants (F1 and F2 of "hawed" are 270 Hz apart). CheapTrick is built to
+follow the harmonic peaks and does so, but is still three to four times
+less accurate than the roots. No method was tuned for this, and MFCCs were
+never meant to locate formants; the table says what each envelope keeps,
+not which is better at its own job.
 
 ## Views, and what this one drops
 
@@ -209,7 +298,7 @@ coefficients and one error power. It drops:
 
 Each recommendation follows the strongest form of each alternative.
 
-**D1. One new type, `so.LPC`, in `src/sonore/views/lpc.py`, dispatching on
+**D1. One new view, `so.LPC`, in `src/sonore/views/lpc.py`, dispatching on
 its input as `so.MFCC` does.** A `Sound` is analyzed with the speech recipe
 (25 ms symmetric Hamming window, the window `MFCC` already uses, a 10 ms hop,
 and an FFT length rounded up to a power of two at least `order` samples
@@ -218,98 +307,132 @@ longer than the window, so the autocorrelation is exact by C3). An `STFT` or
 from its power by one inverse FFT; if its FFT is shorter than the longest
 window plus `order`, `LPC` raises and says which `n_fft` would work (C3: the
 error is small, 4.5 Hz in the example, but a view called "the
-autocorrelation method" should compute it). Alternatives:
+autocorrelation method" should compute it). `LPC.candidates()` returns every
+root in the upper half plane, with its frequency and bandwidth, sorted and
+NaN-padded; filtering by bandwidth is left to the caller, since C7 and C13
+show a fixed threshold is what breaks labeling. Alternatives:
 
 - **A function `so.lpc(segment, order) -> ndarray`**, as in librosa. The
-  simplest, and it would still be offered as the inner step, but it loses
-  the time grid, the envelope and the plot that every other sonore view
-  keeps. Could be added later beside the class if wanted.
+  simplest, but it loses the time grid, the envelope and the plot that
+  every other sonore view keeps.
 - **Windowing the sound itself rather than taking an STFT**, so no FFT is
   needed. Equally exact, but a second copy of the windowing that `STFT`
-  already does; the FFT route keeps one copy (dedup-over-line-count).
+  already does; the FFT route keeps one copy.
 
 **D2. The autocorrelation method with Levinson–Durbin.** Stable by
-construction (C2), exact from an STFT (C3), and the textbook method.
-Alternatives: **Burg's method** (Praat's default for formants, librosa's
-`lpc`) also guarantees stability and avoids the window's effect on the
-estimate, which helps with short windows; it does not come from an STFT and
-would be a second, sample-domain path. **The covariance method** fits
-without windowing and can be more accurate on a few pitch periods, but
-gives no stability guarantee. Either could be added later as
-`method="burg"`; not now.
+construction (C2), exact from an STFT (C3), and the textbook method. Burg's
+method gives the same formants (C12) and is what Praat uses, but it works on
+samples, not on an STFT, so it would be a second path for no measured gain.
+The covariance method gives no stability guarantee. Neither is offered now.
 
-**D3. `order` defaults to round(fs / 1000) + 2.** 18 at 16 kHz, which C6
-finds near the best for these vowels. The rule is cited from memory (Markel
-& Gray, 1976) and is an estimate for other voices and rates; at 44.1 kHz it
-gives 46, fitting the whole band to 22 kHz, so for formants a user would
-analyze a resampled sound. Alternative: make `order` required. Honest, but
-the rule is what every course gives first, and the docstring can say it is a
-rule of thumb.
+**D3. `so.LPC`'s `order` defaults to round(fs / 1000) + 2.** 18 at 16 kHz,
+which C6 finds near the best for these vowels. The rule is cited from memory
+(Markel & Gray, 1976) and is an estimate for other voices and rates.
+Alternative: make `order` required. Honest, but the rule is what every
+course gives first, and the docstring can say it is a rule of thumb.
 
-**D4. `formants()` returns every candidate root, not labeled F1, F2,
-F3.** Frequencies and bandwidths of the roots in the upper half plane,
-narrower than `max_bandwidth` (400 Hz) and above `min_freq` (90 Hz),
-sorted by frequency, NaN-padded to the same count per time window: shape
-`(n_channels, n_candidates, n_windows)` each. The thresholds are common
-choices, not measured optima (estimates). C7 shows that labeling by count
-is where estimates go wrong, and fixing that needs continuity across time:
-a formant tracker, which is out of scope here. The gallery draws candidates
-as dots. Alternative: return F1–F3 by count, as many tools do; simpler to
-use, but it would build C7's failure into the API.
+**D4. A function `so.formant_track(sound, ceiling=5000, n_formants=5, ...)`
+returning a `FormantTrack` view, with Praat's recipe.** It mirrors
+`so.f0_track` and `F0Track`: a function that analyzes a sound and a view
+that keeps the result. It resamples the sound to twice `ceiling`
+(`Sound.resample`), pre-emphasizes it, runs `so.LPC` on it with order
+2 × `n_formants` (25 ms window, 5 ms hop), keeps every root between 50 Hz
+and `ceiling` − 50 Hz (C10), and tracks F1–F3 (D5). `FormantTrack` holds
+`t`, `frequencies` and `bandwidths` of shape `(n_channels, 3, n_windows)`,
+and the `candidates` it chose from, as `F0Track` keeps its candidates. It
+does not decide voicing: unvoiced time windows get formants too, and the
+caller masks them with an F0 track's voicing, as the gallery would. Why
+Praat's recipe: it matches Praat to a few hertz (C13), so sonore's tracks
+can be checked against the tool phoneticians use, and it removes most
+labeling errors before any tracking (C7 against C13). The ceiling is the
+user's choice, as in Praat; the docstring says 5000 Hz for a male voice and
+5500 Hz for a female one (Praat's advice, not measured here beyond these two
+talkers). Alternatives:
 
-**D5. Pre-emphasis is not an argument, as in `MFCC`.** `MFCC`'s D3
-(accepted 2026-10-02) decided that pre-emphasis is a change to the sound,
-applied to the sound before the view; LPC follows the same rule, and its
-docstring gives the same `scipy.signal.lfilter([1, -0.97], 1, ...)` line.
-Here it matters more than for MFCCs (C8: 8.9 against 16 Hz), so the
-docstring says so plainly, and the gallery always shows the line.
-Alternatives: a `preemphasis=0.97` argument (convenient and the usual
-default for LPC, but it would contradict MFCC's accepted decision); or a
-small public `so.preemphasize(snd, 0.97)` used by both docstrings (a new
-name for a one-line filter; worth it only if more views need it).
+- **A `formants()` method on `so.LPC`** with the 16 kHz textbook recipe.
+  One name fewer, but C7 and C13 show the textbook recipe labels worse,
+  and resampling a sound is a change to the sound, which a view should not
+  make (D6).
+- **Labeling by count with no tracker**, which is what Praat's
+  `To Formant` returns. Simpler, and C11 finds it already right on
+  synthesized speech, but on the female recording the tracker halves the
+  F3 jumps (C13).
 
-**D6. `envelope(f)` and `envelope_view()` give E / |A|² on the analyzed
+**D5. The tracker is a Viterbi search over assignments of candidates to
+F1–F3.** A state is an increasing choice of three candidates in one time
+window (a formant may be missing only when there are fewer than three).
+Its cost is, per formant, |ln(f / nominal)| with nominal frequencies 500,
+1500 and 2500 Hz (a uniform 17.5 cm tube), plus bandwidth / f, plus 2 for
+every candidate skipped below the highest one chosen; moving between time
+windows costs 5 |ln(f_now / f_before)| per formant. This is the shape of
+Talkin's (1987) dynamic-programming tracker as cited from memory, not a port
+of it. The weights were set by trying a handful of values on the two
+gallery sentences and the synthesized utterance (C11, C13); they are an
+estimate, not an optimum, and they are parameters. Two pieces were needed
+to keep it from making things worse, and are kept: the skip cost (without
+it the tracker skipped F2's root and called F3 "F2") and allowing a missing
+formant only when candidates run out (without it, missing slots dodged the
+transition cost). Alternative: no nominal frequencies, only continuity.
+Fewer parameters, but nothing then anchors which candidate is F1 at the
+start of each voiced stretch.
+
+**D6. Pre-emphasis is not an argument of `so.LPC`, as in `MFCC`; it is
+part of `so.formant_track`'s recipe.** `MFCC`'s D3 (accepted 2026-10-02)
+decided that pre-emphasis is a change to the sound, applied before a view;
+`so.LPC` follows it, and its docstring gives the `scipy.signal.lfilter([1,
+-0.97], 1, ...)` line and says it matters (C8: 8.9 against 16 Hz).
+`so.formant_track` is a named recipe from a sound, like `so.f0_track`, and
+resampling and pre-emphasis are steps of that recipe, stated in its
+docstring. Alternative: no pre-emphasis inside `formant_track` either, so
+the caller must remember it; consistent, but every call would need the same
+line, and forgetting it doubles the error.
+
+**D7. `envelope(f)` and `envelope_view()` give E / |A|² on the analyzed
 sound's power scale, as a `GridEnvelope`.** Then LPC plugs into everything
 that reads an envelope: `warp_frequency`, `world_synthesize`,
 `harmonic_complex`, and the Spectral envelope page's comparisons. By C9 its
 level is that of the time window's power spectrum, the same scale as
 `Cepstrum.envelope_view()`. When the sound was pre-emphasized the envelope
-is the pre-emphasized one; the view does not undo a change it did not make
-(D5).
+is the pre-emphasized one; the view does not undo a change it did not make.
 
-**D7. The gallery demo goes on Formant synthesis, in a new section
+**D8. The gallery demo goes on Formant synthesis, in a new section
 "Finding the formants again" before "What this page leaves out", with a
 link from Spectral envelope.** Proposed items:
 
 1. *figure*: one time window of the synthesized male "hod": its harmonics,
-   the filter the synthesizer was given, the LPC envelope, and the
-   recovered formants marked against the given ones;
+   the filter the synthesizer was given, and the LPC, CheapTrick, cepstral
+   and MFCC envelopes, with the LPC formants marked against the given ones
+   and C14's table printed beside it;
 2. *figure*: the vowel chart (F2 against F1) with the given male and female
    averages and arrows to what LPC recovers, showing the female errors
    (C4);
 3. *demo*: "hod" with the pitch gliding from 100 to 300 Hz, its wideband
    spectrogram with the LPC candidates as dots over the given formants, so
    the estimate can be seen breaking as harmonics cross F1 (C5);
-4. *demo*: the two talkers' sentence with LPC candidates as dots over the
-   spectrogram.
+4. *demo*: the two talkers' sentence with F1–F3 from `so.formant_track`
+   over the spectrogram, voiced parts only, by count and tracked;
+5. *demo*: copy synthesis. Each talker's tracks and `so.f0_track`'s F0 and
+   voicing drive `so.klatt_synthesize`, played next to the recording. How
+   it sounds has not been tried; what it leaves out (bandwidths fixed,
+   fricatives and bursts unmodeled unless their noise is added) would be
+   said beside it.
 
-The "Copying a recording" bullet in "What this page leaves out" changes to
-say that LPC finds formant candidates per time window, and that linking them
-into tracks (a tracker) is what is still missing. On Spectral envelope, one
-paragraph and, if the gallery-rewrite thread agrees, an LPC curve on its
-one-window figure, linking to the new section. Alternative: a page of its
-own; not recommended, since the point of LPC here is recovering the
-formants this page writes down.
+The "Copying a recording" bullet in "What this page leaves out" goes, and
+the "formant tracker that sonore does not have" there and on Spectral
+envelope is updated. On Spectral envelope, one paragraph and, if the
+gallery-rewrite thread agrees, an LPC curve on its one-window figure.
+Alternative: a page of its own; not recommended, since the point is
+recovering the formants this page writes down, and then using them.
 
-**D8. No resynthesis in this step.** An LPC vocoder (residual or
-pulse-and-noise excitation through 1 / A(z)) is the classic next demo, and
-the residual would make an exact analysis–synthesis pair. It is a separate
+**D9. No LPC resynthesis in this step.** An LPC vocoder (the residual, or
+pulses and noise, through 1 / A(z)) is the classic next demo, and the
+residual would make an exact analysis–synthesis pair. It is a separate
 addition (a `residual()` method and a time-varying all-pole filter);
-proposed later if wanted.
+proposed later if wanted. Copy synthesis (D8) resynthesizes through the
+formant synthesizer instead.
 
 ## API sketch
 
-    snd = so.load(...)
     emphasized = so.Sound(scipy.signal.lfilter([1, -0.97], 1, snd.data, axis=0), snd.fs)
     lpc = so.LPC(emphasized)                # order 18 at 16 kHz, 25 ms, 10 ms hop
     lpc = so.LPC(stft, order=16)            # any STFT with n_fft >= window + order
@@ -319,11 +442,17 @@ proposed later if wanted.
     lpc.t             # window times [s]
     lpc.envelope(f)   # power at frequencies f, (n_channels, len(f), n_windows)
     lpc.envelope_view()                     # GridEnvelope on the STFT's bins
-    freqs, bandwidths = lpc.formants(max_bandwidth=400, min_freq=90)
+    freqs, bandwidths = lpc.candidates()    # every root, NaN-padded
     lpc.plot(ax)      # the envelope as a spectrogram, candidates as dots
 
-A time window of digital silence (r[0] = 0) gets A(z) = 1 and zero error
-power, and no candidates.
+    track = so.formant_track(snd, ceiling=5500)   # Praat's recipe plus the tracker
+    track.t, track.frequencies, track.bandwidths  # (n_channels, 3, n_windows)
+    track.candidates                              # what the tracker chose from
+    track.plot(ax)                                # over a spectrogram
+    so.klatt_synthesize(dur, fs, F1=(track.t, track.frequencies[0, 0]), ...)
+
+A time window of digital silence (r[0] = 0) gets A(z) = 1, zero error
+power and no candidates.
 
 ## Tests (target: under 1 s added; an estimate)
 
@@ -331,7 +460,12 @@ power, and no candidates.
 - The autocorrelation from an STFT equals the direct sum when n_fft ≥ L + p,
   and an STFT with a shorter FFT raises (C3).
 - Every root inside the unit circle on the gallery sentences (C2).
-- A synthesized male vowel's F1–F3 within the checker's numbers (C4).
+- A synthesized male vowel's F1–F3 within the checker's numbers (C4, C10).
+- `formant_track` on the male sentence within a few hertz of Praat's
+  formants, stored as a small fixture so the tests need no parselmouth
+  (C13).
+- The tracker on the synthesized utterance agrees with labeling by count
+  (C11), and on a candidate list with a planted spurious root it skips it.
 - mean(P / P_model) = 1 for one window (C9), and the envelope reads through
   `warp_frequency`.
 - Silent windows give finite output.
@@ -340,22 +474,25 @@ power, and no candidates.
 
 1. This document, `tools/check_lpc_claims.py` and `tools/crosscheck_lpc.py`
    (this PR).
-2. After Cho's decisions: `so.LPC`, tests, API docs, README row, CHANGELOG;
-   `crosscheck_lpc.py` switched to call `so.LPC`.
-3. The gallery section (D7), on top of the gallery rewrite.
+2. After Cho's decisions: `so.LPC`, `so.formant_track`, `FormantTrack`,
+   tests, API docs, README row, CHANGELOG; `crosscheck_lpc.py` switched to
+   call them.
+3. The gallery section (D8), on top of the gallery rewrite.
 
 ## Out of scope
 
-- A formant tracker (continuity over time, labeling F1–F3), and copy
-  synthesis driven by it.
 - Burg and covariance methods (D2), line spectral frequencies, and LPC
   cepstra.
-- Resynthesis (D8).
+- Antiresonances (pole-zero models) and formant tracking through nasals.
+- Voicing decisions inside `formant_track` (D4).
+- LPC resynthesis (D9).
 
 ## References
 
 None of these was verified by lookup for this document; they are cited from
-memory. Every number above comes from the checker or the crosscheck.
+memory. Every number above comes from the checker or the crosscheck. Praat's
+advice on ceilings and its formant recipe are from Praat's manual as
+remembered; C13 checks the recipe against Praat itself.
 
 - Atal, B. S. & Hanauer, S. L. (1971). Speech analysis and synthesis by
   linear prediction of the speech wave. *J. Acoust. Soc. Am.* 50(2B),
@@ -371,3 +508,7 @@ memory. Every number above comes from the checker or the crosscheck.
   Springer. The order rule of thumb.
 - Peterson, G. E. & Barney, H. L. (1952). Control methods used in a study of
   the vowels. *J. Acoust. Soc. Am.* 24(2), 175–184. The vowels.
+- Talkin, D. (1987). Speech formant trajectory estimation using dynamic
+  programming with modulated transition costs. *J. Acoust. Soc. Am.* 82(S1),
+  S55 (a meeting abstract; volume and page not checked). The shape of the
+  tracker (D5); only the idea is used.
