@@ -188,12 +188,24 @@ class HRIRSet:
         Interpolate onset-aligned IRs and interpolate the onset delays
         separately. Avoids the comb filtering you get from averaging HRIRs with
         different delays.
+    fit_onsets
+        With ``align`` and three or more measured distances, delay each IR's
+        two ears together so that their mean onset follows a fit across
+        distances rather than the measured one: for each direction, the
+        travel time ``r/c`` plus ``a + b/r``, fitted to the measured mean
+        onsets with any more than 50 µs off the first fit left out. The
+        ``b/r`` term follows the ears sitting off the head's center, which
+        matters up close. Each ITD stays as measured. This keeps
+        a distance measured with an offset (PKU-IOA's horizontal ring at
+        1.3 m arrives about 110 µs early) from bending the delay, and so the
+        Doppler shift, of a source moving through it.
     """
 
     irs: np.ndarray
     positions: np.ndarray
     fs: float
     align: bool = True
+    fit_onsets: bool = True
     onset_threshold_db: float = -20.0
     _pre: int = field(default=4, repr=False)
 
@@ -288,6 +300,34 @@ class HRIRSet:
         envelope = np.abs(self.irs)
         threshold = envelope.max(axis=-1, keepdims=True) * db_to_amp(self.onset_threshold_db)
         return np.argmax(envelope >= threshold, axis=-1).astype(float)  # (M, 2)
+
+    @cached_property
+    def _delay_onsets(self) -> np.ndarray:
+        """The onsets [samples] at which the aligned IRs are placed, shape (M, 2):
+        fitted across distances (see ``fit_onsets``), or the measured ones."""
+        if not self.fit_onsets or len(self._shells) < 3:
+            return self._onsets
+        radii = np.linalg.norm(self.positions, axis=1)
+        _, direction = np.unique(np.round(self.positions / radii[:, None], 6), axis=0, return_inverse=True)
+        direction = direction.ravel()
+        n_directions = direction.max() + 1
+        design = np.column_stack([np.ones_like(radii), 1 / radii])  # a + b/r
+        # the two ears' mean onset beyond the travel time [s]; fitting the mean keeps each ITD as measured
+        beyond_travel = self._onsets.mean(axis=1) / self.fs - radii / SPEED_OF_SOUND
+        used = np.ones(len(radii), bool)
+        for _ in range(2):  # fit, then refit without the onsets far off the first fit
+            normal = np.zeros((n_directions, 2, 2))
+            right = np.zeros((n_directions, 2))
+            np.add.at(normal, direction[used], design[used, :, None] * design[used, None, :])
+            np.add.at(right, direction[used], design[used] * beyond_travel[used, None])
+            count = np.bincount(direction[used], minlength=n_directions)
+            solvable = (count >= 3) & (np.abs(np.linalg.det(normal)) > 1e-12)
+            coefficients = np.zeros((n_directions, 2))
+            coefficients[solvable] = np.linalg.solve(normal[solvable], right[solvable][..., None])[..., 0]
+            prediction = np.einsum("mk,mk->m", design, coefficients[direction])
+            used = np.abs(beyond_travel - prediction) <= 50e-6
+        shift = np.where(solvable[direction], prediction - beyond_travel, 0.0) * self.fs
+        return self._onsets + shift[:, None]
 
     @cached_property
     def _aligned(self) -> np.ndarray:
@@ -414,12 +454,12 @@ class HRIRSet:
         and their onsets [s], shape (N, 2)."""
         indices, weights = self._weights(points)
         shapes = self._resampled(self._blend(weights, self._aligned[indices]), fs)
-        return shapes, self._blend(weights, self._onsets[indices]) / self.fs
+        return shapes, self._blend(weights, self._delay_onsets[indices]) / self.fs
 
     def _onset_times(self, points: np.ndarray) -> np.ndarray:
         """Interpolated onsets [s] at ``points`` (N, 3), shape (N, 2)."""
         indices, weights = self._weights(points)
-        return self._blend(weights, self._onsets[indices]) / self.fs
+        return self._blend(weights, self._delay_onsets[indices]) / self.fs
 
     @staticmethod
     def _blend(weights: np.ndarray, measured: np.ndarray) -> np.ndarray:
@@ -462,8 +502,8 @@ class HRIRSet:
         indices, weights = self._weights(points)
         if self.align:
             shapes = self._blend(weights, self._aligned[indices])
-            onsets = self._blend(weights, self._onsets[indices])
-            n_out = self.irs.shape[-1] + int(np.ceil(self._onsets.max()))
+            onsets = self._blend(weights, self._delay_onsets[indices])
+            n_out = self.irs.shape[-1] + int(np.ceil(self._delay_onsets.max()))
             hrir = _frac_shift(shapes, onsets - self._pre, n_out)
         else:
             hrir = self._blend(weights, self.irs[indices])

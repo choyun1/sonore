@@ -471,14 +471,16 @@ and should sound the same (C5).
   coming toward the head neared the speed of sound (it gave up at
   300 m/s) and, for one faster than sound, settled outside the sound and
   returned a near-silent result instead of an error. A source whose ear delay shrinks faster than time
-  passes is now refused. With PKU-IOA that happens at 300 m/s already
-  (0.87 of the speed of sound): crossing 1.6 m, the measured onsets make
+  passes is now refused. With PKU-IOA's measured onsets that happened at
+  300 m/s already (0.87 of the speed of sound): crossing 1.6 m, they made
   the left ear's delay shrink at 0.99 s per s where the travel time
-  shrinks at 0.87. Results for slower paths are unchanged to 1e-10.
+  shrinks at 0.87. With the onsets fitted across distances (below) it
+  shrinks at 0.88 there, and 300 m/s renders; 400 m/s is refused.
+  Results for slower paths were unchanged to 1e-10.
   On the gallery's jumping path (top speed 247 m/s, 28° of azimuth in
   5 ms), shapes switched every 5 ms differ from shapes switched every
   0.0625 ms by −13 dB in the worst 20 ms window, and every 0.5 ms by
-  −29 dB, so the gallery renders it with `hop=0.5e-3`.
+  −30 dB, so the gallery renders it with `hop=0.5e-3`.
 - Speed (numbers from `tools/check_move_sound_speed.py`). A 3 s render
   at 44.1 kHz took 1.3 s, most of it spent outside the convolutions:
   computing the windowed sinc afresh for every output sample, and testing
@@ -492,6 +494,44 @@ and should sound the same (C5).
   random directions per shell this picks the same triangles and weights.
   The same render now takes 0.3 s. The convolutions, one per `hop` per
   ear, were never the main cost.
+
+### Onsets fitted across distances
+
+Numbers from `tools/check_onset_fit.py`, on Cho's PKU-IOA files.
+
+Found (2026-10-09, reviewing `move_sound`): PKU-IOA's horizontal ring at
+1.3 m arrives early. The two ears' mean onset, less the travel time
+`r/c`, is between −165 and −195 µs at every distance from 30 cm out,
+both over all directions and on the horizontal ring, except on the
+horizontal ring at 1.3 m, where it is −281 µs. At every one of the
+ring's 72 azimuths, its onset comes 755 to 778 µs after the onset at
+1.0 m, where 0.3 m of travel takes 875 µs. Every other elevation at
+1.3 m agrees with the other distances. The cause is not known; a
+loudspeaker about 4 cm nearer, or a latency offset in that session, would
+both fit (an estimate from the size of the offset, not checked).
+
+Effect: each ear's delay was the measured onset, so a source moving
+through 1.0 to 1.6 m in the horizontal plane had the wrong Doppler
+shift. A 2 kHz tone approaching at 15 m/s, which travel time alone
+shifts by 77.4 cents, was shifted 86.7 cents at 1.45 m and 66.9 cents at
+1.15 m (left ear, straight ahead). At 10° elevation it stayed within
+2 cents. This touched the gallery's 15 m/s straight paths that pass
+close to the head, not the pass-by 3 m away.
+
+Resolution (Cho chose this, 2026-10-10): with three or more measured
+distances, `HRIRSet` (`fit_onsets=True`, the default) fits, for each
+direction, the two ears' mean onset as `r/c + a + b/r`, refits without
+any onset more than 50 µs off the first fit, and delays both ears of
+each IR together by the difference between the fit and the measured
+mean onset. The aligned shapes are unchanged, and so is every ITD. The
+`b/r` term is there because the ears sit off the head's center: fitting
+`r/c + a` alone left the 20 cm onsets about 60 µs late (median), and the
+`b/r` term brings that to 16 µs. The fit moves most IRs by under
+25 µs, between one and two samples at 65.5 kHz, and the horizontal ring
+at 1.3 m by 91 µs. The same tone now shifts 76.6 cents at 1.45 m and
+76.0 at 1.15 m. `spatialize` and `HRIRSet.at` use the same onsets, so a
+still source still matches `move_sound`; `fit_onsets=False` keeps the
+measured onsets as before.
 
 ## Order
 
