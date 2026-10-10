@@ -193,7 +193,11 @@ touches: wrong or inconsistent claims (the pitch ratios above), uncited claims (
 "octave errors are the most common", the ba/da/ga transition cues), statements the demo does not
 show (Harmonics says the contour marks a question, but the sentence is a statement), and passages
 that are hard to follow. Every correction is listed in the PR description with what was checked,
-and a new number is measured by a checker or labeled an estimate. Recommendation: yes, folded
+and a new number is measured by a checker or labeled an estimate. Citations get the same pass: each
+one the page keeps is checked against the work itself (authors, year, title, journal, and the
+claim it supports), linked by DOI or a stable URL, listed in the page's References only if the
+text cites it, and present in the README References (the existing docs test checks the last
+part). Recommendation: yes, folded
 into the group PRs rather than a separate sweep, so each page is rewritten once.
 
 **D16. Cross-links between demos.** As the Synthetic sounds page and Tuning and temperament now
