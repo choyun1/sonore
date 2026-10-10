@@ -437,21 +437,35 @@ class ModulationSpectrum(View):
         f_hi: float = 8000.0,
         bands_per_octave: float = 12,
         env_fs: float = 1000.0,
-        rms_depth: float = 0.2,
+        rms_depth: float | None = None,
+        scale: str = "linear",
+        sd_db: float | None = None,
     ) -> ModulationSpectrum:
         """A target spectrum drawn in code: the sum of :class:`ModulationBlob`
         powers, on the grid :meth:`octave` would measure for a sound of
         ``duration`` seconds, ready for :meth:`to_sound`.
 
         A drawing sets a shape, not a depth, and no long-term spectrum: every
-        band gets the same mean envelope, and ``rms_depth`` scales the
-        modulation (the rms of the envelope array about its mean, relative to
-        the mean). Because envelopes cannot go below zero, a random draw
-        reaches only a limited depth: about 0.28 for a one-blob target in
+        band gets the same mean envelope, and the depth is given separately.
+        With ``scale="linear"`` the blobs describe the envelopes themselves
+        and ``rms_depth`` (default 0.2) scales the modulation: the rms of the
+        envelope array about its mean, relative to the mean. Because
+        envelopes cannot go below zero, a random draw reaches only a limited
+        depth: about 0.28 for a one-blob target in
         ``docs/design/views/modulation-targets.md`` (C2), against 0.71 for one
         full ripple. :meth:`to_envelopes` refuses a draw that would need
-        clipping and names the largest depth that fits it. :attr:`level`
-        shows the drawn power itself (no taper).
+        clipping and names the largest depth that fits it.
+
+        With ``scale="db"`` the blobs describe the envelopes in dB, as the
+        spectrum of ``octave(..., scale="db")`` does, and ``sd_db`` (default
+        6) is the rms of that dB array about its mean. Any level in dB is a
+        positive envelope, so nothing is clipped and the modulation can be as
+        deep as wanted: a random draw is a Gaussian field of levels, as
+        :func:`~sonore.sources.gaussian_spectrogram.gaussian_spectrogram` is
+        for exponential correlations. Deep dB draws spread some of the
+        modulation power of the linear envelopes away from the blobs.
+
+        :attr:`level` shows the drawn power itself (no taper).
         """
         from sonore.core.utils import n_samples
         from sonore.frames.filterbank import cosine_filterbank
@@ -461,22 +475,36 @@ class ModulationSpectrum(View):
             blobs = [blobs]
         if not blobs:
             raise ValueError("give at least one ModulationBlob")
-        if rms_depth <= 0:
-            raise ValueError("rms_depth must be positive")
+        if scale == "linear":
+            if sd_db is not None:
+                raise TypeError('sd_db applies only to scale="db"; use rms_depth')
+            depth = 0.2 if rms_depth is None else rms_depth
+            if depth <= 0:
+                raise ValueError("rms_depth must be positive")
+        elif scale == "db":
+            if rms_depth is not None:
+                raise TypeError('rms_depth applies only to scale="linear"; use sd_db')
+            depth = 6.0 if sd_db is None else sd_db
+            if depth <= 0:
+                raise ValueError("sd_db must be positive")
+        else:
+            raise ValueError(f'scale must be "linear" or "db", not {scale!r}')
         bank = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
         n_bands, n_times = bank.n_filters - 2, n_samples(duration, env_fs)
         new = cls.__new__(cls)
-        new._analysis = _EnvelopeAnalysis(bank, env_fs, n_times, "linear", True)
+        new._analysis = _EnvelopeAnalysis(bank, env_fs, n_times, scale, True)
         rate, density = new._full_axes(shape=(n_bands, n_times))
         power = sum(blob.power(rate, density) for blob in blobs)
         power = (power + np.roll(power[::-1, ::-1], 1, axis=(0, 1))) / 2  # the same at (-rate, -density)
         magnitude = np.sqrt(power)
         if not np.any(magnitude > 0):
             raise ValueError("the blobs fall outside this grid's rates and densities")
-        # Parseval: the rms of an array is the norm of its unnormalized 2-D DFT over the cell count
-        new._mean = 1.0
-        new._magnitude = magnitude * (rms_depth * magnitude.size / np.linalg.norm(magnitude))
-        new._rms_depth = rms_depth
+        # Parseval: the rms of an array is the norm of its unnormalized 2-D DFT over the cell count.
+        # A linear array has mean 1, so its rms is the depth; a dB array's mean (0 dB) only sets
+        # the overall level.
+        new._mean = 1.0 if scale == "linear" else 0.0
+        new._magnitude = magnitude * (depth * magnitude.size / np.linalg.norm(magnitude))
+        new._rms_depth = depth if scale == "linear" else None
         keep = np.fft.fftfreq(n_bands, bank.spacing) >= 0
         new.w_f = np.fft.fftfreq(n_bands, bank.spacing)[keep]
         new.w_t = np.fft.fftshift(np.fft.fftfreq(n_times, 1 / env_fs))

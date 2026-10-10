@@ -24,6 +24,16 @@ Breaking changes since 0.5.0 (each is described under Changed):
 
 ### Added
 
+- `so.gaussian_spectrogram`: random spectrograms whose levels correlate
+  exponentially in time and frequency (McDermott, Wrobleski & Oxenham, 2011),
+  returned as `Envelopes` and heard through `to_sound`
+  (docs/design/sources/gaussian-spectrogram.md).
+  The gallery's "Hearing a modulation spectrum" page has a section on them,
+  and its "Classic stimuli" page is now "Synthetic sounds".
+- `ModulationSpectrum.from_blobs(..., scale="db", sd_db=6)` draws blobs as the
+  modulation spectrum of envelopes in dB. Nothing has to be clipped, so the
+  modulation can go deeper than a linear draw's limit of about 0.28. The
+  default stays linear.
 - Every view has `.plot()` (docs/design/layout/plotting.md). A view with no
   single picture refuses with `NotImplementedError` and its `no_plot`
   sentence, which names what to plot instead: `ReassignedSpectrogram`

@@ -1,4 +1,4 @@
-"""Classic stimuli: speech-shaped noise, beats, amplitude modulation and tone sequences.
+"""Synthetic sounds: speech-shaped noise, beats, tone sequences and band-limited waveforms.
 
 This script is the gallery page https://choyun1.github.io/sonore/gallery/classic.html:
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
@@ -10,10 +10,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
 
 # %% [markdown]
-# # Classic stimuli
+# # Synthetic sounds
 #
-# A few stimuli that turn up again and again in hearing research, each built in a line or two
-# from sonore's generators.
+# A few stimuli made from parameters alone that turn up again and again in hearing research,
+# each built in a line or two from sonore's generators.
 #
 # - [Speech-shaped noise](#h-speech-shaped-noise): noise with the long-term spectrum of speech,
 #   and none of its modulation, and the long-term spectra of a male and a female talker.
@@ -26,6 +26,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   frequencies.
 # - [Band-limited waveforms](#h-band-limited-waveforms): a sawtooth gliding up four octaves,
 #   with and without aliasing.
+#
+# Random spectrograms with the coarse correlations of natural sounds are on
+# [Hearing a modulation spectrum](modtargets.html#h-random-spectrograms), beside the other
+# envelopes drawn from a modulation spectrum.
 
 # %%
 import matplotlib.pyplot as plt
@@ -166,8 +170,9 @@ sound = finish(beating_pair(40))
 fig, playhead = show(sound, fmax=2000, win_dur=50e-3)
 
 # %% [about]
-# 440 and 550 Hz, a major third: 110 Hz apart, more than an ERB. Two smooth tones, resolved in
-# the spectrum and the spectrogram.
+# 440 and 550 Hz, a major third in just intonation (5:4): 110 Hz apart, more than an ERB. Two
+# smooth tones, resolved in the spectrum and the spectrogram. [Tuning and
+# temperament](temperament.html#d-tt1) plays just and equal-tempered thirds side by side.
 
 # %% [demo b3] Two tones, 110 Hz apart
 sound = finish(beating_pair(110))

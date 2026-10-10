@@ -601,7 +601,7 @@ EXAMPLE_HEAD = f"""<link rel="stylesheet" href="{KATEX}katex.min.css" crossorigi
 
 TITLES = {
     "index.html": "Listening gallery",
-    "classic.html": "Classic stimuli",
+    "classic.html": "Synthetic sounds",
     "irn.html": "Iterated rippled noise",
     "ripples.html": "Spectrotemporal ripples",
     "binaural.html": "Binaural cues",
@@ -654,7 +654,8 @@ TOPICS = [
             ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
             (
                 "modtargets.html",
-                "sounds made from a modulation spectrum: measured, edited, drawn, or traded between sounds.",
+                "sounds made from a modulation spectrum: measured, edited, drawn, random spectrograms, or traded"
+                " between sounds.",
             ),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
         ],

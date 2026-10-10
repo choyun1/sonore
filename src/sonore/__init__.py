@@ -55,6 +55,7 @@ from sonore.frames.filterbank import (
 from sonore.frames.frame import Frame
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame, TVGaborFrame
 from sonore.plotting import overview
+from sonore.sources.gaussian_spectrogram import gaussian_spectrogram
 from sonore.sources.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
 from sonore.sources.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
 from sonore.sources.waveforms import (
@@ -184,6 +185,7 @@ __all__ = [
     "Envelopes",
     "Envelope",
     "ripple_sound",
+    "gaussian_spectrogram",
     "RippleSum",
     "Ripple",
     "DynamicRipple",
