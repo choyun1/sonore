@@ -913,14 +913,13 @@ sounds = {label: finish(snd) for label, snd in pair.items()}
 # %% [markdown]
 # ## sonore says its name
 #
-# A whole word: "sonore" as /sɔnɔʁ/, with the tracks set by hand from what `so.f0_track` and
-# `so.formant_track` measure on a recording of the word from
-# [frenchdictionary.com](https://www.frenchdictionary.com/translate/sonore), a female voice. The
-# /s/ is frication through the high parallel formants, with the voicing starting under its tail,
-# as in /sa/. The first vowel is short, about 80 ms, and the pitch falls through it from about 265
-# Hz to about 195 Hz, then stays nearly level. For the /n/, F1 drops and the nasal zero opens.
-# Through the second vowel F2 slides down from about 1800 Hz to 1200 Hz, into the /ʁ/, which is
-# voiceless here: about 100 ms of aspiration noise through formants near 750 and 1250 Hz.
+# The word "sonore" (/sɔnɔʁ/) synthesized with Klatt, with measurements from a recording of the
+# word from [frenchdictionary.com](https://www.frenchdictionary.com/translate/sonore). The /s/ is
+# frication through the high parallel formants, with the voicing starting under its tail, as in
+# /sa/. The first vowel is short, about 80 ms, and the pitch falls through it from about 265 Hz to
+# about 195 Hz, then stays nearly level. For the /n/, F1 drops and the nasal zero opens. Through
+# the second vowel F2 slides down from about 1800 Hz to 1200 Hz, into the /ʁ/, which is voiceless
+# here: about 100 ms of aspiration noise through formants near 750 and 1250 Hz.
 # [sonore_from_recording.py](https://github.com/choyun1/sonore/blob/main/docs/logo/sonore_from_recording.py)
 # measures the recording and prints the table these tracks were read from, then makes an automatic
 # copy from the measurements, with nothing set by hand, to compare. sonore's logo is drawn loosely
