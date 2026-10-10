@@ -817,7 +817,7 @@ for label, (speaker, ceiling) in SPEAKERS.items():
 
 # %% [about]
 # Both sentences, with F1 to F3 drawn where the voice is voiced. The female talker's formants
-# are higher, and her tracks are less steady: with her harmonics farther apart there is less
+# are higher, and the tracks are less steady: with the harmonics farther apart there is less
 # envelope for LPC to fit, as in the glide above.
 
 # %% [demo ft4] Formant tracks of two talkers
@@ -885,7 +885,7 @@ copies = {
 # than this talker's voice. How intelligible the
 # copy is has not been measured.
 
-# %% [demo ft5] The male talker and his copy
+# %% [demo ft5] The male talker and the copy
 fig = plt.figure(figsize=(10, 3.4), layout="constrained")
 playhead = {}
 pair = {"Recording": talkers["Male talker"], "Copy": copies["Male talker"]}
@@ -897,9 +897,9 @@ for column, (label, snd) in zip(fig.subfigures(1, 2), pair.items(), strict=True)
 sounds = {label: finish(snd) for label, snd in pair.items()}
 
 # %% [about]
-# The female talker and her copy, made the same way.
+# The female talker and the copy, made the same way.
 
-# %% [demo ft6] The female talker and her copy
+# %% [demo ft6] The female talker and the copy
 fig = plt.figure(figsize=(10, 3.4), layout="constrained")
 playhead = {}
 pair = {"Recording": talkers["Female talker"], "Copy": copies["Female talker"]}

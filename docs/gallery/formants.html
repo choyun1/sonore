@@ -62,6 +62,7 @@ article + article, .cell + article, article + .cell { border-top: 1px dotted var
 article.sound, article.still { scroll-margin-top: 1.5rem; }
 article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h3.sub { font-weight: 500; font-size: 1.45rem; margin: 2.5rem 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
@@ -1141,7 +1142,7 @@ fig, playhead = show(sound, &quot;hod, F0 gliding from 100 to 300 Hz&quot;, [730
 draw_tracks(playhead[1], track)
 playhead[1].set_title(&quot;Spectrogram (Hann 6 ms): formants given (dashed) and found by so.formant_track (red)&quot;)</code></pre></details>
 </article>
-A recording
+<h3 class="sub" id="h-a-recording">A recording</h3>
 <p>The same analysis on the two talkers the other pages use, saying "Author of the danger trail,
 Philip Steels, etc." (CMU ARCTIC; sources in docs/speech/SOURCES.md). Formants are only
 meaningful where the voice is voiced, so <code>so.f0_track</code> decides where to draw them. There is no
@@ -1160,7 +1161,7 @@ for label, (speaker, ceiling) in SPEAKERS.items():
   <div class="about">
     <h3>Formant tracks of two talkers</h3>
     <div class="desc"><p>Both sentences, with F1 to F3 drawn where the voice is voiced. The female talker's formants
-are higher, and her tracks are less steady: with her harmonics farther apart there is less
+are higher, and the tracks are less steady: with the harmonics farther apart there is less
 envelope for LPC to fit, as in the glide above.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
@@ -1185,7 +1186,7 @@ for column, (label, snd) in zip(fig.subfigures(1, 2), talkers.items(), strict=Tr
     playhead[label] = [ax]
 sounds = {label: finish(snd) for label, snd in talkers.items()}</code></pre></details>
 </article>
-Copy synthesis
+<h3 class="sub" id="h-copy-synthesis">Copy synthesis</h3>
 <p>With formant tracks and a pitch track, the synthesizer can be driven from a recording rather
 than by hand. Here <code>so.klatt_synthesize</code> gets, every 5 ms, the measured F1 to F3 (with a
 five-window median to take out single-window jumps), the measured <span class="tex">F_0</span> while voiced, a
@@ -1230,7 +1231,7 @@ copies = {
 
 <article class="sound pair" id="d-ft5">
   <div class="about">
-    <h3>The male talker and his copy</h3>
+    <h3>The male talker and the copy</h3>
     <div class="desc"><p>The male talker: the recording, then the copy. The formant movements and the melody carry
 over; the voice quality, the consonants and the higher formants do not. The copy is also
 darker above 1 kHz, most likely because the synthesizer's default source falls off faster
@@ -1238,15 +1239,15 @@ than this talker's voice. How intelligible the
 copy is has not been measured.</p></div>
     <div class="players">
     <div><p class="track">Recording</p>
-    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_his_copy_recording.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
-    <p class="file">ft5_the_male_talker_and_his_copy_recording.flac, 2.5 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_the_copy_recording.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">ft5_the_male_talker_and_the_copy_recording.flac, 2.5 s, mono</p></div>
     <div><p class="track">Copy</p>
-    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_his_copy_copy.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.9909013396942505, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
-    <p class="file">ft5_the_male_talker_and_his_copy_copy.flac, 2.5 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_the_copy_copy.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.9909013396942505, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">ft5_the_male_talker_and_the_copy_copy.flac, 2.5 s, mono</p></div>
     </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/ft5_the_male_talker_and_his_copy.png" width="1000" height="340" alt="Plots of the the male talker and his copy sounds" loading="lazy">
+    <img src="img/ft5_the_male_talker_and_the_copy.png" width="1000" height="340" alt="Plots of the the male talker and the copy sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig = plt.figure(figsize=(10, 3.4), layout=&quot;constrained&quot;)
@@ -1262,19 +1263,19 @@ sounds = {label: finish(snd) for label, snd in pair.items()}</code></pre></detai
 
 <article class="sound pair" id="d-ft6">
   <div class="about">
-    <h3>The female talker and her copy</h3>
-    <div class="desc"><p>The female talker and her copy, made the same way.</p></div>
+    <h3>The female talker and the copy</h3>
+    <div class="desc"><p>The female talker and the copy, made the same way.</p></div>
     <div class="players">
     <div><p class="track">Recording</p>
-    <audio controls preload="metadata" src="audio/ft6_the_female_talker_and_her_copy_recording.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
-    <p class="file">ft6_the_female_talker_and_her_copy_recording.flac, 2.6 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/ft6_the_female_talker_and_the_copy_recording.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">ft6_the_female_talker_and_the_copy_recording.flac, 2.6 s, mono</p></div>
     <div><p class="track">Copy</p>
-    <audio controls preload="metadata" src="audio/ft6_the_female_talker_and_her_copy_copy.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
-    <p class="file">ft6_the_female_talker_and_her_copy_copy.flac, 2.6 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/ft6_the_female_talker_and_the_copy_copy.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">ft6_the_female_talker_and_the_copy_copy.flac, 2.6 s, mono</p></div>
     </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/ft6_the_female_talker_and_her_copy.png" width="1000" height="340" alt="Plots of the the female talker and her copy sounds" loading="lazy">
+    <img src="img/ft6_the_female_talker_and_the_copy.png" width="1000" height="340" alt="Plots of the the female talker and the copy sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig = plt.figure(figsize=(10, 3.4), layout=&quot;constrained&quot;)
