@@ -88,6 +88,14 @@ def praat_comparison():
             jumps = jump_fraction(estimate, voiced)
             for index in range(3):
                 report("C13", f"{speaker}, {name}: F{index + 1} jumps", jumps[index])
+        library = so.formant_track(so.Sound(signal, fs), ceiling=CEILINGS[label])
+        index = np.searchsorted(np.round(library.t, 9), np.round(times, 9))
+        from_library = library.frequencies[0][:, index].T
+        report(
+            "C13",
+            f"{speaker}: largest |so.formant_track - the formula-level tracker| [Hz]",
+            np.nanmax(np.abs(from_library - estimates["Praat's recipe, tracker"])),
+        )
         jumps = jump_fraction(reference, voiced)
         for index in range(3):
             report("C13", f"{speaker}, Praat: F{index + 1} jumps", jumps[index])

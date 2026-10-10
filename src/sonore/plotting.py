@@ -497,6 +497,58 @@ def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwa
     return ax
 
 
+def plot_lpc(lpc, ax=None, channel=0, db_range=60.0, fmax=None, candidates=True, cmap="magma", colorbar=True):
+    """An :class:`~sonore.views.lpc.LPC` model: its envelope in dB as a
+    time-frequency image (frequency in kHz), with every candidate resonance
+    as a dot, darker for a narrower one."""
+    freqs = np.arange(lpc.n_fft // 2 + 1) * lpc.fs / lpc.n_fft
+    db = 10 * np.log10(lpc.envelope(freqs)[channel])
+    ax = plot_tf_db(db, lpc.t, freqs, ax=ax, db_range=db_range, cmap=cmap, colorbar=colorbar, fmax=fmax)
+    if candidates:
+        cand_freqs, cand_widths = lpc.candidates()
+        _scatter_candidates(ax, lpc.t, cand_freqs[channel], cand_widths[channel])
+    ax.set_title("LPC envelope")
+    return ax
+
+
+def _scatter_candidates(ax, t, freqs, bandwidths):
+    """Resonances as dots in kHz, white for narrow ones fading to gray at 500 Hz wide."""
+    times = np.broadcast_to(t[None, :], freqs.shape)
+    finite = np.isfinite(freqs)
+    gray_level = np.clip(bandwidths[finite] / 500, 0, 1)
+    ax.scatter(
+        times[finite],
+        freqs[finite] / 1000,
+        s=3,
+        c=gray_level,
+        cmap="gray_r",
+        vmin=-1.5,
+        vmax=1,
+        linewidths=0,
+        zorder=2,
+    )
+
+
+def plot_formant_track(
+    track, ax=None, channel=0, candidates=False, voiced=None, colors=("C0", "C1", "C2"), **kwargs
+):
+    """A :class:`~sonore.views.lpc.FormantTrack`: F1 to F3 [kHz] against time
+    [s], each broken where missing or, given ``voiced`` (a boolean per time
+    window, such as an F0 track's voicing on the same grid), where unvoiced.
+    Frequency is in kHz so the tracks can be drawn over :func:`plot_stft`.
+    With ``candidates=True`` every resonance the tracker chose from is a gray
+    dot, darker for a narrower one."""
+    ax = _ax(ax)
+    if candidates:
+        _scatter_candidates(ax, track.t, track.candidates[channel], track.candidate_bandwidths[channel])
+    keep = np.ones(len(track.t), bool) if voiced is None else np.asarray(voiced, bool)
+    for number, color in enumerate(colors[: track.frequencies.shape[1]]):
+        values = np.where(keep, track.frequencies[channel, number], np.nan)
+        ax.plot(track.t, values / 1000, color=color, zorder=3, label=f"F{number + 1}", **kwargs)
+    ax.set(title="Formants", xlabel="Time [s]", ylabel="Frequency [kHz]")
+    return ax
+
+
 def plot_descriptor_track(track, ax=None, channel=0, **kwargs):
     """A :class:`~sonore.views.timbre.DescriptorTrack` against time, one channel."""
     ax = _ax(ax)

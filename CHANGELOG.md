@@ -24,6 +24,14 @@ Breaking changes since 0.5.0 (each is described under Changed):
 
 ### Added
 
+- `so.LPC`: linear prediction of each time window of a `Sound` or an `STFT`
+  by the autocorrelation method (`so.levinson`), with the all-pole envelope
+  (`envelope`, `envelope_view`) and every resonance from the roots
+  (`candidates`). `so.formant_track` → `FormantTrack`: F1 to F3 every 5 ms
+  from Praat's recipe for candidates and a Viterbi tracker; `track(n)` gives
+  the `(times, values)` that `klatt_synthesize` takes. The tests compare it
+  with Praat's formants, stored by `tools/make_lpc_fixtures.py`. See
+  `docs/design/views/lpc.md`.
 - `so.gaussian_spectrogram`: random spectrograms whose levels correlate
   exponentially in time and frequency (McDermott, Wrobleski & Oxenham, 2011),
   returned as `Envelopes` and heard through `to_sound`

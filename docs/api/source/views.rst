@@ -1,7 +1,7 @@
 views
 =====
 
-One-way analyses, each saying what it drops: spectra and spectrograms (with the reassigned spectrogram), timbre descriptors, envelopes, modulation, the cepstrum and MFCCs, F0 tracking, WORLD's envelope and aperiodicity, and the routes back to sound they have: the channel vocoder (with the envelopes), WORLD's synthesis and the phase vocoder.
+One-way analyses, each saying what it drops: spectra and spectrograms (with the reassigned spectrogram), timbre descriptors, envelopes, modulation, the cepstrum and MFCCs, linear prediction and formant tracking, F0 tracking, WORLD's envelope and aperiodicity, and the routes back to sound they have: the channel vocoder (with the envelopes), WORLD's synthesis and the phase vocoder.
 
 ``sonore.views.view``
 ---------------------
@@ -42,6 +42,11 @@ One-way analyses, each saying what it drops: spectra and spectrograms (with the 
 ---------------------
 
 .. automodule:: sonore.views.mfcc
+
+``sonore.views.lpc``
+--------------------
+
+.. automodule:: sonore.views.lpc
 
 ``sonore.views.f0``
 -------------------

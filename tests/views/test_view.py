@@ -15,6 +15,8 @@ VIEW_NAMES = [
     "ModulationSpectrogram",
     "Cepstrum",
     "MFCC",
+    "LPC",
+    "FormantTrack",
     "GridEnvelope",
     "SpectralEnvelope",
     "Aperiodicity",

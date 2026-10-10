@@ -9,10 +9,19 @@ matches `lpc`, `levinson` or `linear predict`, and the only mentions are
 `views/world.md` and `views/voice-change.md`, which name LPC as a possible
 envelope "later, under its own name".
 
-Status: draft, waiting for Cho's decisions D1–D9. No library code yet.
-Revised 2026-10-10 after Cho asked that the formant tracker be part of this
-work rather than out of scope, and that LPC be compared with the other
-envelope methods (C11–C14).
+Status: accepted 2026-10-10, with decisions D1–D9 as recommended below.
+The first draft left the formant tracker out of scope; Cho asked that it be
+part of this work and that LPC be compared with the other envelope methods
+(C11–C14), and the draft was revised before Cho accepted it. Implemented in
+`src/sonore/views/lpc.py`, tested in `tests/views/test_lpc.py` against the
+formulas, synthesized vowels and Praat's formants
+(`tests/data/praat_formants_reference.npz`, from
+`tools/make_lpc_fixtures.py`). One difference from the checker's tracker:
+when a time window has fewer candidates than formants, the library fills
+the lowest formants, where the checker tried every placement; with Praat's
+recipe it happens in none of the voiced time windows of the gallery
+sentences (one unvoiced window each), and the two give identical tracks on
+both.
 
 ## Why
 
