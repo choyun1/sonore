@@ -601,7 +601,7 @@ EXAMPLE_HEAD = f"""<link rel="stylesheet" href="{KATEX}katex.min.css" crossorigi
 
 TITLES = {
     "index.html": "Listening gallery",
-    "classic.html": "Classic stimuli",
+    "classic.html": "Synthetic sounds",
     "irn.html": "Iterated rippled noise",
     "ripples.html": "Spectrotemporal ripples",
     "binaural.html": "Binaural cues",
@@ -637,7 +637,8 @@ TOPICS = [
         [
             (
                 "classic.html",
-                "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms.",
+                "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms,"
+                " random spectrograms.",
             ),
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),

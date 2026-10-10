@@ -10,8 +10,9 @@ source-and-room separation (Traer & McDermott, 2016). This document sets out
 the model, how it fits sonore, and the decisions for Cho.
 
 Status: D1-D6 accepted by Cho 2026-10-10, all as recommended. Built as
-`so.gaussian_spectrogram` (see "As built"). D7, the gallery page, is open:
-Cho is considering renaming the "Classic stimuli" page instead.
+`so.gaussian_spectrogram` (see "As built"). D7 decided 2026-10-10: the
+"Classic stimuli" page is renamed "Synthetic sounds" and the section goes
+there. D8 is open.
 
 ## How the claims are verified, and what was read
 
@@ -133,7 +134,7 @@ untouched, so its output stays bit-for-bit identical.
 
 Gallery: a short section with the paper's description, one sampled field
 plotted next to the sound's measured envelopes, and audio. It goes on the
-Spectrotemporal ripples page or the Classic stimuli page (D7).
+Synthetic sounds page, formerly Classic stimuli (D7).
 
 ## Decisions
 
@@ -175,7 +176,9 @@ Spectrotemporal ripples page or the Classic stimuli page (D7).
   They can be gallery recipes later if wanted. *Recommended: leave out.*
 - **D7. Gallery page.** The Spectrotemporal ripples page (sounds defined
   by their spectrotemporal envelope) or the Classic stimuli page.
-  *Recommended: the ripples page.*
+  *Recommended: the ripples page.* Decided by Cho: rename the Classic
+  stimuli page "Synthetic sounds" (stimuli made from parameters alone) and
+  put the section there.
 
 - **D8. Blobs drawn in dB.** This came up while building: "can the way
   of imposing statistics carry over to blobs?" A random-phase draw from a

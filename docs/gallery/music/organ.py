@@ -100,7 +100,7 @@ for name, harmonic, semitones in [
 # To come: a celeste, a second rank tuned a few cents sharp of the first, so that the two beat
 # slowly (on middle C, 3 cents sharp beats at about {{ f"{C4 * (so.cents_to_ratio(3) - 1):.2f}" }} Hz
 # and 10 cents at {{ f"{C4 * (so.cents_to_ratio(10) - 1):.2f}" }} Hz; the beats of two close
-# tones are on the [Classic stimuli](classic.html#h-beats-and-roughness) page), and a tremulant,
+# tones are on the [Synthetic sounds](classic.html#h-beats-and-roughness) page), and a tremulant,
 # which shakes the wind and with it the level and pitch of every pipe.
 
 # %% [markdown]
