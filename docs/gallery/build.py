@@ -255,8 +255,11 @@ def example_page(path: Path) -> dict:
                 png, regions, size = encode_figure(ns.pop("fig"), ns.pop("playhead"))
                 audio = {k: flac_bytes(v) for k, v in snd.items()} if isinstance(snd, dict) else flac_bytes(snd)
                 part.update(sound=snd, audio=audio, png=png, regions=regions, size=size)
-                if "scene" in ns:
-                    part["scene"] = scene_json(ns.pop("scene"))
+                if "scene" in ns:  # one scene, or one per sound of a pair
+                    scene = ns.pop("scene")
+                    part["scene"] = (
+                        {label: scene_json(s) for label, s in scene.items()} if isinstance(scene, dict) else scene_json(scene)
+                    )
                 if "live" in ns:
                     part["live"] = live_json(ns.pop("live"))
                 if "lissajous" in ns:
@@ -472,9 +475,12 @@ JS = """
       heads.appendChild(d);
       return d;
     });
-    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
-    const canvas = extras && el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
     const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
@@ -704,7 +710,7 @@ TITLES = {
     "aperiodicity.html": "Source and aperiodicity",
     "voice.html": "Rebuilding and changing a voice",
     "vocoder.html": "Hearing through a vocoder",
-    "reverb.html": "Synthetic reverberation",
+    "reverb.html": "Rooms",
     "moving.html": "Moving talkers",
     "timbre.html": "Timbre",
     "temperament.html": "Tuning and temperament",
@@ -724,7 +730,7 @@ TOPICS = [
         [
             (
                 "classic.html",
-                "speech-shaped noise, beats and roughness, binaural beats, tone sequences, band-limited waveforms.",
+                "speech-shaped noise, beats and roughness, tone sequences, band-limited waveforms.",
             ),
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
@@ -775,9 +781,9 @@ TOPICS = [
         "Spatial hearing",
         "spatial",
         [
-            ("binaural.html", "differences between the ears: timing, and correlation that changes."),
-            ("reverb.html", "rooms built from the statistics of real ones, and rooms that break them."),
-            ("moving.html", "three talkers rendered through measured HRIRs, one of them moving."),
+            ("binaural.html", "differences between the ears: timing, binaural beats, and correlation that changes."),
+            ("reverb.html", "distance, rooms built from the statistics of real ones, and rooms that break them."),
+            ("moving.html", "talkers rendered through measured HRIRs: moving, among maskers of either sex, walking in."),
         ],
     ),
     (
@@ -1081,6 +1087,12 @@ def lissajous_json(lissajous: dict) -> str:
 HEADPHONES = "Headphones required for binaural sounds"
 
 
+def headphones(binaural: bool) -> str:
+    """The headphones mark after a demo's title. Every two-channel demo is binaural: its effect
+    is lost over speakers."""
+    return f' <span class="headphones" title="{HEADPHONES}" role="img" aria-label="{HEADPHONES}">🎧</span>' if binaural else ""
+
+
 def sound_article(
     key,
     title,
@@ -1097,12 +1109,18 @@ def sound_article(
     lissajous=None,
 ) -> str:
     name, (w, h) = file_name(key, title), size
-    scene = (
-        f'\n    <canvas class="scene" data-scene="{html.escape(scene)}" role="img" '
-        f'aria-label="The sources seen from above, moving as the sound plays"></canvas>'
-        if scene
-        else ""
-    )
+    if isinstance(scene, dict):  # a pair: one view from above, showing the scene of whichever sound plays
+        scene = (
+            f'\n    <canvas class="scene" data-scenes="{html.escape(json.dumps([scene[label] for label in snd]))}" '
+            f'role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>'
+        )
+    else:
+        scene = (
+            f'\n    <canvas class="scene" data-scene="{html.escape(scene)}" role="img" '
+            f'aria-label="The sources seen from above, moving as the sound plays"></canvas>'
+            if scene
+            else ""
+        )
     if live:
         scene += (
             f'\n    <canvas class="live" data-live="{html.escape(live)}" role="img" '
@@ -1126,10 +1144,10 @@ def sound_article(
         return f"""
 <article class="sound pair" id="d-{key}">
   <div class="about">
-    <h3>{html.escape(title)}</h3>{extra}
+    <h3>{html.escape(title)}{headphones(any(s.n_channels == 2 for s in snd.values()))}</h3>{extra}
     {desc_html}
     <div class="players">{players}
-    </div>
+    </div>{scene}
   </div>
   <figure class="plot"><div class="plate">
     <img src="{img_src}" width="{w}" height="{h}" alt="Plots of the {html.escape(title.lower())} sounds" loading="lazy">
@@ -1137,12 +1155,7 @@ def sound_article(
   </div></figure>{code}
 </article>"""
     chan = "stereo" if snd.n_channels == 2 else "mono"
-    # Every two-channel demo is binaural: its effect is lost over speakers.
-    phones = (
-        f' <span class="headphones" title="{HEADPHONES}" role="img" aria-label="{HEADPHONES}">🎧</span>'
-        if chan == "stereo"
-        else ""
-    )
+    phones = headphones(chan == "stereo")
     code = f'\n  <details class="code"><summary>Code</summary>{code}</details>' if code else ""
     return f"""
 <article class="sound" id="d-{key}" data-regions="{html.escape(json.dumps(regions))}">
@@ -1275,7 +1288,9 @@ def build_example_page(site: Site, name: str) -> list[str]:
 
     # Every two-channel demo is binaural, as in sound_article.
     binaural = any(
-        isinstance(p, dict) and "sound" in p and not isinstance(p["sound"], dict) and p["sound"].n_channels == 2
+        isinstance(p, dict)
+        and "sound" in p
+        and any(s.n_channels == 2 for s in (p["sound"].values() if isinstance(p["sound"], dict) else [p["sound"]]))
         for p in [p for s in content["sections"] for p in s["parts"]] + content["intro"]
     )
 
@@ -1339,12 +1354,15 @@ MOVED = {
     "formants": {"d-fw4": "formants.html#d-fw1", "d-fw5": "formants.html#d-fw2",
                  "h-female-vowels": "formants.html#d-fw1"},
     "aperiodicity": {"h-a-higher-voice": "talkers.html"},
-    "classic": {"d-k2": "talkers.html#d-tk4"},
     "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
     "vocoder": {"d-cf0": "vocoder.html#d-ci0", "d-cf8": "vocoder.html#d-ci8", "d-cf8p": "vocoder.html#d-cp8",
                 "h-a-higher-voice": "vocoder.html#h-pitch-from-the-envelope"},
+    "classic": {"d-k2": "talkers.html#d-tk4", "d-b4": "binaural.html#d-b4", "h-binaural-beats": "binaural.html#d-b4"},
+    "reverb": {"d-r3": "reverb.html#d-r1"},
+    "moving": {"d-m8": "moving.html#d-m2", "d-m9": "moving.html#d-m3", "h-a-different-voice": "moving.html#h-three-talkers"},
     "modspectrogram": {"d-sv1": "modspectrogram.html#d-s1",
                        "h-a-higher-voice": "modspectrogram.html#h-speech-babble-and-noise"},
+    "irn": {"h-rippled-noise-and-moving-ripples": "ripples.html#h-ripples-and-rippled-noise"},
 }
 
 

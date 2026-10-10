@@ -66,6 +66,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -154,7 +158,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -53 153 153" class="logo" aria-hidden="true"><path d="M-44,-10 V14" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-31,-16 V6" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-18,-6 V18" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M0,0 H52 C58,0 66,12 72,12 H96" class="logo-accent" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,30 H12 C20,30 20,18 28,18 H32 C40,18 40,30 48,30 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,60 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group here" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li class="has-sections"><a href="temperament.html" aria-current="page">Tuning and temperament</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-intervals-are-ratios">Intervals are ratios</a></li><li><a href="#h-the-commas">The commas</a></li><li><a href="#h-one-tune-four-tunings">One tune, four tunings</a></li><li><a href="#h-where-just-intonation-breaks">Where just intonation breaks</a></li><li><a href="#h-a-reference-pitch-is-a-choice">A reference pitch is a choice</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -53 153 153" class="logo" aria-hidden="true"><path d="M-44,-10 V14" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-31,-16 V6" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-18,-6 V18" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M0,0 H52 C58,0 66,12 72,12 H96" class="logo-accent" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,30 H12 C20,30 20,18 28,18 H32 C40,18 40,30 48,30 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,60 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group here" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li class="has-sections"><a href="temperament.html" aria-current="page">Tuning and temperament</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-intervals-are-ratios">Intervals are ratios</a></li><li><a href="#h-the-commas">The commas</a></li><li><a href="#h-one-tune-four-tunings">One tune, four tunings</a></li><li><a href="#h-where-just-intonation-breaks">Where just intonation breaks</a></li><li><a href="#h-a-reference-pitch-is-a-choice">A reference pitch is a choice</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -197,7 +201,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="here"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html" aria-current="page">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="here"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html" aria-current="page">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -262,7 +266,8 @@ def fetch(path):
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from sonore.plotting import plot_lissajous
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from sonore.plotting import plot_lissajous
 
 FS = 22050
 C4 = so.note_to_freq(&quot;C4&quot;)
@@ -365,8 +370,9 @@ are just intervals: the shared partials coincide, and nothing beats. Equal tempe
 every semitone the twelfth root of two, 100 cents, so its fifth is
 1.96 cents narrower than 3:2, and its major third
 13.69 cents wider than 5:4. Near-coinciding partials
-beat at the difference of their frequencies, which the cell prints for intervals above
-A3 = 220 Hz. Two pure tones a just major third apart have no partials to beat and sound
+beat at the difference of their frequencies (<a href="classic.html#h-beats-and-roughness">Beats and
+roughness</a> plays this with two pure tones), which the
+cell prints for intervals above A3 = 220 Hz. Two pure tones a just major third apart have no partials to beat and sound
 smooth, as on the <a href="classic.html#d-b3">Synthetic sounds</a> page.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">A3 = 220.0
 for name, steps, just_ratio, low_n, high_n in [
@@ -790,8 +796,10 @@ their numbers, and Duffin (2007) makes the case for listening to the older ones.
 </div>
 <script>
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -801,20 +809,24 @@ their numbers, and Duffin (2007) makes the case for listening to the older ones.
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    const liveCanvas = el.querySelector(".live");
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
       live = JSON.parse(liveCanvas.dataset.live);
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
-    const figureCanvas = el.querySelector(".lissajous");
+    const figureCanvas = extras && el.querySelector(".lissajous");
     const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
       liveCanvas, live, figureCanvas, figure };
-  });
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -972,23 +984,33 @@ their numbers, and Duffin (2007) makes the case for listening to the older ones.
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
       if (item.live) item.live.played = true;
       if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();

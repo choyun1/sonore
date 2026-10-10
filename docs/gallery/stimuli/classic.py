@@ -15,13 +15,11 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # A few stimuli made from parameters alone that turn up again and again in hearing research,
 # each built in a line or two from sonore's generators.
 #
-# - [Speech-shaped noise](#h-speech-shaped-noise): noise with the long-term spectrum of speech,
-#   and none of its modulation, and the long-term spectra of a male and a female talker.
+# - [Speech-shaped noise](#h-speech-shaped-noise): noise with the long-term spectrum of speech
+#   and none of its modulation.
 # - [Beats and roughness](#h-beats-and-roughness): two tones close in frequency, from a slow
 #   wobble to roughness to two separate tones, and amplitude modulation as the same thing seen
 #   another way.
-# - [Binaural beats](#h-binaural-beats): one tone in each ear, a beat that exists only in the
-#   head.
 # - [Random tone sequences](#h-random-tone-sequences): concurrent streams of tones at random
 #   frequencies.
 # - [Band-limited waveforms](#h-band-limited-waveforms): a sawtooth gliding up four octaves,
@@ -77,9 +75,9 @@ def show(snd, fmax=4000, win_dur=50e-3):
 # a talker without carrying any words. Long-term spectra of speech are much alike from one
 # language to another (Byrne et al., 1994). `so.long_term_spectrum` averages Welch power spectra
 # over a set of recordings, weighted by duration, and `to_sound` (noise by default) turns it into Gaussian
-# noise with that spectrum. Here the recordings are the three CMU Arctic sentences in the
-# repository, from two talkers, each brought to the same RMS first so that neither talker
-# dominates by being louder.
+# noise with that spectrum. Here the recordings are three CMU ARCTIC sentences by two male
+# talkers, bdl and rms (Kominek & Black, 2004), each brought to the same RMS first so that
+# neither talker dominates by being louder.
 
 # %%
 sentences = [
@@ -105,8 +103,11 @@ ax.grid(ls=":", which="both")
 
 # %% [about]
 # The noise itself. It has the spectrum of speech but none of its modulation: the spectrogram is
-# even, and the modulation spectrum is a single line at zero rate, where that of the sentences
-# would spread over the slow rates of syllables and words.
+# even, and the modulation spectrum is one bright line at zero rate over an even floor, the
+# random fluctuation any noise has. A sentence's modulation spectrum spreads over the slow rates
+# of syllables and words instead; the two are side by side on [Hearing a modulation
+# spectrum](modtargets.html#d-mt1), and [Modulation spectrogram](modspectrogram.html#d-s1)
+# follows a sentence into babble and then into this noise.
 
 # %% [demo k1] Speech-shaped noise
 sound = finish(ssn)
@@ -130,7 +131,9 @@ fig, playhead = show(sound, fmax=8000, win_dur=20e-3)
 # roughness. When the two tones are farther apart than an auditory filter is wide, they are heard
 # as two smooth tones again. Plomp & Levelt (1965) found two pure tones sound most dissonant at
 # about a quarter of a critical bandwidth apart. At 440 Hz an ERB (Glasberg & Moore, 1990) is
-# about 72 Hz wide. Each example pairs 440 Hz with a second tone.
+# about 72 Hz wide. Each example pairs 440 Hz with a second tone. The same beating between
+# partials is what tells a tuned interval from a mistuned one on [Tuning and
+# temperament](temperament.html#d-tt8).
 
 
 # %%
@@ -141,7 +144,9 @@ def beating_pair(df, f=440, dur=3.0):
 
 # %% [about]
 # 440 and 444 Hz: one tone whose loudness swells and fades four times a second, as the
-# waveform's envelope does. The two tones are too close for the spectrum to separate.
+# waveform's envelope does. The two tones are too close for the spectrum to separate. With one
+# tone in each ear instead, neither ear beats, and what is heard is a binaural beat, on [Binaural
+# cues](binaural.html#d-b4).
 
 # %% [demo b1] Slow beats, 4 Hz
 sound = finish(beating_pair(4))
@@ -172,34 +177,6 @@ fig, playhead = show(sound, fmax=2000, win_dur=50e-3)
 # %% [demo a1] Amplitude modulation, 4 Hz
 sound = finish(so.amplitude_modulate(so.pure_tone(3, FS, 1000), f_mod=4, depth=1))
 fig, playhead = show(sound, fmax=2000, win_dur=50e-3)
-
-# %% [markdown]
-# ## Binaural beats
-#
-# Put the two tones in different ears instead, 440 Hz on the left and 444 Hz on the right. Each
-# ear alone hears a steady tone, so nothing in either ear beats. Their interaural phase difference
-# turns through a full cycle four times a second, and the binaural system, which follows the
-# phase of low-frequency tones, hears that: the image moves or wobbles inside the head. Binaural
-# beats are heard only at low frequencies, and only for small differences (Licklider, Webster &
-# Hedlun, 1950). They need headphones.
-
-# %% [about]
-# 440 Hz in the left ear, 444 Hz in the right. Both waveforms are steady; the interaural
-# correlation, measured in 10 ms windows, follows $\cos(2\pi \cdot 4\,t)$, which is where the
-# beat is.
-
-# %% [demo b4] Binaural beats, 4 Hz
-sound = finish(so.Sound.from_channels(so.pure_tone(3, FS, 440), so.pure_tone(3, FS, 444), fs=FS))
-cues = so.interaural_cues(sound, win_dur=10e-3)
-fig, axes = plt.subplots(2, 1, figsize=(10, 4.4), sharex=True, layout="constrained")
-sound.plot(axes[0], lw=0.4)
-axes[0].set_title("Waveform, left and right")
-axes[1].plot(cues.t, cues.corr0, color="tab:orange", lw=1, label="measured, 10 ms windows")
-axes[1].plot(cues.t, np.cos(2 * np.pi * 4 * cues.t), color="k", ls=":", lw=1, label="cos(2π·4t)")
-axes[1].set(ylim=(-1.05, 1.05), ylabel="Interaural corr.", xlabel="Time [s]", xlim=(0, sound.duration))
-axes[1].legend(loc="lower right", fontsize=8)
-axes[1].grid(ls=":")
-playhead = list(axes)
 
 # %% [markdown]
 # ## Random tone sequences
@@ -280,12 +257,10 @@ fig, playhead = show(sound, fmax=8000, win_dur=25e-3)
 #   [doi:10.1121/1.410152](https://doi.org/10.1121/1.410152).
 #   [`spectra.long_term_spectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L158)
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data.
-#   *Hearing Research* 47.
+#   *Hearing Research* 47(1–2), 103–138.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955(90)90170-T).
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentences, by speakers bdl, rms and slt.
-# - Licklider, Webster & Hedlun (1950). On the frequency limits of binaural beats. *J. Acoust.
-#   Soc. Am.* 22(4), 468–473. [doi:10.1121/1.1906629](https://doi.org/10.1121/1.1906629).
+#   The sentences, by speakers bdl and rms.
 # - Plomp & Levelt (1965). Tonal consonance and critical bandwidth. *J. Acoust. Soc. Am.* 38(4),
 #   548–560. [doi:10.1121/1.1909741](https://doi.org/10.1121/1.1909741).

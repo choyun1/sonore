@@ -133,8 +133,8 @@ for name, harmonic, semitones in [
 #
 # To come: how a flue pipe starts to speak, with a brief noisy transient (the chiff) and its
 # harmonics building up at different rates. For instrument identification the build-up of the
-# partials seems to matter more than the transient itself (Siedenburg, 2019; see the
-# [Timbre](timbre.html) page), so the synthesis will model both.
+# partials seems to matter more than the transient itself (Siedenburg, 2019; see
+# [Onsets](timbre.html#h-onsets) on the Timbre page), so the synthesis will model both.
 
 # %% [markdown]
 # ## References

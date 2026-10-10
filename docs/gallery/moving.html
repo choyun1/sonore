@@ -10,7 +10,7 @@
 <script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
   { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script><script>(() => { const moved = {"d-m8": "moving.html#d-m2", "d-m9": "moving.html#d-m3", "h-a-different-voice": "moving.html#h-three-talkers"}; const target = moved[location.hash.slice(1)]; if (target) location.replace(target); })();</script>
 <script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
@@ -66,6 +66,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -154,7 +158,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -53 153 153" class="logo" aria-hidden="true"><path d="M-44,-10 V14" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-31,-16 V6" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-18,-6 V18" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M0,0 H52 C58,0 66,12 72,12 H96" class="logo-accent" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,30 H12 C20,30 20,18 28,18 H32 C40,18 40,30 48,30 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,60 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group here" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li class="has-sections"><a href="moving.html" aria-current="page">Moving talkers</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a></li><li><a href="#h-one-talker-moving">One talker, moving</a></li><li><a href="#h-three-talkers">Three talkers</a></li><li><a href="#h-a-different-voice">A different voice</a></li><li><a href="#h-coming-closer">Coming closer</a></li><li><a href="#h-passing-by">Passing by</a></li><li><a href="#h-straight-paths-across-the-plane">Straight paths across the plane</a></li><li><a href="#h-a-path-no-source-could-take">A path no source could take</a></li><li><a href="#h-a-cocktail-party">A "cocktail party"</a></li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -53 153 153" class="logo" aria-hidden="true"><path d="M-44,-10 V14" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-31,-16 V6" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-18,-6 V18" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M0,0 H52 C58,0 66,12 72,12 H96" class="logo-accent" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,30 H12 C20,30 20,18 28,18 H32 C40,18 40,30 48,30 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,60 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group here" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li class="has-sections"><a href="moving.html" aria-current="page">Moving talkers</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a></li><li><a href="#h-one-talker-moving">One talker, moving</a></li><li><a href="#h-three-talkers">Three talkers</a></li><li><a href="#h-coming-closer">Coming closer</a></li><li><a href="#h-passing-by">Passing by</a></li><li><a href="#h-straight-paths-across-the-plane">Straight paths across the plane</a></li><li><a href="#h-a-path-no-source-could-take">A path no source could take</a></li><li><a href="#h-a-cocktail-party">A "cocktail party"</a></li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -197,7 +201,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="here"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html" aria-current="page">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="here"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html" aria-current="page">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -208,31 +212,36 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 })();</script></nav>
 <header>
   <h1>Moving talkers</h1>
-<p>Three male talkers speak at once, one straight ahead and one 40° to each side. Which one do you
-follow? If one of them moves, does that help? Cho &amp; Kidd (2022) asked this with stimuli like the
-ones on this page, made with sonore's predecessor sigtools.</p>
-<ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a>: three sentences, and the paths the target takes.</li><li><a href="#h-one-talker-moving">One talker, moving</a>: what motion alone sounds like.</li><li><a href="#h-three-talkers">Three talkers</a>: the target swinging back and forth in azimuth while the other two stay still.</li><li><a href="#h-a-different-voice">A different voice</a>: a female talker as the target, still and moving.</li><li><a href="#h-coming-closer">Coming closer</a>: the target walking up to the listener, without and with a room.</li><li><a href="#h-passing-by">Passing by</a>: a buzz going past at 15 m/s, and the Doppler glide of its pitch.</li><li><a href="#h-straight-paths-across-the-plane">Straight paths across the plane</a>: the buzz in front, close by, down the side, behind, crossing at an angle and coming straight at the listener.</li><li><a href="#h-a-path-no-source-could-take">A path no source could take</a>: the buzz jumping around the head far faster than anything can move, and what the renderer makes of it.</li><li><a href="#h-a-cocktail-party">A "cocktail party"</a>: two to six talkers walking around the listener for 20 to 30 s.</li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a>: filtering with HRIRs that change over time, without clicks or comb filtering.</li></ul>
+<p>Three talkers speak at once, one straight ahead and one 40° to each side. Which one do you
+follow? If the one ahead moves, does that help, and how does it compare with a voice that
+differs from the other two? Cho &amp; Kidd (2022) asked about motion with stimuli like the ones on
+this page, made with sonore's predecessor sigtools.</p>
+<ul><li><a href="#h-the-talkers-and-the-trajectories">The talkers and the trajectories</a>: the target sentence read by the male and by the female talker, the maskers, and the paths the target takes.</li><li><a href="#h-one-talker-moving">One talker, moving</a>: what motion alone sounds like.</li><li><a href="#h-three-talkers">Three talkers</a>: the male or the female target among two male or two female maskers, standing still and then swinging back and forth in azimuth.</li><li><a href="#h-coming-closer">Coming closer</a>: a talker walking up to the listener, without and with a room.</li><li><a href="#h-passing-by">Passing by</a>: a buzz going past at 15 m/s, and the Doppler glide of its pitch.</li><li><a href="#h-straight-paths-across-the-plane">Straight paths across the plane</a>: the buzz in front, close by, down the side, behind, crossing at an angle and coming straight at the listener.</li><li><a href="#h-a-path-no-source-could-take">A path no source could take</a>: the buzz jumping around the head far faster than anything can move, and what the renderer makes of it.</li><li><a href="#h-a-cocktail-party">A "cocktail party"</a>: two to six talkers walking around the listener for 20 to 30 s.</li><li><a href="#h-how-the-motion-is-rendered">How the motion is rendered</a>: filtering with HRIRs that change over time, without clicks or comb filtering.</li></ul>
 <p>For the interaural cues one at a time, timing alone and correlation that changes, see <a href="binaural.html">Binaural
 cues</a>.</p>
 <p>Every sound here is rendered through measured head-related impulse responses (HRIRs) of a
 KEMAR manikin at eight distances from 20 cm to 1.6 m (Qu et al., 2009), so listen with
 headphones. Farther than 1.6 m, distance changes only the travel time and the level.</p>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
-  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
-  Start with your volume low.</p>
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/moving.ipynb">in Colab</a> or <a href="notebooks/moving.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-the-talkers-and-the-trajectories">
 <h2 id="h-the-talkers-and-the-trajectories">The talkers and the trajectories</h2>
-<p>The target is the sentence from <a href="speech.html">Seeing speech</a>; the two maskers are sentences by
-another male talker in the CMU ARCTIC corpus (sources in docs/speech/SOURCES.md). Each is scaled
-to the same RMS before rendering, as in the experiment.</p>
+<p>The target is the sentence from <a href="speech.html">Seeing speech</a>, read by the male talker and by
+the female talker of <a href="talkers.html">Two talkers</a>. There are two sets of maskers. The male
+maskers are two sentences by a third talker in the CMU ARCTIC corpus, also male (Kominek &amp;
+Black, 2004). The corpus files here hold no other female sentences, so the female maskers are
+the opening seconds of two audiobook passages read by female readers in LibriSpeech
+(Panayotov et al., 2015), cut between words to about the lengths of the male maskers; they are
+read aloud like the sentences, but recorded differently. Sources are in docs/speech/SOURCES.md.
+Every recording is scaled to the same RMS before rendering.</p>
 <p>Azimuth is measured clockwise from straight ahead, so <span class="tex">+40°</span> is to the right. A talker at
 center azimuth <span class="tex">\theta_0</span> that oscillates with amplitude <span class="tex">A</span> at rate <span class="tex">f</span> follows</p>
 <div class="tex display">\theta(t) = \theta_0 + A \sin\!\big(2\pi (f t + \phi)\big),</div>
 <p>so it swings <span class="tex">A</span> to either side of <span class="tex">\theta_0</span>, <span class="tex">2A</span> from one end to the other. Here
-<span class="tex">f = 2</span> Hz, the rate in the experiment, and the start phase <span class="tex">\phi</span> decides whether it first
-moves right (<span class="tex">\phi = 0</span>) or left (<span class="tex">\phi = 1/2</span>).</p>
+<span class="tex">f = 2</span> Hz, as in the experiment, and the start phase <span class="tex">\phi</span> decides whether it first moves
+right (<span class="tex">\phi = 0</span>) or left (<span class="tex">\phi = 1/2</span>).</p>
 <div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
 import urllib.request
 
@@ -256,18 +265,50 @@ def fetch(path):
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from matplotlib.collections import LineCollection
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from matplotlib.collections import LineCollection
 
 hrirs = so.load_hrirs(distances=&quot;all&quot;)  # PKU-IOA KEMAR, 20 cm to 1.6 m; downloaded on first use
 print(hrirs)
 
-# Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
-files = [&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;]
-talkers = [so.load(fetch(f&quot;docs/speech/{f}.flac&quot;)) for f in files]
-target, *maskers = so.normalize(so.match_lengths(talkers, align=&quot;center&quot;))
-fs, duration = target.fs, target.duration
-spoken = so.load(fetch(f&quot;docs/speech/{files[0]}.flac&quot;)).duration
-TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
+# The sentence, read by each of the two talkers, by the CMU ARCTIC speaker names, at 16 kHz.
+SPEAKERS = {&quot;Male talker&quot;: &quot;bdl&quot;, &quot;Female talker&quot;: &quot;slt&quot;}
+talkers = {
+    label: finish(so.load(fetch(f&quot;docs/speech/{speaker}_arctic_a0131.flac&quot;)))
+    for label, speaker in SPEAKERS.items()
+}
+fs = 16000
+
+
+def excerpt(reader, about):
+    &quot;&quot;&quot;The opening of a LibriSpeech passage, about ``about`` [s] long: from its first sound to
+    the quietest 20 ms within 0.4 s of that length, so that it ends between words.&quot;&quot;&quot;
+    snd = so.load(fetch(f&quot;docs/speech/librispeech_{reader}.flac&quot;))
+    n = int(20e-3 * fs)
+    frames = snd.data[: len(snd) // n * n, 0].reshape(-1, n)
+    level = 10 * np.log10(np.mean(frames**2, axis=1) + 1e-20)  # dB, per 20 ms
+    first = int(np.argmax(level &gt; level.max() - 30))
+    near = first + np.arange(int((about - 0.4) / 20e-3), int((about + 0.4) / 20e-3))
+    last = int(near[np.argmin(level[near])])
+    return so.Sound(snd.data[first * n : last * n], fs)
+
+
+MASKERS = {
+    &quot;male&quot;: [so.load(fetch(f&quot;docs/speech/rms_arctic_{n}.flac&quot;)) for n in (&quot;a0132&quot;, &quot;a0133&quot;)],
+    &quot;female&quot;: [excerpt(&quot;1462_170142&quot;, 2.8), excerpt(&quot;8842_304647&quot;, 4.8)],
+}
+for sex, recordings in MASKERS.items():
+    print(f&quot;{sex} maskers: &quot; + &quot;, &quot;.join(f&quot;{snd.duration:.2f} s&quot; for snd in recordings))
+
+# Equal in RMS, then all padded to the longest, centered in time.
+labels, everything = list(talkers), so.normalize([*talkers.values(), *MASKERS[&quot;male&quot;], *MASKERS[&quot;female&quot;]])
+everything = so.match_lengths(everything, align=&quot;center&quot;)
+targets = dict(zip(labels, everything[:2], strict=True))
+MASKERS = {&quot;male&quot;: everything[2:4], &quot;female&quot;: everything[4:6]}
+duration = everything[0].duration
+TALKING = {
+    label: ((duration - snd.duration) / 2, (duration + snd.duration) / 2) for label, snd in talkers.items()
+}
 CENTERS = (0.0, -40.0, 40.0)  # target ahead, maskers to the left and right [deg]
 RATE = 2.0  # oscillations per second
 
@@ -287,40 +328,38 @@ LABELS = (&quot;target&quot;, &quot;left masker&quot;, &quot;right masker&quot;)
 COLORS = (&quot;#d62728&quot;, &quot;#7f7f7f&quot;, &quot;#b0b0b0&quot;)  # one per talker, in plots and in the view from above
 
 
-def render(amplitude, phase=0.0, alone=False, talker=None):
-    &quot;&quot;&quot;The target (``talker``, by default the sentence above) oscillating with ``amplitude``
-    [deg] about straight ahead, with the maskers standing still unless ``alone``. Returns the
-    mix, the target as rendered on its own, the trajectories&#x27; times and each talker&#x27;s azimuth.&quot;&quot;&quot;
+def render(target, amplitude, phase=0.0, maskers=None):
+    &quot;&quot;&quot;The ``target`` talker oscillating with ``amplitude`` [deg] about straight ahead, among
+    the ``maskers`` (&quot;male&quot;, &quot;female&quot; or None for none), who stand still. Returns the mix, the
+    target as rendered on its own, the trajectories&#x27; times and each talker&#x27;s azimuth.&quot;&quot;&quot;
     t, az_target, path = trajectory(CENTERS[0], amplitude, phase)
-    parts = [so.move_sound(target if talker is None else talker, path, hrirs)]
+    parts = [so.move_sound(targets[target], path, hrirs)]
     azimuths = [az_target]
-    if not alone:
-        for snd, center in zip(maskers, CENTERS[1:], strict=True):
-            _, az, path = trajectory(center)
-            parts.append(so.move_sound(snd, path, hrirs))
-            azimuths.append(az)
+    for snd, center in zip(MASKERS[maskers] if maskers else [], CENTERS[1:], strict=False):
+        _, az, path = trajectory(center)
+        parts.append(so.move_sound(snd, path, hrirs))
+        azimuths.append(az)
     return so.mix(parts), parts[0], t, azimuths
 
 
-def scene_of(t, azimuths):
+def scene_of(t, azimuths, labels=LABELS):
     &quot;&quot;&quot;The talkers for the gallery&#x27;s view from above, which moves as the sound plays.&quot;&quot;&quot;
     return [
         {&quot;label&quot;: label, &quot;color&quot;: color, &quot;t&quot;: t, &quot;azimuth&quot;: az}
-        for az, label, color in zip(azimuths, LABELS, COLORS, strict=False)
+        for az, label, color in zip(azimuths, labels, COLORS, strict=False)
     ]
 
 
-def show(mix, target_alone, t, azimuths, title, talking=TALKING):
-    &quot;&quot;&quot;Each talker&#x27;s azimuth, and the interaural time and level differences at the ears,
-    measured in 20 ms windows: of the mix (black) and of the target on its own (red).
-    ``talking`` is when the target speaks [s].&quot;&quot;&quot;
-    fig = plt.figure(figsize=(10, 6.0), layout=&quot;constrained&quot;)
-    axes = fig.subplots(3, 1, sharex=True)
+def draw(where, mix, target_alone, t, azimuths, title, talking, compact=False):
+    &quot;&quot;&quot;Into a figure or subfigure: each talker&#x27;s azimuth, and the interaural time and level
+    differences at the ears, measured in 20 ms windows, of the mix (black) and of the target on
+    its own (red). ``talking`` is when the target speaks [s]. Returns the three axes.&quot;&quot;&quot;
+    axes = where.subplots(3, 1, sharex=True)
     for az, label, color in zip(azimuths, LABELS, COLORS, strict=False):
         axes[0].plot(t, az, color=color, lw=1.5, label=label)
     axes[0].axvspan(*talking, color=COLORS[0], alpha=0.08, lw=0, label=&quot;target talking&quot;)
-    axes[0].set(ylim=(-75, 75), yticks=[-60, -40, -20, 0, 20, 40, 60], ylabel=&quot;Azimuth [deg]&quot;, title=title)
-    axes[0].legend(loc=&quot;upper right&quot;, fontsize=8, ncols=4)
+    axes[0].set(ylim=(-90, 90), yticks=[-80, -40, 0, 40, 80], ylabel=&quot;Azimuth [deg]&quot;, title=title)
+    axes[0].legend(loc=&quot;upper right&quot;, fontsize=7 if compact else 8, ncols=2 if compact else 4)
     sources = [(mix, &quot;k&quot;, &quot;mix&quot;)] if len(azimuths) &gt; 1 else []
     for snd, color, label in sources + [(target_alone, COLORS[0], &quot;target alone&quot;)]:
         cues = so.interaural_cues(snd, win_dur=20e-3)
@@ -337,173 +376,193 @@ def show(mix, target_alone, t, azimuths, title, talking=TALKING):
         ax.grid(ls=&quot;:&quot;)
         ax.set_xlim(0, duration)
     for ax in axes[1:]:
-        ax.legend(loc=&quot;upper right&quot;, fontsize=8, ncols=2, markerscale=3)
+        ax.legend(loc=&quot;upper right&quot;, fontsize=7 if compact else 8, ncols=2, markerscale=3)
     axes[-1].set_xlabel(&quot;Time [s]&quot;)
-    return fig, list(axes)</code></pre></details><pre class="out">HRIRSet(6343 positions, 1024 taps, 65536 Hz)</pre></div>
+    return list(axes)
+
+
+def show(rendered, title, talking):
+    &quot;&quot;&quot;One talker&#x27;s demo: ``rendered`` is what render returns.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 6.0), layout=&quot;constrained&quot;)
+    return fig, draw(fig, *rendered, title, talking)
+
+
+def show_pair(rendered, title, maskers):
+    &quot;&quot;&quot;A column per target talker; ``rendered`` maps each talker&#x27;s label to what render returns.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 6.6), layout=&quot;constrained&quot;)
+    playhead = {}
+    for column, (label, result) in zip(fig.subfigures(1, 2), rendered.items(), strict=True):
+        heading = f&quot;{label.split()[0]} target, {maskers} maskers: {title}&quot;
+        playhead[label] = draw(column, *result, heading, TALKING[label], compact=True)
+    return fig, playhead
+
+
+def three_talkers(amplitude, phase=0.0, maskers=&quot;male&quot;, title=&quot;&quot;):
+    &quot;&quot;&quot;Both targets, each among the same maskers: the figure, the playhead axes, the sounds and,
+    for each target, the talkers seen from above.&quot;&quot;&quot;
+    rendered = {label: render(label, amplitude, phase, maskers) for label in targets}
+    fig, playhead = show_pair(rendered, title, maskers)
+    sounds = {label: finish(mix) for label, (mix, *_) in rendered.items()}
+    scene = {label: scene_of(t, azimuths) for label, (_, _, t, azimuths) in rendered.items()}
+    return fig, playhead, sounds, scene</code></pre></details><pre class="out">HRIRSet(6343 positions, 1024 taps, 65536 Hz)
+male maskers: 2.81 s, 4.82 s
+female maskers: 2.62 s, 4.40 s</pre></div>
 </section>
 <section aria-labelledby="h-one-talker-moving">
 <h2 id="h-one-talker-moving">One talker, moving</h2>
 <p>Alone, a talker swinging 30° to each side twice a second is easy to hear moving. The motion
 reaches the ears as interaural differences that change over time: the sound arrives earlier
-and louder at the ear it moves toward. The view from above, beside each example, follows the
-talkers as the sound plays.</p>
+and louder at the ear it moves toward (the cues are measured as on <a href="binaural.html#h-how-the-cues-are-measured">Binaural
+cues</a>). The cues come from the direction more than from
+the voice, so one talker is enough here: the female talker. The view from above, beside the
+example, follows the talker as the sound plays.</p>
 
-<article class="sound" id="d-m1" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.665923226273148, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+<article class="sound" id="d-m1" data-regions="[{&quot;x0&quot;: 0.0666942894965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2956944314236113, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.0666942894965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35399994068287055, &quot;bottom&quot;: 0.6064357146990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.0666942894965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6647412239583332, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
   <div class="about">
     <h3>One talker, moving <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>The target alone, swinging 30° to either side of straight ahead at 2 Hz. Its interaural time
-and level differences, measured from the rendered sound in 20 ms windows, follow the azimuth.
-Time differences are drawn only where the two ears are well correlated.</p></div>
+    <div class="desc"><p>The female talker alone, swinging 30° to either side of straight ahead at 2 Hz. The interaural
+time and level differences, measured from the rendered sound in 20 ms windows, follow the
+azimuth. Time differences are drawn only where the two ears are well correlated.</p></div>
     <audio controls preload="metadata" src="audio/m1_one_talker_moving.flac"></audio>
     <p class="file">m1_one_talker_moving.flac, 4.8 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
+    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;female talker&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63,-23.12,-27.14,-29.47,-29.94,-28.53,-25.33,-20.54,-14.45,-7.46,-0.0,7.46,14.45,20.54,25.33,28.53,29.94,29.47,27.14,23.12,17.63,11.04,3.76,-3.76,-11.04,-17.63]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/m1_one_talker_moving.png" width="1000" height="600" alt="Plots of the one talker, moving sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, alone=True)
-fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target alone, swinging 30° to either side&quot;)
-scene = scene_of(t, azimuths)
-sound = finish(mix)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rendered = render(&quot;Female talker&quot;, 30.0)
+fig, playhead = show(
+    rendered, &quot;The female talker alone, swinging 30° to either side&quot;, TALKING[&quot;Female talker&quot;]
+)
+scene = scene_of(rendered[2], rendered[3], labels=[&quot;female talker&quot;])
+sound = finish(rendered[0])</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-three-talkers">
 <h2 id="h-three-talkers">Three talkers</h2>
-<p>With all three talking, the target is hard to pick out when everyone stands still, since the
-voices are similar and they say similar things. Set the target moving and listen for whether
-it stands out from the others, and how far it has to move before it does. In the mix, the
-interaural differences at any moment come from whichever talker is loudest, so the target's
-motion shows only in the stretches it dominates.</p>
+<p>Now the target talks among two maskers. Each demo plays it twice, side by side: on the left the
+male talker is the target, on the right the female talker, saying the same sentence from the
+same place among the same maskers. With two male maskers, the male target is one of three
+similar voices and the female target is the one that differs; with two female maskers it is
+the other way round. Listeners ignore a masker of the other sex far more easily than one of the
+same sex (Brungart, 2001, with two talkers at once), so the target should be easier to follow
+in the right column of the first demo and in the left column of the second. How the two voices
+differ is measured on <a href="talkers.html">Two talkers</a>.</p>
+<p>Then the target moves, among the male maskers. Listen for whether motion sets the male target
+apart from the two male maskers, how far it has to move before it does, and whether it adds
+anything for the female target, who already differs. In the mix, the interaural differences at
+any moment come from whichever talker is loudest, so the target's motion shows only in the
+stretches it dominates.</p>
 
-<article class="sound" id="d-m2" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.665923226273148, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+<article class="sound pair" id="d-m2">
   <div class="about">
     <h3>Three talkers, standing still <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>All three still: the target straight ahead, the maskers 40° to the left and right.</p></div>
-    <audio controls preload="metadata" src="audio/m2_three_talkers_standing_still.flac"></audio>
-    <p class="file">m2_three_talkers_standing_still.flac, 4.8 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{&quot;label&quot;:&quot;left masker&quot;,&quot;color&quot;:&quot;#7f7f7f&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{&quot;label&quot;:&quot;right masker&quot;,&quot;color&quot;:&quot;#b0b0b0&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
+    <div class="desc"><p>Nobody moves: the target straight ahead, two male maskers 40° to the left and right.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/m2_three_talkers_standing_still_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870372, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.6649162642045456, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m2_three_talkers_standing_still_male_talker.flac, 4.8 s, stereo</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/m2_three_talkers_standing_still_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870371, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6649162642045454, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m2_three_talkers_standing_still_female_talker.flac, 4.8 s, stereo</p></div>
+    </div>
+    <canvas class="scene" data-scenes="[&quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;, &quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/m2_three_talkers_standing_still.png" width="1000" height="600" alt="Plots of the three talkers, standing still sound" loading="lazy">
+    <img src="img/m2_three_talkers_standing_still.png" width="1000" height="660" alt="Plots of the three talkers, standing still sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(0.0)
-fig, playhead = show(mix, target_alone, t, azimuths, &quot;Nobody moves&quot;)
-scene = scene_of(t, azimuths)
-sound = finish(mix)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, sounds, scene = three_talkers(0.0, maskers=&quot;male&quot;, title=&quot;nobody moves&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-m3" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.665923226273148, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+<article class="sound pair" id="d-m10">
+  <div class="about">
+    <h3>Three talkers, standing still, female maskers <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
+    <div class="desc"><p>The same, with two female maskers in place of the male ones.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/m10_three_talkers_standing_still_female_maskers_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870372, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.6649162642045456, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m10_three_talkers_standing_still_female_maskers_male_talker.flac, 4.8 s, stereo</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/m10_three_talkers_standing_still_female_maskers_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870371, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6649162642045454, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m10_three_talkers_standing_still_female_maskers_female_talker.flac, 4.8 s, stereo</p></div>
+    </div>
+    <canvas class="scene" data-scenes="[&quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;, &quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/m10_three_talkers_standing_still_female_maskers.png" width="1000" height="660" alt="Plots of the three talkers, standing still, female maskers sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, sounds, scene = three_talkers(0.0, maskers=&quot;female&quot;, title=&quot;nobody moves&quot;)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-m3">
   <div class="about">
     <h3>The target swings 10 degrees <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>The target swings 10° to either side of straight ahead.</p></div>
-    <audio controls preload="metadata" src="audio/m3_the_target_swings_10_degrees.flac"></audio>
-    <p class="file">m3_the_target_swings_10_degrees.flac, 4.8 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88]},{&quot;label&quot;:&quot;left masker&quot;,&quot;color&quot;:&quot;#7f7f7f&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{&quot;label&quot;:&quot;right masker&quot;,&quot;color&quot;:&quot;#b0b0b0&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
+    <div class="desc"><p>Among the male maskers, the target swings 10° to either side of straight ahead.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/m3_the_target_swings_10_degrees_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870372, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.6649162642045456, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m3_the_target_swings_10_degrees_male_talker.flac, 4.8 s, stereo</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/m3_the_target_swings_10_degrees_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870371, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6649162642045454, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m3_the_target_swings_10_degrees_female_talker.flac, 4.8 s, stereo</p></div>
+    </div>
+    <canvas class="scene" data-scenes="[&quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;, &quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/m3_the_target_swings_10_degrees.png" width="1000" height="600" alt="Plots of the the target swings 10 degrees sound" loading="lazy">
+    <img src="img/m3_the_target_swings_10_degrees.png" width="1000" height="660" alt="Plots of the the target swings 10 degrees sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(10.0)
-fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target swings 10° to either side&quot;)
-scene = scene_of(t, azimuths)
-sound = finish(mix)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, sounds, scene = three_talkers(10.0, maskers=&quot;male&quot;, title=&quot;swings 10°&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-m4" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.665923226273148, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
+<article class="sound pair" id="d-m4">
   <div class="about">
     <h3>The target swings 30 degrees <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>The target swings 30° to either side, three quarters of the way to the maskers, starting to
-the left this time.</p></div>
-    <audio controls preload="metadata" src="audio/m4_the_target_swings_30_degrees.flac"></audio>
-    <p class="file">m4_the_target_swings_30_degrees.flac, 4.8 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,-0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,-0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63]},{&quot;label&quot;:&quot;left masker&quot;,&quot;color&quot;:&quot;#7f7f7f&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{&quot;label&quot;:&quot;right masker&quot;,&quot;color&quot;:&quot;#b0b0b0&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
+    <div class="desc"><p>The target swings 30° to either side, three quarters of the way to the maskers, starting to the
+left this time.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/m4_the_target_swings_30_degrees_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870372, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06669428949652781, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.6649162642045456, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m4_the_target_swings_30_degrees_male_talker.flac, 4.8 s, stereo</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/m4_the_target_swings_30_degrees_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29911614977904055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3521211581965489, &quot;bottom&quot;: 0.6119112557870371, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.5716942894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6649162642045454, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]"></audio>
+    <p class="file">m4_the_target_swings_30_degrees_female_talker.flac, 4.8 s, stereo</p></div>
+    </div>
+    <canvas class="scene" data-scenes="[&quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,-0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,-0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;, &quot;[{\&quot;label\&quot;:\&quot;target\&quot;,\&quot;color\&quot;:\&quot;#d62728\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,-0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,-0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63,23.12,27.14,29.47,29.94,28.53,25.33,20.54,14.45,7.46,0.0,-7.46,-14.45,-20.54,-25.33,-28.53,-29.94,-29.47,-27.14,-23.12,-17.63,-11.04,-3.76,3.76,11.04,17.63]},{\&quot;label\&quot;:\&quot;left masker\&quot;,\&quot;color\&quot;:\&quot;#7f7f7f\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{\&quot;label\&quot;:\&quot;right masker\&quot;,\&quot;color\&quot;:\&quot;#b0b0b0\&quot;,\&quot;t\&quot;:0.02,\&quot;az\&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]&quot;]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/m4_the_target_swings_30_degrees.png" width="1000" height="600" alt="Plots of the the target swings 30 degrees sound" loading="lazy">
+    <img src="img/m4_the_target_swings_30_degrees.png" width="1000" height="660" alt="Plots of the the target swings 30 degrees sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(30.0, phase=0.5)
-fig, playhead = show(mix, target_alone, t, azimuths, &quot;The target swings 30° to either side&quot;)
-scene = scene_of(t, azimuths)
-sound = finish(mix)</code></pre></details>
-</article>
-</section>
-<section aria-labelledby="h-a-different-voice">
-<h2 id="h-a-different-voice">A different voice</h2>
-<p>Motion is one way to set the target apart. A different voice is another, and a strong one: with
-two talkers at once, Brungart (2001) found a masker of the other sex far easier to ignore than one
-of the same sex. Here the target is the same sentence read by a female talker (slt), among the
-same two male talkers.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">target_female = so.normalize(
-    so.match_lengths([so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)), maskers[0]], align=&quot;center&quot;)
-)[0]
-spoken_female = so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)).duration
-TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)</code></pre></details></div>
-
-<article class="sound" id="d-m8" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.665923226273148, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
-  <div class="about">
-    <h3>A female talker among two male talkers, standing still <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>The female talker straight ahead and the male talkers 40° to either side, nobody moving. Compare
-it with the three male talkers standing still above.</p></div>
-    <audio controls preload="metadata" src="audio/m8_a_female_talker_among_two_male_talkers_standing_still.flac"></audio>
-    <p class="file">m8_a_female_talker_among_two_male_talkers_standing_still.flac, 4.8 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},{&quot;label&quot;:&quot;left masker&quot;,&quot;color&quot;:&quot;#7f7f7f&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{&quot;label&quot;:&quot;right masker&quot;,&quot;color&quot;:&quot;#b0b0b0&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/m8_a_female_talker_among_two_male_talkers_standing_still.png" width="1000" height="600" alt="Plots of the a female talker among two male talkers, standing still sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(0.0, talker=target_female)
-fig, playhead = show(mix, target_alone, t, azimuths, &quot;A female talker ahead, nobody moves&quot;, TALKING_FEMALE)
-scene = scene_of(t, azimuths)
-sound = finish(mix)</code></pre></details>
-</article>
-
-<article class="sound" id="d-m9" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.665923226273148, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
-  <div class="about">
-    <h3>A female talker among two male talkers, swinging 10 degrees <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>The female talker swings 10° to either side, as the male talker did above: both cues at once.</p></div>
-    <audio controls preload="metadata" src="audio/m9_a_female_talker_among_two_male_talkers_swinging_10_degrees.flac"></audio>
-    <p class="file">m9_a_female_talker_among_two_male_talkers_swinging_10_degrees.flac, 4.8 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88,-7.71,-9.05,-9.82,-9.98,-9.51,-8.44,-6.85,-4.82,-2.49,-0.0,2.49,4.82,6.85,8.44,9.51,9.98,9.82,9.05,7.71,5.88,3.68,1.25,-1.25,-3.68,-5.88]},{&quot;label&quot;:&quot;left masker&quot;,&quot;color&quot;:&quot;#7f7f7f&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0,-40.0]},{&quot;label&quot;:&quot;right masker&quot;,&quot;color&quot;:&quot;#b0b0b0&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/m9_a_female_talker_among_two_male_talkers_swinging_10_degrees.png" width="1000" height="600" alt="Plots of the a female talker among two male talkers, swinging 10 degrees sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">mix, target_alone, t, azimuths = render(10.0, talker=target_female)
-fig, playhead = show(
-    mix, target_alone, t, azimuths, &quot;A female talker ahead swings 10° to either side&quot;, TALKING_FEMALE
-)
-scene = scene_of(t, azimuths)
-sound = finish(mix)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, sounds, scene = three_talkers(30.0, phase=0.5, maskers=&quot;male&quot;, title=&quot;swings 30°&quot;)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-coming-closer">
 <h2 id="h-coming-closer">Coming closer</h2>
-<p>Now the target walks toward the listener while it says its sentence, from 3 m to 30 cm,
-30° to the right, about 1 m/s. Its direct sound grows as 1/r, by 20 dB in all, and arrives
-8 ms sooner at the end than at the start. Closer than 1.6 m the measured responses take over,
-and the ear on the talker's side gains more than the other: the level difference between the
-ears grows as the talker comes near, which is what Qu et al. (2009) measured distances for.</p>
-<p>A room changes the picture. The reverberation, built up from reflections off every wall, has
-about the same level wherever the talker stands, while the direct sound grows as it comes
-closer, so a talker far away is mostly room and one close by mostly direct sound. That ratio
-is one of the cues to distance; see <a href="reverb.html">Synthetic reverberation</a> for still talkers.</p>
+<p>Now a talker walks toward the listener while it says the sentence, from 3 m to 30 cm, 30° to
+the right; this time it is the male talker. How distance sets the level of the direct sound
+(the inverse square law) and its ratio to the reverberation of a room is taught with still
+talkers on <a href="reverb.html#h-farther-away">Rooms</a>. Here the distance changes while the sentence
+plays.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">WALK = (300.0, 30.0)  # cm: from 3 m to 30 cm
 WALK_AZIMUTH = 30.0  # deg, to the right
-talker = so.load(fetch(f&quot;docs/speech/{files[0]}.flac&quot;)).normalize()  # the target sentence, without padding
+walker = talkers[&quot;Male talker&quot;]  # the sentence without padding
 room = so.synth_ir(0.6, fs, n_channels=2, rng=1)  # RT60 0.6 s, a different tail at each ear
+print(
+    f&quot;{(WALK[0] - WALK[1]) / 100 / walker.duration:.2f} m/s; &quot;
+    f&quot;direct sound {so.distance_gain_db(WALK[1] / WALK[0]):+.1f} dB from start to end, &quot;
+    f&quot;arriving {1e3 * (WALK[0] - WALK[1]) / 100 / so.SPEED_OF_SOUND:.1f} ms sooner&quot;
+)
 
 
 def walk_in(room=None):
-    &quot;&quot;&quot;The target walking in while it says its sentence, through all eight measured distances.
+    &quot;&quot;&quot;The talker walking in while it says the sentence, through all eight measured distances.
     The room, if any, is set so direct and reverberant sound are equal 1 m away.&quot;&quot;&quot;
-    path = so.hcc_trajectory(dist=([0, talker.duration], WALK), elev=0, azim=WALK_AZIMUTH)
-    return so.move_sound(talker, path, hrirs, room=room, drr_db=0.0)
+    path = so.hcc_trajectory(dist=([0, walker.duration], WALK), elev=0, azim=WALK_AZIMUTH)
+    return so.move_sound(walker, path, hrirs, room=room, drr_db=0.0)
 
 
 def levels_db(data, window=0.2):
@@ -516,13 +575,13 @@ def levels_db(data, window=0.2):
 
 def show_walk(rendered, title):
     &quot;&quot;&quot;Distance, and the level at each ear re the talker, in 0.2 s time windows.&quot;&quot;&quot;
-    t_walk = np.linspace(0, talker.duration, 200)
-    distance = np.interp(t_walk, [0, talker.duration], WALK) / 100
+    t_walk = np.linspace(0, walker.duration, 200)
+    distance = np.interp(t_walk, [0, walker.duration], WALK) / 100
     fig = plt.figure(figsize=(10, 4.5), layout=&quot;constrained&quot;)
     axes = fig.subplots(2, 1, sharex=True)
     axes[0].plot(t_walk, distance, color=COLORS[0], lw=1.5)
     axes[0].set(ylim=(0, 3.2), ylabel=&quot;Distance [m]&quot;, title=title)
-    t_level, talker_db = levels_db(talker.data)
+    t_level, talker_db = levels_db(walker.data)
     ear_db = levels_db(rendered.data)[1][: len(t_level)]
     gain = ear_db - talker_db  # (windows, ears)
     for ear, (label, color) in enumerate([(&quot;left ear&quot;, &quot;#7f7f7f&quot;), (&quot;right ear&quot;, COLORS[0])]):
@@ -540,45 +599,53 @@ def show_walk(rendered, title):
 
 
 def walk_scene():
-    t_walk = np.linspace(0, talker.duration, 100)
+    t_walk = np.linspace(0, walker.duration, 100)
     return [
         {
-            &quot;label&quot;: &quot;target&quot;,
+            &quot;label&quot;: &quot;male talker&quot;,
             &quot;color&quot;: COLORS[0],
             &quot;t&quot;: t_walk,
             &quot;azimuth&quot;: np.full_like(t_walk, WALK_AZIMUTH),
-            &quot;distance&quot;: np.interp(t_walk, [0, talker.duration], WALK) / 100,
+            &quot;distance&quot;: np.interp(t_walk, [0, walker.duration], WALK) / 100,
         }
-    ]</code></pre></details></div>
+    ]</code></pre></details><pre class="out">1.07 m/s; direct sound +20.0 dB from start to end, arriving 7.9 ms sooner</pre></div>
+<p>Without a room, the direct sound is all there is: it grows as 1/r and arrives sooner as the
+talker comes in (printed above). Closer than 1.6 m the measured responses (Qu et al., 2009)
+take over, and the ear on the talker's side gains more than the far ear, so the level
+difference between the ears grows as the talker comes near. In a room, the reverberation keeps
+about the same level wherever the talker stands, so the walk turns the sound from mostly room
+into mostly direct sound.</p>
 
-<article class="sound" id="d-m5" data-regions="[{&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05222296296296303, &quot;bottom&quot;: 0.43681536410108024, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.55025}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5155238044945989, &quot;bottom&quot;: 0.9001162056327161, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.55025}]">
+<article class="sound" id="d-m5" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05767820987654315, &quot;bottom&quot;: 0.43007708285108015, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.55025}, {&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5171704576581788, &quot;bottom&quot;: 0.889569330632716, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.55025}]">
   <div class="about">
     <h3>Walking in <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>The target walking in from 3 m to 30 cm, with no room. The level at each ear follows 1/r
-(dashed), and the right ear, nearer the talker, pulls ahead of the left in the last meter.</p></div>
+    <div class="desc"><p>The male talker walking in from 3 m to 30 cm, with no room. The level at each ear follows 1/r
+(dashed). The right ear, on the talker's side, is louder throughout, and more so in the last
+meter.</p></div>
     <audio controls preload="metadata" src="audio/m5_walking_in.flac"></audio>
     <p class="file">m5_walking_in.flac, 2.6 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0],&quot;r&quot;:[3.0,2.979,2.957,2.936,2.914,2.893,2.872,2.85,2.829,2.808,2.786,2.765,2.743,2.722,2.701,2.679,2.658,2.636,2.615,2.594,2.572,2.551,2.53,2.508,2.487,2.465,2.444,2.423,2.401,2.38,2.358,2.337,2.316,2.294,2.273,2.251,2.23,2.209,2.187,2.166,2.145,2.123,2.102,2.08,2.059,2.038,2.016,1.995,1.973,1.952,1.931,1.909,1.888,1.867,1.845,1.824,1.802,1.781,1.76,1.738,1.717,1.695,1.674,1.653,1.631,1.61,1.589,1.567,1.546,1.524,1.503,1.482,1.46,1.439,1.417,1.396,1.375,1.353,1.332,1.31,1.289,1.268,1.246,1.225,1.204,1.182,1.161,1.139,1.118,1.097,1.075,1.054,1.032,1.011,0.99,0.968,0.947,0.926,0.904,0.883,0.861,0.84,0.819,0.797,0.776,0.754,0.733,0.712,0.69,0.669,0.648,0.626,0.605,0.583,0.562,0.541,0.519,0.498,0.476,0.455,0.434,0.412,0.391,0.37,0.348,0.327,0.305]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
+    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;male talker&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0],&quot;r&quot;:[3.0,2.979,2.957,2.936,2.914,2.893,2.872,2.85,2.829,2.808,2.786,2.765,2.743,2.722,2.701,2.679,2.658,2.636,2.615,2.594,2.572,2.551,2.53,2.508,2.487,2.465,2.444,2.423,2.401,2.38,2.358,2.337,2.316,2.294,2.273,2.251,2.23,2.209,2.187,2.166,2.145,2.123,2.102,2.08,2.059,2.038,2.016,1.995,1.973,1.952,1.931,1.909,1.888,1.867,1.845,1.824,1.802,1.781,1.76,1.738,1.717,1.695,1.674,1.653,1.631,1.61,1.589,1.567,1.546,1.524,1.503,1.482,1.46,1.439,1.417,1.396,1.375,1.353,1.332,1.31,1.289,1.268,1.246,1.225,1.204,1.182,1.161,1.139,1.118,1.097,1.075,1.054,1.032,1.011,0.99,0.968,0.947,0.926,0.904,0.883,0.861,0.84,0.819,0.797,0.776,0.754,0.733,0.712,0.69,0.669,0.648,0.626,0.605,0.583,0.562,0.541,0.519,0.498,0.476,0.455,0.434,0.412,0.391,0.37,0.348,0.327,0.305]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/m5_walking_in.png" width="1000" height="450" alt="Plots of the walking in sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">rendered = walk_in()
-fig, playhead = show_walk(rendered, &quot;The target walks in, 30° to the right, with no room&quot;)
+fig, playhead = show_walk(rendered, &quot;The male talker walks in, 30° to the right, with no room&quot;)
 scene = walk_scene()
 sound = finish(rendered)</code></pre></details>
 </article>
 
-<article class="sound" id="d-m6" data-regions="[{&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05222296296296303, &quot;bottom&quot;: 0.43681536410108024, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2680625}, {&quot;x0&quot;: 0.060447707465277785, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5155238044945989, &quot;bottom&quot;: 0.9001162056327161, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2680625}]">
+<article class="sound" id="d-m6" data-regions="[{&quot;x0&quot;: 0.05830366449652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.05767820987654315, &quot;bottom&quot;: 0.43007708285108015, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2678125}, {&quot;x0&quot;: 0.05830366449652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.5171704576581788, &quot;bottom&quot;: 0.889569330632716, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2678125}]">
   <div class="about">
     <h3>Walking in, in a room <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The same walk in a room with an RT60 of 0.6 s, where direct and reverberant sound are equal at
 1 m. Far away the level changes little, because the room sets it; it rises with 1/r only once
-the direct sound takes over.</p></div>
+the direct sound takes over. For the inverse square law and the direct-to-reverberant ratio
+with a still talker, hear <a href="reverb.html#d-r2">the same sentence four times farther</a> on Rooms.</p></div>
     <audio controls preload="metadata" src="audio/m6_walking_in_in_a_room.flac"></audio>
     <p class="file">m6_walking_in_in_a_room.flac, 3.3 s, stereo</p>
-    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;target&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0],&quot;r&quot;:[3.0,2.979,2.957,2.936,2.914,2.893,2.872,2.85,2.829,2.808,2.786,2.765,2.743,2.722,2.701,2.679,2.658,2.636,2.615,2.594,2.572,2.551,2.53,2.508,2.487,2.465,2.444,2.423,2.401,2.38,2.358,2.337,2.316,2.294,2.273,2.251,2.23,2.209,2.187,2.166,2.145,2.123,2.102,2.08,2.059,2.038,2.016,1.995,1.973,1.952,1.931,1.909,1.888,1.867,1.845,1.824,1.802,1.781,1.76,1.738,1.717,1.695,1.674,1.653,1.631,1.61,1.589,1.567,1.546,1.524,1.503,1.482,1.46,1.439,1.417,1.396,1.375,1.353,1.332,1.31,1.289,1.268,1.246,1.225,1.204,1.182,1.161,1.139,1.118,1.097,1.075,1.054,1.032,1.011,0.99,0.968,0.947,0.926,0.904,0.883,0.861,0.84,0.819,0.797,0.776,0.754,0.733,0.712,0.69,0.669,0.648,0.626,0.605,0.583,0.562,0.541,0.519,0.498,0.476,0.455,0.434,0.412,0.391,0.37,0.348,0.327,0.305]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
+    <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;male talker&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0],&quot;r&quot;:[3.0,2.979,2.957,2.936,2.914,2.893,2.872,2.85,2.829,2.808,2.786,2.765,2.743,2.722,2.701,2.679,2.658,2.636,2.615,2.594,2.572,2.551,2.53,2.508,2.487,2.465,2.444,2.423,2.401,2.38,2.358,2.337,2.316,2.294,2.273,2.251,2.23,2.209,2.187,2.166,2.145,2.123,2.102,2.08,2.059,2.038,2.016,1.995,1.973,1.952,1.931,1.909,1.888,1.867,1.845,1.824,1.802,1.781,1.76,1.738,1.717,1.695,1.674,1.653,1.631,1.61,1.589,1.567,1.546,1.524,1.503,1.482,1.46,1.439,1.417,1.396,1.375,1.353,1.332,1.31,1.289,1.268,1.246,1.225,1.204,1.182,1.161,1.139,1.118,1.097,1.075,1.054,1.032,1.011,0.99,0.968,0.947,0.926,0.904,0.883,0.861,0.84,0.819,0.797,0.776,0.754,0.733,0.712,0.69,0.669,0.648,0.626,0.605,0.583,0.562,0.541,0.519,0.498,0.476,0.455,0.434,0.412,0.391,0.37,0.348,0.327,0.305]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/m6_walking_in_in_a_room.png" width="1000" height="450" alt="Plots of the walking in, in a room sound" loading="lazy">
@@ -595,12 +662,14 @@ sound = finish(rendered)</code></pre></details>
 <p>A source that changes distance also changes pitch: approaching, each wave starts a little
 closer than the last and arrives sooner, so the waves are squeezed together, and receding they
 are stretched apart. Here a 120 Hz buzz passes 3 m in front of the listener, left to right, at
-15 m/s (54 km/h). Its pitch is highest while it approaches and falls as it passes, about 150
-cents (a semitone and a half) in all, most of it in the second around the moment of passing.
-Nothing makes the shift happen but the delay changing from sample to sample.</p>
-<p>Doppler is a weak cue for people: at speeds like these, listeners judge motion mostly from the
-change in level and in interaural differences, and the rising pitch people report as a source
-approaches comes largely from its rising loudness (Carlile &amp; Leung, 2016, review this).</p>
+15 m/s (54 km/h). Its pitch is highest while it approaches and falls as it passes, most of the
+way in the second around the moment of passing; the cell below prints the shift at the start
+and at the end. Nothing makes the shift happen but the delay changing from sample to sample.</p>
+<p>How much listeners use the Doppler shift depends on speed. In the studies reviewed by Carlile &amp;
+Leung (2016), judgments of a source passing at 10 m/s went with its changes in level and ITD,
+and Doppler cues dominated only at 50 m/s. Listeners also report the pitch of an approaching
+source rising, though the Doppler shift holds it steady or lowers it; the rising loudness is
+what they hear as rising pitch (Neuhoff &amp; McBeath, 1997).</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">SPEED, CLOSEST, BUZZ_F0 = 15.0, 3.0, 120.0  # m/s, m, Hz
 PASS_DURATION = 2.5  # s
 buzz = so.harmonic_complex(PASS_DURATION, fs, BUZZ_F0, f_max=5000).normalize()
@@ -621,11 +690,13 @@ shift_cents = -1200 * np.log2(1 + np.gradient(distance_pass, t_pass) / so.SPEED_
 arrival = t_pass + distance_pass / so.SPEED_OF_SOUND
 print(f&quot;approaching: {shift_cents[0]:+.0f} cents; receding: {shift_cents[-1]:+.0f} cents&quot;)</code></pre></details><pre class="out">approaching: +76 cents; receding: -73 cents</pre></div>
 
-<article class="sound" id="d-m7" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.05222296296296303, &quot;bottom&quot;: 0.44002686824845694, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.572125}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.5123123003472223, &quot;bottom&quot;: 0.9001162056327161, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.572125}]">
+<article class="sound" id="d-m7" data-regions="[{&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05767820987654326, &quot;bottom&quot;: 0.43475343074845685, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.572125}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5124941097608027, &quot;bottom&quot;: 0.889569330632716, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.572125}]">
   <div class="about">
     <h3>Passing by <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>A 120 Hz buzz passing 3 m in front at 15 m/s. The pitch measured at the left ear (dots, by
-so.f0_track) follows the Doppler shift computed from the path (line).</p></div>
+    <div class="desc"><p>A 120 Hz buzz passing 3 m in front at 15 m/s. Its pitch falls by
+150 cents in all, about a semitone and a half. The
+pitch measured at the left ear (dots, by so.f0_track) follows the Doppler shift computed from
+the path (line).</p></div>
     <audio controls preload="metadata" src="audio/m7_passing_by.flac"></audio>
     <p class="file">m7_passing_by.flac, 2.6 s, stereo</p>
     <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;buzz&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-80.91,-80.91,-80.91,-80.87,-80.72,-80.56,-80.4,-80.23,-80.05,-79.87,-79.68,-79.49,-79.29,-79.07,-78.86,-78.63,-78.39,-78.14,-77.88,-77.61,-77.33,-77.04,-76.73,-76.41,-76.07,-75.71,-75.34,-74.95,-74.53,-74.09,-73.63,-73.14,-72.63,-72.08,-71.49,-70.87,-70.21,-69.5,-68.74,-67.93,-67.05,-66.11,-65.09,-63.99,-62.79,-61.49,-60.08,-58.53,-56.83,-54.96,-52.9,-50.63,-48.11,-45.34,-42.26,-38.86,-35.11,-30.99,-26.5,-21.64,-16.45,-11.0,-5.35,0.37,6.06,11.61,16.92,21.94,26.61,30.92,34.86,38.45,41.71,44.67,47.35,49.78,51.98,53.99,55.81,57.48,59.01,60.41,61.71,62.9,64.0,65.02,65.97,66.85,67.67,68.44,69.16,69.84,70.47,71.07,71.63,72.16,72.66,73.14,73.59,74.02,74.42,74.81,75.18,75.53,75.87,76.19,76.49,76.79,77.07,77.34,77.6,77.84,78.08,78.31,78.53,78.75,78.95,79.15,79.34,79.53,79.71,79.88,80.04,80.21,80.36,80.51,80.66,80.8,80.91],&quot;r&quot;:[18.988,18.988,18.988,18.916,18.607,18.297,17.988,17.679,17.37,17.061,16.753,16.445,16.137,15.829,15.521,15.214,14.906,14.6,14.293,13.987,13.681,13.375,13.07,12.765,12.461,12.157,11.854,11.551,11.249,10.947,10.647,10.346,10.047,9.749,9.452,9.155,8.86,8.567,8.274,7.984,7.695,7.408,7.124,6.842,6.562,6.287,6.014,5.746,5.483,5.225,4.974,4.73,4.494,4.269,4.054,3.854,3.668,3.501,3.353,3.228,3.129,3.057,3.014,3.001,3.018,3.064,3.137,3.235,3.356,3.498,3.657,3.832,4.019,4.219,4.428,4.646,4.871,5.103,5.34,5.581,5.827,6.077,6.33,6.586,6.844,7.104,7.367,7.631,7.897,8.165,8.433,8.703,8.974,9.246,9.519,9.793,10.068,10.343,10.619,10.895,11.172,11.45,11.728,12.006,12.285,12.564,12.844,13.124,13.404,13.685,13.966,14.247,14.528,14.81,15.092,15.374,15.656,15.938,16.221,16.504,16.787,17.07,17.353,17.636,17.92,18.203,18.487,18.771,18.988]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
@@ -668,11 +739,9 @@ sound = finish(rendered)</code></pre></details>
 <h2 id="h-straight-paths-across-the-plane">Straight paths across the plane</h2>
 <p>The same buzz, at the same 15 m/s, now along six straight lines through different parts of the
 horizontal plane. The Doppler shift depends only on how fast the distance changes, so every
-path that passes the listener starts 65 to 77 cents sharp and ends about as flat. What differs
-is how quickly the change comes and what the ears hear meanwhile. The glide takes longer the
-farther away the path passes, in proportion at this speed: from 95% to 5% of its range, 0.14 s
-at 50 cm, 0.27 s at 1 m and 0.53 s at 2 m. The level rises and falls as 1/r, by 6.5 dB on the
-path 10 m away and 31 dB on the one 50 cm away.</p>
+path that passes the listener starts about as sharp as it ends flat. What differs is how
+quickly the change comes and what the ears hear meanwhile; the cell after the code for the
+paths measures both.</p>
 <p>The buzz stops at 5 kHz (<code>f_max</code>), so that a shift of several semitones up still keeps every
 harmonic below 8 kHz, half the sampling rate (see <a href="#h-a-path-no-source-could-take">A path no source could
 take</a>).</p>
@@ -746,7 +815,7 @@ def show_path(rendered, path, title, color, f0_range=(80, 200), cents_limit=120)
         )
     axes[2].plot(arrival, cents, color=color, lw=1.2, label=&quot;Doppler shift from the path&quot;)
     axes[2].set(ylim=(-cents_limit, cents_limit), ylabel=&quot;Pitch re 120 Hz [cents]&quot;, title=&quot;Pitch at the ears&quot;)
-    axes[2].legend(loc=&quot;upper right&quot;, fontsize=8, ncols=3, markerscale=3)
+    axes[2].legend(loc=&quot;lower left&quot;, fontsize=8, ncols=3, markerscale=3)
     for ax in axes:
         ax.grid(ls=&quot;:&quot;)
         ax.set_xlim(0, rendered.duration)
@@ -765,6 +834,45 @@ def render_path(number):
     rendered = so.move_sound(buzz, path, hrirs)
     fig, playhead = show_path(rendered, path, f&quot;{title}, at 15 m/s&quot;, PATH_COLORS[number])
     return fig, playhead, path_scene(path, &quot;buzz&quot;, PATH_COLORS[number]), finish(rendered)</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">STATS = {}  # per path, as heard
+for title, path in PATHS.items():
+    arrival, distance, azimuth, cents = as_heard(path, 20001)
+    span = cents[0] - cents[-1]
+    # from 95 % to 5 % of the way down (the cents fall, so the arrays are reversed for np.interp)
+    t95, t5 = (np.interp(cents[-1] + share * span, cents[::-1], arrival[::-1]) for share in (0.95, 0.05))
+    STATS[title] = {
+        &quot;closest&quot;: distance.min(),
+        &quot;start&quot;: distance[0],
+        &quot;level&quot;: 20 * np.log10(distance.max() / distance.min()),
+        &quot;sharp&quot;: cents[0],
+        &quot;flat&quot;: cents[-1],
+        &quot;glide&quot;: t5 - t95 if span &gt; 1 else np.nan,
+        &quot;swing&quot;: np.ptp(np.interp([-45, 45], azimuth, arrival)) if np.all(np.diff(azimuth) &gt;= 0) else np.nan,
+    }
+    print(
+        f&quot;{title:&lt;25s} closest {distance.min():5.2f} m, level range {STATS[title][&#x27;level&#x27;]:4.1f} dB, &quot;
+        f&quot;Doppler {cents[0]:+3.0f} to {cents[-1]:+3.0f} cents, 95 to 5 % of the glide in &quot;
+        f&quot;{STATS[title][&#x27;glide&#x27;]:.2f} s&quot;
+    )
+passing_paths = [title for title in PATHS if STATS[title][&quot;glide&quot;] &gt; 0]
+crossing_position = PATHS[&quot;Crossing at an angle&quot;](np.linspace(0, emitted, 200001))
+crossing_delay = (
+    np.argmin(np.abs(crossing_position[:, 1])) - np.argmin(np.linalg.norm(crossing_position, axis=1))
+) * (emitted / 200000)</code></pre></details><pre class="out">Far in front              closest 10.00 m, level range  6.5 dB, Doppler +68 to -66 cents, 95 to 5 % of the glide in 1.74 s
+Close in front            closest  0.50 m, level range 31.5 dB, Doppler +77 to -74 cents, 95 to 5 % of the glide in 0.14 s
+Down the right side       closest  1.00 m, level range 25.5 dB, Doppler +77 to -74 cents, 95 to 5 % of the glide in 0.27 s
+Behind                    closest  2.00 m, level range 19.5 dB, Doppler +77 to -74 cents, 95 to 5 % of the glide in 0.53 s
+Crossing at an angle      closest  1.00 m, level range 25.5 dB, Doppler +77 to -74 cents, 95 to 5 % of the glide in 0.27 s
+Straight at the listener  closest  0.40 m, level range 39.5 dB, Doppler +77 to +77 cents, 95 to 5 % of the glide in nan s</pre></div>
+<p>Every path that passes the listener starts
+68 to
+77 cents sharp and ends about as flat.
+The glide takes longer the farther away the path passes, in proportion at this speed: from 95%
+to 5% of its range, 0.14 s at 50 cm,
+0.27 s at 1 m and
+0.53 s at 2 m. The level rises and falls as 1/r, by
+6.5 dB on the path 10 m away and
+31 dB on the one 50 cm away.</p>
 
 <article class="still" id="d-ml0">
   <div class="about">
@@ -801,11 +909,12 @@ axes[1].set(title=&quot;The middle 6 m (the head drawn to scale)&quot;)
 axes[0].legend(loc=&quot;lower left&quot;, fontsize=8)</code></pre></details>
 </article>
 
-<article class="sound" id="d-ml1" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29672539809992315, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.578625}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3557567283950621, &quot;bottom&quot;: 0.6133149042727624, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.578625}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6675289783468364, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.578625}]">
+<article class="sound" id="d-ml1" data-regions="[{&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2933562574749231, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.578625}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.358676288580247, &quot;bottom&quot;: 0.6087738886477623, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.578625}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6670793979070215, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.578625}]">
   <div class="about">
     <h3>Far in front <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>10 m in front, left to right. Far away, the direction changes slowly and the level only by
-6.5 dB, and the pitch glides gently over most of two seconds.</p></div>
+6.5 dB, and the pitch glides gently over most of two
+seconds.</p></div>
     <audio controls preload="metadata" src="audio/ml1_far_in_front.flac"></audio>
     <p class="file">ml1_far_in_front.flac, 2.6 s, stereo</p>
     <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;buzz&quot;,&quot;color&quot;:&quot;#1f77b4&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-61.93,-61.93,-61.93,-61.93,-61.57,-61.15,-60.73,-60.3,-59.86,-59.4,-58.93,-58.45,-57.95,-57.44,-56.92,-56.38,-55.82,-55.25,-54.67,-54.06,-53.44,-52.8,-52.14,-51.45,-50.75,-50.03,-49.28,-48.52,-47.72,-46.91,-46.07,-45.2,-44.31,-43.38,-42.43,-41.45,-40.44,-39.4,-38.33,-37.23,-36.09,-34.93,-33.72,-32.49,-31.22,-29.92,-28.58,-27.21,-25.8,-24.37,-22.9,-21.4,-19.87,-18.31,-16.73,-15.12,-13.49,-11.84,-10.17,-8.48,-6.79,-5.08,-3.36,-1.64,0.08,1.79,3.5,5.21,6.9,8.58,10.24,11.88,13.5,15.1,16.67,18.21,19.73,21.21,22.67,24.09,25.48,26.84,28.17,29.46,30.72,31.94,33.14,34.3,35.43,36.52,37.59,38.63,39.63,40.61,41.56,42.48,43.38,44.24,45.09,45.91,46.7,47.47,48.22,48.95,49.66,50.35,51.01,51.66,52.29,52.91,53.5,54.08,54.64,55.19,55.73,56.25,56.75,57.24,57.72,58.19,58.64,59.09,59.52,59.94,60.35,60.75,61.14,61.52,61.89],&quot;r&quot;:[21.25,21.25,21.25,21.25,21.002,20.728,20.455,20.184,19.913,19.644,19.377,19.111,18.846,18.582,18.321,18.061,17.802,17.546,17.291,17.038,16.787,16.539,16.292,16.048,15.806,15.567,15.331,15.097,14.866,14.638,14.413,14.192,13.974,13.76,13.549,13.343,13.14,12.942,12.748,12.56,12.376,12.197,12.023,11.856,11.693,11.537,11.388,11.244,11.108,10.978,10.856,10.741,10.633,10.534,10.442,10.359,10.284,10.218,10.16,10.111,10.071,10.04,10.018,10.004,10.0,10.005,10.019,10.042,10.073,10.113,10.162,10.219,10.284,10.358,10.439,10.528,10.624,10.727,10.837,10.954,11.078,11.208,11.343,11.485,11.632,11.785,11.942,12.105,12.272,12.444,12.62,12.801,12.985,13.173,13.364,13.56,13.758,13.96,14.164,14.372,14.582,14.795,15.01,15.228,15.448,15.671,15.895,16.122,16.35,16.58,16.813,17.046,17.282,17.519,17.757,17.997,18.239,18.481,18.725,18.971,19.217,19.464,19.713,19.963,20.213,20.465,20.718,20.971,21.226]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
@@ -817,11 +926,13 @@ axes[0].legend(loc=&quot;lower left&quot;, fontsize=8)</code></pre></details>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, scene, sound = render_path(0)</code></pre></details>
 </article>
 
-<article class="sound" id="d-ml2" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29672539809992315, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5714375}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3557567283950621, &quot;bottom&quot;: 0.6133149042727624, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5714375}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6675289783468364, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5714375}]">
+<article class="sound" id="d-ml2" data-regions="[{&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2933562574749231, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5714375}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.358676288580247, &quot;bottom&quot;: 0.6087738886477623, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5714375}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6670793979070215, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5714375}]">
   <div class="about">
     <h3>Close in front <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>50 cm in front, left to right, inside the measured distances. The level jumps by about 30 dB,
-the azimuth swings from one side to the other in about 0.1 s, and the pitch drops almost at once.</p></div>
+    <div class="desc"><p>50 cm in front, left to right, inside the measured distances. The level jumps by
+31 dB, the azimuth swings from 45° on one side to
+45° on the other in 0.07 s, and the pitch drops
+almost at once.</p></div>
     <audio controls preload="metadata" src="audio/ml2_close_in_front.flac"></audio>
     <p class="file">ml2_close_in_front.flac, 2.6 s, stereo</p>
     <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;buzz&quot;,&quot;color&quot;:&quot;#d62728&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[-88.47,-88.47,-88.47,-88.47,-88.44,-88.41,-88.38,-88.36,-88.32,-88.29,-88.26,-88.23,-88.19,-88.16,-88.12,-88.08,-88.04,-87.99,-87.95,-87.9,-87.85,-87.8,-87.75,-87.69,-87.63,-87.57,-87.5,-87.43,-87.35,-87.28,-87.19,-87.1,-87.01,-86.91,-86.8,-86.68,-86.56,-86.42,-86.28,-86.12,-85.95,-85.76,-85.55,-85.33,-85.08,-84.8,-84.48,-84.13,-83.73,-83.27,-82.73,-82.11,-81.37,-80.48,-79.38,-78.01,-76.23,-73.86,-70.52,-65.55,-57.55,-43.53,-18.77,14.04,39.85,54.8,63.42,68.8,72.42,74.99,76.92,78.42,79.61,80.58,81.39,82.07,82.65,83.16,83.6,83.98,84.32,84.63,84.9,85.15,85.37,85.58,85.77,85.94,86.1,86.24,86.38,86.51,86.63,86.74,86.84,86.94,87.03,87.11,87.19,87.27,87.34,87.41,87.48,87.54,87.6,87.66,87.71,87.76,87.81,87.86,87.9,87.95,87.99,88.03,88.07,88.1,88.14,88.17,88.2,88.24,88.27,88.3,88.33,88.35,88.38,88.41,88.43,88.46,88.47],&quot;r&quot;:[18.756,18.756,18.756,18.673,18.359,18.046,17.732,17.418,17.105,16.791,16.478,16.164,15.851,15.537,15.223,14.91,14.596,14.283,13.969,13.656,13.342,13.029,12.715,12.402,12.089,11.775,11.462,11.148,10.835,10.522,10.208,9.895,9.582,9.268,8.955,8.642,8.329,8.016,7.703,7.39,7.077,6.764,6.451,6.138,5.826,5.513,5.201,4.889,4.577,4.265,3.954,3.643,3.333,3.023,2.715,2.407,2.102,1.799,1.501,1.211,0.936,0.695,0.534,0.521,0.656,0.871,1.12,1.384,1.655,1.932,2.211,2.492,2.775,3.058,3.342,3.627,3.912,4.197,4.482,4.768,5.054,5.34,5.627,5.913,6.2,6.486,6.773,7.059,7.346,7.633,7.92,8.207,8.494,8.781,9.068,9.355,9.642,9.929,10.216,10.503,10.79,11.077,11.364,11.652,11.939,12.226,12.513,12.8,13.088,13.375,13.662,13.949,14.237,14.524,14.811,15.098,15.386,15.673,15.96,16.248,16.535,16.822,17.11,17.397,17.684,17.971,18.259,18.546,18.756]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
@@ -833,7 +944,7 @@ the azimuth swings from one side to the other in about 0.1 s, and the pitch drop
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, scene, sound = render_path(1)</code></pre></details>
 </article>
 
-<article class="sound" id="d-ml3" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29672539809992315, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5711875}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3557567283950621, &quot;bottom&quot;: 0.6133149042727624, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5711875}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6675289783468364, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5711875}]">
+<article class="sound" id="d-ml3" data-regions="[{&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2933562574749231, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.571125}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.358676288580247, &quot;bottom&quot;: 0.6087738886477623, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.571125}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6670793979070215, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.571125}]">
   <div class="about">
     <h3>Down the right side <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>1 m to the right, from front to back. The interaural differences grow as the buzz comes
@@ -851,7 +962,7 @@ Once behind, both ears fall a few dB below 1/r, in the shadow of the outer ear.<
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, scene, sound = render_path(2)</code></pre></details>
 </article>
 
-<article class="sound" id="d-ml4" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29672539809992315, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.57175}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3557567283950621, &quot;bottom&quot;: 0.6133149042727624, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.57175}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6675289783468364, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.57175}]">
+<article class="sound" id="d-ml4" data-regions="[{&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2933562574749231, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5716875}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.358676288580247, &quot;bottom&quot;: 0.6087738886477623, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5716875}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6670793979070215, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5716875}]">
   <div class="about">
     <h3>Behind <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>2 m behind, right to left: the front pass in a mirror. Interaural time and level differences
@@ -868,7 +979,7 @@ sound in front.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, scene, sound = render_path(3)</code></pre></details>
 </article>
 
-<article class="sound" id="d-ml5" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29672539809992315, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.571375}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3557567283950621, &quot;bottom&quot;: 0.6133149042727624, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.571375}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6675289783468364, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.571375}]">
+<article class="sound" id="d-ml5" data-regions="[{&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2933562574749231, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5713125}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.358676288580247, &quot;bottom&quot;: 0.6087738886477623, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5713125}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6670793979070215, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.5713125}]">
   <div class="about">
     <h3>Crossing at an angle <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>From ahead on the left to behind on the right, passing 1 m away 45° to the front right. It
@@ -884,13 +995,16 @@ crosses the line through the ears 0.07 s after it passes closest.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, playhead, scene, sound = render_path(4)</code></pre></details>
 </article>
 
-<article class="sound" id="d-ml6" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29672539809992315, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.627}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.3557567283950621, &quot;bottom&quot;: 0.6133149042727624, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.627}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6675289783468364, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.627}]">
+<article class="sound" id="d-ml6" data-regions="[{&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2933562574749231, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.627}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.358676288580247, &quot;bottom&quot;: 0.6087738886477623, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.627}, {&quot;x0&quot;: 0.06369428949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6670793979070215, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.627}]">
   <div class="about">
     <h3>Straight at the listener <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>Straight at the listener along 30° to the right, from 38 m to 40 cm, where it stops with the
-sound. The distance shrinks at a steady 15 m/s, so the pitch stays put, 77 cents sharp
-throughout, while the level climbs by 40 dB. If the pitch seems to rise, that comes from the
-loudness, as described under Passing by.</p></div>
+    <div class="desc"><p>Straight at the listener along 30° to the right, from
+38 m to
+40 cm, where it stops with the
+sound. The distance shrinks at a steady 15 m/s, so the pitch stays put,
+77 cents sharp throughout, while the
+level climbs by 40 dB. If the pitch seems
+to rise, that comes from the loudness, as described under <a href="#h-passing-by">Passing by</a>.</p></div>
     <audio controls preload="metadata" src="audio/ml6_straight_at_the_listener.flac"></audio>
     <p class="file">ml6_straight_at_the_listener.flac, 2.6 s, stereo</p>
     <canvas class="scene" data-scene="[{&quot;label&quot;:&quot;buzz&quot;,&quot;color&quot;:&quot;#8c564b&quot;,&quot;t&quot;:0.02,&quot;az&quot;:[30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0,30.0],&quot;r&quot;:[37.899,37.899,37.899,37.899,37.899,37.899,37.75,37.436,37.122,36.809,36.495,36.181,35.868,35.554,35.24,34.926,34.613,34.299,33.985,33.672,33.358,33.044,32.73,32.417,32.103,31.789,31.476,31.162,30.848,30.534,30.221,29.907,29.593,29.28,28.966,28.652,28.338,28.025,27.711,27.397,27.083,26.77,26.456,26.142,25.829,25.515,25.201,24.887,24.574,24.26,23.946,23.633,23.319,23.005,22.691,22.378,22.064,21.75,21.437,21.123,20.809,20.495,20.182,19.868,19.554,19.24,18.927,18.613,18.299,17.986,17.672,17.358,17.044,16.731,16.417,16.103,15.79,15.476,15.162,14.848,14.535,14.221,13.907,13.594,13.28,12.966,12.652,12.339,12.025,11.711,11.397,11.084,10.77,10.456,10.143,9.829,9.515,9.201,8.888,8.574,8.26,7.947,7.633,7.319,7.005,6.692,6.378,6.064,5.751,5.437,5.123,4.809,4.496,4.182,3.868,3.555,3.241,2.927,2.613,2.3,1.986,1.672,1.358,1.045,0.731,0.417]}]" role="img" aria-label="The sources seen from above, moving as the sound plays"></canvas>
@@ -944,7 +1058,7 @@ doppler_range = np.percentile(as_heard(jumping_path, 250001)[3], [0, 100])</code
 cents (more than four semitones) as the buzz dives in, -556 cents
 as it leaps out, so here the pitch jumps around as much as the place.</p>
 
-<article class="sound" id="d-mw1" data-regions="[{&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29672539809992315, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.52775}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3557567283950621, &quot;bottom&quot;: 0.6133149042727624, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.52775}, {&quot;x0&quot;: 0.06844770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6675289783468364, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.52775}]">
+<article class="sound" id="d-mw1" data-regions="[{&quot;x0&quot;: 0.06620991449652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04325865740740742, &quot;bottom&quot;: 0.2933562574749231, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.52775}, {&quot;x0&quot;: 0.06620991449652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.358676288580247, &quot;bottom&quot;: 0.6087738886477623, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.52775}, {&quot;x0&quot;: 0.06620991449652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6670793979070215, &quot;bottom&quot;: 0.917176997974537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.52775}]">
   <div class="about">
     <h3>A path no source could take <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The buzz jumping around the head. HRIR shapes are switched every 0.5 ms instead of the usual
@@ -1162,7 +1276,7 @@ def show_party(cast, paths, hurries, title):
         title=&quot;From above (dot: start; thicker: faster)&quot;,
     )
     distance_axes.set(
-        ylim=(0, 10), xlim=(0, paths[0][0][-1]), xlabel=&quot;Time [s]&quot;, ylabel=&quot;Distance [m]&quot;, title=title
+        ylim=(0, 12), xlim=(0, paths[0][0][-1]), xlabel=&quot;Time [s]&quot;, ylabel=&quot;Distance [m]&quot;, title=title
     )
     distance_axes.legend(loc=&quot;upper right&quot;, fontsize=8, ncols=3)
     for ax in (top, distance_axes):
@@ -1188,7 +1302,7 @@ def party_scene(cast, paths):
         )
     return scene</code></pre></details></div>
 
-<article class="sound" id="d-cp1" data-regions="[{&quot;x0&quot;: 0.4426917168803419, &quot;x1&quot;: 0.981833, &quot;top&quot;: 0.09132099467844201, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+<article class="sound" id="d-cp1" data-regions="[{&quot;x0&quot;: 0.4421153947649572, &quot;x1&quot;: 0.9826455, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
   <div class="about">
     <h3>A party of two <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Two talkers, one female and one male, for 20 s.</p></div>
@@ -1206,7 +1320,7 @@ scene = party_scene(PAIR, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp2" data-regions="[{&quot;x0&quot;: 0.44499940918803416, &quot;x1&quot;: 0.987833, &quot;top&quot;: 0.09132099467844201, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 25.0}]">
+<article class="sound" id="d-cp2" data-regions="[{&quot;x0&quot;: 0.44426082745726486, &quot;x1&quot;: 0.9882236249999999, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 25.0}]">
   <div class="about">
     <h3>A party of three <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Three new talkers, one female and two male, for 25 s.</p></div>
@@ -1224,7 +1338,7 @@ scene = party_scene(TRIO, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp3" data-regions="[{&quot;x0&quot;: 0.44499940918803416, &quot;x1&quot;: 0.987833, &quot;top&quot;: 0.09132099467844201, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
+<article class="sound" id="d-cp3" data-regions="[{&quot;x0&quot;: 0.4441857072649572, &quot;x1&quot;: 0.9880283125, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
   <div class="about">
     <h3>A party of four <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Four more talkers, two female and two male, for 30 s.</p></div>
@@ -1242,7 +1356,7 @@ scene = party_scene(FOURSOME, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp4" data-regions="[{&quot;x0&quot;: 0.44499940918803416, &quot;x1&quot;: 0.987833, &quot;top&quot;: 0.051087681159420195, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
+<article class="sound" id="d-cp4" data-regions="[{&quot;x0&quot;: 0.4441857072649572, &quot;x1&quot;: 0.9880283125, &quot;top&quot;: 0.05642433574879213, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
   <div class="about">
     <h3>A party of four, without the room <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The same four talkers on the same paths, without the room: only the direct sound, so each
@@ -1261,7 +1375,7 @@ scene = party_scene(FOURSOME, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp5" data-regions="[{&quot;x0&quot;: 0.44499940918803416, &quot;x1&quot;: 0.987833, &quot;top&quot;: 0.09132099467844201, &quot;bottom&quot;: 0.9022875924667875, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
+<article class="sound" id="d-cp5" data-regions="[{&quot;x0&quot;: 0.4441857072649572, &quot;x1&quot;: 0.9880283125, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
   <div class="about">
     <h3>A party of six <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Six talkers, three female and three male, for 30 s. Three of them also read in the scenes
@@ -1303,15 +1417,17 @@ copies of a sound a fraction of a millisecond apart comb-filters it: passing at 
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Bohannon &amp; Andrews (2011). Normal walking speed: a descriptive meta-analysis. <em>Physiotherapy</em> 97(3), 182–189. <a href="https://doi.org/10.1016/j.physio.2010.12.004">doi:10.1016/j.physio.2010.12.004</a>.</li><li>Brandtsegg, Saue &amp; Lazzarini (2018). Live convolution with time-varying filters. <em>Applied Sciences</em> 8(1), 103. <a href="https://www.mdpi.com/2076-3417/8/1/103">MDPI</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L613"><code>spatialization.move_sound</code></a></li><li>Brungart (2001). Informational and energetic masking effects in the perception of two simultaneous talkers. <em>J. Acoust. Soc. Am.</em> 109(3), 1101–1109. <a href="https://doi.org/10.1121/1.1345696">doi:10.1121/1.1345696</a>.</li><li>Carlile &amp; Leung (2016). The perception of auditory motion. <em>Trends in Hearing</em> 20. <a href="https://doi.org/10.1177/2331216516644254">doi:10.1177/2331216516644254</a>.</li><li>Cho &amp; Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail party" listening environment. <em>J. Acoust. Soc. Am.</em> 152(3), 1684–1694. <a href="https://doi.org/10.1121/10.0013990">doi:10.1121/10.0013990</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L613"><code>spatialization.move_sound</code></a> <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L107"><code>binaural.interaural_cues</code></a></li><li>Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source library for real-time binaural spatialisation. <em>PLOS ONE</em> 14(3), e0211899. <a href="https://doi.org/10.1371/journal.pone.0211899">doi:10.1371/journal.pone.0211899</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L176"><code>spatialization.HRIRSet</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences, by speakers bdl, rms and slt.</li><li>Monson, Hunter &amp; Story (2012). Horizontal directivity of low- and high-frequency energy in speech and singing. <em>J. Acoust. Soc. Am.</em> 132(1), 433–441. <a href="https://doi.org/10.1121/1.4725963">doi:10.1121/1.4725963</a>.</li><li>Panayotov, Chen, Povey &amp; Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain audio books. <em>Proc. ICASSP 2015</em>, 5206–5210. <a href="https://doi.org/10.1109/ICASSP.2015.7178964">doi:10.1109/ICASSP.2015.7178964</a>. The cocktail-party passages, by 12 LibriVox readers (CC BY 4.0; sources in docs/speech/SOURCES.md).</li><li>Qu, Xiao, Gong, Huang, Li &amp; Wu (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. <em>IEEE Trans. Audio, Speech, Lang. Process.</em> 17(6), 1124–1132. <a href="http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial">PKU Scholar</a>. The HRIRs. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/hrir_data.py#L122"><code>hrir_data.load_hrirs</code></a></li></ul>
+<ul><li>Bohannon &amp; Andrews (2011). Normal walking speed: a descriptive meta-analysis. <em>Physiotherapy</em> 97(3), 182–189. <a href="https://doi.org/10.1016/j.physio.2010.12.004">doi:10.1016/j.physio.2010.12.004</a>.</li><li>Brandtsegg, Saue &amp; Lazzarini (2018). Live convolution with time-varying filters. <em>Applied Sciences</em> 8(1), 103. <a href="https://www.mdpi.com/2076-3417/8/1/103">MDPI</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L613"><code>spatialization.move_sound</code></a></li><li>Brungart (2001). Informational and energetic masking effects in the perception of two simultaneous talkers. <em>J. Acoust. Soc. Am.</em> 109(3), 1101–1109. <a href="https://doi.org/10.1121/1.1345696">doi:10.1121/1.1345696</a>.</li><li>Carlile &amp; Leung (2016). The perception of auditory motion. <em>Trends in Hearing</em> 20. <a href="https://doi.org/10.1177/2331216516644254">doi:10.1177/2331216516644254</a>.</li><li>Cho &amp; Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail party" listening environment. <em>J. Acoust. Soc. Am.</em> 152(3), 1684–1694. <a href="https://doi.org/10.1121/10.0013990">doi:10.1121/10.0013990</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L613"><code>spatialization.move_sound</code></a> <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L107"><code>binaural.interaural_cues</code></a></li><li>Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source library for real-time binaural spatialisation. <em>PLOS ONE</em> 14(3), e0211899. <a href="https://doi.org/10.1371/journal.pone.0211899">doi:10.1371/journal.pone.0211899</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L176"><code>spatialization.HRIRSet</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentences, by speakers bdl, rms and slt.</li><li>Monson, Hunter &amp; Story (2012). Horizontal directivity of low- and high-frequency energy in speech and singing. <em>J. Acoust. Soc. Am.</em> 132(1), 433–441. <a href="https://doi.org/10.1121/1.4725963">doi:10.1121/1.4725963</a>.</li><li>Neuhoff &amp; McBeath (1997). Overcoming naïve mental models in explaining the Doppler shift: an illusion creates confusion. <em>Am. J. Phys.</em> 65(7), 618–621. <a href="https://www.public.asu.edu/~mmcbeath/mcbeath.research/pdf/AJP000618.pdf">PDF</a>.</li><li>Panayotov, Chen, Povey &amp; Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain audio books. <em>Proc. ICASSP 2015</em>, 5206–5210. <a href="https://doi.org/10.1109/ICASSP.2015.7178964">doi:10.1109/ICASSP.2015.7178964</a>. The cocktail-party passages, by 12 LibriVox readers, and the female maskers, cut from two of them (CC BY 4.0; sources in docs/speech/SOURCES.md).</li><li>Qu, Xiao, Gong, Huang, Li &amp; Wu (2009). Distance-dependent head-related transfer functions measured with high spatial resolution using a spark gap. <em>IEEE Trans. Audio, Speech, Lang. Process.</em> 17(6), 1124–1132. <a href="http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial">PKU Scholar</a>. The HRIRs. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/hrir_data.py#L122"><code>hrir_data.load_hrirs</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/spatial/moving.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/spatial/moving.py</code>, or a cell at a time.</footer>
 </main>
 </div>
 <script>
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -1321,18 +1437,24 @@ copies of a sound a fraction of a millisecond apart comb-filters it: passing at 
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    const liveCanvas = el.querySelector(".live");
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
       live = JSON.parse(liveCanvas.dataset.live);
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
-      liveCanvas, live };
-  });
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -1418,9 +1540,50 @@ copies of a sound a fraction of a millisecond apart comb-filters it: passing at 
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
     g.fillText("dB", bx + bw + 2, top + h / 2);
   }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
   function draw(item) {
     drawScene(item);
     drawLive(item);
+    drawLissajous(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -1438,28 +1601,44 @@ copies of a sound a fraction of a millisecond apart comb-filters it: passing at 
       new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
     }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
       if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();

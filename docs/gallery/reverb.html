@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Synthetic reverberation</title>
+<title>Rooms</title>
 <link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 <script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
   { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script><script>(() => { const moved = {"d-r3": "reverb.html#d-r1"}; const target = moved[location.hash.slice(1)]; if (target) location.replace(target); })();</script>
 <script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
@@ -66,6 +66,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -154,7 +158,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -53 153 153" class="logo" aria-hidden="true"><path d="M-44,-10 V14" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-31,-16 V6" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-18,-6 V18" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M0,0 H52 C58,0 66,12 72,12 H96" class="logo-accent" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,30 H12 C20,30 20,18 28,18 H32 C40,18 40,30 48,30 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,60 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group here" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li class="has-sections"><a href="reverb.html" aria-current="page">Synthetic reverberation</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a></li><li><a href="#h-natural-rooms">Natural rooms</a></li><li><a href="#h-farther-away">Farther away</a></li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -53 153 153" class="logo" aria-hidden="true"><path d="M-44,-10 V14" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-31,-16 V6" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M-18,-6 V18" class="logo-ink" stroke-width="10" stroke-linecap="round"/><path d="M0,0 H52 C58,0 66,12 72,12 H96" class="logo-accent" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,30 H12 C20,30 20,18 28,18 H32 C40,18 40,30 48,30 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,60 H96" class="logo-ink" fill="none" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group here" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li class="has-sections"><a href="reverb.html" aria-current="page">Rooms</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a></li><li><a href="#h-natural-rooms">Natural rooms</a></li><li><a href="#h-farther-away">Farther away</a></li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -197,7 +201,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="here"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html" aria-current="page">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="here"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html" aria-current="page">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -207,12 +211,14 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
 })();</script></nav>
 <header>
-  <h1>Synthetic reverberation</h1>
+  <h1>Rooms</h1>
 <p>A room's reverberation is its impulse response (IR): what a microphone records after a single
 click. Convolve any dry sound with it and the sound is in that room. Traer &amp; McDermott (2016)
-measured the IRs of 271 real rooms and found them tightly constrained, and <code>so.synth_ir</code> builds
-new ones from their statistics.</p>
-<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a sentence, read by a male and by a female talker, in a synthetic room built like those Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which their listeners heard as wrong, each heard with the starter pistol and then with the sentence.</li></ul>
+measured the IRs of 271 spaces that people found themselves in during daily life and found
+them tightly constrained, and <code>so.synth_ir</code> builds new ones from their statistics. Distance is
+taught here too: moving a source away weakens its direct sound, but not the room's
+reverberation.</p>
+<ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol, then the sentence read by the male and the female talker, in a synthetic room of the kind Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the inverse square law and the direct-to-reverberant ratio, with both talkers four times as far from the listener.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, each heard with the starter pistol and then with the sentence.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/reverb.ipynb">in Colab</a> or <a href="notebooks/reverb.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
@@ -221,17 +227,18 @@ new ones from their statistics.</p>
 <h2 id="h-how-a-room-is-synthesized">How a room is synthesized</h2>
 <p>In real rooms the reverberant tail is close to Gaussian noise whose level, in each frequency
 band, falls exponentially: a straight line in dB. How fast it falls is the band's RT60, the
-time it takes to drop 60 dB. In real rooms mid frequencies ring longest, and both low and high
-frequencies die away faster. <code>so.synth_ir</code> splits Gaussian
-noise into ERB-spaced bands, multiplies each band by its decay, and sums the bands back. Its
-parameters:</p>
+time it takes to drop 60 dB. In the rooms Traer &amp; McDermott measured, decay was slowest
+between about 200 Hz and 2 kHz and faster at low and high frequencies. <code>so.synth_ir</code> splits
+Gaussian noise into ERB-spaced bands, multiplies each band by its decay, and sums the bands
+back. Its parameters:</p>
 <ul><li><code>rt60</code>, the broadband reverberation time in seconds, the median over bands. The time each band takes to decay, and its level at the start, follow the paper's regressions on the 271 rooms, scaled to this value.</li><li><code>drr_db</code>, the direct-to-reverberant ratio: the energy of the direct sound, a unit impulse at time zero, over that of the tail. Without it, only the tail is returned.</li><li><code>n_channels</code>, independent tails per channel, for example 2 for a decorrelated binaural tail.</li><li><code>decay_shape</code>, <code>rt60_profile</code> and <code>drr_profile</code>, which leave the regularities of real rooms behind: they make the paper's atypical rooms, heard below.</li></ul>
 <p><code>so.band_rt60s</code> gives the RT60s of each band for a broadband RT60, and <code>so.measure_rt60</code>
 measures them from an IR by fitting a line to each band's energy decay curve.</p>
-<p>Every room below has the same median RT60 (1 s) and direct-to-reverberant ratio (−3 dB), and
-the same seed, so they share their noise. Unlike the paper, they are not further equated for
-distortion, so some differences in loudness and length remain. They are presented diotically,
-as in the paper.</p>
+<p>Every room below starts from the same natural room, with an RT60 of 1 s and a
+direct-to-reverberant ratio of −3 dB, and the same seed, so the rooms share their noise.
+Unlike the paper's, they are not further equated for how much they distort the sound, so some
+differences in loudness and length remain. They are presented diotically (the same in both
+ears), as in the paper.</p>
 <div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
 import urllib.request
 
@@ -255,9 +262,18 @@ def fetch(path):
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from scipy.signal import butter, sosfilt
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from scipy.signal import butter, sosfilt
+
+SPEAKERS = {&quot;Male talker&quot;: &quot;bdl&quot;, &quot;Female talker&quot;: &quot;slt&quot;}
+talkers = {
+    label: finish(so.load(fetch(f&quot;docs/speech/{speaker}_arctic_a0131.flac&quot;)))
+    for label, speaker in SPEAKERS.items()
+}
 
 FS = 44100
+# the recordings are at 16 kHz; the rooms are built at 44.1 kHz
+sentences = {label: snd.resample(FS) for label, snd in talkers.items()}
 
 
 def starter_pistol():
@@ -273,24 +289,40 @@ def room(**kw):
     return so.synth_ir(1.0, FS, drr_db=-3, rng=5, **kw)
 
 
-def show(snd, ir, kw=None):
-    &quot;&quot;&quot;Waveform and cochleagram of the sound, then the IR&#x27;s decay by band and its RT60s.
-    Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
-    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout=&quot;constrained&quot;)
-    snd.plot(axes[0, 0], lw=0.4)
-    axes[0, 0].set_title(&quot;Waveform&quot;)
+def drr_db(ir):
+    &quot;&quot;&quot;The direct-to-reverberant ratio of an IR [dB]: its first sample&#x27;s energy over the rest&#x27;s.&quot;&quot;&quot;
+    return 10 * np.log10(ir.data[0, 0] ** 2 / np.sum(ir.data[1:, 0] ** 2))
+
+
+def level_db(ir, t, window=0.05):
+    &quot;&quot;&quot;The level of an IR&#x27;s tail [dB] in a 50 ms window starting at time t, relative to its
+    first 50 ms.&quot;&quot;&quot;
+    tail = ir.data[1:, 0] ** 2
+    n, k = int(window * ir.fs), int(t * ir.fs)
+    return 10 * np.log10(tail[k : k + n].mean() / tail[:n].mean())
+
+
+def share_above(snd, f=4000):
+    &quot;&quot;&quot;The fraction of a sound&#x27;s energy above f [Hz].&quot;&quot;&quot;
+    power = np.abs(np.fft.rfft(snd.data[:, 0])) ** 2
+    return power[np.fft.rfftfreq(len(snd), 1 / snd.fs) &gt; f].sum() / power.sum()
+
+
+def show_sound(snd, ax_wave, ax_coch, title=&quot;&quot;):
+    &quot;&quot;&quot;Waveform and cochleagram (60 dB range) of a sound.&quot;&quot;&quot;
+    snd.plot(ax_wave, color=&quot;k&quot;, lw=0.4)
+    ax_wave.set(title=title or &quot;Waveform&quot;, xlabel=&quot;&quot;, ylabel=&quot;&quot;)
     # no extra lowpass: resampling to 1 kHz is already band-limited, and a
     # lowpass would ring visibly around the sharp onset of the shot
     cochleagram = so.cosine_filterbank(30, 50, 8000).analyze(snd).envelopes(fs=1000)
-    cochleagram.plot(axes[0, 1], colorbar=False, db_range=60)
-    axes[0, 1].set_title(&quot;Cochleagram (60 dB range)&quot;)
-    time_axes = [axes[0, 0], axes[0, 1]]
-    if ir is None:
-        for ax in axes[1]:
-            ax.axis(&quot;off&quot;)
-        axes[1, 0].text(0.0, 0.5, &quot;No room: the dry source.&quot;, transform=axes[1, 0].transAxes, fontsize=11)
-        return fig, time_axes
-    # band decays of the impulse response itself (dB), a few bands
+    cochleagram.plot(ax_coch, colorbar=False, db_range=60)
+    ax_coch.set_title(&quot;Cochleagram (60 dB range)&quot;)
+    for ax in (ax_wave, ax_coch):
+        ax.set_xlim(0, snd.duration)
+
+
+def show_room(ax_decay, ax_rt60, ir, kw=None):
+    &quot;&quot;&quot;The IR&#x27;s decay in four bands, and its RT60s by band against those of natural rooms.&quot;&quot;&quot;
     tail = so.Sound(ir.data[1:], ir.fs)
     env = so.cosine_filterbank(30, 50, 8000).analyze(tail).envelopes(lowpass=30, fs=1000)
     for f, color in zip(
@@ -298,46 +330,95 @@ def show(snd, ir, kw=None):
     ):
         k = int(np.argmin(np.abs(env.cfs - f)))
         db = env.db[:, k, 0]
-        axes[1, 0].plot(env.t, db - db.max(), color=color, lw=0.8, label=f&quot;{env.cfs[k]:.0f} Hz&quot;)
-    axes[1, 0].set(
+        ax_decay.plot(env.t, db - db.max(), color=color, lw=0.8, label=f&quot;{env.cfs[k]:.0f} Hz&quot;)
+    ax_decay.set(
         ylim=(-70, 3), xlabel=&quot;Time [s]&quot;, ylabel=&quot;Band envelope [dB]&quot;, title=&quot;The IR&#x27;s decay in four bands&quot;
     )
-    axes[1, 0].legend(fontsize=8, loc=&quot;upper right&quot;)
-    axes[1, 0].grid(ls=&quot;:&quot;)
+    # a time-reversed decay rises to the upper right, so its legend goes on the left
+    reversed_decay = (kw or {}).get(&quot;decay_shape&quot;) == &quot;time_reversed&quot;
+    ax_decay.legend(fontsize=8, loc=&quot;upper left&quot; if reversed_decay else &quot;upper right&quot;)
+    ax_decay.grid(ls=&quot;:&quot;)
     # measured RT60 profile vs the ecological one
     cfs, rt = so.measure_rt60(tail)
-    eco = so.band_rt60s(1.0, cfs, &quot;ecological&quot;)
-    axes[1, 1].semilogx(cfs, eco, color=&quot;k&quot;, lw=1.2, ls=&quot;--&quot;, label=&quot;natural rooms (RT60 = 1 s)&quot;)
+    ax_rt60.semilogx(
+        cfs,
+        so.band_rt60s(1.0, cfs, &quot;ecological&quot;),
+        color=&quot;k&quot;,
+        lw=1.2,
+        ls=&quot;--&quot;,
+        label=&quot;natural rooms (RT60 = 1 s)&quot;,
+    )
     profile = (kw or {}).get(&quot;rt60_profile&quot;)
     if profile:
         # requested profile, computed over synth_ir&#x27;s own bands (which run to 16 kHz)
         synth_cfs = so.cosine_filterbank(32, 20, min(16000, FS / 2)).cfs
         requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile))
-        axes[1, 1].semilogx(cfs, requested, color=&quot;tab:purple&quot;, lw=1, ls=&quot;:&quot;, label=f&quot;requested ({profile})&quot;)
+        ax_rt60.semilogx(cfs, requested, color=&quot;tab:purple&quot;, lw=1, ls=&quot;:&quot;, label=f&quot;requested ({profile})&quot;)
     if not kw or &quot;decay_shape&quot; not in kw:
-        axes[1, 1].semilogx(cfs, rt, color=&quot;tab:purple&quot;, lw=1.2, marker=&quot;.&quot;, label=&quot;this IR (measured)&quot;)
+        ax_rt60.semilogx(cfs, rt, color=&quot;tab:purple&quot;, lw=1.2, marker=&quot;.&quot;, label=&quot;this IR (measured)&quot;)
     else:
-        axes[1, 1].text(
+        ax_rt60.text(
             0.03,
             0.06,
             &quot;decay isn&#x27;t exponential, so an RT60\nisn&#x27;t meaningful for this IR&quot;,
-            transform=axes[1, 1].transAxes,
+            transform=ax_rt60.transAxes,
             fontsize=8,
         )
-    axes[1, 1].set(
-        xlabel=&quot;Frequency [Hz]&quot;, ylabel=&quot;RT60 [s]&quot;, title=&quot;Decay time by frequency&quot;, ylim=(0, None)
-    )
-    axes[1, 1].legend(fontsize=8, loc=&quot;upper right&quot;)
-    axes[1, 1].grid(ls=&quot;:&quot;, which=&quot;both&quot;)
-    return fig, time_axes
+    ax_rt60.set(xlabel=&quot;Frequency [Hz]&quot;, ylabel=&quot;RT60 [s]&quot;, title=&quot;Decay time by frequency&quot;, ylim=(0, 1.8))
+    ax_rt60.legend(fontsize=8, loc=&quot;upper right&quot;)
+    ax_rt60.grid(ls=&quot;:&quot;, which=&quot;both&quot;)
+
+
+def show(snd, ir, kw=None):
+    &quot;&quot;&quot;One sound: waveform and cochleagram, then the IR&#x27;s decay by band and its RT60s.
+    Returns the figure and the panels the playhead follows.&quot;&quot;&quot;
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), layout=&quot;constrained&quot;)
+    show_sound(snd, axes[0, 0], axes[0, 1])
+    if ir is None:
+        for ax in axes[1]:
+            ax.axis(&quot;off&quot;)
+        axes[1, 0].text(0.0, 0.5, &quot;No room: the dry source.&quot;, transform=axes[1, 0].transAxes, fontsize=11)
+    else:
+        show_room(axes[1, 0], axes[1, 1], ir, kw)
+    return fig, [axes[0, 0], axes[0, 1]]
+
+
+def show_pair(sounds, ir, kw=None, panels=show_room):
+    &quot;&quot;&quot;One column per talker (waveform and cochleagram), and below them the room both are in,
+    drawn by `panels` in two axes. Returns the figure and, for each talker, the panels the
+    playhead follows.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 8.4), layout=&quot;constrained&quot;)
+    top, bottom = fig.subfigures(2, 1, height_ratios=[1.25, 1])
+    playhead = {}
+    for column, (label, snd) in zip(top.subfigures(1, 2), sounds.items(), strict=True):
+        ax_wave, ax_coch = column.subplots(2, 1, sharex=True, height_ratios=[0.45, 1])
+        show_sound(snd, ax_wave, ax_coch, label)
+        playhead[label] = [ax_wave, ax_coch]
+    panels(*bottom.subplots(1, 2), ir, kw)
+    return fig, playhead
 
 
 pistol = starter_pistol()</code></pre></details></div>
+<p>The RT60s the natural room below asks for in a few of <code>so.synth_ir</code>'s bands, and the band
+that rings longest:</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">bands = so.cosine_filterbank(32, 20, 16000).cfs
+natural_rt60s = so.band_rt60s(1.0, bands)
+for f in (125, 250, 500, 1000, 2000, 4000, 8000):
+    k = int(np.argmin(np.abs(bands - f)))
+    print(f&quot;{bands[k]:6.0f} Hz: RT60 {natural_rt60s[k]:.2f} s&quot;)
+print(f&quot;longest: {natural_rt60s.max():.2f} s at {bands[natural_rt60s.argmax()]:.0f} Hz&quot;)</code></pre></details><pre class="out">   135 Hz: RT60 1.03 s
+   240 Hz: RT60 1.15 s
+   456 Hz: RT60 1.22 s
+  1061 Hz: RT60 1.19 s
+  1912 Hz: RT60 1.08 s
+  3803 Hz: RT60 0.86 s
+  8389 Hz: RT60 0.31 s
+longest: 1.23 s at 654 Hz</pre></div>
 </section>
 <section aria-labelledby="h-natural-rooms">
 <h2 id="h-natural-rooms">Natural rooms</h2>
 
-<article class="sound" id="d-16" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.47558189964157704, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.13}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.47558189964157704, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 0.1295}]">
+<article class="sound" id="d-16" data-regions="[{&quot;x0&quot;: 0.040951722222222216, &quot;x1&quot;: 0.4886912163628472, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4741349945396506, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.13}, {&quot;x0&quot;: 0.5480935058593749, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4741349945396506, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.13}]">
   <div class="about">
     <h3>Starter pistol, dry</h3>
     <div class="desc"><p>The source for the room examples: a sharp, broadband crack lasting a fraction of a
@@ -355,12 +436,12 @@ whereas a real cochlea rings only afterwards.</p></div>
 fig, playhead = show(sound, None)</code></pre></details>
 </article>
 
-<article class="sound" id="d-17" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+<article class="sound" id="d-17" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>In a natural room</h3>
-    <div class="desc"><p>A synthetic room with RT60 = 1 s whose decay follows the statistics of 271 real rooms:
-exponential, with mid frequencies ringing longest. In Traer &amp; McDermott's experiments, listeners
-could not tell IRs synthesized this way from real ones.</p></div>
+    <div class="desc"><p>A synthetic room with RT60 = 1 s whose decay follows the statistics of the 271 real rooms:
+exponential, with mid frequencies ringing longest. In Traer &amp; McDermott's experiments,
+listeners could not tell IRs synthesized this way from real ones.</p></div>
     <audio controls preload="metadata" src="audio/17_in_a_natural_room.flac"></audio>
     <p class="file">17_in_a_natural_room.flac, 1.4 s, mono</p>
   </div>
@@ -368,74 +449,122 @@ could not tell IRs synthesized this way from real ones.</p></div>
     <img src="img/17_in_a_natural_room.png" width="1000" height="620" alt="Plots of the in a natural room sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">ir = room()
+  <details class="code"><summary>Code</summary><pre><code class="language-python">ir = ir_natural = room()
 sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir)</code></pre></details>
 </article>
 
-<article class="sound" id="d-r1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+<article class="sound pair" id="d-r1">
   <div class="about">
     <h3>A sentence in the same room</h3>
-    <div class="desc"><p>The sentence from <a href="speech.html">Seeing speech</a>, resampled to 44.1 kHz, in the same room. The
-reverberation fills the gaps between words and smears each syllable into the next.</p></div>
-    <audio controls preload="metadata" src="audio/r1_a_sentence_in_the_same_room.flac"></audio>
-    <p class="file">r1_a_sentence_in_the_same_room.flac, 3.8 s, mono</p>
+    <div class="desc"><p>The sentence from <a href="speech.html">Seeing speech</a>, read by each of the <a href="talkers.html">Two talkers</a>,
+in the same room. The reverberation fills the gaps between words and smears each syllable into
+the next. The impulse response belongs to the room, not to the talker, so the panels at the
+bottom are the same for both voices: the room does the same thing to each.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r1_a_sentence_in_the_same_room_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}]"></audio>
+    <p class="file">r1_a_sentence_in_the_same_room_male_talker.flac, 3.8 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r1_a_sentence_in_the_same_room_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}]"></audio>
+    <p class="file">r1_a_sentence_in_the_same_room_female_talker.flac, 3.9 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r1_a_sentence_in_the_same_room.png" width="1000" height="620" alt="Plots of the a sentence in the same room sound" loading="lazy">
+    <img src="img/r1_a_sentence_in_the_same_room.png" width="1000" height="840" alt="Plots of the a sentence in the same room sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)).resample(FS)
-sound = finish(sentence.convolve(ir))
-fig, playhead = show(sound, ir)</code></pre></details>
-</article>
-
-<article class="sound" id="d-r3" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.4999999999999998, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}, {&quot;x0&quot;: 0.5602807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.8685}]">
-  <div class="about">
-    <h3>A higher voice in the same room</h3>
-    <div class="desc"><p>The same sentence read by a female talker (slt), in the same room. The impulse response is the
-room's, not the talker's, so it does to the female voice what it did to the male one.</p></div>
-    <audio controls preload="metadata" src="audio/r3_a_higher_voice_in_the_same_room.flac"></audio>
-    <p class="file">r3_a_higher_voice_in_the_same_room.flac, 3.9 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/r3_a_higher_voice_in_the_same_room.png" width="1000" height="620" alt="Plots of the a higher voice in the same room sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)).resample(FS)
-sound = finish(sentence_female.convolve(ir))
-fig, playhead = show(sound, ir)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-farther-away">
 <h2 id="h-farther-away">Farther away</h2>
-<p>The direct sound from a point source falls 6 dB for every doubling of distance (the inverse
-square law; <code>so.distance_gain_db</code>). The reverberant tail, built up from reflections off every
-wall, stays at about the same level anywhere in the room. So moving a talker away lowers the
-direct-to-reverberant ratio by as much as it lowers the direct sound, and that ratio is one of
-the cues to how far away a source is. Here the talker is four times farther than above. The
-cell below prints the direct sound's level change at two and four times the distance: the
-second number is the 12 dB the next demo takes off the direct sound.</p>
+<p>The direct sound from a point source falls with distance by the inverse square law: its
+energy as one over the distance squared, its level by 20 log10 of the distance ratio, which is
+6 dB for every doubling (<code>so.distance_gain_db</code>). The reverberant tail is built up from
+reflections off every wall, and on this page it is held at the same level wherever the talker
+stands, as in the simplest model of a room. So moving a talker away lowers the
+direct-to-reverberant ratio by exactly as much as it lowers the direct sound. The cell below
+prints the direct sound's change at two and four times the distance, then builds the room
+with the talker four times farther and measures the ratio in both IRs. For a talker walking up
+to the listener, without and with a room, see <a href="moving.html#h-coming-closer">Coming closer</a>
+on the Moving talkers page.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">for distance_ratio in [2, 4]:
-    print(f&quot;{distance_ratio} times farther: {so.distance_gain_db(distance_ratio):.1f} dB&quot;)</code></pre></details><pre class="out">2 times farther: -6.0 dB
-4 times farther: -12.0 dB</pre></div>
+    print(f&quot;{distance_ratio} times farther: {so.distance_gain_db(distance_ratio):.1f} dB&quot;)
+far_gain = so.distance_gain_db(4)
+ir_far = so.synth_ir(1.0, FS, drr_db=-3 + far_gain, rng=5)
+print(f&quot;direct-to-reverberant ratio, near: {drr_db(ir_natural):.1f} dB&quot;)
+print(f&quot;direct-to-reverberant ratio, four times farther: {drr_db(ir_far):.1f} dB&quot;)
 
-<article class="sound" id="d-r2" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318096, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+
+def show_distance(ax_level, ax_drr, ir, kw=None):
+    &quot;&quot;&quot;The near and far IRs&#x27; energy in 10 ms windows, with the tails at the same level; and the
+    direct-to-reverberant ratio against distance.&quot;&quot;&quot;
+    window = int(0.01 * FS)
+    tail = ir_natural.data[1:, 0] ** 2
+    n = len(tail) // window
+    windows = 10 * np.log10(tail[: n * window].reshape(n, window).sum(axis=1))
+    ax_level.plot(
+        (np.arange(n) + 0.5) * window / FS, windows, color=&quot;0.4&quot;, lw=0.8, label=&quot;tail, near and far&quot;
+    )
+    for this_ir, color, label in ((ir_natural, &quot;k&quot;, &quot;near&quot;), (ir, &quot;tab:purple&quot;, &quot;four times farther&quot;)):
+        # scaled so that the tail has the near IR&#x27;s energy: only the direct sound changes
+        scale = np.sqrt(np.sum(tail) / np.sum(this_ir.data[1:, 0] ** 2))
+        direct = 20 * np.log10(scale * this_ir.data[0, 0])
+        ax_level.plot([0, 0], [-90, direct], color=color, lw=2)
+        ax_level.plot(0, direct, &quot;o&quot;, color=color, ms=6, label=f&quot;direct sound, {label}&quot;)
+    ax_level.set(
+        xlim=(-0.03, 1.25),
+        ylim=(-70, 5),
+        xlabel=&quot;Time [s]&quot;,
+        ylabel=&quot;Energy per 10 ms [dB]&quot;,
+        title=&quot;Direct sound and tail&quot;,
+    )
+    ax_level.legend(fontsize=8, loc=&quot;upper right&quot;)
+    ax_level.grid(ls=&quot;:&quot;)
+    ratios = np.geomspace(0.5, 8, 100)
+    ax_drr.semilogx(ratios, drr_db(ir_natural) + so.distance_gain_db(ratios), color=&quot;0.4&quot;, lw=1.2)
+    ax_drr.plot(1, drr_db(ir_natural), &quot;o&quot;, color=&quot;k&quot;, label=&quot;near (measured)&quot;)
+    ax_drr.plot(4, drr_db(ir), &quot;o&quot;, color=&quot;tab:purple&quot;, label=&quot;four times farther (measured)&quot;)
+    ax_drr.set(
+        xlabel=&quot;Distance, relative to the first demo&quot;,
+        ylabel=&quot;Direct-to-reverberant ratio [dB]&quot;,
+        title=&quot;Inverse square law, tail held constant&quot;,
+    )
+    ax_drr.set_xticks([0.5, 1, 2, 4, 8], [&quot;0.5&quot;, &quot;1&quot;, &quot;2&quot;, &quot;4&quot;, &quot;8&quot;])
+    ax_drr.set_xticks([], minor=True)
+    ax_drr.legend(fontsize=8, loc=&quot;upper right&quot;)
+    ax_drr.grid(ls=&quot;:&quot;)</code></pre></details><pre class="out">2 times farther: -6.0 dB
+4 times farther: -12.0 dB
+direct-to-reverberant ratio, near: -3.1 dB
+direct-to-reverberant ratio, four times farther: -15.3 dB</pre></div>
+
+<article class="sound pair" id="d-r2">
   <div class="about">
     <h3>The same sentence, four times farther</h3>
-    <div class="desc"><p>The same sentence and the same room, with the direct sound 12 dB weaker: the
-direct-to-reverberant ratio drops from −3 to −15 dB. Every sound on this page is played at the
-same RMS, so what changes is not the loudness but how much of the sentence is room.</p></div>
-    <audio controls preload="metadata" src="audio/r2_the_same_sentence_four_times_farther.flac"></audio>
-    <p class="file">r2_the_same_sentence_four_times_farther.flac, 3.8 s, mono</p>
+    <div class="desc"><p>The same sentence, read by each talker, in the same room, with the direct sound
+12 dB weaker: the direct-to-reverberant ratio drops from
+-3 to -15 dB. Every sound on this
+page is played at the same RMS, so what changes is not the loudness but how much of the
+sentence is room. Compare <a href="#d-r1">the sentence nearby</a>, and the walk in a room on the Moving
+talkers page (<a href="moving.html#d-m6">Walking in, in a room</a>), where the same balance shifts the
+other way as the talker comes close.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r2_the_same_sentence_four_times_farther_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}]"></audio>
+    <p class="file">r2_the_same_sentence_four_times_farther_male_talker.flac, 3.8 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r2_the_same_sentence_four_times_farther_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}]"></audio>
+    <p class="file">r2_the_same_sentence_four_times_farther_female_talker.flac, 3.9 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r2_the_same_sentence_four_times_farther.png" width="1000" height="620" alt="Plots of the the same sentence, four times farther sound" loading="lazy">
+    <img src="img/r2_the_same_sentence_four_times_farther.png" width="1000" height="840" alt="Plots of the the same sentence, four times farther sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">ir_far = so.synth_ir(1.0, FS, drr_db=-3 + so.distance_gain_db(4), rng=5)
-sound = finish(sentence.convolve(ir_far))
-fig, playhead = show(sound, ir_far)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir_far)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir_far, panels=show_distance)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-rooms-that-break-the-rules">
@@ -444,13 +573,21 @@ fig, playhead = show(sound, ir_far)</code></pre></details>
 2016). Each room below changes one thing about the natural room above, and is heard twice:
 first with the starter pistol, which lays the room bare, then with the sentence, to compare
 with <a href="#d-r1">the sentence in the natural room</a>. Where the decay is no longer exponential, an
-RT60 no longer describes it, so the last panel shows only what natural rooms would do.</p>
+RT60 no longer describes it, so the last panel shows only what natural rooms would do. The
+three profiles that change how decay time depends on frequency do not all keep the natural
+room's median RT60; the cell prints the median of each over <code>so.synth_ir</code>'s bands.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">for profile in (&quot;ecological&quot;, &quot;inverted&quot;, &quot;exaggerated&quot;, &quot;reduced&quot;):
+    print(f&quot;{profile:12s} median RT60 {np.median(so.band_rt60s(1.0, bands, profile)):.2f} s&quot;)</code></pre></details><pre class="out">ecological   median RT60 0.98 s
+inverted     median RT60 0.37 s
+exaggerated  median RT60 0.96 s
+reduced      median RT60 1.00 s</pre></div>
 
-<article class="sound" id="d-18" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+<article class="sound" id="d-18" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>Time-reversed decay</h3>
     <div class="desc"><p>The same decay run backwards: the reverberation swells up to the shot instead of dying away
-after it.</p></div>
+after it. In the paper, listeners readily heard this decay, and the two linear ones after it,
+as synthetic, with impulses, speech and noise alike.</p></div>
     <audio controls preload="metadata" src="audio/18_time-reversed_decay.flac"></audio>
     <p class="file">18_time-reversed_decay.flac, 1.4 s, mono</p>
   </div>
@@ -464,24 +601,30 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-r4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.5039999999999998, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5642807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+<article class="sound pair" id="d-r4">
   <div class="about">
     <h3>The sentence, time-reversed decay</h3>
     <div class="desc"><p>The sentence in the time-reversed room. Each sound's reverberation now grows after it rather
-than fading, cresting about a second later, so every syllable is followed by a swell of itself
-and the swells pile up across the sentence.</p></div>
-    <audio controls preload="metadata" src="audio/r4_the_sentence_time-reversed_decay.flac"></audio>
-    <p class="file">r4_the_sentence_time-reversed_decay.flac, 3.8 s, mono</p>
+than fading, cresting 1.2 s later, so every syllable is followed by a
+swell of itself and the swells pile up across the sentence.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r4_the_sentence_time-reversed_decay_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}]"></audio>
+    <p class="file">r4_the_sentence_time-reversed_decay_male_talker.flac, 3.8 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r4_the_sentence_time-reversed_decay_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}]"></audio>
+    <p class="file">r4_the_sentence_time-reversed_decay_female_talker.flac, 3.9 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r4_the_sentence_time-reversed_decay.png" width="1000" height="620" alt="Plots of the the sentence, time-reversed decay sound" loading="lazy">
+    <img src="img/r4_the_sentence_time-reversed_decay.png" width="1000" height="840" alt="Plots of the the sentence, time-reversed decay sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
-fig, playhead = show(sound, ir, kw)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-19" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 0.3975}]">
+<article class="sound" id="d-19" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}]">
   <div class="about">
     <h3>Linear decay, matched start</h3>
     <div class="desc"><p>Starts at the natural level but falls linearly (in amplitude) rather than exponentially, with
@@ -499,24 +642,30 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-r5" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.49999999999999967, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.79297052154195}, {&quot;x0&quot;: 0.5602807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.7924999999999995}]">
+<article class="sound pair" id="d-r5">
   <div class="about">
     <h3>The sentence, linear decay, matched start</h3>
-    <div class="desc"><p>The sentence in the room whose decay falls linearly from the natural starting level. Its tail
-is over within a quarter of a second, where the natural one lasts more than a second, so less
-of each word spills into the gaps after it.</p></div>
-    <audio controls preload="metadata" src="audio/r5_the_sentence_linear_decay_matched_start.flac"></audio>
-    <p class="file">r5_the_sentence_linear_decay_matched_start.flac, 2.8 s, mono</p>
+    <div class="desc"><p>The sentence in the room whose decay falls linearly from the natural starting level. Its IR
+is 0.27 s long, where the natural one is
+1.23 s, so less of each word spills into the gaps after it.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r5_the_sentence_linear_decay_matched_start_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.49083299999999996, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.79297052154195}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.49083299999999996, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.79297052154195}]"></audio>
+    <p class="file">r5_the_sentence_linear_decay_matched_start_male_talker.flac, 2.8 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r5_the_sentence_linear_decay_matched_start_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.9030385487528343}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.9030385487528343}]"></audio>
+    <p class="file">r5_the_sentence_linear_decay_matched_start_female_talker.flac, 2.9 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r5_the_sentence_linear_decay_matched_start.png" width="1000" height="620" alt="Plots of the the sentence, linear decay, matched start sound" loading="lazy">
+    <img src="img/r5_the_sentence_linear_decay_matched_start.png" width="1000" height="840" alt="Plots of the the sentence, linear decay, matched start sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
-fig, playhead = show(sound, ir, kw)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-20" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+<article class="sound" id="d-20" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>Linear decay, matched end</h3>
     <div class="desc"><p>Linear decay that reaches zero where the natural decay is 60 dB down, again with the same
@@ -534,29 +683,36 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-r6" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.5, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5602807074652777, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+<article class="sound pair" id="d-r6">
   <div class="about">
     <h3>The sentence, linear decay, matched end</h3>
     <div class="desc"><p>The sentence in the room whose linear decay ends where the natural one is 60 dB down. Half a
-second in, its tail is about 11 dB below where it started, the natural one about 27 dB, so each
-word lingers at nearly full strength before it falls away.</p></div>
-    <audio controls preload="metadata" src="audio/r6_the_sentence_linear_decay_matched_end.flac"></audio>
-    <p class="file">r6_the_sentence_linear_decay_matched_end.flac, 3.8 s, mono</p>
+second in, its tail is 6 dB below its first 50 ms, the natural
+one's 27 dB, so each word lingers at nearly full
+strength before it falls away.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r6_the_sentence_linear_decay_matched_end_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}]"></audio>
+    <p class="file">r6_the_sentence_linear_decay_matched_end_male_talker.flac, 3.8 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r6_the_sentence_linear_decay_matched_end_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}]"></audio>
+    <p class="file">r6_the_sentence_linear_decay_matched_end_female_talker.flac, 3.9 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r6_the_sentence_linear_decay_matched_end.png" width="1000" height="620" alt="Plots of the the sentence, linear decay, matched end sound" loading="lazy">
+    <img src="img/r6_the_sentence_linear_decay_matched_end.png" width="1000" height="840" alt="Plots of the the sentence, linear decay, matched end sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
-fig, playhead = show(sound, ir, kw)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-21" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49873586914062484, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5599169086371526, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.3635}]">
+<article class="sound" id="d-21" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>Inverted frequency dependence</h3>
     <div class="desc"><p>Exponential, but low and high frequencies ring longest and the middle dies fastest, the
-reverse of real rooms. In the paper listeners often heard a separate high-frequency hiss
-rather than a room.</p></div>
+reverse of real rooms. Listeners in the paper readily heard it as synthetic, and several
+reported noticing a high-frequency hiss.</p></div>
     <audio controls preload="metadata" src="audio/21_inverted_frequency_dependence.flac"></audio>
     <p class="file">21_inverted_frequency_dependence.flac, 1.4 s, mono</p>
   </div>
@@ -570,29 +726,37 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-r7" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.5039999999999998, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.5642807074652775, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.7584999999999997}]">
+<article class="sound pair" id="d-r7">
   <div class="about">
     <h3>The sentence, inverted frequency dependence</h3>
-    <div class="desc"><p>The sentence in the room where low and high frequencies ring longest. Under 1% of the
-sentence's energy is above 4 kHz, against about 20% of the shot's, so the long high-frequency
-tail has much less to ring with here.</p></div>
-    <audio controls preload="metadata" src="audio/r7_the_sentence_inverted_frequency_dependence.flac"></audio>
-    <p class="file">r7_the_sentence_inverted_frequency_dependence.flac, 3.8 s, mono</p>
+    <div class="desc"><p>The sentence in the room where low and high frequencies ring longest. Above 4 kHz lies
+0.7% of the male talker's energy and
+1.4% of the female talker's, against
+20% of the shot's, so the long high-frequency tail has
+much less to ring with here.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r7_the_sentence_inverted_frequency_dependence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.759047619047619}]"></audio>
+    <p class="file">r7_the_sentence_inverted_frequency_dependence_male_talker.flac, 3.8 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r7_the_sentence_inverted_frequency_dependence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.8691156462585035}]"></audio>
+    <p class="file">r7_the_sentence_inverted_frequency_dependence_female_talker.flac, 3.9 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r7_the_sentence_inverted_frequency_dependence.png" width="1000" height="620" alt="Plots of the the sentence, inverted frequency dependence sound" loading="lazy">
+    <img src="img/r7_the_sentence_inverted_frequency_dependence.png" width="1000" height="840" alt="Plots of the the sentence, inverted frequency dependence sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
-fig, playhead = show(sound, ir, kw)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-22" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.494516764463766, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}, {&quot;x0&quot;: 0.5641360133140114, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.4685}]">
+<article class="sound" id="d-22" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.494029176206147, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}, {&quot;x0&quot;: 0.5606074882903805, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}]">
   <div class="about">
     <h3>Exaggerated frequency dependence</h3>
     <div class="desc"><p>The profile of a room twice as reverberant, scaled down: more sharply peaked than real rooms
-of this size. The subtlest variant; in the paper it was detected with impulses but not with
-speech.</p></div>
+of this size. The subtlest variant: in the paper, it and the reduced profile below were
+detected as synthetic with impulses but not with speech or noise.</p></div>
     <audio controls preload="metadata" src="audio/22_exaggerated_frequency_dependence.flac"></audio>
     <p class="file">22_exaggerated_frequency_dependence.flac, 1.5 s, mono</p>
   </div>
@@ -606,23 +770,29 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-r8" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.4957179045759746, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.863877551020408}, {&quot;x0&quot;: 0.5645628028893032, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.8635}]">
+<article class="sound pair" id="d-r8">
   <div class="about">
     <h3>The sentence, exaggerated frequency dependence</h3>
-    <div class="desc"><p>The sentence in the room with the sharply peaked profile: the room the paper's listeners
-could not tell apart from a natural one when they heard it with speech.</p></div>
-    <audio controls preload="metadata" src="audio/r8_the_sentence_exaggerated_frequency_dependence.flac"></audio>
-    <p class="file">r8_the_sentence_exaggerated_frequency_dependence.flac, 3.9 s, mono</p>
+    <div class="desc"><p>The sentence in the room with the sharply peaked profile, a room the paper's listeners did not
+tell from a natural one when they heard it with speech.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r8_the_sentence_exaggerated_frequency_dependence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.863877551020408}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.863877551020408}]"></audio>
+    <p class="file">r8_the_sentence_exaggerated_frequency_dependence_male_talker.flac, 3.9 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r8_the_sentence_exaggerated_frequency_dependence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.9739455782312927}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.9739455782312927}]"></audio>
+    <p class="file">r8_the_sentence_exaggerated_frequency_dependence_female_talker.flac, 4.0 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r8_the_sentence_exaggerated_frequency_dependence.png" width="1000" height="620" alt="Plots of the the sentence, exaggerated frequency dependence sound" loading="lazy">
+    <img src="img/r8_the_sentence_exaggerated_frequency_dependence.png" width="1000" height="840" alt="Plots of the the sentence, exaggerated frequency dependence sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
-fig, playhead = show(sound, ir, kw)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-23" data-regions="[{&quot;x0&quot;: 0.06281977777777778, &quot;x1&quot;: 0.49490035886066647, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}, {&quot;x0&quot;: 0.5637524189171116, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.4237987455197132, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 1.2794999999999999}]">
+<article class="sound" id="d-23" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4945297787322429, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}, {&quot;x0&quot;: 0.5601068857642849, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}]">
   <div class="about">
     <h3>Reduced frequency dependence</h3>
     <div class="desc"><p>The profile of a room half as reverberant, scaled up: flatter than real rooms of this size.
@@ -640,19 +810,26 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-r9" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.4961014187283854, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.674784580498866}, {&quot;x0&quot;: 0.5641792887368924, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.037903763440860105, &quot;bottom&quot;: 0.42548520595318073, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.6745}]">
+<article class="sound pair" id="d-r9">
   <div class="about">
     <h3>The sentence, reduced frequency dependence</h3>
-    <div class="desc"><p>The sentence in the room with the flatter profile.</p></div>
-    <audio controls preload="metadata" src="audio/r9_the_sentence_reduced_frequency_dependence.flac"></audio>
-    <p class="file">r9_the_sentence_reduced_frequency_dependence.flac, 3.7 s, mono</p>
+    <div class="desc"><p>The sentence in the room with the flatter profile, which the paper's listeners, too, did not
+tell from a natural one with speech.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/r9_the_sentence_reduced_frequency_dependence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.49083299999999996, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.674784580498866}, {&quot;x0&quot;: 0.05356928949652779, &quot;x1&quot;: 0.49083299999999996, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.674784580498866}]"></audio>
+    <p class="file">r9_the_sentence_reduced_frequency_dependence_male_talker.flac, 3.7 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/r9_the_sentence_reduced_frequency_dependence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03089904100529095, &quot;bottom&quot;: 0.16069030902920312, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.7848526077097504}, {&quot;x0&quot;: 0.5585692894965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.20241567278581662, &quot;bottom&quot;: 0.4908407128389546, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.7848526077097504}]"></audio>
+    <p class="file">r9_the_sentence_reduced_frequency_dependence_female_talker.flac, 3.8 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/r9_the_sentence_reduced_frequency_dependence.png" width="1000" height="620" alt="Plots of the the sentence, reduced frequency dependence sound" loading="lazy">
+    <img src="img/r9_the_sentence_reduced_frequency_dependence.png" width="1000" height="840" alt="Plots of the the sentence, reduced frequency dependence sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(sentence.convolve(ir))
-fig, playhead = show(sound, ir, kw)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
+fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-references">
@@ -664,8 +841,10 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
 </div>
 <script>
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -675,18 +854,24 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    const liveCanvas = el.querySelector(".live");
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
       live = JSON.parse(liveCanvas.dataset.live);
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
-      liveCanvas, live };
-  });
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -772,9 +957,50 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
     g.fillText("dB", bx + bw + 2, top + h / 2);
   }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
   function draw(item) {
     drawScene(item);
     drawLive(item);
+    drawLissajous(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -792,28 +1018,44 @@ fig, playhead = show(sound, ir, kw)</code></pre></details>
       new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
     }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
       if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();
