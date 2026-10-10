@@ -916,10 +916,11 @@ sounds = {label: finish(snd) for label, snd in pair.items()}
 # A whole word from tracks set by hand: "sonore" as /soʊˈnɔɹ/. The /s/ is frication through the
 # high parallel formants, with the voicing starting under its tail, as in /sa/. For the /n/, F1
 # drops, F2 rises toward where the tongue touches the ridge behind the teeth, and the nasal zero
-# opens. For the /ɹ/, F3 falls to about 1650 Hz, close to F2, and the pitch falls as the word
-# ends. sonore's logo is drawn from this spectrogram: a few short strokes for the /s/, a rise in
-# the middle line for the /n/ and a step down in the top line for the /ɹ/. It is a picture of the
-# sound rather than a plot of it.
+# opens. For the /ɹ/, F3 falls to about 1650 Hz, close to F2. The pitch, in a female talker's
+# range, stays level through the first vowel and falls through the second. sonore's logo is drawn
+# from this spectrogram: a few short strokes for the /s/, a rise in the middle line for the /n/
+# and a step down in the top line for the /ɹ/. It is a picture of the sound rather than a plot of
+# it.
 
 # %% [demo fl1] sonore says its name
 dur = 0.9
@@ -933,7 +934,7 @@ sound = finish(
     so.klatt_synthesize(
         dur,
         FS,
-        F0=([0.10, 0.105, 0.25, 0.38, 0.60, 0.75, 0.85], [0, 112, 106, 132, 127, 96, 82]),
+        F0=([0.10, 0.105, 0.24, 0.36, 0.65, 0.85], [0, 225, 220, 212, 170, 155]),
         AV=([0.10, 0.105, 0.14, 0.24, 0.27, 0.33, 0.37, 0.73, 0.85], [0, 48, 60, 60, 52, 52, 60, 58, 0]),
         AF=([0.01, 0.025, 0.105, 0.125], [0, 58, 58, 0]),
         A4=40,
