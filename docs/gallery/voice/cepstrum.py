@@ -36,8 +36,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   recognizer's version, how much pitch leaks into it, and what it cannot tell apart.
 # - [Reference implementations](#h-reference-implementations): sonore compared with MATLAB, SciPy
 #   and Praat.
-# - [What this page leaves out](#h-what-this-page-leaves-out): other cepstra and the complex
-#   cepstrum.
+# - [What this page leaves out](#h-what-this-page-leaves-out): linear prediction, other cepstra
+#   and the complex cepstrum.
 
 # %% [markdown]
 # ## The sentence, and code the examples share
@@ -550,6 +550,11 @@ for label, (change_db, coefficient_change) in changes.items():
 #
 # - **Pitch.** The cepstral peak as a pitch estimate, and how it fails on the female talker's
 #   voice, are on [Pitch tracking](pitch.html#h-pitch-from-the-cepstrum).
+# - **Linear prediction.** The other classic envelope is an all-pole fit to each time window
+#   (`so.LPC`). Its envelope follows the peaks of the spectrum rather than its average, and the
+#   roots of its polynomial are resonances, so formants can be read off directly;
+#   [Finding the formants again](formants.html#h-finding-the-formants-again) compares it with the
+#   cepstral, CheapTrick and MFCC envelopes on one vowel.
 # - **Other cepstra on a warped axis.** The mel-generalized cepstra of speech synthesis warp the
 #   frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other
 #   auditory bands. MFCC deltas (`mfcc.deltas()`) are not shown.
