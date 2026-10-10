@@ -176,6 +176,26 @@ class TestHRIRFiles:
         h = both.at(p)[0]
         assert 0.5 * np.abs(hs.irs[5]).max() < np.abs(h).max() < np.abs(hs.irs[5]).max()
 
+    def test_onsets_fitted_across_distances(self):
+        # five distances whose onsets hold the travel time, but one arrives 5 samples early
+        hs, _ = toy_hrirs(taps=512)
+        distances = [0.5, 0.75, 1.0, 1.3, 1.6]
+        early = {1.3: 5}
+        sets = []
+        for distance in distances:
+            shift = int(round(distance / so.SPEED_OF_SOUND * hs.fs)) - early.get(distance, 0)
+            sets.append(so.HRIRSet(np.roll(hs.irs, shift, axis=-1), hs.positions * distance, hs.fs))
+        fitted = so.HRIRSet.concat(sets)
+        measured = so.HRIRSet.concat(sets, fit_onsets=False)
+        radii = np.linalg.norm(fitted.positions, axis=1)
+        beyond_travel = fitted._delay_onsets.mean(axis=1) - radii / so.SPEED_OF_SOUND * hs.fs
+        # in each direction, every distance, the early one included, now lines up with the travel time
+        by_direction = beyond_travel.reshape(len(distances), -1)
+        assert np.ptp(by_direction, axis=0).max() < 1.0
+        shift = fitted._delay_onsets - measured._onsets
+        np.testing.assert_allclose(shift[:, 0], shift[:, 1], atol=1e-9)  # ITDs as measured
+        assert np.median(shift[np.isclose(radii, 1.3), 0]) == pytest.approx(5, abs=1)
+
     def test_concat_rejects_mixed_rates(self):
         hs, _ = toy_hrirs()
         other, _ = toy_hrirs(fs=44100)
