@@ -41,13 +41,17 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - **Few bands are enough for speech in quiet.** Shannon et al. (1995) found high recognition of
 #   the words in simple sentences through only three or four bands of noise, with no fine
 #   structure at all.
-# - **Implant users get only a handful.** Implants have 12 to 22 electrodes, but current spreads
-#   between neighbors. Friesen et al. (2001) found that implant users did no better with more
-#   than about seven or eight channels, while listeners hearing a vocoder kept improving up to the
-#   twenty channels tested, especially in noise.
+# - **Implant users get only a handful.** The implant users of Friesen et al. (2001) had up to 20
+#   active electrodes, but current spreads between neighbors, and they did no better with more
+#   than about seven to ten. Listeners hearing a vocoder kept improving up to the 20 channels
+#   tested, at every noise level.
 # - **Pitch is what suffers most.** With the fine structure gone, the only pitch cues left are
-#   which bands are loud and how fast the envelopes fluctuate. Music, intonation, and telling one
-#   voice from another all depend on pitch, and are hard for implant users.
+#   which bands are loud and how fast the envelopes fluctuate. Implant users hear rhythm about as
+#   well as listeners with normal hearing but recognize melodies poorly (McDermott, 2004); they
+#   tell a question from a statement by its intonation less well as the voice gets higher
+#   (Chatterjee & Peng, 2008); and they tell a male from a female voice about as well as
+#   listeners hearing a vocoder of four to eight bands, leaning on the envelopes' fluctuation
+#   (Fu et al., 2004).
 
 # %% [markdown]
 # ## The sentence, and code the examples share
@@ -365,6 +369,9 @@ sound = vocoded
 # %% [markdown]
 # ## References
 #
+# - Chatterjee & Peng (2008). Processing F0 with cochlear implants: modulation frequency
+#   discrimination and speech intonation recognition. *Hearing Research* 235(1–2), 143–156.
+#   [doi:10.1016/j.heares.2007.11.004](https://doi.org/10.1016/j.heares.2007.11.004).
 # - Dorman, Loizou & Rainey (1997). Speech intelligibility as a function of the number of channels
 #   of stimulation for signal processors using sine-wave and noise-band outputs. *J. Acoust. Soc.
 #   Am.* 102(4), 2403–2411. [doi:10.1121/1.420354](https://doi.org/10.1121/1.420354).
@@ -373,9 +380,16 @@ sound = vocoded
 #   of spectral channels: comparison of acoustic hearing and cochlear implants. *J. Acoust. Soc.
 #   Am.* 110(2), 1150–1163. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11519582/).
 #   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
+# - Fu, Chinchilla & Galvin (2004). The role of spectral and temporal cues in voice gender
+#   discrimination by normal-hearing listeners and cochlear implant users. *J. Assoc. Res.
+#   Otolaryngol.* 5(3), 253–260.
+#   [doi:10.1007/s10162-004-4046-1](https://doi.org/10.1007/s10162-004-4046-1).
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
+# - McDermott (2004). Music perception with cochlear implants: a review. *Trends in
+#   Amplification* 8(2), 49–82.
+#   [doi:10.1177/108471380400800203](https://doi.org/10.1177/108471380400800203).
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
