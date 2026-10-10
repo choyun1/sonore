@@ -79,6 +79,20 @@ Breaking changes since 0.5.0 (each is described under Changed):
   `views/spectra.py`; `views/descriptors.py` renamed `views/timbre.py`.
 - Docs, docstrings, comments and messages use American spelling ("behavior",
   "center", "analyze"); no public name changes.
+- `so.move_sound` renders about four times faster (3 s at 44.1 kHz in 0.3 s
+  instead of 1.3 s): the windowed sinc that reads the sound between samples
+  is tabulated (outputs change by -117 dB for white noise), and each
+  lookup point is tested only against the triangles near it (same weights).
+- `HRIRSet(fit_onsets=True)`, the default: with three or more measured
+  distances, each IR's two ears are delayed together so their mean onset
+  follows a fit across distances (travel time plus `a + b/r` per
+  direction), keeping each ITD as measured. PKU-IOA's horizontal ring at
+  1.3 m arrives about 110 µs early, which made a source moving through it
+  at 15 m/s 10 cents too sharp between 1.3 and 1.6 m and 10 cents too flat
+  between 1.0 and 1.3 m; it now follows the travel time to within about
+  2 cents there. `spatialize`, `HRIRSet.at` and `move_sound` all use the
+  fitted onsets; `fit_onsets=False` keeps the measured ones. A source
+  coming at the head at 300 m/s is now rendered instead of refused.
 
 ### Fixed
 

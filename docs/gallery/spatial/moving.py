@@ -681,20 +681,19 @@ sound = finish(rendered)
 # - While the buzz holds still, the pitch the tracker finds is the buzz's own, to within 3 cents
 #   (95th percentile). During the jumps, where the tracker finds none, the shift was checked on a
 #   1 kHz tone instead: its frequency at each ear follows the shift computed from the distance to
-#   that ear to within 9 cents (median) and 48 cents (95th percentile), while the shift itself
+#   that ear to within 7 cents (median) and 43 cents (95th percentile), while the shift itself
 #   spans more than ±500 cents. The rest of the difference is not yet explained; the HRIRs'
 #   phase, changing with direction, is one candidate.
 # - Switching HRIR shapes at the usual 5 ms leaves an error 13 dB below the signal in the worst
-#   20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 29 dB below.
+#   20 ms window, against switching every 0.0625 ms; every 0.5 ms, as here, 30 dB below.
 # - Nothing aliases, by design: the largest upward shift, a factor of 1.35, takes the top harmonic
 #   to 6.6 kHz, below the 8 kHz limit. A buzz with every harmonic up to 8 kHz, which is what
 #   `so.harmonic_complex` makes without `f_max`, does alias: coming straight at the listener at
 #   15 m/s, its top three harmonics are pushed over the limit and fold back near 7.7–8 kHz, 25 dB
 #   below the harmonics.
 # - The source comes toward the head at up to 130 m/s here. `so.move_sound` refuses a source
-#   coming at the head faster than sound, whose sound would arrive in reverse order. It also
-#   refuses one at 300 m/s, 0.87 of the speed of sound, because between the measured distances
-#   the HRIR onsets change a little faster than the travel time does.
+#   coming at the head faster than sound, whose sound would arrive in reverse order. It renders
+#   one at 300 m/s, 0.87 of the speed of sound, and refuses one at 400 m/s.
 # - Not modeled at all is the noise a body moving through air that fast would make itself.
 
 # %% [markdown]
@@ -993,7 +992,7 @@ sound = finish(mix)
 #   97(3), 182–189. [doi:10.1016/j.physio.2010.12.004](https://doi.org/10.1016/j.physio.2010.12.004).
 # - Brandtsegg, Saue & Lazzarini (2018). Live convolution with time-varying filters. *Applied
 #   Sciences* 8(1), 103. [MDPI](https://www.mdpi.com/2076-3417/8/1/103).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L521)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L613)
 # - Brungart (2001). Informational and energetic masking effects in the perception of two
 #   simultaneous talkers. *J. Acoust. Soc. Am.* 109(3), 1101–1109.
 #   [doi:10.1121/1.1345696](https://doi.org/10.1121/1.1345696).
@@ -1002,7 +1001,7 @@ sound = finish(mix)
 # - Cho & Kidd (2022). Auditory motion as a cue for source segregation and selection in a "cocktail
 #   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
 #   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990).
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L521)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L613)
 #   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L107)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
 #   library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899.
