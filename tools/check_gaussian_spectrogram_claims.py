@@ -33,11 +33,18 @@ erb_per_filter = erb_range / (n_filters + 1)
 hop_s = 0.020 / 2
 per_filter, per_window = 0.075, 0.065
 print(f"G1 ERB-number range 20-4000 Hz: {erb_range:.3f}; spacing {erb_per_filter:.4f} ERB per filter")
-print(f"G1 decay {per_filter} per filter = {per_filter / erb_per_filter:.4f} per ERB "
-      f"(correlation length {erb_per_filter / per_filter:.2f} ERB)")
-print(f"G1 decay {per_window} per window (hop {hop_s * 1000:.0f} ms) = {per_window / hop_s:.2f} per s "
-      f"(correlation length {hop_s / per_window * 1000:.0f} ms)")
-print(f"G1 lag-1 correlations: across filters {np.exp(-per_filter):.4f}, across windows {np.exp(-per_window):.4f}")
+print(
+    f"G1 decay {per_filter} per filter = {per_filter / erb_per_filter:.4f} per ERB "
+    f"(correlation length {erb_per_filter / per_filter:.2f} ERB)"
+)
+print(
+    f"G1 decay {per_window} per window (hop {hop_s * 1000:.0f} ms) = {per_window / hop_s:.2f} per s "
+    f"(correlation length {hop_s / per_window * 1000:.0f} ms)"
+)
+print(
+    f"G1 lag-1 correlations: across filters {np.exp(-per_filter):.4f}, "
+    f"across windows {np.exp(-per_window):.4f}"
+)
 
 
 # G2. AR(1) along each axis versus Cholesky of the full Kronecker covariance.
@@ -67,8 +74,10 @@ print(f"G2 AR(1) covariance minus exponential correlation, max abs: bands {err_f
 # the separable draw: field = A_f @ white @ A_t.T has covariance kron(C_f, C_t)
 kron = np.kron(exp_corr(n_bands, rho_f), exp_corr(n_windows, rho_t))
 a_sep = np.kron(a_f, a_t)
-print(f"G2 separable AR(1) covariance minus Kronecker covariance, max abs: "
-      f"{np.max(np.abs(a_sep @ a_sep.T - kron)):.1e} (cells: {n_bands * n_windows})")
+print(
+    f"G2 separable AR(1) covariance minus Kronecker covariance, max abs: "
+    f"{np.max(np.abs(a_sep @ a_sep.T - kron)):.1e} (cells: {n_bands * n_windows})"
+)
 start = time.perf_counter()
 np.linalg.cholesky(kron)
 chol_s = time.perf_counter() - start
@@ -82,8 +91,10 @@ for k in range(1, n_windows):  # recursion along time
 for k in range(1, n_bands):  # then along frequency
     field[k] = rho_f * field[k - 1] + np.sqrt(1 - rho_f**2) * field[k]
 ar_s = time.perf_counter() - start
-print(f"G2 time: Cholesky of the {n_bands * n_windows}-cell covariance {chol_s * 1000:.0f} ms, "
-      f"AR(1) recursion {ar_s * 1000:.2f} ms (one run, this machine)")
+print(
+    f"G2 time: Cholesky of the {n_bands * n_windows}-cell covariance {chol_s * 1000:.0f} ms, "
+    f"AR(1) recursion {ar_s * 1000:.2f} ms (one run, this machine)"
+)
 
 # G3. The 2017 prototype's variance 0.5 on a log10-amplitude grid, in dB.
 print(f"G3 sd sqrt(0.5) in log10 amplitude = {20 * np.sqrt(0.5):.2f} dB")
