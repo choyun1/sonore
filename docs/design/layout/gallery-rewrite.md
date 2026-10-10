@@ -236,6 +236,19 @@ links. Recommendation: yes, added page by page in each group PR.
   there, as D12 allows. The other pages were patched in place:
   menus, and the links that changed.
 
+## Later groups as built
+
+- Analysis and resynthesis: only Phase vocoder changed; "A higher voice" became "The two talkers
+  trade pitches" (p3), which shifts each talker by the interval between their median pitches.
+- Envelopes and modulation: Vocoder, Modulation spectrogram and Hearing a modulation spectrum pair
+  both talkers. The babble in Modulation spectrogram is built from each talker's own sentence.
+- Spatial: Reverberation is now Rooms, and its higher-voice demo (r3) folded into r1. Binaural
+  beats moved from Synthetic sounds to Binaural cues. Moving talkers pairs the male and the female
+  target among male maskers (m2, m3, m4) and among female maskers (m10); the female maskers are
+  LibriSpeech excerpts, since the corpus files hold no other female sentences. A paired demo can
+  carry a view from above per talker (`scene = {...}`).
+- Demos whose code did not change keep their committed images and sounds.
+
 ## Not changing
 
 Demo sounds that are not speech, the gallery's look, the sidebar and menus (only their entries),
