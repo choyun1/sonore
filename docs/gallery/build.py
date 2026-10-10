@@ -354,11 +354,10 @@ nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem)
   padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
 nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
-nav.pages a.ref { margin-left: auto; }
-nav.pages a.ref + a.repo { margin-left: 0; }
-nav.pages a.repo { margin-left: auto; color: var(--muted); display: inline-flex; }
-nav.pages a.repo:hover { color: var(--ink); }
-@media (max-width: 34rem) { nav.pages a.repo { margin-left: 0; } }
+.links { display: flex; align-items: center; gap: 0.5rem 1.25rem; font-family: var(--sans); }
+.links a.repo { color: var(--muted); display: inline-flex; }
+.links a.repo:hover { color: var(--ink); }
+footer .links { margin-top: 1rem; font-size: 0.95rem; }
 a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
 h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
@@ -409,9 +408,12 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 .side { display: none; }
 @media (min-width: 75rem) {
   .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
-  .side { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 2.5rem 1.25rem 2rem 1.75rem;
-    border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
   html:not(.side-closed) nav.pages > a:first-child, html:not(.side-closed) nav.pages details { display: none; }
+  html:not(.side-closed) footer .links { display: none; }
+  .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
+  .side-foot { margin-top: auto; padding-top: 2rem; }
   .side-closed .layout { grid-template-columns: 3rem minmax(0, 1fr); }
   .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
   .side-closed .side .home, .side-closed .side-body { display: none; }
@@ -900,12 +902,17 @@ def nav(current: str) -> str:
         here = ' class="here"' if current in hrefs else ""
         items = "".join(f"<li>{link(href)}</li>" for href in hrefs)
         parts.append(f"<details{here}><summary>{html.escape(group)}</summary><ul>{items}</ul></details>")
-    parts.append('<a class="ref" href="../api/">API reference</a>')
-    parts.append(
-        '<a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" '
-        f'aria-label="sonore on GitHub">{GITHUB_MARK}</a>'
-    )
     return f'<nav class="pages" aria-label="Gallery pages">{"".join(parts)}<script>{NAV_JS}</script></nav>'
+
+
+def links() -> str:
+    """The API reference and GitHub links: at the foot of the sidebar, and in the page footer while the
+    sidebar is hidden (narrow screens, or folded away)."""
+    return (
+        '<div class="links"><a class="ref" href="../api/">API reference</a>'
+        '<a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" '
+        f'aria-label="sonore on GitHub">{GITHUB_MARK}</a></div>'
+    )
 
 
 def sidebar(current: str, sections_html: str) -> str:
@@ -943,7 +950,7 @@ def sidebar(current: str, sections_html: str) -> str:
             f'<details class="{css_class}" data-group="{key}" open><summary>{html.escape(group)}</summary>'
             f"<ul>{''.join(link(href) for href, _ in pages)}</ul></details>"
         )
-    body = f'<div class="side-body">{"".join(groups)}</div>'
+    body = f'<div class="side-body">{"".join(groups)}<div class="side-foot">{links()}</div></div>'
     return f'<aside class="side" aria-label="All gallery pages">{top}{body}<script>{SIDE_JS}</script></aside>'
 
 
@@ -987,7 +994,7 @@ def page(title: str, current: str, header: str, sections_html: str, head: str = 
 {header}
 </header>
 {sections_html}
-<footer>{footer}</footer>
+<footer>{footer}{links()}</footer>
 </main>
 </div>
 <script>{JS}</script>
