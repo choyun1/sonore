@@ -922,10 +922,10 @@ sounds = {label: finish(snd) for label, snd in pair.items()}
 # Through the second vowel F2 slides down from about 1800 Hz to 1200 Hz, into the /ʁ/, which is
 # voiceless here: about 100 ms of aspiration noise through formants near 750 and 1250 Hz.
 # [sonore_from_recording.py](https://github.com/choyun1/sonore/blob/main/docs/logo/sonore_from_recording.py)
-# goes the whole way: it measures the recording, prints the table these tracks were read from,
-# synthesizes them and compares the two. sonore's logo is drawn loosely from this spectrogram: a
-# few short strokes for the /s/, then three lines with one rise and one step down. It is a picture
-# of the sound rather than a plot of it.
+# measures the recording and prints the table these tracks were read from, then makes an automatic
+# copy from the measurements, with nothing set by hand, to compare. sonore's logo is drawn loosely
+# from this spectrogram: a few short strokes for the /s/, then three lines with one rise and one
+# step down. It is a picture of the sound rather than a plot of it.
 
 # %% [demo fl1] sonore says its name
 dur = 0.62
