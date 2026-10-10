@@ -101,6 +101,7 @@ from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
 from sonore.views.cepstrum import Cepstrum
 from sonore.views.envelopes import Envelope, Envelopes, channel_vocode
 from sonore.views.f0 import F0Track, f0_track, scale_f0
+from sonore.views.lpc import LPC, FormantTrack, formant_track, levinson
 from sonore.views.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.views.mfcc import MFCC
 from sonore.views.modspectrogram import ModulationSpectrogram
@@ -166,6 +167,10 @@ __all__ = [
     "TVSTFT",
     "Cepstrum",
     "MFCC",
+    "LPC",
+    "levinson",
+    "FormantTrack",
+    "formant_track",
     "F0Track",
     "f0_track",
     "Aperiodicity",
