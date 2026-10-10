@@ -10,7 +10,7 @@ source-and-room separation (Traer & McDermott, 2016). This document sets out
 the model, how it fits sonore, and the decisions for Cho.
 
 Status: proposed 2026-10-10, nothing built. Cho asked for the stimulus on
-2026-10-10, after reading a 2017 prototype of his own (see "Prior code").
+2026-10-10, after reading Cho's own 2017 prototype (see "Prior code").
 
 ## How the claims are verified, and what was read
 
