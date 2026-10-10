@@ -12,11 +12,14 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # # Formant synthesis
 #
-# A voice is a source filtered by the vocal tract. In a formant synthesizer every part of that
-# sentence is a number: the source's pitch and level, and the frequency and bandwidth of each
-# resonance (formant). `so.klatt_synthesize` follows Klatt (1980). Voicing is a set of harmonics
-# of $F_0$ with the spectrum of Klatt's glottal pulse, aspiration and frication are noise, and
-# formants are second-order resonators
+# A voice is a source filtered by the vocal tract. The source is the buzz of the vocal folds,
+# which sets the pitch, or the hiss of air through a narrow gap. The filter is the vocal tract's
+# resonances, the formants, which set the vowel. The two are made in different places and can
+# change independently; the other pages on voices build on this picture. In a formant
+# synthesizer every part of it is a number: the source's pitch and level, and the frequency and
+# bandwidth of each formant. `so.klatt_synthesize` follows Klatt (1980). Voicing is a set of
+# harmonics of $F_0$ with the spectrum of Klatt's glottal pulse, aspiration and frication are
+# noise, and formants are second-order resonators
 #
 # $$y[n] = A\,x[n] + B\,y[n-1] + C\,y[n-2],$$
 #
@@ -27,9 +30,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # - [A vowel, piece by piece](#h-a-vowel-piece-by-piece): the source, then one formant at a time.
 # - [Source times filter](#h-source-times-filter): the same vowel as a product of spectra.
-# - [Six vowels](#h-six-vowels): Peterson and Barney's averages, and a continuum between two.
-# - [Female vowels](#h-female-vowels): the same six vowels with female formants and
-#   pitch.
+# - [Six vowels](#h-six-vowels): Peterson and Barney's male and female averages, and a
+#   continuum between two vowels.
 # - [Consonants from transitions](#h-consonants-from-transitions): /ba/, /da/ and /ga/ differ
 #   only in where the formants start.
 # - [Noise](#h-noise): frication, aspiration and breathy voice.
@@ -82,21 +84,42 @@ def onoff(dur, level=60, on=0.02, off=0.05):
     return ([0, on, dur - off, dur], [0, level, level, 0])
 
 
-def show(snd, title, formants=()):
-    """Waveform and wideband spectrogram, with formant tracks ((times, values) or numbers) drawn over it."""
-    fig = plt.figure(figsize=(10, 4.2), layout="constrained")
-    ax0, ax1 = fig.subplots(2, 1, sharex=True, height_ratios=[0.45, 1])
+def draw(container, snd, title, formants=(), long_titles=True):
+    """Waveform and wideband spectrogram in a figure or subfigure, with formant tracks ((times,
+    values) or numbers) drawn over it. Returns the two panels, for the playhead."""
+    ax0, ax1 = container.subplots(2, 1, sharex=True, height_ratios=[0.45, 1])
     snd.plot(ax0, color="k", lw=0.4)
-    ax0.set(title=f"Waveform: {title}", xlabel="")
+    ax0.set(title=title if not long_titles else f"Waveform: {title}", xlabel="")
     frame = so.GaborFrame(0.006, 0.001, n_fft=512)  # zero-padded for smooth bands
     so.STFT(snd, frame=frame).plot(ax1, db_range=60, colorbar=False, fmax=5000)
-    ax1.set_title("Spectrogram (Hann 6 ms), with the formant frequencies given to the synthesizer")
+    if long_titles:
+        ax1.set_title("Spectrogram (Hann 6 ms), with the formant frequencies given to the synthesizer")
+    else:
+        ax1.set_title("Spectrogram (Hann 6 ms), formants given dashed")
     for f in formants:
         t, v = ([0], [f]) if np.isscalar(f) else f  # a track is held after its last point
         ax1.plot([*t, snd.duration], np.array([*v, v[-1]]) / 1000, color="c", lw=1, ls="--")  # in kHz
     for ax in (ax0, ax1):
         ax.set_xlim(0, snd.duration)
-    return fig, [ax0, ax1]
+    return [ax0, ax1]
+
+
+def show(snd, title, formants=()):
+    """One sound: waveform and wideband spectrogram, with its formants."""
+    fig = plt.figure(figsize=(10, 4.2), layout="constrained")
+    return fig, draw(fig, snd, title, formants)
+
+
+def show_pair(sounds, title, formants):
+    """Two sounds side by side, one column each; `formants` maps each sound's label to its tracks."""
+    fig = plt.figure(figsize=(10, 4.4), layout="constrained")
+    columns = fig.subfigures(1, 2)
+    playhead = {
+        label: draw(column, snd, f"{label}: {title}", formants[label], long_titles=False)
+        for column, (label, snd) in zip(columns, sounds.items(), strict=True)
+    }
+    return fig, playhead
+
 
 # %% [markdown]
 # ## A vowel, piece by piece
@@ -206,12 +229,20 @@ ax.legend(loc="upper right", fontsize=8)
 # ## Six vowels
 #
 # Peterson and Barney (1952) measured the formants of ten American English vowels, spoken in words
-# of the form h-vowel-d by male and female adults and by children. Their male averages, for six of
-# the vowels, synthesized with everything else the same: the pitch, the higher formants and the
-# bandwidths.
+# of the form h-vowel-d by 33 men, 28 women and 15 children, and published the averages of each
+# group. Their male and female averages for six of the vowels are below, each set synthesized with
+# everything else the same within the set: the pitch, the higher formants and the bandwidths.
+#
+# Every female formant is higher than the male one, since female vocal tracts are on average
+# shorter, but not by one common factor: the cell prints the ratios. The female pitch is higher
+# too, falling from 230 to 200 Hz where the male one falls from 125 to 105 Hz, and F4 and F5,
+# which Peterson and Barney did not measure, are raised from 3500 and 4500 Hz to 4100 and 4900 Hz
+# to stay above the female F3. These are averages over many talkers. The two recorded talkers
+# the other pages use are one man and one woman, and how their formants differ is measured on
+# [Two talkers](talkers.html#h-spectral-envelopes).
 
 # %%
-VOWELS = {
+VOWELS = {  # male averages, F1 F2 F3 (Hz)
     "heed": (270, 2290, 3010),
     "head": (530, 1840, 2480),
     "had": (660, 1720, 2410),
@@ -219,68 +250,7 @@ VOWELS = {
     "hawed": (570, 840, 2410),
     "who'd": (300, 870, 2240),
 }
-VOWEL_DUR = 0.42
-gap = so.silence(0.15, FS)
-parts, starts = [], []
-t = 0.0
-for f1, f2, f3 in VOWELS.values():
-    v = so.klatt_synthesize(
-        VOWEL_DUR, FS, F0=([0, VOWEL_DUR], [125, 105]), AV=onoff(VOWEL_DUR), F1=f1, F2=f2, F3=f3
-    )
-    parts += [v, gap]
-    starts.append(t)
-    t += VOWEL_DUR + gap.duration
-
-# %% [about]
-# The six vowels in turn, from "heed" to "who'd". The dashed lines are each vowel's F1, F2 and F3.
-
-# %% [demo fw1] Six vowels
-sound = finish(so.concat(parts))
-tracks = [
-    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS.values()], 2))
-    for i in range(3)
-]
-fig, playhead = show(sound, "heed, head, had, hod, hawed, who'd")
-for tt, ff in tracks:
-    for j in range(6):
-        playhead[1].plot(tt[2 * j : 2 * j + 2], ff[2 * j : 2 * j + 2] / 1000, color="c", lw=1, ls="--")
-
-# %% [figure fw2] The vowels by their first two formants
-fig, ax = plt.subplots(figsize=(5, 4), layout="constrained")
-for word, (f1, f2, _) in VOWELS.items():
-    ax.plot(f2, f1, "o", color="C0")
-    ax.annotate(word, (f2, f1), textcoords="offset points", xytext=(6, 4))
-ax.set(xlabel="F2 (Hz)", ylabel="F1 (Hz)", xlim=(2500, 600), ylim=(800, 200))
-ax.set_title("F1 against F2, axes reversed as is usual:\nthe tongue's height and backness")
-
-# %% [about]
-# A continuum from "heed" to "hod" in seven equal steps of F1, F2 and F3, made with
-# `so.klatt_continuum`. Somewhere in the middle the vowel stops being one and becomes the
-# other; experiments on vowel categories use continua like this one.
-
-# %% [demo fw3] From heed to hod in seven steps
-steps = so.klatt_continuum(dict(F1=270, F2=2290, F3=3010), dict(F1=730, F2=1090, F3=2440), 7)
-STEP_DUR = 0.36
-parts = []
-for p in steps:
-    parts += [so.klatt_synthesize(STEP_DUR, FS, p, F0=110, AV=onoff(STEP_DUR)), so.silence(0.15, FS)]
-sound = finish(so.concat(parts))
-fig, playhead = show(sound, "seven steps from heed to hod")
-for i, p in enumerate(steps):
-    for name in ("F1", "F2", "F3"):
-        step_start = (STEP_DUR + 0.15) * i
-        playhead[1].plot([step_start, step_start + STEP_DUR], [p[name] / 1000] * 2, color="c", lw=1, ls="--")
-
-# %% [markdown]
-# ## Female vowels
-#
-# Peterson and Barney's female averages, for the same six vowels. Every formant is higher
-# than the male ones, since female vocal tracts are on average shorter, but not by one common
-# factor: the printout gives the ratios, from 1.04 to 1.30. The pitch is higher too, falling
-# from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above the female F3.
-
-# %%
-VOWELS_FEMALE = {
+VOWELS_FEMALE = {  # female averages
     "heed": (310, 2790, 3310),
     "head": (610, 2330, 2990),
     "had": (860, 2050, 2850),
@@ -288,61 +258,84 @@ VOWELS_FEMALE = {
     "hawed": (590, 920, 2710),
     "who'd": (370, 950, 2670),
 }
-parts_female = []
-for f1, f2, f3 in VOWELS_FEMALE.values():
-    v = so.klatt_synthesize(
-        VOWEL_DUR,
-        FS,
-        F0=([0, VOWEL_DUR], [230, 200]),
-        AV=onoff(VOWEL_DUR),
-        F1=f1,
-        F2=f2,
-        F3=f3,
-        F4=4100,
-        F5=4900,
-    )
-    parts_female += [v, gap]
-for word, (f1, f2, f3) in VOWELS_FEMALE.items():
-    male = VOWELS[word]
-    ratios = ", ".join(f"{f / m:.2f}" for f, m in zip((f1, f2, f3), male, strict=True))
-    print(f"{word:6} female / male, F1 F2 F3: {ratios}")
+VOWEL_DUR = 0.42
+GAP = 0.15
+# Each set: its vowels, and what else it is made with (a falling pitch, and F4 and F5).
+SETS = {
+    "Male formants and pitch": (VOWELS, dict(F0=([0, VOWEL_DUR], [125, 105]), F4=3500, F5=4500)),
+    "Female formants and pitch": (VOWELS_FEMALE, dict(F0=([0, VOWEL_DUR], [230, 200]), F4=4100, F5=4900)),
+}
+
+
+def say(steps, dur, **rest):
+    """Vowels in turn, from a list of parameter sets (F1, F2, F3), each `dur` long with a gap
+    after it, and their F1 to F3 as tracks to draw, one dashed segment per vowel."""
+    parts = []
+    for p in steps:
+        parts += [so.klatt_synthesize(dur, FS, p, AV=onoff(dur), **rest), so.silence(GAP, FS)]
+    starts = np.arange(len(steps)) * (dur + GAP)
+    times = np.ravel([[start, start + dur, start + dur] for start in starts])
+    tracks = [(times, np.ravel([[p[name], p[name], np.nan] for p in steps])) for name in ("F1", "F2", "F3")]
+    return finish(so.concat(parts[:-1])), tracks
+
+
+def formant_dicts(vowels):
+    return [dict(F1=f1, F2=f2, F3=f3) for f1, f2, f3 in vowels.values()]
+
+
+ratios = {word: np.divide(VOWELS_FEMALE[word], VOWELS[word]) for word in VOWELS}
+for word, ratio in ratios.items():
+    print(f"{word:6} female / male, F1 F2 F3: " + ", ".join(f"{r:.2f}" for r in ratio))
+lowest, highest = min(r.min() for r in ratios.values()), max(r.max() for r in ratios.values())
+
+# %% [markdown]
+# The ratios run from {{ f"{lowest:.2f}" }} to {{ f"{highest:.2f}" }}, so the female vowels are
+# not the male ones moved up as a whole: each vowel, and each formant, moves by its own amount.
 
 # %% [about]
-# The six vowels with female formants. The harmonics are now about 215 Hz apart, so each
-# formant peak is drawn by fewer of them than in the male vowels above.
+# The six vowels in turn, from "heed" to "who'd", with each set's formants and pitch. The dashed
+# lines are each vowel's F1, F2 and F3. The female harmonics are farther apart, so each formant
+# peak is drawn by fewer of them, as [Two talkers](talkers.html#h-harmonics-sample-the-envelope)
+# shows for one vowel. [Timbre](timbre.html#d-tb6) sings three of the female vowels on one note.
 
-# %% [demo fw4] Six vowels with female formants
-sound = finish(so.concat(parts_female))
-tracks = [
-    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS_FEMALE.values()], 2))
-    for i in range(3)
-]
-fig, playhead = show(sound, "heed, head, had, hod, hawed, who'd, female formants")
-for tt, ff in tracks:
-    for j in range(6):
-        playhead[1].plot(tt[2 * j : 2 * j + 2], ff[2 * j : 2 * j + 2] / 1000, color="c", lw=1, ls="--")
+# %% [demo fw1] Six vowels
+sounds, formant_tracks = {}, {}
+for label, (vowels, rest) in SETS.items():
+    sounds[label], formant_tracks[label] = say(formant_dicts(vowels), VOWEL_DUR, **rest)
+fig, playhead = show_pair(sounds, "six vowels", formant_tracks)
 
 # %% [about]
-# Both sets of vowels by their first two formants, joined vowel by vowel. The female vowel
-# space is shifted up and outward, most of all in F2 for the front vowels.
+# Both sets by their first two formants, joined vowel by vowel, with the axes reversed as is
+# usual, so that the chart reads like the mouth seen from the left: vowels with the tongue high
+# at the top, vowels with the tongue forward at the left. Every female vowel has a higher F1 and
+# F2 than the male one, and the female vowels spread wider, most of all in F2 for the front
+# vowels.
 
-# %% [figure fw5] Male and female vowels by their first two formants
+# %% [figure fw2] The vowels by their first two formants
 fig, ax = plt.subplots(figsize=(5, 4), layout="constrained")
 for word in VOWELS:
     (f1_male, f2_male, _), (f1_female, f2_female, _) = VOWELS[word], VOWELS_FEMALE[word]
     ax.plot([f2_male, f2_female], [f1_male, f1_female], color="0.7", lw=0.8)
-    ax.annotate(word, (f2_female, f1_female), textcoords="offset points", xytext=(6, 4))
-ax.plot([v[1] for v in VOWELS.values()], [v[0] for v in VOWELS.values()], "o", color="C0", label="male")
-ax.plot(
-    [v[1] for v in VOWELS_FEMALE.values()],
-    [v[0] for v in VOWELS_FEMALE.values()],
-    "o",
-    color="C1",
-    label="female",
-)
+    ax.annotate(word, (f2_female, f1_female), textcoords="offset points", xytext=(6, -12))
+for (label, (vowels, _)), color in zip(SETS.items(), ["C0", "C1"], strict=True):
+    f1, f2, _ = np.transpose(list(vowels.values()))
+    ax.plot(f2, f1, "o", color=color, label=label.split()[0].lower())
 ax.set(xlabel="F2 (Hz)", ylabel="F1 (Hz)", xlim=(3000, 600), ylim=(950, 200))
 ax.legend(loc="lower left", fontsize=8)
 ax.set_title("Peterson and Barney's averages, male and female")
+
+# %% [about]
+# A continuum from "heed" to "hod" in seven equal steps of F1, F2 and F3, made with
+# `so.klatt_continuum`, from the male averages at 110 Hz and from the female ones at 215 Hz.
+# Somewhere in the middle the vowel stops being one and becomes the other; experiments on vowel
+# categories use continua like these.
+
+# %% [demo fw3] From heed to hod in seven steps
+sounds, formant_tracks = {}, {}
+for (label, (vowels, rest)), f0 in zip(SETS.items(), [110, 215], strict=True):
+    steps = so.klatt_continuum(*formant_dicts({word: vowels[word] for word in ("heed", "hod")}), 7)
+    sounds[label], formant_tracks[label] = say(steps, 0.36, F0=f0, F4=rest["F4"], F5=rest["F5"])
+fig, playhead = show_pair(sounds, "heed to hod", formant_tracks)
 
 # %% [markdown]
 # ## Consonants from transitions
@@ -455,7 +448,8 @@ fig, playhead = show(sound, "/ha/: aspiration, then voicing", [730, 1090, 2440])
 # %% [about]
 # A breathy "hod": voicing with aspiration 6 dB below it throughout, and a wider first formant.
 # The noise fills in between the harmonics, most at high frequencies where the harmonics are
-# weak.
+# weak. [Source and aperiodicity](aperiodicity.html#d-ap3) makes a breathy vowel whose share of
+# noise at each frequency is known, and measures it.
 
 # %% [demo fn3] A breathy vowel
 sound = finish(
@@ -524,7 +518,8 @@ print(f"  alternating signs {np.abs(db(alternating) - db(cascade))[inside].max()
 # tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical male
 # voices. `so.glottal_source` makes LF pulses from their harmonics, which have an exact
 # formula, so nothing aliases, and `so.klatt_synthesize` uses them with `SS=3` (the source
-# switch of Klatt & Klatt's KLSYN88) and `RD`.
+# switch of Klatt & Klatt's KLSYN88) and `RD`. The `RD` control is sonore's: KLSYN88 shapes its
+# LF pulse with the open quotient, the speed quotient and a spectral tilt instead.
 
 # %% [about]
 # The same peak excitation $E_e$ in all three. The tense pulse opens for a shorter part of the
@@ -547,8 +542,8 @@ ax0.legend(fontsize=8)
 # %% [about]
 # The harmonics' levels depend on the harmonic number only, not on $F_0$. The difference
 # between the first two harmonics, H1-H2, is the usual measure of this in recordings; Fant's
-# (1995) fit to it, $-7.6 + 11.1\,R_d$ dB, agrees with these spectra to within 0.4 dB up to
-# $R_d$ 1.4. Klatt's 1980 source has the H1-H2 of a modal voice, but around 3 kHz its harmonics
+# (1995) fit to it, $-7.6 + 11.1\,R_d$ dB, agrees with these spectra to within half a decibel
+# up to $R_d$ 1.4. Klatt's 1980 source has the H1-H2 of a modal voice, but around 3 kHz its harmonics
 # are stronger than even the tense pulse's.
 
 # %% [figure fq2] The spectra of the three pulses, and of the 1980 source
@@ -574,20 +569,27 @@ ax.legend(fontsize=8)
 
 # %% [about]
 # The vowel of "hod" three times, with everything the same except the pulse: tense (Rd 0.5),
-# modal (Rd 1) and lax (Rd 2.5). The vowel stays the same; the voice goes from pressed and
-# bright to soft and muffled.
+# modal (Rd 1) and lax (Rd 2.5), with the male averages and pitch and with the female ones. The
+# vowel stays the same; the voice goes from pressed and bright to soft and muffled. Since the
+# pulse sets the level of each harmonic by its number, the same Rd at the higher pitch spreads the
+# same levels over a wider range of frequencies: relative to its first harmonic, the female voice
+# falls off more slowly with frequency.
 
 # %% [demo fq3] One vowel, three voices
-parts = []
-for rd in RDS:
-    snd = so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), SS=3, RD=rd, **hod)
-    parts += [snd, so.silence(0.2, FS)]
-sound = finish(so.concat(parts[:-1]))
-fig, playhead = show(sound, "Rd 0.5, Rd 1, Rd 2.5", [730, 1090, 2440])
+PITCHES = {"Male formants and pitch": F0, "Female formants and pitch": ([0, DUR], [230, 200])}
+sounds = {}
+for label, (vowels, rest) in SETS.items():
+    formants = dict(zip(("F1", "F2", "F3"), vowels["hod"], strict=True), F4=rest["F4"], F5=rest["F5"])
+    parts = []
+    for rd in RDS:
+        snd = so.klatt_synthesize(DUR, FS, F0=PITCHES[label], AV=onoff(DUR), SS=3, RD=rd, **formants)
+        parts += [snd, so.silence(0.2, FS)]
+    sounds[label] = finish(so.concat(parts[:-1]))
+fig, playhead = show_pair(sounds, "Rd 0.5, 1, 2.5", {label: SETS[label][0]["hod"] for label in SETS})
 
 # %% [about]
 # Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical male voices.
-# The LF voice is darker: at 3 kHz its harmonics are about 12 dB weaker, relative to the first.
+# The LF voice is darker: at 3 kHz its harmonics are about 11 dB weaker, relative to the first.
 
 # %% [demo fq4] The 1980 source, then LF at Rd 0.7
 parts = [
@@ -602,7 +604,8 @@ fig, playhead = show(sound, "SS=1 (the default), then SS=3 with RD=0.7", [730, 1
 # A voice relaxing at the end of a phrase: Rd rises from 0.6 to 2.4 while the pitch falls. The
 # LF model is the periodic pulse only, and a lax pulse alone sounds soft rather than breathy;
 # Klatt & Klatt (1990) found aspiration noise the most important cue to breathiness, so the
-# aspiration (`AH`) rises with Rd.
+# aspiration (`AH`) rises with Rd. How noise mixes with the harmonics in a breathy voice is on
+# [Source and aperiodicity](aperiodicity.html#d-ap3).
 
 # %% [demo fq5] Relaxing into breathy voice
 dur = 1.6
@@ -628,8 +631,8 @@ fig, playhead = show(sound, "Rd from 0.6 to 2.4, with aspiration rising", [730, 
 #   the LF pulse: open quotient, a spectral tilt filter, flutter (slow random jitter of $F_0$)
 #   and double pulsing, and its own polynomial pulse (KLGLOTT88). sonore has the LF pulse only.
 # - **Copying a recording.** The parameters here were written by hand. Copy synthesis fits
-#   formant tracks to a recording, which needs a formant tracker that sonore does not have; the
-#   [Voices from harmonics](harmonics.html) page rebuilds a recording from its measured pitch and
+#   formant tracks to a recording, which needs a formant tracker that sonore does not have;
+#   [Rebuilding and changing a voice](voice.html) rebuilds a recording from its measured pitch and
 #   envelope instead.
 # - **Rules.** Text-to-speech systems drive formant synthesizers from phonetic rules, which
 #   generate the tracks from a transcription. Here every track is set by hand.

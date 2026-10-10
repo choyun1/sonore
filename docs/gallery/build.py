@@ -35,21 +35,27 @@ plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 
 
 # ------------------------------------------------------------------- figures
-def encode_figure(fig, time_axes) -> tuple[bytes, list[dict], tuple[int, int]]:
-    """The figure as a 256-color PNG, and where each time axis sits (for the playhead)."""
+def encode_figure(fig, time_axes) -> tuple[bytes, list[dict] | dict[str, list[dict]], tuple[int, int]]:
+    """The figure as a 256-color PNG, and where each time axis sits (for the playhead). For a demo
+    with several sounds, ``time_axes`` maps each sound's label to its axes, and so do the regions."""
     # Constrained layout moves the axes a little on its second pass, so lay the figure out once without
     # drawing anything, then draw it for real: the pixels and the playhead regions below then come from
     # the same, settled layout, and the figure is rendered only once.
     fig.draw_without_rendering()
     fig.canvas.draw()
-    regions = []
-    for ax in time_axes:
-        # ax.bbox is in display units; converting through the *figure* transform gives true figure
-        # fractions even for axes inside subfigures (whose get_position() is relative to the subfigure).
-        box, (t0, t1) = ax.bbox.transformed(fig.transFigure.inverted()), ax.get_xlim()
-        regions.append(
-            {"x0": box.x0, "x1": box.x1, "top": 1 - box.y1, "bottom": 1 - box.y0, "t0": t0, "t1": t1}
-        )
+
+    def where(axes):
+        regions = []
+        for ax in axes:
+            # ax.bbox is in display units; converting through the *figure* transform gives true figure
+            # fractions even for axes inside subfigures (whose get_position() is relative to the subfigure).
+            box, (t0, t1) = ax.bbox.transformed(fig.transFigure.inverted()), ax.get_xlim()
+            regions.append(
+                {"x0": box.x0, "x1": box.x1, "top": 1 - box.y1, "bottom": 1 - box.y0, "t0": t0, "t1": t1}
+            )
+        return regions
+
+    regions = {k: where(v) for k, v in time_axes.items()} if isinstance(time_axes, dict) else where(time_axes)
     # The pixels of that draw are what savefig would write (the figure dpi is 100 in rcParams, and there
     # is no bbox_inches cropping, which keeps figure fractions valid for the playhead).
     image = Image.fromarray(np.asarray(fig.canvas.buffer_rgba())).convert("RGB")
@@ -79,6 +85,8 @@ def file_name(key: str, title: str) -> str:
 #   # %% [markdown]            prose: "# Title" names the page, "## Heading" starts a section
 #   # %% [about]               the description of the example that follows
 #   # %% [demo KEY] Title      code that leaves `sound`, `fig` and `playhead` (the axes the playhead follows),
+#                              or, to hear several sounds against one figure (the two talkers, say),
+#                              `sounds` and `playhead` as dicts from each sound's label to the sound and to its axes,
 #                              and optionally `scene`, sources to draw from above as the sound plays,
 #                              and `live`, an image that changes frame by frame as the sound plays,
 #                              and `lissajous`, two notes drawn against each other as the sound plays
@@ -92,9 +100,10 @@ def file_name(key: str, title: str) -> str:
 # `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
 # where the cell stands. The scripts run from the repository root.
 EXAMPLE_PAGES = [
+    "talkers",
     "speech",
     "cepstrum",
-    "harmonics",
+    "pitch",
     "formants",
     "aperiodicity",
     "voice",
@@ -233,15 +242,19 @@ def example_page(path: Path) -> dict:
                 else:
                     cells.append(("markdown", f"**{cell.title}**"))
             # A demo's last line plays its sound in a notebook; the figure shows by itself.
-            cells.append(("code", cell.source + ("\nsound" if cell.kind == "demo" else "")))
+            pair = re.search(r"(?m)^[\w, ]*\bsounds\b[\w, ]*=[^=]", cell.source)
+            play = "\ndisplay(*sounds.values())" if pair else "\nsound"
+            cells.append(("code", cell.source + (play if cell.kind == "demo" else "")))
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 exec(compile(cell.source, f"{path.name}, cell {cell.key or cell.title}", "exec"), ns)  # noqa: S102
             part = {"key": cell.key, "title": cell.title, "about": about, "code": code_block(cell.source)}
             if cell.kind == "demo":
-                snd = ns.pop("sound")
+                snd = ns.pop("sounds") if "sounds" in ns else ns.pop("sound")
+                ns.pop("sound", None)
                 png, regions, size = encode_figure(ns.pop("fig"), ns.pop("playhead"))
-                part.update(sound=snd, audio=flac_bytes(snd), png=png, regions=regions, size=size)
+                audio = {k: flac_bytes(v) for k, v in snd.items()} if isinstance(snd, dict) else flac_bytes(snd)
+                part.update(sound=snd, audio=audio, png=png, regions=regions, size=size)
                 if "scene" in ns:
                     part["scene"] = scene_json(ns.pop("scene"))
                 if "live" in ns:
@@ -354,6 +367,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -440,8 +457,10 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 
 JS = """
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -451,20 +470,21 @@ JS = """
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
+    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
+    const canvas = extras && el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    const liveCanvas = el.querySelector(".live");
+    const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
       live = JSON.parse(liveCanvas.dataset.live);
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
-    const figureCanvas = el.querySelector(".lissajous");
+    const figureCanvas = extras && el.querySelector(".lissajous");
     const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
       liveCanvas, live, figureCanvas, figure };
-  });
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -622,23 +642,33 @@ JS = """
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
       if (item.live) item.live.played = true;
       if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();
@@ -662,14 +692,15 @@ TITLES = {
     "textures.html": "Sound textures",
     "speech.html": "Seeing speech",
     "resynthesis.html": "Analysis and resynthesis",
-    "cepstrum.html": "Cepstral analysis",
+    "cepstrum.html": "Spectral envelope",
     "modspectrogram.html": "Modulation spectrogram",
     "modtargets.html": "Hearing a modulation spectrum",
     "pv.html": "Phase vocoder",
-    "harmonics.html": "Voices from harmonics",
+    "pitch.html": "Pitch tracking",
+    "talkers.html": "Two talkers",
     "formants.html": "Formant synthesis",
-    "aperiodicity.html": "Source, filter and aperiodicity",
-    "voice.html": "Changing a voice",
+    "aperiodicity.html": "Source and aperiodicity",
+    "voice.html": "Rebuilding and changing a voice",
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Synthetic reverberation",
     "moving.html": "Moving talkers",
@@ -679,11 +710,11 @@ TITLES = {
 }
 
 # The topic pages in groups, for the index and the menus at the top of every page. Each
-# group's scripts live in their own folder of docs/gallery.
-# Groups and the pages within them run from simple to elaborate, roughly up sonore's layers:
-# stimuli from plain generators (signals) to binaural cues (stimuli) and textures (texture);
-# analysis from one frame (the STFT) to views built on it, a phase vocoder that changes the
-# sound, and a voice rebuilt from its F0 track and envelope; then whole listening scenes.
+# group's scripts live in a folder of docs/gallery (two groups may share one).
+# Groups and the pages within them run from simple to elaborate: stimuli from plain generators
+# to textures; analysis and resynthesis with frames and a phase vocoder; voices, from the two
+# talkers every speech page uses to a voice rebuilt and changed; envelopes and modulation; then
+# spatial hearing and music. Each idea is taught on one page and linked from the others.
 TOPICS = [
     (
         "Stimuli",
@@ -699,18 +730,10 @@ TOPICS = [
         ],
     ),
     (
-        "Seeing and changing sound",
+        "Analysis and resynthesis",
         "seeing",
         [
-            ("speech.html", "a short course in time-frequency analysis on one spoken sentence."),
-            ("resynthesis.html", "a filterbank that reconstructs exactly, and spectrogram masking."),
-            ("vocoder.html", "a simulation of cochlear-implant hearing."),
-            ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
-            (
-                "modtargets.html",
-                "sounds made from a modulation spectrum: measured, edited, drawn, random spectrograms, or traded"
-                " between sounds.",
-            ),
+            ("resynthesis.html", "a filterbank that reconstructs exactly, why nothing is lost, and spectrogram masking."),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
         ],
     ),
@@ -718,14 +741,32 @@ TOPICS = [
         "Voices",
         "voice",
         [
+            ("talkers.html", "the male and the female talker every speech page uses, measured once."),
+            ("speech.html", "a short course in time-frequency analysis on one sentence, read by both talkers."),
             ("formants.html", "vowels and consonants written as a source, formants and a few numbers."),
-            ("cepstrum.html", "separating a voice's pitch from its timbre."),
-            ("harmonics.html", "a voice rebuilt from its pitch track and spectral envelope, and changed."),
+            ("pitch.html", "three ways to track a voice's pitch, where each fails, and how the errors sound."),
+            ("cepstrum.html", "a voice's timbre without its pitch: the cepstrum, CheapTrick and MFCCs."),
             (
                 "aperiodicity.html",
                 "how much of a voice is noise, frequency by frequency, and WORLD's resynthesis.",
             ),
-            ("voice.html", "pitch and formants moved separately, with any pitch track and any envelope."),
+            (
+                "voice.html",
+                "a voice rebuilt from its pitch and envelope, then changed: pitch, formants, range, another talker.",
+            ),
+        ],
+    ),
+    (
+        "Envelopes and modulation",
+        "seeing",
+        [
+            ("vocoder.html", "a simulation of cochlear-implant hearing."),
+            ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
+            (
+                "modtargets.html",
+                "sounds made from a modulation spectrum: measured, edited, drawn, random spectrograms, or traded"
+                " between sounds.",
+            ),
         ],
     ),
     (
@@ -874,11 +915,12 @@ def sidebar(current: str, sections_html: str) -> str:
         'title="Hide the menu">&laquo;</button></div>'
     )
     groups = []
-    for group, folder, pages in TOPICS:
+    for group, _, pages in TOPICS:
         is_current_group = current in [href for href, _ in pages]
         css_class = "group here" if is_current_group else "group"
+        key = re.sub(r"[^a-z]+", "-", group.lower()).strip("-")  # two groups may share a folder
         groups.append(
-            f'<details class="{css_class}" data-group="{folder}" open><summary>{html.escape(group)}</summary>'
+            f'<details class="{css_class}" data-group="{key}" open><summary>{html.escape(group)}</summary>'
             f"<ul>{''.join(link(href) for href, _ in pages)}</ul></details>"
         )
     body = f'<div class="side-body">{"".join(groups)}</div>'
@@ -1063,6 +1105,29 @@ def sound_article(
             f'\n    <canvas class="lissajous" data-lissajous="{html.escape(lissajous)}" role="img" '
             f'aria-label="A Lissajous figure of two notes, changing as the sound plays"></canvas>'
         )
+    if isinstance(snd, dict):  # several sounds against one figure, a player each
+        # The figure spans the page, a column per sound, and each sound's player sits above its column.
+        players = "".join(
+            f'''
+    <div><p class="track">{html.escape(label)}</p>
+    <audio controls preload="metadata" src="{audio_src[label]}" data-regions="{html.escape(json.dumps(regions[label]))}"></audio>
+    <p class="file">{html.escape(audio_src[label].rpartition("/")[2] if not audio_src[label].startswith("data:") else name)}, {s.duration:.1f} s, {"stereo" if s.n_channels == 2 else "mono"}</p></div>'''
+            for label, s in snd.items()
+        )
+        code = f'\n  <details class="code"><summary>Code</summary>{code}</details>' if code else ""
+        return f"""
+<article class="sound pair" id="d-{key}">
+  <div class="about">
+    <h3>{html.escape(title)}</h3>{extra}
+    {desc_html}
+    <div class="players">{players}
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="{img_src}" width="{w}" height="{h}" alt="Plots of the {html.escape(title.lower())} sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>{code}
+</article>"""
     chan = "stereo" if snd.n_channels == 2 else "mono"
     # Every two-channel demo is binaural: its effect is lost over speakers.
     phones = (
@@ -1110,18 +1175,29 @@ class Site:
             (out_dir / "audio").mkdir(parents=True, exist_ok=True)
             (out_dir / "img").mkdir(parents=True, exist_ok=True)
 
-    def media(self, name: str, audio: bytes | None, png: bytes) -> tuple[list, list]:
-        """(audio, image) sources for the site and for the single file."""
+    def media(self, name: str, audio: bytes | dict | None, png: bytes) -> tuple[list, list]:
+        """(audio, image) sources for the site and for the single file. Several sounds (a dict
+        by label) give a dict of sources, each file named for its label."""
         rel, inl = [], []
+        tracks = {f"{name}_{file_name('', label)[1:]}": label for label in audio} if isinstance(audio, dict) else {}
         if self.out_dir:
-            if audio is not None:
+            if tracks:
+                for file, label in tracks.items():
+                    (self.out_dir / "audio" / f"{file}.flac").write_bytes(audio[label])
+                rel.append({label: f"audio/{file}.flac" for file, label in tracks.items()})
+            elif audio is not None:
                 (self.out_dir / "audio" / f"{name}.flac").write_bytes(audio)
                 rel.append(f"audio/{name}.flac")
             (self.out_dir / "img" / f"{name}.png").write_bytes(png)
             rel.append(f"img/{name}.png")
         if self.single:
-            if audio is not None:
-                inl.append("data:audio/flac;base64," + base64.b64encode(audio).decode())
+            def data(b):
+                return "data:audio/flac;base64," + base64.b64encode(b).decode()
+
+            if tracks:
+                inl.append({label: data(audio[label]) for label in tracks.values()})
+            elif audio is not None:
+                inl.append(data(audio))
             inl.append("data:image/png;base64," + base64.b64encode(png).decode())
         return rel, inl
 
@@ -1191,7 +1267,7 @@ def build_example_page(site: Site, name: str) -> list[str]:
 
     # Every two-channel demo is binaural, as in sound_article.
     binaural = any(
-        isinstance(p, dict) and "sound" in p and p["sound"].n_channels == 2
+        isinstance(p, dict) and "sound" in p and not isinstance(p["sound"], dict) and p["sound"].n_channels == 2
         for p in [p for s in content["sections"] for p in s["parts"]] + content["intro"]
     )
 
@@ -1214,7 +1290,7 @@ def build_example_page(site: Site, name: str) -> list[str]:
             "<code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself "
             f"from the repository root with <code>python {script}</code>, or a cell at a time."
         )
-        return page(content["title"], f"{name}.html", header, sections, EXAMPLE_HEAD, footer)
+        return page(content["title"], f"{name}.html", header, sections, EXAMPLE_HEAD + moved_head(name), footer)
 
     site.write(f"{name}.html", make)
     if site.out_dir:
@@ -1227,12 +1303,76 @@ def build_example_page(site: Site, name: str) -> list[str]:
 # syllabic tone) was dropped: the vocoder page covers noise vocoding, on speech.
 RETIRED = {"15": "vocoder.html"}
 
+# Demos and sections that moved when the Voices pages were regrouped, by the page they were
+# on. An old link (page.html#d-KEY or #h-section) lands where that material is now. A page
+# that no longer exists is written as a stub that forwards; "" is where it forwards a link
+# with no anchor it knows.
+MOVED = {
+    "harmonics": {
+        "": "voice.html",
+        **{f"d-{key}": f"voice.html#d-{key}" for key in
+           ("he1", "he2", "he3", "hu1", "hu2", "hm3", "hm4", "hf0", "hf1", "hf2", "hf3")},
+        **{f"d-hp{i}": f"pitch.html#d-hp{i}" for i in range(4)},
+        "d-hm1": "voice.html#d-vc9",
+        "d-hm2": "voice.html#d-vc3",
+        "d-hv1": "voice.html#d-vc1",
+        "d-hv2": "voice.html#d-hu2",
+        "h-three-pitch-tracks-heard": "pitch.html#h-three-pitch-tracks-heard",
+        "h-pitch-and-timbre-apart": "voice.html#h-pitch-range",
+        **{f"h-{slug}": f"voice.html#h-{slug}" for slug in (
+            "putting-the-envelope-back", "unvoiced-gaps", "phases-on-a-moving-pitch",
+            "what-this-page-leaves-out", "references")},
+    },
+    "speech": {"d-f1": "pitch.html#d-f1", "h-nothing-is-lost": "resynthesis.html#h-nothing-is-lost",
+               "h-a-higher-voice": "talkers.html"},
+    "cepstrum": {"d-c2": "pitch.html#d-c2", "d-f1": "pitch.html#d-f1", "h-a-higher-voice": "talkers.html",
+                 "h-pitch-from-the-cepstrum": "pitch.html", "h-a-tracker-beside-the-cepstrum": "pitch.html"},
+    "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": "talkers.html#h-spectral-envelopes"},
+    "formants": {"d-fw4": "formants.html#d-fw1", "d-fw5": "formants.html#d-fw2",
+                 "h-female-vowels": "formants.html#d-fw1"},
+    "aperiodicity": {"h-a-higher-voice": "talkers.html"},
+    "classic": {"d-k2": "talkers.html#d-tk4"},
+}
+
+
+def moved_head(name: str) -> str:
+    """A script that sends an anchor which moved off this page to its new place."""
+    if name not in MOVED:
+        return ""
+    moved = {anchor: target for anchor, target in MOVED[name].items() if anchor}
+    return (
+        f"<script>(() => {{ const moved = {json.dumps(moved)}; const target = moved[location.hash.slice(1)];"
+        " if (target) location.replace(target); })();</script>"
+    )
+
+
+def write_moved_stubs(site: Site) -> None:
+    """Pages that no longer exist forward to where their material went."""
+    for name, moved in MOVED.items():
+        if name in EXAMPLE_PAGES:
+            continue
+        anchors = {anchor: target for anchor, target in moved.items() if anchor}
+        stub = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moved</title>
+<script>(() => {{ const moved = {json.dumps(anchors)};
+location.replace(moved[location.hash.slice(1)] || {json.dumps(moved[""])}); }})();</script>
+</head>
+<body><p>This page moved to <a href="{moved[""]}">{html.escape(TITLES[moved[""]])}</a>.</p></body>
+</html>
+"""
+        if site.out_dir:
+            (site.out_dir / f"{name}.html").write_text(stub)
+
 
 def build(out_dir: Path | None, single: Path | None) -> None:
     site = Site(out_dir, single)
     moved = dict(RETIRED)
     for name in EXAMPLE_PAGES:
         moved.update({key: f"{name}.html" for key in build_example_page(site, name)})
+    write_moved_stubs(site)
 
     # Links to examples that moved to their own pages still land on them.
     redirect = (

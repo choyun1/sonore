@@ -1,6 +1,7 @@
 # Gallery rewrite
 
-Status: all decisions accepted by Cho (2026-10-10); D9 changed by Cho to keep Organ. Cho asked (2026-10-10) for a large rewrite of the listening
+Status: all decisions accepted by Cho (2026-10-10); D9 changed by Cho to keep Organ. Built so far:
+the shared setup and notebooks (PR #155), and the Voices group (see "Voices as built" below). Cho asked (2026-10-10) for a large rewrite of the listening
 gallery for two reasons: the pages repeat each other, and the female talker reads as an
 afterthought. This note maps both problems on the current pages and proposes a structure. The
 decisions at the end need Cho's answer before any page changes.
@@ -219,6 +220,21 @@ Phase vocoder p3); breathy voice (Formants fq5, Aperiodicity ap3); vowels as tim
 Formants fw1); distance (Reverb r2, Moving talkers m5); envelopes and fine structure (Vocoder,
 Hearing a modulation spectrum mt5). The existing test that checks gallery anchors covers the new
 links. Recommendation: yes, added page by page in each group PR.
+
+## Voices as built
+
+- Seven pages: Two talkers (new), Seeing speech (moved from the old seeing group), Formant
+  synthesis, Pitch tracking (new), Spectral envelope (was Cepstral analysis), Source and
+  aperiodicity, and Rebuilding and changing a voice (Changing a voice with Voices from harmonics
+  merged in).
+- Every demo on a recording plays both talkers: one figure with a column per talker and a player
+  above each. The build supports this as a paired demo (`sounds = {...}` and `playhead = {...}`).
+- Old links still land: `MOVED` in `build.py` maps every demo and section that moved to its new
+  place. `harmonics.html` is now a stub that forwards, and the pages that lost material carry a
+  small script that forwards the old anchor.
+- The rewritten pages were built in the cloud container, so their images and sounds come from
+  there, as D12 allows. The other pages were patched in place:
+  menus, and the links that changed.
 
 ## Not changing
 

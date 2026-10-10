@@ -9,7 +9,7 @@
 <script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
   { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script><script>(() => { const moved = {"d-fw4": "formants.html#d-fw1", "d-fw5": "formants.html#d-fw2", "h-female-vowels": "formants.html#d-fw1"}; const target = moved[location.hash.slice(1)]; if (target) location.replace(target); })();</script>
 <script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
@@ -65,6 +65,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -151,7 +155,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group here" data-group="voice" open><summary>Voices</summary><ul><li class="has-sections"><a href="formants.html" aria-current="page">Formant synthesis</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a></li><li><a href="#h-source-times-filter">Source times filter</a></li><li><a href="#h-six-vowels">Six vowels</a></li><li><a href="#h-female-vowels">Female vowels</a></li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a></li><li><a href="#h-noise">Noise</a></li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a></li><li><a href="#h-voice-quality">Voice quality</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group here" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li class="has-sections"><a href="formants.html" aria-current="page">Formant synthesis</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a></li><li><a href="#h-source-times-filter">Source times filter</a></li><li><a href="#h-six-vowels">Six vowels</a></li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a></li><li><a href="#h-noise">Noise</a></li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a></li><li><a href="#h-voice-quality">Voice quality</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -194,7 +198,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="here"><summary>Voices</summary><ul><li><a href="formants.html" aria-current="page">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html">Changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="here"><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html" aria-current="page">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -205,17 +209,20 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 })();</script></nav>
 <header>
   <h1>Formant synthesis</h1>
-<p>A voice is a source filtered by the vocal tract. In a formant synthesizer every part of that
-sentence is a number: the source's pitch and level, and the frequency and bandwidth of each
-resonance (formant). <code>so.klatt_synthesize</code> follows Klatt (1980). Voicing is a set of harmonics
-of <span class="tex">F_0</span> with the spectrum of Klatt's glottal pulse, aspiration and frication are noise, and
-formants are second-order resonators</p>
+<p>A voice is a source filtered by the vocal tract. The source is the buzz of the vocal folds,
+which sets the pitch, or the hiss of air through a narrow gap. The filter is the vocal tract's
+resonances, the formants, which set the vowel. The two are made in different places and can
+change independently; the other pages on voices build on this picture. In a formant
+synthesizer every part of it is a number: the source's pitch and level, and the frequency and
+bandwidth of each formant. <code>so.klatt_synthesize</code> follows Klatt (1980). Voicing is a set of
+harmonics of <span class="tex">F_0</span> with the spectrum of Klatt's glottal pulse, aspiration and frication are
+noise, and formants are second-order resonators</p>
 <div class="tex display">y[n] = A\,x[n] + B\,y[n-1] + C\,y[n-2],</div>
 <p>with <span class="tex">C = -e^{-2\pi B_k T}</span>, <span class="tex">B = 2e^{-\pi B_k T}\cos(2\pi F_k T)</span> and <span class="tex">A = 1 - B - C</span> for a
 formant at <span class="tex">F_k</span> Hz, <span class="tex">B_k</span> Hz wide, sampled every <span class="tex">T</span> seconds. Every parameter is a number or a
 track of <code>(times, values)</code>, so the sounds below are written down rather than recorded, and any
 cue can be changed while the others stay put.</p>
-<ul><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a>: the source, then one formant at a time.</li><li><a href="#h-source-times-filter">Source times filter</a>: the same vowel as a product of spectra.</li><li><a href="#h-six-vowels">Six vowels</a>: Peterson and Barney's averages, and a continuum between two.</li><li><a href="#h-female-vowels">Female vowels</a>: the same six vowels with female formants and pitch.</li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a>: /ba/, /da/ and /ga/ differ only in where the formants start.</li><li><a href="#h-noise">Noise</a>: frication, aspiration and breathy voice.</li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a>: why the parallel formants alternate in sign.</li><li><a href="#h-voice-quality">Voice quality</a>: the same vowel from a tense, a modal and a lax glottal pulse.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: the rest of voice quality, and copying a recording.</li></ul>
+<ul><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a>: the source, then one formant at a time.</li><li><a href="#h-source-times-filter">Source times filter</a>: the same vowel as a product of spectra.</li><li><a href="#h-six-vowels">Six vowels</a>: Peterson and Barney's male and female averages, and a continuum between two vowels.</li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a>: /ba/, /da/ and /ga/ differ only in where the formants start.</li><li><a href="#h-noise">Noise</a>: frication, aspiration and breathy voice.</li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a>: why the parallel formants alternate in sign.</li><li><a href="#h-voice-quality">Voice quality</a>: the same vowel from a tense, a modal and a lax glottal pulse.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: the rest of voice quality, and copying a recording.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/formants.ipynb">in Colab</a> or <a href="notebooks/formants.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
@@ -248,7 +255,8 @@ def fetch(path):
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 16000
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 16000
 
 
 def onoff(dur, level=60, on=0.02, off=0.05):
@@ -256,21 +264,41 @@ def onoff(dur, level=60, on=0.02, off=0.05):
     return ([0, on, dur - off, dur], [0, level, level, 0])
 
 
-def show(snd, title, formants=()):
-    &quot;&quot;&quot;Waveform and wideband spectrogram, with formant tracks ((times, values) or numbers) drawn over it.&quot;&quot;&quot;
-    fig = plt.figure(figsize=(10, 4.2), layout=&quot;constrained&quot;)
-    ax0, ax1 = fig.subplots(2, 1, sharex=True, height_ratios=[0.45, 1])
+def draw(container, snd, title, formants=(), long_titles=True):
+    &quot;&quot;&quot;Waveform and wideband spectrogram in a figure or subfigure, with formant tracks ((times,
+    values) or numbers) drawn over it. Returns the two panels, for the playhead.&quot;&quot;&quot;
+    ax0, ax1 = container.subplots(2, 1, sharex=True, height_ratios=[0.45, 1])
     snd.plot(ax0, color=&quot;k&quot;, lw=0.4)
-    ax0.set(title=f&quot;Waveform: {title}&quot;, xlabel=&quot;&quot;)
+    ax0.set(title=title if not long_titles else f&quot;Waveform: {title}&quot;, xlabel=&quot;&quot;)
     frame = so.GaborFrame(0.006, 0.001, n_fft=512)  # zero-padded for smooth bands
     so.STFT(snd, frame=frame).plot(ax1, db_range=60, colorbar=False, fmax=5000)
-    ax1.set_title(&quot;Spectrogram (Hann 6 ms), with the formant frequencies given to the synthesizer&quot;)
+    if long_titles:
+        ax1.set_title(&quot;Spectrogram (Hann 6 ms), with the formant frequencies given to the synthesizer&quot;)
+    else:
+        ax1.set_title(&quot;Spectrogram (Hann 6 ms), formants given dashed&quot;)
     for f in formants:
         t, v = ([0], [f]) if np.isscalar(f) else f  # a track is held after its last point
         ax1.plot([*t, snd.duration], np.array([*v, v[-1]]) / 1000, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)  # in kHz
     for ax in (ax0, ax1):
         ax.set_xlim(0, snd.duration)
-    return fig, [ax0, ax1]</code></pre></details></div>
+    return [ax0, ax1]
+
+
+def show(snd, title, formants=()):
+    &quot;&quot;&quot;One sound: waveform and wideband spectrogram, with its formants.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 4.2), layout=&quot;constrained&quot;)
+    return fig, draw(fig, snd, title, formants)
+
+
+def show_pair(sounds, title, formants):
+    &quot;&quot;&quot;Two sounds side by side, one column each; `formants` maps each sound&#x27;s label to its tracks.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 4.4), layout=&quot;constrained&quot;)
+    columns = fig.subfigures(1, 2)
+    playhead = {
+        label: draw(column, snd, f&quot;{label}: {title}&quot;, formants[label], long_titles=False)
+        for column, (label, snd) in zip(columns, sounds.items(), strict=True)
+    }
+    return fig, playhead</code></pre></details></div>
 </section>
 <section aria-labelledby="h-a-vowel-piece-by-piece">
 <h2 id="h-a-vowel-piece-by-piece">A vowel, piece by piece</h2>
@@ -290,7 +318,7 @@ source = so.harmonic_complex(DUR, FS, F0, amplitudes=lambda t, f: np.interp(f, f
 # Radiation from the lips: a first difference, +6 dB per octave.
 source = so.Sound(np.diff(source.data[:, 0], prepend=0.0), FS)</code></pre></details></div>
 
-<article class="sound" id="d-fv1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-fv1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>The source alone</h3>
     <div class="desc"><p>The source on its own: the glottal pulse train after radiation, a buzz with no vowel in it.
@@ -306,7 +334,7 @@ Its harmonics fall smoothly with frequency, with no peaks.</p></div>
 fig, playhead = show(sound, &quot;the glottal source after radiation&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fv2" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-fv2" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>The first formant</h3>
     <div class="desc"><p>Through the first formant only, at 730 Hz. The buzz becomes a dull, muffled vowel: all that is
@@ -323,7 +351,7 @@ sound = finish(one)
 fig, playhead = show(sound, &quot;the source through F1&quot;, [730])</code></pre></details>
 </article>
 
-<article class="sound" id="d-fv3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-fv3" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>Two formants</h3>
     <div class="desc"><p>Through the first two formants. F1 and F2 are what tells most vowels apart, and with both, the
@@ -340,7 +368,7 @@ sound = finish(two)
 fig, playhead = show(sound, &quot;the source through F1 and F2&quot;, [730, 1090])</code></pre></details>
 </article>
 
-<article class="sound" id="d-fv4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-fv4" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>Five formants</h3>
     <div class="desc"><p>All five formants in cascade (one after the other). F3 to F5 add the brightness of a real
@@ -359,7 +387,7 @@ sound = finish(vowel)
 fig, playhead = show(sound, &quot;the source through F1 to F5&quot;, [f for f, _ in HOD])</code></pre></details>
 </article>
 
-<article class="sound" id="d-fv5" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-fv5" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>The same vowel from so.klatt_synthesize</h3>
     <div class="desc"><p>The same vowel from <code>so.klatt_synthesize</code>, with the voicing switched on and off over 20 and
@@ -423,10 +451,17 @@ ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
 <section aria-labelledby="h-six-vowels">
 <h2 id="h-six-vowels">Six vowels</h2>
 <p>Peterson and Barney (1952) measured the formants of ten American English vowels, spoken in words
-of the form h-vowel-d by male and female adults and by children. Their male averages, for six of
-the vowels, synthesized with everything else the same: the pitch, the higher formants and the
-bandwidths.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {
+of the form h-vowel-d by 33 men, 28 women and 15 children, and published the averages of each
+group. Their male and female averages for six of the vowels are below, each set synthesized with
+everything else the same within the set: the pitch, the higher formants and the bandwidths.</p>
+<p>Every female formant is higher than the male one, since female vocal tracts are on average
+shorter, but not by one common factor: the cell prints the ratios. The female pitch is higher
+too, falling from 230 to 200 Hz where the male one falls from 125 to 105 Hz, and F4 and F5,
+which Peterson and Barney did not measure, are raised from 3500 and 4500 Hz to 4100 and 4900 Hz
+to stay above the female F3. These are averages over many talkers. The two recorded talkers
+the other pages use are one man and one woman, and how their formants differ is measured on
+<a href="talkers.html#h-spectral-envelopes">Two talkers</a>.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {  # male averages, F1 F2 F3 (Hz)
     &quot;heed&quot;: (270, 2290, 3010),
     &quot;head&quot;: (530, 1840, 2480),
     &quot;had&quot;: (660, 1720, 2410),
@@ -434,89 +469,7 @@ bandwidths.</p>
     &quot;hawed&quot;: (570, 840, 2410),
     &quot;who&#x27;d&quot;: (300, 870, 2240),
 }
-VOWEL_DUR = 0.42
-gap = so.silence(0.15, FS)
-parts, starts = [], []
-t = 0.0
-for f1, f2, f3 in VOWELS.values():
-    v = so.klatt_synthesize(
-        VOWEL_DUR, FS, F0=([0, VOWEL_DUR], [125, 105]), AV=onoff(VOWEL_DUR), F1=f1, F2=f2, F3=f3
-    )
-    parts += [v, gap]
-    starts.append(t)
-    t += VOWEL_DUR + gap.duration</code></pre></details></div>
-
-<article class="sound" id="d-fw1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}]">
-  <div class="about">
-    <h3>Six vowels</h3>
-    <div class="desc"><p>The six vowels in turn, from "heed" to "who'd". The dashed lines are each vowel's F1, F2 and F3.</p></div>
-    <audio controls preload="metadata" src="audio/fw1_six_vowels.flac"></audio>
-    <p class="file">fw1_six_vowels.flac, 3.4 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/fw1_six_vowels.png" width="1000" height="420" alt="Plots of the six vowels sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.concat(parts))
-tracks = [
-    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS.values()], 2))
-    for i in range(3)
-]
-fig, playhead = show(sound, &quot;heed, head, had, hod, hawed, who&#x27;d&quot;)
-for tt, ff in tracks:
-    for j in range(6):
-        playhead[1].plot(tt[2 * j : 2 * j + 2], ff[2 * j : 2 * j + 2] / 1000, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)</code></pre></details>
-</article>
-
-<article class="still" id="d-fw2">
-  <div class="about">
-    <h3>The vowels by their first two formants</h3>
-    <div class="desc"></div>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/fw2_the_vowels_by_their_first_two_formants.png" width="500" height="400" alt="The vowels by their first two formants" loading="lazy">
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(5, 4), layout=&quot;constrained&quot;)
-for word, (f1, f2, _) in VOWELS.items():
-    ax.plot(f2, f1, &quot;o&quot;, color=&quot;C0&quot;)
-    ax.annotate(word, (f2, f1), textcoords=&quot;offset points&quot;, xytext=(6, 4))
-ax.set(xlabel=&quot;F2 (Hz)&quot;, ylabel=&quot;F1 (Hz)&quot;, xlim=(2500, 600), ylim=(800, 200))
-ax.set_title(&quot;F1 against F2, axes reversed as is usual:\nthe tongue&#x27;s height and backness&quot;)</code></pre></details>
-</article>
-
-<article class="sound" id="d-fw3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.57}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.57}]">
-  <div class="about">
-    <h3>From heed to hod in seven steps</h3>
-    <div class="desc"><p>A continuum from "heed" to "hod" in seven equal steps of F1, F2 and F3, made with
-<code>so.klatt_continuum</code>. Somewhere in the middle the vowel stops being one and becomes the
-other; experiments on vowel categories use continua like this one.</p></div>
-    <audio controls preload="metadata" src="audio/fw3_from_heed_to_hod_in_seven_steps.flac"></audio>
-    <p class="file">fw3_from_heed_to_hod_in_seven_steps.flac, 3.6 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/fw3_from_heed_to_hod_in_seven_steps.png" width="1000" height="420" alt="Plots of the from heed to hod in seven steps sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">steps = so.klatt_continuum(dict(F1=270, F2=2290, F3=3010), dict(F1=730, F2=1090, F3=2440), 7)
-STEP_DUR = 0.36
-parts = []
-for p in steps:
-    parts += [so.klatt_synthesize(STEP_DUR, FS, p, F0=110, AV=onoff(STEP_DUR)), so.silence(0.15, FS)]
-sound = finish(so.concat(parts))
-fig, playhead = show(sound, &quot;seven steps from heed to hod&quot;)
-for i, p in enumerate(steps):
-    for name in (&quot;F1&quot;, &quot;F2&quot;, &quot;F3&quot;):
-        step_start = (STEP_DUR + 0.15) * i
-        playhead[1].plot([step_start, step_start + STEP_DUR], [p[name] / 1000] * 2, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)</code></pre></details>
-</article>
-</section>
-<section aria-labelledby="h-female-vowels">
-<h2 id="h-female-vowels">Female vowels</h2>
-<p>Peterson and Barney's female averages, for the same six vowels. Every formant is higher
-than the male ones, since female vocal tracts are on average shorter, but not by one common
-factor: the printout gives the ratios, from 1.04 to 1.30. The pitch is higher too, falling
-from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above the female F3.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS_FEMALE = {
+VOWELS_FEMALE = {  # female averages
     &quot;heed&quot;: (310, 2790, 3310),
     &quot;head&quot;: (610, 2330, 2990),
     &quot;had&quot;: (860, 2050, 2850),
@@ -524,78 +477,119 @@ from 230 to 200 Hz, and F4 and F5 are raised to 4100 and 4900 Hz to stay above t
     &quot;hawed&quot;: (590, 920, 2710),
     &quot;who&#x27;d&quot;: (370, 950, 2670),
 }
-parts_female = []
-for f1, f2, f3 in VOWELS_FEMALE.values():
-    v = so.klatt_synthesize(
-        VOWEL_DUR,
-        FS,
-        F0=([0, VOWEL_DUR], [230, 200]),
-        AV=onoff(VOWEL_DUR),
-        F1=f1,
-        F2=f2,
-        F3=f3,
-        F4=4100,
-        F5=4900,
-    )
-    parts_female += [v, gap]
-for word, (f1, f2, f3) in VOWELS_FEMALE.items():
-    male = VOWELS[word]
-    ratios = &quot;, &quot;.join(f&quot;{f / m:.2f}&quot; for f, m in zip((f1, f2, f3), male, strict=True))
-    print(f&quot;{word:6} female / male, F1 F2 F3: {ratios}&quot;)</code></pre></details><pre class="out">heed   female / male, F1 F2 F3: 1.15, 1.22, 1.10
+VOWEL_DUR = 0.42
+GAP = 0.15
+# Each set: its vowels, and what else it is made with (a falling pitch, and F4 and F5).
+SETS = {
+    &quot;Male formants and pitch&quot;: (VOWELS, dict(F0=([0, VOWEL_DUR], [125, 105]), F4=3500, F5=4500)),
+    &quot;Female formants and pitch&quot;: (VOWELS_FEMALE, dict(F0=([0, VOWEL_DUR], [230, 200]), F4=4100, F5=4900)),
+}
+
+
+def say(steps, dur, **rest):
+    &quot;&quot;&quot;Vowels in turn, from a list of parameter sets (F1, F2, F3), each `dur` long with a gap
+    after it, and their F1 to F3 as tracks to draw, one dashed segment per vowel.&quot;&quot;&quot;
+    parts = []
+    for p in steps:
+        parts += [so.klatt_synthesize(dur, FS, p, AV=onoff(dur), **rest), so.silence(GAP, FS)]
+    starts = np.arange(len(steps)) * (dur + GAP)
+    times = np.ravel([[start, start + dur, start + dur] for start in starts])
+    tracks = [(times, np.ravel([[p[name], p[name], np.nan] for p in steps])) for name in (&quot;F1&quot;, &quot;F2&quot;, &quot;F3&quot;)]
+    return finish(so.concat(parts[:-1])), tracks
+
+
+def formant_dicts(vowels):
+    return [dict(F1=f1, F2=f2, F3=f3) for f1, f2, f3 in vowels.values()]
+
+
+ratios = {word: np.divide(VOWELS_FEMALE[word], VOWELS[word]) for word in VOWELS}
+for word, ratio in ratios.items():
+    print(f&quot;{word:6} female / male, F1 F2 F3: &quot; + &quot;, &quot;.join(f&quot;{r:.2f}&quot; for r in ratio))
+lowest, highest = min(r.min() for r in ratios.values()), max(r.max() for r in ratios.values())</code></pre></details><pre class="out">heed   female / male, F1 F2 F3: 1.15, 1.22, 1.10
 head   female / male, F1 F2 F3: 1.15, 1.27, 1.21
 had    female / male, F1 F2 F3: 1.30, 1.19, 1.18
 hod    female / male, F1 F2 F3: 1.16, 1.12, 1.15
 hawed  female / male, F1 F2 F3: 1.04, 1.10, 1.12
 who&#x27;d  female / male, F1 F2 F3: 1.23, 1.09, 1.19</pre></div>
+<p>The ratios run from 1.04 to 1.30, so the female vowels are
+not the male ones moved up as a whole: each vowel, and each formant, moves by its own amount.</p>
 
-<article class="sound" id="d-fw4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}]">
+<article class="sound pair" id="d-fw1">
   <div class="about">
-    <h3>Six vowels with female formants</h3>
-    <div class="desc"><p>The six vowels with female formants. The harmonics are now about 215 Hz apart, so each
-formant peak is drawn by fewer of them than in the male vowels above.</p></div>
-    <audio controls preload="metadata" src="audio/fw4_six_vowels_with_female_formants.flac"></audio>
-    <p class="file">fw4_six_vowels_with_female_formants.flac, 3.4 s, mono</p>
+    <h3>Six vowels</h3>
+    <div class="desc"><p>The six vowels in turn, from "heed" to "who'd", with each set's formants and pitch. The dashed
+lines are each vowel's F1, F2 and F3. The female harmonics are farther apart, so each formant
+peak is drawn by fewer of them, as <a href="talkers.html#h-harmonics-sample-the-envelope">Two talkers</a>
+shows for one vowel. <a href="timbre.html#d-tb6">Timbre</a> sings three of the female vowels on one note.</p></div>
+    <div class="players">
+    <div><p class="track">Male formants and pitch</p>
+    <audio controls preload="metadata" src="audio/fw1_six_vowels_male_formants_and_pitch.flac" data-regions="[{&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.27}, {&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.27}]"></audio>
+    <p class="file">fw1_six_vowels_male_formants_and_pitch.flac, 3.3 s, mono</p></div>
+    <div><p class="track">Female formants and pitch</p>
+    <audio controls preload="metadata" src="audio/fw1_six_vowels_female_formants_and_pitch.flac" data-regions="[{&quot;x0&quot;: 0.5670849144965275, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.27}, {&quot;x0&quot;: 0.5670849144965275, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.27}]"></audio>
+    <p class="file">fw1_six_vowels_female_formants_and_pitch.flac, 3.3 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/fw4_six_vowels_with_female_formants.png" width="1000" height="420" alt="Plots of the six vowels with female formants sound" loading="lazy">
+    <img src="img/fw1_six_vowels.png" width="1000" height="440" alt="Plots of the six vowels sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.concat(parts_female))
-tracks = [
-    (np.repeat(starts, 2) + np.tile([0, VOWEL_DUR], 6), np.repeat([v[i] for v in VOWELS_FEMALE.values()], 2))
-    for i in range(3)
-]
-fig, playhead = show(sound, &quot;heed, head, had, hod, hawed, who&#x27;d, female formants&quot;)
-for tt, ff in tracks:
-    for j in range(6):
-        playhead[1].plot(tt[2 * j : 2 * j + 2], ff[2 * j : 2 * j + 2] / 1000, color=&quot;c&quot;, lw=1, ls=&quot;--&quot;)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds, formant_tracks = {}, {}
+for label, (vowels, rest) in SETS.items():
+    sounds[label], formant_tracks[label] = say(formant_dicts(vowels), VOWEL_DUR, **rest)
+fig, playhead = show_pair(sounds, &quot;six vowels&quot;, formant_tracks)</code></pre></details>
 </article>
 
-<article class="still" id="d-fw5">
+<article class="still" id="d-fw2">
   <div class="about">
-    <h3>Male and female vowels by their first two formants</h3>
-    <div class="desc"><p>Both sets of vowels by their first two formants, joined vowel by vowel. The female vowel
-space is shifted up and outward, most of all in F2 for the front vowels.</p></div>
+    <h3>The vowels by their first two formants</h3>
+    <div class="desc"><p>Both sets by their first two formants, joined vowel by vowel, with the axes reversed as is
+usual, so that the chart reads like the mouth seen from the left: vowels with the tongue high
+at the top, vowels with the tongue forward at the left. Every female vowel has a higher F1 and
+F2 than the male one, and the female vowels spread wider, most of all in F2 for the front
+vowels.</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/fw5_male_and_female_vowels_by_their_first_two_formants.png" width="500" height="400" alt="Male and female vowels by their first two formants" loading="lazy">
+    <img src="img/fw2_the_vowels_by_their_first_two_formants.png" width="500" height="400" alt="The vowels by their first two formants" loading="lazy">
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(5, 4), layout=&quot;constrained&quot;)
 for word in VOWELS:
     (f1_male, f2_male, _), (f1_female, f2_female, _) = VOWELS[word], VOWELS_FEMALE[word]
     ax.plot([f2_male, f2_female], [f1_male, f1_female], color=&quot;0.7&quot;, lw=0.8)
-    ax.annotate(word, (f2_female, f1_female), textcoords=&quot;offset points&quot;, xytext=(6, 4))
-ax.plot([v[1] for v in VOWELS.values()], [v[0] for v in VOWELS.values()], &quot;o&quot;, color=&quot;C0&quot;, label=&quot;male&quot;)
-ax.plot(
-    [v[1] for v in VOWELS_FEMALE.values()],
-    [v[0] for v in VOWELS_FEMALE.values()],
-    &quot;o&quot;,
-    color=&quot;C1&quot;,
-    label=&quot;female&quot;,
-)
+    ax.annotate(word, (f2_female, f1_female), textcoords=&quot;offset points&quot;, xytext=(6, -12))
+for (label, (vowels, _)), color in zip(SETS.items(), [&quot;C0&quot;, &quot;C1&quot;], strict=True):
+    f1, f2, _ = np.transpose(list(vowels.values()))
+    ax.plot(f2, f1, &quot;o&quot;, color=color, label=label.split()[0].lower())
 ax.set(xlabel=&quot;F2 (Hz)&quot;, ylabel=&quot;F1 (Hz)&quot;, xlim=(3000, 600), ylim=(950, 200))
 ax.legend(loc=&quot;lower left&quot;, fontsize=8)
 ax.set_title(&quot;Peterson and Barney&#x27;s averages, male and female&quot;)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-fw3">
+  <div class="about">
+    <h3>From heed to hod in seven steps</h3>
+    <div class="desc"><p>A continuum from "heed" to "hod" in seven equal steps of F1, F2 and F3, made with
+<code>so.klatt_continuum</code>, from the male averages at 110 Hz and from the female ones at 215 Hz.
+Somewhere in the middle the vowel stops being one and becomes the other; experiments on vowel
+categories use continua like these.</p></div>
+    <div class="players">
+    <div><p class="track">Male formants and pitch</p>
+    <audio controls preload="metadata" src="audio/fw3_from_heed_to_hod_in_seven_steps_male_formants_and_pitch.flac" data-regions="[{&quot;x0&quot;: 0.06208491449652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}, {&quot;x0&quot;: 0.06208491449652779, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}]"></audio>
+    <p class="file">fw3_from_heed_to_hod_in_seven_steps_male_formants_and_pitch.flac, 3.4 s, mono</p></div>
+    <div><p class="track">Female formants and pitch</p>
+    <audio controls preload="metadata" src="audio/fw3_from_heed_to_hod_in_seven_steps_female_formants_and_pitch.flac" data-regions="[{&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}, {&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.42}]"></audio>
+    <p class="file">fw3_from_heed_to_hod_in_seven_steps_female_formants_and_pitch.flac, 3.4 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fw3_from_heed_to_hod_in_seven_steps.png" width="1000" height="440" alt="Plots of the from heed to hod in seven steps sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds, formant_tracks = {}, {}
+for (label, (vowels, rest)), f0 in zip(SETS.items(), [110, 215], strict=True):
+    steps = so.klatt_continuum(*formant_dicts({word: vowels[word] for word in (&quot;heed&quot;, &quot;hod&quot;)}), 7)
+    sounds[label], formant_tracks[label] = say(steps, 0.36, F0=f0, F4=rest[&quot;F4&quot;], F5=rest[&quot;F5&quot;])
+fig, playhead = show_pair(sounds, &quot;heed to hod&quot;, formant_tracks)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-consonants-from-transitions">
@@ -624,7 +618,7 @@ def syllable(name):
     )
     return finish(snd), [tracks[&quot;F1&quot;], tracks[&quot;F2&quot;], tracks[&quot;F3&quot;]]</code></pre></details></div>
 
-<article class="sound" id="d-fc1" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}]">
+<article class="sound" id="d-fc1" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9822626874999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9822626874999999, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}]">
   <div class="about">
     <h3>The syllable ba</h3>
     <div class="desc"><p>/ba/: F2 and F3 rise into the vowel, from low starting points (the lips close the front of the
@@ -640,7 +634,7 @@ tract).</p></div>
 fig, playhead = show(sound, &quot;/ba/&quot;, tracks)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fc2" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}]">
+<article class="sound" id="d-fc2" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9822626874999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9822626874999999, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}]">
   <div class="about">
     <h3>The syllable da</h3>
     <div class="desc"><p>/da/: F2 and F3 fall into the vowel from high starting points.</p></div>
@@ -655,7 +649,7 @@ fig, playhead = show(sound, &quot;/ba/&quot;, tracks)</code></pre></details>
 fig, playhead = show(sound, &quot;/da/&quot;, tracks)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fc3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9818329999999998, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}]">
+<article class="sound" id="d-fc3" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9822626874999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9822626874999999, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.4}]">
   <div class="about">
     <h3>The syllable ga</h3>
     <div class="desc"><p>/ga/: F2 and F3 start close together and part, F2 falling and F3 rising.</p></div>
@@ -679,7 +673,7 @@ constriction near the front of the mouth and excites mainly the resonances in fr
 While voicing is on, both noises are modulated at <span class="tex">F_0</span>, 50% deep, as breath through vibrating
 vocal folds is.</p>
 
-<article class="sound" id="d-fn1" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}]">
+<article class="sound" id="d-fn1" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}]">
   <div class="about">
     <h3>The syllable sa</h3>
     <div class="desc"><p>/sa/: frication through the parallel formants 5 and 6 (4500 and 5500 Hz), then the vowel. As
@@ -714,7 +708,7 @@ sound = finish(
 fig, playhead = show(sound, &quot;/sa/: frication, then voicing&quot;, [tracks[&quot;F1&quot;], tracks[&quot;F2&quot;], 4500, 5500])</code></pre></details>
 </article>
 
-<article class="sound" id="d-fn2" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}]">
+<article class="sound" id="d-fn2" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.515}]">
   <div class="about">
     <h3>The syllable ha</h3>
     <div class="desc"><p>/ha/: aspiration alone through the vowel's formants, then voicing. The formants of the vowel
@@ -741,12 +735,13 @@ voicing, fading as it goes, so the vowel starts breathy.</p></div>
 fig, playhead = show(sound, &quot;/ha/: aspiration, then voicing&quot;, [730, 1090, 2440])</code></pre></details>
 </article>
 
-<article class="sound" id="d-fn3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.985833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-fn3" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>A breathy vowel</h3>
     <div class="desc"><p>A breathy "hod": voicing with aspiration 6 dB below it throughout, and a wider first formant.
 The noise fills in between the harmonics, most at high frequencies where the harmonics are
-weak.</p></div>
+weak. <a href="aperiodicity.html#d-ap3">Source and aperiodicity</a> makes a breathy vowel whose share of
+noise at each frequency is known, and measures it.</p></div>
     <audio controls preload="metadata" src="audio/fn3_a_breathy_vowel.flac"></audio>
     <p class="file">fn3_a_breathy_vowel.flac, 1.0 s, mono</p>
   </div>
@@ -823,7 +818,8 @@ Fant (1995) set the whole shape with one number,</p>
 tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical male
 voices. <code>so.glottal_source</code> makes LF pulses from their harmonics, which have an exact
 formula, so nothing aliases, and <code>so.klatt_synthesize</code> uses them with <code>SS=3</code> (the source
-switch of Klatt &amp; Klatt's KLSYN88) and <code>RD</code>.</p>
+switch of Klatt &amp; Klatt's KLSYN88) and <code>RD</code>. The <code>RD</code> control is sonore's: KLSYN88 shapes its
+LF pulse with the open quotient, the speed quotient and a spectral tilt instead.</p>
 
 <article class="still" id="d-fq1">
   <div class="about">
@@ -853,8 +849,8 @@ ax0.legend(fontsize=8)</code></pre></details>
     <h3>The spectra of the three pulses, and of the 1980 source</h3>
     <div class="desc"><p>The harmonics' levels depend on the harmonic number only, not on <span class="tex">F_0</span>. The difference
 between the first two harmonics, H1-H2, is the usual measure of this in recordings; Fant's
-(1995) fit to it, <span class="tex">-7.6 + 11.1\,R_d</span> dB, agrees with these spectra to within 0.4 dB up to
-<span class="tex">R_d</span> 1.4. Klatt's 1980 source has the H1-H2 of a modal voice, but around 3 kHz its harmonics
+(1995) fit to it, <span class="tex">-7.6 + 11.1\,R_d</span> dB, agrees with these spectra to within half a decibel
+up to <span class="tex">R_d</span> 1.4. Klatt's 1980 source has the H1-H2 of a modal voice, but around 3 kHz its harmonics
 are stronger than even the tense pulse's.</p></div>
   </div>
   <figure class="plot"><div class="plate">
@@ -881,32 +877,45 @@ ax.set_title(&quot;Harmonics of the excitation (the flow derivative), relative t
 ax.legend(fontsize=8)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fq3" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]">
+<article class="sound pair" id="d-fq3">
   <div class="about">
     <h3>One vowel, three voices</h3>
     <div class="desc"><p>The vowel of "hod" three times, with everything the same except the pulse: tense (Rd 0.5),
-modal (Rd 1) and lax (Rd 2.5). The vowel stays the same; the voice goes from pressed and
-bright to soft and muffled.</p></div>
-    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices.flac"></audio>
-    <p class="file">fq3_one_vowel_three_voices.flac, 3.4 s, mono</p>
+modal (Rd 1) and lax (Rd 2.5), with the male averages and pitch and with the female ones. The
+vowel stays the same; the voice goes from pressed and bright to soft and muffled. Since the
+pulse sets the level of each harmonic by its number, the same Rd at the higher pitch spreads the
+same levels over a wider range of frequencies: relative to its first harmonic, the female voice
+falls off more slowly with frequency.</p></div>
+    <div class="players">
+    <div><p class="track">Male formants and pitch</p>
+    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices_male_formants_and_pitch.flac" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]"></audio>
+    <p class="file">fq3_one_vowel_three_voices_male_formants_and_pitch.flac, 3.4 s, mono</p></div>
+    <div><p class="track">Female formants and pitch</p>
+    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices_female_formants_and_pitch.flac" data-regions="[{&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]"></audio>
+    <p class="file">fq3_one_vowel_three_voices_female_formants_and_pitch.flac, 3.4 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/fq3_one_vowel_three_voices.png" width="1000" height="420" alt="Plots of the one vowel, three voices sound" loading="lazy">
+    <img src="img/fq3_one_vowel_three_voices.png" width="1000" height="440" alt="Plots of the one vowel, three voices sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">parts = []
-for rd in RDS:
-    snd = so.klatt_synthesize(DUR, FS, F0=F0, AV=onoff(DUR), SS=3, RD=rd, **hod)
-    parts += [snd, so.silence(0.2, FS)]
-sound = finish(so.concat(parts[:-1]))
-fig, playhead = show(sound, &quot;Rd 0.5, Rd 1, Rd 2.5&quot;, [730, 1090, 2440])</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">PITCHES = {&quot;Male formants and pitch&quot;: F0, &quot;Female formants and pitch&quot;: ([0, DUR], [230, 200])}
+sounds = {}
+for label, (vowels, rest) in SETS.items():
+    formants = dict(zip((&quot;F1&quot;, &quot;F2&quot;, &quot;F3&quot;), vowels[&quot;hod&quot;], strict=True), F4=rest[&quot;F4&quot;], F5=rest[&quot;F5&quot;])
+    parts = []
+    for rd in RDS:
+        snd = so.klatt_synthesize(DUR, FS, F0=PITCHES[label], AV=onoff(DUR), SS=3, RD=rd, **formants)
+        parts += [snd, so.silence(0.2, FS)]
+    sounds[label] = finish(so.concat(parts[:-1]))
+fig, playhead = show_pair(sounds, &quot;Rd 0.5, 1, 2.5&quot;, {label: SETS[label][0][&quot;hod&quot;] for label in SETS})</code></pre></details>
 </article>
 
-<article class="sound" id="d-fq4" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}]">
+<article class="sound" id="d-fq4" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.2}]">
   <div class="about">
     <h3>The 1980 source, then LF at Rd 0.7</h3>
     <div class="desc"><p>Klatt's 1980 source, then an LF pulse at the default Rd of 0.7, close to typical male voices.
-The LF voice is darker: at 3 kHz its harmonics are about 12 dB weaker, relative to the first.</p></div>
+The LF voice is darker: at 3 kHz its harmonics are about 11 dB weaker, relative to the first.</p></div>
     <audio controls preload="metadata" src="audio/fq4_the_1980_source_then_lf_at_rd_0.7.flac"></audio>
     <p class="file">fq4_the_1980_source_then_lf_at_rd_0.7.flac, 2.2 s, mono</p>
   </div>
@@ -923,13 +932,14 @@ sound = finish(so.concat(parts))
 fig, playhead = show(sound, &quot;SS=1 (the default), then SS=3 with RD=0.7&quot;, [730, 1090, 2440])</code></pre></details>
 </article>
 
-<article class="sound" id="d-fq5" data-regions="[{&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999998, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.6}, {&quot;x0&quot;: 0.07244770746527779, &quot;x1&quot;: 0.9858329999999998, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.6}]">
+<article class="sound" id="d-fq5" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9877783124999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.6}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.9877783124999999, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.6}]">
   <div class="about">
     <h3>Relaxing into breathy voice</h3>
     <div class="desc"><p>A voice relaxing at the end of a phrase: Rd rises from 0.6 to 2.4 while the pitch falls. The
 LF model is the periodic pulse only, and a lax pulse alone sounds soft rather than breathy;
 Klatt &amp; Klatt (1990) found aspiration noise the most important cue to breathiness, so the
-aspiration (<code>AH</code>) rises with Rd.</p></div>
+aspiration (<code>AH</code>) rises with Rd. How noise mixes with the harmonics in a breathy voice is on
+<a href="aperiodicity.html#d-ap3">Source and aperiodicity</a>.</p></div>
     <audio controls preload="metadata" src="audio/fq5_relaxing_into_breathy_voice.flac"></audio>
     <p class="file">fq5_relaxing_into_breathy_voice.flac, 1.6 s, mono</p>
   </div>
@@ -956,7 +966,7 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>The rest of voice quality.</strong> KLSYN88 (Klatt &amp; Klatt, 1990) has more voice controls than the LF pulse: open quotient, a spectral tilt filter, flutter (slow random jitter of <span class="tex">F_0</span>) and double pulsing, and its own polynomial pulse (KLGLOTT88). sonore has the LF pulse only.</li><li><strong>Copying a recording.</strong> The parameters here were written by hand. Copy synthesis fits formant tracks to a recording, which needs a formant tracker that sonore does not have; the <a href="harmonics.html">Voices from harmonics</a> page rebuilds a recording from its measured pitch and envelope instead.</li><li><strong>Rules.</strong> Text-to-speech systems drive formant synthesizers from phonetic rules, which generate the tracks from a transcription. Here every track is set by hand.</li><li><strong>Drawing the tracks.</strong> Every track here is written in code. <a href="https://choyun1.github.io/sonore-sketch/">sonore-sketch</a>, a separate browser app built on sonore, draws formant, <span class="tex">F_0</span>, voicing and bandwidth tracks with a mouse and plays what the synthesizer makes of them.</li></ul>
+<ul><li><strong>The rest of voice quality.</strong> KLSYN88 (Klatt &amp; Klatt, 1990) has more voice controls than the LF pulse: open quotient, a spectral tilt filter, flutter (slow random jitter of <span class="tex">F_0</span>) and double pulsing, and its own polynomial pulse (KLGLOTT88). sonore has the LF pulse only.</li><li><strong>Copying a recording.</strong> The parameters here were written by hand. Copy synthesis fits formant tracks to a recording, which needs a formant tracker that sonore does not have; <a href="voice.html">Rebuilding and changing a voice</a> rebuilds a recording from its measured pitch and envelope instead.</li><li><strong>Rules.</strong> Text-to-speech systems drive formant synthesizers from phonetic rules, which generate the tracks from a transcription. Here every track is set by hand.</li><li><strong>Drawing the tracks.</strong> Every track here is written in code. <a href="https://choyun1.github.io/sonore-sketch/">sonore-sketch</a>, a separate browser app built on sonore, draws formant, <span class="tex">F_0</span>, voicing and bandwidth tracks with a mouse and plays what the synthesizer makes of them.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
@@ -967,8 +977,10 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
 </div>
 <script>
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -978,18 +990,21 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
+    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
+    const canvas = extras && el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    const liveCanvas = el.querySelector(".live");
+    const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
       live = JSON.parse(liveCanvas.dataset.live);
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
-      liveCanvas, live };
-  });
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -1001,30 +1016,38 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
     const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size, size);
-    const cx = size / 2, cy = size / 2, R = size * 0.38, head = size * 0.07, t = item.audio.currentTime;
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
     g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
-    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]);
     g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
-    g.fillText("1 m", cx + R * 0.72, cy + R * 0.72 + 14);
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
     g.strokeStyle = ink; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
     g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
     g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
-    const at = (src, time) => {
-      if (!src.t) return src.az[0];
-      const k = Math.min(src.az.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
-      return i + 1 < src.az.length ? src.az[i] * (1 - f) + src.az[i + 1] * f : src.az[i];
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
     };
-    const xy = (az) => [cx + R * Math.sin(az * Math.PI / 180), cy - R * Math.cos(az * Math.PI / 180)];
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
     item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
       if (src.t) {  // the path it travels, faintly
-        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round";
-        const lo = Math.min(...src.az), hi = Math.max(...src.az);
-        g.beginPath(); g.arc(cx, cy, R, (lo - 90) * Math.PI / 180, (hi - 90) * Math.PI / 180); g.stroke();
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
         g.globalAlpha = 1;
       }
-      const [x, y] = xy(at(src, t));
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
       g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
       g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
     });
@@ -1067,9 +1090,50 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
     g.fillText("dB", bx + bw + 2, top + h / 2);
   }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
   function draw(item) {
     drawScene(item);
     drawLive(item);
+    drawLissajous(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -1087,28 +1151,44 @@ fig, playhead = show(sound, &quot;Rd from 0.6 to 2.4, with aspiration rising&quo
       new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
     }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
       if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();

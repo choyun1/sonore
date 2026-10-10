@@ -18,12 +18,14 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # - [Perfect reconstruction](#h-perfect-reconstruction): a filterbank whose bands sum back to the
 #   original exactly.
+# - [Nothing is lost](#h-nothing-is-lost): every short-time Fourier transform and filterbank drawn
+#   on [Seeing speech](speech.html) gives the sentence back, and why overlap-add works.
 # - [Masking the spectrogram](#h-masking-the-spectrogram): switching off the cells where noise
 #   dominates, the ideal binary mask.
 #
 # Three other pages go further: the [Phase vocoder](pv.html) changes a sound's duration, pitch or
-# partials, [Hearing through a vocoder](vocoder.html) keeps only band envelopes, and [Cepstral
-# analysis](cepstrum.html) splits a voice into its vocal tract and its source.
+# partials, [Hearing through a vocoder](vocoder.html) keeps only band envelopes, and [Spectral
+# envelope](cepstrum.html) separates a voice's spectral envelope from its source.
 
 # %% [setup]
 import os
@@ -102,10 +104,66 @@ sound = finish(so.cosine_filterbank(6, 100, 6000).analyze(sweep).to_sound())
 fig, playhead = show_bands(sweep)
 
 # %% [markdown]
+# ## Nothing is lost
+#
+# The cosine filterbank is one *frame*: a set of analysis functions whose coefficients determine
+# the signal, so that synthesis recovers it. The short-time Fourier transform (STFT) is another.
+# For the STFT with window $w$ and hop $H$, overlap-adding the windowed inverse transforms of the
+# coefficients gives back the signal multiplied by
+#
+# $$s(t) = K \sum_q \bigl|w(t - qH)\bigr|^2,$$
+#
+# with $K$ the FFT length, so synthesis divides by $s(t)$, which works wherever the windows leave
+# no gap. A filterbank's analogue is $s(f) = \sum_k |H_k(f)|^2$, divided out in frequency; for the
+# cosine filterbank above it is 1. The time-varying windows of a pitch-adaptive frame work the
+# same way, each with its own $w_q$.
+#
+# [Seeing speech](speech.html) draws one sentence through many analyses, with pictures that differ
+# a great deal. The cells below load that sentence, read by each of the [Two talkers](talkers.html),
+# and take each recording through each of those analyses and back.
+
+# %%
+# The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {"Male talker": "bdl", "Female talker": "slt"}
+talkers = {
+    label: finish(so.load(fetch(f"docs/speech/{speaker}_arctic_a0131.flac")))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}
+
+# %%
+frames = {
+    "Hann 2 ms": so.GaborFrame(0.002, 0.0005, n_fft=2048),
+    "Hann 5 ms": so.GaborFrame(0.005, 0.001, n_fft=1024),
+    "Hann 33.3 ms": so.GaborFrame(0.0333, 0.001, n_fft=1024),
+    "Hann 100 ms": so.GaborFrame(0.1, 0.0005, n_fft=2048),
+    "Morlet, 6 cycles": so.morlet_filterbank(54, 70, 7000, cycles=6),
+    "gammatone": so.gammatone_filterbank(60, 70, 7000),
+}
+for label, snd in talkers.items():
+    track = tracks[label]
+    f0 = np.where(track.voiced[0], track.f0[0], 0)  # 0 where unvoiced
+    frames["pitch-adaptive, 3 periods"] = so.TVGaborFrame.pitch_adaptive(
+        track.t, f0, t_end=snd.duration + 0.02, periods=3
+    )
+    for name, frame in frames.items():
+        back = frame.synthesize(frame.analyze(snd))
+        error = np.max(np.abs(back.data - snd.data)) / snd.peak
+        print(f"{label}, {name}: largest error {error:.1e} of the peak")
+
+# %% [markdown]
+# Every frame gives each recording back to within floating-point rounding. However differently
+# the pictures on Seeing speech look, no analysis there loses anything: the tradeoff between
+# resolution in time and in frequency appears only once the phase is discarded and the magnitudes
+# are drawn. Two pictures on that page are not frames, the TANDEM-style power spectrum and the
+# reassigned spectrogram: they keep only magnitudes, and have no synthesis.
+
+# %% [markdown]
 # ## Masking the spectrogram
 #
-# The STFT is invertible too, so a spectrogram with some of its cells switched off is still a
-# sound. Wang (2005) proposed the *ideal binary mask* as the goal of separating speech from
+# Since the STFT is invertible, a spectrogram with some of its cells switched off is still a
+# sound: synthesis gives the sound whose STFT is closest, in the least-squares sense, to the
+# masked coefficients. Wang (2005) proposed the *ideal binary mask* as the goal of separating speech from
 # noise: keep every cell where the target is louder than the noise, discard the rest. It is
 # ideal because computing it needs the target and the noise separately, which a listener never
 # has; what a listener hears through it shows how much a perfect separation would leave.
@@ -140,9 +198,12 @@ masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
 mixture = target + (masker + 5 * dB)
 S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
 mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)
+snr = 20 * np.log10(target.rms / (masker + 5 * dB).rms)
+print(f"signal-to-noise ratio: {snr:.1f} dB")
 
 # %% [about]
-# A gliding harmonic target (a stand-in for a voice) in pink noise at −5 dB SNR.
+# A gliding harmonic target (a stand-in for a voice) in pink noise, at a signal-to-noise ratio of
+# {{ f"{snr:.1f}" }} dB.
 
 # %% [demo 24] Target in noise
 sound = finish(mixture)
@@ -151,7 +212,7 @@ fig, playhead = show_mask(sound, target, mask)
 # %% [about]
 # The same mixture with every time-frequency cell where the noise dominates switched off. The
 # mask is computed from the separate target and noise, which is what makes it ideal; the
-# resynthesis is exact.
+# resynthesis is the least-squares one described above.
 
 # %% [demo 25] Ideal binary mask
 sound = finish((S_x * mask).to_sound())

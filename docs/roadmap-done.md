@@ -60,7 +60,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   carrier=...)` it puts a sound's band envelopes on harmonics that follow
   its own F0 track. The harmonic half of the pulse-plus-noise synthesis
   that WORLD's vocoder (below) completes; see `docs/design/sources/harmonic-source.md` and the
-  [Voices from harmonics](https://choyun1.github.io/sonore/gallery/harmonics.html) gallery page.
+  [Rebuilding and changing a voice](https://choyun1.github.io/sonore/gallery/voice.html) gallery page.
 - **Klatt-style formant synthesizer.** `so.klatt_synthesize` after Klatt
   (1980): harmonic voicing with Klatt's glottal spectrum, aspiration and
   frication noise, formants in cascade and in parallel (alternating signs,
@@ -79,7 +79,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   dependency. Options that depart from WORLD are listed in
   `so.DIFFERENCES_FROM_WORLD`. `so.harmonic_aperiodicity` measures the
   share of noise directly, beside D4C. See `docs/design/views/world.md` and the
-  [Source, filter and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) gallery page.
+  [Source and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) gallery page.
 - **LF glottal source.** `so.glottal_source` makes Liljencrants-Fant pulses
   (Fant, Liljencrants & Lin, 1985) from their exact harmonics, whose
   coefficients have a closed form that depends only on the harmonic number,
@@ -107,7 +107,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   and a DCT, deltas, the mel spectrogram and the smoothed envelope the
   coefficients keep. Tests compare it with Kaldi's and librosa's stored output; see
   `docs/design/views/mfcc.md`. The
-  [Cepstral analysis](https://choyun1.github.io/sonore/gallery/cepstrum.html#h-mfccs-a-cepstrum-on-the-mel-scale)
+  [Spectral envelope](https://choyun1.github.io/sonore/gallery/cepstrum.html#h-mfccs-a-cepstrum-on-the-mel-scale)
   page shows how much a vowel's MFCCs move with its pitch.
 - **Voice changes, any method.** `so.scale_f0` changes the pitch and
   `so.warp_frequency` moves the formants, on any F0 contour (`f0_track`,
@@ -115,7 +115,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   MFCCs), and both synthesizers take any envelope.
   `tools/compare_voice_methods.py` compares the trackers and envelopes at
   resynthesis and voice change; see `docs/design/views/voice-change.md` and the
-  [Changing a voice](https://choyun1.github.io/sonore/gallery/voice.html) gallery page.
+  [Rebuilding and changing a voice](https://choyun1.github.io/sonore/gallery/voice.html) gallery page.
 - **API reference and test layout.** An API reference built from the
   docstrings in CI, and a test folder that mirrors `src/sonore`.
 - **Faster gallery build.** Each figure is drawn once rather than twice;

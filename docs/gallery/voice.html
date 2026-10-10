@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Changing a voice</title>
+<title>Rebuilding and changing a voice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
 <script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
   { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script><script>(() => { const moved = {"d-vc13": "voice.html#d-vc1", "d-vc16": "talkers.html#h-spectral-envelopes"}; const target = moved[location.hash.slice(1)]; if (target) location.replace(target); })();</script>
 <script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
@@ -65,6 +65,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -151,7 +155,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="seeing" open><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group here" data-group="voice" open><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li class="has-sections"><a href="voice.html" aria-current="page">Changing a voice</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a></li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a></li><li><a href="#h-pitch-range">Pitch range</a></li><li><a href="#h-the-aperiodicity">The aperiodicity</a></li><li><a href="#h-toward-another-talker">Toward another talker</a></li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group" data-group="spatial" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html">Listening gallery</a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group" data-group="stimuli" open><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details class="group" data-group="analysis-and-resynthesis" open><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="group here" data-group="voices" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li class="has-sections"><a href="voice.html" aria-current="page">Rebuilding and changing a voice</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a></li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a></li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a></li><li><a href="#h-resynthesis-with-world">Resynthesis with WORLD</a></li><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a></li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a></li><li><a href="#h-pitch-range">Pitch range</a></li><li><a href="#h-the-aperiodicity">The aperiodicity</a></li><li><a href="#h-toward-another-talker">Toward another talker</a></li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group" data-group="envelopes-and-modulation" open><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group" data-group="spatial-hearing" open><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group" data-group="music" open><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details></div><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -194,7 +198,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
       running.oncancel = () => { list.style.overflow = ""; }; }); });
 })();</script></aside>
 <main>
-<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="here"><summary>Voices</summary><ul><li><a href="formants.html">Formant synthesis</a></li><li><a href="cepstrum.html">Cepstral analysis</a></li><li><a href="harmonics.html">Voices from harmonics</a></li><li><a href="aperiodicity.html">Source, filter and aperiodicity</a></li><li><a href="voice.html" aria-current="page">Changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+<nav class="pages" aria-label="Gallery pages"><a href="index.html">Listening gallery</a><details><summary>Stimuli</summary><ul><li><a href="classic.html">Synthetic sounds</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li><li><a href="textures.html">Sound textures</a></li></ul></details><details><summary>Analysis and resynthesis</summary><ul><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li></ul></details><details class="here"><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="speech.html">Seeing speech</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html" aria-current="page">Rebuilding and changing a voice</a></li></ul></details><details><summary>Envelopes and modulation</summary><ul><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Synthetic reverberation</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><a class="ref" href="../api/">API reference</a><a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
   menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
   document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
   if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
@@ -204,31 +208,36 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
 })();</script></nav>
 <header>
-  <h1>Changing a voice</h1>
-<p>A vocoder such as WORLD (Morise, Yokomori &amp; Ozawa, 2016) takes a voice apart into a pitch track,
-a smooth spectral envelope and an aperiodicity (see
-<a href="aperiodicity.html">Source, filter and aperiodicity</a>), and puts it back together from them. Each
-can be changed before it is put back. Two changes are basic:</p>
-<ul><li><strong>the pitch</strong>: every F0 multiplied by a ratio, <code>so.scale_f0(track, ratio)</code>, which moves the harmonics and leaves the envelope alone;</li><li><strong>the formants</strong>: the envelope stretched along frequency, <code>so.warp_frequency(envelope, ratio)</code>, which reads the envelope at <span class="tex">f / \text{ratio}</span>, so a peak at 1000 Hz moves to <span class="tex">1000 \times \text{ratio}</span> Hz, and leaves the pitch alone.</li></ul>
-<p>Both work on any F0 contour and any envelope, so the pitch can come from one analysis and the
-envelope from another. The page measures what each change did; it does not say how the results
-sound.</p>
-<ul><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a>: the sentence with each changed alone and both together, and what was measured on each.</li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a>: the same pitch change by time stretch and resampling, for contrast.</li><li><a href="#h-pitch-range">Pitch range</a>: a monotone and a doubled range, around the same median.</li><li><a href="#h-the-aperiodicity">The aperiodicity</a>: kept in place or moved with the formants.</li><li><a href="#h-toward-another-talker">Toward another talker</a>: the male talker's sentence moved toward the female talker's by one pitch ratio and one formant ratio, beside the female talker's.</li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a>: three trackers and four envelopes mixed, scored on resynthesis.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
+  <h1>Rebuilding and changing a voice</h1>
+<p>A voiced sound is a set of harmonics, multiples of a pitch <span class="tex">F_0</span> that moves over time, whose
+levels follow a smooth spectral envelope, the formants (see
+<a href="formants.html">Formant synthesis</a>). Measure the two, a pitch track
+(<a href="pitch.html">Pitch tracking</a>) and an envelope (<a href="cepstrum.html">Spectral envelope</a>), and a voice
+can be put back together from them. Change one before putting it back, and the pitch moves
+without the formants, or the formants without the pitch. This page does both, on the sentence
+read by the <a href="talkers.html">two talkers</a>, shown side by side throughout.</p>
+<p>The first part rebuilds the voice with <code>so.harmonic_complex</code>, which accepts an F0 contour as well
+as a fixed F0: every harmonic follows <span class="tex">n</span> times the contour, with phase</p>
+<div class="tex display">x(t) = \sum_n a_n \cos\big(n\,\Phi(t) + \phi_n\big), \qquad \Phi(t) = 2\pi \int_0^t F_0(\tau)\,d\tau,</div>
+<p>and the amplitudes <span class="tex">a_n</span> may be a spectral envelope, read at every harmonic's frequency at every
+instant.</p>
+<ul><li><a href="#h-putting-the-envelope-back">Putting the envelope back</a>: harmonics shaped by the envelope, and a channel vocoder on a harmonic carrier.</li><li><a href="#h-unvoiced-gaps">Unvoiced gaps</a>: silence or shaped noise where the voice is not voiced.</li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a>: cosine, Schroeder and random phase.</li></ul>
+<p>The second part changes the voice with the vocoder WORLD (Morise, Yokomori &amp; Ozawa, 2016), which
+adds a third measurement, the aperiodicity (see <a href="aperiodicity.html">Source and aperiodicity</a>).
+Two changes are basic: <code>so.scale_f0(track, ratio)</code> multiplies every F0 by a ratio and leaves the
+envelope alone; <code>so.warp_frequency(envelope, ratio)</code> reads the envelope at <span class="tex">f / \text{ratio}</span>, so
+a peak at 1000 Hz moves to <span class="tex">1000 \times \text{ratio}</span> Hz, and leaves the pitch alone.</p>
+<ul><li><a href="#h-resynthesis-with-world">Resynthesis with WORLD</a>: nothing changed, and how each change is measured.</li><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a>: each changed alone, and both together.</li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a>: the same pitch change by time stretch and resampling, for contrast.</li><li><a href="#h-pitch-range">Pitch range</a>: a monotone, a doubled range and a flipped contour.</li><li><a href="#h-the-aperiodicity">The aperiodicity</a>: kept in place or moved with the formants.</li><li><a href="#h-toward-another-talker">Toward another talker</a>: each talker moved toward the other.</li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a>: three trackers and four envelopes mixed, scored on resynthesis.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
+<p>The page measures what each change did; it does not say how the results sound.</p>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/voice.ipynb">in Colab</a> or <a href="notebooks/voice.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-the-sentence-and-code-the-examples-share">
 <h2 id="h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</h2>
-<p>The sentence from <a href="speech.html">Seeing speech</a>, read by a male talker (CMU ARCTIC, speaker bdl),
-with the F0 track WORLD's Harvest (Morise, 2017) measured, stored with it. CheapTrick's envelope
-and D4C's aperiodicity are measured on that track. <code>so.world_synthesize</code> puts them back together,
-sample for sample as WORLD does.</p>
-<p>Each change below is checked by measurement on the output. The pitch: <code>so.f0_track</code> on the
-output, its median over voiced time windows against the same on the original. The formants:
-CheapTrick's envelope of the output, averaged in dB over voiced time windows, against the
-original's average read at <span class="tex">f / r</span> for a range of ratios <span class="tex">r</span>. The ratio whose curve fits best
-over 100 to 5000 Hz, with the overall level left free, is the <strong>fitted warp</strong>.</p>
+<p>The two recordings and their <code>so.f0_track</code> pitch tracks, as on <a href="talkers.html">Two talkers</a>.
+Every rebuild and change on this page follows those tracks, except where the last section swaps
+in other trackers.</p>
 <div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
 import urllib.request
 
@@ -252,33 +261,421 @@ def fetch(path):
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def show(snd, title, contour=None, fmax=5000):
-    &quot;&quot;&quot;Waveform and narrowband spectrogram (Hann 33 ms, harmonics resolved), on one time axis,
-    with an F0 contour drawn over the spectrogram if one is given.&quot;&quot;&quot;
-    fig = plt.figure(figsize=(10, 4.2), layout=&quot;constrained&quot;)
-    ax0, ax1 = fig.subplots(2, 1, sharex=True, height_ratios=[0.45, 1])
-    snd.plot(ax0, color=&quot;k&quot;, lw=0.4)
-    ax0.set(title=f&quot;Waveform: {title}&quot;, xlabel=&quot;&quot;)
-    so.STFT(snd, win_dur=0.0333, hop_dur=0.002).plot(ax1, db_range=70, colorbar=False, fmax=fmax)
-    ax1.set_title(&quot;Spectrogram (Hann 33 ms)&quot;)
-    if contour is not None:
-        times, values = contour
-        ax1.plot(times, np.where(values &gt; 0, values, np.nan), color=&quot;c&quot;, lw=1.2)
-    for ax in (ax0, ax1):
-        ax.set_xlim(0, snd.duration)
-    return fig, [ax0, ax1]
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {&quot;Male talker&quot;: &quot;bdl&quot;, &quot;Female talker&quot;: &quot;slt&quot;}
+talkers = {
+    label: finish(so.load(fetch(f&quot;docs/speech/{speaker}_arctic_a0131.flac&quot;)))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}
+fs = talkers[&quot;Male talker&quot;].fs
 
 
-sentence = finish(so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)))
-fs = sentence.fs
-harvest_times, harvest_f0 = np.loadtxt(
-    fetch(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;), delimiter=&quot;,&quot;, skiprows=2
-).T
-harvest = (harvest_times, harvest_f0)
-envelope = so.cheaptrick(sentence, harvest)
-aperiodicity = so.d4c(sentence, harvest)
-voiced = harvest_f0 &gt; 0
-scored = (envelope.f &gt;= 100) &amp; (envelope.f &lt;= 5000)
+def contour_of(track):
+    &quot;&quot;&quot;The times and F0 values of a track (an F0Track or a (times, values) pair), NaN where
+    unvoiced, for drawing.&quot;&quot;&quot;
+    times, values = (track.t, track.f0[0]) if hasattr(track, &quot;f0&quot;) else track
+    return times, np.where(np.asarray(values) &gt; 0, values, np.nan)
+
+
+def show_pair(sounds, title, contours=None, fmax=5000):
+    &quot;&quot;&quot;One column per talker: the waveform, and a narrowband spectrogram (Hann 33 ms, which
+    resolves the harmonics of both voices) with an F0 contour over it if one is given. The title
+    is one string, or one per talker. Returns the figure and, for each talker, the panels the
+    playhead follows.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 4.4), layout=&quot;constrained&quot;)
+    columns = fig.subfigures(1, 2)
+    playhead = {}
+    for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+        top, bottom = column.subplots(2, 1, sharex=True, height_ratios=[0.4, 1])
+        snd.plot(top, color=&quot;k&quot;, lw=0.4)
+        top.set(title=f&quot;{label}: {title[label] if isinstance(title, dict) else title}&quot;, xlabel=&quot;&quot;, ylabel=&quot;&quot;)
+        so.STFT(snd, win_dur=0.0333, hop_dur=0.002).plot(bottom, db_range=70, colorbar=False, fmax=fmax)
+        bottom.set_title(&quot;Spectrogram (Hann 33 ms)&quot;)
+        if contours is not None:
+            times, values = contour_of(contours[label])
+            bottom.plot(times, values / 1000, color=&quot;c&quot;, lw=1.2)  # the spectrogram&#x27;s axis is in kHz
+        for ax in (top, bottom):
+            ax.set_xlim(0, snd.duration)
+        playhead[label] = [top, bottom]
+    return fig, playhead
+
+
+medians = {label: np.median(track.f0[0][track.voiced[0]]) for label, track in tracks.items()}
+for label, median in medians.items():
+    print(f&quot;{label}: median voiced F0 {median:.0f} Hz&quot;)</code></pre></details><pre class="out">Male talker: median voiced F0 119 Hz
+Female talker: median voiced F0 183 Hz</pre></div>
+
+<article class="sound pair" id="d-vc1">
+  <div class="about">
+    <h3>The sentence</h3>
+    <div class="desc"><p>The sentence, read by each talker, with <code>so.f0_track</code>'s contour drawn on the spectrogram.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc1_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc1_the_sentence_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc1_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">vc1_the_sentence_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/vc1_the_sentence.png" width="1000" height="440" alt="Plots of the the sentence sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = talkers
+fig, playhead = show_pair(sounds, &quot;the sentence&quot;, tracks)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-putting-the-envelope-back">
+<h2 id="h-putting-the-envelope-back">Putting the envelope back</h2>
+<p>A buzz that follows the pitch track keeps the intonation and nothing else; <a href="pitch.html#h-three-pitch-tracks-heard">Three pitch tracks,
+heard</a> plays one on each of three trackers. The timbre
+is in the spectral envelope. Here it is the cepstral envelope, liftered in each 40 ms time window
+below half the pitch period there, as on <a href="cepstrum.html">Spectral envelope</a>, which explains it.
+<code>envelope_view()</code> holds it as power on its grid of time windows and frequencies, and
+<code>so.harmonic_complex</code> takes it as <code>amplitudes</code>, reading it at each harmonic's frequency and time:
+harmonics that follow the track, with heights that follow the formants.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def cepstral_envelope(snd, track):
+    &quot;&quot;&quot;The cepstrum of 40 ms Hann time windows every 5 ms, liftered below half the pitch period
+    of each window (the track&#x27;s voiced F0, interpolated on a log scale across unvoiced gaps).&quot;&quot;&quot;
+    cepstrum = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005))
+    is_voiced = track.voiced[0]
+    periods = 1 / np.exp(np.interp(cepstrum.t, track.t[is_voiced], np.log(track.f0[0][is_voiced])))
+    return cepstrum.lifter(0.5 * periods).envelope_view()
+
+
+cepstral = {label: cepstral_envelope(snd, tracks[label]) for label, snd in talkers.items()}
+voices = {
+    label: so.harmonic_complex(snd.duration, fs, tracks[label], amplitudes=cepstral[label])
+    for label, snd in talkers.items()
+}</code></pre></details></div>
+
+<article class="sound pair" id="d-he1">
+  <div class="about">
+    <h3>Harmonics shaped by the envelope</h3>
+    <div class="desc"><p>Harmonics on each talker's <code>so.f0_track</code> with the cepstral envelope as their amplitudes, silent
+where the track says unvoiced. The voiced sounds are there, in each talker's intonation; the
+consonants that are noise are missing until <a href="#h-unvoiced-gaps">the next section</a>. The female
+talker's harmonics are farther apart, so each formant is drawn by fewer of them (see
+<a href="talkers.html#h-harmonics-sample-the-envelope">Harmonics sample the envelope</a>).</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/he1_harmonics_shaped_by_the_envelope_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">he1_harmonics_shaped_by_the_envelope_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/he1_harmonics_shaped_by_the_envelope_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">he1_harmonics_shaped_by_the_envelope_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/he1_harmonics_shaped_by_the_envelope.png" width="1000" height="440" alt="Plots of the harmonics shaped by the envelope sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(voice) for label, voice in voices.items()}
+fig, playhead = show_pair(sounds, &quot;harmonics, cepstral envelope&quot;, tracks)</code></pre></details>
+</article>
+<p>A channel vocoder (<a href="vocoder.html">Hearing through a vocoder</a>) does the same job with band
+envelopes in place of a cepstral one. On noise it puts back the envelopes and not the pitch; on
+a harmonic carrier that follows the pitch track it puts the pitch back too. The carrier below is
+<code>so.harmonic_complex</code> with <code>unvoiced=&quot;noise&quot;</code>, which fills the unvoiced stretches with white
+noise of the harmonics' power, so the consonants have something to modulate.</p>
+
+<article class="sound pair" id="d-he2">
+  <div class="about">
+    <h3>Sixteen noise bands</h3>
+    <div class="desc"><p>The sentence through a 16-band noise vocoder (Shannon et al., 1995): the band envelopes are
+there, the harmonics are not.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/he2_sixteen_noise_bands_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">he2_sixteen_noise_bands_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/he2_sixteen_noise_bands_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">he2_sixteen_noise_bands_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/he2_sixteen_noise_bands.png" width="1000" height="440" alt="Plots of the sixteen noise bands sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(so.channel_vocode(snd, 16, 80, 7600, rng=1)) for label, snd in talkers.items()}
+fig, playhead = show_pair(sounds, &quot;16-band noise vocoder&quot;)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-he3">
+  <div class="about">
+    <h3>Sixteen bands on harmonics</h3>
+    <div class="desc"><p>The same 16 bands on a harmonic carrier that follows each talker's <code>so.f0_track</code>, with noise
+where it says unvoiced. The harmonics within a band share one envelope, so the formants are
+blurrier than with the cepstral envelope.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/he3_sixteen_bands_on_harmonics_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">he3_sixteen_bands_on_harmonics_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/he3_sixteen_bands_on_harmonics_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">he3_sixteen_bands_on_harmonics_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/he3_sixteen_bands_on_harmonics.png" width="1000" height="440" alt="Plots of the sixteen bands on harmonics sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.channel_vocode(
+            snd,
+            16,
+            80,
+            7600,
+            carrier=so.harmonic_complex(snd.duration, fs, tracks[label], unvoiced=&quot;noise&quot;, rng=1),
+        )
+    )
+    for label, snd in talkers.items()
+}
+fig, playhead = show_pair(sounds, &quot;16 bands, harmonic carrier&quot;, tracks)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-unvoiced-gaps">
+<h2 id="h-unvoiced-gaps">Unvoiced gaps</h2>
+<p>Where the track says unvoiced, the sound is noise: fricatives, bursts and breath. Noise shaped
+by the same envelope fills the gaps: white noise whose STFT magnitude is replaced, in every time
+window, by the envelope. It is faded in where the track's voicing turns off, and set as loud,
+relative to the harmonics, as the unvoiced parts of each recording are relative to its voiced
+parts.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def rms(x):
+    return np.sqrt(np.mean(x**2))
+
+
+def shaped_noise(snd, envelope, seed):
+    &quot;&quot;&quot;White noise with the envelope as its STFT magnitude, on the envelope&#x27;s time windows.&quot;&quot;&quot;
+    noise = so.STFT(so.gaussian_noise(snd.duration, fs, rng=seed), win_dur=0.040, hop_dur=0.005)
+    noise.data = np.sqrt(envelope.data) * np.exp(1j * np.angle(noise.data))
+    return noise.to_sound().data[: len(snd), 0]
+
+
+breaths = {label: shaped_noise(snd, cepstral[label], seed=2) for label, snd in talkers.items()}
+# The track&#x27;s voicing at every sample, 1 where voiced; the harmonics are switched at the same times.
+voicings = {
+    label: np.interp(np.arange(len(snd)) / fs, tracks[label].t, tracks[label].voiced[0].astype(float))
+    for label, snd in talkers.items()
+}
+balances = {}
+for label, snd in talkers.items():
+    x, voicing = snd.data[:, 0], voicings[label]
+    balances[label] = rms((1 - voicing) * x) / rms(voicing * x)
+    print(f&quot;{label}: unvoiced stretches {20 * np.log10(balances[label]):.1f} dB relative to the voiced ones&quot;)
+
+
+def with_breath(voice, label):
+    &quot;&quot;&quot;The voiced sound, plus the talker&#x27;s envelope-shaped noise where unvoiced, at the balance of
+    that talker&#x27;s recording.&quot;&quot;&quot;
+    gap = (1 - voicings[label]) * breaths[label]
+    voiced = voice.data[:, 0]
+    return so.Sound(voiced + gap * balances[label] * rms(voiced) / rms(gap), fs)</code></pre></details><pre class="out">Male talker: unvoiced stretches -14.1 dB relative to the voiced ones
+Female talker: unvoiced stretches -17.0 dB relative to the voiced ones</pre></div>
+
+<article class="sound pair" id="d-hu1">
+  <div class="about">
+    <h3>Silence in the gaps</h3>
+    <div class="desc"><p>The harmonics shaped by the envelope, as in <a href="#d-he1">the last section</a>, with silence where
+unvoiced.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hu1_silence_in_the_gaps_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hu1_silence_in_the_gaps_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hu1_silence_in_the_gaps_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hu1_silence_in_the_gaps_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hu1_silence_in_the_gaps.png" width="1000" height="440" alt="Plots of the silence in the gaps sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(voice) for label, voice in voices.items()}
+fig, playhead = show_pair(sounds, &quot;harmonics, silence where unvoiced&quot;, tracks)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hu2">
+  <div class="about">
+    <h3>Shaped noise in the gaps</h3>
+    <div class="desc"><p>The same harmonics with envelope-shaped noise in the gaps. The <em>s</em>, <em>t</em> and <em>h</em> sounds come
+back: each sentence is rebuilt from two measurements, a pitch track and a spectral envelope
+every 5 ms.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hu2_shaped_noise_in_the_gaps_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hu2_shaped_noise_in_the_gaps_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hu2_shaped_noise_in_the_gaps_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hu2_shaped_noise_in_the_gaps_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hu2_shaped_noise_in_the_gaps.png" width="1000" height="440" alt="Plots of the shaped noise in the gaps sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rebuilt = {label: finish(with_breath(voice, label)) for label, voice in voices.items()}
+sounds = rebuilt
+fig, playhead = show_pair(sounds, &quot;harmonics, shaped noise where unvoiced&quot;, tracks)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hm4">
+  <div class="about">
+    <h3>Whispered</h3>
+    <div class="desc"><p>A whisper: no harmonics at all, the shaped noise everywhere. This is close to the <a href="#d-he2">noise
+vocoder</a>, with the cepstral envelope in place of 16 band envelopes.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hm4_whispered_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.27136744171493055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3561136341122946, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hm4_whispered_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hm4_whispered_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2708399571452742, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3574323455364353, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hm4_whispered_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hm4_whispered.png" width="1000" height="440" alt="Plots of the whispered sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(so.Sound(breath, fs)) for label, breath in breaths.items()}
+fig, playhead = show_pair(sounds, &quot;shaped noise only&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-phases-on-a-moving-pitch">
+<h2 id="h-phases-on-a-moving-pitch">Phases on a moving pitch</h2>
+<p>The amplitudes fix the spectrum, but the starting phases decide the waveform. In cosine phase
+all the harmonics peak together once a period, giving a sharp pulse; Schroeder's phases spread
+the energy across the period for a nearly flat envelope (Schroeder, 1970); random phases fall in
+between. With a contour the phases set only where each harmonic starts. After that every
+harmonic runs at exactly <span class="tex">n</span> times the same instantaneous frequency, so the waveform keeps its
+shape as the pitch moves. The examples use harmonics of equal amplitude, to show the phases
+alone.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">PHASES = {&quot;cosine&quot;: &quot;cosine&quot;, &quot;Schroeder&quot;: &quot;schroeder+&quot;, &quot;random&quot;: &quot;random&quot;}
+buzzes = {
+    name: {
+        label: so.harmonic_complex(snd.duration, fs, tracks[label], phases=phases, rng=3)
+        for label, snd in talkers.items()
+    }
+    for name, phases in PHASES.items()
+}
+for name, pair in buzzes.items():
+    print(
+        f&quot;{name:9}: crest factor &quot;
+        + &quot;, &quot;.join(f&quot;{snd.peak / snd.rms:.1f} ({label})&quot; for label, snd in pair.items())
+    )</code></pre></details><pre class="out">cosine   : crest factor 17.0 (Male talker), 12.3 (Female talker)
+Schroeder: crest factor 2.4 (Male talker), 2.4 (Female talker)
+random   : crest factor 3.9 (Male talker), 3.9 (Female talker)</pre></div>
+
+<article class="still" id="d-hf0">
+  <div class="about">
+    <h3>Three phase choices, one spectrum</h3>
+    <div class="desc"><p>Thirty milliseconds of each, from 0.50 s, where both talkers are voiced. In each column the three
+have the same spectrum; only the waveform differs. The crest factor is the peak over the RMS of
+the whole sentence.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf0_three_phase_choices_one_spectrum.png" width="1000" height="480" alt="Three phase choices, one spectrum" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig = plt.figure(figsize=(10, 4.8), layout=&quot;constrained&quot;)
+columns = fig.subfigures(1, 2)
+for column, label in zip(columns, talkers, strict=True):
+    axes = column.subplots(3, 1, sharex=True, sharey=True)
+    start = 0.50
+    segment = slice(int(start * fs), int((start + 0.03) * fs))
+    milliseconds = np.arange(segment.start, segment.stop) / fs * 1e3
+    for ax, (name, pair) in zip(axes, buzzes.items(), strict=True):
+        snd = pair[label]
+        ax.plot(milliseconds, snd.data[segment, 0] / snd.rms, color=&quot;k&quot;, lw=0.7)
+        ax.set(title=f&quot;{label}: {name} phase, crest factor {snd.peak / snd.rms:.1f}&quot;, ylabel=&quot;re RMS&quot;)
+        ax.grid(ls=&quot;:&quot;)
+    axes[-1].set_xlabel(&quot;Time (ms)&quot;)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hf1">
+  <div class="about">
+    <h3>Cosine phase</h3>
+    <div class="desc"><p>Cosine phase: a pulse train that follows each talker's intonation.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hf1_cosine_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hf1_cosine_phase_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hf1_cosine_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hf1_cosine_phase_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf1_cosine_phase.png" width="1000" height="440" alt="Plots of the cosine phase sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd) for label, snd in buzzes[&quot;cosine&quot;].items()}
+fig, playhead = show_pair(sounds, &quot;equal harmonics, cosine phase&quot;, tracks)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hf2">
+  <div class="about">
+    <h3>Schroeder phase</h3>
+    <div class="desc"><p>Schroeder phase: the same harmonics, with no instant in the period carrying all the energy.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hf2_schroeder_phase_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hf2_schroeder_phase_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf2_schroeder_phase.png" width="1000" height="440" alt="Plots of the schroeder phase sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd) for label, snd in buzzes[&quot;Schroeder&quot;].items()}
+fig, playhead = show_pair(sounds, &quot;equal harmonics, Schroeder phase&quot;, tracks)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hf3">
+  <div class="about">
+    <h3>Random phase</h3>
+    <div class="desc"><p>Random phase, one draw: a crest factor between the two.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hf3_random_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.04854547222222222, &quot;x1&quot;: 0.48584235917423957, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04854547222222222, &quot;x1&quot;: 0.48584235917423957, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hf3_random_phase_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hf3_random_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5535454722222221, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5535454722222221, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hf3_random_phase_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf3_random_phase.png" width="1000" height="440" alt="Plots of the random phase sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd) for label, snd in buzzes[&quot;random&quot;].items()}
+fig, playhead = show_pair(sounds, &quot;equal harmonics, random phase&quot;, tracks)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-resynthesis-with-world">
+<h2 id="h-resynthesis-with-world">Resynthesis with WORLD</h2>
+<p>WORLD measures the envelope with CheapTrick (Morise, 2015), which <a href="cepstrum.html">Spectral
+envelope</a> compares with the liftered cepstrum, and the aperiodicity with D4C
+(Morise, 2016): how much of the voice is noise, frequency by frequency, so that every time
+window can mix harmonics and noise rather than being one or the other as above.
+<code>so.world_synthesize</code> puts the three back together, sample for sample as WORLD does. Both are
+measured here on the <code>so.f0_track</code> tracks.</p>
+<p>Each change below is checked by measurement on the output. The pitch: <code>so.f0_track</code> on the
+output, its median over voiced time windows against the same on the original. The formants:
+CheapTrick's envelope of the output, averaged in dB over the original's voiced time windows,
+against the original's average read at <span class="tex">f / r</span> for a range of ratios <span class="tex">r</span>. The ratio whose curve
+fits best over 100 to 5000 Hz, with the overall level left free, is the <strong>fitted warp</strong>.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = {label: so.cheaptrick(snd, tracks[label]) for label, snd in talkers.items()}
+aperiodicities = {label: so.d4c(snd, tracks[label]) for label, snd in talkers.items()}
+frequencies = envelopes[&quot;Male talker&quot;].f
+scored = (frequencies &gt;= 100) &amp; (frequencies &lt;= 5000)
+RATIOS = np.arange(0.60, 2.001, 0.005)
 
 
 def median_f0(snd):
@@ -287,134 +684,172 @@ def median_f0(snd):
     return np.median(track.f0[0][track.voiced[0]])
 
 
-def mean_voiced_db(view, times, is_voiced):
-    &quot;&quot;&quot;An envelope averaged in dB over the voiced time windows, on CheapTrick&#x27;s frequencies.&quot;&quot;&quot;
-    return np.mean(10 * np.log10(view(times[is_voiced], envelope.f)[0]), axis=1)
+def mean_voiced_db(view, label):
+    &quot;&quot;&quot;An envelope (or aperiodicity) averaged in dB over the talker&#x27;s voiced time windows.&quot;&quot;&quot;
+    track = tracks[label]
+    return np.mean(10 * np.log10(view(track.t[track.voiced[0]], frequencies)[0]), axis=1)
 
 
-def misfit(changed_db, reference_db, ratio, slope=False):
-    &quot;&quot;&quot;How far changed_db is from reference_db read at f / ratio (RMS dB, 100-5000 Hz), with
-    the level left free and, if slope is True, a straight line in dB over log frequency too.&quot;&quot;&quot;
-    difference = changed_db[scored] - np.interp(envelope.f[scored] / ratio, envelope.f, reference_db)
-    columns = [np.ones(scored.sum())] + ([np.log2(envelope.f[scored])] if slope else [])
-    fit = np.linalg.lstsq(np.column_stack(columns), difference, rcond=None)[0]
-    return np.sqrt(np.mean((difference - np.column_stack(columns) @ fit) ** 2))
+def misfit(changed_db, reference_db, ratio, tilt=False):
+    &quot;&quot;&quot;How far changed_db is from reference_db read at f / ratio (RMS dB, 100-5000 Hz), with the
+    level left free and, if tilt is True, a straight line in dB over log frequency too. Also
+    returns that level and tilt (dB per octave).&quot;&quot;&quot;
+    difference = changed_db[scored] - np.interp(frequencies[scored] / ratio, frequencies, reference_db)
+    basis = np.column_stack([np.ones(scored.sum()), np.log2(frequencies[scored])][: 2 if tilt else 1])
+    fit = np.linalg.lstsq(basis, difference, rcond=None)[0]
+    return np.sqrt(np.mean((difference - basis @ fit) ** 2)), (*fit, 0.0)[:2]
 
 
-RATIOS = np.arange(0.70, 2.001, 0.005)
+def fitted_warp(changed_db, reference_db, tilt=False):
+    &quot;&quot;&quot;The ratio r for which changed_db best matches reference_db read at f / r, and the tilt
+    fitted with it (0 unless tilt is True).&quot;&quot;&quot;
+    misfits = [misfit(changed_db, reference_db, ratio, tilt)[0] for ratio in RATIOS]
+    best = RATIOS[np.argmin(misfits)]
+    return best, misfit(changed_db, reference_db, best, tilt)[1][1]
 
 
-def fitted_warp(changed_db, reference_db, slope=False):
-    &quot;&quot;&quot;The ratio r for which changed_db best matches reference_db read at f / r.&quot;&quot;&quot;
-    misfits = [misfit(changed_db, reference_db, ratio, slope) for ratio in RATIOS]
-    return RATIOS[np.argmin(misfits)], np.min(misfits)
+original_db = {label: mean_voiced_db(envelope, label) for label, envelope in envelopes.items()}
 
 
-original_f0 = median_f0(sentence)
-original_db = mean_voiced_db(envelope, harvest_times, voiced)
+def report(changed):
+    &quot;&quot;&quot;Print, for each changed sentence and each talker, the measured pitch ratio and the fitted
+    warp. changed maps a name to the pair of sentences and the F0 contours they were made on.&quot;&quot;&quot;
+    print(f&quot;{&#x27;&#x27;:44}{&#x27;pitch ratio&#x27;:&gt;12}{&#x27;fitted warp&#x27;:&gt;12}&quot;)
+    for name, (sounds, changed_tracks) in changed.items():
+        for label, snd in sounds.items():
+            changed_db = mean_voiced_db(so.cheaptrick(snd, changed_tracks[label]), label)
+            warp = fitted_warp(changed_db, original_db[label])[0]
+            print(f&quot;{name + &#x27;, &#x27; + label.lower():44}{median_f0(snd) / medians[label]:12.3f}{warp:12.3f}&quot;)
 
 
-def report(snd, track):
-    &quot;&quot;&quot;Print the measured pitch ratio and fitted warp of a changed sentence; track is its F0
-    contour.&quot;&quot;&quot;
-    changed_db = mean_voiced_db(so.cheaptrick(snd, track), harvest_times, voiced)
-    warp = fitted_warp(changed_db, original_db)[0]
-    print(f&quot;pitch ratio {median_f0(snd) / original_f0:.3f}, fitted warp {warp:.3f}&quot;)
+changed = {}  # each change&#x27;s sentences, measured after the demos that make them</code></pre></details></div>
 
-
-print(f&quot;median voiced F0 of the sentence: {original_f0:.0f} Hz&quot;)</code></pre></details><pre class="out">median voiced F0 of the sentence: 119 Hz</pre></div>
+<article class="sound pair" id="d-vc2">
+  <div class="about">
+    <h3>Resynthesis, nothing changed</h3>
+    <div class="desc"><p>WORLD's resynthesis with nothing changed: the pitch track, CheapTrick's envelope and D4C's
+aperiodicity put back together. Every change below is a change of this.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc2_resynthesis_nothing_changed_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc2_resynthesis_nothing_changed_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc2_resynthesis_nothing_changed_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc2_resynthesis_nothing_changed_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/vc2_resynthesis_nothing_changed.png" width="1000" height="440" alt="Plots of the resynthesis, nothing changed sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(so.world_synthesize(tracks[label], envelopes[label], aperiodicities[label]))
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, &quot;so.world_synthesize&quot;, tracks)
+changed[&quot;nothing changed&quot;] = (sounds, tracks)</code></pre></details>
+</article>
 </section>
 <section aria-labelledby="h-pitch-and-formants-one-at-a-time">
 <h2 id="h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</h2>
-<p>The pitch up by half (a ratio of 1.5, a musical fifth), the formants up by a fifth of their
-frequency (1.2), and both. The sentence first, and WORLD's resynthesis with nothing changed,
-which is what every change below is a change of.</p>
+<p>The pitch up by half (a ratio of 1.5, a musical fifth), the formants up by 20% (a ratio of
+1.2), and both, for each talker.</p>
 
-<article class="sound" id="d-vc1" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.99504685143007, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.99504685143007, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
-  <div class="about">
-    <h3>The sentence</h3>
-    <div class="desc"><p>The sentence, for reference, with Harvest's track drawn on the spectrogram.</p></div>
-    <audio controls preload="metadata" src="audio/vc1_the_sentence.flac"></audio>
-    <p class="file">vc1_the_sentence.flac, 2.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/vc1_the_sentence.png" width="1000" height="420" alt="Plots of the the sentence sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = sentence
-fig, playhead = show(sound, &quot;the sentence&quot;, harvest)</code></pre></details>
-</article>
-
-<article class="sound" id="d-vc2" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
-  <div class="about">
-    <h3>Resynthesis, nothing changed</h3>
-    <div class="desc"><p>WORLD's resynthesis with nothing changed: Harvest's track, CheapTrick's envelope and D4C's
-aperiodicity put back together.</p></div>
-    <audio controls preload="metadata" src="audio/vc2_resynthesis_nothing_changed.flac"></audio>
-    <p class="file">vc2_resynthesis_nothing_changed.flac, 2.5 s, mono</p>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/vc2_resynthesis_nothing_changed.png" width="1000" height="420" alt="Plots of the resynthesis, nothing changed sound" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(harvest, envelope, aperiodicity))
-fig, playhead = show(sound, &quot;so.world_synthesize, nothing changed&quot;, harvest)
-report(sound, harvest)</code></pre></details>
-</article>
-
-<article class="sound" id="d-vc3" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc3">
   <div class="about">
     <h3>Higher pitch</h3>
-    <div class="desc"><p>The pitch times 1.5, the envelope as it was. The harmonics are half as far apart again; the
-dark bands of the formants stay at the same frequencies.</p></div>
-    <audio controls preload="metadata" src="audio/vc3_higher_pitch.flac"></audio>
-    <p class="file">vc3_higher_pitch.flac, 2.5 s, mono</p>
+    <div class="desc"><p>The pitch times 1.5, the envelope as it was. The harmonics are half as far apart again; the dark
+bands of the formants stay at the same frequencies.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc3_higher_pitch_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc3_higher_pitch_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc3_higher_pitch_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc3_higher_pitch_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc3_higher_pitch.png" width="1000" height="420" alt="Plots of the higher pitch sound" loading="lazy">
+    <img src="img/vc3_higher_pitch.png" width="1000" height="440" alt="Plots of the higher pitch sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">higher = so.scale_f0(harvest, 1.5)
-sound = finish(so.world_synthesize(higher, envelope, aperiodicity))
-fig, playhead = show(sound, &quot;F0 × 1.5, formants kept&quot;, higher)
-report(sound, higher)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">higher = {label: so.scale_f0(track, 1.5) for label, track in tracks.items()}
+sounds = {
+    label: finish(so.world_synthesize(higher[label], envelopes[label], aperiodicities[label]))
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, &quot;F0 × 1.5, formants kept&quot;, higher)
+changed[&quot;F0 × 1.5&quot;] = (sounds, higher)</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc4" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc4">
   <div class="about">
     <h3>Higher formants</h3>
-    <div class="desc"><p>The formants times 1.2, the pitch as it was. The harmonics are where they were; the formants
-sit a fifth higher in frequency.</p></div>
-    <audio controls preload="metadata" src="audio/vc4_higher_formants.flac"></audio>
-    <p class="file">vc4_higher_formants.flac, 2.5 s, mono</p>
+    <div class="desc"><p>The formants times 1.2, the pitch as it was. The harmonics are where they were; the formants sit
+20% higher in frequency.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc4_higher_formants_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2704051741262039, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3585193030841113, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc4_higher_formants_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc4_higher_formants_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc4_higher_formants_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc4_higher_formants.png" width="1000" height="420" alt="Plots of the higher formants sound" loading="lazy">
+    <img src="img/vc4_higher_formants.png" width="1000" height="440" alt="Plots of the higher formants sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(harvest, so.warp_frequency(envelope, 1.2), aperiodicity))
-fig, playhead = show(sound, &quot;formants × 1.2, F0 kept&quot;, harvest)
-report(sound, harvest)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.world_synthesize(tracks[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label])
+    )
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, &quot;formants × 1.2, F0 kept&quot;, tracks)
+changed[&quot;formants × 1.2&quot;] = (sounds, tracks)</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc5" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc5">
   <div class="about">
     <h3>Higher pitch and formants</h3>
     <div class="desc"><p>Both: the pitch times 1.5 and the formants times 1.2.</p></div>
-    <audio controls preload="metadata" src="audio/vc5_higher_pitch_and_formants.flac"></audio>
-    <p class="file">vc5_higher_pitch_and_formants.flac, 2.5 s, mono</p>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc5_higher_pitch_and_formants_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc5_higher_pitch_and_formants_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc5_higher_pitch_and_formants_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc5_higher_pitch_and_formants_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc5_higher_pitch_and_formants.png" width="1000" height="420" alt="Plots of the higher pitch and formants sound" loading="lazy">
+    <img src="img/vc5_higher_pitch_and_formants.png" width="1000" height="440" alt="Plots of the higher pitch and formants sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(higher, so.warp_frequency(envelope, 1.2), aperiodicity))
-fig, playhead = show(sound, &quot;F0 × 1.5, formants × 1.2&quot;, higher)
-report(sound, higher)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.world_synthesize(higher[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label])
+    )
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, &quot;F0 × 1.5, formants × 1.2&quot;, higher)
+changed[&quot;both&quot;] = (sounds, higher)</code></pre></details>
 </article>
+<p>Measured on each output: the pitch ratio, and the fitted warp of its envelope against the
+original's.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">report(changed)</code></pre></details><pre class="out">                                             pitch ratio fitted warp
+nothing changed, male talker                       0.995       1.005
+nothing changed, female talker                     1.001       1.005
+F0 × 1.5, male talker                              1.485       1.005
+F0 × 1.5, female talker                            1.504       1.010
+formants × 1.2, male talker                        0.994       1.205
+formants × 1.2, female talker                      1.000       1.205
+both, male talker                                  1.483       1.200
+both, female talker                                1.503       1.210</pre></div>
 <p>Each change shows up in its own measurement and not in the other's. What the warp does to one
 time window's envelope, drawn on a linear frequency axis where a ratio stretches it from 0 Hz:
-every feature moves up by the same proportion, so the higher formants move further in hertz.</p>
+every feature moves up by the same proportion, so the higher formants move farther in hertz.</p>
 
 <article class="still" id="d-vc6">
   <div class="about">
@@ -422,113 +857,196 @@ every feature moves up by the same proportion, so the higher formants move furth
     <div class="desc"></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc6_one_envelope_warped.png" width="1000" height="320" alt="One envelope, warped" loading="lazy">
+    <img src="img/vc6_one_envelope_warped.png" width="1000" height="340" alt="One envelope, warped" loading="lazy">
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">window = np.argmax(envelope.data[0].sum(axis=0) * voiced)  # the strongest voiced time window
-fig, ax = plt.subplots(figsize=(10, 3.2), layout=&quot;constrained&quot;)
-for ratio, color in [(1.0, &quot;k&quot;), (1.2, &quot;C3&quot;)]:
-    view = so.warp_frequency(envelope, ratio)
-    level = 10 * np.log10(view(harvest_times[window : window + 1], envelope.f)[0, :, 0])
-    ax.plot(envelope.f, level, color=color, label=f&quot;warp ratio {ratio:g}&quot;)
-harmonics = 1.5 * harvest_f0[window] * np.arange(1, 40)
-ax.vlines(harmonics, -100, 100, color=&quot;C0&quot;, lw=0.5, alpha=0.5, label=&quot;harmonics of F0 × 1.5&quot;)
-top = 10 * np.log10(envelope.data[0, :, window].max()) + 5
-ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Level (dB)&quot;, xlim=(0, 6000), ylim=(top - 70, top))
-ax.set_title(f&quot;CheapTrick&#x27;s envelope at {harvest_times[window]:.2f} s, and the same read at f / 1.2&quot;)
-ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, axes = plt.subplots(1, 2, figsize=(10, 3.4), layout=&quot;constrained&quot;, sharey=False)
+for ax, (label, envelope) in zip(axes, envelopes.items(), strict=True):
+    track = tracks[label]
+    window = np.argmax(envelope.data[0].sum(axis=0) * track.voiced[0])  # the strongest voiced time window
+    for ratio, color in [(1.0, &quot;k&quot;), (1.2, &quot;C3&quot;)]:
+        level = 10 * np.log10(
+            so.warp_frequency(envelope, ratio)(track.t[window : window + 1], frequencies)[0, :, 0]
+        )
+        ax.plot(frequencies, level, color=color, label=f&quot;warp ratio {ratio:g}&quot;)
+    top = 10 * np.log10(envelope.data[0, :, window].max()) + 5
+    ax.vlines(
+        1.5 * track.f0[0][window] * np.arange(1, 40),
+        top - 70,
+        top,
+        color=&quot;C0&quot;,
+        lw=0.5,
+        alpha=0.5,
+        label=&quot;harmonics of F0 × 1.5&quot;,
+    )
+    ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Level (dB)&quot;, xlim=(0, 6000), ylim=(top - 70, top))
+    ax.set_title(f&quot;{label}: CheapTrick at {track.t[window]:.2f} s, and read at f / 1.2&quot;)
+    ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-the-phase-vocoder-moves-both">
 <h2 id="h-the-phase-vocoder-moves-both">The phase vocoder moves both</h2>
-<p>The <a href="pv.html">Phase vocoder</a> page changes pitch the classic way: stretch the sound in time,
-then resample it back to its length. Resampling scales every frequency in the sound, so the
-envelope moves with the harmonics, as the measurement shows.</p>
+<p>The <a href="pv.html">Phase vocoder</a> page changes pitch the classic way: stretch the sound in time, then
+resample it back to its length. Resampling scales every frequency in the sound, so the envelope
+moves with the harmonics: <a href="pv.html#d-p3">The sentence up a fifth</a> there moves pitch and formants
+together, where <a href="#d-vc3">Higher pitch</a> here moves the pitch alone. The measurement shows it.</p>
 
-<article class="sound" id="d-vc7" data-regions="[{&quot;x0&quot;: 0.052447707465277785, &quot;x1&quot;: 0.995166851313599, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.2907632147900677, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.052447707465277785, &quot;x1&quot;: 0.995166851313599, &quot;top&quot;: 0.3711815595879888, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound pair" id="d-vc7">
   <div class="about">
     <h3>Phase vocoder, a fifth up</h3>
-    <div class="desc"><p>The sentence a fifth higher by <code>so.pitch_shift</code>: time stretch and resampling.</p></div>
-    <audio controls preload="metadata" src="audio/vc7_phase_vocoder_a_fifth_up.flac"></audio>
-    <p class="file">vc7_phase_vocoder_a_fifth_up.flac, 2.5 s, mono</p>
+    <div class="desc"><p>Each sentence a fifth higher by <code>so.pitch_shift</code>: time stretch and resampling.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc7_phase_vocoder_a_fifth_up_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.27114117024399265, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3566793127896397, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc7_phase_vocoder_a_fifth_up_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc7_phase_vocoder_a_fifth_up_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">vc7_phase_vocoder_a_fifth_up_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc7_phase_vocoder_a_fifth_up.png" width="1000" height="420" alt="Plots of the phase vocoder, a fifth up sound" loading="lazy">
+    <img src="img/vc7_phase_vocoder_a_fifth_up.png" width="1000" height="440" alt="Plots of the phase vocoder, a fifth up sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.pitch_shift(sentence, 12 * np.log2(1.5)))
-fig, playhead = show(sound, &quot;so.pitch_shift, a fifth up&quot;)
-report(sound, higher)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(so.pitch_shift(snd, 12 * np.log2(1.5))) for label, snd in talkers.items()}
+fig, playhead = show_pair(sounds, &quot;so.pitch_shift, a fifth up&quot;)
+changed[&quot;so.pitch_shift, a fifth up&quot;] = (sounds, higher)</code></pre></details>
 </article>
+<p>Measured as above, beside <a href="#d-vc3">Higher pitch</a>:</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">report({name: changed[name] for name in (&quot;F0 × 1.5&quot;, &quot;so.pitch_shift, a fifth up&quot;)})</code></pre></details><pre class="out">                                             pitch ratio fitted warp
+F0 × 1.5, male talker                              1.485       1.005
+F0 × 1.5, female talker                            1.504       1.010
+so.pitch_shift, a fifth up, male talker            1.498       1.500
+so.pitch_shift, a fifth up, female talker          1.503       1.500</pre></div>
+<p>Both raise the pitch by about 1.5. The phase vocoder's fitted warp follows its pitch ratio, so
+the formants went up a fifth too; WORLD's stays near 1.</p>
 </section>
 <section aria-labelledby="h-pitch-range">
 <h2 id="h-pitch-range">Pitch range</h2>
 <p><code>so.scale_f0</code> has a second argument, <code>range</code>, that spreads the contour around its median on a
-log scale: <span class="tex">\text{median} \times \text{ratio} \times (F_0 / \text{median})^{\text{range}}</span>. A range
-of 0 is a monotone at the median, and 2 doubles every interval from it. The formants and the
-aperiodicity are left as they were.</p>
+log scale: <span class="tex">\text{median} \times \text{ratio} \times (F_0 / \text{median})^{\text{range}}</span>. A
+range of 0 is a monotone at the median, and 2 doubles every interval from it. A range of <span class="tex">-1</span>,
+which <code>so.scale_f0</code> does not take, flips the contour: <span class="tex">\text{median}^2 / F_0</span>, so where the talker
+rises, the flipped contour falls by the same musical interval. The formants and the aperiodicity
+are left as they were.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">ranges = {
+    &quot;range 1 (the sentence)&quot;: tracks,
+    &quot;range 0&quot;: {label: so.scale_f0(track, 1.0, range=0.0) for label, track in tracks.items()},
+    &quot;range 2&quot;: {label: so.scale_f0(track, 1.0, range=2.0) for label, track in tracks.items()},
+    &quot;flipped&quot;: {
+        label: (
+            track.t,
+            np.where(track.voiced[0], medians[label] ** 2 / np.where(track.voiced[0], track.f0[0], 1), 0),
+        )
+        for label, track in tracks.items()
+    },
+}
+
+
+def on_contours(contours):
+    &quot;&quot;&quot;Each talker&#x27;s WORLD resynthesis on another contour, envelope and aperiodicity kept.&quot;&quot;&quot;
+    return {
+        label: finish(so.world_synthesize(contours[label], envelopes[label], aperiodicities[label]))
+        for label in talkers
+    }</code></pre></details></div>
 
 <article class="still" id="d-vc8">
   <div class="about">
-    <h3>Three pitch ranges</h3>
+    <h3>Three pitch ranges and a flipped contour</h3>
     <div class="desc"></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc8_three_pitch_ranges.png" width="1000" height="300" alt="Three pitch ranges" loading="lazy">
+    <img src="img/vc8_three_pitch_ranges_and_a_flipped_contour.png" width="1000" height="360" alt="Three pitch ranges and a flipped contour" loading="lazy">
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">contours = {&quot;range 1 (the sentence)&quot;: harvest}
-contours[&quot;range 0&quot;] = so.scale_f0(harvest, 1.0, range=0.0)
-contours[&quot;range 2&quot;] = so.scale_f0(harvest, 1.0, range=2.0)
-fig, ax = plt.subplots(figsize=(10, 3.0), layout=&quot;constrained&quot;)
-for (label, (times, values)), color in zip(contours.items(), [&quot;k&quot;, &quot;C0&quot;, &quot;C3&quot;], strict=True):
-    ax.plot(times, np.where(values &gt; 0, values, np.nan), color=color, label=label)
-ax.set(xlabel=&quot;Time (s)&quot;, ylabel=&quot;F0 (Hz)&quot;, xlim=(0, sentence.duration))
-ax.set_yscale(&quot;log&quot;)
-ax.set_title(&quot;Harvest&#x27;s contour with its range around the median changed (log frequency axis)&quot;)
-ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, axes = plt.subplots(1, 2, figsize=(10, 3.6), layout=&quot;constrained&quot;, sharey=True)
+for ax, (label, snd) in zip(axes, talkers.items(), strict=True):
+    for (name, contours), color, style in zip(
+        ranges.items(), [&quot;k&quot;, &quot;C0&quot;, &quot;C3&quot;, &quot;C2&quot;], [&quot;-&quot;, &quot;-&quot;, &quot;-&quot;, &quot;--&quot;], strict=True
+    ):
+        ax.plot(*contour_of(contours[label]), color=color, ls=style, lw=1, label=name)
+    ax.set(
+        xlabel=&quot;Time (s)&quot;, xlim=(0, snd.duration), yscale=&quot;log&quot;, title=f&quot;{label}: so.f0_track, range changed&quot;
+    )
+    ax.set_yticks([50, 70, 100, 140, 200, 280, 400], [&quot;50&quot;, &quot;70&quot;, &quot;100&quot;, &quot;140&quot;, &quot;200&quot;, &quot;280&quot;, &quot;400&quot;])
+    ax.set_yticks([], minor=True)
+axes[0].set_ylabel(&quot;F0 (Hz), log scale&quot;)
+fig.legend(*axes[0].get_legend_handles_labels(), loc=&quot;outside lower center&quot;, ncols=4, fontsize=8)</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc9" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc9">
   <div class="about">
     <h3>Monotone</h3>
-    <div class="desc"><p>A monotone: every voiced time window at the median F0.</p></div>
-    <audio controls preload="metadata" src="audio/vc9_monotone.flac"></audio>
-    <p class="file">vc9_monotone.flac, 2.5 s, mono</p>
+    <div class="desc"><p>A monotone: every voiced time window at the talker's median F0. The words are all there,
+without the rises and falls that mark the stressed syllables.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc9_monotone_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc9_monotone_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc9_monotone_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc9_monotone_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc9_monotone.png" width="1000" height="420" alt="Plots of the monotone sound" loading="lazy">
+    <img src="img/vc9_monotone.png" width="1000" height="440" alt="Plots of the monotone sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(contours[&quot;range 0&quot;], envelope, aperiodicity))
-fig, playhead = show(sound, &quot;range 0: a monotone&quot;, contours[&quot;range 0&quot;])</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = on_contours(ranges[&quot;range 0&quot;])
+fig, playhead = show_pair(sounds, &quot;range 0, a monotone&quot;, ranges[&quot;range 0&quot;])</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc10" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc10">
   <div class="about">
     <h3>Twice the range</h3>
     <div class="desc"><p>The range doubled: every rise and fall around the median twice as large, in musical intervals.</p></div>
-    <audio controls preload="metadata" src="audio/vc10_twice_the_range.flac"></audio>
-    <p class="file">vc10_twice_the_range.flac, 2.5 s, mono</p>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc10_twice_the_range_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc10_twice_the_range_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc10_twice_the_range_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc10_twice_the_range_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc10_twice_the_range.png" width="1000" height="420" alt="Plots of the twice the range sound" loading="lazy">
+    <img src="img/vc10_twice_the_range.png" width="1000" height="440" alt="Plots of the twice the range sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(contours[&quot;range 2&quot;], envelope, aperiodicity))
-fig, playhead = show(sound, &quot;range 2: every interval from the median doubled&quot;, contours[&quot;range 2&quot;])</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = on_contours(ranges[&quot;range 2&quot;])
+fig, playhead = show_pair(sounds, &quot;range 2, intervals doubled&quot;, ranges[&quot;range 2&quot;])</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hm3">
+  <div class="about">
+    <h3>The contour flipped</h3>
+    <div class="desc"><p>The contour flipped around the median on a log scale.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hm3_the_contour_flipped_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hm3_the_contour_flipped_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hm3_the_contour_flipped_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">hm3_the_contour_flipped_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hm3_the_contour_flipped.png" width="1000" height="440" alt="Plots of the the contour flipped sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = on_contours(ranges[&quot;flipped&quot;])
+fig, playhead = show_pair(sounds, &quot;contour flipped around the median&quot;, ranges[&quot;flipped&quot;])</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-the-aperiodicity">
 <h2 id="h-the-aperiodicity">The aperiodicity</h2>
-<p>The aperiodicity says, frequency by frequency, how much of the voice is noise. When the
-formants move, it can stay where it is or move with them, and <code>so.warp_frequency</code> warps it the
-same way as an envelope. Which is right depends on where the noise comes from. Noise made at
-the source (breath at the glottis) passes through the formants like the harmonics do, so its
-share at each frequency belongs to the source and should stay. A share that follows the
-formants should move with them. Both are on offer; <code>so.warp_frequency(aperiodicity, ratio)</code> is
-the second.</p>
-<p>D4C's aperiodicity of this sentence has one bend, at 3 kHz (see
-<a href="aperiodicity.html#h-what-world-reports">What WORLD reports</a>), and a warp by 1.2 moves the bend
-to 3.6 kHz. Averaged in dB over voiced time windows, kept and warped:</p>
+<p>When the formants move, the aperiodicity can stay where it is or move with them, and
+<code>so.warp_frequency</code> warps it the same way as an envelope. Which is right depends on where the
+noise comes from. Noise made at the source (breath at the glottis) passes through the formants
+like the harmonics do, so its share at each frequency belongs to the source and should stay. A
+share that follows the formants should move with them. Both are on offer;
+<code>so.warp_frequency(aperiodicity, ratio)</code> is the second.</p>
+<p>At 16 kHz, D4C's aperiodicity has one bend, at 3 kHz (see
+<a href="aperiodicity.html#h-what-world-reports">What WORLD reports</a>), and a warp by 1.2 moves the bend to
+3.6 kHz. Averaged in dB over voiced time windows, kept and warped:</p>
 
 <article class="still" id="d-vc11">
   <div class="about">
@@ -536,138 +1054,237 @@ to 3.6 kHz. Averaged in dB over voiced time windows, kept and warped:</p>
     <div class="desc"></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc11_the_aperiodicity_kept_and_warped.png" width="1000" height="300" alt="The aperiodicity, kept and warped" loading="lazy">
+    <img src="img/vc11_the_aperiodicity_kept_and_warped.png" width="1000" height="320" alt="The aperiodicity, kept and warped" loading="lazy">
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">kept_db = mean_voiced_db(aperiodicity, harvest_times, voiced)
-warped_aperiodicity = so.warp_frequency(aperiodicity, 1.2)
-warped_db = mean_voiced_db(warped_aperiodicity, harvest_times, voiced)
-fig, ax = plt.subplots(figsize=(10, 3.0), layout=&quot;constrained&quot;)
-ax.plot(envelope.f, kept_db, color=&quot;k&quot;, label=&quot;kept&quot;)
-ax.plot(envelope.f, warped_db, color=&quot;C3&quot;, label=&quot;warped by 1.2&quot;)
-ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Share of noise (dB)&quot;, xlim=(0, 8000))
-ax.set_title(&quot;D4C&#x27;s aperiodicity of the sentence, mean over voiced time windows&quot;)
-ax.legend(loc=&quot;lower right&quot;, fontsize=8)
-largest = np.max(np.abs(warped_db - kept_db)[envelope.f &lt;= 5000])
-print(f&quot;largest difference below 5 kHz: {largest:.1f} dB&quot;)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">warped_aperiodicities = {label: so.warp_frequency(view, 1.2) for label, view in aperiodicities.items()}
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.2), layout=&quot;constrained&quot;, sharey=True)
+for ax, label in zip(axes, talkers, strict=True):
+    kept_db = mean_voiced_db(aperiodicities[label], label)
+    warped_db = mean_voiced_db(warped_aperiodicities[label], label)
+    ax.plot(frequencies, kept_db, color=&quot;k&quot;, label=&quot;kept&quot;)
+    ax.plot(frequencies, warped_db, color=&quot;C3&quot;, label=&quot;warped by 1.2&quot;)
+    ax.set(xlabel=&quot;Frequency (Hz)&quot;, xlim=(0, 8000), title=f&quot;{label}: D4C, mean over voiced time windows&quot;)
+    ax.legend(loc=&quot;lower right&quot;, fontsize=8)
+axes[0].set_ylabel(&quot;Share of noise (dB)&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc12" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc12">
   <div class="about">
     <h3>Higher formants, aperiodicity warped</h3>
     <div class="desc"><p>The formants times 1.2 with the aperiodicity warped too. The other formant changes on this page
-keep it.</p></div>
-    <audio controls preload="metadata" src="audio/vc12_higher_formants_aperiodicity_warped.flac"></audio>
-    <p class="file">vc12_higher_formants_aperiodicity_warped.flac, 2.5 s, mono</p>
+keep it; compare <a href="#d-vc4">Higher formants</a>.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc12_higher_formants_aperiodicity_warped_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc12_higher_formants_aperiodicity_warped_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc12_higher_formants_aperiodicity_warped_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc12_higher_formants_aperiodicity_warped_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc12_higher_formants_aperiodicity_warped.png" width="1000" height="420" alt="Plots of the higher formants, aperiodicity warped sound" loading="lazy">
+    <img src="img/vc12_higher_formants_aperiodicity_warped.png" width="1000" height="440" alt="Plots of the higher formants, aperiodicity warped sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(harvest, so.warp_frequency(envelope, 1.2), warped_aperiodicity))
-fig, playhead = show(sound, &quot;formants × 1.2, aperiodicity warped by 1.2&quot;, harvest)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.world_synthesize(
+            tracks[label], so.warp_frequency(envelopes[label], 1.2), warped_aperiodicities[label]
+        )
+    )
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, &quot;formants and aperiodicity × 1.2&quot;, tracks)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-toward-another-talker">
 <h2 id="h-toward-another-talker">Toward another talker</h2>
-<p>The same sentence read by a female talker (speaker slt). Female voices are higher, and female
-vocal tracts are on average shorter, so their formants are higher. Hillenbrand et al. (1995)
-measured F1 to F3 of American English vowels of male and female talkers; for the vowels of "heed",
-"hod" and "who'd", the female formants are 1.11 to 1.28 times the male ones, a geometric mean of
-1.174. The pitch ratio is measured on the two recordings.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">female = finish(so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)))
-female_track = so.f0_track(female)
-pitch_ratio = median_f0(female) / original_f0
-print(f&quot;median voiced F0: {original_f0:.0f} Hz (bdl), {median_f0(female):.0f} Hz (slt)&quot;)
-print(f&quot;pitch ratio: {pitch_ratio:.2f}&quot;)</code></pre></details><pre class="out">median voiced F0: 119 Hz (bdl), 183 Hz (slt)
-pitch ratio: 1.53</pre></div>
+<p>The two talkers differ in pitch and in their spectral envelopes, which <a href="talkers.html#h-spectral-envelopes">Two
+talkers</a> measures: averaged over voiced time windows, the
+female talker's envelope is close to the male talker's read at <span class="tex">f / r</span> for one ratio <span class="tex">r</span>, once a
+tilt (a straight line in dB over log frequency) is left free as well. The cell fits that ratio
+and tilt as that page does, and takes the pitch ratio as the ratio of the median F0s. The male
+talker is moved by the ratios and the tilt; the female talker by their inverses, the pitch
+divided by the pitch ratio, the envelope read at <span class="tex">f \times r</span> and the tilt reversed. Each talker
+is moved toward the other in three steps: the pitch, then the formants, then the tilt.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">toward = {&quot;Male talker&quot;: &quot;Female talker&quot;, &quot;Female talker&quot;: &quot;Male talker&quot;}
+pitch_ratio = medians[&quot;Female talker&quot;] / medians[&quot;Male talker&quot;]
+warp, tilt = fitted_warp(original_db[&quot;Female talker&quot;], original_db[&quot;Male talker&quot;], tilt=True)
+print(f&quot;pitch ratio {pitch_ratio:.3f}, fitted warp {warp:.3f}, tilt {tilt:+.1f} dB per octave&quot;)
+pitch_ratios = {&quot;Male talker&quot;: pitch_ratio, &quot;Female talker&quot;: 1 / pitch_ratio}
+warps = {&quot;Male talker&quot;: warp, &quot;Female talker&quot;: 1 / warp}
+tilts = {&quot;Male talker&quot;: tilt, &quot;Female talker&quot;: -tilt}
 
-<article class="sound" id="d-vc13" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]">
+
+def tilted(view, ratio, tilt):
+    &quot;&quot;&quot;An envelope warped by ratio, and tilted by tilt dB per octave (0 dB at 1 kHz).&quot;&quot;&quot;
+    warped = so.warp_frequency(view, ratio)
+
+    def envelope(t, f):
+        gain = 10 ** (tilt * np.log2(np.maximum(f, 50.0) / 1000) / 10)
+        return warped(t, f) * gain[None, :, None]
+
+    return envelope
+
+
+moved = {label: so.scale_f0(tracks[label], pitch_ratios[label]) for label in talkers}</code></pre></details><pre class="out">pitch ratio 1.529, fitted warp 1.220, tilt -3.3 dB per octave</pre></div>
+
+<article class="sound pair" id="d-vc14">
   <div class="about">
-    <h3>Female talker</h3>
-    <div class="desc"><p>The female talker's sentence, for reference, with <code>so.f0_track</code>'s contour.</p></div>
-    <audio controls preload="metadata" src="audio/vc13_female_talker.flac"></audio>
-    <p class="file">vc13_female_talker.flac, 2.6 s, mono</p>
+    <h3>Each at the other pitch</h3>
+    <div class="desc"><p>Each talker at the other talker's median pitch, the formants as they were. Compare the
+originals in <a href="#d-vc1">The sentence</a>.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc14_each_at_the_other_pitch_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc14_each_at_the_other_pitch_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc14_each_at_the_other_pitch_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc14_each_at_the_other_pitch_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc13_female_talker.png" width="1000" height="420" alt="Plots of the female talker sound" loading="lazy">
+    <img src="img/vc14_each_at_the_other_pitch.png" width="1000" height="440" alt="Plots of the each at the other pitch sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = female
-fig, playhead = show(sound, &quot;the sentence read by slt&quot;, (female_track.t, female_track.f0[0]))</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = on_contours(moved)
+fig, playhead = show_pair(sounds, {label: f&quot;F0 × {pitch_ratios[label]:.2f}&quot; for label in talkers}, moved)
+changed[&quot;pitch&quot;] = (sounds, moved)</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc14" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc15">
   <div class="about">
-    <h3>Male talker, female pitch</h3>
-    <div class="desc"><p>The male talker's sentence at the female median pitch, the formants as they were.</p></div>
-    <audio controls preload="metadata" src="audio/vc14_male_talker_female_pitch.flac"></audio>
-    <p class="file">vc14_male_talker_female_pitch.flac, 2.5 s, mono</p>
+    <h3>Each at the other pitch and formants</h3>
+    <div class="desc"><p>The same, with the formants moved by the fitted ratio.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc15_each_at_the_other_pitch_and_formants_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc15_each_at_the_other_pitch_and_formants_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc15_each_at_the_other_pitch_and_formants_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc15_each_at_the_other_pitch_and_formants_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc14_male_talker_female_pitch.png" width="1000" height="420" alt="Plots of the male talker, female pitch sound" loading="lazy">
+    <img src="img/vc15_each_at_the_other_pitch_and_formants.png" width="1000" height="440" alt="Plots of the each at the other pitch and formants sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">toward = so.scale_f0(harvest, pitch_ratio)
-sound = finish(so.world_synthesize(toward, envelope, aperiodicity))
-fig, playhead = show(sound, f&quot;bdl, F0 × {pitch_ratio:.2f}&quot;, toward)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.world_synthesize(
+            moved[label], so.warp_frequency(envelopes[label], warps[label]), aperiodicities[label]
+        )
+    )
+    for label in talkers
+}
+titles = {label: f&quot;F0 × {pitch_ratios[label]:.2f}, formants × {warps[label]:.2f}&quot; for label in talkers}
+fig, playhead = show_pair(sounds, titles, moved)
+changed[&quot;pitch and formants&quot;] = (sounds, moved)</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc15" data-regions="[{&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0644477074652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]">
+<article class="sound pair" id="d-vc19">
   <div class="about">
-    <h3>Male talker, female pitch and formant ratio</h3>
-    <div class="desc"><p>The male talker's sentence at the female median pitch, with the formants times 1.174,
-Hillenbrand et al.'s ratio.</p></div>
-    <audio controls preload="metadata" src="audio/vc15_male_talker_female_pitch_and_formant_ratio.flac"></audio>
-    <p class="file">vc15_male_talker_female_pitch_and_formant_ratio.flac, 2.5 s, mono</p>
+    <h3>Each at the other pitch, formants and tilt</h3>
+    <div class="desc"><p>The same, with the fitted tilt as well.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc19_each_at_the_other_pitch_formants_and_tilt_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc19_each_at_the_other_pitch_formants_and_tilt_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc19_each_at_the_other_pitch_formants_and_tilt_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.271399586682587, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35603327169315335, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc19_each_at_the_other_pitch_formants_and_tilt_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc15_male_talker_female_pitch_and_formant_ratio.png" width="1000" height="420" alt="Plots of the male talker, female pitch and formant ratio sound" loading="lazy">
+    <img src="img/vc19_each_at_the_other_pitch_formants_and_tilt.png" width="1000" height="440" alt="Plots of the each at the other pitch, formants and tilt sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.world_synthesize(toward, so.warp_frequency(envelope, 1.174), aperiodicity))
-fig, playhead = show(sound, f&quot;bdl, F0 × {pitch_ratio:.2f}, formants × 1.174&quot;, toward)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.world_synthesize(
+            moved[label], tilted(envelopes[label], warps[label], tilts[label]), aperiodicities[label]
+        )
+    )
+    for label in talkers
+}
+titles = {
+    label: f&quot;F0 × {pitch_ratios[label]:.2f}, formants × {warps[label]:.2f}, tilt {tilts[label]:+.1f} dB/oct&quot;
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, titles, moved)
+changed[&quot;pitch, formants and tilt&quot;] = (sounds, moved)</code></pre></details>
 </article>
-<p>One ratio does not turn one talker's average envelope into another's. Fitting the ratio that
-takes the male average voiced envelope closest to the female one gives a much larger number than the formant
-studies do. The two envelopes also differ in slope, which no warp can change; letting a straight
-line in dB over log frequency absorb the slope brings the ratio back near Hillenbrand et al.'s.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">female_db = mean_voiced_db(so.cheaptrick(female, female_track), female_track.t, female_track.voiced[0])
-for label, slope in [(&quot;level free&quot;, False), (&quot;level and slope free&quot;, True)]:
-    ratio, residual = fitted_warp(female_db, original_db, slope=slope)
-    print(f&quot;fitted warp, {label}: {ratio:.3f} (residual {residual:.2f} dB)&quot;)
-print(f&quot;residual at 1.174, level free: {misfit(female_db, original_db, 1.174):.2f} dB&quot;)</code></pre></details><pre class="out">fitted warp, level free: 1.665 (residual 4.55 dB)
-fitted warp, level and slope free: 1.205 (residual 2.81 dB)
-residual at 1.174, level free: 5.20 dB</pre></div>
+<p>Measured on each step: the pitch ratio and the fitted warp against the talker's own original,
+as above. Then how far each step's average envelope is from the other talker's: the RMS of the
+difference in dB, level removed, over 100 to 5000 Hz and over 100 to 4000 Hz, starting from the
+originals.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">steps = [&quot;pitch&quot;, &quot;pitch and formants&quot;, &quot;pitch, formants and tilt&quot;]
+report({name: changed[name] for name in steps})
 
-<article class="still" id="d-vc16">
-  <div class="about">
-    <h3>The male average envelope, warped, and the female one</h3>
-    <div class="desc"></div>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/vc16_the_male_average_envelope_warped_and_the_female_one.png" width="1000" height="320" alt="The male average envelope, warped, and the female one" loading="lazy">
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(10, 3.2), layout=&quot;constrained&quot;)
-for curve, color, label in [
-    (original_db, &quot;k&quot;, &quot;bdl&quot;),
-    (np.interp(envelope.f / 1.174, envelope.f, original_db), &quot;C3&quot;, &quot;bdl read at f / 1.174&quot;),
-    (female_db, &quot;C0&quot;, &quot;slt&quot;),
-]:
-    shift = np.mean(curve[scored] - original_db[scored])  # the same mean level over 100-5000 Hz
-    ax.plot(envelope.f, curve - shift, color=color, label=label)
-ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Level (dB)&quot;, xlim=(0, 6000))
-ax.set_title(&quot;CheapTrick&#x27;s envelope, mean over voiced time windows, levels matched over 100-5000 Hz&quot;)
-ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
-</article>
+
+def level_free_rms(a_db, b_db, top):
+    &quot;&quot;&quot;RMS dB between two average envelopes from 100 Hz to top, with the mean difference removed.&quot;&quot;&quot;
+    band = (frequencies &gt;= 100) &amp; (frequencies &lt;= top)
+    difference = a_db[band] - b_db[band]
+    return np.sqrt(np.mean((difference - difference.mean()) ** 2))
+
+
+for top in (5000, 4000):
+    print(f&quot;\nfrom the other talker&#x27;s average envelope, 100 to {top} Hz:&quot;)
+    for label, other in toward.items():
+        averages = [original_db[label]] + [
+            mean_voiced_db(so.cheaptrick(changed[name][0][label], changed[name][1][label]), label)
+            for name in steps
+        ]
+        distances = [level_free_rms(average, original_db[other], top) for average in averages]
+        print(f&quot;{label:14}&quot; + &quot;, &quot;.join(f&quot;{d:.1f}&quot; for d in distances) + &quot; dB&quot;)
+around_5k = (frequencies &gt;= 4500) &amp; (frequencies &lt;= 5500)
+print(&quot;\naverage envelope, dB re its mean over 100 to 5000 Hz:&quot;)
+for label, average in original_db.items():
+    relative = average - average[scored].mean()
+    lowest = np.argmin(np.where(around_5k, relative, np.inf))
+    at = {f: relative[np.argmin(np.abs(frequencies - f))] for f in (4000, 6000)}
+    print(
+        f&quot;{label:14}{at[4000]:+.1f} at 4 kHz, {relative[lowest]:+.1f} at {frequencies[lowest]:.0f} Hz &quot;
+        f&quot;(lowest from 4.5 to 5.5 kHz), {at[6000]:+.1f} at 6 kHz&quot;
+    )</code></pre></details><pre class="out">                                             pitch ratio fitted warp
+pitch, male talker                                 1.515       1.000
+pitch, female talker                               0.655       1.005
+pitch and formants, male talker                    1.512       1.220
+pitch and formants, female talker                  0.656       0.820
+pitch, formants and tilt, male talker              1.513       1.200
+pitch, formants and tilt, female talker            0.655       0.815
+
+from the other talker&#x27;s average envelope, 100 to 5000 Hz:
+Male talker   6.3, 6.2, 5.0, 3.1 dB
+Female talker 6.3, 6.3, 6.8, 7.5 dB
+
+from the other talker&#x27;s average envelope, 100 to 4000 Hz:
+Male talker   5.6, 5.6, 4.6, 3.0 dB
+Female talker 5.6, 5.6, 5.0, 3.1 dB
+
+average envelope, dB re its mean over 100 to 5000 Hz:
+Male talker   -7.7 at 4 kHz, -27.9 at 5094 Hz (lowest from 4.5 to 5.5 kHz), -16.8 at 6 kHz
+Female talker -9.3 at 4 kHz, -14.3 at 5078 Hz (lowest from 4.5 to 5.5 kHz), -12.1 at 6 kHz</pre></div>
+<p>The pitch step leaves the average envelopes where they were, as it should. The formant and tilt
+steps bring the male talker's average envelope closer to the female talker's. Moving the female
+talker by the inverse brings it closer to the male talker's below 4 kHz, but farther over the
+band up to 5 kHz: the male talker's average has a deep valley near 5 kHz that the female
+talker's lacks. Reading the male envelope at <span class="tex">f / r</span> moves that valley above 5 kHz, out of the
+band the ratio was fitted on; reading the female envelope at <span class="tex">f \times r</span> cannot make it. One
+ratio and one tilt fit the averages in one direction better than in the other.</p>
+<p>Two ratios and a tilt move the averages; they leave the shape of each formant, the voice
+quality, the aperiodicity, the timing and the accent as they were.</p>
 </section>
 <section aria-labelledby="h-any-pitch-track-any-envelope">
 <h2 id="h-any-pitch-track-any-envelope">Any pitch track, any envelope</h2>
-<p><code>so.world_synthesize</code> takes its own envelope as it is and reads any other envelope at its
-time windows and frequencies, so the pitch can come from one analysis and the envelope from
-another. Three pitch tracks, those of the <a href="cepstrum.html">Cepstral analysis</a> page: Harvest,
-<code>so.f0_track</code>, and the cepstral peak in each 40 ms window. Four envelopes: CheapTrick's, the
-cepstrum liftered at half the median period, and the envelope kept by 13 MFCCs (26 mel bands,
-Davis &amp; Mermelstein, 1980) with each band's triangle of height 1 (the default) or of area 1.
+<p><code>so.world_synthesize</code> takes its own envelope as it is and reads any other envelope at its time
+windows and frequencies, so the pitch can come from one analysis and the envelope from another.
+Three pitch tracks, those of <a href="pitch.html">Pitch tracking</a>: <code>so.f0_track</code>, Harvest (Morise, 2017)
+stored with each recording, and the cepstral peak in each 40 ms window (Noll, 1967). Four
+envelopes: CheapTrick's, the liftered cepstrum of <a href="#h-putting-the-envelope-back">the first part</a>,
+and the envelope kept by 13 MFCCs (26 mel bands, Davis &amp; Mermelstein, 1980; see <a href="cepstrum.html">Spectral
+envelope</a>) with each band's triangle of height 1 (the default) or of area 1.
 Triangles of height 1 sum more power the wider they are, so that envelope rises with frequency;
 area 1 removes most of the rise.</p>
 <p>A recording has no true envelope to score against, so the score is a distance between the
@@ -675,24 +1292,32 @@ original's and the resynthesis's 40-band log mel spectrograms: the RMS of their 
 dB per time window with the level removed, median over voiced time windows. It smooths the way
 the MFCC envelope does, so it favors that envelope; read it as a check, not a ranking.
 <code>tools/compare_voice_methods.py</code> also scores synthetic vowels against their true envelopes.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">cepstral_times, cepstral_f0, _ = so.Cepstrum(so.STFT(sentence, win_dur=0.040, hop_dur=0.005)).f0(
-    f_lo=75, f_hi=400
-)
-f0_track = so.f0_track(sentence)
-pitch_tracks = {
-    &quot;Harvest&quot;: harvest,
-    &quot;so.f0_track&quot;: f0_track,
-    &quot;cepstral&quot;: (cepstral_times, cepstral_f0[0]),
-}
-half_period = 0.5 / original_f0
-envelopes = {
-    &quot;CheapTrick&quot;: envelope,
-    &quot;cepstral&quot;: so.Cepstrum(so.STFT(sentence, win_dur=0.040, hop_dur=0.005))
-    .lifter(half_period)
-    .envelope_view(),
-    &quot;MFCC&quot;: so.MFCC(sentence).envelope_view(),
-    &quot;MFCC, area&quot;: so.MFCC(sentence, triangles=&quot;area&quot;).envelope_view(),
-}
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">pitch_tracks, mixed_envelopes, mixed_aperiodicities = {}, {}, {}
+for label, snd in talkers.items():
+    harvest = tuple(
+        np.loadtxt(fetch(f&quot;docs/speech/{SPEAKERS[label]}_arctic_a0131_f0.csv&quot;), delimiter=&quot;,&quot;, skiprows=2).T
+    )
+    cepstral_times, cepstral_f0, _ = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005)).f0(
+        f_lo=75, f_hi=400
+    )
+    pitch_tracks[label] = {
+        &quot;so.f0_track&quot;: tracks[label],
+        &quot;Harvest&quot;: harvest,
+        &quot;cepstral&quot;: (cepstral_times, cepstral_f0[0]),
+    }
+    mixed_envelopes[label] = {
+        &quot;CheapTrick&quot;: envelopes[label],
+        &quot;cepstral&quot;: cepstral[label],
+        &quot;MFCC&quot;: so.MFCC(snd).envelope_view(),
+        &quot;MFCC, area&quot;: so.MFCC(snd, triangles=&quot;area&quot;).envelope_view(),
+    }
+    # D4C needs a track on time windows that start at 0 s, which the cepstral track&#x27;s do not, so
+    # the cepstral pitch is resynthesized with the aperiodicity measured on so.f0_track&#x27;s.
+    mixed_aperiodicities[label] = {
+        &quot;so.f0_track&quot;: aperiodicities[label],
+        &quot;Harvest&quot;: so.d4c(snd, harvest),
+        &quot;cepstral&quot;: aperiodicities[label],
+    }
 
 
 def log_mel(snd):
@@ -700,93 +1325,133 @@ def log_mel(snd):
     return so.MFCC(snd, n_mels=40).mel_db[0]
 
 
-original_mel = log_mel(sentence)
-mel_times = so.MFCC(sentence).t
-mel_voiced = np.interp(mel_times, harvest_times, voiced.astype(float)) &gt; 0.5
-
-
-def distance(snd):
-    &quot;&quot;&quot;Level-free RMS dB between the log mel spectrograms, median over voiced time windows.&quot;&quot;&quot;
+def distance(snd, label):
+    &quot;&quot;&quot;Level-free RMS dB between the log mel spectrograms of snd and the talker&#x27;s recording,
+    median over the recording&#x27;s voiced time windows.&quot;&quot;&quot;
+    original = log_mel(talkers[label])
+    track = tracks[label]
+    mel_voiced = np.interp(so.MFCC(talkers[label]).t, track.t, track.voiced[0].astype(float)) &gt; 0.5
     resynthesized = log_mel(snd)
-    count = min(original_mel.shape[1], resynthesized.shape[1])
-    difference = (resynthesized[:, :count] - original_mel[:, :count])[:, mel_voiced[:count]]
+    count = min(original.shape[1], resynthesized.shape[1])
+    difference = (resynthesized[:, :count] - original[:, :count])[:, mel_voiced[:count]]
     return np.median(np.sqrt(np.mean((difference - difference.mean(axis=0)) ** 2, axis=0)))
 
 
-# D4C needs a track on time windows that start at 0 s, which the cepstral track&#x27;s do not, so
-# the cepstral pitch is resynthesized with the aperiodicity D4C measures on so.f0_track&#x27;s.
-aperiodicities = {&quot;Harvest&quot;: aperiodicity, &quot;so.f0_track&quot;: so.d4c(sentence, f0_track)}
-aperiodicities[&quot;cepstral&quot;] = aperiodicities[&quot;so.f0_track&quot;]
-print(f&quot;{&#x27;pitch from&#x27;:&lt;14}&quot; + &quot;&quot;.join(f&quot;{name:&gt;13}&quot; for name in envelopes))
-for track_name, track in pitch_tracks.items():
-    track_aperiodicity = aperiodicities[track_name]
-    scores = [distance(so.world_synthesize(track, view, track_aperiodicity)) for view in envelopes.values()]
-    print(f&quot;{track_name:&lt;14}&quot; + &quot;&quot;.join(f&quot;{score:&gt;10.2f} dB&quot; for score in scores))</code></pre></details><pre class="out">pitch from       CheapTrick     cepstral         MFCC   MFCC, area
-Harvest             1.83 dB      3.05 dB      4.62 dB      3.16 dB
-so.f0_track         2.03 dB      3.20 dB      4.79 dB      3.39 dB
-cepstral            2.19 dB      3.37 dB      4.95 dB      3.43 dB</pre></div>
+for label in talkers:
+    print(f&quot;{label}\n{&#x27;  pitch from&#x27;:&lt;14}&quot; + &quot;&quot;.join(f&quot;{name:&gt;13}&quot; for name in mixed_envelopes[label]))
+    for track_name, track in pitch_tracks[label].items():
+        aperiodicity = mixed_aperiodicities[label][track_name]
+        scores = [
+            distance(so.world_synthesize(track, view, aperiodicity), label)
+            for view in mixed_envelopes[label].values()
+        ]
+        print(f&quot;  {track_name:&lt;12}&quot; + &quot;&quot;.join(f&quot;{score:&gt;10.2f} dB&quot; for score in scores))</code></pre></details><pre class="out">Male talker
+  pitch from     CheapTrick     cepstral         MFCC   MFCC, area
+  so.f0_track       1.71 dB      2.96 dB      4.62 dB      3.13 dB
+  Harvest           1.62 dB      2.85 dB      4.57 dB      3.05 dB
+  cepstral          1.88 dB      3.15 dB      4.69 dB      3.27 dB
+Female talker
+  pitch from     CheapTrick     cepstral         MFCC   MFCC, area
+  so.f0_track       2.05 dB      5.13 dB      5.10 dB      3.52 dB
+  Harvest           1.99 dB      5.12 dB      5.06 dB      3.50 dB
+  cepstral          2.25 dB      5.13 dB      5.10 dB      3.51 dB</pre></div>
+<p>CheapTrick's envelope scores best for both talkers, whichever track drives it. The liftered
+cepstrum scores worse for the female talker than for the male talker: with the harmonics farther
+apart, the lifter has to cut lower (see <a href="cepstrum.html">Spectral envelope</a>).</p>
 <p>The cepstral track's time windows start before 0 s, so it cannot drive D4C, whose time windows
-must start at 0 s. <code>so.world_synthesize</code> reads it onto the aperiodicity's time windows, so it
-can drive the synthesis.</p>
+must start at 0 s. <code>so.world_synthesize</code> reads it onto the aperiodicity's time windows, so it can
+drive the synthesis.</p>
 
-<article class="sound" id="d-vc17" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952768512068342, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952768512068342, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound pair" id="d-vc17">
   <div class="about">
     <h3>Cepstral pitch, MFCC envelope</h3>
-    <div class="desc"><p>The pitch from the cepstrum and the envelope from the MFCCs (area 1); the only WORLD analysis
-is D4C's aperiodicity.</p></div>
-    <audio controls preload="metadata" src="audio/vc17_cepstral_pitch_mfcc_envelope.flac"></audio>
-    <p class="file">vc17_cepstral_pitch_mfcc_envelope.flac, 2.5 s, mono</p>
+    <div class="desc"><p>The pitch from the cepstrum and the envelope from the MFCCs (area 1); the only WORLD analysis is
+D4C's aperiodicity.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc17_cepstral_pitch_mfcc_envelope_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc17_cepstral_pitch_mfcc_envelope_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc17_cepstral_pitch_mfcc_envelope_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2714343877463701, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35594626903369564, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc17_cepstral_pitch_mfcc_envelope_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc17_cepstral_pitch_mfcc_envelope.png" width="1000" height="420" alt="Plots of the cepstral pitch, mfcc envelope sound" loading="lazy">
+    <img src="img/vc17_cepstral_pitch_mfcc_envelope.png" width="1000" height="440" alt="Plots of the cepstral pitch, mfcc envelope sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(
-    so.world_synthesize(pitch_tracks[&quot;cepstral&quot;], envelopes[&quot;MFCC, area&quot;], aperiodicities[&quot;cepstral&quot;])
-)
-fig, playhead = show(sound, &quot;cepstral F0, MFCC envelope (area 1)&quot;, pitch_tracks[&quot;cepstral&quot;])</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.world_synthesize(
+            pitch_tracks[label][&quot;cepstral&quot;],
+            mixed_envelopes[label][&quot;MFCC, area&quot;],
+            mixed_aperiodicities[label][&quot;cepstral&quot;],
+        )
+    )
+    for label in talkers
+}
+cepstral_tracks = {label: pitch_tracks[label][&quot;cepstral&quot;] for label in talkers}
+fig, playhead = show_pair(sounds, &quot;cepstral F0, MFCC envelope&quot;, cepstral_tracks)</code></pre></details>
 </article>
 
-<article class="sound" id="d-vc18" data-regions="[{&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952768512068342, &quot;top&quot;: 0.055953174603174505, &quot;bottom&quot;: 0.29168483575362614, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.04144770746527778, &quot;x1&quot;: 0.9952768512068342, &quot;top&quot;: 0.36913351300230324, &quot;bottom&quot;: 0.8929816488921958, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+<article class="sound pair" id="d-vc18">
   <div class="about">
     <h3>Cepstral pitch and MFCC envelope, both changed</h3>
     <div class="desc"><p>The same mixture with both changes: the cepstral pitch times 1.5 and the MFCC envelope times
 1.2.</p></div>
-    <audio controls preload="metadata" src="audio/vc18_cepstral_pitch_and_mfcc_envelope_both_changed.flac"></audio>
-    <p class="file">vc18_cepstral_pitch_and_mfcc_envelope_both_changed.flac, 2.5 s, mono</p>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/vc18_cepstral_pitch_and_mfcc_envelope_both_changed_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">vc18_cepstral_pitch_and_mfcc_envelope_both_changed_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/vc18_cepstral_pitch_and_mfcc_envelope_both_changed_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2705982136867261, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.358036704182806, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">vc18_cepstral_pitch_and_mfcc_envelope_both_changed_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/vc18_cepstral_pitch_and_mfcc_envelope_both_changed.png" width="1000" height="420" alt="Plots of the cepstral pitch and mfcc envelope, both changed sound" loading="lazy">
+    <img src="img/vc18_cepstral_pitch_and_mfcc_envelope_both_changed.png" width="1000" height="440" alt="Plots of the cepstral pitch and mfcc envelope, both changed sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">changed_track = so.scale_f0(pitch_tracks[&quot;cepstral&quot;], 1.5)
-changed_envelope = so.warp_frequency(envelopes[&quot;MFCC, area&quot;], 1.2)
-sound = finish(so.world_synthesize(changed_track, changed_envelope, aperiodicities[&quot;cepstral&quot;]))
-fig, playhead = show(sound, &quot;cepstral F0 × 1.5, MFCC envelope (area 1) × 1.2&quot;, changed_track)
-report(sound, so.scale_f0(f0_track, 1.5))</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">changed_tracks = {label: so.scale_f0(track, 1.5) for label, track in cepstral_tracks.items()}
+sounds = {
+    label: finish(
+        so.world_synthesize(
+            changed_tracks[label],
+            so.warp_frequency(mixed_envelopes[label][&quot;MFCC, area&quot;], 1.2),
+            mixed_aperiodicities[label][&quot;cepstral&quot;],
+        )
+    )
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, &quot;cepstral F0 × 1.5, MFCC envelope × 1.2&quot;, changed_tracks)
+changed[&quot;cepstral F0 × 1.5, MFCC × 1.2&quot;] = (sounds, higher)</code></pre></details>
 </article>
-<p>The same envelopes also go to <code>so.harmonic_complex</code> as <code>amplitudes</code>, which reads them at each
-harmonic's frequency and time exactly, with no noise; the
-<a href="harmonics.html">Voices from harmonics</a> page builds a voice that way. WORLD's synthesis turns
-each envelope into a short pulse on its own FFT (1024 points at 16 kHz), which suits a smooth
-envelope like CheapTrick's; an envelope with deep, narrow valleys comes out a few dB off at the
-harmonics there, and <code>so.harmonic_complex</code> is the better route for it.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">report({&quot;cepstral F0 × 1.5, MFCC × 1.2&quot;: changed[&quot;cepstral F0 × 1.5, MFCC × 1.2&quot;]})</code></pre></details><pre class="out">                                             pitch ratio fitted warp
+cepstral F0 × 1.5, MFCC × 1.2, male talker         1.516       1.215
+cepstral F0 × 1.5, MFCC × 1.2, female talker       1.508       1.225</pre></div>
+<p>WORLD's synthesis turns each envelope into a short pulse on its own FFT (1024 points at 16 kHz),
+which suits a smooth envelope like CheapTrick's; an envelope with deep, narrow valleys comes out
+a few dB off at the harmonics there, and <code>so.harmonic_complex</code>, as in
+<a href="#h-putting-the-envelope-back">the first part</a>, is the better route for it: it reads the envelope
+at each harmonic's frequency and time exactly.</p>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>Listening.</strong> The measurements say where the pitch and formants went, not whether the result is natural, nor who it sounds like.</li><li><strong>One talker into another.</strong> A pitch ratio and a formant ratio leave the spectral slope, the voice quality, the aperiodicity, the timing and the accent as they were.</li><li><strong>Ratios that change across frequency.</strong> Formants do not all move by the same ratio between talkers. <code>so.warp_frequency</code> also takes a ratio that changes over time, or any map from output frequency to source frequency, but this page uses one ratio throughout.</li><li><strong>The consonants.</strong> Where the track says unvoiced, WORLD's synthesis is noise shaped by the envelope, so a formant warp moves the noise of the fricatives too.</li></ul>
+<ul><li><strong>Listening.</strong> The measurements say where the pitch and formants went, not how the results sound, nor who they sound like.</li><li><strong>The glottal pulse.</strong> The harmonics' phases in the first part are fixed numbers, and WORLD makes each pulse minimum phase. A voice's phases come from the shape of each glottal pulse and the vocal tract's phase response (see <a href="formants.html">Formant synthesis</a>).</li><li><strong>One talker into another.</strong> A pitch ratio, a formant ratio and a tilt leave the voice quality, the aperiodicity, the timing and the accent as they were.</li><li><strong>Ratios that change across frequency.</strong> Formants do not all move by the same ratio between talkers. <code>so.warp_frequency</code> also takes a ratio that changes over time, or any map from output frequency to source frequency, but this page uses one ratio throughout.</li><li><strong>The consonants.</strong> Where the track says unvoiced, WORLD's synthesis is noise shaped by the envelope, so a formant warp moves the noise of the fricatives too.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Davis &amp; Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 28(4), 357–366. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L99"><code>mfcc.MFCC</code></a></li><li>Hillenbrand, Getty, Clark &amp; Wheeler (1995). Acoustic characteristics of American English vowels. <em>J. Acoust. Soc. Am.</em> 97(5), 3099–3111. <a href="https://doi.org/10.1121/1.411872">doi:10.1121/1.411872</a>. Male and female formants.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L217"><code>spectral_envelope.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L119"><code>aperiodicity.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68">doi:10.21437/Interspeech.2017-68</a>. The stored F0 track.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L233"><code>world.world_synthesize</code></a></li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L181"><code>cepstrum.Cepstrum.f0</code></a></li></ul>
+<ul><li>Davis &amp; Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 28(4), 357–366. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L99"><code>mfcc.MFCC</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L217"><code>spectral_envelope.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L119"><code>aperiodicity.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L233"><code>world.world_synthesize</code></a></li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L181"><code>cepstrum.Cepstrum.f0</code></a></li><li>Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. <em>IEEE Trans. Inf. Theory</em> 16(1), 85–89. <a href="https://doi.org/10.1109/TIT.1970.1054411">doi:10.1109/TIT.1970.1054411</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L376"><code>waveforms.schroeder_complex</code></a></li><li>Shannon, Zeng, Kamath, Wygonski &amp; Ekelid (1995). Speech recognition with primarily temporal cues. <em>Science</em> 270(5234), 303–304. <a href="https://doi.org/10.1126/science.270.5234.303">doi:10.1126/science.270.5234.303</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492"><code>envelopes.channel_vocode</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/voice/voice.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/voice/voice.py</code>, or a cell at a time.</footer>
 </main>
 </div>
 <script>
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -796,18 +1461,21 @@ harmonics there, and <code>so.harmonic_complex</code> is the better route for it
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
+    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
+    const canvas = extras && el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    const liveCanvas = el.querySelector(".live");
+    const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
       live = JSON.parse(liveCanvas.dataset.live);
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
-      liveCanvas, live };
-  });
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -893,9 +1561,50 @@ harmonics there, and <code>so.harmonic_complex</code> is the better route for it
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
     g.fillText("dB", bx + bw + 2, top + h / 2);
   }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
   function draw(item) {
     drawScene(item);
     drawLive(item);
+    drawLissajous(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -913,28 +1622,44 @@ harmonics there, and <code>so.harmonic_complex</code> is the better route for it
       new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
     }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
       if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();

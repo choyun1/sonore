@@ -202,7 +202,7 @@ fig, playhead = show(sound)
 # %% [about]
 # The sentence up a fifth. Its formants have moved up with the pitch, so it sounds like a
 # smaller speaker, not the same speaker higher: keeping the formants in place needs the spectral
-# envelope separated from the harmonics first, as on the [Cepstral analysis](cepstrum.html) page.
+# envelope separated from the harmonics first, as on [Rebuilding and changing a voice](voice.html#d-vc3).
 
 # %% [demo p3] The sentence up a fifth
 sound = finish(so.pitch_shift(sentence, 7))

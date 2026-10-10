@@ -159,6 +159,8 @@ def test_gallery_pages_have_notebooks():
         if page == "index.html":
             continue
         html = (GALLERY / page).read_text()
+        if "<title>Moved</title>" in html:  # a page that forwards to where its material went
+            continue
         notebook = f"notebooks/{page.removesuffix('.html')}.ipynb"
         assert (GALLERY / notebook).exists(), f"{page} has no {notebook}"
         assert f'href="{notebook}"' in html, f"{page} does not link {notebook}"
