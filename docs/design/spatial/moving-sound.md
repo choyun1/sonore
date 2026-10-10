@@ -422,8 +422,8 @@ and should sound the same (C5).
 - Each ear's delay is the interpolated HRIR onset (less the few samples
   the aligned shapes keep before their onset), looked up every 1 ms and
   smoothed with a cubic spline. Each output sample's emission time is
-  found by fixed-point iteration to 1e-12 s, and the sound is read there
-  with the 32-tap Kaiser sinc. Measured on tones at 48 kHz, its error is
+  found to 1e-12 s (see the fast-paths item below for how), and the sound
+  is read there with the 32-tap Kaiser sinc. Measured on tones at 48 kHz, its error is
   about −90 dB up to 16 kHz and −78 dB at 20 kHz, rolling off above that,
   so C3's "flat −97 dB" holds only to about a third of the sampling rate.
 - Shapes are interpolated every `hop` along the path and cross-faded with
@@ -479,6 +479,19 @@ and should sound the same (C5).
   5 ms), shapes switched every 5 ms differ from shapes switched every
   0.0625 ms by −13 dB in the worst 20 ms window, and every 0.5 ms by
   −29 dB, so the gallery renders it with `hop=0.5e-3`.
+- Speed (numbers from `tools/check_move_sound_speed.py`). A 3 s render
+  at 44.1 kHz took 1.3 s, most of it spent outside the convolutions:
+  computing the windowed sinc afresh for every output sample, and testing
+  every lookup point against every triangle on its shell (about 1,580 on
+  PKU-IOA). The sinc is now tabulated at 512 fractions of a sample and
+  interpolated linearly between them; the result changes by −117 dB for
+  white noise, and the error on tones is the same as before (−95 dB at
+  1 kHz, −80 dB at 20 kHz). Each point is now tested only against the
+  triangles touching its three nearest measured directions, found with a
+  k-d tree, and against all of them only if none holds it; on 20,000
+  random directions per shell this picks the same triangles and weights.
+  The same render now takes 0.3 s. The convolutions, one per `hop` per
+  ear, were never the main cost.
 
 ## Order
 

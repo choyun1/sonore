@@ -39,7 +39,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.interpolate import CubicSpline
 from scipy.signal import fftconvolve, minimum_phase
-from scipy.spatial import ConvexHull
+from scipy.spatial import ConvexHull, cKDTree
 from scipy.special import i0
 
 from sonore.core.processing import _track
@@ -319,22 +319,57 @@ class HRIRSet:
         """The measured distances [m], nearest first."""
         return np.array([radius for radius, _, _ in self._shells])
 
-    def _direction_weights(self, shell: int, directions: np.ndarray, chunk: int = 256):
-        """Spherical barycentric weights on one shell: (indices (N, 3), weights (N, 3))."""
+    @cached_property
+    def _shell_neighbors(self) -> list[tuple[cKDTree, np.ndarray, np.ndarray]]:
+        """For each shell, what finding a direction's triangle needs: a k-d tree of
+        the measured directions and the triangles touching each, as one array of
+        triangle numbers with direction i's run starting at ``starts[i]``."""
+        neighbors = []
+        for _, triangles, _ in self._shells:
+            members = np.unique(triangles)
+            points = self.positions[members]
+            directions = points / np.linalg.norm(points, axis=1, keepdims=True)
+            corner = np.searchsorted(members, triangles).ravel()  # each corner's direction
+            order = np.argsort(corner, kind="stable")
+            touching = np.repeat(np.arange(len(triangles)), 3)[order]
+            starts = np.searchsorted(corner[order], np.arange(len(members) + 1))
+            neighbors.append((cKDTree(directions), touching, starts))
+        return neighbors
+
+    def _direction_weights(self, shell: int, directions: np.ndarray, n_nearest: int = 3):
+        """Spherical barycentric weights on one shell: (indices (N, 3), weights (N, 3)).
+        Each direction is tested only against the triangles touching its nearest
+        measured directions; those not inside any of them are tested against all."""
         _, triangles, inverse = self._shells[shell]
-        indices = np.empty((len(directions), 3), int)
-        weights = np.empty((len(directions), 3))
+        tree, touching, starts = self._shell_neighbors[shell]
+        _, nearest = tree.query(directions, k=n_nearest)
+        nearest = nearest.ravel()
+        counts = starts[nearest + 1] - starts[nearest]
+        point = np.repeat(np.repeat(np.arange(len(directions)), n_nearest), counts)
+        within_run = np.arange(counts.sum()) - np.repeat(np.cumsum(counts) - counts, counts)
+        candidate = touching[np.repeat(starts[nearest], counts) + within_run]
+        inside = np.all(np.einsum("cij,cj->ci", inverse[candidate], directions[point]) >= -1e-9, axis=-1)
+        # the lowest-numbered triangle holding the direction, as the search over all picks
+        triangle = np.full(len(directions), len(triangles))
+        np.minimum.at(triangle, point, np.where(inside, candidate, len(triangles)))
+        missed = triangle == len(triangles)
+        if missed.any():
+            triangle[missed] = self._search_all_triangles(shell, directions[missed])
+        found = np.einsum("nij,nj->ni", inverse[triangle], directions)
+        return triangles[triangle], found / found.sum(axis=1, keepdims=True)
+
+    def _search_all_triangles(self, shell: int, directions: np.ndarray, chunk: int = 256) -> np.ndarray:
+        """The lowest-numbered triangle of the shell holding each direction, shape (N,)."""
+        _, _, inverse = self._shells[shell]
+        triangle = np.empty(len(directions), int)
         for start in range(0, len(directions), chunk):
             block = slice(start, start + chunk)
             candidate = np.einsum("tij,nj->nti", inverse, directions[block])  # (n, T, 3)
             inside = np.all(candidate >= -1e-9, axis=-1)
             if not inside.any(axis=1).all():
                 raise ValueError("some directions are outside the measured sphere")
-            triangle = np.argmax(inside, axis=1)
-            found = candidate[np.arange(len(triangle)), triangle]
-            indices[block] = triangles[triangle]
-            weights[block] = found / found.sum(axis=1, keepdims=True)
-        return indices, weights
+            triangle[block] = np.argmax(inside, axis=1)
+        return triangle
 
     def _weights(self, points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Interpolation weights: (indices (N, k), weights (N, k)). On one
@@ -460,14 +495,30 @@ def spatialize(
 
 _READ_HALF_WIDTH = 16  # the windowed sinc spans 32 samples
 _READ_KAISER_BETA = 8.0
+_READ_PHASES = 512  # fractional positions at which the windowed sinc is tabulated
 _DELAY_STEP = 1e-3  # s; spacing at which ear delays are looked up before smoothing
+
+
+def _windowed_sinc_table() -> np.ndarray:
+    """The 32 taps of the Kaiser-windowed sinc for reading at a fraction
+    k / _READ_PHASES of a sample past a whole sample, k = 0 .. _READ_PHASES,
+    shape (_READ_PHASES + 1, 32)."""
+    fraction = np.arange(_READ_PHASES + 1) / _READ_PHASES
+    distance = fraction[:, None] - np.arange(-_READ_HALF_WIDTH + 1, _READ_HALF_WIDTH + 1)[None, :]
+    window = i0(_READ_KAISER_BETA * np.sqrt(np.clip(1 - (distance / _READ_HALF_WIDTH) ** 2, 0, None)))
+    return np.sinc(distance) * window / i0(_READ_KAISER_BETA)
+
+
+_SINC_TABLE = _windowed_sinc_table()
 
 
 def _read_between_samples(signal: np.ndarray, positions: np.ndarray, chunk: int = 32768) -> np.ndarray:
     """``signal`` read at fractional sample ``positions`` with a 32-sample
-    Kaiser-windowed sinc; zero outside the signal. For a tone, the error is
-    about -90 dB re the signal up to a third of the sampling rate and -78 dB
-    at 0.42 of it (20 kHz at 48 kHz); above that the sinc rolls off."""
+    Kaiser-windowed sinc; zero outside the signal. The taps are interpolated
+    linearly between 512 tabulated fractions of a sample, which changes the
+    result by -117 dB for white noise. For a tone, the error is about -90 dB re the
+    signal up to a third of the sampling rate and -80 dB at 0.42 of it
+    (20 kHz at 48 kHz); above that the sinc rolls off."""
     margin = 2 * _READ_HALF_WIDTH
     padded = np.concatenate([np.zeros(margin), signal, np.zeros(margin)])
     offsets = np.arange(-_READ_HALF_WIDTH + 1, _READ_HALF_WIDTH + 1)
@@ -478,10 +529,11 @@ def _read_between_samples(signal: np.ndarray, positions: np.ndarray, chunk: int 
     for start in range(0, len(inside), chunk):
         rows = inside[start : start + chunk]
         whole = np.floor(positions[rows]).astype(int)
-        distance = positions[rows, None] - (whole[:, None] + offsets[None, :])
-        window = i0(_READ_KAISER_BETA * np.sqrt(np.clip(1 - (distance / _READ_HALF_WIDTH) ** 2, 0, None)))
-        taps = np.sinc(distance) * window / i0(_READ_KAISER_BETA)
-        out[rows] = np.sum(padded[whole[:, None] + offsets[None, :] + margin] * taps, axis=1)
+        phase = (positions[rows] - whole) * _READ_PHASES
+        below = np.minimum(phase.astype(int), _READ_PHASES - 1)
+        above_share = (phase - below)[:, None]
+        taps = _SINC_TABLE[below] * (1 - above_share) + _SINC_TABLE[below + 1] * above_share
+        out[rows] = np.einsum("ij,ij->i", padded[whole[:, None] + offsets[None, :] + margin], taps)
     return out
 
 
