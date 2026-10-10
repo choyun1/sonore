@@ -170,7 +170,10 @@ def synthesize_like(name, classes=PAPER_CLASSES, seconds=5.0, iterations=30):
 # The plots: spectrogram, long-term spectrum, and three of the model's own statistics:
 # modulation power at each rate in each band (the model's modulation spectrum), envelope sparsity
 # $\sigma_k^2/\mu_k^2$, and modulation power averaged over bands. For syntheses, the original's is
-# overlaid in dashed black.
+# overlaid in dashed black. The model's modulation spectrum is band by band, over rate only; the
+# two-dimensional one of [Spectrotemporal ripples](ripples.html#h-how-a-ripple-is-made), with
+# density across bands as well, is measured for the crickets, applause and rain on [Modulation
+# spectrogram](modspectrogram.html#d-x1).
 
 # %% [about]
 # Steady rain (nick121087, Freesound, CC0).
@@ -280,7 +283,9 @@ fig, playhead = texture_fig(sound, original("wind_rain"), synthetic=True)
 # - the marginals plus `"mod_power"`, but no correlations across bands or modulation bands.
 #
 # Compare with the full syntheses above: the marginals alone give the right sparsity but not the
-# right rhythm or the coordination across bands.
+# right rhythm or the coordination across bands. [Hearing a modulation
+# spectrum](modtargets.html#d-mt15) makes the converse point with the fire: each band's
+# modulation spectrum kept, with random phases, and the crackles are gone.
 
 # %% [about]
 # Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band's envelope).
@@ -328,7 +333,7 @@ fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
 # ## References
 #
 # - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
-#   periphery. *Neuron* 71.
+#   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
 #   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
 #   [`filterbank.Cosine`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L139)

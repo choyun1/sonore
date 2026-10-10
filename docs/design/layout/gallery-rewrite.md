@@ -247,7 +247,12 @@ links. Recommendation: yes, added page by page in each group PR.
   target among male maskers (m2, m3, m4) and among female maskers (m10); the female maskers are
   LibriSpeech excerpts, since the corpus files hold no other female sentences. A paired demo can
   carry a view from above per talker (`scene = {...}`).
-- Demos whose code did not change keep their committed images and sounds.
+- Stimuli and Music: prose and links only, no demo changed. IRN's closing paragraph is gone
+  (Ripples owns it, and the old anchor forwards); Ripples points on to the other modulation
+  spectrum pages; Textures says how its per-band modulation spectrum differs and links the
+  fire's band-by-band twin; Synthetic sounds links its noise to the modulation pages and its
+  beats to the meantone wolf.
+- Demos whose code did not change keep their committed images, sounds and playhead regions.
 
 ## Not changing
 
