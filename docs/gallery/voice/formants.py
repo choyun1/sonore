@@ -518,7 +518,8 @@ print(f"  alternating signs {np.abs(db(alternating) - db(cascade))[inside].max()
 # tense, pressed voice to 2.7 for a lax, breathy one, and close to 0.7 for typical male
 # voices. `so.glottal_source` makes LF pulses from their harmonics, which have an exact
 # formula, so nothing aliases, and `so.klatt_synthesize` uses them with `SS=3` (the source
-# switch of Klatt & Klatt's KLSYN88) and `RD`.
+# switch of Klatt & Klatt's KLSYN88) and `RD`. The `RD` control is sonore's: KLSYN88 shapes its
+# LF pulse with the open quotient, the speed quotient and a spectral tilt instead.
 
 # %% [about]
 # The same peak excitation $E_e$ in all three. The tense pulse opens for a shorter part of the
