@@ -105,9 +105,9 @@ are trimmed.
 4. Envelopes and modulation: Vocoder, Modulation spectrogram, Hearing a modulation spectrum.
 5. Spatial hearing: Binaural (takes binaural beats), Rooms (Reverb renamed, owns distance),
    Moving talkers.
-6. Music: Timbre, Tuning and temperament. Organ leaves the menu until it has sounds.
+6. Music: Timbre, Tuning and temperament, Organ (kept, D9).
 
-That is 21 pages in the menu, as now (two are new, two merge into one, Organ leaves), but the count is not the aim: the aim is one owner per concept
+That is 22 pages in the menu, one more than now (two are new, two merge into one), but the count is not the aim: the aim is one owner per concept
 and both talkers in the main line of every speech page.
 
 ## Decisions
@@ -166,8 +166,7 @@ Recommendation: keep both; the two are different enough to stand alone.
 **D8. Move binaural beats to Binaural.** Recommendation: yes, with a redirect from the old
 anchor.
 
-**D9. Organ out of the menu** until it has sounds; the page stays at its URL. Recommendation:
-yes.
+**D9. Organ stays in the menu.** Decided by Cho (2026-10-10): keep the page as a promissory note for the stop sounds to come.
 
 **D10. Moving talkers' cast.** "Three talkers" uses a mixed cast from the start (for example a
 female target with male maskers and the reverse), so the other-sex release (Brungart 2001) is
