@@ -31,7 +31,9 @@ Breaking changes since 0.5.0 (each is described under Changed):
   from Praat's recipe for candidates and a Viterbi tracker; `track(n)` gives
   the `(times, values)` that `klatt_synthesize` takes. The tests compare it
   with Praat's formants, stored by `tools/make_lpc_fixtures.py`. See
-  `docs/design/views/lpc.md`.
+  `docs/design/views/lpc.md`. The gallery's "Formant synthesis" page has a
+  section on them, "Finding the formants again", with copy synthesis of the
+  two gallery talkers.
 - `so.gaussian_spectrogram`: random spectrograms whose levels correlate
   exponentially in time and frequency (McDermott, Wrobleski & Oxenham, 2011),
   returned as `Envelopes` and heard through `to_sound`
