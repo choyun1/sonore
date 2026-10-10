@@ -17,12 +17,13 @@ The script goes through four steps:
    five-window median to take out single-window jumps). It prints these every 20 ms as a table.
 3. Synthesis: so.klatt_synthesize gets those tracks directly. Where the word is voiced, the
    voicing level follows the recording's level. Where it is unvoiced, the noise follows that
-   level too: frication through the high parallel formants where most of the power is above
-   3.5 kHz (the /s/), and aspiration elsewhere (the /ʁ/), through each unvoiced stretch's median
-   formants, since the formants measured in noise jump about. Windows within 20 dB of the loudest
-   are voiced even where the F0 tracker says not, so a vowel does not start with a burst of
-   breath. The copy is made twice, the second time with each setting moved by how far the first
-   copy's level missed the recording's, since the three sources come out at different levels.
+   level too. Each unvoiced stretch is one consonant: frication through the high parallel
+   formants if most of its power is above 3.5 kHz (the /s/), aspiration through its median
+   formants if not (the /ʁ/), since the formants measured in noise jump about. Windows within 20
+   dB of the loudest are voiced even where the F0 tracker says not, so a vowel does not start
+   with a burst of breath. The copy is made twice, the second time with each setting moved by
+   how far the first copy's level missed the recording's, since the three sources come out at
+   different levels.
 4. Comparison: the two level profiles side by side, both spectrograms with the formant tracks
    drawn on them (sonore_from_recording.png), and the recording followed by the copy
    (sonore_from_recording.wav), both written next to the recording, since they contain it.
@@ -104,14 +105,20 @@ def main(path):
     nearest = measured[np.abs(measured[None, :] - np.arange(len(times))[:, None]).argmin(axis=1)]
     f0 = np.where(voiced, f0, f0[nearest])
     audible = level > -40
-    fricative = ~voicing & audible & (high > -6)
-    aspirated = ~voicing & audible & ~fricative
-    # Noise has no steady resonances for LPC to find, so the formants jump from window to window
-    # in the /ʁ/. Each unvoiced stretch keeps its median formants instead.
+    # Each unvoiced stretch is one consonant, made with one kind of noise: frication if most of
+    # its power is above 3.5 kHz (its median window), aspiration if not. Judged window by window,
+    # the end of the /s/, where the vowel's low frequencies already reach into the window, came
+    # out as a thump of aspiration through low formants. Noise also has no steady resonances for
+    # LPC to find, so the formants jump from window to window in the /ʁ/; each stretch keeps its
+    # median formants instead.
+    fricative = np.zeros(len(times), dtype=bool)
     stretches, count = label(~voicing)
     for stretch in range(1, count + 1):
         inside = stretches == stretch
+        fricative[inside] = np.median(high[inside]) > -6
         tracks[:, inside] = np.median(tracks[:, inside], axis=1, keepdims=True)
+    fricative &= audible
+    aspirated = ~voicing & audible & ~fricative
 
     def synthesize(level):
         return so.klatt_synthesize(
