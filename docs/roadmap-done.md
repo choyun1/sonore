@@ -123,7 +123,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
 - **More moving talkers and rooms.** Straight paths across the plane and a
   path no real source could take on the Moving talkers page, and the
   gallery sentence in each rule-breaking room on the
-  [Synthetic reverberation](https://choyun1.github.io/sonore/gallery/reverb.html) page.
+  [Rooms](https://choyun1.github.io/sonore/gallery/reverb.html) page.
 - **Gallery in four groups.** Stimuli; Seeing and changing sound; Voices;
   Spatial hearing, one script folder per group, with page URLs unchanged.
 - **Frames and views.** `analysis` split into frames (invertible) and views

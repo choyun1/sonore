@@ -14,18 +14,18 @@ time it runs.
 # %% [markdown]
 # # Moving talkers
 #
-# Three male talkers speak at once, one straight ahead and one 40° to each side. Which one do you
-# follow? If one of them moves, does that help? Cho & Kidd (2022) asked this with stimuli like the
-# ones on this page, made with sonore's predecessor sigtools.
+# Three talkers speak at once, one straight ahead and one 40° to each side. Which one do you
+# follow? If the one ahead moves, does that help, and how does it compare with a voice that
+# differs from the other two? Cho & Kidd (2022) asked about motion with stimuli like the ones on
+# this page, made with sonore's predecessor sigtools.
 #
-# - [The talkers and the trajectories](#h-the-talkers-and-the-trajectories): three sentences, and
-#   the paths the target takes.
+# - [The talkers and the trajectories](#h-the-talkers-and-the-trajectories): the target sentence
+#   read by the male and by the female talker, the maskers, and the paths the target takes.
 # - [One talker, moving](#h-one-talker-moving): what motion alone sounds like.
-# - [Three talkers](#h-three-talkers): the target swinging back and forth in azimuth while the
-#   other two stay still.
-# - [A different voice](#h-a-different-voice): a female talker as the target, still and moving.
-# - [Coming closer](#h-coming-closer): the target walking up to the listener, without and with
-#   a room.
+# - [Three talkers](#h-three-talkers): the male or the female target among two male or two
+#   female maskers, standing still and then swinging back and forth in azimuth.
+# - [Coming closer](#h-coming-closer): a talker walking up to the listener, without and with a
+#   room.
 # - [Passing by](#h-passing-by): a buzz going past at 15 m/s, and the Doppler glide of its pitch.
 # - [Straight paths across the plane](#h-straight-paths-across-the-plane): the buzz in front,
 #   close by, down the side, behind, crossing at an angle and coming straight at the listener.
@@ -46,9 +46,14 @@ time it runs.
 # %% [markdown]
 # ## The talkers and the trajectories
 #
-# The target is the sentence from [Seeing speech](speech.html); the two maskers are sentences by
-# another male talker in the CMU ARCTIC corpus (sources in docs/speech/SOURCES.md). Each is scaled
-# to the same RMS before rendering, as in the experiment.
+# The target is the sentence from [Seeing speech](speech.html), read by the male talker and by
+# the female talker of [Two talkers](talkers.html). There are two sets of maskers. The male
+# maskers are two sentences by a third talker in the CMU ARCTIC corpus, also male (Kominek &
+# Black, 2004). The corpus files here hold no other female sentences, so the female maskers are
+# the opening seconds of two audiobook passages read by female readers in LibriSpeech
+# (Panayotov et al., 2015), cut between words to about the lengths of the male maskers; they are
+# read aloud like the sentences, but recorded differently. Sources are in docs/speech/SOURCES.md.
+# Every recording is scaled to the same RMS before rendering.
 #
 # Azimuth is measured clockwise from straight ahead, so $+40°$ is to the right. A talker at
 # center azimuth $\theta_0$ that oscillates with amplitude $A$ at rate $f$ follows
@@ -56,8 +61,8 @@ time it runs.
 # $$\theta(t) = \theta_0 + A \sin\!\big(2\pi (f t + \phi)\big),$$
 #
 # so it swings $A$ to either side of $\theta_0$, $2A$ from one end to the other. Here
-# $f = 2$ Hz, the rate in the experiment, and the start phase $\phi$ decides whether it first
-# moves right ($\phi = 0$) or left ($\phi = 1/2$).
+# $f = 2$ Hz, as in the experiment, and the start phase $\phi$ decides whether it first moves
+# right ($\phi = 0$) or left ($\phi = 1/2$).
 
 # %% [setup]
 import os
@@ -92,13 +97,44 @@ from matplotlib.collections import LineCollection
 hrirs = so.load_hrirs(distances="all")  # PKU-IOA KEMAR, 20 cm to 1.6 m; downloaded on first use
 print(hrirs)
 
-# Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
-files = ["bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133"]
-talkers = [so.load(fetch(f"docs/speech/{f}.flac")) for f in files]
-target, *maskers = so.normalize(so.match_lengths(talkers, align="center"))
-fs, duration = target.fs, target.duration
-spoken = so.load(fetch(f"docs/speech/{files[0]}.flac")).duration
-TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
+# The sentence, read by each of the two talkers, by the CMU ARCTIC speaker names, at 16 kHz.
+SPEAKERS = {"Male talker": "bdl", "Female talker": "slt"}
+talkers = {
+    label: finish(so.load(fetch(f"docs/speech/{speaker}_arctic_a0131.flac")))
+    for label, speaker in SPEAKERS.items()
+}
+fs = 16000
+
+
+def excerpt(reader, about):
+    """The opening of a LibriSpeech passage, about ``about`` [s] long: from its first sound to
+    the quietest 20 ms within 0.4 s of that length, so that it ends between words."""
+    snd = so.load(fetch(f"docs/speech/librispeech_{reader}.flac"))
+    n = int(20e-3 * fs)
+    frames = snd.data[: len(snd) // n * n, 0].reshape(-1, n)
+    level = 10 * np.log10(np.mean(frames**2, axis=1) + 1e-20)  # dB, per 20 ms
+    first = int(np.argmax(level > level.max() - 30))
+    near = first + np.arange(int((about - 0.4) / 20e-3), int((about + 0.4) / 20e-3))
+    last = int(near[np.argmin(level[near])])
+    return so.Sound(snd.data[first * n : last * n], fs)
+
+
+MASKERS = {
+    "male": [so.load(fetch(f"docs/speech/rms_arctic_{n}.flac")) for n in ("a0132", "a0133")],
+    "female": [excerpt("1462_170142", 2.8), excerpt("8842_304647", 4.8)],
+}
+for sex, recordings in MASKERS.items():
+    print(f"{sex} maskers: " + ", ".join(f"{snd.duration:.2f} s" for snd in recordings))
+
+# Equal in RMS, then all padded to the longest, centered in time.
+labels, everything = list(talkers), so.normalize([*talkers.values(), *MASKERS["male"], *MASKERS["female"]])
+everything = so.match_lengths(everything, align="center")
+targets = dict(zip(labels, everything[:2], strict=True))
+MASKERS = {"male": everything[2:4], "female": everything[4:6]}
+duration = everything[0].duration
+TALKING = {
+    label: ((duration - snd.duration) / 2, (duration + snd.duration) / 2) for label, snd in talkers.items()
+}
 CENTERS = (0.0, -40.0, 40.0)  # target ahead, maskers to the left and right [deg]
 RATE = 2.0  # oscillations per second
 
@@ -118,40 +154,38 @@ LABELS = ("target", "left masker", "right masker")
 COLORS = ("#d62728", "#7f7f7f", "#b0b0b0")  # one per talker, in plots and in the view from above
 
 
-def render(amplitude, phase=0.0, alone=False, talker=None):
-    """The target (``talker``, by default the sentence above) oscillating with ``amplitude``
-    [deg] about straight ahead, with the maskers standing still unless ``alone``. Returns the
-    mix, the target as rendered on its own, the trajectories' times and each talker's azimuth."""
+def render(target, amplitude, phase=0.0, maskers=None):
+    """The ``target`` talker oscillating with ``amplitude`` [deg] about straight ahead, among
+    the ``maskers`` ("male", "female" or None for none), who stand still. Returns the mix, the
+    target as rendered on its own, the trajectories' times and each talker's azimuth."""
     t, az_target, path = trajectory(CENTERS[0], amplitude, phase)
-    parts = [so.move_sound(target if talker is None else talker, path, hrirs)]
+    parts = [so.move_sound(targets[target], path, hrirs)]
     azimuths = [az_target]
-    if not alone:
-        for snd, center in zip(maskers, CENTERS[1:], strict=True):
-            _, az, path = trajectory(center)
-            parts.append(so.move_sound(snd, path, hrirs))
-            azimuths.append(az)
+    for snd, center in zip(MASKERS[maskers] if maskers else [], CENTERS[1:], strict=False):
+        _, az, path = trajectory(center)
+        parts.append(so.move_sound(snd, path, hrirs))
+        azimuths.append(az)
     return so.mix(parts), parts[0], t, azimuths
 
 
-def scene_of(t, azimuths):
+def scene_of(t, azimuths, labels=LABELS):
     """The talkers for the gallery's view from above, which moves as the sound plays."""
     return [
         {"label": label, "color": color, "t": t, "azimuth": az}
-        for az, label, color in zip(azimuths, LABELS, COLORS, strict=False)
+        for az, label, color in zip(azimuths, labels, COLORS, strict=False)
     ]
 
 
-def show(mix, target_alone, t, azimuths, title, talking=TALKING):
-    """Each talker's azimuth, and the interaural time and level differences at the ears,
-    measured in 20 ms windows: of the mix (black) and of the target on its own (red).
-    ``talking`` is when the target speaks [s]."""
-    fig = plt.figure(figsize=(10, 6.0), layout="constrained")
-    axes = fig.subplots(3, 1, sharex=True)
+def draw(where, mix, target_alone, t, azimuths, title, talking, compact=False):
+    """Into a figure or subfigure: each talker's azimuth, and the interaural time and level
+    differences at the ears, measured in 20 ms windows, of the mix (black) and of the target on
+    its own (red). ``talking`` is when the target speaks [s]. Returns the three axes."""
+    axes = where.subplots(3, 1, sharex=True)
     for az, label, color in zip(azimuths, LABELS, COLORS, strict=False):
         axes[0].plot(t, az, color=color, lw=1.5, label=label)
     axes[0].axvspan(*talking, color=COLORS[0], alpha=0.08, lw=0, label="target talking")
-    axes[0].set(ylim=(-75, 75), yticks=[-60, -40, -20, 0, 20, 40, 60], ylabel="Azimuth [deg]", title=title)
-    axes[0].legend(loc="upper right", fontsize=8, ncols=4)
+    axes[0].set(ylim=(-90, 90), yticks=[-80, -40, 0, 40, 80], ylabel="Azimuth [deg]", title=title)
+    axes[0].legend(loc="upper right", fontsize=7 if compact else 8, ncols=2 if compact else 4)
     sources = [(mix, "k", "mix")] if len(azimuths) > 1 else []
     for snd, color, label in sources + [(target_alone, COLORS[0], "target alone")]:
         cues = so.interaural_cues(snd, win_dur=20e-3)
@@ -168,128 +202,129 @@ def show(mix, target_alone, t, azimuths, title, talking=TALKING):
         ax.grid(ls=":")
         ax.set_xlim(0, duration)
     for ax in axes[1:]:
-        ax.legend(loc="upper right", fontsize=8, ncols=2, markerscale=3)
+        ax.legend(loc="upper right", fontsize=7 if compact else 8, ncols=2, markerscale=3)
     axes[-1].set_xlabel("Time [s]")
-    return fig, list(axes)
+    return list(axes)
+
+
+def show(rendered, title, talking):
+    """One talker's demo: ``rendered`` is what render returns."""
+    fig = plt.figure(figsize=(10, 6.0), layout="constrained")
+    return fig, draw(fig, *rendered, title, talking)
+
+
+def show_pair(rendered, title, maskers):
+    """A column per target talker; ``rendered`` maps each talker's label to what render returns."""
+    fig = plt.figure(figsize=(10, 6.6), layout="constrained")
+    playhead = {}
+    for column, (label, result) in zip(fig.subfigures(1, 2), rendered.items(), strict=True):
+        heading = f"{label.split()[0]} target, {maskers} maskers: {title}"
+        playhead[label] = draw(column, *result, heading, TALKING[label], compact=True)
+    return fig, playhead
+
+
+def three_talkers(amplitude, phase=0.0, maskers="male", title=""):
+    """Both targets, each among the same maskers: the figure, the playhead axes, the sounds and,
+    for each target, the talkers seen from above."""
+    rendered = {label: render(label, amplitude, phase, maskers) for label in targets}
+    fig, playhead = show_pair(rendered, title, maskers)
+    sounds = {label: finish(mix) for label, (mix, *_) in rendered.items()}
+    scene = {label: scene_of(t, azimuths) for label, (_, _, t, azimuths) in rendered.items()}
+    return fig, playhead, sounds, scene
+
 
 # %% [markdown]
 # ## One talker, moving
 #
 # Alone, a talker swinging 30° to each side twice a second is easy to hear moving. The motion
 # reaches the ears as interaural differences that change over time: the sound arrives earlier
-# and louder at the ear it moves toward. The view from above, beside each example, follows the
-# talkers as the sound plays.
+# and louder at the ear it moves toward (the cues are measured as on [Binaural
+# cues](binaural.html#h-how-the-cues-are-measured)). The cues come from the direction more than from
+# the voice, so one talker is enough here: the female talker. The view from above, beside the
+# example, follows the talker as the sound plays.
 
 # %% [about]
-# The target alone, swinging 30° to either side of straight ahead at 2 Hz. Its interaural time
-# and level differences, measured from the rendered sound in 20 ms windows, follow the azimuth.
-# Time differences are drawn only where the two ears are well correlated.
+# The female talker alone, swinging 30° to either side of straight ahead at 2 Hz. The interaural
+# time and level differences, measured from the rendered sound in 20 ms windows, follow the
+# azimuth. Time differences are drawn only where the two ears are well correlated.
 
 # %% [demo m1] One talker, moving
-mix, target_alone, t, azimuths = render(30.0, alone=True)
-fig, playhead = show(mix, target_alone, t, azimuths, "The target alone, swinging 30° to either side")
-scene = scene_of(t, azimuths)
-sound = finish(mix)
+rendered = render("Female talker", 30.0)
+fig, playhead = show(
+    rendered, "The female talker alone, swinging 30° to either side", TALKING["Female talker"]
+)
+scene = scene_of(rendered[2], rendered[3], labels=["female talker"])
+sound = finish(rendered[0])
 
 # %% [markdown]
 # ## Three talkers
 #
-# With all three talking, the target is hard to pick out when everyone stands still, since the
-# voices are similar and they say similar things. Set the target moving and listen for whether
-# it stands out from the others, and how far it has to move before it does. In the mix, the
-# interaural differences at any moment come from whichever talker is loudest, so the target's
-# motion shows only in the stretches it dominates.
+# Now the target talks among two maskers. Each demo plays it twice, side by side: on the left the
+# male talker is the target, on the right the female talker, saying the same sentence from the
+# same place among the same maskers. With two male maskers, the male target is one of three
+# similar voices and the female target is the one that differs; with two female maskers it is
+# the other way round. Listeners ignore a masker of the other sex far more easily than one of the
+# same sex (Brungart, 2001, with two talkers at once), so the target should be easier to follow
+# in the right column of the first demo and in the left column of the second. How the two voices
+# differ is measured on [Two talkers](talkers.html).
+#
+# Then the target moves, among the male maskers. Listen for whether motion sets the male target
+# apart from the two male maskers, how far it has to move before it does, and whether it adds
+# anything for the female target, who already differs. In the mix, the interaural differences at
+# any moment come from whichever talker is loudest, so the target's motion shows only in the
+# stretches it dominates.
 
 # %% [about]
-# All three still: the target straight ahead, the maskers 40° to the left and right.
+# Nobody moves: the target straight ahead, two male maskers 40° to the left and right.
 
 # %% [demo m2] Three talkers, standing still
-mix, target_alone, t, azimuths = render(0.0)
-fig, playhead = show(mix, target_alone, t, azimuths, "Nobody moves")
-scene = scene_of(t, azimuths)
-sound = finish(mix)
+fig, playhead, sounds, scene = three_talkers(0.0, maskers="male", title="nobody moves")
 
 # %% [about]
-# The target swings 10° to either side of straight ahead.
+# The same, with two female maskers in place of the male ones.
+
+# %% [demo m10] Three talkers, standing still, female maskers
+fig, playhead, sounds, scene = three_talkers(0.0, maskers="female", title="nobody moves")
+
+# %% [about]
+# Among the male maskers, the target swings 10° to either side of straight ahead.
 
 # %% [demo m3] The target swings 10 degrees
-mix, target_alone, t, azimuths = render(10.0)
-fig, playhead = show(mix, target_alone, t, azimuths, "The target swings 10° to either side")
-scene = scene_of(t, azimuths)
-sound = finish(mix)
+fig, playhead, sounds, scene = three_talkers(10.0, maskers="male", title="swings 10°")
 
 # %% [about]
-# The target swings 30° to either side, three quarters of the way to the maskers, starting to
-# the left this time.
+# The target swings 30° to either side, three quarters of the way to the maskers, starting to the
+# left this time.
 
 # %% [demo m4] The target swings 30 degrees
-mix, target_alone, t, azimuths = render(30.0, phase=0.5)
-fig, playhead = show(mix, target_alone, t, azimuths, "The target swings 30° to either side")
-scene = scene_of(t, azimuths)
-sound = finish(mix)
-
-# %% [markdown]
-# ## A different voice
-#
-# Motion is one way to set the target apart. A different voice is another, and a strong one: with
-# two talkers at once, Brungart (2001) found a masker of the other sex far easier to ignore than one
-# of the same sex. Here the target is the same sentence read by a female talker (slt), among the
-# same two male talkers.
-
-# %%
-target_female = so.normalize(
-    so.match_lengths([so.load(fetch("docs/speech/slt_arctic_a0131.flac")), maskers[0]], align="center")
-)[0]
-spoken_female = so.load(fetch("docs/speech/slt_arctic_a0131.flac")).duration
-TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)
-
-# %% [about]
-# The female talker straight ahead and the male talkers 40° to either side, nobody moving. Compare
-# it with the three male talkers standing still above.
-
-# %% [demo m8] A female talker among two male talkers, standing still
-mix, target_alone, t, azimuths = render(0.0, talker=target_female)
-fig, playhead = show(mix, target_alone, t, azimuths, "A female talker ahead, nobody moves", TALKING_FEMALE)
-scene = scene_of(t, azimuths)
-sound = finish(mix)
-
-# %% [about]
-# The female talker swings 10° to either side, as the male talker did above: both cues at once.
-
-# %% [demo m9] A female talker among two male talkers, swinging 10 degrees
-mix, target_alone, t, azimuths = render(10.0, talker=target_female)
-fig, playhead = show(
-    mix, target_alone, t, azimuths, "A female talker ahead swings 10° to either side", TALKING_FEMALE
-)
-scene = scene_of(t, azimuths)
-sound = finish(mix)
+fig, playhead, sounds, scene = three_talkers(30.0, phase=0.5, maskers="male", title="swings 30°")
 
 # %% [markdown]
 # ## Coming closer
 #
-# Now the target walks toward the listener while it says its sentence, from 3 m to 30 cm,
-# 30° to the right, about 1 m/s. Its direct sound grows as 1/r, by 20 dB in all, and arrives
-# 8 ms sooner at the end than at the start. Closer than 1.6 m the measured responses take over,
-# and the ear on the talker's side gains more than the other: the level difference between the
-# ears grows as the talker comes near, which is what Qu et al. (2009) measured distances for.
-#
-# A room changes the picture. The reverberation, built up from reflections off every wall, has
-# about the same level wherever the talker stands, while the direct sound grows as it comes
-# closer, so a talker far away is mostly room and one close by mostly direct sound. That ratio
-# is one of the cues to distance; see [Synthetic reverberation](reverb.html) for still talkers.
+# Now a talker walks toward the listener while it says the sentence, from 3 m to 30 cm, 30° to
+# the right; this time it is the male talker. How distance sets the level of the direct sound
+# (the inverse square law) and its ratio to the reverberation of a room is taught with still
+# talkers on [Rooms](reverb.html#h-farther-away). Here the distance changes while the sentence
+# plays.
 
 # %%
 WALK = (300.0, 30.0)  # cm: from 3 m to 30 cm
 WALK_AZIMUTH = 30.0  # deg, to the right
-talker = so.load(fetch(f"docs/speech/{files[0]}.flac")).normalize()  # the target sentence, without padding
+walker = talkers["Male talker"]  # the sentence without padding
 room = so.synth_ir(0.6, fs, n_channels=2, rng=1)  # RT60 0.6 s, a different tail at each ear
+print(
+    f"{(WALK[0] - WALK[1]) / 100 / walker.duration:.2f} m/s; "
+    f"direct sound {so.distance_gain_db(WALK[1] / WALK[0]):+.1f} dB from start to end, "
+    f"arriving {1e3 * (WALK[0] - WALK[1]) / 100 / so.SPEED_OF_SOUND:.1f} ms sooner"
+)
 
 
 def walk_in(room=None):
-    """The target walking in while it says its sentence, through all eight measured distances.
+    """The talker walking in while it says the sentence, through all eight measured distances.
     The room, if any, is set so direct and reverberant sound are equal 1 m away."""
-    path = so.hcc_trajectory(dist=([0, talker.duration], WALK), elev=0, azim=WALK_AZIMUTH)
-    return so.move_sound(talker, path, hrirs, room=room, drr_db=0.0)
+    path = so.hcc_trajectory(dist=([0, walker.duration], WALK), elev=0, azim=WALK_AZIMUTH)
+    return so.move_sound(walker, path, hrirs, room=room, drr_db=0.0)
 
 
 def levels_db(data, window=0.2):
@@ -302,13 +337,13 @@ def levels_db(data, window=0.2):
 
 def show_walk(rendered, title):
     """Distance, and the level at each ear re the talker, in 0.2 s time windows."""
-    t_walk = np.linspace(0, talker.duration, 200)
-    distance = np.interp(t_walk, [0, talker.duration], WALK) / 100
+    t_walk = np.linspace(0, walker.duration, 200)
+    distance = np.interp(t_walk, [0, walker.duration], WALK) / 100
     fig = plt.figure(figsize=(10, 4.5), layout="constrained")
     axes = fig.subplots(2, 1, sharex=True)
     axes[0].plot(t_walk, distance, color=COLORS[0], lw=1.5)
     axes[0].set(ylim=(0, 3.2), ylabel="Distance [m]", title=title)
-    t_level, talker_db = levels_db(talker.data)
+    t_level, talker_db = levels_db(walker.data)
     ear_db = levels_db(rendered.data)[1][: len(t_level)]
     gain = ear_db - talker_db  # (windows, ears)
     for ear, (label, color) in enumerate([("left ear", "#7f7f7f"), ("right ear", COLORS[0])]):
@@ -326,32 +361,42 @@ def show_walk(rendered, title):
 
 
 def walk_scene():
-    t_walk = np.linspace(0, talker.duration, 100)
+    t_walk = np.linspace(0, walker.duration, 100)
     return [
         {
-            "label": "target",
+            "label": "male talker",
             "color": COLORS[0],
             "t": t_walk,
             "azimuth": np.full_like(t_walk, WALK_AZIMUTH),
-            "distance": np.interp(t_walk, [0, talker.duration], WALK) / 100,
+            "distance": np.interp(t_walk, [0, walker.duration], WALK) / 100,
         }
     ]
 
 
+# %% [markdown]
+# Without a room, the direct sound is all there is: it grows as 1/r and arrives sooner as the
+# talker comes in (printed above). Closer than 1.6 m the measured responses (Qu et al., 2009)
+# take over, and the ear on the talker's side gains more than the far ear, so the level
+# difference between the ears grows as the talker comes near. In a room, the reverberation keeps
+# about the same level wherever the talker stands, so the walk turns the sound from mostly room
+# into mostly direct sound.
+
 # %% [about]
-# The target walking in from 3 m to 30 cm, with no room. The level at each ear follows 1/r
-# (dashed), and the right ear, nearer the talker, pulls ahead of the left in the last meter.
+# The male talker walking in from 3 m to 30 cm, with no room. The level at each ear follows 1/r
+# (dashed). The right ear, on the talker's side, is louder throughout, and more so in the last
+# meter.
 
 # %% [demo m5] Walking in
 rendered = walk_in()
-fig, playhead = show_walk(rendered, "The target walks in, 30° to the right, with no room")
+fig, playhead = show_walk(rendered, "The male talker walks in, 30° to the right, with no room")
 scene = walk_scene()
 sound = finish(rendered)
 
 # %% [about]
 # The same walk in a room with an RT60 of 0.6 s, where direct and reverberant sound are equal at
 # 1 m. Far away the level changes little, because the room sets it; it rises with 1/r only once
-# the direct sound takes over.
+# the direct sound takes over. For the inverse square law and the direct-to-reverberant ratio
+# with a still talker, hear [the same sentence four times farther](reverb.html#d-r2) on Rooms.
 
 # %% [demo m6] Walking in, in a room
 rendered = walk_in(room)
@@ -365,13 +410,13 @@ sound = finish(rendered)
 # A source that changes distance also changes pitch: approaching, each wave starts a little
 # closer than the last and arrives sooner, so the waves are squeezed together, and receding they
 # are stretched apart. Here a 120 Hz buzz passes 3 m in front of the listener, left to right, at
-# 15 m/s (54 km/h). Its pitch is highest while it approaches and falls as it passes, about 150
-# cents (a semitone and a half) in all, most of it in the second around the moment of passing.
-# Nothing makes the shift happen but the delay changing from sample to sample.
+# 15 m/s (54 km/h). Its pitch is highest while it approaches and falls as it passes, most of the
+# way in the second around the moment of passing; the cell below prints the shift at the start
+# and at the end. Nothing makes the shift happen but the delay changing from sample to sample.
 #
 # Doppler is a weak cue for people: at speeds like these, listeners judge motion mostly from the
 # change in level and in interaural differences, and the rising pitch people report as a source
-# approaches comes largely from its rising loudness (Carlile & Leung, 2016, review this).
+# approaches comes largely from its rising loudness (reviewed by Carlile & Leung, 2016).
 
 # %%
 SPEED, CLOSEST, BUZZ_F0 = 15.0, 3.0, 120.0  # m/s, m, Hz
@@ -396,8 +441,10 @@ print(f"approaching: {shift_cents[0]:+.0f} cents; receding: {shift_cents[-1]:+.0
 
 
 # %% [about]
-# A 120 Hz buzz passing 3 m in front at 15 m/s. The pitch measured at the left ear (dots, by
-# so.f0_track) follows the Doppler shift computed from the path (line).
+# A 120 Hz buzz passing 3 m in front at 15 m/s. Its pitch falls by
+# {{ f"{shift_cents[0] - shift_cents[-1]:.0f}" }} cents in all, about a semitone and a half. The
+# pitch measured at the left ear (dots, by so.f0_track) follows the Doppler shift computed from
+# the path (line).
 
 # %% [demo m7] Passing by
 rendered = so.move_sound(buzz, passing, hrirs)
@@ -434,11 +481,9 @@ sound = finish(rendered)
 #
 # The same buzz, at the same 15 m/s, now along six straight lines through different parts of the
 # horizontal plane. The Doppler shift depends only on how fast the distance changes, so every
-# path that passes the listener starts 65 to 77 cents sharp and ends about as flat. What differs
-# is how quickly the change comes and what the ears hear meanwhile. The glide takes longer the
-# farther away the path passes, in proportion at this speed: from 95% to 5% of its range, 0.14 s
-# at 50 cm, 0.27 s at 1 m and 0.53 s at 2 m. The level rises and falls as 1/r, by 6.5 dB on the
-# path 10 m away and 31 dB on the one 50 cm away.
+# path that passes the listener starts about as sharp as it ends flat. What differs is how
+# quickly the change comes and what the ears hear meanwhile; the cell after the code for the
+# paths measures both.
 #
 # The buzz stops at 5 kHz (`f_max`), so that a shift of several semitones up still keeps every
 # harmonic below 8 kHz, half the sampling rate (see [A path no source could
@@ -515,7 +560,7 @@ def show_path(rendered, path, title, color, f0_range=(80, 200), cents_limit=120)
         )
     axes[2].plot(arrival, cents, color=color, lw=1.2, label="Doppler shift from the path")
     axes[2].set(ylim=(-cents_limit, cents_limit), ylabel="Pitch re 120 Hz [cents]", title="Pitch at the ears")
-    axes[2].legend(loc="upper right", fontsize=8, ncols=3, markerscale=3)
+    axes[2].legend(loc="lower left", fontsize=8, ncols=3, markerscale=3)
     for ax in axes:
         ax.grid(ls=":")
         ax.set_xlim(0, rendered.duration)
@@ -535,6 +580,44 @@ def render_path(number):
     fig, playhead = show_path(rendered, path, f"{title}, at 15 m/s", PATH_COLORS[number])
     return fig, playhead, path_scene(path, "buzz", PATH_COLORS[number]), finish(rendered)
 
+
+# %%
+STATS = {}  # per path, as heard
+for title, path in PATHS.items():
+    arrival, distance, azimuth, cents = as_heard(path, 20001)
+    span = cents[0] - cents[-1]
+    # from 95 % to 5 % of the way down (the cents fall, so the arrays are reversed for np.interp)
+    t95, t5 = (np.interp(cents[-1] + share * span, cents[::-1], arrival[::-1]) for share in (0.95, 0.05))
+    STATS[title] = {
+        "closest": distance.min(),
+        "start": distance[0],
+        "level": 20 * np.log10(distance.max() / distance.min()),
+        "sharp": cents[0],
+        "flat": cents[-1],
+        "glide": t5 - t95 if span > 1 else np.nan,
+        "swing": np.ptp(np.interp([-45, 45], azimuth, arrival)) if np.all(np.diff(azimuth) >= 0) else np.nan,
+    }
+    print(
+        f"{title:<25s} closest {distance.min():5.2f} m, level range {STATS[title]['level']:4.1f} dB, "
+        f"Doppler {cents[0]:+3.0f} to {cents[-1]:+3.0f} cents, 95 to 5 % of the glide in "
+        f"{STATS[title]['glide']:.2f} s"
+    )
+passing_paths = [title for title in PATHS if STATS[title]["glide"] > 0]
+crossing_position = PATHS["Crossing at an angle"](np.linspace(0, emitted, 200001))
+crossing_delay = (
+    np.argmin(np.abs(crossing_position[:, 1])) - np.argmin(np.linalg.norm(crossing_position, axis=1))
+) * (emitted / 200000)
+
+# %% [markdown]
+# Every path that passes the listener starts
+# {{ f"{min(STATS[p]['sharp'] for p in passing_paths):.0f}" }} to
+# {{ f"{max(STATS[p]['sharp'] for p in passing_paths):.0f}" }} cents sharp and ends about as flat.
+# The glide takes longer the farther away the path passes, in proportion at this speed: from 95%
+# to 5% of its range, {{ f"{STATS['Close in front']['glide']:.2f}" }} s at 50 cm,
+# {{ f"{STATS['Down the right side']['glide']:.2f}" }} s at 1 m and
+# {{ f"{STATS['Behind']['glide']:.2f}" }} s at 2 m. The level rises and falls as 1/r, by
+# {{ f"{STATS['Far in front']['level']:.1f}" }} dB on the path 10 m away and
+# {{ f"{STATS['Close in front']['level']:.0f}" }} dB on the one 50 cm away.
 
 # %% [about]
 # The six paths seen from above, the listener at the center facing up. Each covers 37.5 m in
@@ -568,14 +651,17 @@ axes[0].legend(loc="lower left", fontsize=8)
 
 # %% [about]
 # 10 m in front, left to right. Far away, the direction changes slowly and the level only by
-# 6.5 dB, and the pitch glides gently over most of two seconds.
+# {{ f"{STATS['Far in front']['level']:.1f}" }} dB, and the pitch glides gently over most of two
+# seconds.
 
 # %% [demo ml1] Far in front
 fig, playhead, scene, sound = render_path(0)
 
 # %% [about]
-# 50 cm in front, left to right, inside the measured distances. The level jumps by about 30 dB,
-# the azimuth swings from one side to the other in about 0.1 s, and the pitch drops almost at once.
+# 50 cm in front, left to right, inside the measured distances. The level jumps by
+# {{ f"{STATS['Close in front']['level']:.0f}" }} dB, the azimuth swings from 45° on one side to
+# 45° on the other in {{ f"{STATS['Close in front']['swing']:.2f}" }} s, and the pitch drops
+# almost at once.
 
 # %% [demo ml2] Close in front
 fig, playhead, scene, sound = render_path(1)
@@ -599,16 +685,19 @@ fig, playhead, scene, sound = render_path(3)
 
 # %% [about]
 # From ahead on the left to behind on the right, passing 1 m away 45° to the front right. It
-# crosses the line through the ears 0.07 s after it passes closest.
+# crosses the line through the ears {{ f"{crossing_delay:.2f}" }} s after it passes closest.
 
 # %% [demo ml5] Crossing at an angle
 fig, playhead, scene, sound = render_path(4)
 
 # %% [about]
-# Straight at the listener along 30° to the right, from 38 m to 40 cm, where it stops with the
-# sound. The distance shrinks at a steady 15 m/s, so the pitch stays put, 77 cents sharp
-# throughout, while the level climbs by 40 dB. If the pitch seems to rise, that comes from the
-# loudness, as described under Passing by.
+# Straight at the listener along 30° to the right, from
+# {{ f"{STATS['Straight at the listener']['start']:.0f}" }} m to
+# {{ f"{100 * STATS['Straight at the listener']['closest']:.0f}" }} cm, where it stops with the
+# sound. The distance shrinks at a steady 15 m/s, so the pitch stays put,
+# {{ f"{STATS['Straight at the listener']['sharp']:.0f}" }} cents sharp throughout, while the
+# level climbs by {{ f"{STATS['Straight at the listener']['level']:.0f}" }} dB. If the pitch seems
+# to rise, that comes from the loudness, as described under [Passing by](#h-passing-by).
 
 # %% [demo ml6] Straight at the listener
 fig, playhead, scene, sound = render_path(5)
@@ -901,7 +990,7 @@ def show_party(cast, paths, hurries, title):
         title="From above (dot: start; thicker: faster)",
     )
     distance_axes.set(
-        ylim=(0, 10), xlim=(0, paths[0][0][-1]), xlabel="Time [s]", ylabel="Distance [m]", title=title
+        ylim=(0, 12), xlim=(0, paths[0][0][-1]), xlabel="Time [s]", ylabel="Distance [m]", title=title
     )
     distance_axes.legend(loc="upper right", fontsize=8, ncols=3)
     for ax in (top, distance_axes):
@@ -1029,8 +1118,8 @@ sound = finish(mix)
 # - Panayotov, Chen, Povey & Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain
 #   audio books. *Proc. ICASSP 2015*, 5206–5210.
 #   [doi:10.1109/ICASSP.2015.7178964](https://doi.org/10.1109/ICASSP.2015.7178964). The
-#   cocktail-party passages, by 12 LibriVox readers (CC BY 4.0; sources in
-#   docs/speech/SOURCES.md).
+#   cocktail-party passages, by 12 LibriVox readers, and the female maskers, cut from two of
+#   them (CC BY 4.0; sources in docs/speech/SOURCES.md).
 # - Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer functions
 #   measured with high spatial resolution using a spark gap. *IEEE Trans. Audio, Speech, Lang.
 #   Process.* 17(6), 1124–1132. [PKU
