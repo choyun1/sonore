@@ -1333,6 +1333,10 @@ MOVED = {
     "aperiodicity": {"h-a-higher-voice": "talkers.html"},
     "classic": {"d-k2": "talkers.html#d-tk4"},
     "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
+    "vocoder": {"d-cf0": "vocoder.html#d-ci0", "d-cf8": "vocoder.html#d-ci8", "d-cf8p": "vocoder.html#d-cp8",
+                "h-a-higher-voice": "vocoder.html#h-pitch-from-the-envelope"},
+    "modspectrogram": {"d-sv1": "modspectrogram.html#d-s1",
+                       "h-a-higher-voice": "modspectrogram.html#h-speech-babble-and-noise"},
 }
 
 

@@ -12,24 +12,26 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # # Hearing a modulation spectrum
 #
-# A modulation spectrum is the two-dimensional Fourier transform of a sound's envelopes, band by
-# band over time: how much of the pattern moves at each rate (Hz, across) and at each density
-# (cycles per octave, up), keeping only the magnitude (Singh & Theunissen, 2003). The
-# [ripples page](ripples.html) goes from a pattern to its spectrum. This page goes the other way:
-# from a spectrum, measured and edited or drawn from scratch, to a sound that has it.
+# A modulation spectrum says how much of a sound's envelope pattern moves at each rate (Hz) and
+# each density (cycles per octave). [Spectrotemporal ripples](ripples.html#h-how-a-ripple-is-made)
+# defines it and goes from a pattern to its spectrum. This page goes the other way: from a
+# spectrum, measured and edited or drawn from scratch, to a sound that has it.
 #
 # A magnitude is not enough to make a sound. The spectrum has dropped the phase of the
 # modulations, which says when each event happens, and the fine structure under each band's
-# envelope. `ModulationSpectrum.to_sound(carrier=...)` takes both from a *carrier*, the way an
-# envelope is put back on a carrier: a sound lends its own, while `"tones"` and `"noise"` draw a
-# random modulation phase and put the envelopes on steady tones or on noise.
+# envelope. `ModulationSpectrum.to_sound(carrier=...)` takes both from a *carrier*: a sound lends
+# its own, while `"tones"` and `"noise"` draw a random modulation phase and put the envelopes on
+# steady tones or on noise.
 #
-# - [Same spectrum, different sound](#h-same-spectrum-different-sound): a sentence and a sound
-#   with the sentence's modulation spectrum and random modulation phase.
+# The sentence is read by the [two talkers](talkers.html) every speech page uses, and every demo
+# on it plays both.
+#
+# - [Same spectrum, different sound](#h-same-spectrum-different-sound): the sentence, and a sound
+#   with its modulation spectrum and a random modulation phase.
 # - [A drawn spectrum](#h-a-drawn-spectrum): one patch of modulation, heard on three carriers.
 # - [Random spectrograms](#h-random-spectrograms): noise shaped by a spectrogram drawn at
 #   random with the coarse correlations of natural sounds.
-# - [An edited sentence](#h-an-edited-sentence): a sentence with every modulation faster than
+# - [An edited sentence](#h-an-edited-sentence): the sentence with every modulation faster than
 #   4 Hz removed, and how close the sound comes to that.
 # - [Timing from one sound, magnitudes from another](#h-timing-from-one-sound-magnitudes-from-another):
 #   the sentence and rain trade halves.
@@ -67,6 +69,11 @@ def finish(snd):
 
 # %%
 FS = 44100
+SPEAKERS = {"Male talker": "bdl", "Female talker": "slt"}
+talkers = {
+    label: finish(so.load(fetch(f"docs/speech/{speaker}_arctic_a0131.flac")))
+    for label, speaker in SPEAKERS.items()
+}
 
 
 def measure(snd, f_lo):
@@ -74,25 +81,59 @@ def measure(snd, f_lo):
     return so.ModulationSpectrum.octave(snd, f_lo=f_lo, f_hi=8000)
 
 
-def show(snd, target=None, f_lo=250):
-    """The sound's envelopes (a cochleagram), the target spectrum if there is one, and the
-    spectrum measured from the sound. Returns the figure and the panel the playhead follows."""
-    n_panels = 2 if target is None else 3
-    fig, axes = plt.subplots(1, n_panels, figsize=(4 * n_panels, 3.4), layout="constrained")
+bank = so.cosine_filterbank(
+    f_lo=125, f_hi=8000, spacing=1 / 12, scale="octave"
+)  # what measure(snd, 125) uses
+
+
+def cochleagram(ax, snd, f_lo):
+    """The sound's envelopes in 24 bands per octave."""
     bank = so.cosine_filterbank(f_lo=f_lo, f_hi=8000, spacing=1 / 24, scale="octave")
-    bank.analyze(snd).envelopes(lowpass=200, fs=1000).plot(axes[0], db_range=30, colorbar=False)
-    axes[0].set_title("Envelopes (cochleagram)")
+    bank.analyze(snd).envelopes(lowpass=200, fs=1000).plot(ax, db_range=30, colorbar=False)
+    ax.set_title("Envelopes (cochleagram)")
+
+
+def spectra(axes, snd, target, f_lo):
+    """The target spectrum, if there is one, and the spectrum measured from the sound."""
     if target is not None:
-        target.plot(axes[1], db_range=30, wt_max=20, wf_max=4, colorbar=False)
-        axes[1].set_title("Target modulation spectrum")
+        target.plot(axes[0], db_range=30, wt_max=20, wf_max=4, colorbar=False)
+        axes[0].set_title("Target modulation spectrum")
     measure(snd, f_lo).plot(axes[-1], db_range=30, wt_max=20, wf_max=4, colorbar=False)
     axes[-1].set_title("Measured from the sound")
+
+
+def show(snd, target=None, f_lo=250):
+    """The sound's cochleagram, the target spectrum if there is one, and the spectrum measured
+    from the sound. Returns the figure and the panel the playhead follows."""
+    n_panels = 2 if target is None else 3
+    fig, axes = plt.subplots(1, n_panels, figsize=(4 * n_panels, 3.4), layout="constrained")
+    cochleagram(axes[0], snd, f_lo)
+    spectra(axes[1:], snd, target, f_lo)
     return fig, [axes[0]]
+
+
+def show_pair(sounds, targets=None, f_lo=125):
+    """One column per talker: the cochleagram above, and below it the talker's target spectrum
+    (if there is one) beside the spectrum measured from the sound. Returns the figure and, for
+    each talker, the panel the playhead follows."""
+    fig = plt.figure(figsize=(10, 6.4), layout="constrained")
+    columns = fig.subfigures(1, 2)
+    playhead = {}
+    for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+        target = None if targets is None else targets[label]
+        layout = [["top"], ["measured"]] if target is None else [["top"] * 2, ["target", "measured"]]
+        top, *bottom = column.subplot_mosaic(layout).values()
+        cochleagram(top, snd, f_lo)
+        top.set_title(f"{label}: envelopes (cochleagram)")
+        spectra(bottom, snd, target, f_lo)
+        playhead[label] = [top]
+    return fig, playhead
+
 
 # %% [markdown]
 # ## Same spectrum, different sound
 #
-# A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
+# Each talker's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
 # heard with the sentence's own modulation phase thrown away. `to_sound` with `carrier="tones"`
 # draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
 # on a steady tone at its band's center. The random phase leaves the zero-rate column alone,
@@ -100,36 +141,62 @@ def show(snd, target=None, f_lo=250):
 # which bands are loud.
 
 # %% [about]
-# The sentence, a male talker reading one of the CMU ARCTIC prompts. Its modulation spectrum
-# is brightest at low rates and densities, as for most natural sounds (Singh & Theunissen,
-# 2003).
+# The sentence, read by each talker. Its modulation spectrum is brightest at low rates and
+# densities, as for most natural sounds (Singh & Theunissen, 2003); how that modulation changes
+# over the sentence is on [Modulation spectrogram](modspectrogram.html#d-s1). The
+# [speech-shaped noise](classic.html#d-k1) on Synthetic sounds has the long-term spectrum of speech
+# but none of this: its modulation spectrum is a single line at zero rate. In the cochleagrams
+# the lowest harmonics show as separate lines, farther apart for the female talker
+# ([Two talkers](talkers.html#h-harmonics-sample-the-envelope)); at the slow rates shown here the
+# two modulation spectra are much alike.
 
 # %% [demo mt1] A sentence
-sentence = so.load(fetch("docs/speech/bdl_arctic_a0131.flac"))
-spectrum = measure(sentence, f_lo=125)
-sound = finish(sentence)
-fig, playhead = show(sound, f_lo=125)
+spectra_of = {label: measure(snd, f_lo=125) for label, snd in talkers.items()}
+sounds = talkers
+fig, playhead = show_pair(sounds)
 
 # %% [about]
 # The same magnitudes with a random modulation phase. The syllables, the pauses and the onsets
 # are gone from the envelopes, which change at the sentence's rates and densities but never at
-# its moments. A random phase also asks for envelopes below zero, which no
-# envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
-# and that is why the measured spectrum is smoother than the target. The color is kept only
-# roughly. A two-dimensional modulation spectrum does not say which bands carry which
-# modulation, so the random phase spreads the sentence's modulation into bands that were quiet,
-# and clipping turns it into level there.
+# its moments. A random phase also asks for envelopes below zero, which no envelope can be;
+# `to_sound` clips them at zero, with a warning, and that is why the measured spectrum is
+# smoother than the target. The long-term spectrum is kept only roughly. A two-dimensional
+# modulation spectrum does not say which bands carry which modulation, so the random phase
+# spreads the sentence's modulation into bands that were quiet, and clipping turns it into level
+# there.
 
 # %% [demo mt2] Its modulation spectrum, random modulation phase
-twin = spectrum.to_sound(carrier="tones", fs=sentence.fs, rng=0)
-sound = finish(twin)
-fig, playhead = show(sound, target=spectrum, f_lo=125)
+sounds = {
+    label: finish(spectra_of[label].to_sound(carrier="tones", fs=snd.fs, rng=0))
+    for label, snd in talkers.items()
+}
+fig, playhead = show_pair(sounds, targets=spectra_of)
 
 # %% [markdown]
-# So a modulation spectrum fixes how a sound changes, not when. In the design note's check of
-# the same sentence (`docs/design/views/modulation-targets.md`, C1) the two envelope arrays
-# correlate at −0.08, and the pooled envelope, more than 30 dB below its peak 9.6% of the time
-# in the sentence, never is in the twin. Sounds made this way, with a natural sound's modulation
+# The same draw as envelopes, against the sentence's own envelopes: how many values were
+# clipped, how closely the two arrays correlate, and how often the summed envelope is more than
+# 30 dB below its peak, as it is in the pauses.
+
+
+# %%
+def summed_quiet(envelopes):
+    """Share of the time the envelope summed over bands is more than 30 dB below its peak."""
+    summed = envelopes.sum(axis=1)
+    return np.mean(summed < summed.max() * 10 ** (-30 / 20))
+
+
+for label, snd in talkers.items():
+    own = bank.analyze(snd).envelopes(fs=1000).data[:, 1:-1, 0]  # (time, band), edge bands dropped
+    twin = spectra_of[label].to_envelopes(rng=0).data[:, 1:-1, 0]  # the draw mt2 heard; clipped values are 0
+    clipped, correlation = np.mean(twin == 0), np.corrcoef(own.ravel(), twin.ravel())[0, 1]
+    print(
+        f"{label}: {clipped:.0%} clipped, correlation {correlation:.2f}, "
+        f"quiet {summed_quiet(own):.1%} of the time in the sentence, {summed_quiet(twin):.1%} in the twin"
+    )
+
+# %% [markdown]
+# So a modulation spectrum fixes how a sound changes, not when. The two envelope arrays barely
+# correlate, and the twin has no pauses. Sounds made this way, with a natural sound's modulation
 # spectrum and a random modulation phase, have been used to ask what auditory neurons respond
 # to (Hsu et al., 2004).
 
@@ -138,15 +205,17 @@ fig, playhead = show(sound, target=spectrum, f_lo=125)
 #
 # A target can be drawn from scratch as a few patches on the rate × density plane.
 # `so.ModulationBlob(rate, density)` is a Gaussian bump at that rate [Hz] and density
-# [cycles/octave], half an octave wide in rate and a quarter of a cycle per octave in density by
-# default. The signs follow the [ripples](ripples.html): a positive rate and density is a
-# downward sweep. A ripple is a blob of no width.
+# [cycles/octave], with a standard deviation of half an octave in rate and a quarter of a cycle
+# per octave in density by default. The signs follow the
+# [ripples](ripples.html#h-how-a-ripple-is-made): a positive rate and density is a downward
+# sweep. A ripple is a blob of no width.
 #
 # A drawing sets a shape, not a depth, so `from_blobs` takes the depth separately: `rms_depth`,
 # the rms of the envelopes about their mean, relative to the mean (0.2 by default). Envelopes
-# cannot go below zero, and a random phase reaches only a limited depth before they would: about
-# 0.28 for the blob below (C2 of the design note), against 0.71 for one full ripple. A drawn
-# target that would need clipping is refused, with the largest depth that fits.
+# cannot go below zero, and a random phase reaches only a limited depth before they would: a
+# random-phase field is close to Gaussian, whose peaks lie several standard deviations from its
+# mean, while a single ripple's peak is only $\sqrt{2}$ of them away. A drawn target that would
+# need clipping is refused, with the largest depth that fits.
 
 # %% [about]
 # Downward sweeps around 4 Hz and half a cycle per octave, on steady tones at the band centers.
@@ -172,15 +241,22 @@ sound = finish(on_noise)
 fig, playhead = show(sound, target=target)
 
 # %% [about]
-# The same target on the sentence. A sound as carrier lends its own modulation phase as well as
-# its fine structure, so the sweeps now come when the sentence's syllables did, in its voice. The
-# sentence is 2.5 s long, so this target is drawn for 2.5 s.
+# The same target on each talker's sentence, drawn for as long as that sentence and a little
+# shallower (`rms_depth=0.15`): the default depth would push some of the female talker's
+# envelope values below zero with this phase, and is refused. A sound as carrier lends its own
+# modulation phase as well as its fine structure, so the sweeps now come when the sentence's
+# syllables did, in each talker's voice: the sentence keeps its fine structure and gets new
+# envelopes. A [noise vocoder](vocoder.html#d-ci8) makes the opposite
+# trade, keeping the envelopes and replacing the fine structure with noise.
 
 # %% [demo mt5] The same blob, on the sentence
-short_target = so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), duration=2.5)
-on_sentence = short_target.to_sound(carrier=sentence)
-sound = finish(on_sentence)
-fig, playhead = show(sound, target=short_target)
+short_targets = {
+    label: so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), duration=snd.duration, rms_depth=0.15)
+    for label, snd in talkers.items()
+}
+on_sentence = {label: short_targets[label].to_sound(carrier=snd) for label, snd in talkers.items()}
+sounds = {label: finish(snd) for label, snd in on_sentence.items()}
+fig, playhead = show_pair(sounds, targets=short_targets, f_lo=250)
 
 # %% [markdown]
 # How much of each sound's measured modulation power lies where the target has its power (within
@@ -197,18 +273,18 @@ def share_in_target(snd, target):
     return measured_power[in_target & moving].sum() / measured_power[:, moving].sum()
 
 
-for name, snd, drawn in [
-    ("tones", on_tones, target),
-    ("noise", on_noise, target),
-    ("sentence", on_sentence, short_target),
-]:
-    print(f"{name:>8}: {share_in_target(snd, drawn):.0%}")
+carriers = [("tones", on_tones, target), ("noise", on_noise, target)]
+carriers += [(label.lower(), on_sentence[label], short_targets[label]) for label in talkers]
+for name, snd, drawn in carriers:
+    print(f"{name:>13}: {share_in_target(snd, drawn):.0%}")
 
 # %% [markdown]
 # The carrier matters as much as the target. A steady tone at each band's center adds almost no
 # modulation of its own, so the target survives. Noise and speech fluctuate inside every band,
-# and those fluctuations land in the measured spectrum on top of the drawn one. That is why
-# `"tones"` is the default carrier (C3 of the design note).
+# and those fluctuations land in the measured spectrum on top of the drawn one; a tone vocoder
+# keeps fast envelope modulations better than a noise vocoder for the same reason
+# ([Noise or tones](vocoder.html#h-noise-or-tones)). That is why `"tones"` is the default
+# carrier.
 
 # %% [markdown]
 # ## Random spectrograms
@@ -274,44 +350,50 @@ fig, playhead = show_spectrograms(env, sound)
 # ## An edited sentence
 #
 # A measured spectrum can be edited and heard. `with_gain(g)` multiplies every cell by
-# `g(rate, density)`; `lambda r, d: abs(r) <= 4` keeps only the modulations at 4 Hz and below,
-# roughly the syllable rate and slower, and removes everything faster. Elliott & Theunissen
-# (2009) filtered the modulation spectrum of speech's spectrogram in a similar way to find which
-# modulations intelligibility needs. With the sentence itself as carrier, its own modulation phase and fine
-# structure go back under the edited magnitudes, so wherever the gain is 1 the timing is kept.
+# `g(rate, density)`; `lambda r, d: abs(r) <= 4` keeps only the modulations at 4 Hz and below and
+# removes everything faster. Elliott & Theunissen (2009) filtered the modulation spectrum of
+# speech's spectrogram in a similar way to find which modulations intelligibility needs. With the
+# sentence itself as carrier, its own modulation phase and fine structure go back under the
+# edited magnitudes, so wherever the gain is 1 the timing is kept.
 
 # %% [about]
-# The edit, put straight back on the sentence. The measured spectrum keeps some power above
+# The edit, put straight back on each sentence. The measured spectrum keeps some power above
 # 4 Hz, less than the sentence had but more than the edit asks for: the sentence's fine
 # structure brings fast modulation of its own back into every band.
 
 # %% [demo mt6] Modulations above 4 Hz removed
-slow = spectrum.with_gain(lambda rate, density: np.abs(rate) <= 4)
-edited = slow.to_sound(carrier=sentence)
-sound = finish(edited)
-fig, playhead = show(sound, target=slow, f_lo=125)
+slow = {
+    label: spectrum.with_gain(lambda rate, density: np.abs(rate) <= 4)
+    for label, spectrum in spectra_of.items()
+}
+edited = {label: slow[label].to_sound(carrier=snd) for label, snd in talkers.items()}
+sounds = {label: finish(snd) for label, snd in edited.items()}
+fig, playhead = show_pair(sounds, targets=slow)
 
 # %% [about]
 # The same edit with 20 rounds of a search in the manner of Griffin & Lim (1984): analyze the
 # sound, keep its fine structure and modulation phase, impose the edited magnitudes again, and
-# resynthesize. Each round brings the sound's own spectrum closer to the edit.
+# resynthesize. Each round brings the sound's own spectrum closer to the edit. This is the
+# slowest cell on the page: each round is one analysis and one synthesis.
 
 # %% [demo mt7] The same edit, after 20 iterations
-searched = slow.to_sound(carrier=sentence, iterations=20)
-sound = finish(searched)
-fig, playhead = show(sound, target=slow, f_lo=125)
+searched = {label: slow[label].to_sound(carrier=snd, iterations=20) for label, snd in talkers.items()}
+sounds = {label: finish(snd) for label, snd in searched.items()}
+fig, playhead = show_pair(sounds, targets=slow)
 
 # %% [about]
 # The same edit on steady tones, with a random modulation phase: the slow modulations survive,
 # but the sentence's timing does not.
 
 # %% [demo mt8] The same edit, on tones
-on_tones_edit = slow.to_sound(carrier="tones", fs=sentence.fs, rng=0)
-sound = finish(on_tones_edit)
-fig, playhead = show(sound, target=slow, f_lo=125)
+on_tones_edit = {
+    label: slow[label].to_sound(carrier="tones", fs=snd.fs, rng=0) for label, snd in talkers.items()
+}
+sounds = {label: finish(snd) for label, snd in on_tones_edit.items()}
+fig, playhead = show_pair(sounds, targets=slow)
 
 # %% [markdown]
-# The modulation power left between 6 and 40 Hz, relative to the sentence's:
+# The modulation power left between 6 and 40 Hz, relative to each talker's sentence:
 
 
 # %%
@@ -323,68 +405,73 @@ def fast_share(snd):
     return power[:, fast].sum() / power.sum()
 
 
-for name, snd in [("edit", edited), ("20 iterations", searched), ("on tones", on_tones_edit)]:
-    print(f"{name:>13}: {10 * np.log10(fast_share(snd) / fast_share(sentence)):.1f} dB")
+for label, snd in talkers.items():
+    print(label)
+    for name, version in [("edit", edited), ("20 iterations", searched), ("on tones", on_tones_edit)]:
+        print(f"  {name:>13}: {10 * np.log10(fast_share(version[label]) / fast_share(snd)):.1f} dB")
 
 # %% [markdown]
 # None of them reaches the edit exactly, which removed everything there. A sound's envelopes are
 # not free: they come from filtering one waveform, so most arrays of magnitudes belong to no
-# sound at all, and the search finds a sound whose spectrum is close, never equal. The design
-# note measures the same comparison in C6 and C7.
+# sound at all, and the search finds a sound whose spectrum is close, never equal.
 
 # %% [markdown]
 # ## Timing from one sound, magnitudes from another
 #
 # A sound as carrier lends its modulation phase, so one sound's magnitudes can be heard with
 # another sound's timing. `to_envelopes(carrier=...)` gives the envelopes alone, which can then go
-# on either sound's fine structure. Here the sentence and 2.5 s of rain trade halves.
+# on either sound's fine structure. Here each talker's sentence and as much rain trade halves.
 
 # %%
-rain = so.load(fetch("docs/textures/rain.flac")).mono().resample(sentence.fs)
-rain = so.Sound(rain.data[: sentence.n_samples], sentence.fs)
-rain_spectrum = measure(rain, f_lo=125)
-bank = spectrum._analysis.filterbank  # the 12-per-octave bank both spectra were measured with
+rain_long = so.load(fetch("docs/textures/rain.flac")).mono()
+rains = {
+    label: so.Sound(rain_long.resample(snd.fs).data[: snd.n_samples], snd.fs)
+    for label, snd in talkers.items()
+}
+rain_spectra = {label: measure(rain, f_lo=125) for label, rain in rains.items()}
 
 # %% [about]
-# Rain's modulation magnitudes and fine structure, with the sentence's modulation phase. The
+# Rain's modulation magnitudes and fine structure, with each sentence's modulation phase. The
 # rain now swells and fades with the syllables.
 
 # %% [demo mt9] Rain magnitudes, sentence timing
-envelopes = rain_spectrum.to_envelopes(carrier=sentence)
-sound = finish((envelopes * bank.analyze(rain).tfs()).to_sound())
-fig, playhead = show(sound, target=rain_spectrum, f_lo=125)
+sounds = {}
+for label, snd in talkers.items():
+    envelopes = rain_spectra[label].to_envelopes(carrier=snd)
+    sounds[label] = finish((envelopes * bank.analyze(rains[label]).tfs()).to_sound())
+fig, playhead = show_pair(sounds, targets=rain_spectra)
 
 # %% [about]
-# The other way round: the sentence's magnitudes and fine structure, with rain's modulation
+# The other way round: each sentence's magnitudes and fine structure, with rain's modulation
 # phase. The voice is still there, but its events come at rain's moments.
 
 # %% [demo mt10] Sentence magnitudes, rain timing
-envelopes = spectrum.to_envelopes(carrier=rain)
-sound = finish((envelopes * bank.analyze(sentence).tfs()).to_sound())
-fig, playhead = show(sound, target=spectrum, f_lo=125)
+sounds = {}
+for label, snd in talkers.items():
+    envelopes = spectra_of[label].to_envelopes(carrier=rains[label])
+    sounds[label] = finish((envelopes * bank.analyze(snd).tfs()).to_sound())
+fig, playhead = show_pair(sounds, targets=spectra_of)
 
 # %% [markdown]
-# Some of the words can be made out in both: speech carries information in its timing and in
-# its modulation spectrum.
+# Listen for which words can still be made out in each: the first keeps the sentence's timing
+# and the second its modulation magnitudes.
 
 # %% [markdown]
 # ## Twins band by band
 #
 # A two-dimensional modulation spectrum says how much modulation there is at each rate and
 # density, but not which bands carry it. A random phase therefore spreads modulation into bands
-# that were steady or quiet, which is the extra noise heard in the sentence's twin above. A
-# narrower description keeps it: each band's own modulation spectrum, the per-band modulation
-# power that McDermott & Simoncelli (2011) use among their texture statistics. A twin of that
-# keeps each band's envelope magnitudes over rate and randomizes only its phase in time, band by
-# band. Both kinds of twin below keep each band's own fine structure, so only the envelopes
-# differ.
+# that were steady or quiet, as in the sentence's twin above. A narrower description keeps it:
+# each band's own modulation spectrum, close to the per-band modulation power that McDermott &
+# Simoncelli (2011) use among their texture statistics. A twin of that keeps each band's
+# envelope magnitudes over rate and randomizes only its phase in time, band by band. Both kinds
+# of twin below keep each band's own fine structure, so only the envelopes differ.
 
 
 # %%
 def band_twin(snd, rng=0):
     """Each band keeps its envelope's magnitude spectrum over time (and so its level); the phase is
     random, band by band. On the sound's own fine structure."""
-    bank = so.cosine_filterbank(f_lo=125, f_hi=8000, spacing=1 / 12, scale="octave")
     subbands = bank.analyze(snd)
     envelopes = subbands.envelopes(fs=1000).data[:, :, 0]  # (time, band)
     magnitude = np.abs(np.fft.rfft(envelopes, axis=0))
@@ -398,8 +485,7 @@ def band_twin(snd, rng=0):
 def plane_twin(snd, rng=0):
     """The same modulation spectrum on the plane, a random phase, on the sound's own fine structure."""
     plane = measure(snd, f_lo=125)
-    subbands = plane._analysis.filterbank.analyze(snd)
-    return (plane.to_envelopes(rng=rng) * subbands.tfs()).to_sound()
+    return (plane.to_envelopes(rng=rng) * bank.analyze(snd).tfs()).to_sound()
 
 
 def texture(name, seconds=3.5):
@@ -408,7 +494,8 @@ def texture(name, seconds=3.5):
 
 
 # %% [about]
-# 3.5 s of crickets, from the [sound textures](textures.html) page.
+# 3.5 s of crickets, from the [sound textures](textures.html) page, whose modulation over time
+# is on [Modulation spectrogram](modspectrogram.html#d-x1).
 
 # %% [demo mt11] Crickets
 crickets = texture("crickets")
@@ -449,9 +536,11 @@ sound = finish(band_twin(fire))
 fig, playhead = show(sound, f_lo=125)
 
 # %% [markdown]
-# So a band-by-band twin keeps a steady texture such as crickets, rain or wind, but not the
-# sparse events of a fire, applause or speech. That is why McDermott & Simoncelli's statistics
-# also include each band's envelope skew and kurtosis and the correlations between bands.
+# So a band-by-band twin keeps a steady texture such as crickets, but not the sparse events of
+# a fire. McDermott & Simoncelli's statistics also include each band's envelope skew and
+# kurtosis, which measure sparseness, and correlations between bands, which measure how events
+# line up across them; [What the statistics do](textures.html#h-what-the-statistics-do) hears a
+# fire synthesized with some of them left out.
 
 # %% [markdown]
 # ## What this page leaves out

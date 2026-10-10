@@ -20,15 +20,13 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # band's envelope modulates a band of noise in its place (Shannon et al., 1995). It is the
 # standard way to let a listener with normal hearing hear roughly what an implant passes on.
 #
-# Everything on this page is one function, `so.channel_vocode`, applied to the sentence from
-# [Seeing speech](speech.html) and to a short melody:
+# Everything on this page is one function, `so.channel_vocode`, applied to the sentence read by
+# the [two talkers](talkers.html) and to a short melody:
 #
 # - [How many bands](#h-how-many-bands): from a coarse picture of the spectrum to a fine one.
 # - [Noise or tones](#h-noise-or-tones): what carries the envelopes.
 # - [Pitch from the envelope](#h-pitch-from-the-envelope): the weak temporal pitch cue an implant
-#   leaves.
-# - [A higher voice](#h-a-higher-voice): the sentence read by a female talker, through the same
-#   vocoders.
+#   leaves, for a low voice and a higher one.
 # - [A melody](#h-a-melody): music, which cannot do without pitch.
 # - [What this simulation leaves out](#h-what-this-simulation-leaves-out): current spread,
 #   insertion depth, and the rest.
@@ -40,13 +38,13 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # how fast the envelopes may change, and what carries them. That is how its classic results were
 # found:
 #
-# - **Few bands are enough for speech in quiet.** Shannon et al. (1995) found that listeners
-#   understood most of the words in sentences through four noise bands, with no fine structure
-#   at all.
+# - **Few bands are enough for speech in quiet.** Shannon et al. (1995) found high recognition of
+#   the words in simple sentences through only three or four bands of noise, with no fine
+#   structure at all.
 # - **Implant users get only a handful.** Implants have 12 to 22 electrodes, but current spreads
-#   between neighbors. Friesen et al. (2001) found that most implant users did no better with
-#   more than about eight channels, while listeners hearing a vocoder kept improving up to about
-#   twenty, especially in noise.
+#   between neighbors. Friesen et al. (2001) found that implant users did no better with more
+#   than about seven or eight channels, while listeners hearing a vocoder kept improving up to the
+#   twenty channels tested, especially in noise.
 # - **Pitch is what suffers most.** With the fine structure gone, the only pitch cues left are
 #   which bands are loud and how fast the envelopes fluctuate. Music, intonation, and telling one
 #   voice from another all depend on pitch, and are hard for implant users.
@@ -54,11 +52,13 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # ## The sentence, and code the examples share
 #
-# The vocoder below splits the sound with half-cosine filters equally spaced on the ERB scale
-# between 80 Hz and 7.6 kHz (just under the 8 kHz Nyquist frequency of this 16 kHz recording),
-# neighbors overlapping by half, takes each band's Hilbert
-# envelope, lowpasses it at 50 Hz unless stated, and multiplies it into the same band of fresh
-# Gaussian noise. The output has the input's RMS.
+# Both talkers read the same sentence, recorded at 16 kHz. The vocoder splits each recording
+# with half-cosine filters equally spaced on the ERB scale, neighbors overlapping by half, that
+# together cover 80 Hz to 7.6 kHz; what lies below 80 Hz and between 7.6 kHz and the 8 kHz
+# Nyquist frequency is dropped. It takes each band's Hilbert envelope, lowpasses it at 50 Hz
+# unless stated (a fourth-order Butterworth filter run forward and backward), and multiplies it
+# into the same band of fresh Gaussian noise. The output has the input's RMS. Every sentence
+# figure has one column per talker, the male talker on the left.
 
 # %% [setup]
 import os
@@ -88,9 +88,14 @@ def finish(snd):
 
 
 # %%
-# The sentence at its native 16 kHz. Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
-fs = sentence.fs
+# The sentence, read by each talker, at its native 16 kHz. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {"Male talker": "bdl", "Female talker": "slt"}
+talkers = {
+    label: finish(so.load(fetch(f"docs/speech/{speaker}_arctic_a0131.flac")))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}
+fs = talkers["Male talker"].fs
 F_LO, F_HI = 80, 7600
 
 # Every spectrogram: a wideband STFT (Hann 5 ms), dB re its own maximum over 60 dB, 0 to 8 kHz.
@@ -104,24 +109,56 @@ def bands(snd, n_bands, env_lowpass=50.0):
     return fb.analyze(snd).envelopes(lowpass=env_lowpass, fs=1000)
 
 
-def show(snd, envelopes=None, title=""):
-    """Waveform, spectrogram and (if given) the band envelopes, on one time axis.
-    Returns the figure and the panels the playhead follows."""
-    n = 3 if envelopes is not None else 2
-    fig = plt.figure(figsize=(10, 2.0 + 2.2 * (n - 1)), layout="constrained")
-    axes = fig.subplots(n, 1, sharex=True, height_ratios=[0.55] + [1] * (n - 1))
+def draw(axes, snd, envelopes=None, title=""):
+    """Waveform, spectrogram and (if given) the band envelopes, down one column of axes."""
     snd.plot(axes[0], color="k", lw=0.4)
-    axes[0].set_title(f"Waveform{': ' + title if title else ''}")
+    axes[0].set_title(title)
     wide.analyze(snd).plot(axes[1], db_range=DB, colorbar=False, fmax=FMAX)
     axes[1].set_title("Spectrogram (Hann 5 ms)")
-    if envelopes is not None:
+    if envelopes is not None and envelopes.data.shape[1] == 3:  # one band (and the two dropped edges)
+        axes[2].plot(envelopes.t, envelopes.data[:, 1, 0], color="k", lw=0.6)
+        axes[2].set(title="The one envelope the vocoder keeps", ylabel="Envelope")
+    elif envelopes is not None:
         envelopes.plot(axes[2], db_range=DB, colorbar=False, fscale="linear", fmax=FMAX)
         axes[2].set_title(f"The {envelopes.data.shape[1] - 2} band envelopes the vocoder keeps")
     for ax in axes:
         ax.set_xlim(0, snd.duration)
         ax.set_xlabel("")
     axes[-1].set_xlabel("Time [s]")
+
+
+def show(snd, envelopes=None, title=""):
+    """One sound: waveform, spectrogram and (if given) band envelopes on one time axis.
+    Returns the figure and the panels the playhead follows."""
+    n = 3 if envelopes is not None else 2
+    fig = plt.figure(figsize=(10, 2.0 + 2.2 * (n - 1)), layout="constrained")
+    axes = fig.subplots(n, 1, sharex=True, height_ratios=[0.55] + [1] * (n - 1))
+    draw(axes, snd, envelopes, f"Waveform{': ' + title if title else ''}")
     return fig, list(axes)
+
+
+def show_pair(sounds, n_bands=None, env_lowpass=50.0, title=""):
+    """One column per talker, as `show`; the band envelopes are drawn from each talker's
+    original recording. Returns the figure and, for each talker, the panels the playhead follows."""
+    n = 2 if n_bands is None else 3
+    fig = plt.figure(figsize=(10, 1.6 + 2.0 * (n - 1)), layout="constrained")
+    columns = fig.subfigures(1, 2)
+    playhead = {}
+    for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+        axes = column.subplots(n, 1, sharex=True, height_ratios=[0.55] + [1] * (n - 1))
+        envelopes = None if n_bands is None else bands(talkers[label], n_bands, env_lowpass)
+        draw(axes, snd, envelopes, f"{label}{': ' + title if title else ''}")
+        playhead[label] = list(axes)
+    return fig, playhead
+
+
+def vocode_both(n_bands, **options):
+    """Both talkers through the same vocoder."""
+    return {
+        label: finish(so.channel_vocode(snd, n_bands, F_LO, F_HI, **options))
+        for label, snd in talkers.items()
+    }
+
 
 # %% [markdown]
 # ## How many bands
@@ -131,141 +168,144 @@ def show(snd, envelopes=None, title=""):
 # that fall in the same band can no longer be told apart.
 
 # %% [about]
-# The original, for comparison.
+# The two readings, for comparison.
 
 # %% [demo ci0] The original sentence
-fig, playhead = show(sentence)
-sound = sentence
+sounds = talkers
+fig, playhead = show_pair(sounds, title="original")
 
 # %% [about]
 # One band: the envelope of the whole sentence on a single noise. The rhythm and syllables are
 # there; the words are not.
 
 # %% [demo ci1] One band
-vocoded = finish(so.channel_vocode(sentence, 1, F_LO, F_HI, rng=1))
-fig, playhead = show(vocoded, bands(sentence, 1), "one band")
-sound = vocoded
+sounds = vocode_both(1, rng=1)
+fig, playhead = show_pair(sounds, 1, title="one band")
 
 # %% [about]
-# Four bands, about where Shannon et al. (1995) found listeners began to understand most words in
-# quiet. The spectrogram shows four broad blocks, switching on and off with the syllables.
+# Four bands, the most that Shannon et al. (1995) used; with three or four, their listeners
+# recognized most of the words in simple sentences. The band envelopes are four broad blocks,
+# switching on and off with the syllables.
 
 # %% [demo ci4] Four bands
-vocoded = finish(so.channel_vocode(sentence, 4, F_LO, F_HI, rng=4))
-fig, playhead = show(vocoded, bands(sentence, 4), "four bands")
-sound = vocoded
+sounds = vocode_both(4, rng=4)
+fig, playhead = show_pair(sounds, 4, title="four bands")
 
 # %% [about]
-# Eight bands, about as many as most implant users can use. The formant movements are now
-# visible as energy moving from band to band.
+# Eight bands, about as many as the implant users of Friesen et al. (2001) could make use of. The
+# formant movements are now visible as energy moving from band to band.
 
 # %% [demo ci8] Eight bands
-vocoded = finish(so.channel_vocode(sentence, 8, F_LO, F_HI, rng=8))
-fig, playhead = show(vocoded, bands(sentence, 8), "eight bands")
-sound = vocoded
+sounds = vocode_both(8, rng=8)
+fig, playhead = show_pair(sounds, 8, title="eight bands")
 
 # %% [about]
-# Sixteen bands. The words are easy, but the voice is still a whisper: no band of noise has a
-# pitch, so the talker's intonation is gone.
+# Sixteen bands. The words are clearer still, but both voices are still whispers: no band of
+# noise has a pitch, so the intonation is gone. What is left to tell the two talkers apart is
+# mostly where their energy sits across the bands, which follows their
+# [spectral envelopes](talkers.html#h-spectral-envelopes), and how fast each reads.
 
 # %% [demo ci16] Sixteen bands
-vocoded = finish(so.channel_vocode(sentence, 16, F_LO, F_HI, rng=16))
-fig, playhead = show(vocoded, bands(sentence, 16), "sixteen bands")
-sound = vocoded
+sounds = vocode_both(16, rng=16)
+fig, playhead = show_pair(sounds, 16, title="sixteen bands")
 
 # %% [markdown]
 # ## Noise or tones
 #
 # The carrier is the vocoder's stand-in for the electrode, and noise is only one choice. A tone
 # vocoder puts a sinusoid at each band's center instead. The envelopes are the same, but a tone
-# has no envelope fluctuations of its own to blur them, so fast modulations survive better, and
+# has no envelope fluctuations of its own to blur them, so fast modulations survive better (the
+# same blur shows in [a drawn modulation put on noise](modtargets.html#d-mt4)), and
 # the result sounds more like a buzzy voice than a whisper. With few bands, the tones are heard
 # as separate pitches. Speech through either is about equally intelligible (Dorman et al., 1997).
+#
+# A carrier can also be another sound, whose fine structure then carries the envelopes.
+# [Hearing a modulation spectrum](modtargets.html#d-mt5) does the reverse of this page: it keeps
+# the sentence's fine structure and gives it new envelopes.
 
 # %% [about]
 # The sentence through eight tones, at the same eight band centers as the noise vocoder above.
 
 # %% [demo ct8] Eight tones
-vocoded = finish(so.channel_vocode(sentence, 8, F_LO, F_HI, carrier="tone"))
-fig, playhead = show(vocoded, bands(sentence, 8), "eight tones")
-sound = vocoded
+sounds = vocode_both(8, carrier="tone")
+fig, playhead = show_pair(sounds, 8, title="eight tones")
 
 # %% [markdown]
 # ## Pitch from the envelope
 #
 # The vocoder's envelope lowpass decides how fast an envelope may change. At 50 Hz it keeps the
 # syllables and the formant movements but not the voice's periodicity. Raise it above the
-# fundamental, here about 90 to 190 Hz, and each band's envelope pulses once per glottal
-# period: a *temporal* pitch cue, the kind implant users rely on. It is weak and works only for
-# low pitches, a few hundred hertz at most.
+# fundamental and each band's envelope pulses once per glottal period: a *temporal* pitch cue,
+# the kind implant users rely on. These pulses are the vertical striations of a wideband
+# spectrogram ([Seeing speech](speech.html#d-27)).
+#
+# Whether a talker's pulses get through depends on where the pitch sits against the cutoff. The
+# gain of the envelope lowpass (a fourth-order Butterworth run forward and backward, so
+# $1 / (1 + (f/f_c)^8)$ in amplitude) at the median and at the 95th percentile of each talker's
+# pitch track (see [Two talkers](talkers.html#h-pitch)):
+
+
+# %%
+def lowpass_gain_db(f, cutoff):
+    """Amplitude gain [dB] of the envelope lowpass at f [Hz]."""
+    return -20 * np.log10(1 + (f / cutoff) ** 8)
+
+
+pitch = {}
+for label, track in tracks.items():
+    voiced = track.f0[0][track.voiced[0]]
+    pitch[label] = {"median": np.median(voiced), "95th percentile": np.percentile(voiced, 95)}
+    for name, f0 in pitch[label].items():
+        gains = ", ".join(f"{lowpass_gain_db(f0, cutoff):6.1f} dB at {cutoff} Hz" for cutoff in (50, 300))
+        print(f"{label}, {name:>15}: {f0:3.0f} Hz, lowpass gain {gains}")
+
+# %% [markdown]
+# With 50 Hz envelopes, the pulses of both voices are cut by at least
+# {{ f"{np.floor(-max(lowpass_gain_db(p['median'], 50) for p in pitch.values())):.0f}" }} dB at the
+# median pitch, so the noise-vocoded sentences above carry no voice pitch. With 300 Hz envelopes,
+# the pulses of both pass almost untouched: the female talker's, faster and closer to the cutoff,
+# lose only {{ f"{-lowpass_gain_db(pitch['Female talker']['95th percentile'], 300):.1f}" }} dB near
+# the top of its range. A voice pitched above the cutoff would lose them.
 
 # %% [about]
-# One band's envelope over a stretch of voiced speech, lowpassed at 50 Hz and at 300 Hz. Only
-# the 300 Hz envelope follows the glottal pulses.
+# One band's envelope over the first voiced stretch of each reading, lowpassed at 50 Hz and at
+# 300 Hz. Only the 300 Hz envelope follows the glottal pulses, which come faster in the female
+# talker's reading.
 
 # %% [figure cp0] One envelope, two cutoffs
 fb = so.cosine_filterbank(8, F_LO, F_HI)
-sub = fb.analyze(sentence)
 band = int(np.argmin(np.abs(fb.cfs - 700)))  # the band nearest 700 Hz
-fig, ax = plt.subplots(figsize=(10, 3.0), layout="constrained")
-for cutoff, color in ((50, "tab:blue"), (300, "tab:red")):
-    env = sub.envelopes(lowpass=cutoff)
-    ax.plot(env.t, env.data[:, band, 0], color=color, lw=1, label=f"lowpass {cutoff} Hz")
-ax.set(
-    xlim=(0.1, 0.3),
-    xlabel="Time [s]",
-    ylabel="Envelope",
-    title=f"The band centered at {fb.cfs[band]:.0f} Hz",
-)
-ax.legend(loc="upper right", fontsize=8)
-ax.grid(ls=":")
+STRETCH = 0.15  # seconds shown
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.0), layout="constrained")
+for ax, (label, snd) in zip(axes, talkers.items(), strict=True):
+    track = tracks[label]
+    # the start of the first voiced stretch at least STRETCH long
+    voiced = np.r_[False, track.voiced[0], False].astype(int)
+    starts, ends = np.flatnonzero(np.diff(voiced) == 1), np.flatnonzero(np.diff(voiced) == -1)
+    start = next(
+        track.t[a] for a, b in zip(starts, ends, strict=True) if track.t[b - 1] - track.t[a] >= STRETCH
+    )
+    sub = fb.analyze(snd)
+    for cutoff, color in ((50, "tab:blue"), (300, "tab:red")):
+        env = sub.envelopes(lowpass=cutoff)
+        ax.plot(env.t, env.data[:, band, 0], color=color, lw=1, label=f"lowpass {cutoff} Hz")
+    ax.set(
+        xlim=(start, start + STRETCH),
+        xlabel="Time [s]",
+        ylabel="Envelope",
+        title=f"{label}: the band centered at {fb.cfs[band]:.0f} Hz",
+    )
+    ax.legend(loc="upper right", fontsize=8)
+    ax.grid(ls=":")
 
 # %% [about]
-# Eight bands with envelopes lowpassed at 300 Hz instead of 50 Hz. Listen for the intonation,
-# faint but back. The wideband spectrogram shows the pulses as vertical striations again.
+# Eight bands with envelopes lowpassed at 300 Hz instead of 50 Hz. Listen for the intonation of
+# each talker, faint but back. The wideband spectrograms show the pulses as vertical striations
+# again, closer together for the female talker; zoom in to see single ones.
 
 # %% [demo cp8] Eight bands, 300 Hz envelopes
-vocoded = finish(so.channel_vocode(sentence, 8, F_LO, F_HI, env_lowpass=300, rng=8))
-fig, playhead = show(vocoded, bands(sentence, 8, env_lowpass=300), "eight bands, 300 Hz envelopes")
-sound = vocoded
-
-# %% [markdown]
-# ## A higher voice
-#
-# The same sentence read by a female talker (slt). The female fundamental, about 150 to 230 Hz here
-# by `so.f0_track`, is higher than the male talker's, so a temporal cue has to follow faster pulses.
-
-# %%
-sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
-track_female = so.f0_track(sentence_female)
-print(f"female F0: {track_female}")
-
-# %% [about]
-# The female talker's sentence as recorded.
-
-# %% [demo cf0] Female talker
-fig, playhead = show(sentence_female)
-sound = sentence_female
-
-# %% [about]
-# Through eight noise bands with 50 Hz envelopes. As with the male talker's sentence, the words come through
-# and the intonation does not; with the pitch gone, the main difference left between the two
-# vocoded voices is where their formants sit.
-
-# %% [demo cf8] Female talker, eight bands
-vocoded = finish(so.channel_vocode(sentence_female, 8, F_LO, F_HI, rng=8))
-fig, playhead = show(vocoded, bands(sentence_female, 8), "eight bands")
-sound = vocoded
-
-# %% [about]
-# Eight bands with 300 Hz envelopes. The female fundamental is still below the cutoff, so the
-# envelopes pulse with it, as the male talker's do. Listen for the intonation, and compare it with
-# the male talker's above.
-
-# %% [demo cf8p] Female talker, eight bands, 300 Hz envelopes
-vocoded = finish(so.channel_vocode(sentence_female, 8, F_LO, F_HI, env_lowpass=300, rng=8))
-fig, playhead = show(vocoded, bands(sentence_female, 8, env_lowpass=300), "eight bands, 300 Hz envelopes")
-sound = vocoded
+sounds = vocode_both(8, env_lowpass=300, rng=8)
+fig, playhead = show_pair(sounds, 8, env_lowpass=300, title="eight bands, 300 Hz envelopes")
 
 # %% [markdown]
 # ## A melody

@@ -16,41 +16,46 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # spectrogram* does the same for its modulation spectrum: how fast, and how deeply, the
 # envelope of each frequency band rises and falls, moment by moment (Greenberg & Kingsbury,
 # 1997; Kingsbury et al., 1998). It has three axes, time, acoustic frequency and modulation
-# rate, so it is a cube, and a page can only show cuts through it. Here every example has two:
-# modulation rate against time, pooled over the acoustic bands, beside the plot; and acoustic
-# frequency against modulation rate at the current moment (Atlas & Shamma, 2003), which changes
-# as the sound plays.
+# rate, so it is a cube, and a page can only show cuts through it. The main one here is
+# modulation rate against time, pooled over the acoustic bands. The other is acoustic frequency
+# against modulation rate at one moment (Atlas & Shamma, 2003): beside the player it follows the
+# sound as it plays, and under the speech it is drawn at three moments.
+#
+# This is a different modulation spectrum from the two-dimensional one of rates and spectral
+# densities, measured over a whole sound, that [Spectrotemporal ripples](ripples.html) defines
+# and [Hearing a modulation spectrum](modtargets.html) turns back into sound.
 #
 # - [How it is computed](#h-how-it-is-computed): band envelopes, then a bank of windowed
 #   complex exponentials on each envelope.
 # - [A modulation rate that glides](#h-a-modulation-rate-that-glides): a pattern a spectrogram
 #   cannot show.
-# - [Speech, babble and noise](#h-speech-babble-and-noise): the syllable rhythm, blurred by more
-#   talkers and gone in noise with the same spectrum.
-# - [A higher voice](#h-a-higher-voice): one sentence read by a male and by a female talker, with
-#   the same rhythm.
+# - [Speech, babble and noise](#h-speech-babble-and-noise): the syllable rhythm of each talker,
+#   blurred by more voices and gone in noise with the same spectrum.
 # - [Three textures](#h-three-textures): crickets, applause and rain, each with its own rates.
 # - [Three cuts through the cube](#h-three-cuts-through-the-cube): one moment, one rate and the
 #   pooled view, side by side.
-# - [What this page leaves out](#h-what-this-page-leaves-out): power, live analysis, and
-#   inversion.
+# - [What this page leaves out](#h-what-this-page-leaves-out): power, live analysis, inversion
+#   and the front end.
 
 # %% [markdown]
 # ## How it is computed
 #
-# The sound first goes through 24 ERB-spaced bands from 100 Hz to 7 kHz, and each band's
-# envelope is taken at 1000 Hz (a cochleagram). Each envelope then goes through a bank of
-# modulation filters, one per rate from 0.5 to 64 Hz. A filter is a complex exponential at its
-# rate under a Hann window, so it measures the envelope's Fourier component at that rate over
-# the window, the way one bin of an STFT does for the sound itself. The same window, without
-# the exponential, measures the envelope's local mean, and the ratio of the two is the
-# *modulation depth*:
+# The sound first goes through 24 bands from 100 Hz to 7 kHz, equally spaced on the ERB scale
+# (`so.cosine_filterbank`, as on [Analysis and resynthesis](resynthesis.html#h-perfect-reconstruction)),
+# and each band's envelope is taken at 1000 Hz (a cochleagram). Each envelope then goes through a
+# bank of modulation filters, one per rate from 0.5 to 64 Hz. A filter is a complex exponential at
+# its rate under a Hann window, so it measures the envelope's Fourier component at that rate over
+# the window, the way one bin of an STFT does for the sound itself. The same window, without the
+# exponential, measures the envelope's local mean, and the ratio of the two is the *modulation
+# depth*:
 #
 # $$m_{b,k}(t) = \frac{2\,|y_{b,k}(t)|}{\mu_{b,k}(t)}$$
 #
 # A band whose envelope is $1 + m \sin(2\pi f_m t)$ reads $m$ at the rate $f_m$, so 100%
 # modulation is 0 dB and 50% is $-6$ dB. Depth says how modulated a band is, whatever its
-# level, which is what makes a quiet band's rhythm as visible as a loud one's.
+# level, which is what makes a quiet band's rhythm as visible as a loud one's. The pooled view
+# adds the bands' modulation power and divides by their summed squared means, so there the louder
+# bands count for more.
 #
 # The window sets the trade-off, as in an STFT. By default each rate's window holds three of
 # its cycles: 6 s at 0.5 Hz, 0.75 s at 4 Hz, 47 ms at 64 Hz, so slow rates are resolved finely
@@ -59,14 +64,6 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # half as quickly; the examples show both. Cells drawn gray are ones the analysis cannot trust:
 # where the window runs past either end of the sound, or where the rate is faster than the band
 # is wide (a band's envelope can't change faster than that).
-#
-# The image beside each player is the default analysis at one moment, band by band. It is
-# noisier than the pooled plots. The envelope of a narrow band of noise fluctuates at random,
-# so even steady noise has some depth at every rate, more at fast rates (about $-35$ dB at
-# 0.5 Hz, $-12$ dB at 64 Hz). In one band that depth scatters by about 5 dB from moment to
-# moment; pooled over the 24 bands it scatters by less than 1 dB. Press play,
-# or click a time axis, and it follows the sound; before that it shows a moment chosen for each
-# example.
 
 # %% [setup]
 import os
@@ -96,6 +93,14 @@ def finish(snd):
 
 
 # %%
+# The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {"Male talker": "bdl", "Female talker": "slt"}
+talkers = {
+    label: finish(so.load(fetch(f"docs/speech/{speaker}_arctic_a0131.flac")))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}
+
 fs = 16000
 rng = np.random.default_rng(0)
 
@@ -106,11 +111,18 @@ def analyze(snd):
     return env, so.ModulationSpectrogram(env), so.ModulationSpectrogram(env, cycles=6, per_octave=4)
 
 
-def show(snd, marks=(), start=None):
-    """The cochleagram and both modulation spectrograms, one above the other, with dashed lines
-    at ``marks`` [s]; and the band x rate depth image (3 cycles) that follows the sound."""
+def depth_db(msg):
+    """Depth in dB for every band, rate and time window, NaN where the cell is not valid."""
+    db = 20 * np.log10(msg.depth[0])
+    db[~msg.valid] = np.nan
+    return db
+
+
+def draw(column, snd, marks):
+    """The cochleagram and both modulation spectrograms, one above the other in ``column`` (a
+    figure or subfigure), with dashed lines at ``marks`` [s]. Returns the analyses and axes."""
     env, msg, fine = analyze(snd)
-    fig, axes = plt.subplots(3, 1, figsize=(9, 8.4), layout="constrained", sharex=True)
+    axes = column.subplots(3, 1, sharex=True)
     env.plot(ax=axes[0])
     axes[0].set(title="Cochleagram", xlabel="")
     msg.plot(ax=axes[1])
@@ -120,8 +132,15 @@ def show(snd, marks=(), start=None):
     for ax in axes:
         for m in marks:
             ax.axvline(m, color="c", lw=1, ls="--")
-    db = 20 * np.log10(msg.depth[0])
-    db[~msg.valid] = np.nan
+    return msg, list(axes)
+
+
+def show(snd, marks=(), start=None):
+    """``draw`` for one sound, and the band x rate depth image (3 cycles) that follows the sound
+    beside the player."""
+    fig = plt.figure(figsize=(9, 8.4), layout="constrained")
+    msg, axes = draw(fig, snd, marks)
+    db = depth_db(msg)
     top = np.nanmax(db)
     live = {
         "t": msg.t,
@@ -134,7 +153,68 @@ def show(snd, marks=(), start=None):
         "title": "Depth",
         "start": snd.duration / 2 if start is None else start,
     }
-    return fig, list(axes), live
+    return fig, axes, live
+
+
+def show_pair(sounds, marks, moments):
+    """One column per talker: ``draw``, and under it the band x rate depth image (3 cycles) at
+    each of that talker's ``moments`` [s], named by their keys. Returns the figure and, for
+    each talker, the panels the playhead follows."""
+    fig = plt.figure(figsize=(12, 11), layout="constrained")
+    columns = fig.subfigures(1, 2)
+    playhead = {}
+    for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+        upper, lower = column.subfigures(2, 1, height_ratios=[3, 1])
+        msg, axes = draw(upper, snd, marks[label])
+        upper.suptitle(label, fontsize=11)
+        db = depth_db(msg)
+        top = np.nanmax(db)
+        cuts = lower.subplots(1, len(moments[label]), sharey=True)
+        for ax, (name, moment) in zip(cuts, moments[label].items(), strict=True):
+            i = int(np.argmin(np.abs(msg.t - moment)))
+            image = ax.pcolormesh(
+                msg.fm, msg.f, db[:, :, i], cmap="magma", vmin=top - 30, vmax=top, shading="nearest"
+            )
+            image.cmap.set_bad("0.75")
+            ax.set(xscale="log", yscale="log", title=f"{name}, {msg.t[i]:.1f} s", xlabel="Rate [Hz]")
+        cuts[0].set_ylabel("Frequency [Hz]")
+        lower.colorbar(image, ax=cuts, label="Depth [dB]", shrink=0.9)
+        playhead[label] = axes
+    return fig, playhead
+
+
+# %% [markdown]
+# How much depth does a sound without any rhythm have? 20 s of white noise, through the same
+# analysis. The envelope of a narrow band of noise fluctuates at random, so even steady noise has
+# some depth at every rate. The cell also measures how wide the 3-cycle filters are.
+
+# %%
+noise = so.Sound(rng.standard_normal(20 * fs), fs).normalize(rms=0.1)
+_, noise_msg, _ = analyze(noise)
+noise_db = depth_db(noise_msg)
+noise_pooled = 20 * np.log10(noise_msg.pooled_depth()[0])
+band_median = np.nanmedian(noise_db, axis=(0, 2))
+band_scatter = np.nanmedian(np.nanstd(noise_db, axis=2), axis=0)
+pooled_scatter = np.nanstd(noise_pooled, axis=1)
+for rate, level, one, pooled in zip(noise_msg.fm, band_median, band_scatter, pooled_scatter, strict=True):
+    print(f"{rate:5.3g} Hz: median {level:5.1f} dB, scatter in a band {one:.1f} dB, pooled {pooled:.1f} dB")
+rates = np.linspace(1, 16, 20001)  # the response of the 8 Hz filter
+response = noise_msg.bank.response(rates)[:, list(noise_msg.fm).index(8.0)]
+half_power = rates[response >= response.max() / np.sqrt(2)]
+quality = 8.0 / (half_power[-1] - half_power[0])
+print(f"8 Hz filter: half-power width {half_power[-1] - half_power[0]:.2f} Hz, Q = {quality:.2f}")
+
+# %% [markdown]
+# Steady noise reads about {{ f"{band_median[0]:.0f}" }} dB at 0.5 Hz and
+# {{ f"{band_median[-1]:.0f}" }} dB at 64 Hz: more depth at faster rates. In one band the depth
+# scatters by about {{ f"{np.median(band_scatter):.1f}" }} dB (standard deviation) from moment to
+# moment; pooled over the bands it scatters by about {{ f"{np.median(pooled_scatter):.1f}" }} dB.
+# That is why the pooled plots are smooth and the band x rate images grainy. The filters' Q is
+# about {{ f"{quality:.1f}" }}: each is about half as wide as its rate, like the modulation
+# filters of a model of modulation detection (Dau et al., 1997), whose Q is 2 above 10 Hz.
+#
+# Beside each player the band x rate image follows the sound: press play, or click a time axis.
+# Before that it shows a moment chosen for each example.
 
 # %% [markdown]
 # ## A modulation rate that glides
@@ -161,93 +241,106 @@ fig, playhead, live = show(sound)
 # %% [markdown]
 # ## Speech, babble and noise
 #
-# Three sentences from two talkers, then 4 s of babble made of six copies of the same sentences
-# overlapping at random, then 4 s of noise with the sentences' long-term spectrum. Speech is
-# modulated most strongly between about 2 and 8 Hz, the rate of its syllables (Greenberg & Kingsbury,
-# 1997). That rhythm is what babble partly hides and
-# speech-shaped noise lacks entirely.
+# For each talker ([Two talkers](talkers.html)): the sentence from the CMU ARCTIC corpus
+# (Kominek & Black, 2004), then 4 s of babble, then 4 s of noise with the sentence's long-term
+# spectrum. The collection has one sentence by the female talker, so each talker's babble is that
+# talker's own sentence six times over, each copy repeated end to end and started at a random
+# point. Speech is modulated most strongly at a few hertz, the rate of its syllables (Greenberg &
+# Kingsbury, 1997). That rhythm is what babble
+# partly hides and speech-shaped noise ([Synthetic sounds](classic.html#d-k1)) lacks entirely.
+# [Hearing a modulation spectrum](modtargets.html#d-mt1) measures the male talker's sentence as a
+# whole, and hears what is left when its modulation keeps its rates but loses its timing
+# ([mt2](modtargets.html#d-mt2)).
 
 # %%
-names = ("bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133")
-sentences = [so.load(fetch(f"docs/speech/{n}.flac")).normalize(rms=0.1) for n in names]
-talk = so.concat(sentences)
 n = int(4 * fs)
-babble = np.zeros(n)
-for s in sentences * 2:
-    x = np.tile(s.data[:, 0], 3)
-    start = int(rng.uniform(0, 1.5) * fs)
-    babble[start:] += x[: n - start]
-ssn = so.long_term_spectrum(sentences).to_sound(4, fs, rng=0)
-mixed = so.concat([talk, so.Sound(babble, fs).normalize(rms=0.1), ssn.normalize(rms=0.1)])
-marks = [talk.duration, talk.duration + 4]
-print(f"sentences {talk.duration:.2f} s, then babble and noise, {mixed.duration:.2f} s in all")
+mixes, segments = {}, {}
+for label, snd in talkers.items():
+    x = snd.data[:, 0]
+    repeated = np.tile(x, n // len(x) + 2)
+    babble = np.zeros(n)
+    for start in rng.integers(len(x), size=6):
+        babble += repeated[start : start + n]
+    ssn = so.long_term_spectrum([snd]).to_sound(4, fs, rng=0)
+    parts = [snd, so.Sound(babble, fs).normalize(rms=0.1), ssn.normalize(rms=0.1)]
+    mixes[label] = finish(so.concat(parts))
+    ends = np.cumsum([p.duration for p in parts])
+    segments[label] = {"Speech": (0, ends[0]), "Babble": (ends[0], ends[1]), "Noise": (ends[1], ends[2])}
+
+# The pooled depth (3 cycles), median over each part's time windows
+shown = [2, 4, 8, 16, 32, 64]
+pooled_medians = {}
+print("depth [dB] at", ", ".join(f"{rate} Hz" for rate in shown))
+for label, mix in mixes.items():
+    _, msg, _ = analyze(mix)
+    pooled = 20 * np.log10(msg.pooled_depth()[0])
+    columns = [list(msg.fm).index(rate) for rate in shown]
+    for name, (begin, end) in segments[label].items():
+        during = (msg.t >= begin) & (msg.t < end)
+        pooled_medians[label, name] = np.nanmedian(pooled[columns][:, during], axis=1)
+        print(f"{label:13} {name:6}", "  ".join(f"{v:6.1f}" for v in pooled_medians[label, name]))
+speech_gap = np.abs(pooled_medians["Male talker", "Speech"] - pooled_medians["Female talker", "Speech"])
+lowest_f0 = {label: track.f0[0][track.voiced[0]].min() for label, track in tracks.items()}
+print("lowest F0:", ", ".join(f"{label} {f0:.0f} Hz" for label, f0 in lowest_f0.items()))
 
 # %% [about]
-# The dashed lines mark where the babble and the noise begin. Under the sentences the pooled
-# depth is high from about 2 to 10 Hz, brightest around 3 to 5 Hz. In the babble it is weaker and
-# patchier, since six talkers' syllables fill each other's gaps. In the speech-shaped noise it
-# falls to the level any noise has: the envelope of a narrow band of noise fluctuates randomly,
-# more at rates near the band's width. Watch the image beside the player change at each line.
+# The dashed lines mark where the babble and the noise begin; under the modulation
+# spectrograms is the band x rate image at one moment of each part. Under the sentence the pooled
+# depth is high from 2 to 8 Hz. In the babble it is a few dB lower there and more even across
+# rates, since the six copies' syllables fill each other's gaps. In the speech-shaped noise it
+# falls further, toward the depth any noise has (measured above): lowest at the slow rates and
+# highest at the fast ones, where the noise is more deeply modulated than the speech. The bright
+# patch just before the first dashed line is the end of the sentence running into the babble,
+# which windows that span both read as modulation.
+#
+# The two talkers look much alike. During the sentence their pooled depths from 2 to 16 Hz
+# differ by {{ f"{speech_gap[:4].max():.0f}" }} dB or less; the female talker's speech is a few
+# dB less modulated at 32 and 64 Hz. The rhythm is set by the syllables, and the two talkers read
+# the same syllables at nearly the same pace. Pitch does not show at all: the fastest rate here,
+# 64 Hz, is below either talker's lowest F0 (printed above), so the beating of harmonics within a
+# band, at the rate of F0, is beyond the top of the plots. The difference between the voices is
+# in a spectrogram ([Two talkers](talkers.html#h-harmonics-sample-the-envelope)), not here.
 
 # %% [demo s1] Speech, babble and noise
-sound = finish(mixed)
-fig, playhead, live = show(sound, marks=marks, start=1.5)
-
-# %% [markdown]
-# ## A higher voice
-#
-# The first of those sentences read twice, by the male talker from the sentences above (bdl) and by
-# a female talker (slt) whose voice is roughly an octave higher. A spectrogram of the two looks
-# quite different, with the female talker's harmonics twice as far apart. Their modulation
-# spectrograms should not, if the modulation is set by the syllables rather than by the voice.
-
-# %%
-same_sentence = [
-    so.load(fetch(f"docs/speech/{n}_arctic_a0131.flac")).normalize(rms=0.1) for n in ("bdl", "slt")
-]
-two_voices = so.concat(same_sentence)
-env, msg, fine = analyze(two_voices)
-depth_db = 20 * np.log10(msg.depth[0])
-depth_db[~msg.valid] = np.nan
-switch = same_sentence[0].duration
-for speaker, during in (("bdl", msg.t < switch), ("slt", msg.t >= switch)):
-    pooled = np.nanmedian(depth_db[:, :, during], axis=(0, 2))
-    rates = (msg.fm >= 2) & (msg.fm <= 16)
-    pairs = zip(msg.fm[rates], pooled[rates], strict=True)
-    shown = ", ".join(f"{rate:.3g} Hz {level:.1f}" for rate, level in pairs)
-    print(f"{speaker}, median depth [dB]: {shown}")
-
-# %% [about]
-# The dashed line marks where the female talker begins; the bright patch around it is the pause
-# between the two readings, which every window that spans it reads as deep modulation. Away from the
-# line the pooled depth has the same shape in both halves, highest between about 2 and 8 Hz and
-# falling off above 10 Hz. The printout above gives the medians, which differ by 2 dB or less; the
-# male talker's are a little deeper at the slowest rates. Pitch does not show at all: the fastest
-# rate here, 64 Hz, is below either voice's F0, so the beating of harmonics within a band, at the
-# rate of F0, falls off the top. What does change is the cochleagram, whose low bands resolve the
-# female talker's widely spaced harmonics into separate stripes.
-
-# %% [demo sv1] The same sentence, two voices
-sound = finish(two_voices)
-fig, playhead, live = show(sound, marks=[switch], start=1.2)
+sounds = mixes
+marks = {label: [parts["Babble"][0], parts["Noise"][0]] for label, parts in segments.items()}
+moments = {label: {name: (a + b) / 2 for name, (a, b) in parts.items()} for label, parts in segments.items()}
+fig, playhead = show_pair(sounds, marks, moments)
 
 # %% [markdown]
 # ## Three textures
 #
 # Crickets, applause and rain, 3.5 s of each, from the recordings on the
-# [Sound textures](textures.html) page. A texture is a sound whose statistics stay put, so its
-# modulation spectrogram should hold still while each texture lasts and change at the joins.
+# [Sound textures](textures.html) page ([crickets](textures.html#d-t02a),
+# [applause](textures.html#d-t03a), [rain](textures.html#d-t00a)). A texture is a sound whose
+# statistics stay put, so its modulation spectrogram should hold still while each texture lasts
+# and change at the joins.
 
 # %%
 textures = [so.load(fetch(f"docs/textures/{n}.flac")).resample(fs) for n in ("crickets", "applause", "rain")]
 three = so.concat([s[:3.5].normalize(rms=0.1) for s in textures])
+_, msg, _ = analyze(finish(three))
+pooled = 20 * np.log10(msg.pooled_depth()[0])
+deepest = {}
+for name, begin in (("crickets", 0.0), ("applause", 3.5), ("rain", 7.0)):
+    during = (msg.t >= begin + 0.5) & (msg.t < begin + 3.0)  # away from the joins
+    median = np.nanmedian(pooled[:, during], axis=1)
+    deepest[name] = msg.fm[np.nanargmax(median)]
+    print(
+        f"{name:9} deepest at {msg.fm[np.nanargmax(median)]:4.3g} Hz ({np.nanmax(median):5.1f} dB),",
+        f"median over 2 to 64 Hz {np.nanmedian(median[msg.fm >= 2]):5.1f} dB",
+    )
 
 # %% [about]
-# The crickets chirp in pulses at about 40 to 60 Hz, and their modulation sits there and
-# nowhere else. Applause is a crowd of claps, each clapper about four times a second, and adds a
-# band of slow modulation. Rain has many small drops at no particular rate and the weakest
-# modulation of the three. The 6-cycle view separates the rates more cleanly, since nothing here
-# changes quickly.
+# The printout gives each texture's pooled depth, median over its middle 2.5 s. The crickets
+# chirp in fast pulses, and their modulation sits at the top of the rate axis (deepest at
+# {{ f"{deepest['crickets']:.0f}" }} Hz) and hardly anywhere else. Applause is a crowd of claps
+# and adds a band of slow modulation, deepest at {{ f"{deepest['applause']:.1f}" }} Hz. Rain has
+# many small drops at no particular rate: no slow rate stands out, and its depth grows toward the
+# fast rates, as steady noise's does. The 6-cycle view separates the rates more cleanly, since
+# nothing here changes quickly. The same crickets are on
+# [Hearing a modulation spectrum](modtargets.html#d-mt11), with a twin that keeps each band's
+# modulation ([crickets, twin band by band](modtargets.html#d-mt13)).
 
 # %% [demo x1] Crickets, applause and rain
 sound = finish(three)
@@ -258,37 +351,46 @@ fig, playhead, live = show(sound, marks=[3.5, 7.0], start=1.75)
 #
 # `msg.slices(t, rate)` draws three cuts through the cube at once, on one color scale: rate
 # against time pooled over bands, frequency against time at one rate, and frequency against
-# rate at one moment. Here they are for the sentences, at 4 Hz and at 2 s.
+# rate at one moment. Here they are for each talker's speech, babble and noise from above, at
+# 4 Hz and at a moment in the sentence.
 
 # %% [about]
-# The middle panel shows which bands carry the 4 Hz rhythm and when: nearly all of them, in
-# step with the syllables, since a syllable's onset raises the level across the spectrum. On the
-# right, the moment at 2 s: depth is high from 1 to about 5 Hz in most bands and falls off above
-# 10 Hz, most steeply in the low bands. The gray column is 0.5 Hz, whose 6 s window runs past
-# the start; the gray cell at the bottom right is 64 Hz in the lowest band, faster than that band
-# is wide.
+# The male talker's sentence, babble and noise from above, cut at 4 Hz and at 1.3 s. The middle
+# panel shows which bands carry the 4 Hz rhythm and when: during the sentence, nearly all of
+# them, in step with the syllables, since a syllable's onset raises the level across the
+# spectrum; in the babble, fewer and more evenly; in the noise, almost none. On the right, the
+# moment at 1.3 s: depth is high from the slowest valid rate to about 10 Hz in most bands and
+# falls off above that. The gray columns are the slow rates whose windows run past the start;
+# the gray cell at the bottom right is 64 Hz in the lowest band, faster than that band is wide.
 
-# %% [figure s2] Three cuts through the sentences
-env, msg, fine = analyze(finish(talk))
-fig = msg.slices(2.0, rate=4.0)
+# %% [figure s2] Three cuts, male talker
+_, msg, _ = analyze(mixes["Male talker"])
+fig = msg.slices(1.3, rate=4.0)
+
+# %% [about]
+# The same cuts for the female talker. The sentence looks much as it does for the male talker.
+# In the babble, a group of bands around 1 kHz keeps a strong 4 Hz rhythm for about two seconds:
+# six voices hide the rhythm unevenly, more in some bands and moments than in others.
+
+# %% [figure s3] Three cuts, female talker
+_, msg, _ = analyze(mixes["Female talker"])
+fig = msg.slices(1.3, rate=4.0)
 
 # %% [markdown]
 # ## What this page leaves out
 #
 # - **Power.** Each cell also has a modulation power, $|2y|^2$, which says how much of the sound
 #   a modulation is rather than how modulated a band is (`msg.power`, and `msg.average()` over
-#   time). Pooled over bands it is dominated by the loudest bands and reads less clearly than
-#   depth.
-# - **Live analysis.** With `align="causal"` every window ends at the time it reports, as a live analysis
-#   would see the sound, at the cost of a delay of half a window. The analysis can run on blocks
-#   of a stream and give the same numbers; a streaming version is planned.
+#   time).
+# - **Live analysis.** With `align="causal"` every window ends at the time it reports, as a live
+#   analysis would see the sound, so each number comes half a window later than in the centered
+#   analysis used here.
 # - **Inversion.** The phase of each filter output is dropped and the local mean divided out, so
 #   the modulation spectrogram can't be turned back into sound. To change a sound's modulation,
 #   filter its envelopes and resynthesize, as on the
 #   [Analysis and resynthesis](resynthesis.html) page.
-# - **The front end.** Any filterbank's envelopes will do. A gammatone bank gives nearly the same
-#   pictures as the ERB bank used here; compressing the envelopes (raising them to the 0.3
-#   power, as a cochlea does) scales every depth by about the same factor, 0.45.
+# - **The front end.** Any filterbank's envelopes will do, a gammatone bank's for instance, and
+#   the envelopes can be compressed first; this page keeps one front end throughout.
 
 # %% [markdown]
 # ## References
@@ -309,5 +411,5 @@ fig = msg.slices(2.0, rate=4.0)
 #   spectrogram. *Speech Communication* 25(1–3), 117–132.
 #   [doi:10.1016/S0167-6393(98)00032-6](https://doi.org/10.1016/S0167-6393(98)00032-6).
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
-#   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
-#   The sentences, by speakers bdl, rms and slt.
+#   Workshop (SSW5)*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
+#   The sentence, read by speakers bdl and slt.
