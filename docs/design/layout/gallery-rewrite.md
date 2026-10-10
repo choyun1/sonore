@@ -134,11 +134,16 @@ their formant ratios, and the shared loading code. Every other page states the d
 by linking here, so it is said once and measured once (a checker in `tools/` computes the
 numbers the page prints). Recommendation: yes.
 
-**D4. Shared setup code.** Cho asked that each example's exact code be on the page. Options:
-(a) keep a "code the examples share" cell on each page, but shorter; (b) move `finish`,
-`rcParams`, talker loading and the standard panels into `docs/gallery/common.py`, and have each
-page show the one-line import plus a folded copy of that file's source. Recommendation: (b);
-the code is still on the page, written once.
+**D4. Shared setup code.** The code is on the page so a reader can paste it into a notebook and
+get exactly the same sound and figure (Cho, 2026-10-10). So the setup has to be on every page in
+full, not behind an import. Proposal: the setup is written once in `docs/gallery/common.py`, and
+`build.py` prints it in full as the first code cell of every page and runs that same text, so
+what is shown is what ran. Each page also offers its whole code as one download (a `.py` or
+`.ipynb` built from the same cells), so a reader does not copy cell by cell. Two things today
+stop a paste from reproducing outside a clone of the repository: pages load recordings from
+relative paths (`docs/speech/...`), and some setup lives only on the page. The setup cell would
+load recordings the way the Colab tutorial's setup does, from a URL, so a pasted page runs in a
+fresh notebook. Recommendation: yes to all three parts.
 
 **D5. One owner per concept.** Each concept in the table above is taught on one page and linked
 from the others. Proposed owners: source and filter, Klatt setup, female formants: Formant
