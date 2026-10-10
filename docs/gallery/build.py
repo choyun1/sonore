@@ -1354,6 +1354,7 @@ MOVED = {
     "moving": {"d-m8": "moving.html#d-m2", "d-m9": "moving.html#d-m3", "h-a-different-voice": "moving.html#h-three-talkers"},
     "modspectrogram": {"d-sv1": "modspectrogram.html#d-s1",
                        "h-a-higher-voice": "modspectrogram.html#h-speech-babble-and-noise"},
+    "irn": {"h-rippled-noise-and-moving-ripples": "ripples.html#h-ripples-and-rippled-noise"},
 }
 
 

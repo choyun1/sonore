@@ -333,7 +333,7 @@ ax.grid(ls=":")
 # 52%. So the onset matters, but mostly through the way the partials build up; the transient
 # itself (a hammer's knock, a pipe's chiff) counted for less.
 #
-# His sounds were recordings. Three synthetic versions of the idea, on one tone ($s = 1$): all
+# The study used recordings. Three synthetic versions of the idea, on one tone ($s = 1$): all
 # partials starting together over 20 ms; the partials building up at different rates, from
 # 20 ms for the fundamental to 200 ms for the 20th harmonic, as brass instruments do (an
 # illustration, not a measured brass onset); and the first tone with a 15 ms burst of noise at

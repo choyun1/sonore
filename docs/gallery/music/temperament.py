@@ -185,9 +185,10 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
 # every semitone the twelfth root of two, 100 cents, so its fifth is
 # {{ f"{so.ratio_to_cents(3 / 2) - 700:.2f}" }} cents narrower than 3:2, and its major third
 # {{ f"{400 - so.ratio_to_cents(5 / 4):.2f}" }} cents wider than 5:4. Near-coinciding partials
-# beat at the difference of their frequencies, which the cell prints for intervals above
-# A3 = 220 Hz. Two pure tones a just major third apart have no partials to beat and sound
-# smooth, as on the [Synthetic sounds](classic.html#d-b3) page.
+# beat at the difference of their frequencies ([Beats and
+# roughness](classic.html#h-beats-and-roughness) plays this with two pure tones), which the
+# cell prints for intervals above A3 = 220 Hz. Two pure tones a just major third apart have no
+# partials to beat and sound smooth, as on the [Synthetic sounds](classic.html#d-b3) page.
 
 # %%
 A3 = 220.0

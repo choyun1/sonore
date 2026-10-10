@@ -18,6 +18,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # (Kowalski et al., 1996) and to measure how sensitive listeners are to modulation (Chi et al.,
 # 1999).
 #
+# - [How a ripple is made](#h-how-a-ripple-is-made): the envelope, and the modulation spectrum
+#   that measures it.
 # - [Moving ripples](#h-moving-ripples): a ripple drifting down, drifting up, and two at once,
 #   each with its measured modulation spectrum.
 # - [Carriers](#h-carriers): the same pattern on log-spaced tones, harmonics and noise.
@@ -42,7 +44,11 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # Each figure shows the pattern as specified, the envelopes measured back from the sound in 24
 # bands per octave (a cochleagram), the waveform, and the modulation spectrum measured from the
 # sound: the two-dimensional Fourier transform of the cochleagram, with rate across and density
-# up (Singh & Theunissen, 2003). A single ripple puts a single peak in it.
+# up (Singh & Theunissen, 2003). A single ripple puts a single peak in it. The other gallery
+# pages that use a modulation spectrum start from this one: [Hearing a modulation
+# spectrum](modtargets.html) goes the other way, from a drawn modulation spectrum to a sound,
+# and [Modulation spectrogram](modspectrogram.html) measures it in a window that slides along a
+# sound.
 
 # %% [setup]
 import os
@@ -167,7 +173,7 @@ fig, playhead = show(sound, dmr, dmr=True)
 # [Iterated rippled noise](irn.html) has a rippled spectrum too, but a different kind. Its ripple
 # does not move, so all of it sits at zero rate; and it is periodic on a *linear* frequency axis,
 # one peak every $1/d$ hertz, rather than on the logarithmic axis used here. An 8 ms delay gives a
-# density of 8 cycles/kHz, which is where its modulation spectrum peaks. Equally spaced peaks
+# density of 8 cycles/kHz, which is where [its modulation spectrum](irn.html#d-09) peaks. Equally spaced peaks
 # along linear frequency are harmonics, which is why rippled noise has a pitch and these ripples,
 # sinusoidal along log frequency, do not.
 

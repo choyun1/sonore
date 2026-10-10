@@ -23,8 +23,6 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Fewer iterations](#h-fewer-iterations): one and four iterations, from a faint pitch to a clear
 #   one.
 # - [Subtracting instead](#h-subtracting-instead): a negative gain, whose pitch is ambiguous.
-# - [Rippled noise and moving ripples](#h-rippled-noise-and-moving-ripples): how its rippled
-#   spectrum relates to the [spectrotemporal ripples](ripples.html).
 
 # %% [markdown]
 # ## How it is made
@@ -85,7 +83,9 @@ def show(snd):
 # %% [about]
 # Noise added to an 8 ms delayed copy of itself, sixteen times over. A 125 Hz pitch rises out
 # of the hiss; the spectrum ripples at multiples of 125 Hz and the modulation spectrum peaks at
-# 8 cycles/kHz, the delay in milliseconds.
+# 8 cycles/kHz, the delay in milliseconds, and at zero rate, since the ripple does not move. How
+# this ripple differs from a [moving ripple](ripples.html#d-01), and why only this one has a
+# pitch, is on [Spectrotemporal ripples](ripples.html#h-ripples-and-rippled-noise).
 
 # %% [demo 09] Iterated rippled noise
 sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, iterations=16, rng=0))
@@ -139,17 +139,6 @@ axes[-1].set(xlabel="Lag [ms]", xlim=(0, 30))
 # %% [demo in] Negative gain
 sound = finish(so.iterated_ripple_noise(2, FS, delay=8e-3, gain=-1, iterations=16, rng=0))
 fig, playhead = show(sound)
-
-# %% [markdown]
-# ## Rippled noise and moving ripples
-#
-# The rippled spectrum here is one kind of ripple; the [spectrotemporal ripples](ripples.html) are
-# another. This one does not move, so all of it sits at zero rate in a modulation spectrum, and it
-# is periodic along *linear* frequency, one peak every $1/d$ hertz: an 8 ms delay gives 8
-# cycles/kHz, where the modulation spectrum of the first example peaks. Spectrotemporal ripples
-# are sinusoidal along *log* frequency and drift over time. Equally spaced peaks along linear
-# frequency are harmonics of $1/d$, which is why rippled noise has a pitch and those ripples do
-# not.
 
 # %% [markdown]
 # ## References
