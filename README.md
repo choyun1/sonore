@@ -26,10 +26,9 @@ The name comes from Pierre Schaeffer's *objet sonore*, the "sound object": a
 sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
-The logo is drawn from the spectrogram of sonore saying its own name with the
-formant synthesizer ([the last example on the Formant synthesis page](https://choyun1.github.io/sonore/gallery/formants.html#d-fl1)):
-a few strokes for the s, a rise in the middle line for the n, and a step down
-in the top line for the r.
+The logo is drawn from the spectrogram of
+[sonore saying its own name](https://choyun1.github.io/sonore/gallery/formants.html#d-fl1)
+with the formant synthesizer.
 
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
 playable next to its plots, with a playhead that follows the sound.
