@@ -6,6 +6,16 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-10
+
+Linear prediction and formant tracking: `so.LPC` and `so.formant_track`, with
+copy synthesis of the gallery's two talkers through the Klatt synthesizer.
+Also new: `so.gaussian_spectrogram`, a `.plot()` on every view, envelopes heard
+on any carrier through `to_sound`, a faster `move_sound` with HRIR onsets fitted
+across distances, and the fixes from audit sittings 9 and 10. The gallery is
+rewritten around a male and a female talker, every page is also a notebook, a
+landing page runs sonore in the browser, and sonore has a logo.
+
 Breaking changes since 0.5.0 (each is described under Changed):
 
 - `sonore.views.spectrum` and `sonore.views.reassigned` are one module,
@@ -55,6 +65,20 @@ Breaking changes since 0.5.0 (each is described under Changed):
   for `Envelopes`; a Sound for `Envelope`). `Envelopes.to_sound` is
   `Envelope.to_sound` in every band followed by the filterbank's synthesis.
   `channel_vocode` is now a recipe over `Envelopes.to_sound`.
+- A landing page at choyun1.github.io/sonore with one editable code cell
+  (the tutorial's tone in noise) that installs sonore from PyPI and runs it in
+  the browser through Pyodide (`docs/index.html`, `docs/try/runner.py`,
+  `docs/design/landing-page.md`).
+- A logo: three lines and the strokes of an s, drawn from the spectrogram of
+  "sonore" said by the Klatt synthesizer, its tracks taken from a recording of
+  the word with `so.f0_track` and `so.formant_track` (`docs/logo/`). The README
+  opens with the banner and the gallery uses the mark; the Formant synthesis
+  page ends with the word as an example.
+- Every gallery page is also a notebook in `docs/gallery/notebooks`, linked
+  from the page and openable in Colab.
+- `tools/crosscheck_gammatone_hohmann.py` compares `so.gammatone_filterbank`
+  with a Hohmann (2002) style IIR gammatone bank.
+- The "Tuning and temperament" gallery page lets you hear the meantone wolf fifth.
 
 ### Changed
 
@@ -103,6 +127,20 @@ Breaking changes since 0.5.0 (each is described under Changed):
   2 cents there. `spatialize`, `HRIRSet.at` and `move_sound` all use the
   fitted onsets; `fit_onsets=False` keeps the measured ones. A source
   coming at the head at 300 m/s is now rendered instead of refused.
+- Gallery: every page opens with the same setup cell, `docs/gallery/common.py`
+  in full. The Voices, Phase vocoder, Envelopes and modulation and Spatial
+  pages play the male and the female talker side by side instead of ending in
+  a "higher voice" section; a new Two talkers page measures how they differ,
+  Pitch tracking is its own page, and Voices from harmonics is merged into
+  Rebuilding and changing a voice. Reverberation is now Rooms and binaural
+  beats move to Binaural cues. Numbers in the prose are computed on the pages,
+  claims the pages could not back are removed or cited, and old links forward
+  to their new place.
+- README: tests, PyPI, Python and license badges; the sigtools migration guide
+  moves to `docs/migrating-from-sigtools.md` and the finished roadmap to
+  `docs/roadmap-done.md`; links to sonore-sketch.
+- Choices among argument kinds and operator overloads are written as `match`
+  statements; behavior is unchanged.
 
 ### Fixed
 
@@ -599,7 +637,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.5.0...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.6.0...main
+[0.6.0]: https://github.com/choyun1/sonore/releases/tag/v0.6.0
 [0.5.0]: https://github.com/choyun1/sonore/releases/tag/v0.5.0
 [0.4.0]: https://github.com/choyun1/sonore/releases/tag/v0.4.0
 [0.3.1]: https://github.com/choyun1/sonore/releases/tag/v0.3.1

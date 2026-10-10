@@ -133,7 +133,7 @@ from sonore.views.timbre import (
 from sonore.views.view import NotInvertibleError, View
 from sonore.views.world import DIFFERENCES_FROM_WORLD, world_synthesize
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 __all__ = [
     "DescriptorTrack",
