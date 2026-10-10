@@ -211,20 +211,32 @@ each built in a line or two from sonore's generators.</p>
 <p>Random spectrograms with the coarse correlations of natural sounds are on
 <a href="modtargets.html#h-random-spectrograms">Hearing a modulation spectrum</a>, beside the other
 envelopes drawn from a modulation spectrum.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import sawtooth
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 44100
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from scipy.signal import sawtooth
+
+FS = 44100
 
 
 def show(snd, fmax=4000, win_dur=50e-3):
@@ -235,6 +247,7 @@ def show(snd, fmax=4000, win_dur=50e-3):
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/classic.ipynb">in Colab</a> or <a href="notebooks/classic.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-speech-shaped-noise">
 <h2 id="h-speech-shaped-noise">Speech-shaped noise</h2>
@@ -246,7 +259,7 @@ noise with that spectrum. Here the recordings are the three CMU Arctic sentences
 repository, from two talkers, each brought to the same RMS first so that neither talker
 dominates by being louder.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentences = [
-    so.load(f&quot;docs/speech/{name}.flac&quot;).normalize(rms=0.1)
+    so.load(fetch(f&quot;docs/speech/{name}.flac&quot;)).normalize(rms=0.1)
     for name in (&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;)
 ]
 ltass = so.long_term_spectrum(sentences)
@@ -292,7 +305,7 @@ male and female long-term spectra nearly the same from 250 Hz to 5 kHz, with mal
 160 Hz and below, where their fundamentals lie. Two single sentences, the same words read by one
 male talker (bdl) and one female talker (slt), can differ by more. The cell prints how each
 sentence's power divides among octave bands.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">pair = [so.load(f&quot;docs/speech/{name}_arctic_a0131.flac&quot;).normalize(rms=0.1) for name in (&quot;bdl&quot;, &quot;slt&quot;)]
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">pair = [so.load(fetch(f&quot;docs/speech/{name}_arctic_a0131.flac&quot;)).normalize(rms=0.1) for name in (&quot;bdl&quot;, &quot;slt&quot;)]
 pair_spectra = [so.long_term_spectrum([sentence]) for sentence in pair]
 octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
 print(&quot;octave from [Hz]     &quot; + &quot;&quot;.join(f&quot;{low:&gt;6}&quot; for low in octave_edges[:-1]))

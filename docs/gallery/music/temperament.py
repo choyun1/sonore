@@ -53,14 +53,36 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # fundamentals, drawn over the last few hundredths of a second as the sound plays. Inner notes
 # of a chord are heard but not drawn.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
-from sonore.plotting import plot_lissajous
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
+
+
+def finish(snd):
+    """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
+from sonore.plotting import plot_lissajous
+
 FS = 22050
 C4 = so.note_to_freq("C4")
 LEAD = 0.5  # silence before every sound [s]
@@ -102,12 +124,6 @@ def tone(f0, duration, attack=60e-3, release=120e-3):
     envelope[:n_attack] = 0.5 - 0.5 * np.cos(np.pi * np.arange(n_attack) / n_attack)
     envelope[note.n_samples - n_release :] = 0.5 + 0.5 * np.cos(np.pi * np.arange(n_release) / n_release)
     return note * envelope[:, None]
-
-
-def finish(snd):
-    """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
-    snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
 def play(events, total):
@@ -158,7 +174,6 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
     )
     ax_c.grid(ls=":")
     return fig, [ax_s, ax_c]
-
 
 # %% [markdown]
 # ## Intervals are ratios

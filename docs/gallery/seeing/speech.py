@@ -70,16 +70,25 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # Every example below is the code shown with it, run after this cell: the sentence and its pitch
 # track, the level the gallery plays sounds at, and the plotting conventions all images share.
 
-# %%
-import matplotlib
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
@@ -88,10 +97,15 @@ def finish(snd):
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
+import matplotlib
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Rectangle
+
 # The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
 # Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load("docs/speech/bdl_arctic_a0131.flac"))
-f0_times, f0 = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
+sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
+f0_times, f0 = np.loadtxt(fetch("docs/speech/bdl_arctic_a0131_f0.csv"), delimiter=",", skiprows=2).T
 fs = sentence.fs
 
 # Every image on the page: dB re its own maximum over 60 dB, on a linear 0 to 5 kHz axis.
@@ -119,7 +133,6 @@ def shared_time(fig, axes, images):
     sm = matplotlib.cm.ScalarMappable(matplotlib.colors.Normalize(-DB, 0), "magma")
     fig.colorbar(sm, ax=list(np.ravel(images)), label="dB re panel maximum", shrink=0.9)
     return list(np.ravel(axes))
-
 
 # %% [markdown]
 # ## One window, two views
@@ -491,7 +504,7 @@ sound = sentence
 
 # %%
 # The same sentence read by a female talker, and its F0 track from sonore's tracker.
-sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
 track_female = so.f0_track(sentence_female)
 f0_female = track_female.f0[0]
 voiced_female = f0_female[f0_female > 0]

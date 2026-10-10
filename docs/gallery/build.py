@@ -83,9 +83,12 @@ def file_name(key: str, title: str) -> str:
 #                              and `live`, an image that changes frame by frame as the sound plays,
 #                              and `lissajous`, two notes drawn against each other as the sound plays
 #   # %% [figure KEY] Title    code that leaves `fig`: a figure without sound
+#   # %% [setup]               the setup every page opens with: docs/gallery/common.py, copied in full
+#                              (tools/sync_gallery_setup.py copies it, tests/test_docs.py checks the copies)
 #   # %%                       any other code; what it prints is shown under it
 #
-# Every code cell is shown on the page exactly as it ran. Prose may use $TeX$, $$display TeX$$,
+# Every code cell is shown on the page exactly as it ran, so a reader can paste the cells into a notebook
+# and get the same sounds and figures; each page is also written out as a notebook, in NOTEBOOKS. Prose may use $TeX$, $$display TeX$$,
 # `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
 # where the cell stands. The scripts run from the repository root.
 EXAMPLE_PAGES = [
@@ -112,12 +115,15 @@ EXAMPLE_PAGES = [
     "organ",
 ]
 ROOT = HERE.parent.parent
+NOTEBOOKS = "notebooks"  # beside the pages
+SITE = "https://choyun1.github.io/sonore/gallery/"
+COLAB = "https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/"
 CELL = re.compile(r"# %%(?: \[(\w+)(?: (\w+))?\])?(?: (.*))?")
 
 
 @dataclass
 class Cell:
-    kind: str  # markdown, about, demo, figure or code
+    kind: str  # markdown, about, demo, figure, setup or code
     source: str
     key: str = ""
     title: str = ""
@@ -198,13 +204,18 @@ def example_page(path: Path) -> dict:
     """Run a page script cell by cell. Returns its title, intro and sections, where each
     part is either HTML or an example (a dict with the media to write)."""
     ns: dict = {"__name__": "__gallery__", "__file__": str(path)}
-    title, intro, sections, about = "", [], [], ""
+    title, intro, sections, about, about_cell = "", [], [], "", 0
+    cells = []  # the page as a notebook: (kind, source) with kind "markdown" or "code"
     cwd = Path.cwd()
     os.chdir(ROOT)
     try:
         for cell in read_cells(path):
             if cell.kind in ("markdown", "about"):
-                blocks = markdown(substitute(cell.source, ns))
+                prose = substitute(cell.source, ns)
+                if cell.kind == "about":
+                    about_cell = len(cells)
+                cells.append(("markdown", prose))
+                blocks = markdown(prose)
                 if cell.kind == "about":
                     about = "".join(h for _, h in blocks)
                     continue
@@ -216,6 +227,13 @@ def example_page(path: Path) -> dict:
                     else:
                         (sections[-1]["parts"] if sections else intro).append(h)
                 continue
+            if cell.kind in ("demo", "figure"):  # the title heads its description
+                if about:
+                    cells[about_cell] = ("markdown", f"**{cell.title}**\n\n" + cells[about_cell][1])
+                else:
+                    cells.append(("markdown", f"**{cell.title}**"))
+            # A demo's last line plays its sound in a notebook; the figure shows by itself.
+            cells.append(("code", cell.source + ("\nsound" if cell.kind == "demo" else "")))
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 exec(compile(cell.source, f"{path.name}, cell {cell.key or cell.title}", "exec"), ns)  # noqa: S102
@@ -235,14 +253,50 @@ def example_page(path: Path) -> dict:
                 part.update(png=png, size=size)
             else:
                 printed = out.getvalue().rstrip()
-                code = f'<details class="code"><summary>Code</summary>{part["code"]}</details>'
+                label = "Setup, the same on every page" if cell.kind == "setup" else "Code"
+                code = f'<details class="code"><summary>{label}</summary>{part["code"]}</details>'
                 part = code + (f'<pre class="out">{html.escape(printed)}</pre>' if printed else "")
                 part = f'<div class="cell">{part}</div>'
             (sections[-1]["parts"] if sections else intro).append(part)
             about = ""
     finally:
         os.chdir(cwd)
-    return {"title": title, "intro": intro, "sections": sections}
+    return {"title": title, "intro": intro, "sections": sections, "cells": cells}
+
+
+def notebook(name: str, title: str, cells: list[tuple[str, str]]) -> str:
+    """A page as a Jupyter notebook: its prose and code in order, after a cell that installs sonore
+    from the repository. Links between pages point to the published gallery."""
+
+    def absolute(prose: str) -> str:
+        prose = re.sub(r"\]\((?!https?:|#)([^)]+)\)", lambda m: f"]({SITE}{m.group(1)})", prose)
+        return re.sub(r"\]\(#", f"]({SITE}{name}.html#", prose)
+
+    intro = (
+        f"This notebook is the gallery page [{title}]({SITE}{name}.html), cell for cell. Run it from top to "
+        "bottom: the first cell installs sonore, and the recordings come from the sonore repository."
+    )
+    install = "%pip install --quiet git+https://github.com/choyun1/sonore"
+    cells = [("markdown", intro), ("code", install)] + [(k, absolute(t) if k == "markdown" else t) for k, t in cells]
+
+    def lines(text: str) -> list[str]:
+        return text.splitlines(keepends=True)
+
+    nb = {
+        "cells": [
+            {"cell_type": k, "metadata": {}, "source": lines(t)}
+            | ({"execution_count": None, "outputs": []} if k == "code" else {})
+            for k, t in cells
+        ],
+        "metadata": {
+            "colab": {"provenance": []},
+            "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
+            "language_info": {"name": "python"},
+        },
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+    return json.dumps(nb, indent=1, ensure_ascii=False) + "\n"
 
 
 # ---------------------------------------------------------------------- page
@@ -1145,7 +1199,12 @@ def build_example_page(site: Site, name: str) -> list[str]:
         def show(p):
             return rendered[id(p)][variant] if isinstance(p, dict) else p
 
-        header = "\n".join(show(p) for p in content["intro"]) + "\n" + how(binaural)
+        run = (
+            f'<p class="how">To run this page yourself, open it as a notebook <a href="{COLAB}{name}.ipynb">in '
+            f'Colab</a> or <a href="notebooks/{name}.ipynb" download>download it</a>. It is the same code, '
+            "and it fetches the recordings it needs from the sonore repository.</p>"
+        )
+        header = "\n".join(show(p) for p in content["intro"]) + "\n" + how(binaural) + "\n" + run
         sections = "\n".join(
             section_html(s["title"], [show(p) for p in s["parts"]]) for s in content["sections"]
         )
@@ -1158,6 +1217,9 @@ def build_example_page(site: Site, name: str) -> list[str]:
         return page(content["title"], f"{name}.html", header, sections, EXAMPLE_HEAD, footer)
 
     site.write(f"{name}.html", make)
+    if site.out_dir:
+        (site.out_dir / NOTEBOOKS).mkdir(exist_ok=True)
+        (site.out_dir / NOTEBOOKS / f"{name}.ipynb").write_text(notebook(name, content["title"], content["cells"]))
     return keys
 
 

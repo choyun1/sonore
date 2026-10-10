@@ -53,7 +53,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # original's average read at $f / r$ for a range of ratios $r$. The ratio whose curve fits best
 # over 100 to 5000 Hz, with the overall level left free, is the **fitted warp**.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -62,12 +65,22 @@ import sonore as so
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 
 
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
+
+
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
 def show(snd, title, contour=None, fmax=5000):
     """Waveform and narrowband spectrogram (Hann 33 ms, harmonics resolved), on one time axis,
     with an F0 contour drawn over the spectrogram if one is given."""
@@ -85,9 +98,11 @@ def show(snd, title, contour=None, fmax=5000):
     return fig, [ax0, ax1]
 
 
-sentence = finish(so.load("docs/speech/bdl_arctic_a0131.flac"))
+sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
 fs = sentence.fs
-harvest_times, harvest_f0 = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
+harvest_times, harvest_f0 = np.loadtxt(
+    fetch("docs/speech/bdl_arctic_a0131_f0.csv"), delimiter=",", skiprows=2
+).T
 harvest = (harvest_times, harvest_f0)
 envelope = so.cheaptrick(sentence, harvest)
 aperiodicity = so.d4c(sentence, harvest)
@@ -302,7 +317,7 @@ fig, playhead = show(sound, "formants × 1.2, aperiodicity warped by 1.2", harve
 # 1.174. The pitch ratio is measured on the two recordings.
 
 # %%
-female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
 female_track = so.f0_track(female)
 pitch_ratio = median_f0(female) / original_f0
 print(f"median voiced F0: {original_f0:.0f} Hz (bdl), {median_f0(female):.0f} Hz (slt)")

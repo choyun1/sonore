@@ -59,14 +59,25 @@ time it runs.
 # $f = 2$ Hz, the rate in the experiment, and the start phase $\phi$ decides whether it first
 # moves right ($\phi = 0$) or left ($\phi = 1/2$).
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.collections import LineCollection
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
@@ -75,15 +86,18 @@ def finish(snd):
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
+from matplotlib.collections import LineCollection
+
 hrirs = so.load_hrirs(distances="all")  # PKU-IOA KEMAR, 20 cm to 1.6 m; downloaded on first use
 print(hrirs)
 
 # Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
 files = ["bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133"]
-talkers = [so.load(f"docs/speech/{f}.flac") for f in files]
+talkers = [so.load(fetch(f"docs/speech/{f}.flac")) for f in files]
 target, *maskers = so.normalize(so.match_lengths(talkers, align="center"))
 fs, duration = target.fs, target.duration
-spoken = so.load(f"docs/speech/{files[0]}.flac").duration
+spoken = so.load(fetch(f"docs/speech/{files[0]}.flac")).duration
 TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
 CENTERS = (0.0, -40.0, 40.0)  # target ahead, maskers to the left and right [deg]
 RATE = 2.0  # oscillations per second
@@ -158,7 +172,6 @@ def show(mix, target_alone, t, azimuths, title, talking=TALKING):
     axes[-1].set_xlabel("Time [s]")
     return fig, list(axes)
 
-
 # %% [markdown]
 # ## One talker, moving
 #
@@ -225,9 +238,9 @@ sound = finish(mix)
 
 # %%
 target_female = so.normalize(
-    so.match_lengths([so.load("docs/speech/slt_arctic_a0131.flac"), maskers[0]], align="center")
+    so.match_lengths([so.load(fetch("docs/speech/slt_arctic_a0131.flac")), maskers[0]], align="center")
 )[0]
-spoken_female = so.load("docs/speech/slt_arctic_a0131.flac").duration
+spoken_female = so.load(fetch("docs/speech/slt_arctic_a0131.flac")).duration
 TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)
 
 # %% [about]
@@ -268,7 +281,7 @@ sound = finish(mix)
 # %%
 WALK = (300.0, 30.0)  # cm: from 3 m to 30 cm
 WALK_AZIMUTH = 30.0  # deg, to the right
-talker = so.load(f"docs/speech/{files[0]}.flac").normalize()  # the target sentence, without padding
+talker = so.load(fetch(f"docs/speech/{files[0]}.flac")).normalize()  # the target sentence, without padding
 room = so.synth_ir(0.6, fs, n_channels=2, rng=1)  # RT60 0.6 s, a different tail at each ear
 
 
@@ -821,7 +834,7 @@ PARTY_FADE = 2.0  # s, at the start and end of each scene
 def party(cast, duration, seed, room=PARTY_ROOM):
     """The cast's voices, each from the start of its passage for ``duration`` [s], each on its
     own walk. Returns the mix, each talker's path and the hurries."""
-    voices = so.normalize([so.load(f"docs/speech/librispeech_{reader}.flac") for reader, _, _ in cast])
+    voices = so.normalize([so.load(fetch(f"docs/speech/librispeech_{reader}.flac")) for reader, _, _ in cast])
     paths, hurries = walks(len(cast), duration, seed)
     rendered = []
     for voice, (times, points) in zip(voices, paths, strict=False):

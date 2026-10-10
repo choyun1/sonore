@@ -60,7 +60,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # envelope, lowpasses it at 50 Hz unless stated, and multiplies it into the same band of fresh
 # Gaussian noise. The output has the input's RMS.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -69,14 +72,24 @@ import sonore as so
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
 
 
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
+
+
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
 # The sentence at its native 16 kHz. Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load("docs/speech/bdl_arctic_a0131.flac"))
+sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
 fs = sentence.fs
 F_LO, F_HI = 80, 7600
 
@@ -109,7 +122,6 @@ def show(snd, envelopes=None, title=""):
         ax.set_xlabel("")
     axes[-1].set_xlabel("Time [s]")
     return fig, list(axes)
-
 
 # %% [markdown]
 # ## How many bands
@@ -224,7 +236,7 @@ sound = vocoded
 # by `so.f0_track`, is higher than the male talker's, so a temporal cue has to follow faster pulses.
 
 # %%
-sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
 track_female = so.f0_track(sentence_female)
 print(f"female F0: {track_female}")
 

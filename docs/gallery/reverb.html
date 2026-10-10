@@ -212,6 +212,7 @@ new ones from their statistics.</p>
 <ul><li><a href="#h-how-a-room-is-synthesized">How a room is synthesized</a>: decaying noise in cochlear bands, and the parameters that shape it.</li><li><a href="#h-natural-rooms">Natural rooms</a>: a starter pistol and a sentence, read by a male and by a female talker, in a synthetic room built like those Traer &amp; McDermott's listeners could not tell from real ones.</li><li><a href="#h-farther-away">Farther away</a>: the same sentence four times as far from the listener, where less of what arrives is direct sound.</li><li><a href="#h-rooms-that-break-the-rules">Rooms that break the rules</a>: the paper's atypical rooms, which their listeners heard as wrong, each heard with the starter pistol and then with the sentence.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/reverb.ipynb">in Colab</a> or <a href="notebooks/reverb.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-how-a-room-is-synthesized">
 <h2 id="h-how-a-room-is-synthesized">How a room is synthesized</h2>
@@ -228,20 +229,32 @@ measures them from an IR by fitting a line to each band's energy decay curve.</p
 the same seed, so they share their noise. Unlike the paper, they are not further equated for
 distortion, so some differences in loudness and length remain. They are presented diotically,
 as in the paper.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import butter, sosfilt
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 44100
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from scipy.signal import butter, sosfilt
+
+FS = 44100
 
 
 def starter_pistol():
@@ -369,7 +382,7 @@ reverberation fills the gaps between words and smears each syllable into the nex
     <img src="img/r1_a_sentence_in_the_same_room.png" width="1000" height="620" alt="Plots of the a sentence in the same room sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;).resample(FS)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)).resample(FS)
 sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)</code></pre></details>
 </article>
@@ -386,7 +399,7 @@ room's, not the talker's, so it does to the female voice what it did to the male
     <img src="img/r3_a_higher_voice_in_the_same_room.png" width="1000" height="620" alt="Plots of the a higher voice in the same room sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;).resample(FS)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)).resample(FS)
 sound = finish(sentence_female.convolve(ir))
 fig, playhead = show(sound, ir)</code></pre></details>
 </article>

@@ -217,6 +217,7 @@ headphones. Farther than 1.6 m, distance changes only the travel time and the le
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. The audio is lossless, since compression would alter the binaural sounds.
   Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/moving.ipynb">in Colab</a> or <a href="notebooks/moving.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-the-talkers-and-the-trajectories">
 <h2 id="h-the-talkers-and-the-trajectories">The talkers and the trajectories</h2>
@@ -229,30 +230,40 @@ center azimuth <span class="tex">\theta_0</span> that oscillates with amplitude 
 <p>so it swings <span class="tex">A</span> to either side of <span class="tex">\theta_0</span>, <span class="tex">2A</span> from one end to the other. Here
 <span class="tex">f = 2</span> Hz, the rate in the experiment, and the start phase <span class="tex">\phi</span> decides whether it first
 moves right (<span class="tex">\phi = 0</span>) or left (<span class="tex">\phi = 1/2</span>).</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.collections import LineCollection
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
 
 
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
-
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from matplotlib.collections import LineCollection
 
 hrirs = so.load_hrirs(distances=&quot;all&quot;)  # PKU-IOA KEMAR, 20 cm to 1.6 m; downloaded on first use
 print(hrirs)
 
 # Three male talkers at 16 kHz, equal in RMS, centered in time on the longest.
 files = [&quot;bdl_arctic_a0131&quot;, &quot;rms_arctic_a0132&quot;, &quot;rms_arctic_a0133&quot;]
-talkers = [so.load(f&quot;docs/speech/{f}.flac&quot;) for f in files]
+talkers = [so.load(fetch(f&quot;docs/speech/{f}.flac&quot;)) for f in files]
 target, *maskers = so.normalize(so.match_lengths(talkers, align=&quot;center&quot;))
 fs, duration = target.fs, target.duration
-spoken = so.load(f&quot;docs/speech/{files[0]}.flac&quot;).duration
+spoken = so.load(fetch(f&quot;docs/speech/{files[0]}.flac&quot;)).duration
 TALKING = ((duration - spoken) / 2, (duration + spoken) / 2)  # when the target is talking [s]
 CENTERS = (0.0, -40.0, 40.0)  # target ahead, maskers to the left and right [deg]
 RATE = 2.0  # oscillations per second
@@ -424,9 +435,9 @@ two talkers at once, Brungart (2001) found a masker of the other sex far easier 
 of the same sex. Here the target is the same sentence read by a female talker (slt), among the
 same two male talkers.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">target_female = so.normalize(
-    so.match_lengths([so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;), maskers[0]], align=&quot;center&quot;)
+    so.match_lengths([so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)), maskers[0]], align=&quot;center&quot;)
 )[0]
-spoken_female = so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;).duration
+spoken_female = so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)).duration
 TALKING_FEMALE = ((duration - spoken_female) / 2, (duration + spoken_female) / 2)</code></pre></details></div>
 
 <article class="sound" id="d-m8" data-regions="[{&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.03916722222222224, &quot;bottom&quot;: 0.29833115017361145, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35254522424768553, &quot;bottom&quot;: 0.6117091521990741, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}, {&quot;x0&quot;: 0.06744770746527778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.665923226273148, &quot;bottom&quot;: 0.925087154224537, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.815}]">
@@ -481,7 +492,7 @@ closer, so a talker far away is mostly room and one close by mostly direct sound
 is one of the cues to distance; see <a href="reverb.html">Synthetic reverberation</a> for still talkers.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">WALK = (300.0, 30.0)  # cm: from 3 m to 30 cm
 WALK_AZIMUTH = 30.0  # deg, to the right
-talker = so.load(f&quot;docs/speech/{files[0]}.flac&quot;).normalize()  # the target sentence, without padding
+talker = so.load(fetch(f&quot;docs/speech/{files[0]}.flac&quot;)).normalize()  # the target sentence, without padding
 room = so.synth_ir(0.6, fs, n_channels=2, rng=1)  # RT60 0.6 s, a different tail at each ear
 
 
@@ -1081,7 +1092,7 @@ PARTY_FADE = 2.0  # s, at the start and end of each scene
 def party(cast, duration, seed, room=PARTY_ROOM):
     &quot;&quot;&quot;The cast&#x27;s voices, each from the start of its passage for ``duration`` [s], each on its
     own walk. Returns the mix, each talker&#x27;s path and the hurries.&quot;&quot;&quot;
-    voices = so.normalize([so.load(f&quot;docs/speech/librispeech_{reader}.flac&quot;) for reader, _, _ in cast])
+    voices = so.normalize([so.load(fetch(f&quot;docs/speech/librispeech_{reader}.flac&quot;)) for reader, _, _ in cast])
     paths, hurries = walks(len(cast), duration, seed)
     rendered = []
     for voice, (times, points) in zip(voices, paths, strict=False):

@@ -70,6 +70,11 @@ src = ["src"]
 [tool.ruff.lint.per-file-ignores]
 "docs/gallery/build.py" = ["E501"]  # prose in string literals
 "tools/draw_layout.py" = ["E501"]  # SVG in string literals
+# Gallery pages are notebooks: each opens with the shared setup (docs/gallery/common.py), whose imports
+# not every page uses, and imports what else it needs where it needs it.
+"docs/gallery/common.py" = ["F401"]
+"docs/gallery/*/*.py" = ["E402", "F401"]
+"docs/gallery/notebooks/*.ipynb" = ["E402", "F401"]  # the same pages, written out by build.py
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "NPY"]

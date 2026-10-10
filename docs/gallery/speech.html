@@ -211,6 +211,7 @@ a great deal, and this page explains why:</p>
 <ul><li><a href="#h-motivation">Motivation</a>: pitch, spectral envelope and glottal pulses are all measured from a time-frequency picture, and inherit whatever it smears.</li><li><a href="#h-one-window-two-views">One window, two views</a>: the short-time Fourier transform, and the tradeoff between resolution in time and in frequency.</li><li><a href="#h-wideband-and-narrowband">Wideband and narrowband</a>: the two classic spectrograms, one showing glottal pulses and the other harmonics.</li><li><a href="#h-letting-the-window-scale-with-frequency">Letting the window scale with frequency</a>: constant-Q analysis, and the cochlea.</li><li><a href="#h-following-the-pitch">Following the pitch</a>: a window that is always three periods long.</li><li><a href="#h-the-same-plane-tiled-four-ways">The same plane, tiled four ways</a>: how each analysis divides time and frequency.</li><li><a href="#h-reassignment">Reassignment</a>: moving energy to where it actually is.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same sentence read by a female talker, and what a higher pitch changes.</li><li><a href="#h-nothing-is-lost">Nothing is lost</a>: the analyses keep the same information; what differs is what each one makes easy to see.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/speech.ipynb">in Colab</a> or <a href="notebooks/speech.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-motivation">
 <h2 id="h-motivation">Motivation</h2>
@@ -225,27 +226,37 @@ each analysis in sonore does about it.</p>
 <h2 id="h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</h2>
 <p>Every example below is the code shown with it, run after this cell: the sentence and its pitch
 track, the level the gallery plays sounds at, and the plotting conventions all images share.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
 
 
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
-
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Rectangle
 
 # The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
 # Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
-f0_times, f0 = np.loadtxt(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;, delimiter=&quot;,&quot;, skiprows=2).T
+sentence = finish(so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)))
+f0_times, f0 = np.loadtxt(fetch(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;), delimiter=&quot;,&quot;, skiprows=2).T
 fs = sentence.fs
 
 # Every image on the page: dB re its own maximum over 60 dB, on a linear 0 to 5 kHz axis.
@@ -653,7 +664,7 @@ so:</p>
 <p>The pitch-adaptive window adjusts by itself: three female periods are about 16 ms. The F0 track
 here is from <code>so.f0_track</code>, sonore's own tracker, since this recording has no stored track.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The same sentence read by a female talker, and its F0 track from sonore&#x27;s tracker.
-sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+sentence_female = finish(so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)))
 track_female = so.f0_track(sentence_female)
 f0_female = track_female.f0[0]
 voiced_female = f0_female[f0_female &gt; 0]

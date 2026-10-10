@@ -218,25 +218,37 @@ cue can be changed while the others stay put.</p>
 <ul><li><a href="#h-a-vowel-piece-by-piece">A vowel, piece by piece</a>: the source, then one formant at a time.</li><li><a href="#h-source-times-filter">Source times filter</a>: the same vowel as a product of spectra.</li><li><a href="#h-six-vowels">Six vowels</a>: Peterson and Barney's averages, and a continuum between two.</li><li><a href="#h-female-vowels">Female vowels</a>: the same six vowels with female formants and pitch.</li><li><a href="#h-consonants-from-transitions">Consonants from transitions</a>: /ba/, /da/ and /ga/ differ only in where the formants start.</li><li><a href="#h-noise">Noise</a>: frication, aspiration and breathy voice.</li><li><a href="#h-cascade-and-parallel">Cascade and parallel</a>: why the parallel formants alternate in sign.</li><li><a href="#h-voice-quality">Voice quality</a>: the same vowel from a tense, a modal and a lax glottal pulse.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: the rest of voice quality, and copying a recording.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/formants.ipynb">in Colab</a> or <a href="notebooks/formants.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-code-the-examples-share">
 <h2 id="h-code-the-examples-share">Code the examples share</h2>
 <p>All the sounds are at 16 kHz. Each one is drawn as a waveform
 and a wideband spectrogram (Hann 6 ms), which shows formants as dark bands, with the formant
 frequencies the synthesizer was given drawn over it.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 16000
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 16000
 
 
 def onoff(dur, level=60, on=0.02, off=0.05):

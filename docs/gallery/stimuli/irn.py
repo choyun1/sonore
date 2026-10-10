@@ -42,14 +42,25 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # computes the network exactly in the frequency domain, so the delay need not be a whole number
 # of samples, and drops a warm-up stretch so that the noise is stationary from the start.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 44100
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
@@ -58,12 +69,15 @@ def finish(snd):
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
+FS = 44100
+
+
 def show(snd):
     """so.overview: waveform, spectrum, spectrogram (50 ms windows) and modulation spectrum.
     Returns the figure and the panels the playhead follows."""
     fig = so.overview(snd, win_dur=50e-3, figsize=(10, 6.2), fmax=4000)
     return fig, [ax for ax in fig.axes if ax.get_title() in ("Waveform", "Spectrogram")]
-
 
 # %% [markdown]
 # ## Pitch from delay

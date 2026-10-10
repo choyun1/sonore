@@ -216,19 +216,30 @@ envelope. <code>ModulationSpectrum.to_sound(carrier=...)</code> takes both from 
 envelope is put back on a carrier: a sound lends its own, while <code>&quot;tones&quot;</code> and <code>&quot;noise&quot;</code> draw a
 random modulation phase and put the envelopes on steady tones or on noise.</p>
 <ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a>: a sentence and a sound with the sentence's modulation spectrum and random modulation phase.</li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a>: one patch of modulation, heard on three carriers.</li><li><a href="#h-random-spectrograms">Random spectrograms</a>: noise shaped by a spectrogram drawn at random with the coarse correlations of natural sounds.</li><li><a href="#h-an-edited-sentence">An edited sentence</a>: a sentence with every modulation faster than 4 Hz removed, and how close the sound comes to that.</li><li><a href="#h-timing-from-one-sound-magnitudes-from-another">Timing from one sound, magnitudes from another</a>: the sentence and rain trade halves.</li><li><a href="#h-twins-band-by-band">Twins band by band</a>: crickets and a fire with their timing randomized, keeping each band's own modulation.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: drawing with a mouse, dB targets, and the other modulation spectra.</li></ul>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 44100
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 44100
 
 
 def measure(snd, f_lo):
@@ -252,6 +263,7 @@ def show(snd, target=None, f_lo=250):
     return fig, [axes[0]]</code></pre></details></div>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/modtargets.ipynb">in Colab</a> or <a href="notebooks/modtargets.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-same-spectrum-different-sound">
 <h2 id="h-same-spectrum-different-sound">Same spectrum, different sound</h2>
@@ -275,7 +287,7 @@ is brightest at low rates and densities, as for most natural sounds (Singh &amp;
     <img src="img/mt1_a_sentence.png" width="800" height="340" alt="Plots of the a sentence sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
 spectrum = measure(sentence, f_lo=125)
 sound = finish(sentence)
 fig, playhead = show(sound, f_lo=125)</code></pre></details>
@@ -567,7 +579,7 @@ note measures the same comparison in C6 and C7.</p>
 <p>A sound as carrier lends its modulation phase, so one sound's magnitudes can be heard with
 another sound's timing. <code>to_envelopes(carrier=...)</code> gives the envelopes alone, which can then go
 on either sound's fine structure. Here the sentence and 2.5 s of rain trade halves.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">rain = so.load(&quot;docs/textures/rain.flac&quot;).mono().resample(sentence.fs)
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">rain = so.load(fetch(&quot;docs/textures/rain.flac&quot;)).mono().resample(sentence.fs)
 rain = so.Sound(rain.data[: sentence.n_samples], sentence.fs)
 rain_spectrum = measure(rain, f_lo=125)
 bank = spectrum._analysis.filterbank  # the 12-per-octave bank both spectra were measured with</code></pre></details></div>
@@ -640,7 +652,7 @@ def plane_twin(snd, rng=0):
 
 
 def texture(name, seconds=3.5):
-    snd = so.load(f&quot;docs/textures/{name}.flac&quot;).mono()
+    snd = so.load(fetch(f&quot;docs/textures/{name}.flac&quot;)).mono()
     return so.Sound(snd.data[: int(seconds * snd.fs)], snd.fs)</code></pre></details></div>
 
 <article class="sound" id="d-mt11" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
