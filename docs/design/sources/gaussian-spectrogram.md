@@ -21,6 +21,8 @@ Cho is considering renaming the "Classic stimuli" page instead.
   uses NumPy only, shares no code with sonore, and runs in under a second.
 - **[sound]**: printed by `tools/check_gaussian_spectrogram_sound.py`,
   which uses sonore itself to measure what the built function does.
+- **[blob]**: printed by `tools/check_db_blob_claims.py` (uses sonore and a
+  prototype dB draw).
 - **[math]**: follows in one line from the formulas shown.
 - **[prior]**: measured on Cho's 2017 prototype, outside this repository
   (the archive is private; the scripts are kept with the project's notes).
@@ -89,6 +91,19 @@ Cho is considering renaming the "Classic stimuli" page instead.
   standard deviation in every band, the lognormal correction
   `exp((sd ln10 / 10)^2 / 2)` is the same factor for all of them, so only
   the overall level changes, and that is set by the carrier anyway.
+
+- **G8 [blob].** Drawing a blob target in dB instead of linear amplitude
+  (D8). One blob at 4 Hz and 1 cyc/oct, 5 seeds, on `to_sound("noise")`:
+  the linear draw at rms depth 0.2 (near its cap of about 0.28, from
+  `views/modulation-targets.md`, C2) gives drawn envelopes of depth 0.20.
+  Only 12% of the sound's modulation power (rates of at least 0.5 Hz)
+  falls near the blob: within an octave of 4 Hz and 0.5 cyc/oct of 1. dB
+  draws with standard deviations of 3, 6 and 10 dB give depths of 0.35,
+  0.76 and 1.50, with 24%, 42% and 41% of the power near the blob. In the
+  dB modulation spectrum the shares are 20%, 46% and 65%. The peak stays
+  at 4 Hz in every case (5 Hz once), and at a density of 0.85 or 1.06,
+  the grid's two nearest bins. One blob and five seeds; a single
+  measurement, not a survey.
 
 ## Proposed design
 
@@ -161,6 +176,22 @@ Spectrotemporal ripples page or the Classic stimuli page (D7).
 - **D7. Gallery page.** The Spectrotemporal ripples page (sounds defined
   by their spectrotemporal envelope) or the Classic stimuli page.
   *Recommended: the ripples page.*
+
+- **D8. Blobs drawn in dB.** This came up while building: "can the way
+  of imposing statistics carry over to blobs?" A random-phase draw from a
+  modulation spectrum is a Gaussian field. A field with exponential
+  correlations has a Lorentzian modulation spectrum at zero rate and
+  density, so this function is one particular "blob", drawn in dB. Linear
+  draws cannot go deep, because envelopes can't go negative. dB draws can
+  go as deep as asked and put three to five times more of the modulation
+  power where the target is (G8). Proposal:
+  `ModulationSpectrum.from_blobs(..., scale="db", sd_db=...)`, which uses
+  the dB envelope analysis the class already has. `rms_depth` stays the
+  linear option, and the default stays linear, so nothing changes for
+  existing code. What a dB draw gives up: its envelopes are lognormal, so
+  the blob shapes the spectrum of the log envelope, and the linear
+  spectrum is that shape plus its spread, as G8's linear shares show.
+  *Recommended: add it in this PR. Question for Cho.*
 
 ## As built
 
