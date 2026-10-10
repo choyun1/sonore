@@ -1,6 +1,6 @@
 # Gallery rewrite
 
-Status: proposal, nothing built. Cho asked (2026-10-10) for a large rewrite of the listening
+Status: all decisions accepted by Cho (2026-10-10); D9 changed by Cho to keep Organ. Cho asked (2026-10-10) for a large rewrite of the listening
 gallery for two reasons: the pages repeat each other, and the female talker reads as an
 afterthought. This note maps both problems on the current pages and proposes a structure. The
 decisions at the end need Cho's answer before any page changes.
@@ -137,8 +137,10 @@ numbers the page prints). Recommendation: yes.
 **D4. Shared setup code.** The code is on the page so a reader can paste it into a notebook and
 get exactly the same sound and figure (Cho, 2026-10-10). So the setup has to be on every page in
 full, not behind an import. Proposal: the setup is written once in `docs/gallery/common.py`, and
-`build.py` prints it in full as the first code cell of every page and runs that same text, so
-what is shown is what ran. Each page also offers its whole code as one download (a `.py` or
+every page opens with it in full as a setup cell, so what is shown is what ran. As built, the
+copies live in the page scripts themselves (`tools/sync_gallery_setup.py` writes them and a docs
+test checks them): a script that imported or `exec`ed the file would not run on its own once
+pasted, and linting could not see its names. Each page also offers its whole code as one download (a `.py` or
 `.ipynb` built from the same cells), so a reader does not copy cell by cell. Two things today
 stop a paste from reproducing outside a clone of the repository: pages load recordings from
 relative paths (`docs/speech/...`), and some setup lives only on the page. The setup cell would
