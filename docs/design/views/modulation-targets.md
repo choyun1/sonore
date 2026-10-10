@@ -17,6 +17,14 @@ SciPy and soundfile, writes every filter and transform out from its
 formula, and shares no code with sonore. It runs in about 45 s. The numbers
 below come from NumPy 2.4.6 and SciPy 1.17.1, with the seeds in the script.
 
+The checker measures the male talker's sentence with the settings of
+2026-10-03, and still reproduces every number below (rerun 2026-10-10). The
+gallery page has since moved on: it plays the male and the female talker
+side by side, uses its own settings for some demos (an rms depth of 0.15 for
+the blob on the sentence, for one), and prints the numbers it quotes from
+its own run. Where the page and this note differ, they measure different
+sounds; the page's numbers are the ones for the page.
+
 ## How the claims are verified
 
 As in `modulation-spectrogram.md`, each claim is tagged:

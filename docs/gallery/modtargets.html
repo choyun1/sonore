@@ -65,6 +65,10 @@ h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
 audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
 .scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
 .live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
 .lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
@@ -205,17 +209,18 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 })();</script></nav>
 <header>
   <h1>Hearing a modulation spectrum</h1>
-<p>A modulation spectrum is the two-dimensional Fourier transform of a sound's envelopes, band by
-band over time: how much of the pattern moves at each rate (Hz, across) and at each density
-(cycles per octave, up), keeping only the magnitude (Singh &amp; Theunissen, 2003). The
-<a href="ripples.html">ripples page</a> goes from a pattern to its spectrum. This page goes the other way:
-from a spectrum, measured and edited or drawn from scratch, to a sound that has it.</p>
+<p>A modulation spectrum says how much of a sound's envelope pattern moves at each rate (Hz) and
+each density (cycles per octave). <a href="ripples.html#h-how-a-ripple-is-made">Spectrotemporal ripples</a>
+defines it and goes from a pattern to its spectrum. This page goes the other way: from a
+spectrum, measured and edited or drawn from scratch, to a sound that has it.</p>
 <p>A magnitude is not enough to make a sound. The spectrum has dropped the phase of the
 modulations, which says when each event happens, and the fine structure under each band's
-envelope. <code>ModulationSpectrum.to_sound(carrier=...)</code> takes both from a <em>carrier</em>, the way an
-envelope is put back on a carrier: a sound lends its own, while <code>&quot;tones&quot;</code> and <code>&quot;noise&quot;</code> draw a
-random modulation phase and put the envelopes on steady tones or on noise.</p>
-<ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a>: a sentence and a sound with the sentence's modulation spectrum and random modulation phase.</li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a>: one patch of modulation, heard on three carriers.</li><li><a href="#h-random-spectrograms">Random spectrograms</a>: noise shaped by a spectrogram drawn at random with the coarse correlations of natural sounds.</li><li><a href="#h-an-edited-sentence">An edited sentence</a>: a sentence with every modulation faster than 4 Hz removed, and how close the sound comes to that.</li><li><a href="#h-timing-from-one-sound-magnitudes-from-another">Timing from one sound, magnitudes from another</a>: the sentence and rain trade halves.</li><li><a href="#h-twins-band-by-band">Twins band by band</a>: crickets and a fire with their timing randomized, keeping each band's own modulation.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: drawing with a mouse, dB targets, and the other modulation spectra.</li></ul>
+envelope. <code>ModulationSpectrum.to_sound(carrier=...)</code> takes both from a <em>carrier</em>: a sound lends
+its own, while <code>&quot;tones&quot;</code> and <code>&quot;noise&quot;</code> draw a random modulation phase and put the envelopes on
+steady tones or on noise.</p>
+<p>The sentence is read by the <a href="talkers.html">two talkers</a> every speech page uses, and every demo
+on it plays both.</p>
+<ul><li><a href="#h-same-spectrum-different-sound">Same spectrum, different sound</a>: the sentence, and a sound with its modulation spectrum and a random modulation phase.</li><li><a href="#h-a-drawn-spectrum">A drawn spectrum</a>: one patch of modulation, heard on three carriers.</li><li><a href="#h-random-spectrograms">Random spectrograms</a>: noise shaped by a spectrogram drawn at random with the coarse correlations of natural sounds.</li><li><a href="#h-an-edited-sentence">An edited sentence</a>: the sentence with every modulation faster than 4 Hz removed, and how close the sound comes to that.</li><li><a href="#h-timing-from-one-sound-magnitudes-from-another">Timing from one sound, magnitudes from another</a>: the sentence and rain trade halves.</li><li><a href="#h-twins-band-by-band">Twins band by band</a>: crickets and a fire with their timing randomized, keeping each band's own modulation.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: drawing with a mouse, dB targets, and the other modulation spectra.</li></ul>
 <div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
 import urllib.request
 
@@ -239,7 +244,13 @@ def fetch(path):
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 44100
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 44100
+SPEAKERS = {&quot;Male talker&quot;: &quot;bdl&quot;, &quot;Female talker&quot;: &quot;slt&quot;}
+talkers = {
+    label: finish(so.load(fetch(f&quot;docs/speech/{speaker}_arctic_a0131.flac&quot;)))
+    for label, speaker in SPEAKERS.items()
+}
 
 
 def measure(snd, f_lo):
@@ -247,78 +258,145 @@ def measure(snd, f_lo):
     return so.ModulationSpectrum.octave(snd, f_lo=f_lo, f_hi=8000)
 
 
-def show(snd, target=None, f_lo=250):
-    &quot;&quot;&quot;The sound&#x27;s envelopes (a cochleagram), the target spectrum if there is one, and the
-    spectrum measured from the sound. Returns the figure and the panel the playhead follows.&quot;&quot;&quot;
-    n_panels = 2 if target is None else 3
-    fig, axes = plt.subplots(1, n_panels, figsize=(4 * n_panels, 3.4), layout=&quot;constrained&quot;)
+bank = so.cosine_filterbank(
+    f_lo=125, f_hi=8000, spacing=1 / 12, scale=&quot;octave&quot;
+)  # what measure(snd, 125) uses
+
+
+def cochleagram(ax, snd, f_lo):
+    &quot;&quot;&quot;The sound&#x27;s envelopes in 24 bands per octave.&quot;&quot;&quot;
     bank = so.cosine_filterbank(f_lo=f_lo, f_hi=8000, spacing=1 / 24, scale=&quot;octave&quot;)
-    bank.analyze(snd).envelopes(lowpass=200, fs=1000).plot(axes[0], db_range=30, colorbar=False)
-    axes[0].set_title(&quot;Envelopes (cochleagram)&quot;)
+    bank.analyze(snd).envelopes(lowpass=200, fs=1000).plot(ax, db_range=30, colorbar=False)
+    ax.set_title(&quot;Envelopes (cochleagram)&quot;)
+
+
+def spectra(axes, snd, target, f_lo):
+    &quot;&quot;&quot;The target spectrum, if there is one, and the spectrum measured from the sound.&quot;&quot;&quot;
     if target is not None:
-        target.plot(axes[1], db_range=30, wt_max=20, wf_max=4, colorbar=False)
-        axes[1].set_title(&quot;Target modulation spectrum&quot;)
+        target.plot(axes[0], db_range=30, wt_max=20, wf_max=4, colorbar=False)
+        axes[0].set_title(&quot;Target modulation spectrum&quot;)
     measure(snd, f_lo).plot(axes[-1], db_range=30, wt_max=20, wf_max=4, colorbar=False)
     axes[-1].set_title(&quot;Measured from the sound&quot;)
-    return fig, [axes[0]]</code></pre></details></div>
+
+
+def show(snd, target=None, f_lo=250):
+    &quot;&quot;&quot;The sound&#x27;s cochleagram, the target spectrum if there is one, and the spectrum measured
+    from the sound. Returns the figure and the panel the playhead follows.&quot;&quot;&quot;
+    n_panels = 2 if target is None else 3
+    fig, axes = plt.subplots(1, n_panels, figsize=(4 * n_panels, 3.4), layout=&quot;constrained&quot;)
+    cochleagram(axes[0], snd, f_lo)
+    spectra(axes[1:], snd, target, f_lo)
+    return fig, [axes[0]]
+
+
+def show_pair(sounds, targets=None, f_lo=125):
+    &quot;&quot;&quot;One column per talker: the cochleagram above, and below it the talker&#x27;s target spectrum
+    (if there is one) beside the spectrum measured from the sound. Returns the figure and, for
+    each talker, the panel the playhead follows.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 6.4), layout=&quot;constrained&quot;)
+    columns = fig.subfigures(1, 2)
+    playhead = {}
+    for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+        target = None if targets is None else targets[label]
+        layout = [[&quot;top&quot;], [&quot;measured&quot;]] if target is None else [[&quot;top&quot;] * 2, [&quot;target&quot;, &quot;measured&quot;]]
+        top, *bottom = column.subplot_mosaic(layout).values()
+        cochleagram(top, snd, f_lo)
+        top.set_title(f&quot;{label}: envelopes (cochleagram)&quot;)
+        spectra(bottom, snd, target, f_lo)
+        playhead[label] = [top]
+    return fig, playhead</code></pre></details></div>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/modtargets.ipynb">in Colab</a> or <a href="notebooks/modtargets.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-same-spectrum-different-sound">
 <h2 id="h-same-spectrum-different-sound">Same spectrum, different sound</h2>
-<p>A sentence's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
+<p>Each talker's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
 heard with the sentence's own modulation phase thrown away. <code>to_sound</code> with <code>carrier=&quot;tones&quot;</code>
 draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
 on a steady tone at its band's center. The random phase leaves the zero-rate column alone,
 since that column (its phase as well as its magnitudes) is the sentence's long-term spectrum:
 which bands are loud.</p>
 
-<article class="sound" id="d-mt1" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.499739581729232, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+<article class="sound pair" id="d-mt1">
   <div class="about">
     <h3>A sentence</h3>
-    <div class="desc"><p>The sentence, a male talker reading one of the CMU ARCTIC prompts. Its modulation spectrum
-is brightest at low rates and densities, as for most natural sounds (Singh &amp; Theunissen,
-2003).</p></div>
-    <audio controls preload="metadata" src="audio/mt1_a_sentence.flac"></audio>
-    <p class="file">mt1_a_sentence.flac, 2.5 s, mono</p>
+    <div class="desc"><p>The sentence, read by each talker. Its modulation spectrum is brightest at low rates and
+densities, as for most natural sounds (Singh &amp; Theunissen, 2003); how that modulation changes
+over the sentence is on <a href="modspectrogram.html#d-s1">Modulation spectrogram</a>. The
+<a href="classic.html#d-k1">speech-shaped noise</a> on Synthetic sounds has the long-term spectrum of speech
+but none of this: its modulation spectrum is a single line at zero rate. In the cochleagrams
+the lowest harmonics show as separate lines, farther apart for the female talker
+(<a href="talkers.html#h-harmonics-sample-the-envelope">Two talkers</a>); at the slow rates shown here the
+two modulation spectra are much alike.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt1_a_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt1_a_sentence_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt1_a_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt1_a_sentence_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt1_a_sentence.png" width="800" height="340" alt="Plots of the a sentence sound" loading="lazy">
+    <img src="img/mt1_a_sentence.png" width="1000" height="640" alt="Plots of the a sentence sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sentence = so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
-spectrum = measure(sentence, f_lo=125)
-sound = finish(sentence)
-fig, playhead = show(sound, f_lo=125)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">spectra_of = {label: measure(snd, f_lo=125) for label, snd in talkers.items()}
+sounds = talkers
+fig, playhead = show_pair(sounds)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt2" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+<article class="sound pair" id="d-mt2">
   <div class="about">
     <h3>Its modulation spectrum, random modulation phase</h3>
     <div class="desc"><p>The same magnitudes with a random modulation phase. The syllables, the pauses and the onsets
 are gone from the envelopes, which change at the sentence's rates and densities but never at
-its moments. A random phase also asks for envelopes below zero, which no
-envelope can be: about a third of the values (34% here) are clipped at zero, with a warning,
-and that is why the measured spectrum is smoother than the target. The color is kept only
-roughly. A two-dimensional modulation spectrum does not say which bands carry which
-modulation, so the random phase spreads the sentence's modulation into bands that were quiet,
-and clipping turns it into level there.</p></div>
-    <audio controls preload="metadata" src="audio/mt2_its_modulation_spectrum_random_modulation_phase.flac"></audio>
-    <p class="file">mt2_its_modulation_spectrum_random_modulation_phase.flac, 2.5 s, mono</p>
+its moments. A random phase also asks for envelopes below zero, which no envelope can be;
+<code>to_sound</code> clips them at zero, with a warning, and that is why the measured spectrum is
+smoother than the target. The long-term spectrum is kept only roughly. A two-dimensional
+modulation spectrum does not say which bands carry which modulation, so the random phase
+spreads the sentence's modulation into bands that were quiet, and clipping turns it into level
+there.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt2_its_modulation_spectrum_random_modulation_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt2_its_modulation_spectrum_random_modulation_phase_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt2_its_modulation_spectrum_random_modulation_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt2_its_modulation_spectrum_random_modulation_phase_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt2_its_modulation_spectrum_random_modulation_phase.png" width="1200" height="340" alt="Plots of the its modulation spectrum, random modulation phase sound" loading="lazy">
+    <img src="img/mt2_its_modulation_spectrum_random_modulation_phase.png" width="1000" height="640" alt="Plots of the its modulation spectrum, random modulation phase sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">twin = spectrum.to_sound(carrier=&quot;tones&quot;, fs=sentence.fs, rng=0)
-sound = finish(twin)
-fig, playhead = show(sound, target=spectrum, f_lo=125)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(spectra_of[label].to_sound(carrier=&quot;tones&quot;, fs=snd.fs, rng=0))
+    for label, snd in talkers.items()
+}
+fig, playhead = show_pair(sounds, targets=spectra_of)</code></pre></details>
 </article>
-<p>So a modulation spectrum fixes how a sound changes, not when. In the design note's check of
-the same sentence (<code>docs/design/views/modulation-targets.md</code>, C1) the two envelope arrays
-correlate at −0.08, and the pooled envelope, more than 30 dB below its peak 9.6% of the time
-in the sentence, never is in the twin. Sounds made this way, with a natural sound's modulation
+<p>The same draw as envelopes, against the sentence's own envelopes: how many values were
+clipped, how closely the two arrays correlate, and how often the summed envelope is more than
+30 dB below its peak, as it is in the pauses.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def summed_quiet(envelopes):
+    &quot;&quot;&quot;Share of the time the envelope summed over bands is more than 30 dB below its peak.&quot;&quot;&quot;
+    summed = envelopes.sum(axis=1)
+    return np.mean(summed &lt; summed.max() * 10 ** (-30 / 20))
+
+
+for label, snd in talkers.items():
+    own = bank.analyze(snd).envelopes(fs=1000).data[:, 1:-1, 0]  # (time, band), edge bands dropped
+    twin = spectra_of[label].to_envelopes(rng=0).data[:, 1:-1, 0]  # the draw mt2 heard; clipped values are 0
+    clipped, correlation = np.mean(twin == 0), np.corrcoef(own.ravel(), twin.ravel())[0, 1]
+    print(
+        f&quot;{label}: {clipped:.0%} clipped, correlation {correlation:.2f}, &quot;
+        f&quot;quiet {summed_quiet(own):.1%} of the time in the sentence, {summed_quiet(twin):.1%} in the twin&quot;
+    )</code></pre></details><pre class="out">Male talker: 34% clipped, correlation 0.07, quiet 8.2% of the time in the sentence, 0.0% in the twin
+Female talker: 38% clipped, correlation 0.16, quiet 15.4% of the time in the sentence, 0.0% in the twin</pre></div>
+<p>So a modulation spectrum fixes how a sound changes, not when. The two envelope arrays barely
+correlate, and the twin has no pauses. Sounds made this way, with a natural sound's modulation
 spectrum and a random modulation phase, have been used to ask what auditory neurons respond
 to (Hsu et al., 2004).</p>
 </section>
@@ -326,16 +404,18 @@ to (Hsu et al., 2004).</p>
 <h2 id="h-a-drawn-spectrum">A drawn spectrum</h2>
 <p>A target can be drawn from scratch as a few patches on the rate × density plane.
 <code>so.ModulationBlob(rate, density)</code> is a Gaussian bump at that rate [Hz] and density
-[cycles/octave], half an octave wide in rate and a quarter of a cycle per octave in density by
-default. The signs follow the <a href="ripples.html">ripples</a>: a positive rate and density is a
-downward sweep. A ripple is a blob of no width.</p>
+[cycles/octave], with a standard deviation of half an octave in rate and a quarter of a cycle
+per octave in density by default. The signs follow the
+<a href="ripples.html#h-how-a-ripple-is-made">ripples</a>: a positive rate and density is a downward
+sweep. A ripple is a blob of no width.</p>
 <p>A drawing sets a shape, not a depth, so <code>from_blobs</code> takes the depth separately: <code>rms_depth</code>,
 the rms of the envelopes about their mean, relative to the mean (0.2 by default). Envelopes
-cannot go below zero, and a random phase reaches only a limited depth before they would: about
-0.28 for the blob below (C2 of the design note), against 0.71 for one full ripple. A drawn
-target that would need clipping is refused, with the largest depth that fits.</p>
+cannot go below zero, and a random phase reaches only a limited depth before they would: a
+random-phase field is close to Gaussian, whose peaks lie several standard deviations from its
+mean, while a single ripple's peak is only <span class="tex">\sqrt{2}</span> of them away. A drawn target that would
+need clipping is refused, with the largest depth that fits.</p>
 
-<article class="sound" id="d-mt3" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.3380707098765435, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}]">
+<article class="sound" id="d-mt3" data-regions="[{&quot;x0&quot;: 0.0611225560619213, &quot;x1&quot;: 0.33663407793209893, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}]">
   <div class="about">
     <h3>A drawn blob, on tones</h3>
     <div class="desc"><p>Downward sweeps around 4 Hz and half a cycle per octave, on steady tones at the band centers.
@@ -356,7 +436,7 @@ sound = finish(on_tones)
 fig, playhead = show(sound, target=target)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt4" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.3380707098765435, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}]">
+<article class="sound" id="d-mt4" data-regions="[{&quot;x0&quot;: 0.0611225560619213, &quot;x1&quot;: 0.33663407793209893, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.9995000000000003}]">
   <div class="about">
     <h3>The same blob, on noise</h3>
     <div class="desc"><p>The same target on noise: each envelope multiplies a band of noise instead of a tone. The
@@ -374,23 +454,36 @@ sound = finish(on_noise)
 fig, playhead = show(sound, target=target)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt5" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.3380707098765435, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.4995000000000003}]">
+<article class="sound pair" id="d-mt5">
   <div class="about">
     <h3>The same blob, on the sentence</h3>
-    <div class="desc"><p>The same target on the sentence. A sound as carrier lends its own modulation phase as well as
-its fine structure, so the sweeps now come when the sentence's syllables did, in its voice. The
-sentence is 2.5 s long, so this target is drawn for 2.5 s.</p></div>
-    <audio controls preload="metadata" src="audio/mt5_the_same_blob_on_the_sentence.flac"></audio>
-    <p class="file">mt5_the_same_blob_on_the_sentence.flac, 2.5 s, mono</p>
+    <div class="desc"><p>The same target on each talker's sentence, drawn for as long as that sentence and a little
+shallower (<code>rms_depth=0.15</code>): the default depth would push some of the female talker's
+envelope values below zero with this phase, and is refused. A sound as carrier lends its own
+modulation phase as well as its fine structure, so the sweeps now come when the sentence's
+syllables did, in each talker's voice: the sentence keeps its fine structure and gets new
+envelopes. A <a href="vocoder.html#d-ci8">noise vocoder</a> makes the opposite
+trade, keeping the envelopes and replacing the fine structure with noise.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt5_the_same_blob_on_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt5_the_same_blob_on_the_sentence_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt5_the_same_blob_on_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt5_the_same_blob_on_the_sentence_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt5_the_same_blob_on_the_sentence.png" width="1200" height="340" alt="Plots of the the same blob, on the sentence sound" loading="lazy">
+    <img src="img/mt5_the_same_blob_on_the_sentence.png" width="1000" height="640" alt="Plots of the the same blob, on the sentence sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">short_target = so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), duration=2.5)
-on_sentence = short_target.to_sound(carrier=sentence)
-sound = finish(on_sentence)
-fig, playhead = show(sound, target=short_target)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">short_targets = {
+    label: so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), duration=snd.duration, rms_depth=0.15)
+    for label, snd in talkers.items()
+}
+on_sentence = {label: short_targets[label].to_sound(carrier=snd) for label, snd in talkers.items()}
+sounds = {label: finish(snd) for label, snd in on_sentence.items()}
+fig, playhead = show_pair(sounds, targets=short_targets, f_lo=250)</code></pre></details>
 </article>
 <p>How much of each sound's measured modulation power lies where the target has its power (within
 20 dB of its peak), leaving out the zero-rate column, which holds the long-term spectrum:</p>
@@ -403,18 +496,19 @@ fig, playhead = show(sound, target=short_target)</code></pre></details>
     return measured_power[in_target &amp; moving].sum() / measured_power[:, moving].sum()
 
 
-for name, snd, drawn in [
-    (&quot;tones&quot;, on_tones, target),
-    (&quot;noise&quot;, on_noise, target),
-    (&quot;sentence&quot;, on_sentence, short_target),
-]:
-    print(f&quot;{name:&gt;8}: {share_in_target(snd, drawn):.0%}&quot;)</code></pre></details><pre class="out">   tones: 98%
-   noise: 31%
-sentence: 24%</pre></div>
+carriers = [(&quot;tones&quot;, on_tones, target), (&quot;noise&quot;, on_noise, target)]
+carriers += [(label.lower(), on_sentence[label], short_targets[label]) for label in talkers]
+for name, snd, drawn in carriers:
+    print(f&quot;{name:&gt;13}: {share_in_target(snd, drawn):.0%}&quot;)</code></pre></details><pre class="out">        tones: 98%
+        noise: 31%
+  male talker: 19%
+female talker: 15%</pre></div>
 <p>The carrier matters as much as the target. A steady tone at each band's center adds almost no
 modulation of its own, so the target survives. Noise and speech fluctuate inside every band,
-and those fluctuations land in the measured spectrum on top of the drawn one. That is why
-<code>&quot;tones&quot;</code> is the default carrier (C3 of the design note).</p>
+and those fluctuations land in the measured spectrum on top of the drawn one; a tone vocoder
+keeps fast envelope modulations better than a noise vocoder for the same reason
+(<a href="vocoder.html#h-noise-or-tones">Noise or tones</a>). That is why <code>&quot;tones&quot;</code> is the default
+carrier.</p>
 </section>
 <section aria-labelledby="h-random-spectrograms">
 <h2 id="h-random-spectrograms">Random spectrograms</h2>
@@ -497,66 +591,90 @@ fig, playhead = show_spectrograms(env, sound)</code></pre></details>
 <section aria-labelledby="h-an-edited-sentence">
 <h2 id="h-an-edited-sentence">An edited sentence</h2>
 <p>A measured spectrum can be edited and heard. <code>with_gain(g)</code> multiplies every cell by
-<code>g(rate, density)</code>; <code>lambda r, d: abs(r) &lt;= 4</code> keeps only the modulations at 4 Hz and below,
-roughly the syllable rate and slower, and removes everything faster. Elliott &amp; Theunissen
-(2009) filtered the modulation spectrum of speech's spectrogram in a similar way to find which
-modulations intelligibility needs. With the sentence itself as carrier, its own modulation phase and fine
-structure go back under the edited magnitudes, so wherever the gain is 1 the timing is kept.</p>
+<code>g(rate, density)</code>; <code>lambda r, d: abs(r) &lt;= 4</code> keeps only the modulations at 4 Hz and below and
+removes everything faster. Elliott &amp; Theunissen (2009) filtered the modulation spectrum of
+speech's spectrogram in a similar way to find which modulations intelligibility needs. With the
+sentence itself as carrier, its own modulation phase and fine structure go back under the
+edited magnitudes, so wherever the gain is 1 the timing is kept.</p>
 
-<article class="sound" id="d-mt6" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+<article class="sound pair" id="d-mt6">
   <div class="about">
     <h3>Modulations above 4 Hz removed</h3>
-    <div class="desc"><p>The edit, put straight back on the sentence. The measured spectrum keeps some power above
+    <div class="desc"><p>The edit, put straight back on each sentence. The measured spectrum keeps some power above
 4 Hz, less than the sentence had but more than the edit asks for: the sentence's fine
 structure brings fast modulation of its own back into every band.</p></div>
-    <audio controls preload="metadata" src="audio/mt6_modulations_above_4_hz_removed.flac"></audio>
-    <p class="file">mt6_modulations_above_4_hz_removed.flac, 2.5 s, mono</p>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt6_modulations_above_4_hz_removed_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt6_modulations_above_4_hz_removed_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt6_modulations_above_4_hz_removed_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt6_modulations_above_4_hz_removed_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt6_modulations_above_4_hz_removed.png" width="1200" height="340" alt="Plots of the modulations above 4 hz removed sound" loading="lazy">
+    <img src="img/mt6_modulations_above_4_hz_removed.png" width="1000" height="640" alt="Plots of the modulations above 4 hz removed sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">slow = spectrum.with_gain(lambda rate, density: np.abs(rate) &lt;= 4)
-edited = slow.to_sound(carrier=sentence)
-sound = finish(edited)
-fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">slow = {
+    label: spectrum.with_gain(lambda rate, density: np.abs(rate) &lt;= 4)
+    for label, spectrum in spectra_of.items()
+}
+edited = {label: slow[label].to_sound(carrier=snd) for label, snd in talkers.items()}
+sounds = {label: finish(snd) for label, snd in edited.items()}
+fig, playhead = show_pair(sounds, targets=slow)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt7" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+<article class="sound pair" id="d-mt7">
   <div class="about">
     <h3>The same edit, after 20 iterations</h3>
     <div class="desc"><p>The same edit with 20 rounds of a search in the manner of Griffin &amp; Lim (1984): analyze the
 sound, keep its fine structure and modulation phase, impose the edited magnitudes again, and
-resynthesize. Each round brings the sound's own spectrum closer to the edit.</p></div>
-    <audio controls preload="metadata" src="audio/mt7_the_same_edit_after_20_iterations.flac"></audio>
-    <p class="file">mt7_the_same_edit_after_20_iterations.flac, 2.5 s, mono</p>
+resynthesize. Each round brings the sound's own spectrum closer to the edit. This is the
+slowest cell on the page: each round is one analysis and one synthesis.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt7_the_same_edit_after_20_iterations_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt7_the_same_edit_after_20_iterations_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt7_the_same_edit_after_20_iterations_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt7_the_same_edit_after_20_iterations_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt7_the_same_edit_after_20_iterations.png" width="1200" height="340" alt="Plots of the the same edit, after 20 iterations sound" loading="lazy">
+    <img src="img/mt7_the_same_edit_after_20_iterations.png" width="1000" height="640" alt="Plots of the the same edit, after 20 iterations sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">searched = slow.to_sound(carrier=sentence, iterations=20)
-sound = finish(searched)
-fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">searched = {label: slow[label].to_sound(carrier=snd, iterations=20) for label, snd in talkers.items()}
+sounds = {label: finish(snd) for label, snd in searched.items()}
+fig, playhead = show_pair(sounds, targets=slow)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt8" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+<article class="sound pair" id="d-mt8">
   <div class="about">
     <h3>The same edit, on tones</h3>
     <div class="desc"><p>The same edit on steady tones, with a random modulation phase: the slow modulations survive,
 but the sentence's timing does not.</p></div>
-    <audio controls preload="metadata" src="audio/mt8_the_same_edit_on_tones.flac"></audio>
-    <p class="file">mt8_the_same_edit_on_tones.flac, 2.5 s, mono</p>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt8_the_same_edit_on_tones_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt8_the_same_edit_on_tones_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt8_the_same_edit_on_tones_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt8_the_same_edit_on_tones_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt8_the_same_edit_on_tones.png" width="1200" height="340" alt="Plots of the the same edit, on tones sound" loading="lazy">
+    <img src="img/mt8_the_same_edit_on_tones.png" width="1000" height="640" alt="Plots of the the same edit, on tones sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">on_tones_edit = slow.to_sound(carrier=&quot;tones&quot;, fs=sentence.fs, rng=0)
-sound = finish(on_tones_edit)
-fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">on_tones_edit = {
+    label: slow[label].to_sound(carrier=&quot;tones&quot;, fs=snd.fs, rng=0) for label, snd in talkers.items()
+}
+sounds = {label: finish(snd) for label, snd in on_tones_edit.items()}
+fig, playhead = show_pair(sounds, targets=slow)</code></pre></details>
 </article>
-<p>The modulation power left between 6 and 40 Hz, relative to the sentence's:</p>
+<p>The modulation power left between 6 and 40 Hz, relative to each talker's sentence:</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def fast_share(snd):
     &quot;&quot;&quot;Share of the measured modulation power at 6-40 Hz.&quot;&quot;&quot;
     measured = measure(snd, f_lo=125)
@@ -565,75 +683,97 @@ fig, playhead = show(sound, target=slow, f_lo=125)</code></pre></details>
     return power[:, fast].sum() / power.sum()
 
 
-for name, snd in [(&quot;edit&quot;, edited), (&quot;20 iterations&quot;, searched), (&quot;on tones&quot;, on_tones_edit)]:
-    print(f&quot;{name:&gt;13}: {10 * np.log10(fast_share(snd) / fast_share(sentence)):.1f} dB&quot;)</code></pre></details><pre class="out">         edit: -4.1 dB
-20 iterations: -16.3 dB
-     on tones: -12.9 dB</pre></div>
+for label, snd in talkers.items():
+    print(label)
+    for name, version in [(&quot;edit&quot;, edited), (&quot;20 iterations&quot;, searched), (&quot;on tones&quot;, on_tones_edit)]:
+        print(f&quot;  {name:&gt;13}: {10 * np.log10(fast_share(version[label]) / fast_share(snd)):.1f} dB&quot;)</code></pre></details><pre class="out">Male talker
+           edit: -4.1 dB
+  20 iterations: -16.3 dB
+       on tones: -12.9 dB
+Female talker
+           edit: -4.2 dB
+  20 iterations: -15.2 dB
+       on tones: -13.6 dB</pre></div>
 <p>None of them reaches the edit exactly, which removed everything there. A sound's envelopes are
 not free: they come from filtering one waveform, so most arrays of magnitudes belong to no
-sound at all, and the search finds a sound whose spectrum is close, never equal. The design
-note measures the same comparison in C6 and C7.</p>
+sound at all, and the search finds a sound whose spectrum is close, never equal.</p>
 </section>
 <section aria-labelledby="h-timing-from-one-sound-magnitudes-from-another">
 <h2 id="h-timing-from-one-sound-magnitudes-from-another">Timing from one sound, magnitudes from another</h2>
 <p>A sound as carrier lends its modulation phase, so one sound's magnitudes can be heard with
 another sound's timing. <code>to_envelopes(carrier=...)</code> gives the envelopes alone, which can then go
-on either sound's fine structure. Here the sentence and 2.5 s of rain trade halves.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">rain = so.load(fetch(&quot;docs/textures/rain.flac&quot;)).mono().resample(sentence.fs)
-rain = so.Sound(rain.data[: sentence.n_samples], sentence.fs)
-rain_spectrum = measure(rain, f_lo=125)
-bank = spectrum._analysis.filterbank  # the 12-per-octave bank both spectra were measured with</code></pre></details></div>
+on either sound's fine structure. Here each talker's sentence and as much rain trade halves.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">rain_long = so.load(fetch(&quot;docs/textures/rain.flac&quot;)).mono()
+rains = {
+    label: so.Sound(rain_long.resample(snd.fs).data[: snd.n_samples], snd.fs)
+    for label, snd in talkers.items()
+}
+rain_spectra = {label: measure(rain, f_lo=125) for label, rain in rains.items()}</code></pre></details></div>
 
-<article class="sound" id="d-mt9" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+<article class="sound pair" id="d-mt9">
   <div class="about">
     <h3>Rain magnitudes, sentence timing</h3>
-    <div class="desc"><p>Rain's modulation magnitudes and fine structure, with the sentence's modulation phase. The
+    <div class="desc"><p>Rain's modulation magnitudes and fine structure, with each sentence's modulation phase. The
 rain now swells and fades with the syllables.</p></div>
-    <audio controls preload="metadata" src="audio/mt9_rain_magnitudes_sentence_timing.flac"></audio>
-    <p class="file">mt9_rain_magnitudes_sentence_timing.flac, 2.5 s, mono</p>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt9_rain_magnitudes_sentence_timing_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt9_rain_magnitudes_sentence_timing_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt9_rain_magnitudes_sentence_timing_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt9_rain_magnitudes_sentence_timing_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt9_rain_magnitudes_sentence_timing.png" width="1200" height="340" alt="Plots of the rain magnitudes, sentence timing sound" loading="lazy">
+    <img src="img/mt9_rain_magnitudes_sentence_timing.png" width="1000" height="640" alt="Plots of the rain magnitudes, sentence timing sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = rain_spectrum.to_envelopes(carrier=sentence)
-sound = finish((envelopes * bank.analyze(rain).tfs()).to_sound())
-fig, playhead = show(sound, target=rain_spectrum, f_lo=125)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
+for label, snd in talkers.items():
+    envelopes = rain_spectra[label].to_envelopes(carrier=snd)
+    sounds[label] = finish((envelopes * bank.analyze(rains[label]).tfs()).to_sound())
+fig, playhead = show_pair(sounds, targets=rain_spectra)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt10" data-regions="[{&quot;x0&quot;: 0.06352123770254631, &quot;x1&quot;: 0.33617478184060584, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]">
+<article class="sound pair" id="d-mt10">
   <div class="about">
     <h3>Sentence magnitudes, rain timing</h3>
-    <div class="desc"><p>The other way round: the sentence's magnitudes and fine structure, with rain's modulation
+    <div class="desc"><p>The other way round: each sentence's magnitudes and fine structure, with rain's modulation
 phase. The voice is still there, but its events come at rain's moments.</p></div>
-    <audio controls preload="metadata" src="audio/mt10_sentence_magnitudes_rain_timing.flac"></audio>
-    <p class="file">mt10_sentence_magnitudes_rain_timing.flac, 2.5 s, mono</p>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/mt10_sentence_magnitudes_rain_timing_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.4830751875000001, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.5244999999999997}]"></audio>
+    <p class="file">mt10_sentence_magnitudes_rain_timing_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/mt10_sentence_magnitudes_rain_timing_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5783470672743056, &quot;x1&quot;: 0.9880751875, &quot;top&quot;: 0.04055499131944429, &quot;bottom&quot;: 0.42235343560112837, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 2.6345}]"></audio>
+    <p class="file">mt10_sentence_magnitudes_rain_timing_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/mt10_sentence_magnitudes_rain_timing.png" width="1200" height="340" alt="Plots of the sentence magnitudes, rain timing sound" loading="lazy">
+    <img src="img/mt10_sentence_magnitudes_rain_timing.png" width="1000" height="640" alt="Plots of the sentence magnitudes, rain timing sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = spectrum.to_envelopes(carrier=rain)
-sound = finish((envelopes * bank.analyze(sentence).tfs()).to_sound())
-fig, playhead = show(sound, target=spectrum, f_lo=125)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
+for label, snd in talkers.items():
+    envelopes = spectra_of[label].to_envelopes(carrier=rains[label])
+    sounds[label] = finish((envelopes * bank.analyze(snd).tfs()).to_sound())
+fig, playhead = show_pair(sounds, targets=spectra_of)</code></pre></details>
 </article>
-<p>Some of the words can be made out in both: speech carries information in its timing and in
-its modulation spectrum.</p>
+<p>Listen for which words can still be made out in each: the first keeps the sentence's timing
+and the second its modulation magnitudes.</p>
 </section>
 <section aria-labelledby="h-twins-band-by-band">
 <h2 id="h-twins-band-by-band">Twins band by band</h2>
 <p>A two-dimensional modulation spectrum says how much modulation there is at each rate and
 density, but not which bands carry it. A random phase therefore spreads modulation into bands
-that were steady or quiet, which is the extra noise heard in the sentence's twin above. A
-narrower description keeps it: each band's own modulation spectrum, the per-band modulation
-power that McDermott &amp; Simoncelli (2011) use among their texture statistics. A twin of that
-keeps each band's envelope magnitudes over rate and randomizes only its phase in time, band by
-band. Both kinds of twin below keep each band's own fine structure, so only the envelopes
-differ.</p>
+that were steady or quiet, as in the sentence's twin above. A narrower description keeps it:
+each band's own modulation spectrum, close to the per-band modulation power that McDermott &amp;
+Simoncelli (2011) use among their texture statistics. A twin of that keeps each band's
+envelope magnitudes over rate and randomizes only its phase in time, band by band. Both kinds
+of twin below keep each band's own fine structure, so only the envelopes differ.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def band_twin(snd, rng=0):
     &quot;&quot;&quot;Each band keeps its envelope&#x27;s magnitude spectrum over time (and so its level); the phase is
     random, band by band. On the sound&#x27;s own fine structure.&quot;&quot;&quot;
-    bank = so.cosine_filterbank(f_lo=125, f_hi=8000, spacing=1 / 12, scale=&quot;octave&quot;)
     subbands = bank.analyze(snd)
     envelopes = subbands.envelopes(fs=1000).data[:, :, 0]  # (time, band)
     magnitude = np.abs(np.fft.rfft(envelopes, axis=0))
@@ -647,18 +787,18 @@ differ.</p>
 def plane_twin(snd, rng=0):
     &quot;&quot;&quot;The same modulation spectrum on the plane, a random phase, on the sound&#x27;s own fine structure.&quot;&quot;&quot;
     plane = measure(snd, f_lo=125)
-    subbands = plane._analysis.filterbank.analyze(snd)
-    return (plane.to_envelopes(rng=rng) * subbands.tfs()).to_sound()
+    return (plane.to_envelopes(rng=rng) * bank.analyze(snd).tfs()).to_sound()
 
 
 def texture(name, seconds=3.5):
     snd = so.load(fetch(f&quot;docs/textures/{name}.flac&quot;)).mono()
     return so.Sound(snd.data[: int(seconds * snd.fs)], snd.fs)</code></pre></details></div>
 
-<article class="sound" id="d-mt11" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+<article class="sound" id="d-mt11" data-regions="[{&quot;x0&quot;: 0.09168383409288194, &quot;x1&quot;: 0.502411150173611, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
   <div class="about">
     <h3>Crickets</h3>
-    <div class="desc"><p>3.5 s of crickets, from the <a href="textures.html">sound textures</a> page.</p></div>
+    <div class="desc"><p>3.5 s of crickets, from the <a href="textures.html">sound textures</a> page, whose modulation over time
+is on <a href="modspectrogram.html#d-x1">Modulation spectrogram</a>.</p></div>
     <audio controls preload="metadata" src="audio/mt11_crickets.flac"></audio>
     <p class="file">mt11_crickets.flac, 3.5 s, mono</p>
   </div>
@@ -671,7 +811,7 @@ sound = finish(crickets)
 fig, playhead = show(sound, f_lo=125)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt12" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+<article class="sound" id="d-mt12" data-regions="[{&quot;x0&quot;: 0.09168383409288194, &quot;x1&quot;: 0.502411150173611, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
   <div class="about">
     <h3>Crickets, twin on the plane</h3>
     <div class="desc"><p>The crickets' twin on the plane. The long-term spectrum is kept, so the chirps stay at the
@@ -687,7 +827,7 @@ top, but some of their modulation spreads into the bands below, which were nearl
 fig, playhead = show(sound, f_lo=125)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt13" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+<article class="sound" id="d-mt13" data-regions="[{&quot;x0&quot;: 0.09168383409288194, &quot;x1&quot;: 0.502411150173611, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
   <div class="about">
     <h3>Crickets, twin band by band</h3>
     <div class="desc"><p>The crickets' twin band by band. Each band keeps its own modulation, and the chirps stay at
@@ -703,7 +843,7 @@ the top.</p></div>
 fig, playhead = show(sound, f_lo=125)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt14" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+<article class="sound" id="d-mt14" data-regions="[{&quot;x0&quot;: 0.09168383409288194, &quot;x1&quot;: 0.502411150173611, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
   <div class="about">
     <h3>Fire</h3>
     <div class="desc"><p>3.5 s of a fire: a low roar with sharp crackles.</p></div>
@@ -719,7 +859,7 @@ sound = finish(fire)
 fig, playhead = show(sound, f_lo=125)</code></pre></details>
 </article>
 
-<article class="sound" id="d-mt15" data-regions="[{&quot;x0&quot;: 0.09528185655381945, &quot;x1&quot;: 0.5040273611111111, &quot;top&quot;: 0.0691186274509803, &quot;bottom&quot;: 0.8648596839256536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
+<article class="sound" id="d-mt15" data-regions="[{&quot;x0&quot;: 0.09168383409288194, &quot;x1&quot;: 0.502411150173611, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: -0.0005, &quot;t1&quot;: 3.4995000000000003}]">
   <div class="about">
     <h3>Fire, twin band by band</h3>
     <div class="desc"><p>The fire's twin band by band. Every band keeps its level and its modulation spectrum, but the
@@ -735,9 +875,11 @@ in the phase.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(band_twin(fire))
 fig, playhead = show(sound, f_lo=125)</code></pre></details>
 </article>
-<p>So a band-by-band twin keeps a steady texture such as crickets, rain or wind, but not the
-sparse events of a fire, applause or speech. That is why McDermott &amp; Simoncelli's statistics
-also include each band's envelope skew and kurtosis and the correlations between bands.</p>
+<p>So a band-by-band twin keeps a steady texture such as crickets, but not the sparse events of
+a fire. McDermott &amp; Simoncelli's statistics also include each band's envelope skew and
+kurtosis, which measure sparseness, and correlations between bands, which measure how events
+line up across them; <a href="textures.html#h-what-the-statistics-do">What the statistics do</a> hears a
+fire synthesized with some of them left out.</p>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
@@ -752,8 +894,10 @@ also include each band's envelope skew and kurtosis and the correlations between
 </div>
 <script>
 (() => {
-  const items = [...document.querySelectorAll(".sound")].map((el) => {
-    const regions = JSON.parse(el.dataset.regions);
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
     const heads = el.querySelector(".heads");
     const lines = regions.map((r) => {
       const d = document.createElement("div");
@@ -763,18 +907,21 @@ also include each band's envelope skew and kurtosis and the correlations between
       heads.appendChild(d);
       return d;
     });
-    const canvas = el.querySelector(".scene");
+    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
+    const canvas = extras && el.querySelector(".scene");
     const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
-    const liveCanvas = el.querySelector(".live");
+    const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
       live = JSON.parse(liveCanvas.dataset.live);
       live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
       live.played = false;
     }
-    return { el, audio: el.querySelector("audio"), plate: el.querySelector(".plate"), regions, lines, canvas, scene,
-      liveCanvas, live };
-  });
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
   // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
   // circle at its azimuth (clockwise from straight ahead) at the current time.
   function drawScene(item) {
@@ -860,9 +1007,50 @@ also include each band's envelope skew and kurtosis and the correlations between
     g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
     g.fillText("dB", bx + bw + 2, top + h / 2);
   }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
   function draw(item) {
     drawScene(item);
     drawLive(item);
+    drawLissajous(item);
     const t = item.audio.currentTime;
     item.regions.forEach((r, i) => {
       const line = item.lines[i];
@@ -880,28 +1068,44 @@ also include each band's envelope skew and kurtosis and the correlations between
       new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
     }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
     if (item.canvas) {
       new ResizeObserver(() => drawScene(item)).observe(item.canvas);
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
     }
     item.audio.addEventListener("play", () => {
       items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
       if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
       active = item; requestAnimationFrame(loop);
     });
     item.audio.addEventListener("seeked", () => draw(item));
     item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
     item.plate.tabIndex = 0;
     item.plate.setAttribute("role", "button");
     item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
     item.plate.addEventListener("click", (e) => {
       const box = item.plate.getBoundingClientRect();
       const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
-      const r = item.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
-      if (r) { item.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); item.audio.play(); }
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
     });
     item.plate.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); item.audio.paused ? item.audio.play() : item.audio.pause(); }
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
     });
   });
 })();
