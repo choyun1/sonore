@@ -233,6 +233,9 @@ def example_page(path: Path) -> dict:
                         title = html.unescape(re.sub("<[^>]+>", "", h))
                     elif kind == "h2":
                         sections.append({"title": h, "parts": []})
+                    elif kind == "h3":  # a subsection, inside the section above
+                        sub = f'<h3 class="sub" id="{heading_slug(h)}">{h}</h3>'
+                        (sections[-1]["parts"] if sections else intro).append(sub)
                     else:
                         (sections[-1]["parts"] if sections else intro).append(h)
                 continue
@@ -366,6 +369,7 @@ article + article, .cell + article, article + .cell { border-top: 1px dotted var
 article.sound, article.still { scroll-margin-top: 1.5rem; }
 article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h3.sub { font-weight: 500; font-size: 1.45rem; margin: 2.5rem 0 0.5rem; }
 .desc { margin: 0 0 1rem; }
 .desc p { margin: 0 0 0.75rem; }
 .headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
@@ -1231,11 +1235,15 @@ class Site:
             self.single.with_name(stem + self.single.suffix).write_text(make(1))
 
 
-def section_html(title_html: str, parts: list[str], intro: str = "") -> str:
+def heading_slug(title_html: str) -> str:
     # Runs of spaces and punctuation become one hyphen, so "Speech, babble" is
     # h-speech-babble, the slug a reader writes by hand in a topic link.
     text = html.unescape(re.sub("<[^>]+>", "", title_html)).lower()
-    slug = "h-" + re.sub(r"[^0-9a-z]+", "-", text).strip("-")
+    return "h-" + re.sub(r"[^0-9a-z]+", "-", text).strip("-")
+
+
+def section_html(title_html: str, parts: list[str], intro: str = "") -> str:
+    slug = heading_slug(title_html)
     out = [f'<section aria-labelledby="{slug}">', f'<h2 id="{slug}">{title_html}</h2>']
     if intro:
         out.append(f'<p class="section-intro">{html.escape(intro)}</p>')
