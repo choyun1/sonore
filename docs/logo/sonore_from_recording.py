@@ -167,8 +167,10 @@ def main(path):
     out = Path(path).parent
     fig.savefig(out / "sonore_from_recording.png", dpi=100)
     gap = so.silence(0.5, FS)
+    # Each at RMS 0.1, as in the gallery, and lowered together only if a peak would pass 0.95.
     both = so.concat([word.normalize(rms=0.1), gap, copy.normalize(rms=0.1)])
-    both.normalize(peak=0.95).save(out / "sonore_from_recording.wav")
+    both = both.normalize(peak=0.95) if both.peak > 0.95 else both
+    both.save(out / "sonore_from_recording.wav")
 
 
 if __name__ == "__main__":
