@@ -343,6 +343,8 @@ header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted);
 nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
 nav.pages a { color: var(--accent); }
 nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.home { display: inline-flex; align-items: center; gap: 0.3rem; }
+nav.pages .home .logo { width: 2.1rem; height: 2.1rem; margin: -0.5rem 0 -0.5rem -0.4rem; }
 nav.pages details { position: relative; }
 nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
 nav.pages summary::-webkit-details-marker { display: none; }
@@ -891,7 +893,8 @@ def nav(current: str) -> str:
         here = ' aria-current="page"' if href == current else ""
         return f'<a href="{href}"{here}>{TITLES[href]}</a>'
 
-    parts = [link("index.html")]
+    here = ' aria-current="page"' if current == "index.html" else ""
+    parts = [f'<a class="home" href="index.html"{here}>{LOGO_MARK}{TITLES["index.html"]}</a>']
     for group, _, pages in TOPICS:
         hrefs = [href for href, _ in pages]
         here = ' class="here"' if current in hrefs else ""

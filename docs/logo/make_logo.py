@@ -30,11 +30,11 @@ def lines(ink, accent, small=False):
     """The three lines (rows at 0, 30 and 60) and the strokes for the s, as SVG elements.
     The small version is shorter, so the lines stay apart at 16 px."""
     if small:
-        width, (rise, back), (drop, land), stroke, s_stroke = 96, (12, 48), (58, 72), 13, 10
-        strokes = [(-44, -10, 14), (-31, -16, 6), (-18, -6, 18)]
+        width, (rise, back), (drop, land), stroke, s_stroke = 96, (12, 48), (58, 72), 13, 7
+        strokes = [(-36, -10, 14), (-26, -16, 6), (-16, -6, 18)]
     else:
-        width, (rise, back), (drop, land), stroke, s_stroke = 200, (52, 112), (130, 142), 10, 7
-        strokes = [(-40, -10, 14), (-29, -16, 6), (-18, -6, 18)]
+        width, (rise, back), (drop, land), stroke, s_stroke = 200, (52, 112), (130, 142), 10, 4.5
+        strokes = [(-30, -10, 14), (-22, -16, 6), (-14, -6, 18)]
     top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},12 {land},12 H{width}"
     middle = (
         f"M0,30 H{rise} C{rise + 8},30 {rise + 8},18 {rise + 16},18 H{back - 16} "
@@ -72,7 +72,7 @@ def banner(font, theme):
     size = 98
     baseline = 30 + font["OS/2"].sxHeight / font["head"].unitsPerEm * size / 2
     word, right = wordmark(font, "sonore", size, 235, baseline, ink)
-    left, top, bottom = -48, -24, 74
+    left, top, bottom = -38, -24, 74
     view = f"{left} {top} {right - left + 6:.0f} {bottom - top}"
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-label="sonore">'
@@ -91,7 +91,7 @@ def mark():
     )
     body = lines("INK", "ACCENT", small=True)
     body = body.replace('stroke="INK"', 'class="logo-ink"').replace('stroke="ACCENT"', 'class="logo-accent"')
-    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -53 153 153" role="img" aria-label="sonore">'
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-45 -53 153 153" role="img" aria-label="sonore">'
     return f"{svg}<title>sonore</title>{style}{body}</svg>\n"
 
 

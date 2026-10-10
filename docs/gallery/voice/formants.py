@@ -40,7 +40,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   pulse.
 # - [Finding the formants again](#h-finding-the-formants-again): linear prediction reads the
 #   formants back out of a sound, and drives the synthesizer from a recording.
-# - [sonore says its name](#h-sonore-says-its-name): a word from hand-set tracks, and where the
+# - [sonore says its name](#h-sonore-says-its-name): a word with tracks set from a recording, and where the
 #   logo comes from.
 # - [What this page leaves out](#h-what-this-page-leaves-out): the rest of voice quality, rules,
 #   and drawing the tracks.
@@ -913,37 +913,54 @@ sounds = {label: finish(snd) for label, snd in pair.items()}
 # %% [markdown]
 # ## sonore says its name
 #
-# A whole word from tracks set by hand: "sonore" as /soʊˈnɔɹ/. The /s/ is frication through the
-# high parallel formants, with the voicing starting under its tail, as in /sa/. For the /n/, F1
-# drops, F2 rises toward where the tongue touches the ridge behind the teeth, and the nasal zero
-# opens. For the /ɹ/, F3 falls to about 1650 Hz, close to F2. sonore's logo is drawn from this
-# spectrogram: a few short strokes for the /s/, a rise in the middle line for the /n/ and a step
-# down in the top line for the /ɹ/. It is a picture of the sound rather than a plot of it.
+# A whole word: "sonore" as /sɔnɔʁ/, with the tracks set by hand from what `so.f0_track` and
+# `so.formant_track` measure on a recording of the word from
+# [frenchdictionary.com](https://www.frenchdictionary.com/translate/sonore), a female voice. The
+# /s/ is frication through the high parallel formants, with the voicing starting under its tail,
+# as in /sa/. The first vowel is short, about 80 ms, and the pitch falls through it from about 265
+# Hz to about 195 Hz, then stays nearly level. For the /n/, F1 drops and the nasal zero opens.
+# Through the second vowel F2 slides down from about 1800 Hz to 1200 Hz, into the /ʁ/, which is
+# voiceless here: about 100 ms of aspiration noise through formants near 750 and 1250 Hz.
+# [sonore_from_recording.py](https://github.com/choyun1/sonore/blob/main/docs/logo/sonore_from_recording.py)
+# goes the whole way: it measures the recording, prints the table these tracks were read from,
+# synthesizes them and compares the two. sonore's logo is drawn loosely from this spectrogram: a
+# few short strokes for the /s/, then three lines with one rise and one step down. It is a picture
+# of the sound rather than a plot of it.
 
 # %% [demo fl1] sonore says its name
-dur = 1.0
-times = [0.12, 0.19, 0.33, 0.38, 0.43, 0.48, 0.63, 0.75, 0.90]  # o, n, o, r
+dur = 0.62
+times = [0.15, 0.21, 0.23, 0.27, 0.29, 0.35, 0.42, 0.46, 0.49, 0.58]  # o, n, o, r
 tracks = dict(
-    F1=(times, [400, 520, 430, 280, 280, 600, 600, 460, 440]),
-    F2=(times, [1400, 1000, 830, 1500, 1500, 950, 950, 1100, 1100]),
-    F3=(times, [2600, 2450, 2450, 2500, 2500, 2600, 2550, 1650, 1600]),
+    F1=(times, [530, 470, 380, 380, 600, 590, 590, 600, 750, 750]),
+    F2=(times, [1750, 1730, 1750, 1750, 1800, 1450, 1250, 1200, 1250, 1250]),
+    F3=(times, [3000, 2950, 2800, 2800, 2950, 2900, 2970, 3050, 2900, 2900]),
 )
 sound = finish(
     so.klatt_synthesize(
         dur,
         FS,
-        F0=([0.10, 0.105, 0.35, 0.48, 0.57, 0.90, 0.95], [0, 112, 106, 132, 128, 92, 85]),
-        AV=([0.10, 0.105, 0.14, 0.34, 0.37, 0.43, 0.47, 0.83, 0.95], [0, 48, 60, 60, 52, 52, 60, 58, 0]),
-        AF=([0.01, 0.025, 0.105, 0.125], [0, 58, 58, 0]),
-        A4=40,
-        A5=56,
+        F0=([0.14, 0.18, 0.22, 0.26, 0.30, 0.34, 0.38, 0.47], [266, 250, 232, 212, 205, 197, 192, 189]),
+        AV=(
+            [0.135, 0.14, 0.16, 0.21, 0.23, 0.27, 0.29, 0.43, 0.46, 0.48],
+            [0, 56, 60, 56, 50, 50, 55, 54, 47, 0],
+        ),
+        AF=([0.0, 0.02, 0.125, 0.145], [0, 48, 48, 0]),
+        AH=([0.45, 0.48, 0.55, 0.60], [0, 34, 32, 0]),
+        F4=4400,
+        F5=5200,
+        F6=6500,
+        B6=1500,
+        SS=3,
+        RD=1.3,
+        A4=34,
+        A5=50,
         A6=60,
-        FNZ=([0.34, 0.37, 0.43, 0.46], [250, 450, 450, 250]),
+        FNZ=([0.21, 0.23, 0.27, 0.29], [250, 450, 450, 250]),
         rng=1,
         **tracks,
     )
 )
-fig, playhead = show(sound, "/soʊˈnɔɹ/", [tracks["F1"], tracks["F2"], tracks["F3"]])
+fig, playhead = show(sound, "/sɔnɔʁ/", [tracks["F1"], tracks["F2"], tracks["F3"]])
 
 # %% [markdown]
 # ## What this page leaves out
