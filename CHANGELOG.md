@@ -30,6 +30,10 @@ Breaking changes since 0.5.0 (each is described under Changed):
   (docs/design/sources/gaussian-spectrogram.md).
   The gallery's "Classic stimuli" page is now "Synthetic sounds" and has a
   section on them.
+- `ModulationSpectrum.from_blobs(..., scale="db", sd_db=6)` draws blobs as the
+  modulation spectrum of envelopes in dB. Nothing has to be clipped, so the
+  modulation can go deeper than a linear draw's limit of about 0.28. The
+  default stays linear.
 - Every view has `.plot()` (docs/design/layout/plotting.md). A view with no
   single picture refuses with `NotImplementedError` and its `no_plot`
   sentence, which names what to plot instead: `ReassignedSpectrogram`

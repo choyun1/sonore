@@ -1,6 +1,6 @@
 """Numbers for D8 of docs/design/sources/gaussian-spectrogram.md: a blob
-target drawn in dB (log amplitude) instead of linear amplitude. Uses sonore;
-the dB draw is a prototype built from from_blobs' own grid and magnitudes.
+target drawn in dB (log amplitude) instead of linear amplitude, with
+ModulationSpectrum.from_blobs(..., scale="db"). Uses sonore.
 
   G8  for one blob (4 Hz, 1 cyc/oct), 5 seeds: the drawn envelopes' linear
       rms depth, and the share of the sound's modulation power (rate at
@@ -10,26 +10,14 @@ the dB draw is a prototype built from from_blobs' own grid and magnitudes.
 """
 
 import collections
-import copy
 import warnings
 
 import numpy as np
 
 import sonore as so
-from sonore.views.envelopes import _EnvelopeAnalysis
 
 fs, dur = 16000, 2.0
 blob = so.ModulationBlob(4.0, 1.0)
-
-
-def db_version(spec, sd_db):
-    new = copy.copy(spec)
-    a = spec._analysis
-    new._analysis = _EnvelopeAnalysis(a.filterbank, a.fs, a.n_samples, "db", a.drop_edges)
-    new._mean = 0.0
-    new._rms_depth = None
-    new._magnitude = spec._magnitude * (sd_db * spec._magnitude.size / np.linalg.norm(spec._magnitude))
-    return new
 
 
 def blob_share(sound, scale):
@@ -55,7 +43,7 @@ for seed in range(5):
     s = env.to_sound("noise", fs=fs, rng=100 + seed)
     rows.append(("linear, rms_depth 0.2", depth(env), *blob_share(s, "linear"), *blob_share(s, "db")))
     for sd in (3, 6, 10):
-        d = db_version(lin, sd)
+        d = so.ModulationSpectrum.from_blobs(blob, dur, f_lo=250, f_hi=7000, scale="db", sd_db=sd)
         env = d.to_envelopes(rng=seed)
         s = env.to_sound("noise", fs=fs, rng=100 + seed)
         rows.append((f"dB, sd {sd} dB", depth(env), *blob_share(s, "linear"), *blob_share(s, "db")))

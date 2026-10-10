@@ -188,6 +188,49 @@ def test_blob_target_is_found_again_in_the_sound():
     assert correlation > 0.9
 
 
+def _db_blob_target(sd_db=10.0):
+    return so.ModulationSpectrum.from_blobs(
+        so.ModulationBlob(4, 0.5), 2, f_lo=250, f_hi=FAST_HI, bands_per_octave=6, scale="db", sd_db=sd_db
+    )
+
+
+def test_db_blob_target_has_the_asked_spread_and_goes_deeper_than_linear():
+    target = _db_blob_target()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # nothing is clipped
+        envelopes = target.to_envelopes(rng=0).data[:, 1:-1, 0]
+    levels = 20 * np.log10(envelopes)
+    assert levels.std() == pytest.approx(10.0)
+    np.testing.assert_allclose(
+        np.abs(np.fft.fft2(levels.T - levels.mean())), target._magnitude, atol=1e-9 * target._magnitude.max()
+    )
+    # deeper than any linear draw of one blob can reach (about 0.28)
+    assert envelopes.std() / envelopes.mean() > 0.5
+
+
+def test_db_blob_target_is_found_again_in_the_sound():
+    target = _db_blob_target(sd_db=6.0)
+    y = target.to_sound(carrier="tones", fs=FAST, rng=0)
+    _, measured = _octave_spectrum(y, scale="db")
+    drawn = target._magnitude > 0.1 * target._magnitude.max()
+    correlation = np.corrcoef(np.log(measured._magnitude[drawn]), np.log(target._magnitude[drawn]))[0, 1]
+    assert correlation > 0.9
+
+
+@pytest.mark.parametrize(
+    "kwargs, error",
+    [
+        ({"scale": "db", "rms_depth": 0.2}, TypeError),
+        ({"sd_db": 6}, TypeError),
+        ({"scale": "db", "sd_db": 0}, ValueError),
+        ({"scale": "log"}, ValueError),
+    ],
+)
+def test_blob_target_rejects_mixed_depths(kwargs, error):
+    with pytest.raises(error):
+        so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), 1, **kwargs)
+
+
 def test_iterations_bring_the_sound_closer_to_an_edit():
     x = _speech_like()
     _, spectrum = _octave_spectrum(x)

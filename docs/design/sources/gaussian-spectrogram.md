@@ -12,7 +12,7 @@ the model, how it fits sonore, and the decisions for Cho.
 Status: D1-D6 accepted by Cho 2026-10-10, all as recommended. Built as
 `so.gaussian_spectrogram` (see "As built"). D7 decided 2026-10-10: the
 "Classic stimuli" page is renamed "Synthetic sounds" and the section goes
-there. D8 is open.
+there. D8 accepted by Cho 2026-10-10 and built (see "As built").
 
 ## How the claims are verified, and what was read
 
@@ -194,7 +194,7 @@ Synthetic sounds page, formerly Classic stimuli (D7).
   existing code. What a dB draw gives up: its envelopes are lognormal, so
   the blob shapes the spectrum of the log envelope, and the linear
   spectrum is that shape plus its spread, as G8's linear shares show.
-  *Recommended: add it in this PR. Question for Cho.*
+  *Recommended: add it in this PR.* Accepted by Cho.
 
 ## As built
 
@@ -209,6 +209,16 @@ from t = 0 until they cover the sound. Tests are in
 `tests/sources/test_gaussian_spectrogram.py`: the recursion's covariance
 against the Kronecker one, reproducibility, cell statistics (G6), the
 flat-on-average slope, and a sound that keeps its drawn levels.
+
+D8: `ModulationSpectrum.from_blobs(..., scale="db", sd_db=6)` draws the
+blobs as the spectrum of envelopes in dB, with mean 0 dB and the given rms
+in dB, using the dB envelope analysis. `rms_depth` (default 0.2) stays the
+linear option and the default stays linear; giving the other scale's depth
+raises `TypeError`. `tools/check_db_blob_claims.py` now calls this API and
+prints the same G8 numbers as the prototype did. Tests are in
+`tests/views/test_modulation.py`: the drawn spread and magnitudes, a depth
+past the linear cap without clipping, the target found again in the sound's
+dB spectrum, and the parameter checks.
 
 ## Prior code
 
