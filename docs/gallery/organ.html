@@ -212,11 +212,33 @@ than adding notes. This page is a template. Its sounds wait for measured spectra
 so for now it lays out what each section will show, and prints the arithmetic of footages and
 tuning, which needs no pipe sounds.</p>
 <ul><li><a href="#h-footage-is-a-harmonic-number">Footage is a harmonic number</a>: what 8′, 4′ and 2⅔′ mean.</li><li><a href="#h-one-stop">One stop</a>: principal, flute, stopped flute and reed on the same note.</li><li><a href="#h-building-a-registration">Building a registration</a>: stops added one by one, and gap registrations.</li><li><a href="#h-mutations-are-tuned-pure">Mutations are tuned pure</a>: where the organ meets the <a href="temperament.html">temperament</a> page.</li><li><a href="#h-celeste-and-tremulant">Celeste and tremulant</a>: beats on purpose.</li><li><a href="#h-attack">Attack</a>: how a pipe starts to speak.</li></ul>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import sonore as so
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
 
-C4 = so.note_to_freq(&quot;C4&quot;)</code></pre></details></div>
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">C4 = so.note_to_freq(&quot;C4&quot;)</code></pre></details></div>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/organ.ipynb">in Colab</a> or <a href="notebooks/organ.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-footage-is-a-harmonic-number">
 <h2 id="h-footage-is-a-harmonic-number">Footage is a harmonic number</h2>

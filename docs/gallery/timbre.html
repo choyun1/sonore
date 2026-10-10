@@ -217,6 +217,7 @@ measures each with sonore's timbre descriptors.</p>
 <ul><li><a href="#h-attack-time">Attack time</a>: one tone starting over 5 to 300 ms.</li><li><a href="#h-brightness">Brightness</a>: five spectral slopes, from dull to bright.</li><li><a href="#h-spectral-flux">Spectral flux</a>: a steady spectrum against one that brightens.</li><li><a href="#h-three-descriptors-at-once">Three descriptors at once</a>: every tone of the page placed by its numbers.</li><li><a href="#h-onsets">Onsets</a>: partials starting together, building up at different rates, and with a burst of noise.</li><li><a href="#h-vowels-are-timbres">Vowels are timbres</a>: three vowels sung on one note.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/timbre.ipynb">in Colab</a> or <a href="notebooks/timbre.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-code-the-examples-share">
 <h2 id="h-code-the-examples-share">Code the examples share</h2>
@@ -232,13 +233,30 @@ why):</p>
 <ul><li><strong>Log attack time</strong> (<code>so.log_attack_time</code>): <span class="tex">\log_{10}</span> of the attack's duration in seconds. The attack is found on the energy envelope (the amplitude of the signal, smoothed by a 20 Hz low-pass filter) by the paper's "weakest effort" method, which looks for where the envelope climbs fastest from one tenth of its maximum to the next. <code>so.attack_segment</code> gives its start and end.</li><li><strong>Spectral centroid</strong> (<code>so.spectral_centroid</code>): the center of gravity of the power spectrum, <span class="tex">\sum_k f_k p_k / \sum_k p_k</span>, in each 23.2 ms time window, every 5.8 ms. Its median over the tone is the usual measure of brightness.</li><li><strong>Spectral flux</strong> (<code>so.spectral_flux</code>): one minus the correlation of two magnitude spectra 100 ms apart, 0 when the spectrum keeps its shape.</li></ul>
 <p>Each sound is drawn as a spectrogram with its centroid track over it and, under it, the
 waveform with each tone's measured attack shaded. Every sound starts with half a second of silence.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 44100
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 44100
 F0 = so.note_to_freq(&quot;Eb4&quot;)
 DUR = 1.0  # every tone [s]
 GAP = 0.5  # silence before and between tones [s]
@@ -264,12 +282,6 @@ def tone(slope=1.0, attack=20e-3, duration=DUR):
         return float(n) ** -s / np.sqrt(power) * envelope(t, rise, duration)
 
     return so.harmonic_complex(duration, FS, F0, harmonics=HARMONICS, amplitudes=gain)
-
-
-def finish(snd):
-    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
-    snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
 
 
 def describe(snd):

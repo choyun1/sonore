@@ -68,21 +68,36 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # or click a time axis, and it follows the sound; before that it shows a moment chosen for each
 # example.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-fs = 16000
-rng = np.random.default_rng(0)
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
+fs = 16000
+rng = np.random.default_rng(0)
 
 
 def analyze(snd):
@@ -121,7 +136,6 @@ def show(snd, marks=(), start=None):
     }
     return fig, list(axes), live
 
-
 # %% [markdown]
 # ## A modulation rate that glides
 #
@@ -155,7 +169,7 @@ fig, playhead, live = show(sound)
 
 # %%
 names = ("bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133")
-sentences = [so.load(f"docs/speech/{n}.flac").normalize(rms=0.1) for n in names]
+sentences = [so.load(fetch(f"docs/speech/{n}.flac")).normalize(rms=0.1) for n in names]
 talk = so.concat(sentences)
 n = int(4 * fs)
 babble = np.zeros(n)
@@ -188,7 +202,9 @@ fig, playhead, live = show(sound, marks=marks, start=1.5)
 # spectrograms should not, if the modulation is set by the syllables rather than by the voice.
 
 # %%
-same_sentence = [so.load(f"docs/speech/{n}_arctic_a0131.flac").normalize(rms=0.1) for n in ("bdl", "slt")]
+same_sentence = [
+    so.load(fetch(f"docs/speech/{n}_arctic_a0131.flac")).normalize(rms=0.1) for n in ("bdl", "slt")
+]
 two_voices = so.concat(same_sentence)
 env, msg, fine = analyze(two_voices)
 depth_db = 20 * np.log10(msg.depth[0])
@@ -223,7 +239,7 @@ fig, playhead, live = show(sound, marks=[switch], start=1.2)
 # modulation spectrogram should hold still while each texture lasts and change at the joins.
 
 # %%
-textures = [so.load(f"docs/textures/{n}.flac").resample(fs) for n in ("crickets", "applause", "rain")]
+textures = [so.load(fetch(f"docs/textures/{n}.flac")).resample(fs) for n in ("crickets", "applause", "rain")]
 three = so.concat([s[:3.5].normalize(rms=0.1) for s in textures])
 
 # %% [about]

@@ -43,14 +43,25 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # (de Cheveigné & Kawahara, 2002); and WORLD's Harvest (Morise, 2017), stored with the sentence.
 # Unless stated, the syntheses below follow `so.f0_track`.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
@@ -59,11 +70,14 @@ def finish(snd):
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
+from scipy.interpolate import RegularGridInterpolator
+
 # The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
 # Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load("docs/speech/bdl_arctic_a0131.flac"))
+sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
 fs, duration = sentence.fs, sentence.duration
-f0_times, f0_harvest = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
+f0_times, f0_harvest = np.loadtxt(fetch("docs/speech/bdl_arctic_a0131_f0.csv"), delimiter=",", skiprows=2).T
 
 stft = so.STFT(sentence, win_dur=0.040, hop_dur=0.005)
 cep = so.Cepstrum(stft)
@@ -93,7 +107,6 @@ def show(snd, title, contour=None):
     for ax in (ax0, ax1):
         ax.set_xlim(0, duration)
     return fig, [ax0, ax1]
-
 
 # %% [markdown]
 # ## Three pitch tracks, heard
@@ -406,7 +419,7 @@ def resynthesize(snd, seed=2):
     return finish(so.Sound(out, fs)), (snd_track.t, snd_track.f0[0])
 
 
-sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
 resynthesis_female, contour_female = resynthesize(sentence_female)
 f0_female = contour_female[1]
 print(f"median voiced F0: {np.median(f0_female[f0_female > 0]):.0f} Hz (slt), {median:.0f} Hz (bdl)")

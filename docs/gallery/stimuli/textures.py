@@ -30,17 +30,25 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # Every example below is the code shown with it, run after this cell: loading a recording and
 # its synthesis, the level the gallery plays sounds at, and the plots.
 
-# %%
-import json
+# %% [setup]
+import os
+import urllib.request
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
-from sonore.texture import TextureStats
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 44100
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
@@ -49,20 +57,28 @@ def finish(snd):
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
+import json
+
+from sonore.texture import TextureStats
+
+FS = 44100
+
+
 def original(name):
     """A recording; docs/textures/SOURCES.md says where each comes from and which excerpt."""
-    return so.load(f"docs/textures/{name}.flac")
+    return so.load(fetch(f"docs/textures/{name}.flac"))
 
 
 def synthesized(name, imposed=""):
     """A synthesis precomputed by tools/make_texture_synths.py (below)."""
     suffix = f"__{imposed}" if imposed else ""
-    return so.load(f"docs/textures/synth/{name}{suffix}.flac").resample(FS)
+    return so.load(fetch(f"docs/textures/synth/{name}{suffix}.flac")).resample(FS)
 
 
 def report(name):
     """How closely the synthesis matches: the statistic SNR averaged over classes."""
-    info = json.loads(open(f"docs/textures/synth/{name}.json").read())
+    info = json.loads(open(fetch(f"docs/textures/synth/{name}.json")).read())
     snr = np.mean(list(info["snr_all_classes"].values()))
     return f"Average statistic SNR {snr:.0f} dB after {info['best_iteration']} iterations."
 
@@ -110,7 +126,6 @@ def texture_fig(snd, original, synthetic=False):
     for ax in (ax_v, ax_p):
         ax.grid(ls=":", which="both", lw=0.5)
     return fig, [ax_s]  # the playhead follows the spectrogram
-
 
 # %% [markdown]
 # ## The model and its statistics

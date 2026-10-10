@@ -31,15 +31,25 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # [Hearing a modulation spectrum](modtargets.html#h-random-spectrograms), beside the other
 # envelopes drawn from a modulation spectrum.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import sawtooth
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 44100
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
@@ -48,12 +58,17 @@ def finish(snd):
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
+from scipy.signal import sawtooth
+
+FS = 44100
+
+
 def show(snd, fmax=4000, win_dur=50e-3):
     """so.overview: waveform, spectrum, spectrogram and modulation spectrum.
     Returns the figure and the panels the playhead follows."""
     fig = so.overview(snd, win_dur=win_dur, figsize=(10, 6.2), fmax=fmax)
     return fig, [ax for ax in fig.axes if ax.get_title() in ("Waveform", "Spectrogram")]
-
 
 # %% [markdown]
 # ## Speech-shaped noise
@@ -68,7 +83,7 @@ def show(snd, fmax=4000, win_dur=50e-3):
 
 # %%
 sentences = [
-    so.load(f"docs/speech/{name}.flac").normalize(rms=0.1)
+    so.load(fetch(f"docs/speech/{name}.flac")).normalize(rms=0.1)
     for name in ("bdl_arctic_a0131", "rms_arctic_a0132", "rms_arctic_a0133")
 ]
 ltass = so.long_term_spectrum(sentences)
@@ -105,7 +120,7 @@ fig, playhead = show(sound, fmax=8000, win_dur=20e-3)
 # sentence's power divides among octave bands.
 
 # %%
-pair = [so.load(f"docs/speech/{name}_arctic_a0131.flac").normalize(rms=0.1) for name in ("bdl", "slt")]
+pair = [so.load(fetch(f"docs/speech/{name}_arctic_a0131.flac")).normalize(rms=0.1) for name in ("bdl", "slt")]
 pair_spectra = [so.long_term_spectrum([sentence]) for sentence in pair]
 octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
 print("octave from [Hz]     " + "".join(f"{low:>6}" for low in octave_edges[:-1]))

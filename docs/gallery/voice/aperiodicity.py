@@ -46,23 +46,38 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # 6 dB per octave. Its level is set so that noise and harmonics are equally strong at 4 kHz.
 # Everything about the vowel is known, so its aperiodicity can be written down.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 16000
-F0 = 115.0
-DUR = 1.0
-HOD = [(730, 60), (1090, 90), (2440, 150), (3500, 200), (4500, 250)]
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
+FS = 16000
+F0 = 115.0
+DUR = 1.0
+HOD = [(730, 60), (1090, 90), (2440, 150), (3500, 200), (4500, 250)]
 
 
 def show(snd, title, fmax=5000):
@@ -306,8 +321,10 @@ for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", s
 # a single bend at 3 kHz.
 
 # %%
-sentence = finish(so.load("docs/speech/bdl_arctic_a0131.flac"))
-harvest_times, harvest_f0 = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
+sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
+harvest_times, harvest_f0 = np.loadtxt(
+    fetch("docs/speech/bdl_arctic_a0131_f0.csv"), delimiter=",", skiprows=2
+).T
 harvest = (harvest_times, harvest_f0)
 sentence_envelope = so.cheaptrick(sentence, harvest)
 sentence_d4c = so.d4c(sentence, harvest)
@@ -455,7 +472,7 @@ for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", s
 # track for this recording, so the pitch comes from `so.f0_track`; the analysis is still WORLD's.
 
 # %%
-sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
 track_female = so.f0_track(sentence_female)
 envelope_female = so.cheaptrick(sentence_female, track_female)
 d4c_female = so.d4c(sentence_female, track_female)

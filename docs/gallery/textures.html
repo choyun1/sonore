@@ -212,43 +212,56 @@ synthesizes a new sample by imposing those statistics on noise.</p>
 <ul><li><a href="#h-the-model-and-its-statistics">The model and its statistics</a>: cochlear bands, their envelopes, and what is measured from them.</li><li><a href="#h-originals-and-syntheses">Originals and syntheses</a>: each recording followed by its synthesis, which shares no waveform with it, only statistics.</li><li><a href="#h-what-the-statistics-do">What the statistics do</a>: the same textures synthesized from only some of the statistics.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/textures.ipynb">in Colab</a> or <a href="notebooks/textures.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-code-the-examples-share">
 <h2 id="h-code-the-examples-share">Code the examples share</h2>
 <p>Every example below is the code shown with it, run after this cell: loading a recording and
 its synthesis, the level the gallery plays sounds at, and the plots.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import json
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
-from sonore.texture import TextureStats
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 44100
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import json
+
+from sonore.texture import TextureStats
+
+FS = 44100
 
 
 def original(name):
     &quot;&quot;&quot;A recording; docs/textures/SOURCES.md says where each comes from and which excerpt.&quot;&quot;&quot;
-    return so.load(f&quot;docs/textures/{name}.flac&quot;)
+    return so.load(fetch(f&quot;docs/textures/{name}.flac&quot;))
 
 
 def synthesized(name, imposed=&quot;&quot;):
     &quot;&quot;&quot;A synthesis precomputed by tools/make_texture_synths.py (below).&quot;&quot;&quot;
     suffix = f&quot;__{imposed}&quot; if imposed else &quot;&quot;
-    return so.load(f&quot;docs/textures/synth/{name}{suffix}.flac&quot;).resample(FS)
+    return so.load(fetch(f&quot;docs/textures/synth/{name}{suffix}.flac&quot;)).resample(FS)
 
 
 def report(name):
     &quot;&quot;&quot;How closely the synthesis matches: the statistic SNR averaged over classes.&quot;&quot;&quot;
-    info = json.loads(open(f&quot;docs/textures/synth/{name}.json&quot;).read())
+    info = json.loads(open(fetch(f&quot;docs/textures/synth/{name}.json&quot;)).read())
     snr = np.mean(list(info[&quot;snr_all_classes&quot;].values()))
     return f&quot;Average statistic SNR {snr:.0f} dB after {info[&#x27;best_iteration&#x27;]} iterations.&quot;
 

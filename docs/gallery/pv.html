@@ -212,6 +212,7 @@ partials moved, while everything else stays the same.</p>
 <ul><li><a href="#h-how-it-works">How it works</a>: the STFT, and the frequency hidden in how fast each bin's phase turns.</li><li><a href="#h-changing-duration">Changing duration</a>: time windows resynthesized further apart, and why their phases have to be locked.</li><li><a href="#h-changing-pitch">Changing pitch</a>: stretching, then resampling.</li><li><a href="#h-a-higher-voice">A higher voice</a>: a female talker's sentence stretched, and lowered to the male talker's pitch.</li><li><a href="#h-moving-the-partials">Moving the partials</a>: an oscillator bank with every frequency remapped.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/pv.ipynb">in Colab</a> or <a href="notebooks/pv.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-how-it-works">
 <h2 id="h-how-it-works">How it works</h2>
@@ -230,19 +231,30 @@ a quarter window: the bins a Hann window's main lobe reaches are then all close 
 bin near a partial reports that partial's frequency, the <em>instantaneous frequency</em>, and with
 magnitudes and instantaneous frequencies in hand the sound can be rebuilt differently.
 <code>so.pv_analyze</code> returns all three.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 44100
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 44100
 
 
 def vibrato_complex(dur=2.0):
@@ -277,7 +289,7 @@ sung = vibrato_complex()
 pv = so.pv_analyze(sung)
 
 # The sentence from Seeing speech, at its native 16 kHz. Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))</code></pre></details></div>
+sentence = finish(so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)))</code></pre></details></div>
 
 <article class="still" id="d-p0">
   <div class="about">
@@ -427,7 +439,7 @@ fig, playhead = show(sound, fmax=5000)</code></pre></details>
 <h2 id="h-a-higher-voice">A higher voice</h2>
 <p>The same sentence read by a female talker (slt), whose voice is about a fifth higher than the male
 talker's, so lowering it by a fifth brings the female pitch to the male one.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)))
 
 
 def median_f0(snd):

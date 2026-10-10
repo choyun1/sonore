@@ -55,21 +55,37 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # distortion, so some differences in loudness and length remain. They are presented diotically,
 # as in the paper.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.signal import butter, sosfilt
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 44100
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
+from scipy.signal import butter, sosfilt
+
+FS = 44100
 
 
 def starter_pistol():
@@ -174,7 +190,7 @@ fig, playhead = show(sound, ir)
 # reverberation fills the gaps between words and smears each syllable into the next.
 
 # %% [demo r1] A sentence in the same room
-sentence = so.load("docs/speech/bdl_arctic_a0131.flac").resample(FS)
+sentence = so.load(fetch("docs/speech/bdl_arctic_a0131.flac")).resample(FS)
 sound = finish(sentence.convolve(ir))
 fig, playhead = show(sound, ir)
 
@@ -183,7 +199,7 @@ fig, playhead = show(sound, ir)
 # room's, not the talker's, so it does to the female voice what it did to the male one.
 
 # %% [demo r3] A higher voice in the same room
-sentence_female = so.load("docs/speech/slt_arctic_a0131.flac").resample(FS)
+sentence_female = so.load(fetch("docs/speech/slt_arctic_a0131.flac")).resample(FS)
 sound = finish(sentence_female.convolve(ir))
 fig, playhead = show(sound, ir)
 

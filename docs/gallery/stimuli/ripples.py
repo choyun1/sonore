@@ -44,19 +44,35 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # sound: the two-dimensional Fourier transform of the cochleagram, with rate across and density
 # up (Singh & Theunissen, 2003). A single ripple puts a single peak in it.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 44100
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
+FS = 44100
 
 
 def show(snd, pattern, dmr=False):
@@ -74,7 +90,6 @@ def show(snd, pattern, dmr=False):
     ms.plot(axes[1, 1], db_range=30, wt_max=50 if dmr else 20, wf_max=4, colorbar=False)
     axes[1, 1].set_title("Measured modulation spectrum")
     return fig, [axes[0, 0], axes[0, 1], axes[1, 0]]
-
 
 # %% [markdown]
 # ## Moving ripples

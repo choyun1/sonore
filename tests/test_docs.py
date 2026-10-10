@@ -137,3 +137,28 @@ def test_readme_contents_matches_its_sections():
     for _, _, _, anchor in numbered:
         assert anchor in anchors, f"Contents links #{anchor}, which is not a README heading"
     assert [title for _, _, title, _ in numbered] == sections
+
+
+def test_gallery_pages_open_with_the_shared_setup():
+    """Every page script opens with docs/gallery/common.py in full (tools/sync_gallery_setup.py
+    copies it), so a page's code runs on its own when pasted into a notebook."""
+    setup = (GALLERY / "common.py").read_text().strip()
+    scripts = sorted(GALLERY.glob("*/*.py"))
+    assert len(scripts) >= 20
+    for script in scripts:
+        cells = re.split(r"(?m)^(?=# %%)", script.read_text())
+        found = [c.partition("\n")[2].strip() for c in cells if c.startswith("# %% [setup]")]
+        assert found == [setup], f"{script.name}: run tools/sync_gallery_setup.py"
+        first_code = next(c for c in cells if re.match(r"# %%(\n| \[(setup|demo|figure)\])", c))
+        assert first_code.startswith("# %% [setup]"), f"{script.name}: the setup must come before other code"
+
+
+def test_gallery_pages_have_notebooks():
+    """Every page is also a notebook, linked from the page."""
+    for page in PAGES:
+        if page == "index.html":
+            continue
+        html = (GALLERY / page).read_text()
+        notebook = f"notebooks/{page.removesuffix('.html')}.ipynb"
+        assert (GALLERY / notebook).exists(), f"{page} has no {notebook}"
+        assert f'href="{notebook}"' in html, f"{page} does not link {notebook}"

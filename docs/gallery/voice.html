@@ -216,6 +216,7 @@ sound.</p>
 <ul><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a>: the sentence with each changed alone and both together, and what was measured on each.</li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a>: the same pitch change by time stretch and resampling, for contrast.</li><li><a href="#h-pitch-range">Pitch range</a>: a monotone and a doubled range, around the same median.</li><li><a href="#h-the-aperiodicity">The aperiodicity</a>: kept in place or moved with the formants.</li><li><a href="#h-toward-another-talker">Toward another talker</a>: the male talker's sentence moved toward the female talker's by one pitch ratio and one formant ratio, beside the female talker's.</li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a>: three trackers and four envelopes mixed, scored on resynthesis.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/voice.ipynb">in Colab</a> or <a href="notebooks/voice.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-the-sentence-and-code-the-examples-share">
 <h2 id="h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</h2>
@@ -228,7 +229,10 @@ output, its median over voiced time windows against the same on the original. Th
 CheapTrick's envelope of the output, averaged in dB over voiced time windows, against the
 original's average read at <span class="tex">f / r</span> for a range of ratios <span class="tex">r</span>. The ratio whose curve fits best
 over 100 to 5000 Hz, with the overall level left free, is the <strong>fitted warp</strong>.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -236,13 +240,19 @@ import sonore as so
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
 
 
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
-
-
-def show(snd, title, contour=None, fmax=5000):
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def show(snd, title, contour=None, fmax=5000):
     &quot;&quot;&quot;Waveform and narrowband spectrogram (Hann 33 ms, harmonics resolved), on one time axis,
     with an F0 contour drawn over the spectrogram if one is given.&quot;&quot;&quot;
     fig = plt.figure(figsize=(10, 4.2), layout=&quot;constrained&quot;)
@@ -259,9 +269,11 @@ def show(snd, title, contour=None, fmax=5000):
     return fig, [ax0, ax1]
 
 
-sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
+sentence = finish(so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)))
 fs = sentence.fs
-harvest_times, harvest_f0 = np.loadtxt(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;, delimiter=&quot;,&quot;, skiprows=2).T
+harvest_times, harvest_f0 = np.loadtxt(
+    fetch(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;), delimiter=&quot;,&quot;, skiprows=2
+).T
 harvest = (harvest_times, harvest_f0)
 envelope = so.cheaptrick(sentence, harvest)
 aperiodicity = so.d4c(sentence, harvest)
@@ -562,7 +574,7 @@ vocal tracts are on average shorter, so their formants are higher. Hillenbrand e
 measured F1 to F3 of American English vowels of male and female talkers; for the vowels of "heed",
 "hod" and "who'd", the female formants are 1.11 to 1.28 times the male ones, a geometric mean of
 1.174. The pitch ratio is measured on the two recordings.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">female = finish(so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)))
 female_track = so.f0_track(female)
 pitch_ratio = median_f0(female) / original_f0
 print(f&quot;median voiced F0: {original_f0:.0f} Hz (bdl), {median_f0(female):.0f} Hz (slt)&quot;)

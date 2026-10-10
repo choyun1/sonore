@@ -220,33 +220,45 @@ or edited separately.</p>
 <ul><li><a href="#h-one-time-window">One time window</a>: a log spectrum, its cepstrum, and the envelope a lifter recovers.</li><li><a href="#h-pitch-from-the-cepstrum">Pitch from the cepstrum</a>: the cepstrogram, and the pitch read off its peaks.</li><li><a href="#h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</a>: <code>so.f0_track</code> and Harvest on the same sentence.</li><li><a href="#h-splitting-the-voice-in-two">Splitting the voice in two</a>: the vocal tract and the source, heard separately.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the same analysis on a female voice.</li><li><a href="#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel scale</a>: the speech recognizer's version, how much pitch leaks into it, and what it cannot tell apart.</li><li><a href="#h-reference-implementations">Reference implementations</a>: sonore compared with MATLAB, SciPy and Praat.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>: tracking from the cepstrum, better envelopes, and the complex cepstrum.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/cepstrum.ipynb">in Colab</a> or <a href="notebooks/cepstrum.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-the-sentence-and-code-the-examples-share">
 <h2 id="h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</h2>
 <p>Every cepstrum below is taken from an STFT with Hann windows 40 ms long, every 5 ms. A window
 must hold about three periods for the harmonics to show as a ripple, and 40 ms is three periods
 at 75 Hz, below this speaker's lowest pitch.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
-from scipy.fft import dct, idct
 
 import sonore as so
-from sonore.core.utils import freq_to_mel
-from sonore.views.mfcc import mel_filterbank
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from scipy.fft import dct, idct
 
+from sonore.core.utils import freq_to_mel
+from sonore.views.mfcc import mel_filterbank
 
 # The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
 # Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
-f0_times, f0_harvest = np.loadtxt(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;, delimiter=&quot;,&quot;, skiprows=2).T
+sentence = finish(so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)))
+f0_times, f0_harvest = np.loadtxt(fetch(&quot;docs/speech/bdl_arctic_a0131_f0.csv&quot;), delimiter=&quot;,&quot;, skiprows=2).T
 fs = sentence.fs
 
 stft = so.STFT(sentence, win_dur=0.040, hop_dur=0.005)
@@ -490,7 +502,7 @@ database of laryngograph recordings, cepstral F0 made octave-down errors on 1.5%
 voice's time windows and none on a male voice's
 (<a href="https://github.com/choyun1/sonore/blob/main/docs/design/views/female-voices.md"><code>docs/design/views/female-voices.md</code></a>).
 There is no stored F0 track for this recording, so <code>so.f0_track</code> stands in for Harvest.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)))
 stft_female = so.STFT(sentence_female, win_dur=0.040, hop_dur=0.005)
 cep_female = so.Cepstrum(stft_female)
 t_female, f0_cep_female, peak_female = cep_female.f0(f_lo=75, f_hi=400)

@@ -59,13 +59,34 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # Each sound is drawn as a spectrogram with its centroid track over it and, under it, the
 # waveform with each tone's measured attack shaded. Every sound starts with half a second of silence.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
+
+
+def finish(snd):
+    """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
 FS = 44100
 F0 = so.note_to_freq("Eb4")
 DUR = 1.0  # every tone [s]
@@ -92,12 +113,6 @@ def tone(slope=1.0, attack=20e-3, duration=DUR):
         return float(n) ** -s / np.sqrt(power) * envelope(t, rise, duration)
 
     return so.harmonic_complex(duration, FS, F0, harmonics=HARMONICS, amplitudes=gain)
-
-
-def finish(snd):
-    """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
-    snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
 def describe(snd):
@@ -156,7 +171,6 @@ def show(snd, tones, starts, labels, fmin=150, fmax=8000, lower="envelope"):
     ax_l.set(xlim=(0, snd.duration), xlabel="Time [s]")
     ax_l.grid(ls=":")
     return fig, [ax_s, ax_l]
-
 
 # %% [markdown]
 # ## Attack time

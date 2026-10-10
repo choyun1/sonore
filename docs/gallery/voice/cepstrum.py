@@ -50,16 +50,25 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # must hold about three periods for the harmonics to show as a ripple, and 40 ms is three periods
 # at 75 Hz, below this speaker's lowest pitch.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.fft import dct, idct
 
 import sonore as so
-from sonore.core.utils import freq_to_mel
-from sonore.views.mfcc import mel_filterbank
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
@@ -68,10 +77,16 @@ def finish(snd):
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
 
 
+# %%
+from scipy.fft import dct, idct
+
+from sonore.core.utils import freq_to_mel
+from sonore.views.mfcc import mel_filterbank
+
 # The sentence at its native 16 kHz, and its F0 track (WORLD Harvest, 0 where unvoiced).
 # Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load("docs/speech/bdl_arctic_a0131.flac"))
-f0_times, f0_harvest = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
+sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
+f0_times, f0_harvest = np.loadtxt(fetch("docs/speech/bdl_arctic_a0131_f0.csv"), delimiter=",", skiprows=2).T
 fs = sentence.fs
 
 stft = so.STFT(sentence, win_dur=0.040, hop_dur=0.005)
@@ -279,7 +294,7 @@ sound = finish(whole)
 # There is no stored F0 track for this recording, so `so.f0_track` stands in for Harvest.
 
 # %%
-sentence_female = finish(so.load("docs/speech/slt_arctic_a0131.flac"))
+sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
 stft_female = so.STFT(sentence_female, win_dur=0.040, hop_dur=0.005)
 cep_female = so.Cepstrum(stft_female)
 t_female, f0_cep_female, peak_female = cep_female.f0(f_lo=75, f_hi=400)

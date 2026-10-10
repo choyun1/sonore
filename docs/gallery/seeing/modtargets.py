@@ -38,20 +38,35 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [What this page leaves out](#h-what-this-page-leaves-out): drawing with a mouse, dB targets,
 #   and the other modulation spectra.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 44100
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
+FS = 44100
 
 
 def measure(snd, f_lo):
@@ -74,7 +89,6 @@ def show(snd, target=None, f_lo=250):
     axes[-1].set_title("Measured from the sound")
     return fig, [axes[0]]
 
-
 # %% [markdown]
 # ## Same spectrum, different sound
 #
@@ -91,7 +105,7 @@ def show(snd, target=None, f_lo=250):
 # 2003).
 
 # %% [demo mt1] A sentence
-sentence = so.load("docs/speech/bdl_arctic_a0131.flac")
+sentence = so.load(fetch("docs/speech/bdl_arctic_a0131.flac"))
 spectrum = measure(sentence, f_lo=125)
 sound = finish(sentence)
 fig, playhead = show(sound, f_lo=125)
@@ -326,7 +340,7 @@ for name, snd in [("edit", edited), ("20 iterations", searched), ("on tones", on
 # on either sound's fine structure. Here the sentence and 2.5 s of rain trade halves.
 
 # %%
-rain = so.load("docs/textures/rain.flac").mono().resample(sentence.fs)
+rain = so.load(fetch("docs/textures/rain.flac")).mono().resample(sentence.fs)
 rain = so.Sound(rain.data[: sentence.n_samples], sentence.fs)
 rain_spectrum = measure(rain, f_lo=125)
 bank = spectrum._analysis.filterbank  # the 12-per-octave bank both spectra were measured with
@@ -389,7 +403,7 @@ def plane_twin(snd, rng=0):
 
 
 def texture(name, seconds=3.5):
-    snd = so.load(f"docs/textures/{name}.flac").mono()
+    snd = so.load(fetch(f"docs/textures/{name}.flac")).mono()
     return so.Sound(snd.data[: int(seconds * snd.fs)], snd.fs)
 
 

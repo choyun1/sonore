@@ -217,6 +217,7 @@ standard way to let a listener with normal hearing hear roughly what an implant 
 <ul><li><a href="#h-how-many-bands">How many bands</a>: from a coarse picture of the spectrum to a fine one.</li><li><a href="#h-noise-or-tones">Noise or tones</a>: what carries the envelopes.</li><li><a href="#h-pitch-from-the-envelope">Pitch from the envelope</a>: the weak temporal pitch cue an implant leaves.</li><li><a href="#h-a-higher-voice">A higher voice</a>: the sentence read by a female talker, through the same vocoders.</li><li><a href="#h-a-melody">A melody</a>: music, which cannot do without pitch.</li><li><a href="#h-what-this-simulation-leaves-out">What this simulation leaves out</a>: current spread, insertion depth, and the rest.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/vocoder.ipynb">in Colab</a> or <a href="notebooks/vocoder.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-motivation">
 <h2 id="h-motivation">Motivation</h2>
@@ -232,7 +233,10 @@ between 80 Hz and 7.6 kHz (just under the 8 kHz Nyquist frequency of this 16 kHz
 neighbors overlapping by half, takes each band's Hilbert
 envelope, lowpasses it at 50 Hz unless stated, and multiplies it into the same band of fresh
 Gaussian noise. The output has the input's RMS.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
@@ -240,14 +244,20 @@ import sonore as so
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
 
 
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
-
-
-# The sentence at its native 16 kHz. Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(&quot;docs/speech/bdl_arctic_a0131.flac&quot;))
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The sentence at its native 16 kHz. Sources: docs/speech/SOURCES.md.
+sentence = finish(so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)))
 fs = sentence.fs
 F_LO, F_HI = 80, 7600
 
@@ -449,7 +459,7 @@ sound = vocoded</code></pre></details>
 <h2 id="h-a-higher-voice">A higher voice</h2>
 <p>The same sentence read by a female talker (slt). The female fundamental, about 150 to 230 Hz here
 by <code>so.f0_track</code>, is higher than the male talker's, so a temporal cue has to follow faster pulses.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(&quot;docs/speech/slt_arctic_a0131.flac&quot;))
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">sentence_female = finish(so.load(fetch(&quot;docs/speech/slt_arctic_a0131.flac&quot;)))
 track_female = so.f0_track(sentence_female)
 print(f&quot;female F0: {track_female}&quot;)</code></pre></details><pre class="out">female F0: F0Track(528 time windows, 1 ch, 68% voiced, F0 148-227 Hz)</pre></div>
 

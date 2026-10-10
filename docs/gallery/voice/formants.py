@@ -46,20 +46,35 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # and a wideband spectrogram (Hann 6 ms), which shows formants as dark bands, with the formant
 # frequencies the synthesizer was given drawn over it.
 
-# %%
+# %% [setup]
+import os
+import urllib.request
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
-FS = 16000
+
+
+def fetch(path):
+    """A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path."""
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        urllib.request.urlretrieve("https://raw.githubusercontent.com/choyun1/sonore/main/" + path, path)
+    return path
 
 
 def finish(snd):
     """How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95."""
     snd = snd.ramp(5e-3).normalize(rms=0.1)
     return snd.normalize(peak=0.95) if snd.peak > 0.95 else snd
+
+
+# %%
+FS = 16000
 
 
 def onoff(dur, level=60, on=0.02, off=0.05):
@@ -82,7 +97,6 @@ def show(snd, title, formants=()):
     for ax in (ax0, ax1):
         ax.set_xlim(0, snd.duration)
     return fig, [ax0, ax1]
-
 
 # %% [markdown]
 # ## A vowel, piece by piece

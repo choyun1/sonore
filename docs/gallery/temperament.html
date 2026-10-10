@@ -213,6 +213,7 @@ still when the ratio is exact and turns when it is not.</p>
 <ul><li><a href="#h-intervals-are-ratios">Intervals are ratios</a>: a just fifth and third against tempered ones, heard as beats and seen as a figure that turns.</li><li><a href="#h-the-commas">The commas</a>: why twelve notes cannot keep every fifth and third just.</li><li><a href="#h-one-tune-four-tunings">One tune, four tunings</a>: Twinkle, Twinkle, Little Star in equal temperament, just intonation, Pythagorean tuning and quarter-comma meantone.</li><li><a href="#h-where-just-intonation-breaks">Where just intonation breaks</a>: one chord that just intonation fixed on C cannot tune.</li><li><a href="#h-a-reference-pitch-is-a-choice">A reference pitch is a choice</a>: the tune at A4 = 440 Hz and at 432 Hz, and a short history.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/temperament.ipynb">in Colab</a> or <a href="notebooks/temperament.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-code-the-examples-share">
 <h2 id="h-code-the-examples-share">Code the examples share</h2>
@@ -235,13 +236,31 @@ quite closes, and the figure slowly changes. The square figure beside each sound
 Lissajous figure of the lowest note (across) against the highest (up), using their
 fundamentals, drawn over the last few hundredths of a second as the sound plays. Inner notes
 of a chord are heard but not drawn.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
-from sonore.plotting import plot_lissajous
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from sonore.plotting import plot_lissajous
+
 FS = 22050
 C4 = so.note_to_freq(&quot;C4&quot;)
 LEAD = 0.5  # silence before every sound [s]
@@ -283,12 +302,6 @@ def tone(f0, duration, attack=60e-3, release=120e-3):
     envelope[:n_attack] = 0.5 - 0.5 * np.cos(np.pi * np.arange(n_attack) / n_attack)
     envelope[note.n_samples - n_release :] = 0.5 + 0.5 * np.cos(np.pi * np.arange(n_release) / n_release)
     return note * envelope[:, None]
-
-
-def finish(snd):
-    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
-    snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
 
 
 def play(events, total):

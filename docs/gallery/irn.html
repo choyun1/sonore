@@ -211,6 +211,7 @@ It is a classic stimulus for pitch because its strength can be turned up step by
 <ul><li><a href="#h-how-it-is-made">How it is made</a>: the delay-and-add network, and what it does to the spectrum and the autocorrelation.</li><li><a href="#h-pitch-from-delay">Pitch from delay</a>: an 8 ms delay, sixteen times over, and its pitch at 125 Hz.</li><li><a href="#h-fewer-iterations">Fewer iterations</a>: one and four iterations, from a faint pitch to a clear one.</li><li><a href="#h-subtracting-instead">Subtracting instead</a>: a negative gain, whose pitch is ambiguous.</li><li><a href="#h-rippled-noise-and-moving-ripples">Rippled noise and moving ripples</a>: how its rippled spectrum relates to the <a href="ripples.html">spectrotemporal ripples</a>.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/irn.ipynb">in Colab</a> or <a href="notebooks/irn.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
 </header>
 <section aria-labelledby="h-how-it-is-made">
 <h2 id="h-how-it-is-made">How it is made</h2>
@@ -224,19 +225,30 @@ time, the noise becomes partly correlated with itself <span class="tex">d</span>
 at lag <span class="tex">d</span>, and its height, which grows with <span class="tex">n</span>, goes with how strong the pitch is. sonore
 computes the network exactly in the frequency domain, so the delay need not be a whole number
 of samples, and drops a warm-up stretch so that the noise is stationary from the start.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import matplotlib.pyplot as plt
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
 import numpy as np
 
 import sonore as so
 
 plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
-FS = 44100
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
 
 
 def finish(snd):
     &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
     snd = snd.ramp(5e-3).normalize(rms=0.1)
-    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div><div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 44100
 
 
 def show(snd):
