@@ -1303,9 +1303,9 @@ def build_example_page(site: Site, name: str) -> list[str]:
 # syllabic tone) was dropped: the vocoder page covers noise vocoding, on speech.
 RETIRED = {"15": "vocoder.html"}
 
-# Demos and sections that moved when the Voices pages were regrouped, by the page they were
-# on. An old link (page.html#d-KEY or #h-section) lands where that material is now. A page
-# that no longer exists is written as a stub that forwards; "" is where it forwards a link
+# Demos and sections that moved when the gallery was regrouped, by the page they were on. An
+# old link (page.html#d-KEY or #h-section) lands where that material is now. A page that no
+# longer exists is written as a stub that forwards; "" is where it forwards a link
 # with no anchor it knows.
 MOVED = {
     "harmonics": {
@@ -1332,6 +1332,7 @@ MOVED = {
                  "h-female-vowels": "formants.html#d-fw1"},
     "aperiodicity": {"h-a-higher-voice": "talkers.html"},
     "classic": {"d-k2": "talkers.html#d-tk4"},
+    "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
 }
 
 

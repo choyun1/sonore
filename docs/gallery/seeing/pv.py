@@ -21,9 +21,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   phase turns.
 # - [Changing duration](#h-changing-duration): time windows resynthesized further apart, and why their
 #   phases have to be locked.
-# - [Changing pitch](#h-changing-pitch): stretching, then resampling.
-# - [A higher voice](#h-a-higher-voice): a female talker's sentence stretched, and lowered to the
-#   male talker's pitch.
+# - [Changing pitch](#h-changing-pitch): stretching, then resampling, and the two talkers' pitches
+#   traded.
 # - [Moving the partials](#h-moving-the-partials): an oscillator bank with every frequency remapped.
 
 # %% [markdown]
@@ -110,8 +109,31 @@ def show(snd, fmax=3000):
 sung = vibrato_complex()
 pv = so.pv_analyze(sung)
 
-# The sentence from Seeing speech, at its native 16 kHz. Sources: docs/speech/SOURCES.md.
-sentence = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
+# The sentence from Seeing speech, read by each of the two talkers, at its native 16 kHz, by the
+# CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {"Male talker": "bdl", "Female talker": "slt"}
+talkers = {
+    label: finish(so.load(fetch(f"docs/speech/{speaker}_arctic_a0131.flac")))
+    for label, speaker in SPEAKERS.items()
+}
+
+
+def show_pair(sounds, title, fmax=5000):
+    """One column per talker: the waveform and a spectrogram (Hann 46 ms, the phase vocoder's
+    window). Returns the figure and, for each talker, the panels the playhead follows."""
+    fig = plt.figure(figsize=(10, 4.4), layout="constrained")
+    columns = fig.subfigures(1, 2)
+    playhead = {}
+    for column, (label, snd) in zip(columns, sounds.items(), strict=True):
+        top, bottom = column.subplots(2, 1, sharex=True, height_ratios=[0.4, 1])
+        snd.plot(top, color="k", lw=0.4)
+        top.set(title=f"{label}: {title[label] if isinstance(title, dict) else title}", xlabel="", ylabel="")
+        so.STFT(snd, 46e-3).plot(bottom, fmax=fmax, colorbar=False, db_range=70)
+        bottom.set_title("Spectrogram (Hann 46 ms)")
+        for ax in (top, bottom):
+            ax.set_xlim(0, snd.duration)
+        playhead[label] = [top, bottom]
+    return fig, playhead
 
 # %% [about]
 # One time window of the reference tone below, 0 to 1 kHz. Top: the magnitude of each bin, with the
@@ -170,19 +192,21 @@ sound = finish(so.time_stretch(sung, 2))
 fig, playhead = show(sound)
 
 # %% [about]
-# The sentence from [Seeing speech](speech.html), twice as long, with phase locking.
+# The sentence from [Seeing speech](speech.html), read by each of the [Two talkers](talkers.html),
+# twice as long, with phase locking. The harmonics keep their frequencies; every syllable and every
+# pitch movement takes twice the time.
 
 # %% [demo p1] The sentence, twice as long
-sound = finish(so.time_stretch(sentence, 2))
-fig, playhead = show(sound, fmax=5000)
+sounds = {label: finish(so.time_stretch(snd, 2)) for label, snd in talkers.items()}
+fig, playhead = show_pair(sounds, "twice as long")
 
 # %% [about]
-# The same without phase locking: each bin's phase runs free, and the voice turns diffuse and
-# distant, as if heard in a room.
+# The same without phase locking: each bin's phase runs free, and the voices take on the smeared,
+# reverberant quality called phasiness.
 
 # %% [demo p2] Twice as long, phases not locked
-sound = finish(so.time_stretch(sentence, 2, phase_lock=False))
-fig, playhead = show(sound, fmax=5000)
+sounds = {label: finish(so.time_stretch(snd, 2, phase_lock=False)) for label, snd in talkers.items()}
+fig, playhead = show_pair(sounds, "twice as long, phases not locked")
 
 # %% [markdown]
 # ## Changing pitch
@@ -199,55 +223,37 @@ fig, playhead = show(sound, fmax=5000)
 sound = finish(so.pitch_shift(sung, 7))
 fig, playhead = show(sound)
 
-# %% [about]
-# The sentence up a fifth. Its formants have moved up with the pitch, so it sounds like a
-# smaller speaker, not the same speaker higher: keeping the formants in place needs the spectral
-# envelope separated from the harmonics first, as on [Rebuilding and changing a voice](voice.html#d-vc3).
-
-# %% [demo p3] The sentence up a fifth
-sound = finish(so.pitch_shift(sentence, 7))
-fig, playhead = show(sound, fmax=5000)
-
-# %% [markdown]
-# ## A higher voice
-#
-# The same sentence read by a female talker (slt), whose voice is about a fifth higher than the male
-# talker's, so lowering it by a fifth brings the female pitch to the male one.
-
 # %%
-sentence_female = finish(so.load(fetch("docs/speech/slt_arctic_a0131.flac")))
-
-
 def median_f0(snd):
     """Median F0 [Hz] of the voiced time windows, from so.f0_track."""
-    f0_track = so.f0_track(snd).f0[0]
-    return np.median(f0_track[f0_track > 0])
+    track = so.f0_track(snd)
+    return np.median(track.f0[0][track.voiced[0]])
 
 
-lowered = so.pitch_shift(sentence_female, -7)
-print(
-    f"median F0: male {median_f0(sentence):.0f} Hz, female {median_f0(sentence_female):.0f} Hz, "
-    f"female down a fifth {median_f0(lowered):.0f} Hz"
-)
-
-# %% [about]
-# The female talker's sentence twice as long, with phase locking.
-
-# %% [demo p4] Female talker, twice as long
-sound = finish(so.time_stretch(sentence_female, 2))
-fig, playhead = show(sound, fmax=5000)
+medians = {label: median_f0(snd) for label, snd in talkers.items()}
+interval = 12 * np.log2(medians["Female talker"] / medians["Male talker"])  # semitones
+traded = {
+    "Male talker": so.pitch_shift(talkers["Male talker"], interval),
+    "Female talker": so.pitch_shift(talkers["Female talker"], -interval),
+}
+print(f"the female talker's median F0 is {interval:.1f} semitones above the male talker's")
+for label in talkers:
+    print(f"{label}: median F0 {medians[label]:.0f} Hz, after the shift {median_f0(traded[label]):.0f} Hz")
 
 # %% [about]
-# The female talker's sentence down a fifth, the reverse of the male talker's sentence up a fifth
-# above. The female pitch now sits at the male one, as the printout shows, but the female formants
-# have moved down by a third as well. In
-# the averages of Hillenbrand et al. (1995), female first three formants are 11 to 28% higher than
-# male ones in the vowels of heed, hod and who'd, so lowering the female ones by a third puts them below a
-# typical male talker's: the voice belongs to a larger speaker than either.
+# Each talker shifted by the interval between the two median pitches, {{ f"{interval:.1f}" }}
+# semitones: the male talker up, the female talker down, so the two trade pitches, as the printout
+# above shows. The formants moved by the same ratio, which is larger than the gap between the two
+# talkers' formants measured on [Two talkers](talkers.html#h-spectral-envelopes). So the male
+# talker's formants now sit above the female talker's, and the female talker's below the male
+# talker's: each voice has the other talker's pitch, with formants beyond the other talker's.
+# [Higher pitch](voice.html#d-vc3) on Rebuilding and changing a voice moves the pitch alone and
+# leaves the formants where they were.
 
-# %% [demo p5] Female talker, down a fifth
-sound = finish(lowered)
-fig, playhead = show(sound, fmax=5000)
+# %% [demo p3] The two talkers trade pitches
+sounds = {label: finish(snd) for label, snd in traded.items()}
+title = {"Male talker": f"up {interval:.1f} semitones", "Female talker": f"down {interval:.1f} semitones"}
+fig, playhead = show_pair(sounds, title)
 
 # %% [markdown]
 # ## Moving the partials
@@ -255,8 +261,9 @@ fig, playhead = show(sound, fmax=5000)
 # The analysis can also drive a bank of oscillators, one per bin, each following its bin's
 # magnitude and instantaneous frequency from time window to time window (Dolson, 1986). `pv.to_sound`
 # does this, and its `freq_map` changes every frequency on the way: a ratio scales them all, a
-# function can do anything. Scaling keeps a harmonic sound harmonic; adding a constant does not,
-# unless the constant is a multiple of half the fundamental.
+# function can do anything. Scaling keeps a harmonic sound harmonic. Adding a constant keeps the
+# spacing between partials but generally moves them off any harmonic series near the original;
+# a shift of half the fundamental is a special case, below.
 
 # %% [about]
 # Oscillator-bank resynthesis with every partial moved up 70 Hz, to 290, 510, 730 Hz and on:
@@ -268,8 +275,9 @@ sound = finish(pv.to_sound(freq_map=lambda f: f + 70))
 fig, playhead = show(sound)
 
 # %% [about]
-# The same with half the spacing: 330, 550, 770 Hz are exactly the odd harmonics of 110 Hz. The
-# result is harmonic again, a hollow, clarinet-like tone an octave below the reference.
+# The same with a shift of half the spacing: 330, 550, 770 Hz are exactly the odd harmonics of
+# 110 Hz. The result is harmonic again, with odd harmonics only, a hollow tone an octave below the
+# reference.
 
 # %% [demo 14b] Partials shifted up 110 Hz
 sound = finish(pv.to_sound(freq_map=lambda f: f + 110))
@@ -284,12 +292,6 @@ fig, playhead = show(sound)
 # - Flanagan & Golden (1966). Phase vocoder. *Bell System Technical Journal* 45(9), 1493–1509.
 #   [doi:10.1002/j.1538-7305.1966.tb01706.x](https://doi.org/10.1002/j.1538-7305.1966.tb01706.x).
 #   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py)
-# - Gordon & Strawn (1985). An introduction to the phase vocoder. In J. Strawn (ed.), *Digital
-#   Audio Signal Processing: An Anthology*. [CCRMA](https://ccrma.stanford.edu/papers/introduction-phase-vocoder).
-#   [`phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py)
-# - Hillenbrand, Getty, Clark & Wheeler (1995). Acoustic characteristics of American English
-#   vowels. *J. Acoust. Soc. Am.* 97(5), 3099–3111.
-#   [doi:10.1121/1.411872](https://doi.org/10.1121/1.411872).
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.

@@ -521,7 +521,7 @@ for ax, (label, envelope) in zip(axes, envelopes.items(), strict=True):
 #
 # The [Phase vocoder](pv.html) page changes pitch the classic way: stretch the sound in time, then
 # resample it back to its length. Resampling scales every frequency in the sound, so the envelope
-# moves with the harmonics: [The sentence up a fifth](pv.html#d-p3) there moves pitch and formants
+# moves with the harmonics: [The two talkers trade pitches](pv.html#d-p3) there moves pitch and formants
 # together, where [Higher pitch](#d-vc3) here moves the pitch alone. The measurement shows it.
 
 # %% [about]
