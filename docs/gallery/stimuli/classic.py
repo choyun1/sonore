@@ -168,8 +168,9 @@ sound = finish(beating_pair(40))
 fig, playhead = show(sound, fmax=2000, win_dur=50e-3)
 
 # %% [about]
-# 440 and 550 Hz, a major third: 110 Hz apart, more than an ERB. Two smooth tones, resolved in
-# the spectrum and the spectrogram.
+# 440 and 550 Hz, a major third in just intonation (5:4): 110 Hz apart, more than an ERB. Two
+# smooth tones, resolved in the spectrum and the spectrogram. [Tuning and
+# temperament](temperament.html#d-tt1) plays just and equal-tempered thirds side by side.
 
 # %% [demo b3] Two tones, 110 Hz apart
 sound = finish(beating_pair(110))
