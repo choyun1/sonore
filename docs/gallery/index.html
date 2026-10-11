@@ -179,16 +179,14 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
     if (closed) { root.classList.add("side-closing");
       after(150, () => { root.classList.remove("side-closing"); show(true); }); }
     else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
-  // The page's own sections fold under its title, folded unless opened before.
+  // The page's own sections fold under its title, folded on every page load.
   const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
   if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
       sectionsToggle.setAttribute("aria-expanded", String(open));
       const label = open ? "Hide this page's sections" : "Show this page's sections";
       sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
-    let open = false; try { open = localStorage.getItem("sonore-side-sections") === "open"; } catch (e) {}
-    sections.style.transition = "none"; showSections(open); sections.offsetHeight; sections.style.transition = "";
-    sectionsToggle.addEventListener("click", () => { const now = !sections.classList.contains("open"); showSections(now);
-      save("sonore-side-sections", now ? "open" : "closed"); }); }
+    showSections(false);
+    sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
   let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
   groups.forEach((group) => { const name = group.dataset.group;
     if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
