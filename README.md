@@ -1,7 +1,7 @@
-<h1><picture>
+<h1><a href="https://choyun1.github.io/sonore/gallery/"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/choyun1/sonore/main/docs/logo/sonore-banner-dark.svg">
   <img alt="sonore" src="https://raw.githubusercontent.com/choyun1/sonore/main/docs/logo/sonore-banner-light.svg" height="56">
-</picture></h1>
+</picture></a></h1>
 
 [![tests](https://github.com/choyun1/sonore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/choyun1/sonore/actions/workflows/tests.yml) [![PyPI](https://img.shields.io/pypi/v/sonore)](https://pypi.org/project/sonore/) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/sonore/) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 
