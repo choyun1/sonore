@@ -411,14 +411,17 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
     padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
   nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
-  html:not(.side-closed) footer .links { display: none; }
+  footer .links { display: none; }
+  .side-repo { display: none; }
+  .side-closed .side-repo { display: flex; justify-content: center; margin-top: auto; color: var(--muted); }
+  .side-closed .side-repo:hover { color: var(--ink); }
   .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
   .side-foot { margin-top: auto; padding-top: 2rem; }
   .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
     border-top: 1px solid var(--rule); }
   .side-closed .layout { grid-template-columns: 4.25rem minmax(0, 1fr); }
   .side { scrollbar-gutter: stable; }  /* room for a scrollbar always, so opening a list never rewraps the menu */
-  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; scrollbar-gutter: auto; }
+  .side-closed .side { padding: 2.5rem 0 1.5rem; overflow: hidden; scrollbar-gutter: auto; }
   .side-closed .side .home-title, .side-closed .side-body { display: none; }
   .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
   .side-closed .side .home { padding: 0; border: 0; }
@@ -917,8 +920,8 @@ def nav(current: str) -> str:
 
 
 def links() -> str:
-    """The API reference and GitHub links: at the foot of the sidebar, and in the page footer while the
-    sidebar is hidden (narrow screens, or folded away)."""
+    """The GitHub and API reference links: at the foot of the sidebar, and in the page footer on narrow
+    screens, which have no sidebar."""
     return (
         f'<div class="links"><a class="repo" href="https://github.com/choyun1/sonore">{GITHUB_MARK}GitHub</a>'
         '<a class="ref" href="../api/">API reference</a></div>'
@@ -962,7 +965,11 @@ def sidebar(current: str, sections_html: str) -> str:
             f"<ul>{''.join(link(href) for href, _ in pages)}</ul></details>"
         )
     body = f'<div class="side-body">{"".join(groups)}<div class="side-foot">{links()}</div></div>'
-    return f'<aside class="side" aria-label="All gallery pages">{top}{body}<script>{SIDE_JS}</script></aside>'
+    repo = (  # the folded strip keeps only the GitHub mark, at its foot
+        f'<a class="side-repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" '
+        f'aria-label="sonore on GitHub">{GITHUB_MARK}</a>'
+    )
+    return f'<aside class="side" aria-label="All gallery pages">{top}{body}{repo}<script>{SIDE_JS}</script></aside>'
 
 
 def how(binaural: bool) -> str:
