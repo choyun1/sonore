@@ -355,8 +355,8 @@ nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem)
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
 nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
 .links { display: flex; align-items: center; gap: 0.5rem 1.25rem; font-family: var(--sans); }
-.links a.repo { color: var(--muted); display: inline-flex; }
-.links a.repo:hover { color: var(--ink); }
+.links a { display: inline-flex; align-items: center; gap: 0.45rem; }
+.links svg { width: 1.15rem; height: 1.15rem; }
 footer .links { margin-top: 1rem; font-size: 0.95rem; }
 a { color: var(--accent); }
 section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
@@ -410,17 +410,21 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
   .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
     padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
-  html:not(.side-closed) nav.pages > a:first-child, html:not(.side-closed) nav.pages details { display: none; }
+  nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
   html:not(.side-closed) footer .links { display: none; }
   .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
   .side-foot { margin-top: auto; padding-top: 2rem; }
+  .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
+    border-top: 1px solid var(--rule); }
   .side-closed .layout { grid-template-columns: 3rem minmax(0, 1fr); }
   .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
-  .side-closed .side .home, .side-closed .side-body { display: none; }
-  .side-closed .side-top { justify-content: center; }
+  .side-closed .side .home-title, .side-closed .side-body { display: none; }
+  .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
+  .side-closed .side .home { padding: 0; border: 0; }
+  .side-closed .side .home .logo { width: 2.2rem; height: 2.2rem; margin: 0; }
   .layout { transition: grid-template-columns 0.25s ease; }
-  .side-opening .side .home, .side-opening .side-body { animation: side-in 0.25s ease both; }
-  .side-closing .side .home, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side .home-title, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home-title, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
   .side-opening .side { overflow: hidden; }
   .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
 }
@@ -438,7 +442,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 .side .sections > div { overflow: hidden; min-height: 0; }
 @media (prefers-reduced-motion: reduce) {
   .layout, .side .sections, .sections-toggle::before { transition: none; }
-  .side-opening .side .home, .side-opening .side-body, .side-closing .side .home, .side-closing .side-body { animation: none; }
+  .side-opening .side .home-title, .side-opening .side-body, .side-closing .side .home-title, .side-closing .side-body { animation: none; }
 }
 .side a { text-decoration: none; }
 .side a:hover { text-decoration: underline; }
@@ -447,6 +451,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 .side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
   letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
 .side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home-title { display: block; }
 .side .home .logo { display: block; width: 2.6rem; height: 2.6rem; margin: -0.4rem 0 0.1rem -0.35rem; }
 .logo .logo-ink { stroke: var(--ink); } .logo .logo-accent { stroke: var(--accent); }
 .side .home[aria-current] { font-weight: 600; }
@@ -909,9 +914,8 @@ def links() -> str:
     """The API reference and GitHub links: at the foot of the sidebar, and in the page footer while the
     sidebar is hidden (narrow screens, or folded away)."""
     return (
-        '<div class="links"><a class="ref" href="../api/">API reference</a>'
-        '<a class="repo" href="https://github.com/choyun1/sonore" title="sonore on GitHub" '
-        f'aria-label="sonore on GitHub">{GITHUB_MARK}</a></div>'
+        f'<div class="links"><a class="repo" href="https://github.com/choyun1/sonore">{GITHUB_MARK}GitHub</a>'
+        '<a class="ref" href="../api/">API reference</a></div>'
     )
 
 
@@ -937,7 +941,8 @@ def sidebar(current: str, sections_html: str) -> str:
 
     here = ' aria-current="page"' if current == "index.html" else ""
     top = (
-        f'<div class="side-top"><a class="home" href="index.html"{here}>{LOGO_MARK}{TITLES["index.html"]}</a>'
+        f'<div class="side-top"><a class="home" href="index.html"{here} aria-label="{TITLES["index.html"]}">{LOGO_MARK}'
+        f'<span class="home-title">{TITLES["index.html"]}</span></a>'
         '<button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" '
         'title="Hide the menu">&laquo;</button></div>'
     )
