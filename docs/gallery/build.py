@@ -333,7 +333,7 @@ CSS = """
 *, *::before, *::after { box-sizing: inherit; }
 html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
-main { max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+main { width: 100%; max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
 header { max-width: 44rem; margin-bottom: 3.5rem; }
 h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
 header p { margin: 0 0 0.9rem; }
@@ -423,6 +423,12 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
   .side-closed .side .home { padding: 0; border: 0; }
   .side-closed .side .home .logo { width: 2.8rem; height: 2.8rem; margin: 0; }
+  .side-toggle { margin-top: 3.8rem; }  /* level with where it sits under the logo in the folded strip */
+  .side-closed .side-toggle { margin-top: 0; }
+  /* With the sidebar folded, the top menu stays in view while the page scrolls. */
+  .side-closed nav.pages { position: sticky; top: 0; z-index: 20; background: var(--paper);
+    padding: 0.9rem 0; margin-top: -0.9rem; border-bottom: 1px solid var(--rule); }
+  html.side-closed { scroll-padding-top: 4rem; }
   .layout { transition: grid-template-columns 0.25s ease; }
   .side-opening .side .home-title, .side-opening .side-body { animation: side-in 0.25s ease both; }
   .side-closing .side .home-title, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
@@ -877,11 +883,10 @@ SIDE_JS = """(() => { const root = document.documentElement, side = document.cur
     // Going back to a page can restore it as it was left; fold its sections then too.
     addEventListener("pageshow", (event) => { if (event.persisted) showSections(false); });
     sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
-  let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
-  groups.forEach((group) => { const name = group.dataset.group;
-    if (folded.includes(name) && !group.classList.contains("here")) group.open = false;
-    group.addEventListener("toggle", () => { folded = folded.filter((other) => other !== name);
-      if (!group.open) folded.push(name); save("sonore-side-groups", JSON.stringify(folded)); });
+  // Only the group of the page being read starts open; groups opened on another page do not stay open.
+  addEventListener("pageshow", (event) => { if (event.persisted)
+    groups.forEach((group) => { group.open = group.classList.contains("here"); }); });
+  groups.forEach((group) => {
     // A group's pages slide open and shut rather than appearing at once.
     const list = group.querySelector("ul"); let running = null;
     group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
@@ -951,9 +956,9 @@ def sidebar(current: str, sections_html: str) -> str:
     for group, _, pages in TOPICS:
         is_current_group = current in [href for href, _ in pages]
         css_class = "group here" if is_current_group else "group"
-        key = re.sub(r"[^a-z]+", "-", group.lower()).strip("-")  # two groups may share a folder
+        is_open = " open" if is_current_group else ""
         groups.append(
-            f'<details class="{css_class}" data-group="{key}" open><summary>{html.escape(group)}</summary>'
+            f'<details class="{css_class}"{is_open}><summary>{html.escape(group)}</summary>'
             f"<ul>{''.join(link(href) for href, _ in pages)}</ul></details>"
         )
     body = f'<div class="side-body">{"".join(groups)}<div class="side-foot">{links()}</div></div>'
