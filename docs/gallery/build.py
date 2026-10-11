@@ -407,7 +407,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 @media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
 .side { display: none; }
 @media (min-width: 75rem) {
-  .layout { display: grid; grid-template-columns: 16rem minmax(0, 1fr); }
+  .layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
   .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
     padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
   nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
@@ -417,7 +417,8 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
   .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
     border-top: 1px solid var(--rule); }
   .side-closed .layout { grid-template-columns: 4.25rem minmax(0, 1fr); }
-  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; }
+  .side { scrollbar-gutter: stable; }  /* room for a scrollbar always, so opening a list never rewraps the menu */
+  .side-closed .side { padding: 2.5rem 0 0; overflow: hidden; scrollbar-gutter: auto; }
   .side-closed .side .home-title, .side-closed .side-body { display: none; }
   .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
   .side-closed .side .home { padding: 0; border: 0; }
@@ -873,6 +874,8 @@ SIDE_JS = """(() => { const root = document.documentElement, side = document.cur
       const label = open ? "Hide this page's sections" : "Show this page's sections";
       sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
     showSections(false);
+    // Going back to a page can restore it as it was left; fold its sections then too.
+    addEventListener("pageshow", (event) => { if (event.persisted) showSections(false); });
     sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
   let folded = []; try { folded = JSON.parse(localStorage.getItem("sonore-side-groups") || "[]"); } catch (e) {}
   groups.forEach((group) => { const name = group.dataset.group;
