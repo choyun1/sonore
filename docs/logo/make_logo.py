@@ -30,14 +30,16 @@ COLORS = {"light": ("#16202A", "#235B7C"), "dark": ("#E4E9ED", "#7FB6D6")}
 def lines(ink, accent, small=False):
     """The three lines (rows at 0, ROW and 2 ROW) and the strokes for the s, as SVG elements. The
     strokes run nearly the full height, since the noise of an s spreads over most frequencies,
-    and sit close to where the lines start, as the s runs into the vowel. The small version is
-    shorter, with thinner lines and smaller steps, so the lines stay apart at 16 px."""
+    and sit close to where the lines start, as the s runs into the vowel. Each stroke is given as
+    its x and how far it is moved down; the middle one sits a little higher and the right one a
+    little lower, so they read as noise. The small version is shorter, with thinner lines and
+    smaller steps, so the lines stay apart at 16 px."""
     if small:
         width, (rise, back), (drop, land), stroke, s_stroke, step = 68, (4, 34), (38, 52), 11, 5, 8
-        strokes = [-27, -20, -13]
+        strokes = [(-27, 0), (-20, -4), (-13, 4)]
     else:
         width, (rise, back), (drop, land), stroke, s_stroke, step = 105, (16, 62), (72, 84), 10, 4.5, 10
-        strokes = [-25, -18, -11]
+        strokes = [(-25, 0), (-18, -5), (-11, 5)]
     # step is how far the middle line rises for the n and the top line drops for the r
     reach = (stroke - s_stroke) / 2 - 5  # the strokes' round ends stop a little inside the lines' outer edges
     top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},{step} {land},{step} H{width}"
@@ -49,7 +51,9 @@ def lines(ink, accent, small=False):
     bottom = f"M0,{2 * ROW} H{width}"
     line = f'fill="none" stroke-width="{stroke}" stroke-linecap="round" stroke-linejoin="round"'
     s_line = f'stroke="{ink}" stroke-width="{s_stroke}" stroke-linecap="round"'
-    s = "".join(f'<path d="M{x},{-reach:g} V{2 * ROW + reach:g}" {s_line}/>' for x in strokes)
+    s = "".join(
+        f'<path d="M{x},{down - reach:g} V{2 * ROW + reach + down:g}" {s_line}/>' for x, down in strokes
+    )
     return (
         s + f'<path d="{top}" stroke="{accent}" {line}/><path d="{middle}" stroke="{ink}" {line}/>'
         f'<path d="{bottom}" stroke="{ink}" {line}/>'
