@@ -33,17 +33,17 @@ def lines(ink, accent, small=False):
     """The three lines (rows at 0, ROW and 2 ROW) and the strokes for the s, as SVG elements. The
     strokes run most of the height, since the noise of an s spreads over most frequencies,
     and sit close to where the lines start, as the s runs into the vowel. Each stroke is given as
-    its x, how far it is moved down and how far its ends stop inside the lines' outer edges; the
-    left one is the longest, the middle one sits a little higher and the right one a little lower,
-    so they read as noise. The small version is shorter, with thinner lines and
+    its x and how far it is moved down; the middle one sits a little higher and the right one a
+    little lower, so they read as noise. The small version is shorter, with thinner lines and
     smaller steps, so the lines stay apart at 16 px."""
     if small:
         width, (rise, back), (drop, land), stroke, s_stroke, step = 68, (4, 34), (38, 52), 11, 5, 8
-        strokes = [(-27, 0, 5), (-20, -4, 11), (-13, 4, 11)]
+        strokes = [(-27, 0), (-20, -4), (-13, 4)]
     else:
         width, (rise, back), (drop, land), stroke, s_stroke, step = 105, (16, 62), (72, 84), 10, 4.5, 10
-        strokes = [(-25, 0, 5), (-18, -5, 11), (-11, 5, 11)]
+        strokes = [(-25, 0), (-18, -5), (-11, 5)]
     # step is how far the middle line rises for the n and the top line drops for the r
+    reach = (stroke - s_stroke) / 2 - 11  # the strokes stop well inside the top and bottom lines
     top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},{step} {land},{step} H{width}"
     peak = ROW - step
     middle = (
@@ -53,10 +53,9 @@ def lines(ink, accent, small=False):
     bottom = f"M0,{2 * ROW} H{width}"
     line = f'fill="none" stroke-width="{stroke}" stroke-linecap="round" stroke-linejoin="round"'
     s_line = f'stroke="{NOISE_GRAY}" stroke-width="{s_stroke}" stroke-linecap="round"'
-    s = ""
-    for x, down, inset in strokes:
-        reach = (stroke - s_stroke) / 2 - inset  # how far the stroke's round end passes the line's center
-        s += f'<path d="M{x},{down - reach:g} V{2 * ROW + reach + down:g}" {s_line}/>'
+    s = "".join(
+        f'<path d="M{x},{down - reach:g} V{2 * ROW + reach + down:g}" {s_line}/>' for x, down in strokes
+    )
     return (
         s + f'<path d="{top}" stroke="{accent}" {line}/><path d="{middle}" stroke="{ink}" {line}/>'
         f'<path d="{bottom}" stroke="{ink}" {line}/>'
