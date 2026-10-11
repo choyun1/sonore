@@ -23,30 +23,33 @@ from fontTools.ttLib import TTFont
 
 HERE = Path(__file__).parent
 # the gallery's ink and accent colors, light and dark
+ROW = 24  # spacing of the three lines
 COLORS = {"light": ("#16202A", "#235B7C"), "dark": ("#E4E9ED", "#7FB6D6")}
 
 
 def lines(ink, accent, small=False):
-    """The three lines (rows at 0, 30 and 60) and the strokes for the s, as SVG elements. The
+    """The three lines (rows at 0, ROW and 2 ROW) and the strokes for the s, as SVG elements. The
     strokes run nearly the full height, since the noise of an s spreads over most frequencies,
     and sit close to where the lines start, as the s runs into the vowel. The small version is
-    shorter, so the lines stay apart at 16 px."""
+    shorter, with thinner lines and smaller steps, so the lines stay apart at 16 px."""
     if small:
-        width, (rise, back), (drop, land), stroke, s_stroke = 76, (6, 38), (44, 58), 13, 6
-        strokes = [-28, -20, -12]
+        width, (rise, back), (drop, land), stroke, s_stroke, step = 68, (4, 34), (38, 52), 11, 5, 8
+        strokes = [-27, -20, -13]
     else:
-        width, (rise, back), (drop, land), stroke, s_stroke = 125, (24, 74), (86, 98), 10, 4.5
+        width, (rise, back), (drop, land), stroke, s_stroke, step = 105, (16, 62), (72, 84), 10, 4.5, 10
         strokes = [-25, -18, -11]
+    # step is how far the middle line rises for the n and the top line drops for the r
     reach = (stroke - s_stroke) / 2 - 5  # the strokes' round ends stop a little inside the lines' outer edges
-    top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},12 {land},12 H{width}"
+    top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},{step} {land},{step} H{width}"
+    peak = ROW - step
     middle = (
-        f"M0,30 H{rise} C{rise + 8},30 {rise + 8},18 {rise + 16},18 H{back - 16} "
-        f"C{back - 8},18 {back - 8},30 {back},30 H{width}"
+        f"M0,{ROW} H{rise} C{rise + 8},{ROW} {rise + 8},{peak} {rise + 16},{peak} H{back - 16} "
+        f"C{back - 8},{peak} {back - 8},{ROW} {back},{ROW} H{width}"
     )
-    bottom = f"M0,60 H{width}"
+    bottom = f"M0,{2 * ROW} H{width}"
     line = f'fill="none" stroke-width="{stroke}" stroke-linecap="round" stroke-linejoin="round"'
     s_line = f'stroke="{ink}" stroke-width="{s_stroke}" stroke-linecap="round"'
-    s = "".join(f'<path d="M{x},{-reach:g} V{60 + reach:g}" {s_line}/>' for x in strokes)
+    s = "".join(f'<path d="M{x},{-reach:g} V{2 * ROW + reach:g}" {s_line}/>' for x in strokes)
     return (
         s + f'<path d="{top}" stroke="{accent}" {line}/><path d="{middle}" stroke="{ink}" {line}/>'
         f'<path d="{bottom}" stroke="{ink}" {line}/>'
@@ -71,9 +74,9 @@ def banner(font, theme):
     """The lines beside the wordmark, whose x-height is centered on the middle row."""
     ink, accent = COLORS[theme]
     size = 98
-    baseline = 30 + font["OS/2"].sxHeight / font["head"].unitsPerEm * size / 2
-    word, right = wordmark(font, "sonore", size, 160, baseline, ink)
-    left, top, bottom = -33, -24, 74
+    baseline = ROW + font["OS/2"].sxHeight / font["head"].unitsPerEm * size / 2
+    word, right = wordmark(font, "sonore", size, 140, baseline, ink)
+    left, top, bottom = -33, ROW - 54, ROW + 44
     view = f"{left} {top} {right - left + 6:.0f} {bottom - top}"
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-label="sonore">'
@@ -92,7 +95,7 @@ def mark():
     )
     body = lines("INK", "ACCENT", small=True)
     body = body.replace('stroke="INK"', 'class="logo-ink"').replace('stroke="ACCENT"', 'class="logo-accent"')
-    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -32 124 124" role="img" aria-label="sonore">'
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -34 116 116" role="img" aria-label="sonore">'
     return f"{svg}<title>sonore</title>{style}{body}</svg>\n"
 
 
