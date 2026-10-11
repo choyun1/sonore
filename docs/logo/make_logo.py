@@ -2,7 +2,7 @@
 
 The logo is three lines and a patch of noise, an abstract picture of the spectrogram of
 "sonore" said by the formant synthesizer (the aside at the end of the Formant synthesis page in
-the gallery): short vertical strokes for the s, a middle line that rises and falls once for the
+the gallery): vertical strokes for the s, a middle line that rises and falls once for the
 n, and a top line that steps down once for the r. It is not a plot of that sound.
 
 The wordmark is set in Spectral SemiBold (SIL Open Font License), the gallery's serif, and
@@ -27,14 +27,16 @@ COLORS = {"light": ("#16202A", "#235B7C"), "dark": ("#E4E9ED", "#7FB6D6")}
 
 
 def lines(ink, accent, small=False):
-    """The three lines (rows at 0, 30 and 60) and the strokes for the s, as SVG elements.
-    The small version is shorter, so the lines stay apart at 16 px."""
+    """The three lines (rows at 0, 30 and 60) and the strokes for the s, as SVG elements. The
+    strokes run the full height, since the noise of an s spreads over most frequencies. The small
+    version is shorter, so the lines stay apart at 16 px."""
     if small:
-        width, (rise, back), (drop, land), stroke, s_stroke = 96, (12, 48), (58, 72), 13, 7
-        strokes = [(-36, -10, 14), (-26, -16, 6), (-16, -6, 18)]
+        width, (rise, back), (drop, land), stroke, s_stroke = 76, (6, 38), (44, 58), 13, 6
+        strokes = [-32, -23, -14]
     else:
-        width, (rise, back), (drop, land), stroke, s_stroke = 200, (52, 112), (130, 142), 10, 4.5
-        strokes = [(-30, -10, 14), (-22, -16, 6), (-14, -6, 18)]
+        width, (rise, back), (drop, land), stroke, s_stroke = 125, (24, 74), (86, 98), 10, 4.5
+        strokes = [-30, -22, -14]
+    reach = (stroke - s_stroke) / 2  # the strokes' round ends meet the outer edges of the lines
     top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},12 {land},12 H{width}"
     middle = (
         f"M0,30 H{rise} C{rise + 8},30 {rise + 8},18 {rise + 16},18 H{back - 16} "
@@ -42,10 +44,8 @@ def lines(ink, accent, small=False):
     )
     bottom = f"M0,60 H{width}"
     line = f'fill="none" stroke-width="{stroke}" stroke-linecap="round" stroke-linejoin="round"'
-    s = "".join(
-        f'<path d="M{x},{y0} V{y1}" stroke="{ink}" stroke-width="{s_stroke}" stroke-linecap="round"/>'
-        for x, y0, y1 in strokes
-    )
+    s_line = f'stroke="{ink}" stroke-width="{s_stroke}" stroke-linecap="round"'
+    s = "".join(f'<path d="M{x},{-reach:g} V{60 + reach:g}" {s_line}/>' for x in strokes)
     return (
         s + f'<path d="{top}" stroke="{accent}" {line}/><path d="{middle}" stroke="{ink}" {line}/>'
         f'<path d="{bottom}" stroke="{ink}" {line}/>'
@@ -71,7 +71,7 @@ def banner(font, theme):
     ink, accent = COLORS[theme]
     size = 98
     baseline = 30 + font["OS/2"].sxHeight / font["head"].unitsPerEm * size / 2
-    word, right = wordmark(font, "sonore", size, 235, baseline, ink)
+    word, right = wordmark(font, "sonore", size, 160, baseline, ink)
     left, top, bottom = -38, -24, 74
     view = f"{left} {top} {right - left + 6:.0f} {bottom - top}"
     return (
@@ -91,7 +91,7 @@ def mark():
     )
     body = lines("INK", "ACCENT", small=True)
     body = body.replace('stroke="INK"', 'class="logo-ink"').replace('stroke="ACCENT"', 'class="logo-accent"')
-    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-45 -53 153 153" role="img" aria-label="sonore">'
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-38 -32 124 124" role="img" aria-label="sonore">'
     return f"{svg}<title>sonore</title>{style}{body}</svg>\n"
 
 
