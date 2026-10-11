@@ -28,15 +28,16 @@ COLORS = {"light": ("#16202A", "#235B7C"), "dark": ("#E4E9ED", "#7FB6D6")}
 
 def lines(ink, accent, small=False):
     """The three lines (rows at 0, 30 and 60) and the strokes for the s, as SVG elements. The
-    strokes run the full height, since the noise of an s spreads over most frequencies. The small
-    version is shorter, so the lines stay apart at 16 px."""
+    strokes run nearly the full height, since the noise of an s spreads over most frequencies,
+    and sit close to where the lines start, as the s runs into the vowel. The small version is
+    shorter, so the lines stay apart at 16 px."""
     if small:
         width, (rise, back), (drop, land), stroke, s_stroke = 76, (6, 38), (44, 58), 13, 6
-        strokes = [-32, -23, -14]
+        strokes = [-28, -20, -12]
     else:
         width, (rise, back), (drop, land), stroke, s_stroke = 125, (24, 74), (86, 98), 10, 4.5
-        strokes = [-30, -22, -14]
-    reach = (stroke - s_stroke) / 2  # the strokes' round ends meet the outer edges of the lines
+        strokes = [-25, -18, -11]
+    reach = (stroke - s_stroke) / 2 - 5  # the strokes' round ends stop a little inside the lines' outer edges
     top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},12 {land},12 H{width}"
     middle = (
         f"M0,30 H{rise} C{rise + 8},30 {rise + 8},18 {rise + 16},18 H{back - 16} "
@@ -72,7 +73,7 @@ def banner(font, theme):
     size = 98
     baseline = 30 + font["OS/2"].sxHeight / font["head"].unitsPerEm * size / 2
     word, right = wordmark(font, "sonore", size, 160, baseline, ink)
-    left, top, bottom = -38, -24, 74
+    left, top, bottom = -33, -24, 74
     view = f"{left} {top} {right - left + 6:.0f} {bottom - top}"
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-label="sonore">'
@@ -91,7 +92,7 @@ def mark():
     )
     body = lines("INK", "ACCENT", small=True)
     body = body.replace('stroke="INK"', 'class="logo-ink"').replace('stroke="ACCENT"', 'class="logo-accent"')
-    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-38 -32 124 124" role="img" aria-label="sonore">'
+    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -32 124 124" role="img" aria-label="sonore">'
     return f"{svg}<title>sonore</title>{style}{body}</svg>\n"
 
 
