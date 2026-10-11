@@ -24,6 +24,8 @@ from fontTools.ttLib import TTFont
 HERE = Path(__file__).parent
 # the gallery's ink and accent colors, light and dark
 ROW = 24  # spacing of the three lines
+# one gray for the s strokes, the same on light and dark backgrounds
+NOISE_GRAY = "#7D8891"
 COLORS = {"light": ("#16202A", "#235B7C"), "dark": ("#E4E9ED", "#7FB6D6")}
 
 
@@ -50,7 +52,7 @@ def lines(ink, accent, small=False):
     )
     bottom = f"M0,{2 * ROW} H{width}"
     line = f'fill="none" stroke-width="{stroke}" stroke-linecap="round" stroke-linejoin="round"'
-    s_line = f'stroke="{ink}" stroke-width="{s_stroke}" stroke-linecap="round"'
+    s_line = f'stroke="{NOISE_GRAY}" stroke-width="{s_stroke}" stroke-linecap="round"'
     s = "".join(
         f'<path d="M{x},{down - reach:g} V{2 * ROW + reach + down:g}" {s_line}/>' for x, down in strokes
     )
