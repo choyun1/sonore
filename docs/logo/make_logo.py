@@ -27,6 +27,7 @@ ROW = 24  # spacing of the three lines
 # the small mark's middle and bottom rows: the middle one lower, so the n and r steps can be
 # deeper and survive at 16 px, and the bottom one close under it, since the bottom line has no step
 SMALL_ROWS = (32, 52)
+SMALL_WIDTH = 60  # the small mark's lines, short so the mark fills its square
 # one gray for the s strokes, the same on light and dark backgrounds
 NOISE_GRAY = "#7D8891"
 COLORS = {"light": ("#16202A", "#235B7C"), "dark": ("#E4E9ED", "#7FB6D6")}
@@ -41,7 +42,7 @@ def lines(ink, accent, small=False):
     thinner lines and deeper steps, so the n and the r still show at 16 px."""
     row, low = SMALL_ROWS if small else (ROW, 2 * ROW)
     if small:
-        width, (rise, back), (drop, land), stroke, s_stroke, step = 72, (2, 44), (46, 60), 11, 5, 16
+        width, (rise, back), (drop, land), stroke, s_stroke, step = SMALL_WIDTH, (2, 40), (42, 56), 11, 5, 16
         strokes = [(-27, 0), (-20, -4), (-13, 4)]
     else:
         width, (rise, back), (drop, land), stroke, s_stroke, step = 105, (16, 62), (72, 84), 10, 4.5, 10
@@ -103,7 +104,8 @@ def mark():
     )
     body = lines("INK", "ACCENT", small=True)
     body = body.replace('stroke="INK"', 'class="logo-ink"').replace('stroke="ACCENT"', 'class="logo-accent"')
-    view = f"-36 {SMALL_ROWS[1] / 2 - 58:g} 116 116"  # centered on the lines
+    size = SMALL_WIDTH + 44  # square, with room for the s strokes on the left
+    view = f"-36 {SMALL_ROWS[1] / 2 - size / 2:g} {size} {size}"  # centered on the lines
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-label="sonore">'
     return f"{svg}<title>sonore</title>{style}{body}</svg>\n"
 
