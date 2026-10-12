@@ -24,20 +24,24 @@ from fontTools.ttLib import TTFont
 HERE = Path(__file__).parent
 # the gallery's ink and accent colors, light and dark
 ROW = 24  # spacing of the three lines
+# the small mark's middle and bottom rows: the middle one lower, so the n and r steps can be
+# deeper and survive at 16 px, and the bottom one close under it, since the bottom line has no step
+SMALL_ROWS = (32, 52)
 # one gray for the s strokes, the same on light and dark backgrounds
 NOISE_GRAY = "#7D8891"
 COLORS = {"light": ("#16202A", "#235B7C"), "dark": ("#E4E9ED", "#7FB6D6")}
 
 
 def lines(ink, accent, small=False):
-    """The three lines (rows at 0, ROW and 2 ROW) and the strokes for the s, as SVG elements. The
-    strokes run most of the height, since the noise of an s spreads over most frequencies,
-    and sit close to where the lines start, as the s runs into the vowel. Each stroke is given as
-    its x and how far it is moved down; the middle one sits a little higher and the right one a
-    little lower, so they read as noise. The small version is shorter, with thinner lines and
-    smaller steps, so the lines stay apart at 16 px."""
+    """The three lines (rows at 0, ROW and 2 ROW, or at 0 and SMALL_ROWS) and the strokes for the
+    s, as SVG elements. The strokes run most of the height, since the noise of an s spreads over
+    most frequencies, and sit close to where the lines start, as the s runs into the vowel. Each
+    stroke is given as its x and how far it is moved down; the middle one sits a little higher and
+    the right one a little lower, so they read as noise. The small version is shorter, with
+    thinner lines and deeper steps, so the n and the r still show at 16 px."""
+    row, low = SMALL_ROWS if small else (ROW, 2 * ROW)
     if small:
-        width, (rise, back), (drop, land), stroke, s_stroke, step = 68, (4, 34), (38, 52), 11, 5, 8
+        width, (rise, back), (drop, land), stroke, s_stroke, step = 72, (2, 44), (46, 60), 11, 5, 16
         strokes = [(-27, 0), (-20, -4), (-13, 4)]
     else:
         width, (rise, back), (drop, land), stroke, s_stroke, step = 105, (16, 62), (72, 84), 10, 4.5, 10
@@ -45,17 +49,15 @@ def lines(ink, accent, small=False):
     # step is how far the middle line rises for the n and the top line drops for the r
     reach = (stroke - s_stroke) / 2 - 11  # the strokes stop well inside the top and bottom lines
     top = f"M0,0 H{drop - 6} C{drop},0 {land - 6},{step} {land},{step} H{width}"
-    peak = ROW - step
+    peak = row - step
     middle = (
-        f"M0,{ROW} H{rise} C{rise + 8},{ROW} {rise + 8},{peak} {rise + 16},{peak} H{back - 16} "
-        f"C{back - 8},{peak} {back - 8},{ROW} {back},{ROW} H{width}"
+        f"M0,{row} H{rise} C{rise + 8},{row} {rise + 8},{peak} {rise + 16},{peak} H{back - 16} "
+        f"C{back - 8},{peak} {back - 8},{row} {back},{row} H{width}"
     )
-    bottom = f"M0,{2 * ROW} H{width}"
+    bottom = f"M0,{low} H{width}"
     line = f'fill="none" stroke-width="{stroke}" stroke-linecap="round" stroke-linejoin="round"'
     s_line = f'stroke="{NOISE_GRAY}" stroke-width="{s_stroke}" stroke-linecap="round"'
-    s = "".join(
-        f'<path d="M{x},{down - reach:g} V{2 * ROW + reach + down:g}" {s_line}/>' for x, down in strokes
-    )
+    s = "".join(f'<path d="M{x},{down - reach:g} V{low + reach + down:g}" {s_line}/>' for x, down in strokes)
     return (
         s + f'<path d="{top}" stroke="{accent}" {line}/><path d="{middle}" stroke="{ink}" {line}/>'
         f'<path d="{bottom}" stroke="{ink}" {line}/>'
@@ -101,7 +103,8 @@ def mark():
     )
     body = lines("INK", "ACCENT", small=True)
     body = body.replace('stroke="INK"', 'class="logo-ink"').replace('stroke="ACCENT"', 'class="logo-accent"')
-    svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -34 116 116" role="img" aria-label="sonore">'
+    view = f"-36 {SMALL_ROWS[1] / 2 - 58:g} 116 116"  # centered on the lines
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-label="sonore">'
     return f"{svg}<title>sonore</title>{style}{body}</svg>\n"
 
 
