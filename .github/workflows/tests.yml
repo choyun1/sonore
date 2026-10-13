@@ -26,7 +26,10 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check src tests tools  # the gallery and design docs keep their hand-aligned code
-      - run: mypy  # settings in pyproject.toml
+      # NumPy's type stubs change between releases, so the types are checked
+      # once, against the newest Python and NumPy; settings in pyproject.toml
+      - run: mypy
+        if: matrix.python-version == '3.14'
       - run: python -m pytest -q
 
   docs:
