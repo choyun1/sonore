@@ -4,7 +4,7 @@ resynthesis with the original or minimum phase, and cepstral F0."""
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -114,7 +114,7 @@ class Cepstrum(View):
         mirror = self.data[:, 1 : self.n_fft - n_half + 1][:, ::-1]
         return np.concatenate([self.data, mirror], axis=1)
 
-    def lifter(self, cutoff: float | Sequence[float], keep: str = "low") -> Cepstrum:
+    def lifter(self, cutoff: float | Sequence[float], keep: Literal["low", "high"] = "low") -> Cepstrum:
         """A rectangular lifter. ``keep="low"`` keeps the quefrencies below
         ``cutoff`` [s], the smooth spectral envelope; ``"high"`` keeps the
         rest, the fine structure such as the harmonics. ``cutoff`` is one
@@ -152,7 +152,7 @@ class Cepstrum(View):
         freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
         return GridEnvelope(self.envelope() ** 2, self.t, freqs)
 
-    def to_stft(self, phase: str = "original") -> STFT | TVSTFT:
+    def to_stft(self, phase: Literal["original", "minimum"] = "original") -> STFT | TVSTFT:
         """Coefficients of the source's type and frame with :meth:`envelope`
         as magnitude.
 
@@ -174,7 +174,7 @@ class Cepstrum(View):
                 raise ValueError(f"phase must be 'original' or 'minimum', not {phase!r}")
         return self.source._with_data(data)
 
-    def to_sound(self, phase: str = "original") -> Sound:
+    def to_sound(self, phase: Literal["original", "minimum"] = "original") -> Sound:
         """:meth:`to_stft` synthesized by the source's frame: exact for an
         unliftered cepstrum with the original phase, as long as no
         magnitude fell below ``floor_db`` (those are raised to the floor),

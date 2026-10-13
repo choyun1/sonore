@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from scipy.signal import ShortTimeFFT, welch
@@ -97,7 +97,12 @@ class Spectrum(View):
         return Spectrum(self.f, power_to_db(mean_power, floor_db=_FLOOR_DB))
 
     def to_sound(
-        self, duration: float, fs: float, carrier: str | Sound = "noise", rng: RNG = None, **noise_kwargs
+        self,
+        duration: float,
+        fs: float,
+        carrier: Literal["noise", "minimum"] | Sound = "noise",
+        rng: RNG = None,
+        **noise_kwargs,
     ) -> Sound:
         """A sound with this magnitude spectrum, its phase supplied by ``carrier``.
 

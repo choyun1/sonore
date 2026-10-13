@@ -254,7 +254,12 @@ class HannModulationFilterbank(ModulationFilterbank):
         return np.abs(_hann_ft((freq_col - rates) * durations) + _hann_ft((freq_col + rates) * durations))
 
     def filter(
-        self, x: ArrayLike, fs: float, axis: int = 0, analytic: bool = False, align: str = "center"
+        self,
+        x: ArrayLike,
+        fs: float,
+        axis: int = 0,
+        analytic: bool = False,
+        align: Literal["center", "causal"] = "center",
     ) -> np.ndarray:
         """Filter ``x`` along ``axis`` with every band (zero outside ``x``).
 
@@ -282,7 +287,7 @@ def _hann_ft(u: np.ndarray) -> np.ndarray:
     return np.where(np.isclose(np.abs(u), 1.0), 0.5, transform)
 
 
-def _correlate(x: np.ndarray, h: np.ndarray, align: str) -> np.ndarray:
+def _correlate(x: np.ndarray, h: np.ndarray, align: Literal["center", "causal"]) -> np.ndarray:
     """``y[n] = sum_j x[n + j - c] conj(h[j])`` along axis 0, with ``x`` zero
     outside its extent; ``c = L - 1`` (causal) or ``L - 1 - (L - 1) // 2``
     (centered)."""
@@ -417,7 +422,7 @@ class ModulationSpectrum(View):
         f_lo: float = 125.0,
         f_hi: float = 8000.0,
         env_fs: float = 1000.0,
-        scale: str = "linear",
+        scale: Literal["linear", "db"] = "linear",
     ) -> ModulationSpectrum:
         """Modulation spectrum on a log-frequency axis [cycles/octave].
 
@@ -639,7 +644,11 @@ class ModulationSpectrum(View):
         return Envelopes(bands, analysis.fs, bank)
 
     def to_sound(
-        self, carrier: str | Sound = "tones", fs: float | None = None, rng: RNG = None, iterations: int = 0
+        self,
+        carrier: Literal["tones", "noise"] | Sound = "tones",
+        fs: float | None = None,
+        rng: RNG = None,
+        iterations: int = 0,
     ) -> Sound:
         """A sound whose envelopes have this modulation spectrum.
 

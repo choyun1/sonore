@@ -36,7 +36,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
@@ -119,7 +119,7 @@ class Ripple(_Pattern):
     density: float
     depth: float = 0.9
     phase: float = 0.0
-    scale: str = "linear"
+    scale: Literal["linear", "db"] = "linear"
 
     def __post_init__(self):
         if self.scale not in _SCALES:
@@ -318,7 +318,7 @@ def ripple_sound(
     fs: float,
     f_lo: float = 250.0,
     f_hi: float = 8000.0,
-    carrier: str | Sound = "tones",
+    carrier: Literal["tones", "harmonic", "noise", "low-noise"] | Sound = "tones",
     tones_per_octave: float = 20.0,
     f0: float = 100.0,
     bands_per_octave: float = 24.0,

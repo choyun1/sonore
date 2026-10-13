@@ -22,7 +22,7 @@ import json
 import os
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field, fields
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from scipy.signal import hilbert, resample
@@ -245,7 +245,9 @@ class TextureStats(View):
     duration: float = field(default=0.0)
 
     @classmethod
-    def measure(cls, sound: Sound, model: TextureModel | None = None, window: str = "ramped") -> TextureStats:
+    def measure(
+        cls, sound: Sound, model: TextureModel | None = None, window: Literal["ramped", "uniform"] = "ramped"
+    ) -> TextureStats:
         """Measure the statistics of ``sound``. ``window="ramped"`` (the
         default, for recorded originals) downweights the ends with
         :func:`measurement_window`; ``"uniform"`` weights all samples
@@ -255,7 +257,9 @@ class TextureStats(View):
         return cls.from_subbands(model.subbands(x), model, window)
 
     @classmethod
-    def from_subbands(cls, sb: np.ndarray, model: TextureModel, window: str = "ramped") -> TextureStats:
+    def from_subbands(
+        cls, sb: np.ndarray, model: TextureModel, window: Literal["ramped", "uniform"] = "ramped"
+    ) -> TextureStats:
         env = model.envelopes(sb)
         n_env = env.shape[0]
         env_weights = cls._window(model, n_env, window)
@@ -265,7 +269,7 @@ class TextureStats(View):
         return cls.from_envelopes(env, subband_variance, model, window)
 
     @staticmethod
-    def _window(model: TextureModel, n_env: int, window: str) -> np.ndarray:
+    def _window(model: TextureModel, n_env: int, window: Literal["ramped", "uniform"]) -> np.ndarray:
         match window:
             case "ramped":
                 weights = measurement_window(n_env, int(round(n_env / model.env_fs)))
@@ -277,7 +281,11 @@ class TextureStats(View):
 
     @classmethod
     def from_envelopes(
-        cls, env: np.ndarray, subband_var: np.ndarray, model: TextureModel, window: str = "uniform"
+        cls,
+        env: np.ndarray,
+        subband_var: np.ndarray,
+        model: TextureModel,
+        window: Literal["ramped", "uniform"] = "uniform",
     ) -> TextureStats:
         """Statistics of compressed, downsampled envelopes ``(n_env, B)``
         (subband variances are passed through). Used during synthesis."""

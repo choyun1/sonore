@@ -10,7 +10,7 @@ out in ``docs/design/music/timbre-page.md``.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from scipy.signal import butter, filtfilt, hilbert, lfilter
@@ -151,7 +151,10 @@ def _spectra(sound: Sound, win_dur: float, hop_dur: float, scale: str) -> tuple[
 
 
 def spectral_centroid(
-    sound: Sound, scale: str = "power", win_dur: float = WIN_DUR, hop_dur: float = HOP_DUR
+    sound: Sound,
+    scale: Literal["power", "magnitude"] = "power",
+    win_dur: float = WIN_DUR,
+    hop_dur: float = HOP_DUR,
 ) -> DescriptorTrack:
     """The center of gravity of the spectrum in each time window,
     ``sum(f_k a_k) / sum(a_k)`` (Peeters et al., 2011, eq. 7), on a Hamming
@@ -177,7 +180,7 @@ def spectral_centroid(
 def spectral_flux(
     sound: Sound,
     spacing: float | None = 0.1,
-    scale: str = "magnitude",
+    scale: Literal["power", "magnitude"] = "magnitude",
     win_dur: float = WIN_DUR,
     hop_dur: float = HOP_DUR,
 ) -> DescriptorTrack:

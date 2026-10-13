@@ -579,7 +579,7 @@ def iterated_ripple_noise(
     delay: float,
     gain: float = 1.0,
     iterations: int = 16,
-    network: str = "add-same",
+    network: Literal["add-same", "add-original"] = "add-same",
     rng: RNG = None,
     **noise_kwargs,
 ) -> Sound:

@@ -13,7 +13,7 @@ design and the numbers behind it.
 from __future__ import annotations
 
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 
@@ -100,7 +100,7 @@ class ModulationSpectrogram(View):
         cycles: int = 3,
         window: float | None = None,
         hop: float = 0.010,
-        align: str = "center",
+        align: Literal["center", "causal"] = "center",
         bank: HannModulationFilterbank | None = None,
     ):
         from sonore.views.envelopes import Envelopes
@@ -167,7 +167,7 @@ class ModulationSpectrogram(View):
         with np.errstate(divide="ignore", invalid="ignore"):
             return np.where(self.mean > tiny, np.sqrt(self.power) / self.mean, np.nan)
 
-    def at(self, t: float, kind: str = "depth") -> np.ndarray:
+    def at(self, t: float, kind: Literal["depth", "power"] = "depth") -> np.ndarray:
         """The acoustic band x modulation rate image at the time window nearest
         ``t`` [s], shape ``(n_channels, n_bands, n_mod)``: Atlas and Shamma's
         joint acoustic and modulation frequency display at one moment.
@@ -175,7 +175,7 @@ class ModulationSpectrogram(View):
         window_index = int(np.argmin(np.abs(self.t - t)))
         return self._kind(kind)[..., window_index]
 
-    def average(self, kind: str = "power") -> np.ndarray:
+    def average(self, kind: Literal["depth", "power"] = "power") -> np.ndarray:
         """Average over time windows, shape ``(n_channels, n_bands, n_mod)``. The
         average power is the per-band modulation power spectrum, the same kind
         of quantity as the texture statistics' ``mod_power``."""
@@ -224,7 +224,7 @@ class ModulationSpectrogram(View):
 
         return animate_modulation_spectrogram(self, path=path, sound=sound, fps=fps, **kwargs)
 
-    def _kind(self, kind: str) -> np.ndarray:
+    def _kind(self, kind: Literal["depth", "power"]) -> np.ndarray:
         match kind:
             case "depth":
                 return self.depth

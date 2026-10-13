@@ -217,6 +217,11 @@ def cents_scale(reference: float = 440.0) -> FrequencyScale:
     )
 
 
+#: The name of a scale in :data:`FREQUENCY_SCALES` (any capitalization works).
+ScaleName = Literal["erb", "octave", "cents", "mel", "linear"]
+#: Where shorter sounds sit when lengths are matched: at the start, centered, or at the end.
+Align = Literal["start", "center", "end"]
+
 #: The scales a filterbank can be built on by name: the ERB-number scale
 #: (Glasberg & Moore, 1990), octaves (log2 frequency), cents from A4 at 440 Hz,
 #: the HTK mel scale, and Hz.
@@ -229,7 +234,7 @@ FREQUENCY_SCALES = {
 }
 
 
-def _as_frequency_scale(scale: str | FrequencyScale) -> FrequencyScale:
+def _as_frequency_scale(scale: ScaleName | FrequencyScale) -> FrequencyScale:
     if isinstance(scale, FrequencyScale):
         return scale
     try:

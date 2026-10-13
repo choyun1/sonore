@@ -6,14 +6,14 @@ import functools
 import numbers
 import operator
 from collections.abc import Sequence
-from typing import cast
+from typing import Literal, cast
 
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import butter, lfilter, sosfilt, sosfiltfilt
 
 from sonore.core.sound import Sound
-from sonore.core.utils import amp_to_db, time_axis
+from sonore.core.utils import Align, amp_to_db, time_axis
 
 __all__ = [
     "match_fs",
@@ -34,7 +34,9 @@ __all__ = [
 Track = float | tuple[ArrayLike, ArrayLike]
 
 
-def match_fs(sounds: Sequence[Sound], fs: float | None = None, mode: str = "down") -> list[Sound]:
+def match_fs(
+    sounds: Sequence[Sound], fs: float | None = None, mode: Literal["down", "up"] = "down"
+) -> list[Sound]:
     """Resample so all sounds share a rate: ``fs`` if given, else the lowest
     (``mode="down"``) or highest (``mode="up"``) rate in the list."""
     _check_not_empty(sounds)
@@ -53,7 +55,9 @@ def match_channels(sounds: Sequence[Sound]) -> list[Sound]:
     return [s.to_channels(n_channels) for s in sounds]
 
 
-def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "start") -> list[Sound]:
+def match_lengths(
+    sounds: Sequence[Sound], mode: Literal["pad", "truncate"] = "pad", align: Align = "start"
+) -> list[Sound]:
     """Bring sounds to one length: zero-pad to the longest (``mode="pad"``)
     or cut to the shortest (``mode="truncate"``).
 
@@ -110,7 +114,7 @@ def concat(sounds: Sequence[Sound]) -> Sound:
     return Sound(np.concatenate([s.data for s in match_channels(sounds)]), fs)
 
 
-def mix(sounds: Sequence[Sound], align: str = "start") -> Sound:
+def mix(sounds: Sequence[Sound], align: Align = "start") -> Sound:
     """Sum sounds of possibly different lengths (zero-padded per ``align``)."""
     _check_fs(sounds)
     return functools.reduce(operator.add, match_lengths(match_channels(sounds), align=align))
@@ -127,7 +131,7 @@ def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
 def butter_filter(
     sound: Sound,
     cutoff: float | tuple[float, float],
-    btype: str = "bandpass",
+    btype: Literal["lowpass", "highpass", "bandpass", "bandstop"] = "bandpass",
     order: int = 4,
     zero_phase: bool = True,
 ) -> Sound:

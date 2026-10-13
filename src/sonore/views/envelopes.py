@@ -33,7 +33,7 @@ from __future__ import annotations
 import numbers
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -407,7 +407,9 @@ class Envelopes(_PaddedBands, View):
 
     __rmul__ = __mul__
 
-    def modulation_spectrum(self, scale: str = "linear", drop_edges: bool = True) -> ModulationSpectrum:
+    def modulation_spectrum(
+        self, scale: Literal["linear", "db"] = "linear", drop_edges: bool = True
+    ) -> ModulationSpectrum:
         """2-D modulation spectrum (temporal Hz x spectral cycles per scale unit).
 
         ``scale="db"`` transforms log envelopes. The edge bands are dropped by

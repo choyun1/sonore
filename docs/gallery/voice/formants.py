@@ -984,7 +984,7 @@ fig, playhead = show(sound, "/sɔnɔʁ/", [tracks["F1"], tracks["F2"], tracks["F
 # - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
 #   [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py#L104)
-#   [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L235)
+#   [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L239)
 # - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis.
 #   *STL-QPSR* 36(2–3), 119–156. The Rd parameter.
 #   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L852)

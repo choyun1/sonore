@@ -40,7 +40,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import KW_ONLY, dataclass
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import scipy.fft as sp_fft
@@ -51,6 +51,7 @@ from sonore.core.fft import fast_padding, threads
 from sonore.core.sound import Sound
 from sonore.core.utils import (
     FrequencyScale,
+    ScaleName,
     _as_frequency_scale,
     _parabola_vertex,
     db_to_amp,
@@ -244,7 +245,7 @@ class Gammatone(FilterType):
 
     order: int = 4
     bandwidth_factor: float = 1.019
-    phase: str = "causal"
+    phase: Literal["causal", "zero"] = "causal"
     edge_width: float = 1.0
 
     def __post_init__(self):
@@ -626,7 +627,7 @@ def cosine_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | FrequencyScale = "erb",
+    scale: ScaleName | FrequencyScale = "erb",
     spacing: float | None = None,
     centers: ArrayLike | None = None,
     width: float = 1.0,
@@ -651,10 +652,10 @@ def gammatone_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | FrequencyScale = "erb",
+    scale: ScaleName | FrequencyScale = "erb",
     spacing: float | None = None,
     centers: ArrayLike | None = None,
-    phase: str = "causal",
+    phase: Literal["causal", "zero"] = "causal",
     order: int = 4,
     bandwidth_factor: float = 1.019,
     edges: bool = True,
@@ -677,7 +678,7 @@ def morlet_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | FrequencyScale = "octave",
+    scale: ScaleName | FrequencyScale = "octave",
     spacing: float | None = None,
     centers: ArrayLike | None = None,
     cycles: float = 6.0,

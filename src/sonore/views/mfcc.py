@@ -31,8 +31,8 @@ def mel_filterbank(
     f_lo: float,
     f_hi: float,
     scale: MelScale = "htk",
-    triangles: str = "height",
-    triangle_axis: str = "mel",
+    triangles: Literal["height", "area"] = "height",
+    triangle_axis: Literal["mel", "hz"] = "mel",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Triangular mel weights on the frequencies ``freqs`` [Hz].
 
@@ -225,8 +225,8 @@ class MFCC(View):
         f_lo: float = 0.0,
         f_hi: float | None = None,
         mel_scale: MelScale = "htk",
-        triangles: str = "height",
-        triangle_axis: str = "mel",
+        triangles: Literal["height", "area"] = "height",
+        triangle_axis: Literal["mel", "hz"] = "mel",
         floor_db: float = -200.0,
         lifter: float = 0.0,
         win_dur: float | None = None,

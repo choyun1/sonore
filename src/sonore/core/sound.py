@@ -10,7 +10,7 @@ from __future__ import annotations
 import numbers
 import warnings
 from os import PathLike
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -18,6 +18,7 @@ from scipy.signal import fftconvolve, hilbert
 
 from sonore.core.units import Decibels
 from sonore.core.utils import (
+    Align,
     _phase_ramp_delay,
     _resample_poly,
     amp_to_db,
@@ -326,7 +327,7 @@ class Sound:
         """Remove each channel's own mean (DC offset)."""
         return Sound(self._data - self._data.mean(axis=0), self.fs)
 
-    def ramp(self, duration: float, shape: str = "cosine") -> Sound:
+    def ramp(self, duration: float, shape: Literal["cosine", "linear"] = "cosine") -> Sound:
         """Apply onset and offset ramps of ``duration`` seconds.
 
         ``shape`` is ``"cosine"`` (raised cosine) or ``"linear"``.
@@ -354,7 +355,7 @@ class Sound:
         n_before, n_after = n_samples(before, self.fs), n_samples(after, self.fs)
         return Sound(np.pad(self._data, ((n_before, n_after), (0, 0))), self.fs)
 
-    def pad_to(self, n: int, align: str = "start") -> Sound:
+    def pad_to(self, n: int, align: Align = "start") -> Sound:
         """Zero-pad to ``n`` samples. ``align`` is ``start``, ``center``, or ``end``."""
         extra = n - self.n_samples
         if extra < 0:

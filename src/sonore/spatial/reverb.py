@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from functools import cache
 from importlib.resources import files
+from typing import Literal, get_args
 
 import numpy as np
 
@@ -24,12 +25,15 @@ def _model() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return load("fit_DRR.npy"), load("fit_RT60.npy"), load("fit_freqs.npy")
 
 
-DECAY_SHAPES = ("exponential", "time_reversed", "linear_matched_start", "linear_matched_end")
-RT60_PROFILES = ("ecological", "inverted", "exaggerated", "reduced")
-DRR_PROFILES = ("ecological", "constant")
+DecayShape = Literal["exponential", "time_reversed", "linear_matched_start", "linear_matched_end"]
+RT60Profile = Literal["ecological", "inverted", "exaggerated", "reduced"]
+DRRProfile = Literal["ecological", "constant"]
+DECAY_SHAPES = get_args(DecayShape)
+RT60_PROFILES = get_args(RT60Profile)
+DRR_PROFILES = get_args(DRRProfile)
 
 
-def band_rt60s(rt60: float, freqs: np.ndarray, profile: str = "ecological") -> np.ndarray:
+def band_rt60s(rt60: float, freqs: np.ndarray, profile: RT60Profile = "ecological") -> np.ndarray:
     """Per-band RT60s [s] at ``freqs`` for a broadband (median) RT60, from the
     regression fits of Traer & McDermott (2016, Eq. S11), or one of the
     paper's atypical variants (Eq. S15 and following):
@@ -87,9 +91,9 @@ def synth_ir(
     f_lo: float = 20.0,
     f_hi: float = 16000.0,
     n_channels: int = 1,
-    decay_shape: str = "exponential",
-    rt60_profile: str = "ecological",
-    drr_profile: str = "ecological",
+    decay_shape: DecayShape = "exponential",
+    rt60_profile: RT60Profile = "ecological",
+    drr_profile: DRRProfile = "ecological",
     rng: RNG = None,
 ) -> Sound:
     """Synthesize a room impulse response (Traer & McDermott, 2016).
