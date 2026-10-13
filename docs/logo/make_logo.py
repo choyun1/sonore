@@ -80,17 +80,27 @@ def wordmark(font, text, size, x, baseline, fill):
 
 
 def banner(font, theme):
-    """The lines beside the wordmark, whose x-height is centered on the middle row."""
+    """The lines beside the wordmark, whose x-height is centered on the middle row: the whole
+    banner, then its mark and name halves, cut in the gap between the lines and the word. The README
+    sets the halves side by side and links only the mark (to the gallery), as sonore-sketch's does;
+    both share the banner's height, so together they make the whole banner."""
     ink, accent = COLORS[theme]
     size = 98
     baseline = ROW + font["OS/2"].sxHeight / font["head"].unitsPerEm * size / 2
     word, right = wordmark(font, "sonore", size, 140, baseline, ink)
     left, top, bottom = -33, ROW - 54, ROW + 44
-    view = f"{left} {top} {right - left + 6:.0f} {bottom - top}"
-    return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-label="sonore">'
-        f"<title>sonore</title>{lines(ink, accent)}{word}</svg>\n"
-    )
+    cut, height = 122, bottom - top
+
+    def svg(x, width, body):
+        view = f"{x} {top} {width:.0f} {height}"
+        return (
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{view}" role="img" aria-label="sonore">'
+            f"<title>sonore</title>{body}</svg>\n"
+        )
+
+    drawn = lines(ink, accent)
+    whole = svg(left, right - left + 6, drawn + word)
+    return whole, svg(left, cut - left, drawn), svg(cut, right + 6 - cut, word)
 
 
 def mark():
@@ -113,5 +123,8 @@ def mark():
 if __name__ == "__main__":
     font = TTFont(sys.argv[1])
     for theme in COLORS:
-        (HERE / f"sonore-banner-{theme}.svg").write_text(banner(font, theme))
+        whole, mark_half, name_half = banner(font, theme)
+        (HERE / f"sonore-banner-{theme}.svg").write_text(whole)  # older READMEs, as on PyPI, link the whole
+        (HERE / f"sonore-banner-mark-{theme}.svg").write_text(mark_half)
+        (HERE / f"sonore-banner-name-{theme}.svg").write_text(name_half)
     (HERE / "sonore-mark.svg").write_text(mark())
