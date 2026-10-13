@@ -6,9 +6,37 @@ you like (e.g. ``plt.style.use(...)``).
 
 from __future__ import annotations
 
+import os
+from collections.abc import Iterable, Sequence
+from typing import TYPE_CHECKING, Any, Literal, cast
+
 import numpy as np
+from numpy.typing import ArrayLike
 
 from sonore.core.utils import time_axis
+
+if TYPE_CHECKING:
+    from matplotlib.animation import FuncAnimation
+    from matplotlib.axes import Axes
+    from matplotlib.collections import QuadMesh
+    from matplotlib.colors import Colormap
+    from matplotlib.figure import Figure
+
+    from sonore.core.sound import Sound
+    from sonore.frames.filterbank import Subbands
+    from sonore.frames.gabor import STFT
+    from sonore.sources.ripples import Pattern
+    from sonore.spatial.binaural import InterauralCues
+    from sonore.views.cepstrum import Cepstrum
+    from sonore.views.envelopes import Envelope, Envelopes
+    from sonore.views.f0 import F0Track
+    from sonore.views.lpc import LPC, FormantTrack
+    from sonore.views.mask import Mask
+    from sonore.views.mfcc import MFCC
+    from sonore.views.modspectrogram import ModulationSpectrogram
+    from sonore.views.modulation import ModulationSpectrum
+    from sonore.views.spectra import Spectrum
+    from sonore.views.timbre import DescriptorTrack
 
 __all__ = [
     "plot_waveform",
@@ -34,7 +62,7 @@ __all__ = [
 ]
 
 
-def _ax(ax):
+def _ax(ax: Axes | None) -> Axes:
     if ax is None:
         import matplotlib.pyplot as plt
 
@@ -42,7 +70,9 @@ def _ax(ax):
     return ax
 
 
-def plot_waveform(sound, ax=None, labels=None, **kwargs):
+def plot_waveform(
+    sound: Sound, ax: Axes | None = None, *, labels: Sequence[str] | None = None, **kwargs
+) -> Axes:
     ax = _ax(ax)
     kwargs.setdefault("alpha", 0.6)
     kwargs.setdefault("lw", 0.8)
@@ -59,7 +89,14 @@ def plot_waveform(sound, ax=None, labels=None, **kwargs):
     return ax
 
 
-def plot_spectrum(spectrum, ax=None, fscale="log", relative=True, **kwargs):
+def plot_spectrum(
+    spectrum: Spectrum,
+    ax: Axes | None = None,
+    *,
+    fscale: Literal["log", "linear"] = "log",
+    relative: bool = True,
+    **kwargs,
+) -> Axes:
     ax = _ax(ax)
     spec = spectrum.relative() if relative else spectrum
     freqs, levels = (spec.f[1:], spec.level[1:]) if fscale == "log" else (spec.f, spec.level)
@@ -75,7 +112,17 @@ def plot_spectrum(spectrum, ax=None, fscale="log", relative=True, **kwargs):
     return ax
 
 
-def _image(ax, x, y, values, cmap, vmin, vmax, colorbar=False, label=""):
+def _image(
+    ax: Axes,
+    x: ArrayLike,
+    y: ArrayLike,
+    values: ArrayLike,
+    cmap: str | Colormap,
+    vmin: float,
+    vmax: float,
+    colorbar: bool = False,
+    label: str = "",
+) -> QuadMesh:
     """Every image plot's drawing: ``values`` on the ``x`` by ``y`` grid, each
     cell halfway to its neighbors, rasterized so vector files stay small, with
     an optional colorbar."""
@@ -85,18 +132,28 @@ def _image(ax, x, y, values, cmap, vmin, vmax, colorbar=False, label=""):
     return im
 
 
-def _db_limits(db, db_range):
+def _db_limits(db: np.ndarray, db_range: float) -> tuple[float, float]:
     """Color limits for levels in dB: the top ``db_range`` dB below the maximum."""
     vmax = np.max(db)
     return vmax - db_range, vmax
 
 
-def _tf_image(ax, values, t, f, cmap, vmin, vmax, colorbar, label):
+def _tf_image(
+    ax: Axes,
+    values: np.ndarray,
+    t: np.ndarray,
+    f: np.ndarray,
+    cmap: str | Colormap,
+    vmin: float,
+    vmax: float,
+    colorbar: bool,
+    label: str,
+) -> QuadMesh:
     ax.set(xlabel="Time [s]", ylabel="Frequency [kHz]")
     return _image(ax, t, f / 1000, values, cmap, vmin, vmax, colorbar, label)
 
 
-def _interior(stft):
+def _interior(stft: STFT) -> slice:
     """Time windows that lie entirely inside the signal (edge time windows are
     zero-padded, which looks like a click)."""
     start = np.round(stft.t * stft.fs).astype(int) - stft.sft.m_num_mid
@@ -105,8 +162,16 @@ def _interior(stft):
 
 
 def plot_stft(
-    stft, ax=None, channel=0, db_range=80.0, cmap="magma", colorbar=True, fmax=None, trim_edges=True
-):
+    stft: STFT,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    db_range: float = 80.0,
+    cmap: str | Colormap = "magma",
+    colorbar: bool = True,
+    fmax: float | None = None,
+    trim_edges: bool = True,
+) -> Axes:
     ax = _ax(ax)
     keep = _interior(stft) if trim_edges else slice(None)
     levels_db = stft.db[channel][:, keep]
@@ -118,7 +183,14 @@ def plot_stft(
     return ax
 
 
-def plot_mask(mask, ax=None, channel=0, cmap="Greys_r", colorbar=False):
+def plot_mask(
+    mask: Mask,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    cmap: str | Colormap = "Greys_r",
+    colorbar: bool = False,
+) -> Axes:
     """A mask's gains as an image, black 0 to white 1: time windows by FFT
     bins for an STFT mask, samples by bands for a subband mask."""
     from sonore.frames.filterbank import Subbands
@@ -136,8 +208,15 @@ def plot_mask(mask, ax=None, channel=0, cmap="Greys_r", colorbar=False):
 
 
 def plot_modulation_spectrum(
-    ms, ax=None, db_range=60.0, cmap="magma", colorbar=True, wt_max=None, wf_max=None
-):
+    ms: ModulationSpectrum,
+    ax: Axes | None = None,
+    *,
+    db_range: float = 60.0,
+    cmap: str | Colormap = "magma",
+    colorbar: bool = True,
+    wt_max: float | None = None,
+    wf_max: float | None = None,
+) -> Axes:
     ax = _ax(ax)
     _image(ax, ms.w_t, ms.w_f, ms.level, cmap, *_db_limits(ms.level, db_range), colorbar, "dB")
     ax.set(
@@ -153,7 +232,7 @@ def plot_modulation_spectrum(
     return ax
 
 
-def _depth_db(depth, valid=None):
+def _depth_db(depth: np.ndarray, valid: np.ndarray | None = None) -> np.ndarray:
     """Depth in dB with invalid or undefined cells as NaN (drawn gray)."""
     with np.errstate(divide="ignore", invalid="ignore"):
         db = 20 * np.log10(depth)
@@ -162,18 +241,20 @@ def _depth_db(depth, valid=None):
     return np.where(np.isfinite(db), db, np.nan)
 
 
-def _depth_cmap(cmap):
+def _depth_cmap(cmap: str) -> Colormap:
     import matplotlib
 
     return matplotlib.colormaps[cmap].with_extremes(bad="0.75")
 
 
-def _depth_limits(db, db_range):
+def _depth_limits(db: np.ndarray, db_range: float) -> tuple[float, float]:
     vmax = np.nanmax(db) if np.isfinite(db).any() else 0.0
     return vmax - db_range, vmax
 
 
-def _modulation_view(msg, channel, band, rate):
+def _modulation_view(
+    msg: ModulationSpectrogram, channel: int, band: float | None, rate: float | None
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, str, str, bool]:
     """(values in dB, x, y, ylabel, title, log y) for one 2-D view."""
     if band is not None and rate is not None:
         raise ValueError("give band or rate, not both")
@@ -197,8 +278,16 @@ def _modulation_view(msg, channel, band, rate):
 
 
 def plot_modulation_spectrogram(
-    msg, ax=None, channel=0, band=None, rate=None, db_range=30.0, cmap="magma", colorbar=True
-):
+    msg: ModulationSpectrogram,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    band: float | None = None,
+    rate: float | None = None,
+    db_range: float = 30.0,
+    cmap: str = "magma",
+    colorbar: bool = True,
+) -> Axes:
     """Modulation depth in dB as an image; cells the analysis marks invalid
     (rate above the band's width, window past either end) are gray. The
     default view is modulation rate against time, pooled over bands;
@@ -214,7 +303,9 @@ def plot_modulation_spectrogram(
     return ax
 
 
-def _plot_band_rate(msg, ax, i, channel, vmin, vmax, cmap):
+def _plot_band_rate(
+    msg: ModulationSpectrogram, ax: Axes, i: int, channel: int, vmin: float, vmax: float, cmap: Colormap
+) -> QuadMesh:
     db = _depth_db(msg.depth[channel, :, :, i], msg.valid[:, :, i])
     im = _image(ax, msg.fm, msg.f, db, cmap, vmin, vmax)
     ax.set(xscale="log", yscale="log", xlabel="Modulation rate [Hz]", ylabel="Frequency [Hz]")
@@ -222,7 +313,16 @@ def _plot_band_rate(msg, ax, i, channel, vmin, vmax, cmap):
     return im
 
 
-def plot_modulation_slices(msg, t, rate=4.0, channel=0, db_range=30.0, cmap="magma", figsize=(13, 3.8)):
+def plot_modulation_slices(
+    msg: ModulationSpectrogram,
+    t: float,
+    *,
+    rate: float = 4.0,
+    channel: int = 0,
+    db_range: float = 30.0,
+    cmap: str = "magma",
+    figsize: tuple[float, float] = (13, 3.8),
+) -> Figure:
     """Three linked cuts through a modulation spectrogram's time x band x
     rate cube, with a cursor at ``t`` [s]: rate against time (pooled over
     bands), band against time at ``rate`` [Hz], and band against rate at
@@ -248,8 +348,17 @@ def plot_modulation_slices(msg, t, rate=4.0, channel=0, db_range=30.0, cmap="mag
 
 
 def animate_modulation_spectrogram(
-    msg, path=None, sound=None, fps=25.0, channel=0, db_range=30.0, cmap="magma", figsize=(5, 4), dpi=100
-):
+    msg: ModulationSpectrogram,
+    *,
+    path: str | os.PathLike | None = None,
+    sound: Sound | None = None,
+    fps: float = 25.0,
+    channel: int = 0,
+    db_range: float = 30.0,
+    cmap: str = "magma",
+    figsize: tuple[float, float] = (5, 4),
+    dpi: float = 100,
+) -> FuncAnimation:
     """The band x rate image moving with time, one video frame every
     ``1/fps`` seconds. Returns a ``matplotlib.animation.FuncAnimation``
     (``anim.to_jshtml()`` shows it in a notebook). With ``path`` it is saved
@@ -277,7 +386,7 @@ def animate_modulation_spectrogram(
     return anim
 
 
-def _save_with_audio(anim, path, fps, dpi, sound):
+def _save_with_audio(anim: FuncAnimation, path: str, fps: float, dpi: float, sound: Sound | None) -> None:
     import shutil
     import subprocess
     import tempfile
@@ -286,19 +395,19 @@ def _save_with_audio(anim, path, fps, dpi, sound):
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("saving an animation needs ffmpeg on the PATH")
     if sound is None:
-        anim.save(path, writer="ffmpeg", fps=fps, dpi=dpi)
+        anim.save(path, writer="ffmpeg", fps=fps, dpi=dpi)  # type: ignore[arg-type]  # any rate works
         return
     import soundfile as sf
 
     with tempfile.TemporaryDirectory() as tmp:
         video, audio = Path(tmp) / "video.mp4", Path(tmp) / "audio.wav"
-        anim.save(video, writer="ffmpeg", fps=fps, dpi=dpi)
+        anim.save(video, writer="ffmpeg", fps=fps, dpi=dpi)  # type: ignore[arg-type]
         sf.write(audio, sound.data, int(sound.fs))
         cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video), "-i", str(audio)]
         subprocess.run(cmd + ["-c:v", "copy", "-c:a", "aac", "-shortest", path], check=True)
 
 
-def _band_labels(cfs, edges=True):
+def _band_labels(cfs: np.ndarray, edges: bool = True) -> list[str]:
     """CF labels; the first and last filters are the lowpass/highpass edges."""
     labels = [f"{cf:.0f}" for cf in cfs]
     if edges:
@@ -307,7 +416,15 @@ def _band_labels(cfs, edges=True):
     return labels
 
 
-def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None):
+def plot_subbands(
+    sb: Subbands,
+    axes: Sequence[Axes] | None = None,
+    *,
+    channel: int = 0,
+    sharey: bool = True,
+    color: Any = None,
+    bands: Iterable[int] | None = None,
+) -> list[Axes]:
     """One trace per band, lowest at the bottom. With ``sharey=True`` (default)
     all traces share one amplitude scale, so relative band levels are visible.
     The bottom and top traces are the lowpass and highpass edge filters
@@ -324,7 +441,7 @@ def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None)
     n_shown = len(band_idx)
     t = time_axis(n_samples, sb.fs)
     data = sb.data[:, band_idx, channel]
-    labels = [_band_labels(sb.cfs)[i] for i in band_idx]
+    labels = [_band_labels(sb.cfs)[int(i)] for i in band_idx]
     if axes is None:
         _, axes = plt.subplots(n_shown, 1, figsize=(8, 0.5 * n_shown + 0.6), sharex=True)
     axes = list(axes)
@@ -347,7 +464,7 @@ def plot_subbands(sb, axes=None, channel=0, sharey=True, color=None, bands=None)
     return axes
 
 
-def plot_envelope(env, ax=None, db=False, **kwargs):
+def plot_envelope(env: Envelope, ax: Axes | None = None, *, db: bool = False, **kwargs) -> Axes:
     """A single :class:`~sonore.views.envelopes.Envelope` over time."""
     ax = _ax(ax)
     ax.plot(env.t, env.db if db else env.data, **kwargs)
@@ -362,17 +479,18 @@ def plot_envelope(env, ax=None, db=False, **kwargs):
 
 
 def plot_envelopes(
-    env,
-    ax=None,
-    channel=0,
-    db_range=40.0,
-    cmap="magma",
-    colorbar=True,
-    edges=False,
-    align=None,
-    fscale="log",
-    fmax=None,
-):
+    env: Envelopes,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    db_range: float = 40.0,
+    cmap: str | Colormap = "magma",
+    colorbar: bool = True,
+    edges: bool = False,
+    align: Literal["peak"] | None = None,
+    fscale: Literal["log", "linear"] = "log",
+    fmax: float | None = None,
+) -> Axes:
     """Envelopes (a cochleagram) as an image: time x band, in dB re the maximum.
     Edge bands are hidden unless ``edges=True``.
 
@@ -408,7 +526,18 @@ def plot_envelopes(
     return ax
 
 
-def plot_tf_db(db, t, f, ax=None, db_range=60.0, cmap="magma", colorbar=True, fmax=None, title=None):
+def plot_tf_db(
+    db: np.ndarray,
+    t: ArrayLike,
+    f: ArrayLike,
+    ax: Axes | None = None,
+    *,
+    db_range: float = 60.0,
+    cmap: str | Colormap = "magma",
+    colorbar: bool = True,
+    fmax: float | None = None,
+    title: str | None = None,
+) -> Axes:
     """A time-frequency image from levels ``db`` (shape ``(n_freqs, n_windows)``)
     at window times ``t`` [s] and frequencies ``f`` [Hz], which need not be
     uniform: each cell extends halfway to its neighbors. Frequency is linear
@@ -422,7 +551,15 @@ def plot_tf_db(db, t, f, ax=None, db_range=60.0, cmap="magma", colorbar=True, fm
     return ax
 
 
-def plot_cepstrum(cep, ax=None, channel=0, q_range=(1e-3, 15e-3), cmap="magma", colorbar=True):
+def plot_cepstrum(
+    cep: Cepstrum,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    q_range: tuple[float, float] = (1e-3, 15e-3),
+    cmap: str | Colormap = "magma",
+    colorbar: bool = True,
+) -> Axes:
     """A cepstrum as an image: time [s] across, quefrency [ms] up, from
     ``q_range`` [s]. The default, 1 to 15 ms, leaves out the low quefrencies
     (the spectral envelope, which would set the color scale) and covers the
@@ -440,7 +577,16 @@ def plot_cepstrum(cep, ax=None, channel=0, q_range=(1e-3, 15e-3), cmap="magma", 
     return ax
 
 
-def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, db_range=60.0):
+def plot_mfcc(
+    mfcc: MFCC,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    kind: Literal["mfcc", "mel"] = "mfcc",
+    cmap: str | Colormap | None = None,
+    colorbar: bool = True,
+    db_range: float = 60.0,
+) -> Axes:
     """MFCCs as an image, time [s] across.
 
     ``kind="mfcc"``: coefficients ``c1`` and up (``c0``, the level, would set
@@ -470,7 +616,15 @@ def plot_mfcc(mfcc, ax=None, channel=0, kind="mfcc", cmap=None, colorbar=True, d
     return ax
 
 
-def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwargs):
+def plot_f0_track(
+    track: F0Track,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    candidates: bool = False,
+    color: Any = "C0",
+    **kwargs,
+) -> Axes:
     """An F0 track: F0 [Hz] against time [s], broken where unvoiced. With
     ``candidates=True``, every refined candidate the tracker weighed is drawn
     as a gray dot, darker for a higher periodicity score."""
@@ -497,7 +651,17 @@ def plot_f0_track(track, ax=None, channel=0, candidates=False, color="C0", **kwa
     return ax
 
 
-def plot_lpc(lpc, ax=None, channel=0, db_range=60.0, fmax=None, candidates=True, cmap="magma", colorbar=True):
+def plot_lpc(
+    lpc: LPC,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    db_range: float = 60.0,
+    fmax: float | None = None,
+    candidates: bool = True,
+    cmap: str | Colormap = "magma",
+    colorbar: bool = True,
+) -> Axes:
     """An :class:`~sonore.views.lpc.LPC` model: its envelope in dB as a
     time-frequency image (frequency in kHz), with every candidate resonance
     as a dot, darker for a narrower one."""
@@ -511,7 +675,7 @@ def plot_lpc(lpc, ax=None, channel=0, db_range=60.0, fmax=None, candidates=True,
     return ax
 
 
-def _scatter_candidates(ax, t, freqs, bandwidths):
+def _scatter_candidates(ax: Axes, t: np.ndarray, freqs: np.ndarray, bandwidths: np.ndarray) -> None:
     """Resonances as dots in kHz, white for narrow ones fading to gray at 500 Hz wide."""
     times = np.broadcast_to(t[None, :], freqs.shape)
     finite = np.isfinite(freqs)
@@ -530,8 +694,15 @@ def _scatter_candidates(ax, t, freqs, bandwidths):
 
 
 def plot_formant_track(
-    track, ax=None, channel=0, candidates=False, voiced=None, colors=("C0", "C1", "C2"), **kwargs
-):
+    track: FormantTrack,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    candidates: bool = False,
+    voiced: ArrayLike | None = None,
+    colors: Sequence[Any] = ("C0", "C1", "C2"),
+    **kwargs,
+) -> Axes:
     """A :class:`~sonore.views.lpc.FormantTrack`: F1 to F3 [kHz] against time
     [s], each broken where missing or, given ``voiced`` (a boolean per time
     window, such as an F0 track's voicing on the same grid), where unvoiced.
@@ -549,7 +720,9 @@ def plot_formant_track(
     return ax
 
 
-def plot_descriptor_track(track, ax=None, channel=0, **kwargs):
+def plot_descriptor_track(
+    track: DescriptorTrack, ax: Axes | None = None, *, channel: int = 0, **kwargs
+) -> Axes:
     """A :class:`~sonore.views.timbre.DescriptorTrack` against time, one channel."""
     ax = _ax(ax)
     ax.plot(track.t, track.values[channel], **kwargs)
@@ -558,18 +731,19 @@ def plot_descriptor_track(track, ax=None, channel=0, **kwargs):
     return ax
 
 
-def plot_interaural_cues(cues, ax=None, show_iac=True):
+def plot_interaural_cues(cues: InterauralCues, ax: Axes | None = None, *, show_iac: bool = True) -> Axes:
     """Broadband cues: ITD and ILD on twin axes (plus IAC underneath).
     Per-band cues: ITD as an image."""
     import matplotlib.pyplot as plt
 
     if cues.itd.ndim == 2:
+        cfs = cast(np.ndarray, cues.cfs)  # per-band cues have their center frequencies
         ax = _ax(ax)
         itd_lim = np.nanmax(np.abs(cues.itd)) * 1e6 or 1
         bands = np.arange(cues.itd.shape[1])
         _image(ax, cues.t, bands, 1e6 * cues.itd.T, "RdBu_r", -itd_lim, itd_lim, True, "ITD [µs]")
-        n_bands, step = len(cues.cfs), max(1, len(cues.cfs) // 8)
-        ax.set_yticks(np.arange(n_bands)[::step], _band_labels(cues.cfs)[::step])
+        n_bands, step = len(cfs), max(1, len(cfs) // 8)
+        ax.set_yticks(np.arange(n_bands)[::step], _band_labels(cfs)[::step])
         ax.set(xlabel="Time [s]", ylabel="CF [Hz]", title="ITD per band (+ = right leads)")
         return ax
 
@@ -604,7 +778,9 @@ def plot_interaural_cues(cues, ax=None, show_iac=True):
     return ax
 
 
-def plot_lissajous(sound, ax=None, duration=None, start=0.0, **kwargs):
+def plot_lissajous(
+    sound: Sound, ax: Axes | None = None, *, duration: float | None = None, start: float = 0.0, **kwargs
+) -> Axes:
     """A Lissajous figure: the left channel of a two-channel ``sound`` against
     the right, over ``duration`` seconds from ``start`` (by default the rest
     of the sound). Two tones whose frequencies are in a small whole-number
@@ -626,8 +802,17 @@ def plot_lissajous(sound, ax=None, duration=None, start=0.0, **kwargs):
 
 
 def plot_ripple_pattern(
-    pattern, duration=1.0, f_lo=250.0, f_hi=8000.0, ax=None, cmap="RdBu_r", colorbar=True, n_t=None, n_x=200
-):
+    pattern: Pattern,
+    ax: Axes | None = None,
+    *,
+    duration: float = 1.0,
+    f_lo: float = 250.0,
+    f_hi: float = 8000.0,
+    cmap: str | Colormap = "RdBu_r",
+    colorbar: bool = True,
+    n_t: int | None = None,
+    n_x: int = 200,
+) -> Axes:
     """Envelope of a ripple pattern (dB re its mean level) over time and
     log-frequency, before any sound is made."""
     from sonore.sources.ripples import _evaluate, _max_rate
@@ -646,7 +831,9 @@ def plot_ripple_pattern(
     return ax
 
 
-def overview(sound, win_dur=20e-3, figsize=(12, 8), fmax=None):
+def overview(
+    sound: Sound, *, win_dur: float = 20e-3, figsize: tuple[float, float] = (12, 8), fmax: float | None = None
+) -> Figure:
     """Waveform, spectrum, spectrogram and modulation spectrum in one figure
     (replaces the old ``display_STFT``). Returns the Figure."""
     import matplotlib.pyplot as plt
@@ -655,10 +842,10 @@ def overview(sound, win_dur=20e-3, figsize=(12, 8), fmax=None):
     from sonore.views.modulation import ModulationSpectrum
     from sonore.views.spectra import long_term_spectrum
 
-    stft = STFT(sound.mono(), win_dur)
+    stft = STFT(sound.mono(), win_dur=win_dur)
     fig, axes = plt.subplots(2, 2, figsize=figsize, layout="constrained")
-    plot_waveform(sound, axes[0, 0])
-    plot_spectrum(long_term_spectrum(sound), axes[0, 1])
-    plot_stft(stft, axes[1, 0], fmax=fmax)
-    plot_modulation_spectrum(ModulationSpectrum(stft), axes[1, 1], wt_max=50, wf_max=10)
+    plot_waveform(sound, ax=axes[0, 0])
+    plot_spectrum(long_term_spectrum(sound), ax=axes[0, 1])
+    plot_stft(stft, ax=axes[1, 0], fmax=fmax)
+    plot_modulation_spectrum(ModulationSpectrum(stft), ax=axes[1, 1], wt_max=50, wf_max=10)
     return fig

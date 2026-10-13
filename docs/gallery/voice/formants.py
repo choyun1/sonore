@@ -983,22 +983,22 @@ fig, playhead = show(sound, "/sɔnɔʁ/", [tracks["F1"], tracks["F2"], tracks["F
 #
 # - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
-#   [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py#L103)
-#   [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L232)
+#   [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py#L104)
+#   [`processing.resonator`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L240)
 # - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis.
 #   *STL-QPSR* 36(2–3), 119–156. The Rd parameter.
-#   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L863)
+#   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L862)
 # - Fant, Liljencrants & Lin (1985). A four-parameter model of glottal flow. *STL-QPSR* 26(4),
-#   1–13. [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L784)
+#   1–13. [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L783)
 # - Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among
 #   female and male talkers. *J. Acoust. Soc. Am.* 87(2), 820–857.
 #   [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894). The `SS` source switch.
 # - Makhoul (1975). Linear prediction: A tutorial review. *Proc. IEEE* 63(4), 561–580.
 #   [doi:10.1109/PROC.1975.9792](https://doi.org/10.1109/PROC.1975.9792).
-#   [`lpc.LPC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L69)
+#   [`lpc.LPC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L74)
 # - Boersma & Weenink. Praat: doing phonetics by computer (computer program).
 #   [praat.org](https://www.praat.org). Its formant recipe, which `so.formant_track` follows.
-#   [`lpc.formant_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L365)
+#   [`lpc.formant_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L387)
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
 #   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The vowels' formant frequencies.

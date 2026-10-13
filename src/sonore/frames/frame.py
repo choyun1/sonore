@@ -24,6 +24,7 @@ version).
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 
@@ -50,11 +51,11 @@ class Frame(ABC):
     """An invertible analysis. See the module docstring for the contract."""
 
     @abstractmethod
-    def analyze(self, sound: Sound, **kwargs):
+    def analyze(self, sound: Sound) -> Any:
         """Coefficients of ``sound``."""
 
     @abstractmethod
-    def synthesize(self, coefs) -> Sound:
+    def synthesize(self, coefs: Any) -> Sound:
         """The least-squares signal for ``coefs`` (exact for unmodified ones)."""
 
     @abstractmethod
@@ -63,12 +64,12 @@ class Frame(ABC):
         ``n_samples`` samples at ``fs`` Hz."""
 
     @abstractmethod
-    def energy(self, coefs) -> np.ndarray:
+    def energy(self, coefs: Any) -> np.ndarray:
         """Coefficient energy per channel, in the norm the bounds and the least
         squares are defined in, so that bounds, SNRs and tests all agree."""
 
     @abstractmethod
-    def adjoint(self, coefs) -> Sound:
+    def adjoint(self, coefs: Any) -> Sound:
         """The adjoint of :meth:`analyze`: the signal ``y`` with
         ``<analyze(x), coefs> == <x, y>`` for every ``x``, the coefficient
         inner product being the one :meth:`energy` uses. It is

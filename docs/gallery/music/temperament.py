@@ -154,7 +154,7 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
     fig, (ax_s, ax_c) = plt.subplots(
         2, 1, figsize=(10, 5.4), sharex=True, height_ratios=[1.7, 1], layout="constrained"
     )
-    stft = so.STFT(snd, 80e-3, 10e-3)
+    stft = so.STFT(snd, win_dur=80e-3, hop_dur=10e-3)
     keep = (stft.f >= fmin) & (stft.f <= fmax)
     level = stft.db[0][keep]
     ax_s.pcolormesh(stft.t, stft.f[keep], level, vmin=level.max() - 70, vmax=level.max(), cmap="magma")
@@ -543,5 +543,5 @@ fig, playhead = show(sound, events)
 # - Haynes (2002). *A History of Performing Pitch: The Story of "A"*. Scarecrow Press.
 # - ISO 16:1975. Acoustics — Standard tuning frequency (standard musical pitch).
 #   [ISO](https://www.iso.org/standard/3601.html).
-#   [`utils.note_to_freq`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L147)
-#   [`utils.ratio_to_cents`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L130)
+#   [`utils.note_to_freq`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L152)
+#   [`utils.ratio_to_cents`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py#L135)

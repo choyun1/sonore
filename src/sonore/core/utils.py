@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from fractions import Fraction
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -40,14 +41,14 @@ def rms(x: ArrayLike, axis: int | None = None) -> np.ndarray | float:
     return np.sqrt(np.mean(np.square(x), axis=axis))
 
 
-def amp_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
+def amp_to_db(x: ArrayLike, *, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
     """Amplitude (not power) to decibels: ``20*log10(|x|/ref)``, floored."""
     x = np.abs(np.asarray(x)).astype(float) / ref
     with np.errstate(divide="ignore"):
         return np.maximum(20 * np.log10(x), floor_db)
 
 
-def power_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
+def power_to_db(x: ArrayLike, *, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
     """Power (not amplitude) to decibels: ``10*log10(x/ref)``, floored at
     ``floor_db``.
 
@@ -95,7 +96,11 @@ _SLANEY_HZ_PER_MEL = 200 / 3  # linear part: 15 mel at 1000 Hz
 _SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.4
 
 
-def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
+#: The two mel scales: HTK's formula and Slaney's (as librosa uses).
+MelScale = Literal["htk", "slaney"]
+
+
+def freq_to_mel(freq: ArrayLike, *, scale: MelScale = "htk") -> np.ndarray:
     """Frequency [Hz] to mel.
 
     ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses,
@@ -114,7 +119,7 @@ def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
             raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
 
 
-def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
+def mel_to_freq(mel: ArrayLike, *, scale: MelScale = "htk") -> np.ndarray:
     """Mel to frequency [Hz]; the inverse of :func:`freq_to_mel`."""
     mel = np.asarray(mel, dtype=float)
     match scale:
@@ -144,7 +149,7 @@ _NOTE_STEPS = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 _ACCIDENTALS = {"#": 1, "\u266f": 1, "b": -1, "\u266d": -1}
 
 
-def note_to_freq(note: str, a4: float = 440.0) -> float:
+def note_to_freq(note: str, *, a4: float = 440.0) -> float:
     """The equal-tempered frequency [Hz] of a note name such as ``"A4"``,
     ``"C#3"`` or ``"Bb2"`` (scientific pitch notation: octave 4 starts at
     middle C; ``#`` or ``b``, or ♯ and ♭, for sharp and flat, repeatable), with A4 at
@@ -179,8 +184,8 @@ class FrequencyScale:
 
     name: str
     unit: str
-    to_scale: Callable[[np.ndarray], np.ndarray]
-    from_scale: Callable[[np.ndarray], np.ndarray]
+    to_scale: Callable[[ArrayLike], np.ndarray]  # Hz to scale units
+    from_scale: Callable[[ArrayLike], np.ndarray]  # scale units to Hz
 
     def __post_init__(self):
         # A mismatched or mistyped pair would still build a bank, with every
@@ -212,6 +217,11 @@ def cents_scale(reference: float = 440.0) -> FrequencyScale:
     )
 
 
+#: The name of a scale in :data:`FREQUENCY_SCALES` (any capitalization works).
+ScaleName = Literal["erb", "octave", "cents", "mel", "linear"]
+#: Where shorter sounds sit when lengths are matched: at the start, centered, or at the end.
+Align = Literal["start", "center", "end"]
+
 #: The scales a filterbank can be built on by name: the ERB-number scale
 #: (Glasberg & Moore, 1990), octaves (log2 frequency), cents from A4 at 440 Hz,
 #: the HTK mel scale, and Hz.
@@ -224,7 +234,7 @@ FREQUENCY_SCALES = {
 }
 
 
-def _as_frequency_scale(scale: str | FrequencyScale) -> FrequencyScale:
+def _as_frequency_scale(scale: ScaleName | FrequencyScale) -> FrequencyScale:
     if isinstance(scale, FrequencyScale):
         return scale
     try:
@@ -248,7 +258,11 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     return np.arange(n) / fs
 
 
-def as_rng(rng: int | np.random.Generator | None) -> np.random.Generator:
+#: A random seed, a NumPy ``Generator``, or None for fresh entropy.
+RNG = int | np.random.Generator | None
+
+
+def as_rng(rng: RNG) -> np.random.Generator:
     """Accept a seed, a Generator, or None and return a Generator."""
     return np.random.default_rng(rng)
 
@@ -277,7 +291,7 @@ def _resample_poly(data: np.ndarray, fs: float, fs_new: float, axis: int = 0, **
     return resample_poly(data, ratio.numerator, ratio.denominator, axis=axis, **kwargs)
 
 
-def _fit_length(data: np.ndarray, length: int, mode: str = "constant") -> np.ndarray:
+def _fit_length(data: np.ndarray, length: int, mode: Literal["constant", "edge"] = "constant") -> np.ndarray:
     """``data`` cut or padded at the end (axis 0) to ``length`` samples; ``mode``
     is ``np.pad``'s (zeros by default, ``"edge"`` repeats the last sample)."""
     if data.shape[0] >= length:

@@ -66,7 +66,7 @@ def test_cell_statistics():
 
 def test_sound_keeps_the_drawn_cells():
     env = so.gaussian_spectrogram(0.4, FS, rng=2)
-    sound = env.to_sound(so.gaussian_noise(0.4, FS, rng=3))
+    sound = env.to_sound(carrier=so.gaussian_noise(0.4, FS, rng=3))
     drawn = env.data[:, 1:-1, 0]
     got = np.abs(env.filterbank.analyze(sound).envelopes().data[:, 1:-1, 0])
     # compare smoothed band levels over 20 ms

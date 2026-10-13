@@ -8,7 +8,7 @@ import sonore as so
 
 
 class TestEnvelopes:
-    x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 30), phases="random", rng=0)
+    x = so.harmonic_complex(0.5, FS, 150, harmonics=np.arange(1, 30), phases="random", rng=0)
 
     def test_types_follow_the_concepts(self):
         sb = so.cosine_filterbank(8).analyze(self.x)
@@ -60,7 +60,7 @@ class TestEnvelopes:
             so.Envelope(np.ones(FS), FS) * self.x
 
     def test_modulation_spectrum_from_envelopes(self):
-        x = so.harmonic_complex(0.5, FAST, 150, np.arange(1, 30), phases="random", rng=0)
+        x = so.harmonic_complex(0.5, FAST, 150, harmonics=np.arange(1, 30), phases="random", rng=0)
         fb = so.cosine_filterbank(f_lo=125, f_hi=FAST_HI, spacing=1 / 12, scale="octave")
         direct = so.ModulationSpectrum.octave(x, f_hi=FAST_HI)
         via = fb.analyze(x).envelopes(fs=1000).modulation_spectrum()
@@ -122,25 +122,25 @@ def test_gammatone_peak_delay_aligns_a_click():
 
 
 class TestToSound:
-    x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 30), phases="random", rng=0)
+    x = so.harmonic_complex(0.5, FS, 150, harmonics=np.arange(1, 30), phases="random", rng=0)
     carrier = so.gaussian_noise(0.5, FS, rng=4)
 
     def test_envelope_takes_only_the_carriers_fine_structure(self):
         env = self.x.envelope()
-        out = env.to_sound(self.carrier)
+        out = env.to_sound(carrier=self.carrier)
         fine = self.carrier / self.carrier.envelope()
         np.testing.assert_allclose(out.data, env.data * fine.data)
         # the carrier's own envelope is gone: any level of carrier gives the same sound
-        np.testing.assert_allclose(env.to_sound(3 * self.carrier).data, out.data, atol=1e-12)
+        np.testing.assert_allclose(env.to_sound(carrier=3 * self.carrier).data, out.data, atol=1e-12)
         with pytest.raises(TypeError, match="Sound"):
-            env.to_sound("noise")
+            env.to_sound(carrier="noise")
 
     def test_envelopes_are_envelope_to_sound_in_every_band(self):
         fb = so.cosine_filterbank(8)
         env = fb.analyze(self.x).envelopes(lowpass=50)
-        whole = env.to_sound(self.carrier)
+        whole = env.to_sound(carrier=self.carrier)
         carrier_bands = fb.analyze(self.carrier)
-        bands = np.stack([env[i].to_sound(carrier_bands[i]).data for i in range(len(env))], axis=1)
+        bands = np.stack([env[i].to_sound(carrier=carrier_bands[i]).data for i in range(len(env))], axis=1)
         per_band = fb.synthesize(so.Subbands(bands, FS, fb))
         # away from the ends, where only the bands' padding differs, they agree to 0.1%
         middle = slice(FS // 10, 4 * FS // 10)
@@ -149,20 +149,20 @@ class TestToSound:
 
     def test_own_fine_structure_gives_the_sound_back(self):
         sb = so.cosine_filterbank(8).analyze(self.x)
-        np.testing.assert_allclose(sb.envelopes().to_sound(self.x).data, self.x.data, atol=1e-9)
+        np.testing.assert_allclose(sb.envelopes().to_sound(carrier=self.x).data, self.x.data, atol=1e-9)
 
     def test_carriers(self):
         fb = so.cosine_filterbank(8)
         env = fb.analyze(self.x).envelopes(lowpass=50, fs=1000)
-        noise = env.to_sound("noise", fs=FS, rng=1)
+        noise = env.to_sound(carrier="noise", fs=FS, rng=1)
         assert noise.fs == FS and len(noise) == len(self.x)
-        np.testing.assert_array_equal(noise.data, env.to_sound("noise", fs=FS, rng=1).data)
-        assert not np.array_equal(noise.data, env.to_sound("noise", fs=FS, rng=2).data)
-        assert env.to_sound("noise", rng=1).fs == 1000  # the envelopes' own rate by default
+        np.testing.assert_array_equal(noise.data, env.to_sound(carrier="noise", fs=FS, rng=1).data)
+        assert not np.array_equal(noise.data, env.to_sound(carrier="noise", fs=FS, rng=2).data)
+        assert env.to_sound(carrier="noise", rng=1).fs == 1000  # the envelopes' own rate by default
         # bands of noise scaled to a mean-square envelope of 1 keep the envelopes' level
-        tone_level = env.to_sound("tone", fs=FS).rms
+        tone_level = env.to_sound(carrier="tone", fs=FS).rms
         assert noise.rms == pytest.approx(tone_level, rel=0.1)
-        tone = env.without_edges().to_sound("tone", fs=FS)
+        tone = env.without_edges().to_sound(carrier="tone", fs=FS)
         power = np.abs(np.fft.rfft(tone.data[:, 0])) ** 2
         freqs = np.fft.rfftfreq(len(tone), 1 / FS)
         # the power sits within the 50 Hz envelope bandwidth of the band centers,
@@ -170,17 +170,17 @@ class TestToSound:
         near_center = np.min(np.abs(freqs[:, None] - fb.cfs[None, 1:-1]), axis=1) < 60
         assert power[near_center].sum() / power.sum() > 0.95
         with pytest.raises(TypeError, match="rng"):
-            env.to_sound("tone", rng=0)
+            env.to_sound(carrier="tone", rng=0)
         with pytest.raises(TypeError, match="fs and rng"):
-            env.to_sound(self.x, rng=0)
+            env.to_sound(carrier=self.x, rng=0)
         with pytest.raises(ValueError, match="carrier must be"):
-            env.to_sound("pink")
+            env.to_sound(carrier="pink")
         with pytest.raises(ValueError, match="carrier must be"):
-            env.to_sound(np.zeros(10))
+            env.to_sound(carrier=np.zeros(10))
 
     def test_stereo_noise_has_a_noise_per_channel(self):
         stereo = so.Sound(np.column_stack([self.x.data[:, 0], self.x.data[:, 0]]), FS)
-        out = so.cosine_filterbank(8).analyze(stereo).envelopes().to_sound("noise", rng=0)
+        out = so.cosine_filterbank(8).analyze(stereo).envelopes().to_sound(carrier="noise", rng=0)
         assert out.n_channels == 2 and not np.allclose(out.data[:, 0], out.data[:, 1])
 
 
@@ -285,7 +285,7 @@ class TestEnvelope:
 
 
 class TestEnvelopesBank:
-    x = so.harmonic_complex(0.5, FS, 150, np.arange(1, 30), phases="random", rng=0)
+    x = so.harmonic_complex(0.5, FS, 150, harmonics=np.arange(1, 30), phases="random", rng=0)
     sb = so.cosine_filterbank(8).analyze(x)
 
     def test_axes_and_levels(self):
@@ -298,7 +298,9 @@ class TestEnvelopesBank:
     def test_lowpass_is_the_single_envelope_lowpass_in_every_band(self):
         env = so.cosine_filterbank(8).analyze(self.x, pad=0).envelopes()
         for order in (2, 4):
-            np.testing.assert_allclose(env.lowpass(40, order).data[:, 3], env[3].lowpass(40, order).data)
+            np.testing.assert_allclose(
+                env.lowpass(40, order=order).data[:, 3], env[3].lowpass(40, order=order).data
+            )
 
     def test_products(self):
         env = self.sb.envelopes()
@@ -320,7 +322,7 @@ class TestEnvelopesBank:
             fb.analyze(self.x).envelopes().modulation_spectrum(scale="log")
 
     def test_bank_without_edges_keeps_every_band(self):
-        x = so.harmonic_complex(0.5, FAST, 150, np.arange(1, 30), phases="random", rng=0)
+        x = so.harmonic_complex(0.5, FAST, 150, harmonics=np.arange(1, 30), phases="random", rng=0)
         bank = so.cosine_filterbank(f_lo=125, f_hi=FAST_HI, spacing=1 / 12, scale="octave", edges=False)
         with_edges = so.cosine_filterbank(f_lo=125, f_hi=FAST_HI, spacing=1 / 12, scale="octave")
         kept = bank.analyze(x).envelopes(fs=1000).modulation_spectrum()
@@ -330,7 +332,7 @@ class TestEnvelopesBank:
 
 
 class TestNoiseVocode:
-    x = so.harmonic_complex(0.5, FS, 120, np.arange(1, 50), phases="sine")
+    x = so.harmonic_complex(0.5, FS, 120, harmonics=np.arange(1, 50), phases="sine")
 
     def test_noise_bands_keep_their_own_fluctuations(self):
         fb = so.cosine_filterbank(16, 80, 7600)

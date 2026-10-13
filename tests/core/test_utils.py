@@ -65,7 +65,7 @@ def test_n_samples_rounds():
 @pytest.mark.parametrize("convert", [freq_to_mel, mel_to_freq])
 def test_mel_scales_refuse_an_unknown_name(convert):
     with pytest.raises(ValueError, match="htk"):
-        convert(1000.0, "bark")
+        convert(1000.0, scale="bark")
 
 
 def test_parabola_vertex_refines_peaks_and_dips():

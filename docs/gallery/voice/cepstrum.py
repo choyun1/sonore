@@ -569,18 +569,18 @@ for label, (change_db, coefficient_change) in changes.items():
 # - Bogert, Healy & Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum,
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
 #   Analysis*. Wiley. [Semantic Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
-#   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L35)
+#   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L39)
 # - Davis & Mermelstein (1980). Comparison of parametric representations for monosyllabic word
 #   recognition in continuously spoken sentences. *IEEE Trans. Acoust., Speech, Signal Process.*
 #   28(4), 357–366.
-#   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L99)
+#   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L106)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L217)
+#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L226)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored

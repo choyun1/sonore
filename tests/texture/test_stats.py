@@ -22,7 +22,7 @@ def am_noise(f_mod, dur=2.0, rng=0, comodulated=True):
 def test_counts_match_paper():
     st = TextureStats.measure(so.gaussian_noise(2, FS, rng=0))
     assert st.count() == 1515
-    counts = [st.count(c) for c in ("env_mean", "env_corr", "mod_power", "c1", "c2")]
+    counts = [st.count(classes=c) for c in ("env_mean", "env_corr", "mod_power", "c1", "c2")]
     assert counts == [32, 189, 640, 366, 192]
 
 

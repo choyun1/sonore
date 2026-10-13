@@ -15,9 +15,11 @@ import sys
 import tempfile
 import urllib.request
 import warnings
+from collections.abc import Sequence
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
+from typing import Literal
 
 from sonore.spatial.spatialization import HRIRSet
 
@@ -103,9 +105,9 @@ def _fetch(url: str, path: Path, sha256: str | None) -> Path:
             return path
         path.unlink()  # stale or corrupted; fetch it again
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".part")
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=path.name, suffix=".part")
     os.close(fd)
-    tmp_path = Path(tmp_path)
+    tmp_path = Path(tmp_name)
     try:
         _download(url, tmp_path)
         digest = _sha256(tmp_path)
@@ -121,7 +123,7 @@ def _fetch(url: str, path: Path, sha256: str | None) -> Path:
 
 def load_hrirs(
     name: str = "pku-ioa",
-    distances=None,
+    distances: float | Sequence[float] | Literal["all"] | None = None,
     cache_dir: str | PathLike | None = None,
     **kwargs,
 ) -> HRIRSet:

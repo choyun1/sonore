@@ -3,15 +3,21 @@ bands on a mel scale, summarized by a discrete cosine transform."""
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Literal
+
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.fft import dct, idct
 from scipy.signal import savgol_filter
 
 from sonore.core.sound import Sound
-from sonore.core.utils import db_to_power, freq_to_mel, mel_to_freq
+from sonore.core.utils import MelScale, db_to_power, freq_to_mel, mel_to_freq
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["mel_filterbank", "symmetric_hamming", "delta_features", "MFCC"]
 
@@ -24,9 +30,10 @@ def mel_filterbank(
     freqs: np.ndarray,
     f_lo: float,
     f_hi: float,
-    scale: str = "htk",
-    triangles: str = "height",
-    triangle_axis: str = "mel",
+    *,
+    scale: MelScale = "htk",
+    triangles: Literal["height", "area"] = "height",
+    triangle_axis: Literal["mel", "hz"] = "mel",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Triangular mel weights on the frequencies ``freqs`` [Hz].
 
@@ -48,11 +55,11 @@ def mel_filterbank(
         raise ValueError(f"triangles must be 'height' or 'area', not {triangles!r}")
     if triangle_axis not in ("mel", "hz"):
         raise ValueError(f"triangle_axis must be 'mel' or 'hz', not {triangle_axis!r}")
-    edge_mels = np.linspace(freq_to_mel(f_lo, scale), freq_to_mel(f_hi, scale), n_mels + 2)
-    edges = mel_to_freq(edge_mels, scale)
+    edge_mels = np.linspace(freq_to_mel(f_lo, scale=scale), freq_to_mel(f_hi, scale=scale), n_mels + 2)
+    edges = mel_to_freq(edge_mels, scale=scale)
     freqs = np.asarray(freqs, dtype=float)
     if triangle_axis == "mel":
-        positions, edge_positions = freq_to_mel(freqs, scale), edge_mels
+        positions, edge_positions = freq_to_mel(freqs, scale=scale), edge_mels
     else:
         positions, edge_positions = freqs, edges
     weights = np.zeros((n_mels, len(freqs)))
@@ -74,7 +81,7 @@ def symmetric_hamming(n_samples: int) -> np.ndarray:
     return 0.54 - 0.46 * np.cos(2 * np.pi * np.arange(n_samples) / (n_samples - 1))
 
 
-def delta_features(values: np.ndarray, order: int = 1, width: int = 5, axis: int = -1) -> np.ndarray:
+def delta_features(values: np.ndarray, *, order: int = 1, width: int = 5, axis: int = -1) -> np.ndarray:
     """Time derivatives of a feature track, computed as librosa's
     ``feature.delta`` does.
 
@@ -218,14 +225,15 @@ class MFCC(View):
         n_mels: int = 26,
         f_lo: float = 0.0,
         f_hi: float | None = None,
-        mel_scale: str = "htk",
-        triangles: str = "height",
-        triangle_axis: str = "mel",
+        mel_scale: MelScale = "htk",
+        triangles: Literal["height", "area"] = "height",
+        triangle_axis: Literal["mel", "hz"] = "mel",
         floor_db: float = -200.0,
         lifter: float = 0.0,
         win_dur: float | None = None,
         hop_dur: float | None = None,
     ):
+        coefs: STFT | TVSTFT
         match source:
             case Sound():
                 win_dur = 0.025 if win_dur is None else win_dur
@@ -255,7 +263,7 @@ class MFCC(View):
         self.lifter = lifter
         bin_freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
         self.weights, self.edges = mel_filterbank(
-            n_mels, bin_freqs, f_lo, f_hi, mel_scale, triangles, triangle_axis
+            n_mels, bin_freqs, f_lo, f_hi, scale=mel_scale, triangles=triangles, triangle_axis=triangle_axis
         )
         power = np.abs(coefs.data) ** 2
         self.mel_power = np.einsum("mk,ckw->cmw", self.weights, power)
@@ -302,7 +310,7 @@ class MFCC(View):
         """The floored mel spectrogram in dB, shape ``(n_channels, n_mels, n_windows)``."""
         return 10 * np.log10(self._floored(self.mel_power))
 
-    def deltas(self, order: int = 1, width: int = 5) -> np.ndarray:
+    def deltas(self, *, order: int = 1, width: int = 5) -> np.ndarray:
         """Time derivatives of the coefficients, per time window, computed as
         librosa's ``feature.delta`` (see :func:`delta_features`); ``width=9``
         is librosa's default. Same shape as :attr:`data`.
@@ -312,7 +320,7 @@ class MFCC(View):
         they pick out changes at the rate of syllables and phonemes."""
         return delta_features(self.data, order=order, width=width, axis=-1)
 
-    def envelope(self, f) -> np.ndarray:
+    def envelope(self, f: ArrayLike) -> np.ndarray:
         """The smoothed power spectrum the kept coefficients stand for, at
         frequencies ``f`` [Hz], shape ``(n_channels, len(f), n_windows)``.
 
@@ -329,8 +337,8 @@ class MFCC(View):
         padded = np.zeros((n_channels, n_mels, n_windows))
         padded[:, :n_mfcc] = self.data / self._lifter_gains(n_mfcc)[:, None]
         smoothed_log_power = idct(padded, type=2, norm="ortho", axis=1)
-        center_mels = freq_to_mel(self.cfs, self.mel_scale)
-        query_mels = freq_to_mel(np.asarray(f, dtype=float), self.mel_scale)
+        center_mels = freq_to_mel(self.cfs, scale=self.mel_scale)
+        query_mels = freq_to_mel(np.asarray(f, dtype=float), scale=self.mel_scale)
         # Linear interpolation is linear in the values, so it is a matrix:
         # column m interpolates the m-th unit vector.
         interpolation = np.stack(
@@ -339,7 +347,7 @@ class MFCC(View):
         log_power = np.einsum("qm,cmw->cqw", interpolation, smoothed_log_power)
         return np.exp(log_power)
 
-    def envelope_view(self, f=None) -> GridEnvelope:
+    def envelope_view(self, f: ArrayLike | None = None) -> GridEnvelope:
         """:meth:`envelope` on this analysis's time windows, at frequencies
         ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
         wherever a spectral envelope is taken
@@ -352,7 +360,9 @@ class MFCC(View):
         freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft if f is None else np.asarray(f, float)
         return GridEnvelope(self.envelope(freqs), self.t, freqs)
 
-    def plot(self, ax=None, channel: int = 0, kind: str = "mfcc", **kwargs):
+    def plot(
+        self, ax: Axes | None = None, *, channel: int = 0, kind: Literal["mfcc", "mel"] = "mfcc", **kwargs
+    ) -> Axes:
         """The coefficients against time (``kind="mfcc"``) or the mel
         spectrogram in dB (``kind="mel"``); see :func:`~sonore.plotting.plot_mfcc`."""
         from sonore.plotting import plot_mfcc

@@ -11,7 +11,7 @@ import sonore as so
 
 def test_modulation_spectrum_peak():
     x = so.amplitude_modulate(so.gaussian_noise(2, FS, rng=0), 8, depth=1)
-    ms = so.ModulationSpectrum(so.STFT(x, 20e-3))
+    ms = so.ModulationSpectrum(so.STFT(x, win_dur=20e-3))
     row = ms.level[0]
     pos = ms.w_t > 2
     assert ms.w_t[pos][np.argmax(row[pos])] == pytest.approx(8, abs=1)
@@ -27,7 +27,7 @@ def _speech_like(rng=0):
 def _octave_spectrum(x, scale="linear"):
     bank = so.cosine_filterbank(f_lo=250, f_hi=FAST_HI, spacing=1 / 6, scale="octave")
     envelopes = bank.analyze(x).envelopes(fs=1000)
-    return envelopes, envelopes.modulation_spectrum(scale)
+    return envelopes, envelopes.modulation_spectrum(scale=scale)
 
 
 def _share_above(spectrum, rate_hz):
@@ -118,7 +118,7 @@ def test_with_gain_is_symmetric():
 
 
 def test_to_sound_needs_envelopes_and_a_rate():
-    stft_spectrum = so.ModulationSpectrum(so.STFT(_speech_like(), 20e-3))
+    stft_spectrum = so.ModulationSpectrum(so.STFT(_speech_like(), win_dur=20e-3))
     with pytest.raises(TypeError, match="made from Envelopes"):
         stft_spectrum.to_sound(carrier="tones", fs=FAST)
     _, spectrum = _octave_spectrum(_speech_like())

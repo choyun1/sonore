@@ -64,7 +64,7 @@ def test_minimum_phase_fold():
     x[512 : 512 + len(h_min)] = h_min  # starts at time window 8's phase reference
     cep = so.Cepstrum(frame.analyze(so.Sound(x, FS)))
     i = int(np.argmin(np.abs(cep.t - 512 / FS)))
-    got = cep.to_stft("minimum").data[0, :, i]
+    got = cep.to_stft(phase="minimum").data[0, :, i]
     want = np.fft.rfft(h_min, 256)
     assert np.allclose(got, want, atol=1e-9 * np.abs(want).max())
 
@@ -72,7 +72,7 @@ def test_minimum_phase_fold():
     mixed[[0, 3]] = 1 / mixed[[0, 3]].conj()
     x[512 : 512 + len(h_min)] = np.real(np.poly(mixed))
     cep = so.Cepstrum(frame.analyze(so.Sound(x, FS)))
-    got = cep.to_stft("minimum").data[0, :, i]
+    got = cep.to_stft(phase="minimum").data[0, :, i]
     assert np.allclose(np.abs(got), np.abs(cep.source.data[0, :, i]), rtol=1e-9)
     assert not np.allclose(got, cep.source.data[0, :, i], atol=1e-3)
 

@@ -17,14 +17,14 @@ class TestPhaseVocoder:
         assert abs(cents(dominant_freq(mid), 440.0)) < 2
 
     def test_time_stretch_preserves_level(self):
-        x = so.harmonic_complex(1.0, FS, 200, np.arange(1, 10)).ramp(20e-3)
+        x = so.harmonic_complex(1.0, FS, 200, harmonics=np.arange(1, 10)).ramp(20e-3)
         y = so.time_stretch(x, 1.7)
         mid_x = x[0.2:0.8].rms
         mid_y = y[0.2 * y.duration : 0.8 * y.duration].rms
         assert so.amp_to_db(mid_y / mid_x) == pytest.approx(0, abs=0.5)
 
     def test_identity_stretch_reconstructs(self):
-        x = so.harmonic_complex(1.0, FS, 150, np.arange(1, 20), phases="random", rng=0)
+        x = so.harmonic_complex(1.0, FS, 150, harmonics=np.arange(1, 20), phases="random", rng=0)
         y = so.time_stretch(x, 1.0)
         np.testing.assert_allclose(y.data, x.data, atol=1e-8)
 
@@ -46,7 +46,7 @@ class TestPhaseVocoder:
 
     def test_stationary_complex_keeps_phase_coherence(self):
         # a cosine-phase complex is peaky; losing inter-partial phase coherence flattens it
-        x = so.harmonic_complex(1.0, FS, 200, np.arange(1, 15)).ramp(20e-3)
+        x = so.harmonic_complex(1.0, FS, 200, harmonics=np.arange(1, 15)).ramp(20e-3)
         for factor in (0.7, 2.5):
             assert self.crest_db(so.time_stretch(x, factor)) == pytest.approx(self.crest_db(x), abs=0.3)
 
@@ -67,7 +67,7 @@ class TestPhaseVocoder:
         assert f == pytest.approx(1234.5, abs=0.1)  # sub-bin: bins are ~21.5 Hz apart
 
     def test_oscillator_bank_identity(self):
-        x = so.harmonic_complex(1.0, FS, 220, np.arange(1, 8)).ramp(20e-3)
+        x = so.harmonic_complex(1.0, FS, 220, harmonics=np.arange(1, 8)).ramp(20e-3)
         y = so.pv_analyze(x).to_sound()
         sl = slice(int(0.1 * FS), int(0.9 * FS))
         assert np.corrcoef(x.data[sl, 0], y.data[sl, 0])[0, 1] > 0.99

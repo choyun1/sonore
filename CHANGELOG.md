@@ -6,6 +6,35 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+Breaking changes since 0.6.0 (each is described under Changed):
+
+- Options are keyword-only. A call passes the arguments that say what is made
+  or analyzed by position and every option by name, as NumPy, SciPy and
+  librosa do: `so.harmonic_complex(1.0, fs, 200, harmonics=range(1, 11))`,
+  `so.STFT(snd, win_dur=0.025)`, `snd.normalize(rms=0.05)`. Calls that passed
+  an option by position raise a `TypeError`.
+- sonore needs Python 3.11 or newer.
+
+### Added
+
+- sonore ships `py.typed`, so type checkers read its annotations, and CI
+  checks them with mypy. String options are typed as the values they accept
+  (`Literal`), so an editor can offer them and a checker can catch a typo.
+
+### Changed
+
+- Every public function and method takes its options as keywords only: the
+  arguments without a default (and, where they name what is made, the first
+  defaulted one, such as `n_bands, f_lo, f_hi` of a filterbank or a
+  `channel_vocode`, `ax` of a `.plot`, or the voice quality `rd`) stay
+  positional; everything after them goes after a `*`.
+- A ripple pattern's `.plot` and `so.plot_ripple_pattern` take `ax` second,
+  like every other plot; `duration`, `f_lo` and `f_hi` are keywords.
+- The minimum Python is 3.11 (3.10 reaches its end of life this month), and CI
+  tests 3.11 and 3.14.
+- CI checks formatting with `ruff format --check` on the package, tests and
+  tools.
+
 ## [0.6.0] - 2026-10-10
 
 Linear prediction and formant tracking: `so.LPC` and `so.formant_track`, with

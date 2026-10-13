@@ -5,11 +5,12 @@ from __future__ import annotations
 
 from functools import cache
 from importlib.resources import files
+from typing import Literal, get_args
 
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, db_to_amp
+from sonore.core.utils import RNG, as_rng, db_to_amp
 from sonore.frames.filterbank import cosine_filterbank
 from sonore.sources.waveforms import gaussian_noise
 from sonore.views.envelopes import Envelopes
@@ -24,12 +25,15 @@ def _model() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     return load("fit_DRR.npy"), load("fit_RT60.npy"), load("fit_freqs.npy")
 
 
-DECAY_SHAPES = ("exponential", "time_reversed", "linear_matched_start", "linear_matched_end")
-RT60_PROFILES = ("ecological", "inverted", "exaggerated", "reduced")
-DRR_PROFILES = ("ecological", "constant")
+DecayShape = Literal["exponential", "time_reversed", "linear_matched_start", "linear_matched_end"]
+RT60Profile = Literal["ecological", "inverted", "exaggerated", "reduced"]
+DRRProfile = Literal["ecological", "constant"]
+DECAY_SHAPES = get_args(DecayShape)
+RT60_PROFILES = get_args(RT60Profile)
+DRR_PROFILES = get_args(DRRProfile)
 
 
-def band_rt60s(rt60: float, freqs: np.ndarray, profile: str = "ecological") -> np.ndarray:
+def band_rt60s(rt60: float, freqs: np.ndarray, *, profile: RT60Profile = "ecological") -> np.ndarray:
     """Per-band RT60s [s] at ``freqs`` for a broadband (median) RT60, from the
     regression fits of Traer & McDermott (2016, Eq. S11), or one of the
     paper's atypical variants (Eq. S15 and following):
@@ -81,16 +85,17 @@ def _decay_envelopes(t, onset_db, taus, shape):
 def synth_ir(
     rt60: float,
     fs: float,
+    *,
     drr_db: float | None = None,
     decay_db: float = 60.0,
     n_bands: int = 32,
     f_lo: float = 20.0,
     f_hi: float = 16000.0,
     n_channels: int = 1,
-    decay_shape: str = "exponential",
-    rt60_profile: str = "ecological",
-    drr_profile: str = "ecological",
-    rng=None,
+    decay_shape: DecayShape = "exponential",
+    rt60_profile: RT60Profile = "ecological",
+    drr_profile: DRRProfile = "ecological",
+    rng: RNG = None,
 ) -> Sound:
     """Synthesize a room impulse response (Traer & McDermott, 2016).
 
@@ -138,7 +143,7 @@ def synth_ir(
     filterbank = cosine_filterbank(n_bands, f_lo, f_hi)
     cfs = filterbank.cfs
 
-    taus = band_rt60s(rt60, cfs, rt60_profile)
+    taus = band_rt60s(rt60, cfs, profile=rt60_profile)
     match drr_profile:
         case "ecological":
             onset_db = fit_drr[:, 0] * np.log10(rt60) + fit_drr[:, 1]
@@ -175,7 +180,12 @@ def synth_ir(
 
 
 def measure_rt60(
-    ir: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float = 8000.0, fit_range_db=(-5.0, -25.0)
+    ir: Sound,
+    *,
+    n_bands: int = 30,
+    f_lo: float = 50.0,
+    f_hi: float = 8000.0,
+    fit_range_db: tuple[float, float] = (-5.0, -25.0),
 ) -> tuple[np.ndarray, np.ndarray]:
     """Per-band RT60s of an impulse response: ``(center freqs [Hz], RT60s [s])``.
 

@@ -37,23 +37,32 @@ their synthesis is the canonical dual.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import KW_ONLY, dataclass
 from functools import lru_cache
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import scipy.fft as sp_fft
+from numpy.typing import ArrayLike
 from scipy.signal import hilbert
 
 from sonore.core.fft import fast_padding, threads
 from sonore.core.sound import Sound
 from sonore.core.utils import (
     FrequencyScale,
+    ScaleName,
     _as_frequency_scale,
     _parabola_vertex,
     db_to_amp,
     erb_bandwidth,
 )
 from sonore.frames.frame import Frame, _check_frame
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+    from sonore.views.envelopes import Envelopes
 
 __all__ = [
     "FilterType",
@@ -160,7 +169,7 @@ class Cosine(FilterType):
     def band_response(self, bank: Filterbank, freqs: np.ndarray) -> np.ndarray:
         return self.responses(bank, freqs, edges=False)
 
-    def responses(self, bank: Filterbank, freqs: np.ndarray, edges: bool | None = None) -> np.ndarray:
+    def responses(self, bank: Filterbank, freqs: np.ndarray, *, edges: bool | None = None) -> np.ndarray:
         with np.errstate(divide="ignore"):
             scale_pos = bank.scale.to_scale(freqs)[:, None]
         knots = bank._knots
@@ -236,7 +245,7 @@ class Gammatone(FilterType):
 
     order: int = 4
     bandwidth_factor: float = 1.019
-    phase: str = "causal"
+    phase: Literal["causal", "zero"] = "causal"
     edge_width: float = 1.0
 
     def __post_init__(self):
@@ -414,13 +423,13 @@ class Filterbank(Frame):
         when every ``s`` is within the tolerance of 1."""
         return _tight_gain(self, int(n), float(fs))
 
-    def is_tight(self, n_samples: int, fs: float, pad: float | str = "auto") -> bool:
+    def is_tight(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> bool:
         """Whether ``s`` is constant (to :data:`TIGHT_TOLERANCE`) on the grid
         :meth:`analyze` would use for ``n_samples`` at ``fs``, padding
         included. Synthesis is then re-filtering, divided by that constant."""
         return self._tight_gain(int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples), fs) is not None
 
-    def ringing(self, fs: float, level_db: float = -60.0) -> int:
+    def ringing(self, fs: float, *, level_db: float = -60.0) -> int:
         """How long [samples] the filters ring: the longest time, over all
         filters, before the zero-phase impulse response stays below
         ``level_db`` re its peak (capped at 2 s). The minimum padding of
@@ -433,7 +442,7 @@ class Filterbank(Frame):
             return fast_padding(int(n_samples), self.ringing(fs))
         return int(round(float(pad) * fs))
 
-    def analyze(self, sound: Sound, pad: float | str = "auto") -> Subbands:
+    def analyze(self, sound: Sound, *, pad: float | str = "auto") -> Subbands:
         """Split ``sound`` into subbands (via FFT).
 
         By default the sound is zero-padded by at least the filters' ringing
@@ -497,7 +506,7 @@ class Filterbank(Frame):
                 signal = sp_fft.irfft(weighted_spectra.sum(axis=1) / power_sum[:, None], n=n_padded, axis=0)
         return Sound(signal[n_pad : n_padded - n_pad], fs)
 
-    def frame_bounds(self, n_samples: int, fs: float, pad: float | str = "auto") -> tuple[float, float]:
+    def frame_bounds(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> tuple[float, float]:
         """``(min s, max s)`` on the DFT grid that :meth:`analyze` would use
         for a signal of ``n_samples`` at ``fs``, including its padding: the
         bounds of the grid the coefficients actually live on, which depends on
@@ -618,9 +627,9 @@ def cosine_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | FrequencyScale = "erb",
+    scale: ScaleName | FrequencyScale = "erb",
     spacing: float | None = None,
-    centers=None,
+    centers: ArrayLike | None = None,
     width: float = 1.0,
     edges: bool = True,
 ) -> Filterbank:
@@ -643,10 +652,10 @@ def gammatone_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | FrequencyScale = "erb",
+    scale: ScaleName | FrequencyScale = "erb",
     spacing: float | None = None,
-    centers=None,
-    phase: str = "causal",
+    centers: ArrayLike | None = None,
+    phase: Literal["causal", "zero"] = "causal",
     order: int = 4,
     bandwidth_factor: float = 1.019,
     edges: bool = True,
@@ -669,9 +678,9 @@ def morlet_filterbank(
     f_lo: float = 50.0,
     f_hi: float = 8000.0,
     *,
-    scale: str | FrequencyScale = "octave",
+    scale: ScaleName | FrequencyScale = "octave",
     spacing: float | None = None,
-    centers=None,
+    centers: ArrayLike | None = None,
     cycles: float = 6.0,
     edges: bool = True,
     edge_width: float = 1.0,
@@ -693,7 +702,7 @@ class _PaddedBands:
     each end that :attr:`data` hides. The array is a copy, read-only, so the
     caller's array stays writeable and the object can't change under its users."""
 
-    def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
+    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank, pad: int = 0):
         bands = np.array(data, dtype=float)
         if bands.ndim != 3 or bands.shape[1] != filterbank.n_filters:
             raise ValueError(
@@ -725,6 +734,10 @@ class _PaddedBands:
     def __len__(self) -> int:
         """Number of bands (including the two edge filters)."""
         return self._full.shape[1]
+
+    if TYPE_CHECKING:  # each subclass returns its own kind of band
+
+        def __getitem__(self, i: int) -> Any: ...
 
     def __iter__(self):
         return (self[i] for i in range(len(self)))
@@ -763,7 +776,7 @@ class Subbands(_PaddedBands):
         with threads():
             return hilbert(self._full, axis=0)
 
-    def envelopes(self, lowpass: float | None = None, fs: float | None = None):
+    def envelopes(self, *, lowpass: float | None = None, fs: float | None = None) -> Envelopes:
         """Hilbert envelope of every band, as :class:`~sonore.views.envelopes.Envelopes`.
         Optionally lowpass-filtered [Hz] and then resampled to ``fs``."""
         from sonore.views.envelopes import Envelopes
@@ -820,7 +833,7 @@ class Subbands(_PaddedBands):
         add up correctly."""
         return Sound(self.data.sum(axis=1), self.fs)
 
-    def plot(self, axes=None, channel: int = 0, **kwargs):
+    def plot(self, axes: Sequence[Axes] | None = None, *, channel: int = 0, **kwargs) -> list[Axes]:
         """Stacked band waveforms (see :func:`sonore.plotting.plot_subbands`).
         For an image, plot the envelopes: ``sb.envelopes().plot()``."""
         from sonore.plotting import plot_subbands

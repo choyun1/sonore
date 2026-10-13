@@ -25,20 +25,24 @@ from __future__ import annotations
 
 import copy
 import warnings
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, cast
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.signal import fftconvolve
 
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
-from sonore.core.utils import amp_to_db, as_rng, db_to_amp
+from sonore.core.utils import RNG, amp_to_db, as_rng, db_to_amp
 from sonore.frames.gabor import _FLOOR_DB, STFT
 from sonore.views.view import View
 
 if TYPE_CHECKING:
-    from sonore.views.envelopes import Envelopes
+    from matplotlib.axes import Axes
+
+    from sonore.views.envelopes import Envelopes, _EnvelopeAnalysis
 
 __all__ = [
     "ModulationFilterbank",
@@ -64,11 +68,11 @@ class ModulationFilterbank:
     def cfs(self) -> np.ndarray:
         raise NotImplementedError
 
-    def response(self, freqs) -> np.ndarray:
+    def response(self, freqs: ArrayLike) -> np.ndarray:
         """Magnitude responses, shape ``(len(freqs), n_bands)`` (``freqs`` >= 0)."""
         raise NotImplementedError
 
-    def filter(self, x, fs: float, axis: int = 0, analytic: bool = False) -> np.ndarray:
+    def filter(self, x: ArrayLike, fs: float, *, axis: int = 0, analytic: bool = False) -> np.ndarray:
         """Filter ``x`` (circularly) along ``axis`` with every band.
 
         The band index is appended as a new *last* axis. With ``analytic=True``
@@ -128,7 +132,7 @@ class ConstantQModulationFilterbank(ModulationFilterbank):
         position = (freq_col - cf_row) / (2 * cf_row / self.Q)  # -1/2 .. 1/2 across the support
         return np.where(np.abs(position) < 0.5, np.cos(np.pi * np.clip(position, -0.5, 0.5)), 0.0)
 
-    def response(self, freqs) -> np.ndarray:
+    def response(self, freqs: ArrayLike) -> np.ndarray:
         return self._raw(freqs) * self.scale
 
 
@@ -147,7 +151,7 @@ class OctaveModulationFilterbank(ModulationFilterbank):
     def cfs(self) -> np.ndarray:
         return self.f_hi / 2.0 ** np.arange(self.n_bands - 1, -1, -1)
 
-    def response(self, freqs) -> np.ndarray:
+    def response(self, freqs: ArrayLike) -> np.ndarray:
         freq_col = np.asarray(freqs, float)[:, None]
         with np.errstate(divide="ignore"):
             octave_offset = (np.log2(freq_col) - np.log2(self.cfs)[None, :]) / 2  # octaves / width
@@ -241,7 +245,7 @@ class HannModulationFilterbank(ModulationFilterbank):
             kernels.append((hann * np.exp(2j * np.pi * rate * t_centered), hann))
         return kernels
 
-    def response(self, freqs) -> np.ndarray:
+    def response(self, freqs: ArrayLike) -> np.ndarray:
         """Magnitude response of the real filter (the real part of
         :meth:`filter`'s analytic output), shape ``(len(freqs), n_bands)``,
         for continuous-time windows. Peak gain is about 1; zero at 0 Hz."""
@@ -250,7 +254,13 @@ class HannModulationFilterbank(ModulationFilterbank):
         return np.abs(_hann_ft((freq_col - rates) * durations) + _hann_ft((freq_col + rates) * durations))
 
     def filter(
-        self, x, fs: float, axis: int = 0, analytic: bool = False, align: str = "center"
+        self,
+        x: ArrayLike,
+        fs: float,
+        *,
+        axis: int = 0,
+        analytic: bool = False,
+        align: Literal["center", "causal"] = "center",
     ) -> np.ndarray:
         """Filter ``x`` along ``axis`` with every band (zero outside ``x``).
 
@@ -278,7 +288,7 @@ def _hann_ft(u: np.ndarray) -> np.ndarray:
     return np.where(np.isclose(np.abs(u), 1.0), 0.5, transform)
 
 
-def _correlate(x: np.ndarray, h: np.ndarray, align: str) -> np.ndarray:
+def _correlate(x: np.ndarray, h: np.ndarray, align: Literal["center", "causal"]) -> np.ndarray:
     """``y[n] = sum_j x[n + j - c] conj(h[j])`` along axis 0, with ``x`` zero
     outside its extent; ``c = L - 1`` (causal) or ``L - 1 - (L - 1) // 2``
     (centered)."""
@@ -365,11 +375,11 @@ class ModulationSpectrum(View):
         "ModulationSpectrum.to_sound(carrier=...) takes both from a carrier: a Sound lends its own "
         "modulation phase and fine structure, 'tones' and 'noise' draw a random modulation phase."
     )
-    _analysis = None  # an _EnvelopeAnalysis when made from Envelopes or blobs
-    _rms_depth = None  # set by from_blobs, which refuses to clip
-    _long_term_phase = None  # phase of the zero-rate column, kept by random draws
+    _analysis: _EnvelopeAnalysis | None = None  # set when made from Envelopes or blobs
+    _rms_depth: float | None = None  # set by from_blobs, which refuses to clip
+    _long_term_phase: np.ndarray | None = None  # phase of the zero-rate column, kept by random draws
 
-    def __init__(self, stft: STFT, channel: int = 0):
+    def __init__(self, stft: STFT, *, channel: int = 0):
         spectrogram_db = stft.db[channel]
         bin_spacing = stft.f[1] - stft.f[0]
         dt = stft.sft.hop / stft.fs
@@ -409,11 +419,12 @@ class ModulationSpectrum(View):
     def octave(
         cls,
         sound: Sound,
+        *,
         bands_per_octave: float = 12,
         f_lo: float = 125.0,
         f_hi: float = 8000.0,
         env_fs: float = 1000.0,
-        scale: str = "linear",
+        scale: Literal["linear", "db"] = "linear",
     ) -> ModulationSpectrum:
         """Modulation spectrum on a log-frequency axis [cycles/octave].
 
@@ -426,19 +437,20 @@ class ModulationSpectrum(View):
 
         f_hi = min(f_hi, sound.fs / 2)
         fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
-        return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
+        return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale=scale)
 
     @classmethod
     def from_blobs(
         cls,
-        blobs,
+        blobs: ModulationBlob | Sequence[ModulationBlob],
         duration: float,
+        *,
         f_lo: float = 250.0,
         f_hi: float = 8000.0,
         bands_per_octave: float = 12,
         env_fs: float = 1000.0,
         rms_depth: float | None = None,
-        scale: str = "linear",
+        scale: Literal["linear", "db"] = "linear",
         sd_db: float | None = None,
     ) -> ModulationSpectrum:
         """A target spectrum drawn in code: the sum of :class:`ModulationBlob`
@@ -494,7 +506,7 @@ class ModulationSpectrum(View):
         new = cls.__new__(cls)
         new._analysis = _EnvelopeAnalysis(bank, env_fs, n_times, scale, True)
         rate, density = new._full_axes(shape=(n_bands, n_times))
-        power = sum(blob.power(rate, density) for blob in blobs)
+        power = cast(np.ndarray, sum(blob.power(rate, density) for blob in blobs))
         power = (power + np.roll(power[::-1, ::-1], 1, axis=(0, 1))) / 2  # the same at (-rate, -density)
         magnitude = np.sqrt(power)
         if not np.any(magnitude > 0):
@@ -505,8 +517,9 @@ class ModulationSpectrum(View):
         new._mean = 1.0 if scale == "linear" else 0.0
         new._magnitude = magnitude * (depth * magnitude.size / np.linalg.norm(magnitude))
         new._rms_depth = depth if scale == "linear" else None
-        keep = np.fft.fftfreq(n_bands, bank.spacing) >= 0
-        new.w_f = np.fft.fftfreq(n_bands, bank.spacing)[keep]
+        spacing = cast(float, bank.spacing)  # never None: the bands are evenly spaced
+        keep = np.fft.fftfreq(n_bands, spacing) >= 0
+        new.w_f = np.fft.fftfreq(n_bands, spacing)[keep]
         new.w_t = np.fft.fftshift(np.fft.fftfreq(n_times, 1 / env_fs))
         new.level = amp_to_db(np.fft.fftshift(new._magnitude[keep], axes=1), floor_db=_FLOOR_DB)
         new.spectral_unit = f"cyc/{bank.unit}"
@@ -516,19 +529,23 @@ class ModulationSpectrum(View):
         """Rate [Hz] (row) and density (column) of every cell of the
         untapered transform, in FFT order."""
         n_density, n_times = self._magnitude.shape if shape is None else shape
-        analysis = self._analysis
+        analysis = self._envelope_analysis("with_gain")
         rate = np.fft.fftfreq(n_times, 1 / analysis.fs)[None, :]
-        density = np.fft.fftfreq(n_density, analysis.filterbank.spacing)[:, None]
+        spacing = cast(float, analysis.filterbank.spacing)  # never None: Envelopes.modulation_spectrum checks
+        density = np.fft.fftfreq(n_density, spacing)[:, None]
         return rate, density
 
-    def _require_envelopes(self, what: str) -> None:
+    def _envelope_analysis(self, what: str) -> _EnvelopeAnalysis:
+        """How this spectrum's envelopes were made; ``what`` needs it, and
+        is named in the error when the spectrum was not made from Envelopes."""
         if self._analysis is None:
             raise TypeError(
                 f"{what} needs a modulation spectrum made from Envelopes (ModulationSpectrum.octave or "
                 "env.modulation_spectrum()); this one was made from an STFT or an array"
             )
+        return self._analysis
 
-    def with_gain(self, gain) -> ModulationSpectrum:
+    def with_gain(self, gain: float | Callable[[np.ndarray, np.ndarray], ArrayLike]) -> ModulationSpectrum:
         """A copy with every cell's amplitude multiplied by ``gain``.
 
         ``gain`` is a function ``g(rate, density)`` of rate [Hz] and spectral
@@ -541,7 +558,7 @@ class ModulationSpectrum(View):
         the same gain, which is exact where the gain is smooth across the
         taper's rate resolution.
         """
-        self._require_envelopes("with_gain")
+        self._envelope_analysis("with_gain")
         rate, density = self._full_axes()
         values = gain(rate, density) if callable(gain) else gain
         values = np.broadcast_to(np.asarray(values, float), self._magnitude.shape)
@@ -555,7 +572,7 @@ class ModulationSpectrum(View):
         new.level = np.maximum(self.level + amp_to_db(shown, floor_db=-400.0), _FLOOR_DB)
         return new
 
-    def to_envelopes(self, carrier: Sound | None = None, rng=None) -> Envelopes:
+    def to_envelopes(self, *, carrier: Sound | None = None, rng: RNG = None) -> Envelopes:
         """The envelopes this spectrum describes, given a modulation phase.
 
         The stored magnitudes and mean fix everything but the phase of the
@@ -570,8 +587,7 @@ class ModulationSpectrum(View):
         warning saying how much, which changes their spectrum. Edge bands
         that the spectrum dropped are zero.
         """
-        self._require_envelopes("to_envelopes")
-        analysis = self._analysis
+        analysis = self._envelope_analysis("to_envelopes")
         if carrier is None:
             phase = np.angle(np.fft.fft2(as_rng(rng).standard_normal(self._magnitude.shape)))
             if self._long_term_phase is not None:
@@ -591,7 +607,7 @@ class ModulationSpectrum(View):
     def _modulation_phase(self, subbands) -> np.ndarray:
         """Phase of the 2-D transform of these subbands' envelopes, analyzed
         as this spectrum's were."""
-        analysis = self._analysis
+        analysis = self._envelope_analysis("to_envelopes")
         kept = slice(1, -1) if analysis.drop_edges else slice(None)
         own = subbands.envelopes(fs=analysis.fs).data.mean(axis=2)[:, kept]
         if own.shape[0] != analysis.n_samples:
@@ -605,7 +621,7 @@ class ModulationSpectrum(View):
         ``quiet`` clips without a word (inside a search)."""
         from sonore.views.envelopes import Envelopes
 
-        analysis = self._analysis
+        analysis = self._envelope_analysis("to_envelopes")
         bank, n_env = analysis.filterbank, analysis.n_samples
         kept = slice(1, -1) if analysis.drop_edges else slice(None)
         rebuilt = self._mean + np.real(np.fft.ifft2(self._magnitude * np.exp(1j * phase)))
@@ -631,7 +647,12 @@ class ModulationSpectrum(View):
         return Envelopes(bands, analysis.fs, bank)
 
     def to_sound(
-        self, carrier: str | Sound = "tones", fs: float | None = None, rng=None, iterations: int = 0
+        self,
+        *,
+        carrier: Literal["tones", "noise"] | Sound = "tones",
+        fs: float | None = None,
+        rng: RNG = None,
+        iterations: int = 0,
     ) -> Sound:
         """A sound whose envelopes have this modulation spectrum.
 
@@ -677,7 +698,7 @@ class ModulationSpectrum(View):
                     raise TypeError("rng applies only to carrier='tones' or 'noise'")
                 if fs is not None and fs != carrier.fs:
                     raise ValueError(f"fs {fs} differs from the carrier's {carrier.fs}")
-                envelopes = self.to_envelopes(carrier)
+                envelopes = self.to_envelopes(carrier=carrier)
                 fs = carrier.fs
             case "tones" | "noise":
                 if fs is None:
@@ -686,7 +707,7 @@ class ModulationSpectrum(View):
                 envelopes = self.to_envelopes(rng=rng)
             case _:
                 raise ValueError(f"carrier must be 'tones', 'noise' or a Sound, not {carrier!r}")
-        analysis = self._analysis
+        analysis = self._envelope_analysis("to_sound")
         bank = analysis.filterbank
         n_audio = int(round(analysis.n_samples * fs / analysis.fs))
 
@@ -699,7 +720,9 @@ class ModulationSpectrum(View):
                 sound = (envelopes * fine).to_sound()
             case "tones":
                 t = np.arange(n_audio)[:, None] / fs
-                tones = np.cos(2 * np.pi * bank.cfs[None, :] * t + rng.uniform(0, 2 * np.pi, bank.n_filters))
+                tones = np.cos(
+                    2 * np.pi * bank.cfs[None, :] * t + as_rng(rng).uniform(0, 2 * np.pi, bank.n_filters)
+                )
                 sound = (envelopes * Subbands(tones[:, :, None], fs, bank)).sum()
         sound = Sound(sound.data[:n_audio], fs)
         for _ in range(int(iterations)):
@@ -709,7 +732,7 @@ class ModulationSpectrum(View):
             sound = Sound(sound.data[:n_audio], fs)
         return sound.normalize() if sound.rms > 0 else sound
 
-    def peak(self, exclude_dc: bool = True) -> tuple[float, float]:
+    def peak(self, *, exclude_dc: bool = True) -> tuple[float, float]:
         """``(temporal Hz, spectral)`` coordinates of the largest component.
 
         At zero spectral modulation, ``+rate`` and ``-rate`` are mirror images
@@ -723,7 +746,7 @@ class ModulationSpectrum(View):
         rate = float(self.w_t[j])
         return (abs(rate) if self.w_f[i] == 0 else rate), float(self.w_f[i])
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """The modulation spectrum as an image in dB (see
         :func:`~sonore.plotting.plot_modulation_spectrum`)."""
         from sonore.plotting import plot_modulation_spectrum

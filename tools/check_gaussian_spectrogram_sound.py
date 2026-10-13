@@ -32,8 +32,8 @@ for seed in range(n_seeds):
     bank = env.filterbank
     drawn = cell_levels(env.data[:, 1:-1, 0] ** 2, env.t)
     sounds = {
-        "fine structure of a noise": env.to_sound(so.gaussian_noise(duration, fs, rng=1000 + seed)),
-        "'noise' (bands keep their own envelopes)": env.to_sound("noise", rng=1000 + seed),
+        "fine structure of a noise": env.to_sound(carrier=so.gaussian_noise(duration, fs, rng=1000 + seed)),
+        "'noise' (bands keep their own envelopes)": env.to_sound(carrier="noise", rng=1000 + seed),
     }
     for name, sound in sounds.items():
         bands = bank.analyze(sound).data[:, 1:-1, 0]

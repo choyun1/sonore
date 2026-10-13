@@ -42,7 +42,7 @@ IR_FB = so.cosine_filterbank(32, 20, IR_FS / 2)  # synth_ir's own bands at this 
 
 def measured_profile(rt60_profile, seeds=3):
     """Median over noise seeds of measured/requested RT60, per band."""
-    requested = so.band_rt60s(1.0, IR_FB.cfs, rt60_profile)[1:-1]
+    requested = so.band_rt60s(1.0, IR_FB.cfs, profile=rt60_profile)[1:-1]
     ratios = []
     for seed in range(seeds):
         ir = so.synth_ir(1.0, IR_FS, rt60_profile=rt60_profile, rng=seed)
@@ -65,7 +65,9 @@ def test_inverted_profile_decays_slowest_at_the_extremes():
 
 
 def test_exaggerated_and_reduced_profiles():
-    peak = {p: np.ptp(so.band_rt60s(1.0, IR_FB.cfs, p)) for p in ("reduced", "ecological", "exaggerated")}
+    peak = {
+        p: np.ptp(so.band_rt60s(1.0, IR_FB.cfs, profile=p)) for p in ("reduced", "ecological", "exaggerated")
+    }
     assert peak["reduced"] < peak["ecological"] < peak["exaggerated"]
 
 
@@ -73,8 +75,8 @@ def test_exaggerated_and_reduced_are_twice_and_half_as_reverberant_rooms():
     """The docstring's definitions: a room twice (half) as reverberant, scaled to this length."""
     cfs = IR_FB.cfs
     eco = {f: so.band_rt60s(f, cfs) for f in (0.5, 1.0, 2.0)}
-    np.testing.assert_allclose(so.band_rt60s(1.0, cfs, "exaggerated"), eco[2.0] / 2, rtol=1e-12)
-    np.testing.assert_allclose(so.band_rt60s(1.0, cfs, "reduced"), eco[0.5] * 2, rtol=1e-12)
+    np.testing.assert_allclose(so.band_rt60s(1.0, cfs, profile="exaggerated"), eco[2.0] / 2, rtol=1e-12)
+    np.testing.assert_allclose(so.band_rt60s(1.0, cfs, profile="reduced"), eco[0.5] * 2, rtol=1e-12)
 
 
 @pytest.mark.parametrize("shape", ["time_reversed", "linear_matched_start", "linear_matched_end"])

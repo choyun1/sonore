@@ -23,6 +23,7 @@ other's value.
 from __future__ import annotations
 
 import os
+from contextlib import AbstractContextManager
 
 import scipy.fft
 
@@ -65,7 +66,7 @@ class set_fft_workers:
         _workers = self._previous
 
 
-def threads():
+def threads() -> AbstractContextManager:
     """Context in which SciPy FFTs (also inside ``scipy.signal``) use
     :func:`fft_workers` threads."""
     return scipy.fft.set_workers(_workers)

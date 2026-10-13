@@ -41,7 +41,7 @@ x[n_fft : n_fft + len(h)] = h  # starts at the phase reference of the time windo
 frame = so.GaborFrame(n_fft / FS, n_fft / 4 / FS, window="boxcar")
 cep = so.Cepstrum(frame.analyze(so.Sound(x, FS)))
 i = int(np.argmin(np.abs(cep.t - n_fft / FS)))
-ours = np.fft.irfft(cep.to_stft("minimum").data[0, :, i], n_fft)[: len(h)]
+ours = np.fft.irfft(cep.to_stft(phase="minimum").data[0, :, i], n_fft)[: len(h)]
 ref = minimum_phase(h, method="homomorphic", n_fft=n_fft, half=False)
 print(
     f"SciPy {scipy.__version__} minimum_phase(homomorphic, half=False), 17-tap mixed-phase FIR, n_fft {n_fft}"
@@ -67,7 +67,9 @@ path = "docs/speech/bdl_arctic_a0131.flac"
 tab = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2)
 times, harvest = tab[:, 0], tab[:, 1]
 snd = so.load(path)
-ours_t, ours_f0, ours_peak = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005)).f0(75, 400, threshold=0)
+ours_t, ours_f0, ours_peak = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005)).f0(
+    f_lo=75, f_hi=400, threshold=0
+)
 ours_at = np.interp(times, ours_t, ours_f0[0])
 peak_at = np.interp(times, ours_t, ours_peak[0])
 praat_sound = parselmouth.Sound(path)

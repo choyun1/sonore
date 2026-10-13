@@ -361,7 +361,7 @@ def show_room(ax_decay, ax_rt60, ir, kw=None):
     cfs, rt = so.measure_rt60(tail)
     ax_rt60.semilogx(
         cfs,
-        so.band_rt60s(1.0, cfs, &quot;ecological&quot;),
+        so.band_rt60s(1.0, cfs, profile=&quot;ecological&quot;),
         color=&quot;k&quot;,
         lw=1.2,
         ls=&quot;--&quot;,
@@ -371,7 +371,7 @@ def show_room(ax_decay, ax_rt60, ir, kw=None):
     if profile:
         # requested profile, computed over synth_ir&#x27;s own bands (which run to 16 kHz)
         synth_cfs = so.cosine_filterbank(32, 20, min(16000, FS / 2)).cfs
-        requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile))
+        requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile=profile))
         ax_rt60.semilogx(cfs, requested, color=&quot;tab:purple&quot;, lw=1, ls=&quot;:&quot;, label=f&quot;requested ({profile})&quot;)
     if not kw or &quot;decay_shape&quot; not in kw:
         ax_rt60.semilogx(cfs, rt, color=&quot;tab:purple&quot;, lw=1.2, marker=&quot;.&quot;, label=&quot;this IR (measured)&quot;)
@@ -596,7 +596,7 @@ RT60 no longer describes it, so the last panel shows only what natural rooms wou
 three profiles that change how decay time depends on frequency do not all keep the natural
 room's median RT60; the cell prints the median of each over <code>so.synth_ir</code>'s bands.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">for profile in (&quot;ecological&quot;, &quot;inverted&quot;, &quot;exaggerated&quot;, &quot;reduced&quot;):
-    print(f&quot;{profile:12s} median RT60 {np.median(so.band_rt60s(1.0, bands, profile)):.2f} s&quot;)</code></pre></details><pre class="out">ecological   median RT60 0.98 s
+    print(f&quot;{profile:12s} median RT60 {np.median(so.band_rt60s(1.0, bands, profile=profile)):.2f} s&quot;)</code></pre></details><pre class="out">ecological   median RT60 0.98 s
 inverted     median RT60 0.37 s
 exaggerated  median RT60 0.96 s
 reduced      median RT60 1.00 s</pre></div>
@@ -853,7 +853,7 @@ fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Traer &amp; McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. <em>Proc. Natl. Acad. Sci. USA</em> 113(48), E7856–E7865. <a href="https://doi.org/10.1073/pnas.1612524113">doi:10.1073/pnas.1612524113</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/reverb.py#L81"><code>reverb.synth_ir</code></a></li></ul>
+<ul><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Traer &amp; McDermott (2016). Statistics of natural reverberation enable perceptual separation of sound and space. <em>Proc. Natl. Acad. Sci. USA</em> 113(48), E7856–E7865. <a href="https://doi.org/10.1073/pnas.1612524113">doi:10.1073/pnas.1612524113</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/reverb.py#L85"><code>reverb.synth_ir</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/spatial/reverb.py</code> in the <a href="https://github.com/choyun1/sonore">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/spatial/reverb.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
 </main>

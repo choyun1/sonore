@@ -167,7 +167,7 @@ both put noise where Harvest has harmonics in weak voiced stretches.
 
 **D1. One function, `harmonic_complex`, whose `f0` is a number or a
 contour (accepted, Cho 2026-10-02).** The pitch is one value that comes in
-two shapes, and a `match` statement (Python 3.10, sonore's minimum) picks
+two shapes, and a `match` statement (Python 3.10) picks
 the case:
 
 - **A number** runs the existing code unchanged, so every fixed-F0 output
@@ -281,7 +281,7 @@ src = so.harmonic_complex(snd.duration, snd.fs, trk, unvoiced="noise", rng=0)
 so.noise_vocode(snd, 16, carrier=src)  # its envelopes, this pitch
 
 # A number is today's call; anything that is an F0 contour also works:
-so.harmonic_complex(1.0, 44100, 220, range(1, 11))
+so.harmonic_complex(1.0, 44100, 220, harmonics=range(1, 11))
 t = np.arange(0, 2.005, 0.005)
 glide = so.harmonic_complex(2.0, 44100, (t, 100 * 2**t))  # two octaves, no aliasing
 monotone = so.harmonic_complex(snd.duration, snd.fs, (trk.t, np.where(trk.voiced, 120, 0)))

@@ -374,7 +374,7 @@ msg.plot()                                   # rate vs time, pooled over bands
 msg.plot(rate=4)                             # acoustic band vs time at 4 Hz
 img = msg.at(1.2)                            # bands x rates at t = 1.2 s
 msg.slices(1.2)                              # three linked cuts, cursor at 1.2 s
-msg.animate("sentence.mp4")                  # band x rate image playing with the audio
+msg.animate(path="sentence.mp4")             # band x rate image playing with the audio
 
 slow = so.ModulationSpectrogram(env, cycles=6)     # longer windows, finer rate resolution
 fixed = so.ModulationSpectrogram(env, window=2.0)  # one 2 s window for all rates: STFT of each envelope

@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import functools
 import numbers
+import operator
 from collections.abc import Sequence
+from typing import Literal, cast
 
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import butter, lfilter, sosfilt, sosfiltfilt
 
 from sonore.core.sound import Sound
-from sonore.core.utils import amp_to_db, time_axis
+from sonore.core.utils import Align, amp_to_db, time_axis
 
 __all__ = [
     "match_fs",
@@ -31,7 +34,9 @@ __all__ = [
 Track = float | tuple[ArrayLike, ArrayLike]
 
 
-def match_fs(sounds: Sequence[Sound], fs: float | None = None, mode: str = "down") -> list[Sound]:
+def match_fs(
+    sounds: Sequence[Sound], fs: float | None = None, mode: Literal["down", "up"] = "down"
+) -> list[Sound]:
     """Resample so all sounds share a rate: ``fs`` if given, else the lowest
     (``mode="down"``) or highest (``mode="up"``) rate in the list."""
     _check_not_empty(sounds)
@@ -50,7 +55,9 @@ def match_channels(sounds: Sequence[Sound]) -> list[Sound]:
     return [s.to_channels(n_channels) for s in sounds]
 
 
-def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "start") -> list[Sound]:
+def match_lengths(
+    sounds: Sequence[Sound], *, mode: Literal["pad", "truncate"] = "pad", align: Align = "start"
+) -> list[Sound]:
     """Bring sounds to one length: zero-pad to the longest (``mode="pad"``)
     or cut to the shortest (``mode="truncate"``).
 
@@ -64,7 +71,7 @@ def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "star
     match mode:
         case "pad":
             length = max(len(s) for s in sounds)
-            return [s.pad_to(length, align) for s in sounds]
+            return [s.pad_to(length, align=align) for s in sounds]
         case "truncate":
             length = min(len(s) for s in sounds)
 
@@ -78,14 +85,14 @@ def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "star
             raise ValueError(f"mode must be 'pad' or 'truncate', not {mode!r}")
 
 
-def normalize(sounds: Sequence[Sound], rms: float | None = 1.0, peak: float | None = None) -> list[Sound]:
+def normalize(sounds: Sequence[Sound], *, rms: float = 1.0, peak: float | None = None) -> list[Sound]:
     """Scale each sound on its own to a target RMS (default 1) or, if
     ``peak`` is given, a target peak, as :meth:`Sound.normalize` does.
 
     Each sound gets its own gain, so their level differences are lost: with
     ``rms`` they all come out equally loud, with ``peak`` they all peak at
     the same value."""
-    return [s.normalize(rms, peak) for s in sounds]
+    return [s.normalize(rms=rms, peak=peak) for s in sounds]
 
 
 def _check_not_empty(sounds: Sequence[Sound]) -> None:
@@ -107,13 +114,13 @@ def concat(sounds: Sequence[Sound]) -> Sound:
     return Sound(np.concatenate([s.data for s in match_channels(sounds)]), fs)
 
 
-def mix(sounds: Sequence[Sound], align: str = "start") -> Sound:
+def mix(sounds: Sequence[Sound], *, align: Align = "start") -> Sound:
     """Sum sounds of possibly different lengths (zero-padded per ``align``)."""
     _check_fs(sounds)
-    return sum(match_lengths(match_channels(sounds), align=align), start=0)
+    return functools.reduce(operator.add, match_lengths(match_channels(sounds), align=align))
 
 
-def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
+def relative_db(sounds: Sequence[Sound], *, ref: int = 0) -> list[float]:
     """Level of each sound in dB relative to ``sounds[ref]``."""
     ref_rms = sounds[ref].rms
     if ref_rms == 0:
@@ -124,7 +131,8 @@ def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
 def butter_filter(
     sound: Sound,
     cutoff: float | tuple[float, float],
-    btype: str = "bandpass",
+    *,
+    btype: Literal["lowpass", "highpass", "bandpass", "bandstop"] = "bandpass",
     order: int = 4,
     zero_phase: bool = True,
 ) -> Sound:
@@ -141,17 +149,17 @@ def butter_filter(
     return Sound(run_filter(sos, sound.data, axis=0), sound.fs)
 
 
-def bandpass(sound: Sound, f_lo: float, f_hi: float, order: int = 4, zero_phase: bool = True) -> Sound:
+def bandpass(sound: Sound, f_lo: float, f_hi: float, *, order: int = 4, zero_phase: bool = True) -> Sound:
     """Butterworth band-pass from ``f_lo`` to ``f_hi`` [Hz].
 
-    Shorthand for ``butter_filter(sound, (f_lo, f_hi), "bandpass", order,
-    zero_phase)``; see :func:`butter_filter`. The band edges are where the
+    Shorthand for ``butter_filter(sound, (f_lo, f_hi), btype="bandpass",
+    order=order, zero_phase=zero_phase)``; see :func:`butter_filter`. The band edges are where the
     gain is -3 dB (one way) or -6 dB (``zero_phase=True``). ``order`` is
     SciPy's, so the band-pass has ``2 * order`` poles."""
-    return butter_filter(sound, (f_lo, f_hi), "bandpass", order, zero_phase)
+    return butter_filter(sound, (f_lo, f_hi), btype="bandpass", order=order, zero_phase=zero_phase)
 
 
-def amplitude_modulate(sound: Sound, f_mod: float, depth: float = 1.0, phase: float = 0.0) -> Sound:
+def amplitude_modulate(sound: Sound, f_mod: float, *, depth: float = 1.0, phase: float = 0.0) -> Sound:
     """Multiply by ``1 + depth*sin(2*pi*f_mod*t + phase)``.
 
     ``phase`` is in radians. ``depth`` 1 takes the envelope down to zero;
@@ -167,7 +175,7 @@ def _track(value: Track, t: np.ndarray, name: str = "value") -> np.ndarray | flo
     if isinstance(value, numbers.Real):
         return float(value)
     try:
-        times, values = value
+        times, values = cast(tuple, value)
     except (TypeError, ValueError):
         raise TypeError(f"{name} must be a number or a (times, values) pair") from None
     times = np.asarray(times, float)
@@ -214,9 +222,9 @@ def _two_zero(x: np.ndarray, a, b, c) -> np.ndarray:
 def _filter(sound: Sound, f: Track, bw: Track, inverse: bool) -> Sound:
     fs = sound.fs
     t = time_axis(len(sound), fs)
-    f, bw = _track(f, t, "f"), _track(bw, t, "bw")
-    _check_resonance(f, bw, fs)
-    a, b, c = _resonator_coefs(f, bw, fs)
+    f_values, bw_values = _track(f, t, "f"), _track(bw, t, "bw")
+    _check_resonance(f_values, bw_values, fs)
+    a, b, c = _resonator_coefs(f_values, bw_values, fs)
     data = sound.data
     if np.ndim(a) == 0:
         numerator, denominator = ([1 / a, -b / a, -c / a], [1.0]) if inverse else ([a], [1.0, -b, -c])

@@ -23,12 +23,18 @@ then follows each band's level, not its waveform.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
+from numpy.typing import ArrayLike
 
 from sonore.core.utils import power_to_db, time_axis
 from sonore.frames.filterbank import Subbands
 from sonore.frames.gabor import _FLOOR_DB, STFT, TVSTFT
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["Mask", "ideal_binary_mask", "ideal_ratio_mask"]
 
@@ -51,7 +57,7 @@ class Mask(View):
     )
     back_to_sound = "Multiply coefficients by it and go back from those: (stft * mask).to_sound()."
 
-    def __init__(self, values, like: Coefficients):
+    def __init__(self, values: ArrayLike, like: Coefficients):
         gains = np.array(values, dtype=float)
         if gains.shape != _array(like).shape:
             raise ValueError(f"mask values have shape {gains.shape}, the coefficients {_array(like).shape}")
@@ -78,12 +84,12 @@ class Mask(View):
             raise ValueError("this mask was made for coefficients on a different grid")
         if isinstance(coefs, Subbands):
             return coefs._new(coefs._full * self.values)
-        return type(coefs)._from(coefs, coefs.data * self.values)
+        return coefs._with_data(coefs.data * self.values)
 
     def __repr__(self) -> str:
         return f"Mask({type(self._like).__name__}, mean gain {self.values.mean():.3g})"
 
-    def plot(self, ax=None, channel: int = 0, **kwargs):
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
         """Draw one channel's gains as an image on the coefficients' time
         and frequency axes; see :func:`sonore.plotting.plot_mask`."""
         from sonore.plotting import plot_mask
@@ -116,7 +122,7 @@ def _check_pair(target: Coefficients, masker: Coefficients) -> None:
         raise ValueError("target and masker must be analyzed by the same frame, at the same length")
 
 
-def ideal_binary_mask(target: Coefficients, masker: Coefficients, lc_db: float = 0.0) -> Mask:
+def ideal_binary_mask(target: Coefficients, masker: Coefficients, *, lc_db: float = 0.0) -> Mask:
     """1 where the target's level exceeds the masker's by more than
     ``lc_db``, the local SNR criterion, else 0 (Wang, 2005; Brungart et al.,
     2006)."""
@@ -124,7 +130,7 @@ def ideal_binary_mask(target: Coefficients, masker: Coefficients, lc_db: float =
     return Mask((_level_db(target) - _level_db(masker) > lc_db).astype(float), target)
 
 
-def ideal_ratio_mask(target: Coefficients, masker: Coefficients, beta: float = 0.5) -> Mask:
+def ideal_ratio_mask(target: Coefficients, masker: Coefficients, *, beta: float = 0.5) -> Mask:
     """``(T**2 / (T**2 + M**2))**beta`` with ``T**2`` and ``M**2`` the powers
     of each coefficient (Wang, Narayanan & Wang, 2014; 0 where both are
     silent)."""

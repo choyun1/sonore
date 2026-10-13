@@ -33,16 +33,19 @@ from __future__ import annotations
 import numbers
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.signal import butter, resample, resample_poly, sosfiltfilt
 
-from sonore.core.utils import _fit_length, amp_to_db, as_rng, time_axis
+from sonore.core.utils import RNG, _fit_length, amp_to_db, as_rng, time_axis
 from sonore.frames.filterbank import Subbands, _PaddedBands, cosine_filterbank
 from sonore.views.view import View
 
 if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
     from sonore.core.sound import Sound
     from sonore.frames.filterbank import Filterbank
     from sonore.views.modulation import ModulationSpectrum
@@ -149,7 +152,7 @@ class Envelope(View):
 
     __array_ufunc__ = None
 
-    def __init__(self, data, fs: float):
+    def __init__(self, data: ArrayLike, fs: float):
         values = np.array(data, dtype=float)
         if values.ndim == 1:
             values = values[:, None]
@@ -185,7 +188,7 @@ class Envelope(View):
     def __repr__(self) -> str:
         return f"Envelope({self.duration:.3f} s, {self.fs:g} Hz, {self._data.shape[1]} ch)"
 
-    def lowpass(self, cutoff: float, order: int = 4) -> Envelope:
+    def lowpass(self, cutoff: float, *, order: int = 4) -> Envelope:
         """Zero-phase Butterworth lowpass at ``cutoff`` Hz (result clipped at 0)."""
         return Envelope(_lowpass(self._data, cutoff, self.fs, order), self.fs)
 
@@ -264,7 +267,7 @@ class Envelope(View):
             raise TypeError("carrier must be a Sound")
         return self * (carrier / carrier.envelope())
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """The envelope against time (see :func:`~sonore.plotting.plot_envelope`)."""
         from sonore.plotting import plot_envelope
 
@@ -305,7 +308,7 @@ class Envelopes(_PaddedBands, View):
 
     __array_ufunc__ = None
 
-    def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
+    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank, *, pad: int = 0):
         data = np.asarray(data, dtype=float)
         super().__init__(data[:, :, None] if data.ndim == 2 else data, fs, filterbank, pad)
 
@@ -332,10 +335,10 @@ class Envelopes(_PaddedBands, View):
 
     def _new(self, full, fs=None, pad=None) -> Envelopes:
         return Envelopes(
-            full, self.fs if fs is None else fs, self.filterbank, self.pad if pad is None else pad
+            full, self.fs if fs is None else fs, self.filterbank, pad=self.pad if pad is None else pad
         )
 
-    def lowpass(self, cutoff: float, order: int = 4) -> Envelopes:
+    def lowpass(self, cutoff: float, *, order: int = 4) -> Envelopes:
         """Zero-phase Butterworth lowpass of every band at ``cutoff`` Hz,
         padding included (result clipped at 0)."""
         return self._new(_lowpass(self._full, cutoff, self.fs, order))
@@ -404,7 +407,9 @@ class Envelopes(_PaddedBands, View):
 
     __rmul__ = __mul__
 
-    def modulation_spectrum(self, scale: str = "linear", drop_edges: bool = True) -> ModulationSpectrum:
+    def modulation_spectrum(
+        self, *, scale: Literal["linear", "db"] = "linear", drop_edges: bool = True
+    ) -> ModulationSpectrum:
         """2-D modulation spectrum (temporal Hz x spectral cycles per scale unit).
 
         ``scale="db"`` transforms log envelopes. The edge bands are dropped by
@@ -433,7 +438,7 @@ class Envelopes(_PaddedBands, View):
         spectrum._analysis = _EnvelopeAnalysis(filterbank, self.fs, self.n_samples, scale, drop_edges)
         return spectrum
 
-    def to_sound(self, carrier: Sound | str = "noise", fs: float | None = None, rng=None) -> Sound:
+    def to_sound(self, *, carrier: Sound | str = "noise", fs: float | None = None, rng: RNG = None) -> Sound:
         """These envelopes imposed on a carrier, band by band, and synthesized
         with their filterbank.
 
@@ -481,7 +486,7 @@ class Envelopes(_PaddedBands, View):
                 raise ValueError("carrier must be 'noise', 'tone', or a Sound")
         return (self * fine).to_sound()
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """The envelopes as a cochleagram, time by band in dB (see
         :func:`~sonore.plotting.plot_envelopes`)."""
         from sonore.plotting import plot_envelopes
@@ -494,9 +499,10 @@ def channel_vocode(
     n_bands: int = 16,
     f_lo: float = 80.0,
     f_hi: float = 8000.0,
+    *,
     carrier: Sound | str = "noise",
     env_lowpass: float | None = 50.0,
-    rng=None,
+    rng: RNG = None,
 ) -> Sound:
     """A channel vocoder with Hilbert envelopes: the sound's band envelopes on
     a ``carrier``. The default, ``carrier="noise"``, is the noise vocoder of
@@ -521,11 +527,11 @@ def channel_vocode(
                 raise ValueError(f"sample rates differ ({carrier.fs:g} Hz carrier vs {sound.fs:g} Hz sound)")
             if len(carrier) < len(sound):
                 raise ValueError("carrier is shorter than the sound")
-            vocoded = envelopes.to_sound(Sound(carrier.data[: len(sound)], carrier.fs))
+            vocoded = envelopes.to_sound(carrier=Sound(carrier.data[: len(sound)], carrier.fs))
         case str("noise"):
-            vocoded = envelopes.to_sound("noise", rng=rng)
+            vocoded = envelopes.to_sound(carrier="noise", rng=rng)
         case str("tone"):
-            vocoded = envelopes.to_sound("tone")
+            vocoded = envelopes.to_sound(carrier="tone")
         case _:
             raise ValueError("carrier must be 'noise', 'tone', or a Sound")
-    return vocoded.normalize(sound.rms)
+    return vocoded.normalize(rms=sound.rms)

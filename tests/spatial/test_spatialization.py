@@ -36,7 +36,7 @@ class TestSpatialization:
         x = so.gaussian_noise(2, 48000, band=(200, 3000), rng=0)
         traj = so.circular_trajectory((100, 0, 90), (100, 0, -90), 200)
         y = so.move_sound(x, traj, hs)
-        c = so.interaural_cues(y, 50e-3)
+        c = so.interaural_cues(y, win_dur=50e-3)
         itd = c.itd[np.isfinite(c.itd)]
         assert itd[:3].mean() > 400e-6  # starts right
         assert itd[-3:].mean() < -400e-6  # ends left

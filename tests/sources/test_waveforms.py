@@ -16,14 +16,14 @@ class TestGenerators:
     def test_linear_chirp_phase(self):
         """cos(2 pi (f0 t + (f1 - f0) t^2 / 2T) + phase), scaled to RMS 1."""
         duration, f0, f1, phase = 0.05, 200.0, 2000.0, 0.3
-        x = so.linear_chirp(duration, FS, f0, f1, phase).data[:, 0]
+        x = so.linear_chirp(duration, FS, f0, f1, phase=phase).data[:, 0]
         t = np.arange(len(x)) / FS
         expected = np.cos(2 * np.pi * (f0 * t + (f1 - f0) * t**2 / (2 * duration)) + phase)
         np.testing.assert_allclose(x, expected / np.sqrt(np.mean(expected**2)), atol=1e-9)
 
     def test_harmonics_above_nyquist_dropped(self):
         with pytest.warns(UserWarning, match="Nyquist"):
-            x = so.harmonic_complex(0.1, FS, 5000, np.arange(1, 6))
+            x = so.harmonic_complex(0.1, FS, 5000, harmonics=np.arange(1, 6))
         assert x.rms == pytest.approx(1)
 
     def test_fixed_f0_honors_f_max(self):
@@ -117,13 +117,13 @@ class TestHarmonicContours:
 
     def test_constant_contour_is_the_fixed_complex(self):
         t, f = time_windows(lambda t: np.full_like(t, 220.0), 0.5)
-        a = so.harmonic_complex(0.5, FAST, (t, f), np.arange(1, 11), phases="random", rng=0)
-        b = so.harmonic_complex(0.5, FAST, 220.0, np.arange(1, 11), phases="random", rng=0)
+        a = so.harmonic_complex(0.5, FAST, (t, f), harmonics=np.arange(1, 11), phases="random", rng=0)
+        b = so.harmonic_complex(0.5, FAST, 220.0, harmonics=np.arange(1, 11), phases="random", rng=0)
         np.testing.assert_allclose(a.data, b.data, atol=1e-10)
 
     def test_linear_glide_is_exact(self):
         t, f = time_windows(lambda t: 100 + 200 * t, 1.0)
-        x = so.harmonic_complex(1.0, FAST, (t, f), [1])
+        x = so.harmonic_complex(1.0, FAST, (t, f), harmonics=[1])
         ts = np.arange(len(x)) / FAST
         ref = np.cos(2 * np.pi * (100 * ts + 100 * ts**2))
         np.testing.assert_allclose(x.data[:, 0], ref / np.sqrt(np.mean(ref**2)), atol=1e-9)
@@ -139,14 +139,14 @@ class TestHarmonicContours:
         mid = (np.arange(2 * FAST - 1) + 0.5) / FAST
         inner = (mid > 0.1) & (mid < 1.9)
         for k in (1, 10):
-            x = so.harmonic_complex(2.0, FAST, (t, f), [k]).data[:, 0]
+            x = so.harmonic_complex(2.0, FAST, (t, f), harmonics=[k]).data[:, 0]
             inst = np.diff(np.unwrap(np.angle(hilbert(x)))) * FAST / (2 * np.pi)
             assert np.max(np.abs(inst[inner] / (k * vib(mid[inner])) - 1)) < 2e-4
 
     def test_gaps_are_filled_and_silent(self):
         # voiced 0-0.2 s at 100 Hz, unvoiced 0.2-0.4 s, voiced 0.4-0.6 s at 200 Hz
         t, f = time_windows(lambda t: np.where(t < 0.2, 100.0, np.where(t < 0.4, 0.0, 200.0)), 0.6)
-        x = so.harmonic_complex(0.6, FAST, (t, f), [1]).data[:, 0]
+        x = so.harmonic_complex(0.6, FAST, (t, f), harmonics=[1]).data[:, 0]
         gap = slice(int(0.21 * FAST), int(0.39 * FAST))
         assert np.max(np.abs(x[gap])) == 0
         # filled, not swept through zero: the period never exceeds 1/100 s while sounding
@@ -159,7 +159,7 @@ class TestHarmonicContours:
         assert power_above(x.data[:, 0], 0.45 * FAST + 400) < -90
 
     def test_f0_track_pair_and_channels(self):
-        track = so.f0_track(so.harmonic_complex(0.3, FAST, 150.0, np.arange(1, 10)))
+        track = so.f0_track(so.harmonic_complex(0.3, FAST, 150.0, harmonics=np.arange(1, 10)))
         assert track.voiced.any()
         a = so.harmonic_complex(0.3, FAST, track)
         b = so.harmonic_complex(0.3, FAST, (track.t, track.f0[0]))
@@ -183,8 +183,10 @@ class TestHarmonicContours:
 
     def test_amplitudes_as_a_spectral_envelope(self):
         t, f = time_windows(lambda t: np.full_like(t, 200.0), 0.2)
-        x = so.harmonic_complex(0.2, FAST, (t, f), [1, 2], amplitudes=lambda t, f: (f < 300).astype(float))
-        y = so.harmonic_complex(0.2, FAST, 200.0, [1])
+        x = so.harmonic_complex(
+            0.2, FAST, (t, f), harmonics=[1, 2], amplitudes=lambda t, f: (f < 300).astype(float)
+        )
+        y = so.harmonic_complex(0.2, FAST, 200.0, harmonics=[1])
         np.testing.assert_allclose(x.data, y.data, atol=1e-10)
 
     def test_complex_amplitudes_by_harmonic_number(self):
@@ -196,12 +198,16 @@ class TestHarmonicContours:
         def gains(t, f, number):
             return np.full_like(t, amplitudes[number - 1] * np.exp(1j * phases[number - 1]), dtype=complex)
 
-        want = so.harmonic_complex(0.2, FAST, 200.0, [1, 2, 3], amplitudes, phases)
-        got = so.harmonic_complex(0.2, FAST, 200.0, [1, 2, 3], gains)
+        want = so.harmonic_complex(
+            0.2, FAST, 200.0, harmonics=[1, 2, 3], amplitudes=amplitudes, phases=phases
+        )
+        got = so.harmonic_complex(0.2, FAST, 200.0, harmonics=[1, 2, 3], amplitudes=gains)
         np.testing.assert_allclose(got.data, want.data, atol=1e-12)
         t, f = time_windows(lambda t: np.full_like(t, 200.0), 0.2)
-        want = so.harmonic_complex(0.2, FAST, (t, f), [1, 2, 3], amplitudes, phases)
-        got = so.harmonic_complex(0.2, FAST, (t, f), [1, 2, 3], gains)
+        want = so.harmonic_complex(
+            0.2, FAST, (t, f), harmonics=[1, 2, 3], amplitudes=amplitudes, phases=phases
+        )
+        got = so.harmonic_complex(0.2, FAST, (t, f), harmonics=[1, 2, 3], amplitudes=gains)
         np.testing.assert_allclose(got.data, want.data, atol=1e-12)
 
 
@@ -252,9 +258,9 @@ class TestAuditSitting4:
 
     def test_phase_presets(self):
         t = np.arange(int(0.01 * FS)) / FS
-        sine = so.harmonic_complex(0.01, FS, 1000.0, [1], phases="sine").data[:, 0]
+        sine = so.harmonic_complex(0.01, FS, 1000.0, harmonics=[1], phases="sine").data[:, 0]
         np.testing.assert_allclose(sine, np.sqrt(2) * np.sin(2 * np.pi * 1000 * t), atol=1e-9)
-        alternating = so.harmonic_complex(0.01, FS, 1000.0, [1, 2], phases="alternating").data[:, 0]
+        alternating = so.harmonic_complex(0.01, FS, 1000.0, harmonics=[1, 2], phases="alternating").data[:, 0]
         expected = np.cos(2 * np.pi * 1000 * t) + np.sin(2 * np.pi * 2000 * t)
         np.testing.assert_allclose(alternating, expected / np.sqrt(np.mean(expected**2)), atol=1e-9)
 
@@ -267,11 +273,11 @@ class TestAuditSitting4:
     @pytest.mark.parametrize("sign", [1, -1])
     def test_schroeder_phases(self, sign):
         n = np.arange(1, 21)
-        want = so.harmonic_complex(0.05, FS, 200.0, n, phases=sign * np.pi * n * (n + 1) / 20)
+        want = so.harmonic_complex(0.05, FS, 200.0, harmonics=n, phases=sign * np.pi * n * (n + 1) / 20)
         got = so.schroeder_complex(0.05, FS, 200.0, n_harmonics=20, sign=sign)
         np.testing.assert_allclose(got.data, want.data, atol=1e-10)
         # the point of Schroeder phases: a far lower peak than cosine phases
-        assert got.peak < 0.5 * so.harmonic_complex(0.05, FS, 200.0, n).peak
+        assert got.peak < 0.5 * so.harmonic_complex(0.05, FS, 200.0, harmonics=n).peak
 
     @pytest.mark.parametrize(
         "times, values, message",
@@ -307,8 +313,8 @@ class TestAuditSitting4:
 
     def test_harmonic_at_nyquist_is_dropped(self):
         with pytest.warns(UserWarning, match="dropping 1 harmonic"):
-            x = so.harmonic_complex(0.01, FS, FS / 4, [1, 2])
-        np.testing.assert_allclose(x.data, so.harmonic_complex(0.01, FS, FS / 4, [1]).data)
+            x = so.harmonic_complex(0.01, FS, FS / 4, harmonics=[1, 2])
+        np.testing.assert_allclose(x.data, so.harmonic_complex(0.01, FS, FS / 4, harmonics=[1]).data)
 
     def test_naive_square_and_sawtooth(self):
         from scipy.signal import sawtooth
@@ -330,7 +336,7 @@ class TestAuditSitting4:
 
     def test_exponential_chirp_phase(self):
         duration, f0, f1, phase = 0.05, 200.0, 3200.0, 0.3
-        x = so.exponential_chirp(duration, FS, f0, f1, phase).data[:, 0]
+        x = so.exponential_chirp(duration, FS, f0, f1, phase=phase).data[:, 0]
         t = np.arange(len(x)) / FS
         k = f1 / f0
         expected = np.cos(2 * np.pi * f0 * duration * (k ** (t / duration) - 1) / np.log(k) + phase)
@@ -365,7 +371,9 @@ class TestAuditSitting4:
     @pytest.mark.parametrize("network", ["add-same", "add-original"])
     def test_irn_networks_gain_iterations_and_warm_up(self, network):
         fs, delay, gain, iterations = 8000, 0.004, 0.5, 4
-        x = so.iterated_ripple_noise(0.1, fs, delay, gain, iterations, network, rng=0).data[:, 0]
+        x = so.iterated_ripple_noise(
+            0.1, fs, delay, gain=gain, iterations=iterations, network=network, rng=0
+        ).data[:, 0]
         warmup = int(np.ceil(iterations * delay * fs))
         source = so.gaussian_noise((len(x) + warmup) / fs, fs, rng=0).data[:, 0]
         y = self.irn_by_iteration(source, int(round(delay * fs)), gain, iterations, network)[warmup:]

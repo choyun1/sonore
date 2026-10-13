@@ -193,9 +193,9 @@ class TestAuditSitting5:
                 0.3,
                 FS,
                 contour,
-                harmonic_numbers,
-                2 * np.abs(coefficients),
-                np.angle(coefficients),
+                harmonics=harmonic_numbers,
+                amplitudes=2 * np.abs(coefficients),
+                phases=np.angle(coefficients),
                 f_max=6000,
                 ramp=ramp,
             )
