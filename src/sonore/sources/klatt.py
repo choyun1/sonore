@@ -14,6 +14,7 @@ from __future__ import annotations
 import numbers
 from collections.abc import Mapping
 from types import MappingProxyType
+from typing import cast
 
 import numpy as np
 
@@ -157,7 +158,7 @@ def klatt_synthesize(
 
     ``rng`` seeds the noise, so a call can be repeated exactly.
     """
-    settings = dict(KLATT_DEFAULTS)
+    settings: dict[str, Track] = dict(KLATT_DEFAULTS)
     given = dict(params or {}) | kwargs
     unknown = sorted(set(given) - set(settings))
     if unknown:
@@ -250,7 +251,7 @@ def klatt_continuum(
     """
     if steps < 2:
         raise ValueError("a continuum needs at least 2 steps")
-    out = [{} for _ in range(steps)]
+    out: list[dict[str, Track]] = [{} for _ in range(steps)]
     for name in sorted(set(start) | set(end)):
         if name not in KLATT_DEFAULTS:
             raise ValueError(f"unknown Klatt parameter {name!r}")
@@ -264,11 +265,11 @@ def klatt_continuum(
             continue
         start_times, start_values = _as_points(start_value)
         end_times, end_values = _as_points(end_value)
-        if start_times is None and end_times is None:
+        times = start_times if start_times is not None else end_times
+        if times is None:  # two numbers
             for i, weight in enumerate(np.linspace(0, 1, steps)):
                 out[i][name] = float((1 - weight) * start_values + weight * end_values)
             continue
-        times = start_times if start_times is not None else end_times
         if start_times is not None and end_times is not None and not np.array_equal(start_times, end_times):
             raise ValueError(f"{name}: the two tracks must share their times to be interpolated")
         start_values, end_values = (
@@ -283,10 +284,11 @@ def klatt_continuum(
 def _as_points(value: Track) -> tuple[np.ndarray | None, np.ndarray | float]:
     if isinstance(value, numbers.Real):
         return None, float(value)
+    message = "a Klatt parameter must be a number or a (times, values) pair"
     try:
-        times, values = (np.asarray(v, float) for v in value)
+        times, values = (np.asarray(v, float) for v in cast(tuple, value))
     except (TypeError, ValueError):
-        times = values = None
-    if times is not None and times.ndim == 1 and times.shape == values.shape:
+        raise ValueError(message) from None
+    if times.ndim == 1 and times.shape == values.shape:
         return times, values
-    raise ValueError("a Klatt parameter must be a number or a (times, values) pair")
+    raise ValueError(message)

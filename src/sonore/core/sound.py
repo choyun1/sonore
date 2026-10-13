@@ -10,6 +10,7 @@ from __future__ import annotations
 import numbers
 import warnings
 from os import PathLike
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -17,6 +18,7 @@ from scipy.signal import fftconvolve, hilbert
 
 from sonore.core.units import Decibels
 from sonore.core.utils import (
+    Align,
     _phase_ramp_delay,
     _resample_poly,
     amp_to_db,
@@ -25,6 +27,11 @@ from sonore.core.utils import (
     rms,
     time_axis,
 )
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+    from sonore.views.envelopes import Envelope
 
 __all__ = ["Sound", "load"]
 
@@ -307,7 +314,7 @@ class Sound:
         value = db.value if isinstance(db, Decibels) else float(db)
         return self * float(db_to_amp(value))
 
-    def normalize(self, rms: float | None = 1.0, peak: float | None = None) -> Sound:
+    def normalize(self, *, rms: float = 1.0, peak: float | None = None) -> Sound:
         """Scale to a target RMS (default 1) or, if ``peak`` is given, a target peak."""
         current = self.peak if peak is not None else self.rms
         if current == 0:
@@ -320,7 +327,7 @@ class Sound:
         """Remove each channel's own mean (DC offset)."""
         return Sound(self._data - self._data.mean(axis=0), self.fs)
 
-    def ramp(self, duration: float, shape: str = "cosine") -> Sound:
+    def ramp(self, duration: float, *, shape: Literal["cosine", "linear"] = "cosine") -> Sound:
         """Apply onset and offset ramps of ``duration`` seconds.
 
         ``shape`` is ``"cosine"`` (raised cosine) or ``"linear"``.
@@ -348,7 +355,7 @@ class Sound:
         n_before, n_after = n_samples(before, self.fs), n_samples(after, self.fs)
         return Sound(np.pad(self._data, ((n_before, n_after), (0, 0))), self.fs)
 
-    def pad_to(self, n: int, align: str = "start") -> Sound:
+    def pad_to(self, n: int, *, align: Align = "start") -> Sound:
         """Zero-pad to ``n`` samples. ``align`` is ``start``, ``center``, or ``end``."""
         extra = n - self.n_samples
         if extra < 0:
@@ -399,7 +406,7 @@ class Sound:
             impulse_response = impulse_response[:, None]
         return Sound(fftconvolve(self._data, impulse_response, axes=0), self.fs)
 
-    def envelope(self, pad: float | str = "auto"):
+    def envelope(self, *, pad: float | str = "auto") -> Envelope:
         """Hilbert envelope of each channel, as an :class:`~sonore.views.envelopes.Envelope`
         (not a Sound: you apply an envelope to a sound rather than listen to it).
         ``snd / snd.envelope()`` is the fine structure.
@@ -416,7 +423,7 @@ class Sound:
         return Envelope(np.abs(hilbert(padded, axis=0))[n_pad : n_pad + self.n_samples], self.fs)
 
     # ---------------------------------------------------------------- output
-    def play(self, blocking: bool = False, **kwargs) -> None:
+    def play(self, *, blocking: bool = False, **kwargs) -> None:
         """Play through the default device (requires the ``sounddevice`` extra)."""
         try:
             import sounddevice as sd
@@ -438,7 +445,7 @@ class Sound:
             )
         sf.write(path, self._data, int(self.fs), **kwargs)
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """Waveform plot; returns the matplotlib Axes."""
         from sonore.plotting import plot_waveform
 

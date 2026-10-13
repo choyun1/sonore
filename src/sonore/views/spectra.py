@@ -11,14 +11,18 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from scipy.signal import ShortTimeFFT, welch
 
 from sonore.core.sound import Sound
-from sonore.core.utils import db_to_power, n_samples, power_to_db
+from sonore.core.utils import RNG, db_to_power, n_samples, power_to_db
 from sonore.frames.gabor import _FLOOR_DB, GaborFrame, TVGaborFrame
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = [
     "Spectrum",
@@ -93,7 +97,13 @@ class Spectrum(View):
         return Spectrum(self.f, power_to_db(mean_power, floor_db=_FLOOR_DB))
 
     def to_sound(
-        self, duration: float, fs: float, carrier: str | Sound = "noise", rng=None, **noise_kwargs
+        self,
+        duration: float,
+        fs: float,
+        *,
+        carrier: Literal["noise", "minimum"] | Sound = "noise",
+        rng: RNG = None,
+        **noise_kwargs,
     ) -> Sound:
         """A sound with this magnitude spectrum, its phase supplied by ``carrier``.
 
@@ -138,7 +148,7 @@ class Spectrum(View):
         sound = Sound(data, fs)
         return sound.normalize() if sound.rms > 0 else sound
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """Level against frequency, on a log frequency axis and re the peak by
         default (see :func:`~sonore.plotting.plot_spectrum`)."""
         from sonore.plotting import plot_spectrum
@@ -155,7 +165,7 @@ def _one_sided(length: int) -> np.ndarray:
     return weights
 
 
-def long_term_spectrum(sounds: Sound | Sequence[Sound], win_dur: float = 0.1) -> Spectrum:
+def long_term_spectrum(sounds: Sound | Sequence[Sound], *, win_dur: float = 0.1) -> Spectrum:
     """Long-term average spectrum via Welch's method, averaged over sounds
     (weighted by duration), in dB re 1 per Hz. This is the right input for
     speech-shaped noise.
@@ -210,7 +220,7 @@ class TFPower(View):
         """``10*log10(power)``, floored like the other representations."""
         return power_to_db(self.power, floor_db=_FLOOR_DB)
 
-    def plot(self, ax=None, channel: int = 0, **kwargs):
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
         """Power in dB (see :func:`~sonore.plotting.plot_tf_db`)."""
         from sonore.plotting import plot_tf_db
 
@@ -221,6 +231,7 @@ def tandem_power(
     sound: Sound,
     f0_times: Sequence[float],
     f0: Sequence[float],
+    *,
     periods: float = 2.5,
     overlap: float = 4,
     window: str | tuple = "blackman",
@@ -299,7 +310,7 @@ class ReassignedSpectrogram(View):
 
 
 def reassigned_spectrogram(
-    sound: Sound, frame: GaborFrame, threshold_db: float = -60.0
+    sound: Sound, frame: GaborFrame, *, threshold_db: float = -60.0
 ) -> ReassignedSpectrogram:
     """The reassigned spectrogram (Kodera et al., 1978; Auger & Flandrin, 1995).
 

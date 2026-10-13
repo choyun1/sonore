@@ -13,7 +13,7 @@ import numbers
 import warnings
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Protocol, overload
+from typing import Literal, Protocol, cast, get_args, runtime_checkable
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -21,7 +21,7 @@ from scipy.optimize import brentq
 from scipy.signal import chirp
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
+from sonore.core.utils import RNG, as_rng, db_to_amp, n_samples, time_axis
 
 __all__ = [
     "silence",
@@ -42,28 +42,26 @@ __all__ = [
 ]
 
 
-RNG = int | np.random.Generator | None
-
-
 def _finish(data: np.ndarray, fs: float) -> Sound:
     sound = Sound(data, fs)
     return sound.normalize() if sound.rms > 0 else sound
 
 
-def silence(duration: float, fs: float, n_channels: int = 1) -> Sound:
+def silence(duration: float, fs: float, *, n_channels: int = 1) -> Sound:
     """Zeros, ``duration`` seconds long, in ``n_channels`` channels (RMS 0, the
     one generator not scaled to 1)."""
     return Sound(np.zeros((n_samples(duration, fs), n_channels)), fs)
 
 
-def pure_tone(duration: float, fs: float, freq: float, phase: float = 0.0) -> Sound:
+def pure_tone(duration: float, fs: float, freq: float, *, phase: float = 0.0) -> Sound:
     """``cos(2*pi*freq*t + phase)``."""
     t = time_axis(n_samples(duration, fs), fs)
     return _finish(np.cos(2 * np.pi * freq * t + phase), fs)
 
 
 # ----------------------------------------------------------- harmonic sounds
-_PHASE_PRESETS = ("cosine", "sine", "alternating", "random", "schroeder+", "schroeder-")
+PhasePreset = Literal["cosine", "sine", "alternating", "random", "schroeder+", "schroeder-"]
+_PHASE_PRESETS = get_args(PhasePreset)
 
 
 class F0Contour(Protocol):
@@ -74,6 +72,10 @@ class F0Contour(Protocol):
     t: ArrayLike
     f0: ArrayLike
 
+
+#: An F0 contour: a ``(times, values)`` pair or an :class:`F0Contour`; and an F0 that may also be fixed [Hz].
+ContourLike = tuple[ArrayLike, ArrayLike] | F0Contour
+F0Like = float | ContourLike
 
 Amplitudes = (
     ArrayLike
@@ -141,13 +143,13 @@ def _max_harmonic(values: np.ndarray, f_max: float) -> int:
     return int(f_max // voiced.min()) if voiced.size else 0
 
 
-def _n_max(f0, fs: float, f_max: float | None) -> int:
+def _n_max(f0: F0Like, fs: float, f_max: float | None) -> int:
     """The highest harmonic number a harmonic waveform on ``f0`` can hold:
     below ``f_max`` (by default Nyquist for a fixed F0, 0.45 fs for a contour)
     somewhere on it."""
     contour = _contour(f0)
     if contour is None:
-        return int(np.ceil((fs / 2 if f_max is None else f_max) / f0)) - 1
+        return int(np.ceil((fs / 2 if f_max is None else f_max) / cast(float, f0))) - 1
     return _max_harmonic(contour[1], 0.45 * fs if f_max is None else f_max)
 
 
@@ -172,7 +174,10 @@ def _voicing_gate(
     return np.convolve(padded, window / window.sum(), mode="same")[n_ramp:-n_ramp]
 
 
-def _amplitude_function(amplitudes: Callable) -> Callable[[np.ndarray, np.ndarray, int], ArrayLike]:
+GainFunction = Callable[[np.ndarray, np.ndarray, int], ArrayLike]
+
+
+def _amplitude_function(amplitudes: Callable) -> GainFunction:
     """``amplitudes`` as a function of time, frequency and harmonic number,
     whether it takes the harmonic number or not. A spectral envelope view
     (power on a grid, with an ``amplitude`` method that reads it point by
@@ -196,10 +201,11 @@ def _add_harmonic(total: np.ndarray, amplitude, argument: np.ndarray) -> None:
         total += amplitude * np.cos(argument)
 
 
-def _gains(amplitudes: Amplitudes, harmonics: np.ndarray) -> np.ndarray | None:
-    """Per-harmonic amplitudes as an array, or None when they are a function."""
+def _gains(amplitudes: Amplitudes, harmonics: np.ndarray) -> np.ndarray | GainFunction:
+    """Per-harmonic amplitudes as an array, or as a function of time,
+    frequency and harmonic number (see :func:`_amplitude_function`)."""
     if callable(amplitudes):
-        return None
+        return _amplitude_function(amplitudes)
     if amplitudes is None:
         return np.ones(len(harmonics))
     amplitudes = np.asarray(amplitudes, float)
@@ -208,49 +214,19 @@ def _gains(amplitudes: Amplitudes, harmonics: np.ndarray) -> np.ndarray | None:
     return amplitudes
 
 
-@overload
 def harmonic_complex(
     duration: float,
     fs: float,
-    f0: float,
+    f0: F0Like,
+    *,
     harmonics: ArrayLike | None = None,
     amplitudes: Amplitudes = None,
-    phases: ArrayLike | str = "cosine",
+    phases: ArrayLike | PhasePreset = "cosine",
     rng: RNG = None,
-    *,
-    f_max: float | None = None,
-) -> Sound: ...
-
-
-@overload
-def harmonic_complex(
-    duration: float,
-    fs: float,
-    f0: tuple[ArrayLike, ArrayLike] | F0Contour,
-    harmonics: ArrayLike | None = None,
-    amplitudes: Amplitudes = None,
-    phases: ArrayLike | str = "cosine",
-    rng: RNG = None,
-    *,
     f_max: float | None = None,
     ramp: float = 0.005,
-    unvoiced: str = "silence",
-) -> Sound: ...
-
-
-def harmonic_complex(
-    duration,
-    fs,
-    f0,
-    harmonics=None,
-    amplitudes=None,
-    phases="cosine",
-    rng=None,
-    *,
-    f_max=None,
-    ramp=0.005,
-    unvoiced="silence",
-):
+    unvoiced: Literal["silence", "noise"] = "silence",
+) -> Sound:
     """Sum of harmonics ``a_n cos(n * Phi(t) + phi_n)`` of a fixed or moving F0.
 
     ``f0`` is either a number, for ``Phi = 2*pi*f0*t``, or an F0 contour:
@@ -298,6 +274,7 @@ def harmonic_complex(
         return _contour_complex(
             duration, fs, *contour, harmonics, amplitudes, phases, rng, f_max, ramp, unvoiced
         )
+    f0 = cast(float, f0)  # not a contour, so a number
     if f_max is not None and not 0 < f_max <= fs / 2:
         raise ValueError(f"f_max must be in (0, fs/2], got {f_max:g}")
     if harmonics is None:
@@ -316,15 +293,14 @@ def harmonic_complex(
     keep = below_nyquist & (taper > 0)
     t = time_axis(n_samples(duration, fs), fs)
     data = np.zeros_like(t)
-    if gains is None:
-        gain_function = _amplitude_function(amplitudes)
-        gains = [
-            weight * gain_function(t, np.full_like(t, number * f0), number)
+    if callable(gains):
+        kept_gains = [
+            weight * gains(t, np.full_like(t, number * f0), number)
             for number, weight in zip(harmonics[keep], taper[keep], strict=True)
         ]
     else:
-        gains = gains[keep] * taper[keep]
-    for number, amplitude, start_phase in zip(harmonics[keep], gains, start_phases[keep], strict=True):
+        kept_gains = gains[keep] * taper[keep]
+    for number, amplitude, start_phase in zip(harmonics[keep], kept_gains, start_phases[keep], strict=True):
         _add_harmonic(data, amplitude, 2 * np.pi * number * f0 * t + start_phase)
     return _finish(data, fs)
 
@@ -342,7 +318,6 @@ def _contour_complex(
         harmonics = np.arange(1, _max_harmonic(values, f_max) + 1)
     harmonics = np.atleast_1d(np.asarray(harmonics))
     gains = _gains(amplitudes, harmonics)
-    gain_function = _amplitude_function(amplitudes) if gains is None else None
     start_phases = _harmonic_phases(harmonics, phases, rng)
 
     length = n_samples(duration, fs)
@@ -362,7 +337,7 @@ def _contour_complex(
             phase = 2 * np.pi / fs * cumulative_f0
             for index, (number, start_phase) in enumerate(zip(harmonics, start_phases, strict=True)):
                 freq = number * f0_at_sample
-                amplitude = gain_function(t, freq, number) if gains is None else gains[index]
+                amplitude = gains(t, freq, number) if callable(gains) else gains[index]
                 _add_harmonic(harmonic_sum, amplitude * _taper(freq, f_max), number * phase + start_phase)
             gate = _voicing_gate(t, window_times, voiced, ramp, fs)
         data[:, channel] = gate * harmonic_sum
@@ -376,7 +351,8 @@ def _contour_complex(
 def schroeder_complex(
     duration: float,
     fs: float,
-    f0: float | tuple[ArrayLike, ArrayLike] | F0Contour,
+    f0: F0Like,
+    *,
     n_harmonics: int | None = None,
     sign: int = 1,
     **contour,
@@ -391,7 +367,7 @@ def schroeder_complex(
         duration,
         fs,
         f0,
-        np.arange(1, count + 1),
+        harmonics=np.arange(1, count + 1),
         phases="schroeder+" if sign > 0 else "schroeder-",
         **contour,
     )
@@ -401,20 +377,25 @@ def _waveform(duration, fs, f0, phase, harmonics, amplitudes, kind, contour) -> 
     """A named band-limited waveform as a harmonic complex: harmonic ``n`` has
     amplitude ``amplitudes[i]`` and phase ``n * phase``, as a sine or a cosine."""
     phases = harmonics * phase - (np.pi / 2 if kind == "sin" else 0.0)
-    return harmonic_complex(duration, fs, f0, harmonics, amplitudes, phases, **contour)
+    return harmonic_complex(
+        duration, fs, f0, harmonics=harmonics, amplitudes=amplitudes, phases=phases, **contour
+    )
 
 
-def _fixed_only(f0, name: str) -> None:
+def _fixed_only(f0: F0Like, name: str) -> float:
+    """``f0``, refused unless it is a number."""
     if _contour(f0) is not None:
         raise ValueError(
             f"a {name} that is not band-limited needs a fixed f0; use bandlimited=True for a contour"
         )
+    return cast(float, f0)
 
 
 def square_wave(
     duration: float,
     fs: float,
-    f0: float | tuple[ArrayLike, ArrayLike] | F0Contour,
+    f0: F0Like,
+    *,
     phase: float = 0.0,
     bandlimited: bool = True,
     **contour,
@@ -423,7 +404,7 @@ def square_wave(
     ``bandlimited=False``, which aliases badly at high f0. A band-limited
     square wave also takes an F0 contour, as :func:`harmonic_complex` does."""
     if not bandlimited:
-        _fixed_only(f0, "square wave")
+        f0 = _fixed_only(f0, "square wave")
         t = time_axis(n_samples(duration, fs), fs)
         return _finish(np.sign(np.sin(2 * np.pi * f0 * t + phase)), fs)
     numbers = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1, 2)
@@ -433,7 +414,8 @@ def square_wave(
 def sawtooth_wave(
     duration: float,
     fs: float,
-    f0: float | tuple[ArrayLike, ArrayLike] | F0Contour,
+    f0: F0Like,
+    *,
     phase: float = 0.0,
     bandlimited: bool = True,
     **contour,
@@ -444,7 +426,7 @@ def sawtooth_wave(
     if not bandlimited:
         from scipy.signal import sawtooth
 
-        _fixed_only(f0, "sawtooth")
+        f0 = _fixed_only(f0, "sawtooth")
         t = time_axis(n_samples(duration, fs), fs)
         return _finish(sawtooth(2 * np.pi * f0 * t + phase + np.pi), fs)
     numbers = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1)
@@ -454,7 +436,8 @@ def sawtooth_wave(
 def pulse_train(
     duration: float,
     fs: float,
-    f0: float | tuple[ArrayLike, ArrayLike] | F0Contour,
+    f0: F0Like,
+    *,
     phase: float = 0.0,
     bandlimited: bool = True,
     **contour,
@@ -469,7 +452,7 @@ def pulse_train(
     if bandlimited:
         numbers = np.arange(1, _n_max(f0, fs, contour.get("f_max")) + 1)
         return _waveform(duration, fs, f0, phase, numbers, np.ones(len(numbers)), "cos", contour)
-    _fixed_only(f0, "pulse train")
+    f0 = _fixed_only(f0, "pulse train")
     length = n_samples(duration, fs)
     times = (np.arange(0, duration * f0 + 1) - phase / (2 * np.pi)) / f0
     pulse_samples = np.round(times * fs).astype(int)
@@ -478,27 +461,35 @@ def pulse_train(
     return _finish(data, fs)
 
 
-def linear_chirp(duration: float, fs: float, f0: float, f1: float, phase: float = 0.0) -> Sound:
+def linear_chirp(duration: float, fs: float, f0: float, f1: float, *, phase: float = 0.0) -> Sound:
     """Linear frequency sweep from ``f0`` to ``f1``."""
     t = time_axis(n_samples(duration, fs), fs)
     return _finish(chirp(t, f0, duration, f1, "linear", phi=np.degrees(phase)), fs)
 
 
-def exponential_chirp(duration: float, fs: float, f0: float, f1: float, phase: float = 0.0) -> Sound:
+def exponential_chirp(duration: float, fs: float, f0: float, f1: float, *, phase: float = 0.0) -> Sound:
     """Exponential (log-frequency) sweep from ``f0`` to ``f1``."""
     t = time_axis(n_samples(duration, fs), fs)
     return _finish(chirp(t, f0, duration, f1, "logarithmic", phi=np.degrees(phase)), fs)
 
 
 # ------------------------------------------------------------------- noises
-SpectrumLike = Callable[[np.ndarray], np.ndarray] | tuple[ArrayLike, ArrayLike]
+@runtime_checkable
+class _MeasuredSpectrum(Protocol):
+    """A sonore :class:`~sonore.views.spectra.Spectrum` (named by what it does,
+    since sources sit below views)."""
+
+    def _level_in_range(self, freqs: np.ndarray) -> np.ndarray: ...
+
+
+SpectrumLike = Callable[[np.ndarray], np.ndarray] | tuple[ArrayLike, ArrayLike] | _MeasuredSpectrum
 
 
 def _spectral_gain(
     freqs: np.ndarray,
     band: tuple[float, float] | None,
     tilt: float,
-    spectrum,
+    spectrum: SpectrumLike | None,
 ) -> np.ndarray:
     gain = np.ones_like(freqs)
     if band is not None:
@@ -509,7 +500,7 @@ def _spectral_gain(
             # any reference frequency would do, since the output is scaled to RMS 1
             gain *= np.where(freqs > 0, (freqs / 1000.0) ** (tilt / (20 * np.log10(2))), 0.0)
     if spectrum is not None:
-        if hasattr(spectrum, "_level_in_range"):  # a sonore Spectrum: silent outside its frequencies
+        if isinstance(spectrum, _MeasuredSpectrum):  # a sonore Spectrum: silent outside its frequencies
             level_db = spectrum._level_in_range(freqs)
         elif callable(spectrum):
             level_db = spectrum(freqs)
@@ -523,6 +514,7 @@ def _spectral_gain(
 def gaussian_noise(
     duration: float,
     fs: float,
+    *,
     band: tuple[float, float] | None = None,
     tilt: float = 0.0,
     spectrum: SpectrumLike | None = None,
@@ -564,7 +556,9 @@ def gaussian_noise(
     return _finish(data, fs)
 
 
-def correlated_noise(duration: float, fs: float, corr: float = 1.0, rng: RNG = None, **noise_kwargs) -> Sound:
+def correlated_noise(
+    duration: float, fs: float, *, corr: float = 1.0, rng: RNG = None, **noise_kwargs
+) -> Sound:
     """Two-channel noise whose interaural correlation is exactly ``corr`` (in
     [-1, 1]), each channel at RMS 1. Extra keyword arguments go to
     :func:`gaussian_noise`.
@@ -592,9 +586,10 @@ def iterated_ripple_noise(
     duration: float,
     fs: float,
     delay: float,
+    *,
     gain: float = 1.0,
     iterations: int = 16,
-    network: str = "add-same",
+    network: Literal["add-same", "add-original"] = "add-same",
     rng: RNG = None,
     **noise_kwargs,
 ) -> Sound:
@@ -610,11 +605,12 @@ def iterated_ripple_noise(
     noise = gaussian_noise((length + warmup) / fs, fs, rng=rng, **noise_kwargs).data[:, 0]
     freqs = np.fft.rfftfreq(len(noise), 1 / fs)
     one_pass = gain * np.exp(-2j * np.pi * freqs * delay)
+    transfer: np.ndarray
     match network:
         case "add-same":
             transfer = (1 + one_pass) ** iterations
         case "add-original":
-            transfer = sum(one_pass**i for i in range(iterations + 1))
+            transfer = cast(np.ndarray, sum(one_pass**i for i in range(iterations + 1)))
         case _:
             raise ValueError("network must be 'add-same' or 'add-original'")
     output = np.fft.irfft(np.fft.rfft(noise) * transfer, n=len(noise))[warmup:]
@@ -765,11 +761,14 @@ class _LFShape:
 
 
 @lru_cache(maxsize=4096)
-def _shape(rd: float | None, ra: float | None, rg: float | None, rk: float | None) -> _LFShape:
-    if rd is not None:
-        ra, rg, rk = _r_parameters(rd)
+def _shape(ra: float, rg: float, rk: float) -> _LFShape:
     tp = 1 / (2 * rg)
     return _LFShape(tp, tp * (1 + rk), ra)
+
+
+@lru_cache(maxsize=4096)
+def _shape_of_rd(rd: float) -> _LFShape:
+    return _shape(*_r_parameters(rd))
 
 
 def _shape_from(rd, ra, rg, rk) -> _LFShape:
@@ -777,8 +776,8 @@ def _shape_from(rd, ra, rg, rk) -> _LFShape:
     if any(given):
         if not all(given):
             raise ValueError("give all of ra, rg and rk, or rd alone")
-        return _shape(None, float(ra), float(rg), float(rk))
-    return _shape(float(rd), None, None, None)
+        return _shape(float(ra), float(rg), float(rk))
+    return _shape_of_rd(float(rd))
 
 
 def lf_harmonics(
@@ -863,7 +862,7 @@ def _rd_track_gains(rd_times: np.ndarray, rd_values: np.ndarray, harmonic_number
 def glottal_source(
     duration: float,
     fs: float,
-    f0: float | tuple[ArrayLike, ArrayLike] | F0Contour,
+    f0: F0Like,
     rd: float | tuple[ArrayLike, ArrayLike] = 0.7,
     *,
     flow: bool = False,
@@ -901,17 +900,27 @@ def glottal_source(
         if contour is not None and not np.any(contour[1] > 0):  # never voiced, as harmonic_complex
             return silence(duration, fs, n_channels=contour[1].shape[0])
         raise ValueError("no harmonic of this F0 fits below f_max")
-    contour_options = {"f_max": f_max} if isinstance(f0, numbers.Real) else {"f_max": f_max, "ramp": ramp}
     if isinstance(rd, numbers.Real):
         coefficients = lf_harmonics(harmonic_numbers, rd, flow=flow)
         amplitudes, phases = 2 * np.abs(coefficients), np.angle(coefficients)
-        return harmonic_complex(duration, fs, f0, harmonic_numbers, amplitudes, phases, **contour_options)
+        return harmonic_complex(
+            duration,
+            fs,
+            f0,
+            harmonics=harmonic_numbers,
+            amplitudes=amplitudes,
+            phases=phases,
+            f_max=f_max,
+            ramp=ramp,
+        )
     try:
-        rd_times, rd_values = (np.asarray(part, float) for part in rd)
+        rd_times, rd_values = (np.asarray(part, float) for part in cast(tuple, rd))
     except (TypeError, ValueError):
         raise ValueError("rd must be a number or a (times, values) pair") from None
     if rd_times.ndim != 1 or rd_times.shape != rd_values.shape or len(rd_times) == 0:
         raise ValueError("an rd track needs one value per time")
     _check_rd(rd_values)
     gains = _rd_track_gains(rd_times, rd_values, harmonic_numbers, flow)
-    return harmonic_complex(duration, fs, f0, harmonic_numbers, gains, **contour_options)
+    return harmonic_complex(
+        duration, fs, f0, harmonics=harmonic_numbers, amplitudes=gains, f_max=f_max, ramp=ramp
+    )

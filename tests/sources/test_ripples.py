@@ -80,7 +80,7 @@ class TestRipples:
         assert rate == pytest.approx(6, abs=1) and density == pytest.approx(1, abs=0.15)
 
     def test_sound_carrier(self):
-        speechlike = so.harmonic_complex(1.0, FAST, 120, np.arange(1, 50), phases="random", rng=0)
+        speechlike = so.harmonic_complex(1.0, FAST, 120, harmonics=np.arange(1, 50), phases="random", rng=0)
         s = so.ripple_sound(so.Ripple(-4, 1), 1.0, FAST, f_hi=FAST_HI, carrier=speechlike, rng=0)
         rate, density = so.ModulationSpectrum.octave(s, f_lo=250, f_hi=FAST_HI).peak()
         assert rate == pytest.approx(-4, abs=1) and density == pytest.approx(1, abs=0.15)

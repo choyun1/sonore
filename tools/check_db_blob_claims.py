@@ -40,12 +40,12 @@ rows = []
 for seed in range(5):
     lin = so.ModulationSpectrum.from_blobs(blob, dur, f_lo=250, f_hi=7000, rms_depth=0.2)
     env = lin.to_envelopes(rng=seed)
-    s = env.to_sound("noise", fs=fs, rng=100 + seed)
+    s = env.to_sound(carrier="noise", fs=fs, rng=100 + seed)
     rows.append(("linear, rms_depth 0.2", depth(env), *blob_share(s, "linear"), *blob_share(s, "db")))
     for sd in (3, 6, 10):
         d = so.ModulationSpectrum.from_blobs(blob, dur, f_lo=250, f_hi=7000, scale="db", sd_db=sd)
         env = d.to_envelopes(rng=seed)
-        s = env.to_sound("noise", fs=fs, rng=100 + seed)
+        s = env.to_sound(carrier="noise", fs=fs, rng=100 + seed)
         rows.append((f"dB, sd {sd} dB", depth(env), *blob_share(s, "linear"), *blob_share(s, "db")))
 agg = collections.defaultdict(list)
 for r in rows:

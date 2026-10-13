@@ -53,7 +53,7 @@ def test_objective_gradient(setup):
 def test_impose_channel_reduces_every_class(setup):
     target, _, env, adjusted = setup
     k = 15
-    s, report = impose_channel(target, env, k, adjusted, n_iter=5)
+    s, report = impose_channel(target, env, k, adjusted=adjusted, n_iter=5)
     assert s.min() >= 0
     assert report["after"] < report["before"] / 100
     for name, before in report["terms_before"].items():
@@ -74,7 +74,7 @@ def test_impose_channel_reduces_every_class(setup):
 
 def test_more_iterations_do_better(setup):
     target, _, env, adjusted = setup
-    losses = [impose_channel(target, env, 15, adjusted, n_iter=n)[1]["after"] for n in (1, 5, 20)]
+    losses = [impose_channel(target, env, 15, adjusted=adjusted, n_iter=n)[1]["after"] for n in (1, 5, 20)]
     assert losses[0] > losses[1] > losses[2]
 
 
@@ -86,7 +86,7 @@ def test_channel_order():
 def test_affine_correction_sets_mean_and_variance(setup):
     target, _, env, adjusted = setup
     context = tg.ChannelContext.build(M, env.shape[0])
-    s, _ = impose_channel(target, env, 15, adjusted, n_iter=2, context=context)
+    s, _ = impose_channel(target, env, 15, adjusted=adjusted, n_iter=2, context=context)
     mom = tg.env_moments(s, context)[0]
     assert mom[0] == pytest.approx(target.env_mean[15], rel=1e-9)
     assert mom[1] == pytest.approx(target.env_var[15], rel=1e-9)

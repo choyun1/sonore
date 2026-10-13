@@ -11,6 +11,7 @@ in :data:`~sonore.views.world.DIFFERENCES_FROM_WORLD`.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -33,6 +34,11 @@ from sonore.views.world import (
     _time_windows,
     world_fft_size,
 )
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+    from sonore.sources.waveforms import ContourLike
 
 __all__ = ["Aperiodicity", "d4c", "harmonic_aperiodicity"]
 
@@ -86,7 +92,7 @@ class Aperiodicity(_FrequencyView):
         """The noise share in dB, ``20 log10 data``."""
         return 20 * np.log10(self.data)
 
-    def bands(self, edges: Sequence[float], envelope: SpectralEnvelope | None = None) -> np.ndarray:
+    def bands(self, edges: Sequence[float], *, envelope: SpectralEnvelope | None = None) -> np.ndarray:
         """The noise share averaged over each band ``[edges[i], edges[i+1])``,
         shape ``(n_channels, n_bands, n_windows)``. With an ``envelope``, the
         average is weighted by its power, so the result is the band's noise
@@ -100,7 +106,9 @@ class Aperiodicity(_FrequencyView):
             out.append(np.sum(self.share[:, in_band] * band_weights, axis=1) / np.sum(band_weights, axis=1))
         return np.stack(out, axis=1)
 
-    def plot(self, ax=None, channel: int = 0, db_range: float = 60.0, fmax: float | None = None):
+    def plot(
+        self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 60.0, fmax: float | None = None
+    ) -> Axes:
         """The noise share in dB as a time-frequency image (0 dB is all noise)."""
         from sonore.plotting import plot_tf_db
 
@@ -116,7 +124,9 @@ class Aperiodicity(_FrequencyView):
 
 
 # ------------------------------------------------------------------- D4C
-def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F0) -> Aperiodicity:
+def d4c(
+    sound: Sound, f0: ContourLike, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F0
+) -> Aperiodicity:
     """WORLD's D4C aperiodicity (Morise, 2016), ported exactly.
 
     At each voiced time window: a "static group delay" from two Blackman-windowed
@@ -152,7 +162,7 @@ def d4c(sound: Sound, f0, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F
     """
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
-    n_fft_out = world_fft_size(fs, f0_floor)
+    n_fft_out = world_fft_size(fs, f0_floor=f0_floor)
     n_fft = _periods_fft_size(fs, 4.0, _FLOOR_F0_D4C)
     n_bands = int(min(_D4C_UPPER_LIMIT, fs / 2.0 - _D4C_BAND_SPACING) / _D4C_BAND_SPACING)
     window_length = int(_D4C_BAND_SPACING * n_fft / fs) * 2 + 1
@@ -234,7 +244,12 @@ def _d4c_bands(samples, fs, time, f0, n_fft, n_bands, nuttall, noise):
 
 # ------------------------------------------------- harmonic residual
 def harmonic_aperiodicity(
-    sound: Sound, f0, *, periods: float = 4.0, f0_floor: float = _FLOOR_F0, cell_harmonics: float = 2.0
+    sound: Sound,
+    f0: ContourLike,
+    *,
+    periods: float = 4.0,
+    f0_floor: float = _FLOOR_F0,
+    cell_harmonics: float = 2.0,
 ) -> Aperiodicity:
     """The share of noise, measured by fitting the harmonics and keeping
     what is left. Not part of WORLD; :func:`d4c` is WORLD's measure.
@@ -270,7 +285,7 @@ def harmonic_aperiodicity(
     """
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
-    n_fft_out = world_fft_size(fs, f0_floor)
+    n_fft_out = world_fft_size(fs, f0_floor=f0_floor)
     freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
     data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))
     sample_times = time_axis(sound.n_samples, fs)

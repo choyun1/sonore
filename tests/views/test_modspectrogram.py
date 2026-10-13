@@ -182,6 +182,6 @@ def test_animation_with_audio(tmp_path):
     env = so.cosine_filterbank(n_bands=4, f_lo=500, f_hi=2000).analyze(snd).envelopes(fs=FE)
     msg = so.ModulationSpectrogram(env, f_lo=16.0, f_hi=32.0)
     path = tmp_path / "msg.mp4"
-    msg.animate(path, sound=snd, fps=10, figsize=(2, 2), dpi=50)
+    msg.animate(path=path, sound=snd, fps=10, figsize=(2, 2), dpi=50)
     assert path.stat().st_size > 0
     plt.close("all")

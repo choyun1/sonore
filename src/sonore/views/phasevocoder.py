@@ -87,6 +87,7 @@ class PVAnalysis(View):
 
     def to_sound(
         self,
+        *,
         time_scale: float = 1.0,
         freq_map: float | Callable[[np.ndarray], np.ndarray] | None = None,
         floor_db: float = -80.0,
@@ -153,7 +154,7 @@ class PVAnalysis(View):
         return Sound(out, self.fs)
 
 
-def pv_analyze(sound: Sound, win_dur: float = 46e-3, hop_dur: float | None = None) -> PVAnalysis:
+def pv_analyze(sound: Sound, *, win_dur: float = 46e-3, hop_dur: float | None = None) -> PVAnalysis:
     """Phase-vocoder analysis with a Hann window of ``win_dur`` seconds and a hop
     of ``hop_dur`` (default: a quarter window, the largest hop at which
     instantaneous frequency is unambiguous across a Hann main lobe)."""
@@ -176,7 +177,7 @@ def _lock_phases(
     return peak_synthesis_phase[owner] + (analysis_phase - analysis_phase[peaks[owner]])
 
 
-def time_stretch(sound: Sound, factor: float, win_dur: float = 46e-3, phase_lock: bool = True) -> Sound:
+def time_stretch(sound: Sound, factor: float, *, win_dur: float = 46e-3, phase_lock: bool = True) -> Sound:
     """Change duration by ``factor`` (2 = twice as long) without changing pitch.
 
     The synthesis hop is fixed at a quarter window; the analysis hop is
@@ -243,10 +244,10 @@ def time_stretch(sound: Sound, factor: float, win_dur: float = 46e-3, phase_lock
     return Sound(np.real(signal).T, fs)
 
 
-def pitch_shift(sound: Sound, semitones: float, win_dur: float = 46e-3, phase_lock: bool = True) -> Sound:
+def pitch_shift(sound: Sound, semitones: float, *, win_dur: float = 46e-3, phase_lock: bool = True) -> Sound:
     """Shift pitch by ``semitones`` without changing duration (time-stretch,
     then resample). Formants shift along with the pitch."""
     ratio = Fraction(2 ** (semitones / 12)).limit_denominator(1000)
-    stretched = time_stretch(sound, float(ratio), win_dur, phase_lock)
+    stretched = time_stretch(sound, float(ratio), win_dur=win_dur, phase_lock=phase_lock)
     resampled = resample_poly(stretched.data, ratio.denominator, ratio.numerator, axis=0)
     return Sound(_fit_length(resampled, len(sound)), sound.fs)

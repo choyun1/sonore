@@ -322,7 +322,8 @@ fig, playhead = show_pair(sounds, 8, env_lowpass=300, title="eight bands, 300 Hz
 notes = [131, 131, 196, 196, 220, 220, 196]  # C3 C3 G3 G3 A3 A3 G3 [Hz]
 durs = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.8]
 tones = [
-    so.harmonic_complex(d, fs, f, np.arange(1, 21)).ramp(20e-3) for f, d in zip(notes, durs, strict=True)
+    so.harmonic_complex(d, fs, f, harmonics=np.arange(1, 21)).ramp(20e-3)
+    for f, d in zip(notes, durs, strict=True)
 ]
 melody = finish(so.concat(tones))
 
@@ -375,11 +376,11 @@ sound = vocoded
 # - Dorman, Loizou & Rainey (1997). Speech intelligibility as a function of the number of channels
 #   of stimulation for signal processors using sine-wave and noise-band outputs. *J. Acoust. Soc.
 #   Am.* 102(4), 2403–2411. [doi:10.1121/1.420354](https://doi.org/10.1121/1.420354).
-#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497)
 # - Friesen, Shannon, Baskent & Wang (2001). Speech recognition in noise as a function of the number
 #   of spectral channels: comparison of acoustic hearing and cochlear implants. *J. Acoust. Soc.
 #   Am.* 110(2), 1150–1163. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11519582/).
-#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497)
 # - Fu, Chinchilla & Galvin (2004). The role of spectral and temporal cues in voice gender
 #   discrimination by normal-hearing listeners and cochlear implant users. *J. Assoc. Res.
 #   Otolaryngol.* 5(3), 253–260.
@@ -393,7 +394,7 @@ sound = vocoded
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
-#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497)
 # - Wilson, Finley, Lawson, Wolford, Eddington & Rabinowitz (1991). Better speech recognition with
 #   cochlear implants. *Nature* 352, 236–238. [PubMed](https://pubmed.ncbi.nlm.nih.gov/1857418/).
-#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L492)
+#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497)

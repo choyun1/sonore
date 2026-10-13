@@ -312,7 +312,7 @@ for name, snd, drawn in carriers:
 def random_spectrogram_sound(seed, **kwargs):
     """A drawn spectrogram, and the sound made by putting it on a noise's fine structure."""
     env = so.gaussian_spectrogram(1.0, FS, rng=seed, **kwargs)
-    sound = finish(env.to_sound(so.gaussian_noise(1.0, FS, rng=100 + seed)))
+    sound = finish(env.to_sound(carrier=so.gaussian_noise(1.0, FS, rng=100 + seed)))
     return env, sound
 
 
@@ -562,24 +562,24 @@ fig, playhead = show(sound, f_lo=125)
 # - Elliott & Theunissen (2009). The modulation transfer function for speech intelligibility.
 #   *PLoS Comput. Biol.* 5(3), e1000302.
 #   [doi:10.1371/journal.pcbi.1000302](https://doi.org/10.1371/journal.pcbi.1000302).
-#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L531)
+#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L548)
 # - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE
 #   Trans. Acoust. Speech Signal Process.* 32(2), 236–243.
 #   [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L633)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L649)
 # - Hsu, Woolley, Fremouw & Theunissen (2004). Modulation power and phase spectrum of natural
 #   sounds enhance neural encoding performed by single auditory neurons. *J. Neurosci.* 24(41),
 #   9201–9211.
 #   [doi:10.1523/JNEUROSCI.2449-04.2004](https://doi.org/10.1523/JNEUROSCI.2449-04.2004).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L633)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L649)
 # - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
 #   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
 # - McDermott, Wrobleski & Oxenham (2011). Recovering sound sources from embedded repetition.
 #   *PNAS* 108(3), 1188–1193. [doi:10.1073/pnas.1004765108](https://doi.org/10.1073/pnas.1004765108).
-#   [`gaussian_spectrogram.gaussian_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/gaussian_spectrogram.py#L42)
+#   [`gaussian_spectrogram.gaussian_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/gaussian_spectrogram.py#L44)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.
 #   [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067).
-#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L333)
+#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L343)

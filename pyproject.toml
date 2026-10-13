@@ -7,7 +7,7 @@ name = "sonore"
 dynamic = ["version"]
 description = "Signals and stimuli for auditory research: generators, filterbanks, STFTs, binaural cues, HRIR spatialization, synthetic reverb."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "Adrian Cho", email = "choyun1@gmail.com" }]
 license = "MIT"
 license-files = ["LICENSE"]
@@ -18,7 +18,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -45,7 +44,7 @@ play = ["sounddevice>=0.4"]
 sofa = ["h5py>=3.8"]
 notebook = ["ipykernel", "ipython", "ipywidgets", "tqdm"]
 docs = ["sphinx>=7", "furo"]
-dev = ["pytest>=8", "ruff>=0.5", "h5py>=3.8"]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.15", "h5py>=3.8"]
 
 [tool.hatch.version]
 path = "src/sonore/__init__.py"
@@ -62,6 +61,17 @@ packages = ["src/sonore"]
 testpaths = ["tests"]
 pythonpath = ["tests"]  # so tests in subfolders can import tests/helpers.py
 filterwarnings = ["error::RuntimeWarning"]
+
+[tool.mypy]
+files = ["src/sonore"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+[[tool.mypy.overrides]]
+# No type information published for these.
+module = ["soundfile", "sounddevice", "h5py", "scipy.*", "mpl_toolkits.*", "IPython.*"]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 110

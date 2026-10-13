@@ -128,7 +128,7 @@ class TestHandWrittenValues:
         np.testing.assert_array_equal(self.sound([1.0, 1.0]).pad(0.001, 0.003).data[:, 0], [0, 1, 1, 0, 0, 0])
 
     def test_pad_to_center_puts_the_odd_sample_at_the_end(self):
-        np.testing.assert_array_equal(self.sound([1.0]).pad_to(4, "center").data[:, 0], [0, 1, 0, 0])
+        np.testing.assert_array_equal(self.sound([1.0]).pad_to(4, align="center").data[:, 0], [0, 1, 0, 0])
 
     def test_time_slices_round_to_the_nearest_sample(self):
         snd = self.sound(np.arange(10.0))

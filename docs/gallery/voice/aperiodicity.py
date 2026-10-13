@@ -396,7 +396,7 @@ for label, vowel in vowels.items():
     wrong_track = (window_times, track[1] * 1.01)
     for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", so.d4c)]:
         for f0_name, f0 in [("exact F0", track), ("F0 1% high", wrong_track)]:
-            shares = measure(vowel, f0).bands(band_edges, envelope)[0][:, inside].mean(axis=1)
+            shares = measure(vowel, f0).bands(band_edges, envelope=envelope)[0][:, inside].mean(axis=1)
             row = f"  {name}, {f0_name}"
             print(f"{row:<34}" + "".join(f"{value:>11.1f}" for value in 10 * np.log10(shares)))
 
@@ -431,7 +431,7 @@ print(f"{'Median share of noise [dB], band [Hz]':<44}{bands}")
 for label in talkers:
     voiced = np.interp(d4c_maps[label].t, *harvest[label]) > 0
     for name, maps in [("D4C", d4c_maps), ("harmonic residual", residual_maps)]:
-        shares = maps[label].bands(band_edges, envelopes[label])[0][:, voiced]
+        shares = maps[label].bands(band_edges, envelope=envelopes[label])[0][:, voiced]
         row = f"{label}, {name}"
         print(f"{row:<44}" + "".join(f"{value:>11.1f}" for value in 10 * np.log10(np.median(shares, axis=1))))
 
@@ -547,10 +547,10 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L217)
+#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L226)
 # - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
 #   Communication* 84, 57–65. [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
-#   [`aperiodicity.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L119)
+#   [`aperiodicity.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L127)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
@@ -558,7 +558,7 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
-#   [`world.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L233)
+#   [`world.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L239)
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
 #   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The formants of "hod".

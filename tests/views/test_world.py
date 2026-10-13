@@ -125,7 +125,7 @@ def test_views(reference):
     # halfway between time windows, halfway in dB
     middle = envelope([(envelope.t[3] + envelope.t[4]) / 2], [envelope.f[40]])[0, 0, 0]
     assert np.isclose(10 * np.log10(middle), (envelope.db[0, 40, 3] + envelope.db[0, 40, 4]) / 2)
-    bands = aperiodicity.bands([0, 4000, 8001], envelope)
+    bands = aperiodicity.bands([0, 4000, 8001], envelope=envelope)
     assert bands.shape == (1, 2, len(envelope.t))
     assert np.all((bands > 0) & (bands <= 1))
     assert "D4C" in repr(aperiodicity)
@@ -182,7 +182,7 @@ def test_harmonic_aperiodicity_reads_a_known_noise_share(noise_db, vibrato):
     aperiodicity = so.harmonic_aperiodicity(sound, track)
     assert aperiodicity.method == "harmonic residual"
     inside = (track[0] > 0.05) & (track[0] < 0.45)
-    shares = aperiodicity.bands([200, 1000, 3000, 6000], so.cheaptrick(sound, track))[0][:, inside]
+    shares = aperiodicity.bands([200, 1000, 3000, 6000], envelope=so.cheaptrick(sound, track))[0][:, inside]
     expected = 10 ** (noise_db / 10) / (1 + 10 ** (noise_db / 10))
     assert np.allclose(10 * np.log10(shares.mean(axis=1)), 10 * np.log10(expected), atol=1.5)
 

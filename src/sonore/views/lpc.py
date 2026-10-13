@@ -5,8 +5,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import combinations
+from typing import TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.signal import lfilter
 
 from sonore.core.sound import Sound
@@ -14,6 +16,9 @@ from sonore.frames.gabor import STFT, TVSTFT, GaborFrame
 from sonore.views.mfcc import symmetric_hamming
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["levinson", "LPC", "FormantTrack", "formant_track"]
 
@@ -150,6 +155,7 @@ class LPC(View):
         win_dur: float | None = None,
         hop_dur: float | None = None,
     ):
+        coefs: STFT | TVSTFT
         match source:
             case Sound():
                 order = round(source.fs / 1000) + 2 if order is None else order
@@ -195,7 +201,7 @@ class LPC(View):
         """Window center times [s], those of :attr:`source`."""
         return self.source.t
 
-    def envelope(self, f) -> np.ndarray:
+    def envelope(self, f: ArrayLike) -> np.ndarray:
         """The model's power spectrum ``E / |A|^2`` at frequencies ``f`` [Hz],
         shape ``(n_channels, len(f), n_windows)``, on the scale of the time
         window's power spectrum ``|X|^2``: averaged over all ``n_fft`` bins,
@@ -208,7 +214,7 @@ class LPC(View):
         response = np.einsum("fk,ckw->cfw", phasors, self.data)
         return self.error_power[:, None, :] / np.abs(response) ** 2
 
-    def envelope_view(self, f=None) -> GridEnvelope:
+    def envelope_view(self, f: ArrayLike | None = None) -> GridEnvelope:
         """:meth:`envelope` on this analysis's time windows, at frequencies
         ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
         wherever a spectral envelope is taken
@@ -243,7 +249,15 @@ class LPC(View):
             np.moveaxis(bandwidths.reshape(shape), -1, 1),
         )
 
-    def plot(self, ax=None, channel: int = 0, db_range: float = 60.0, fmax: float | None = None, **kwargs):
+    def plot(
+        self,
+        ax: Axes | None = None,
+        *,
+        channel: int = 0,
+        db_range: float = 60.0,
+        fmax: float | None = None,
+        **kwargs,
+    ) -> Axes:
         """The envelope as a time-frequency image with the candidates as dots
         (see :func:`~sonore.plotting.plot_lpc`)."""
         from sonore.plotting import plot_lpc
@@ -286,7 +300,7 @@ class FormantTrack(View):
             f"medians {medians} Hz)"
         )
 
-    def track(self, number: int, channel: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    def track(self, number: int, *, channel: int = 0) -> tuple[np.ndarray, np.ndarray]:
         """Formant ``number`` (1, 2 or 3) of one channel as a ``(times,
         values)`` pair, the form :func:`~sonore.sources.klatt.klatt_synthesize`
         takes for ``F1``, ``F2`` and ``F3``; time windows where it is missing
@@ -295,7 +309,15 @@ class FormantTrack(View):
         present = np.isfinite(values)
         return self.t[present], values[present]
 
-    def plot(self, ax=None, channel: int = 0, candidates: bool = False, voiced=None, **kwargs):
+    def plot(
+        self,
+        ax: Axes | None = None,
+        *,
+        channel: int = 0,
+        candidates: bool = False,
+        voiced: ArrayLike | None = None,
+        **kwargs,
+    ) -> Axes:
         """F1 to F3 against time (see :func:`~sonore.plotting.plot_formant_track`)."""
         from sonore.plotting import plot_formant_track
 
@@ -364,9 +386,9 @@ def _track(freqs, bandwidths, nominal, nominal_weight, bandwidth_weight, skip_co
 
 def formant_track(
     sound: Sound,
+    *,
     ceiling: float = 5000.0,
     n_formants: int = 5,
-    *,
     win_dur: float = 0.025,
     hop: float = 0.005,
     nominal: tuple[float, float, float] = (500.0, 1500.0, 2500.0),

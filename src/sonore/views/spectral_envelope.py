@@ -25,8 +25,10 @@ from __future__ import annotations
 import copy
 import numbers
 from collections.abc import Callable
+from typing import TYPE_CHECKING, TypeGuard
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from sonore.core.sound import Sound
 from sonore.views.view import View
@@ -41,6 +43,11 @@ from sonore.views.world import (
     _time_windows,
     world_fft_size,
 )
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+    from sonore.sources.waveforms import ContourLike
 
 __all__ = ["SpectralEnvelope", "cheaptrick", "GridEnvelope", "warp_frequency"]
 
@@ -158,7 +165,7 @@ class _FrequencyView(View):
         at_freqs = log_values[:, bin_lower] * (1 - bin_weight) + log_values[:, bin_upper] * bin_weight
         return at_freqs[:, :, lower] * (1 - weight) + at_freqs[:, :, upper] * weight
 
-    def __call__(self, t, f) -> np.ndarray:
+    def __call__(self, t: ArrayLike, f: ArrayLike) -> np.ndarray:
         """The values at times ``t`` [s] and frequencies ``f`` [Hz], shape
         ``(n_channels, len(f), len(t))``: linear in time between time
         windows, linear in dB between bins."""
@@ -200,7 +207,7 @@ class SpectralEnvelope(_FrequencyView):
         """``10 log10`` of the power."""
         return 10 * np.log10(self.data)
 
-    def amplitude(self, t, f, channel: int = 0) -> np.ndarray:
+    def amplitude(self, t: ArrayLike, f: ArrayLike, *, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
         f[i])``, ``t`` and ``f`` of the same shape: the form
         :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
@@ -208,13 +215,17 @@ class SpectralEnvelope(_FrequencyView):
         held beyond the first and last time windows."""
         return np.exp(0.5 * _pointwise(np.log(self.data[channel]), self.t, self.f, t, f))
 
-    def plot(self, ax=None, channel: int = 0, db_range: float = 70.0, fmax: float | None = None):
+    def plot(
+        self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
+    ) -> Axes:
         """The envelope in dB as a time-frequency image."""
         return _plot_envelope(self, ax, channel, db_range, fmax)
 
 
 # ------------------------------------------------------------ CheapTrick
-def cheaptrick(sound: Sound, f0, *, q1: float = -0.15, f0_floor: float = _FLOOR_F0) -> SpectralEnvelope:
+def cheaptrick(
+    sound: Sound, f0: ContourLike, *, q1: float = -0.15, f0_floor: float = _FLOOR_F0
+) -> SpectralEnvelope:
     """WORLD's CheapTrick spectral envelope (Morise, 2015), ported exactly.
 
     At each time window of the F0 track: the sound under a Hann window three
@@ -244,7 +255,7 @@ def cheaptrick(sound: Sound, f0, *, q1: float = -0.15, f0_floor: float = _FLOOR_
     """
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
-    n_fft = world_fft_size(fs, f0_floor)
+    n_fft = world_fft_size(fs, f0_floor=f0_floor)
     analysis_floor = 3.0 * fs / (n_fft - 3.0)
     quefrencies = np.arange(n_fft // 2 + 1) / fs
     data = np.empty((sound.n_channels, n_fft // 2 + 1, len(times)))
@@ -299,7 +310,7 @@ class GridEnvelope(View):
         "an aperiodicity."
     )
 
-    def __init__(self, data: np.ndarray, t, f):
+    def __init__(self, data: np.ndarray, t: ArrayLike, f: ArrayLike):
         self.data = np.asarray(data, dtype=float)
         self.t = np.asarray(t, dtype=float)
         self.f = np.asarray(f, dtype=float)
@@ -325,7 +336,7 @@ class GridEnvelope(View):
     def _log(self) -> np.ndarray:
         return np.log(np.maximum(self.data, np.finfo(float).tiny))
 
-    def __call__(self, t, f) -> np.ndarray:
+    def __call__(self, t: ArrayLike, f: ArrayLike) -> np.ndarray:
         """Power at times ``t`` [s] and frequencies ``f`` [Hz], shape
         ``(n_channels, len(f), len(t))``."""
         times = np.atleast_1d(np.asarray(t, dtype=float))
@@ -337,14 +348,16 @@ class GridEnvelope(View):
         at_freqs = log_values[:, f_lower] * (1 - f_weight) + log_values[:, f_upper] * f_weight
         return np.exp(at_freqs[:, :, t_lower] * (1 - t_weight) + at_freqs[:, :, t_upper] * t_weight)
 
-    def amplitude(self, t, f, channel: int = 0) -> np.ndarray:
+    def amplitude(self, t: ArrayLike, f: ArrayLike, *, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
         f[i])``, ``t`` and ``f`` of the same shape: the form
         :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
         per sample and harmonic."""
         return np.exp(0.5 * _pointwise(self._log()[channel], self.t, self.f, t, f))
 
-    def plot(self, ax=None, channel: int = 0, db_range: float = 70.0, fmax: float | None = None):
+    def plot(
+        self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
+    ) -> Axes:
         """The envelope in dB as a time-frequency image."""
         return _plot_envelope(self, ax, channel, db_range, fmax)
 
@@ -364,11 +377,17 @@ def _plot_envelope(envelope, ax, channel: int, db_range: float, fmax: float | No
 
 
 # ------------------------------------------------------------ the formants
-def _is_grid_view(view) -> bool:
+#: Anything read as ``view(t, f)``: a spectral envelope, an aperiodicity, or a function.
+EnvelopeFunction = Callable[[np.ndarray, np.ndarray], np.ndarray]
+
+
+def _is_grid_view(view: object) -> TypeGuard[_FrequencyView | GridEnvelope]:
     return isinstance(view, (_FrequencyView, GridEnvelope))
 
 
-def warp_frequency(view, ratio):
+def warp_frequency(
+    view: EnvelopeFunction, ratio: float | tuple[ArrayLike, ArrayLike] | Callable[[np.ndarray], ArrayLike]
+) -> EnvelopeFunction:
     """A spectral envelope (or aperiodicity) moved along frequency:
     ``new(t, f) = view(t, f / ratio)``. A ratio above 1 moves every formant
     up by that factor, as a shorter vocal tract would; below 1, down. The
@@ -400,7 +419,7 @@ def warp_frequency(view, ratio):
     """
     match ratio:
         case numbers.Real():
-            if not ratio > 0:
+            if not float(ratio) > 0:
                 raise ValueError(f"ratio must be positive, not {ratio}")
             if ratio == 1:
                 return view
@@ -454,5 +473,5 @@ class _WarpedFunction:
         self.view = view
         self.source_freqs = source_freqs
 
-    def __call__(self, t, f):
+    def __call__(self, t: ArrayLike, f: ArrayLike) -> np.ndarray:
         return self.view(t, self.source_freqs(np.asarray(f, dtype=float)))

@@ -92,7 +92,7 @@ def texture_fig(snd, original, synthetic=False):
     gs = fig.add_gridspec(2, 3)
     ax_s = fig.add_subplot(gs[0, :2])
     ax_l, ax_m, ax_v, ax_p = (fig.add_subplot(gs[r, c]) for r, c in ((0, 2), (1, 0), (1, 1), (1, 2)))
-    so.STFT(snd, 20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
+    so.STFT(snd, win_dur=20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
     ax_s.set_title("Spectrogram")
     so.long_term_spectrum(snd).plot(ax_l, lw=1.2, label="this sound")
     if synthetic:
@@ -336,5 +336,5 @@ fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
 #   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
-#   [`filterbank.Cosine`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L139)
+#   [`filterbank.Cosine`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L148)
 #   [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py)

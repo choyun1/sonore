@@ -22,7 +22,7 @@ class TestBinaural:
         """The right channel is the left one 8 samples earlier and twice as large: ITD +8/FS, ILD +6.02 dB."""
         g = so.gaussian_noise(1, FS, band=(100, 8000), rng=0).data[:, 0]
         left, right = g[:-8], 2 * g[8:]
-        c = so.interaural_cues(so.Sound(np.column_stack([left, right]), FS), 50e-3)
+        c = so.interaural_cues(so.Sound(np.column_stack([left, right]), FS), win_dur=50e-3)
         assert np.nanmedian(c.itd) == pytest.approx(8 / FS, abs=1e-6)
         # each window sees slightly different noise samples in the two ears, hence not exact
         assert np.nanmedian(c.ild) == pytest.approx(20 * np.log10(2), abs=0.01)
@@ -31,19 +31,19 @@ class TestBinaural:
     def test_itd_ild_roundtrip(self, itd):
         g = so.gaussian_noise(1, FS, band=(100, 8000), rng=0)
         b = so.apply_itd_ild(g, itd=itd, ild=6)
-        c = so.interaural_cues(b, 50e-3)
+        c = so.interaural_cues(b, win_dur=50e-3)
         assert np.nanmedian(c.itd) == pytest.approx(itd, abs=3e-6)
         assert np.nanmedian(c.ild) == pytest.approx(6, abs=0.05)
         # fractional lags: the sampled CCF peak sits slightly below its true height
         assert np.nanmedian(c.iac) > (0.995 if abs(itd * FS - round(itd * FS)) < 1e-6 else 0.99)
 
     def test_simple_bir_is_level_independent_of_itd(self):
-        a, b = so.simple_bir(FS, 100e-6), so.simple_bir(FS, 500e-6)
+        a, b = so.simple_bir(FS, itd=100e-6), so.simple_bir(FS, itd=500e-6)
         assert np.sum(a.data**2) == pytest.approx(np.sum(b.data**2), rel=2e-2)
 
     def test_per_band_cues(self):
         b = so.apply_itd_ild(so.gaussian_noise(0.5, FS, rng=0), itd=200e-6)
-        c = so.interaural_cues(b, 20e-3, filterbank=so.cosine_filterbank(8, 200, 1500))
+        c = so.interaural_cues(b, win_dur=20e-3, filterbank=so.cosine_filterbank(8, 200, 1500))
         assert c.itd.shape[1] == 10
         assert np.nanmedian(c.itd[:, 2:-2]) == pytest.approx(200e-6, abs=10e-6)
 
@@ -60,7 +60,7 @@ class TestBinaural:
 
 def test_zero_lag_correlation_tracks_oscor():
     s = so.oscor(2, FS, 2, rng=0)
-    c = so.interaural_cues(s, 10e-3)
+    c = so.interaural_cues(s, win_dur=10e-3)
     ok = np.isfinite(c.corr0)
     r = np.corrcoef(c.corr0[ok], np.sin(2 * np.pi * 2 * c.t[ok]))[0, 1]
     assert r > 0.95

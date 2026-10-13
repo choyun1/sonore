@@ -20,6 +20,7 @@ adjoint of ``s -> Re(A s)`` is ``g -> Re(A g)`` and of ``s -> Im(A s)`` is
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 import numpy as np
@@ -72,15 +73,15 @@ class ChannelContext:
         """Adjoint of :meth:`mod_filter`: ``(n, n_mod) -> (n,)``."""
         return np.fft.irfft((np.fft.rfft(G, axis=0) * self.H_mod).sum(axis=1), n=self.n)
 
-    def analytic(self, x: np.ndarray, bands) -> np.ndarray:
+    def analytic(self, x: np.ndarray, bands: Iterable[int]) -> np.ndarray:
         """``(n,) -> (n, len(bands))`` complex analytic octave bands."""
         return np.fft.ifft(np.fft.fft(x)[:, None] * self.A_oct[:, list(bands)], axis=0)
 
-    def analytic_many(self, X: np.ndarray, bands) -> np.ndarray:
+    def analytic_many(self, X: np.ndarray, bands: Iterable[int]) -> np.ndarray:
         """``(n, k) -> (n, len(bands), k)``: :meth:`analytic` of each column."""
         return np.fft.ifft(np.fft.fft(X, axis=0)[:, None, :] * self.A_oct[:, list(bands), None], axis=0)
 
-    def analytic_adjoint(self, g_re: np.ndarray, g_im: np.ndarray, bands) -> np.ndarray:
+    def analytic_adjoint(self, g_re: np.ndarray, g_im: np.ndarray, bands: Iterable[int]) -> np.ndarray:
         """Adjoint of ``x -> (Re A x, Im A x)`` for the given bands, summed over bands.
 
         Since ``A`` is Hermitian, this is ``Re(A g_re) - Im(A g_im)``
@@ -90,13 +91,17 @@ class ChannelContext:
         return np.fft.ifft((g_spectrum * self.A_oct[:, list(bands)]).sum(axis=1)).real
 
 
+#: The vector-Jacobian product of a statistic: cotangent of its value -> gradient for the envelope.
+Vjp = Callable[[np.ndarray], np.ndarray]
+
+
 def _central(s, w):
     mean = w @ s
     d = s - mean
     return mean, d
 
 
-def env_moments(s: np.ndarray, context: ChannelContext):
+def env_moments(s: np.ndarray, context: ChannelContext) -> tuple[np.ndarray, Vjp]:
     """``[mean, var/mean**2, skew, kurtosis]`` of the envelope."""
     w = context.w
     mean, d = _central(s, w)
@@ -122,7 +127,7 @@ def env_moments(s: np.ndarray, context: ChannelContext):
     return value, vjp
 
 
-def mod_power(s: np.ndarray, context: ChannelContext):
+def mod_power(s: np.ndarray, context: ChannelContext) -> tuple[np.ndarray, Vjp]:
     """Modulation power in each constant-Q band, relative to envelope variance."""
     _, d = _central(s, context.w)
     value, core_vjp = mod_power_core(context.mod_filter(s), d, context.w)
@@ -135,7 +140,7 @@ def mod_power(s: np.ndarray, context: ChannelContext):
     return value, vjp
 
 
-def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray):
+def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray) -> tuple[np.ndarray, Callable]:
     """:func:`mod_power` from the filtered envelope ``B`` ``(n, M)`` and the
     centered envelope ``d``. ``vjp(g)`` returns ``(G, direct)``: the cotangent
     of ``B`` (to be passed through the filter adjoint) and the gradient term
@@ -150,7 +155,7 @@ def mod_power_core(B: np.ndarray, d: np.ndarray, w: np.ndarray):
     return value, vjp
 
 
-def env_corr(s: np.ndarray, others: np.ndarray, context: ChannelContext):
+def env_corr(s: np.ndarray, others: np.ndarray, context: ChannelContext) -> tuple[np.ndarray, Vjp]:
     """Correlation of ``s`` with each column of ``others`` ``(n, k)`` (fixed
     envelopes of other channels)."""
     w = context.w
@@ -168,7 +173,9 @@ def env_corr(s: np.ndarray, others: np.ndarray, context: ChannelContext):
     return value, vjp
 
 
-def c1(s: np.ndarray, others: np.ndarray, context: ChannelContext, bands=None):
+def c1(
+    s: np.ndarray, others: np.ndarray, context: ChannelContext, bands: Iterable[int] | None = None
+) -> tuple[np.ndarray, Vjp]:
     """C1: correlation of ``s``'s octave modulation bands with the same bands
     of each column of ``others`` ``(n, k)``. Shape ``(len(bands), k)``. No
     mean subtraction (paper Eq. 6)."""
@@ -185,7 +192,7 @@ def c1(s: np.ndarray, others: np.ndarray, context: ChannelContext, bands=None):
     return value, vjp
 
 
-def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray):
+def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray) -> tuple[np.ndarray, Callable]:
     """:func:`c1` from the octave bands of ``s`` (``R``, ``(n, K)``) and of the
     neighbors (``Ro``, ``(n, K, k)``). ``vjp(g)`` returns the cotangent of ``R``."""
     pow_s = w @ R**2  # (K,) weighted power of each band of s
@@ -202,7 +209,7 @@ def c1_core(R: np.ndarray, Ro: np.ndarray, w: np.ndarray):
     return value, vjp
 
 
-def c2(s: np.ndarray, context: ChannelContext):
+def c2(s: np.ndarray, context: ChannelContext) -> tuple[np.ndarray, Vjp]:
     """C2 within one channel: correlation of each octave band, frequency-doubled,
     with the next band up. Complex ``(n_oct - 1,)``: real part against the
     band's real part, imaginary part against its imaginary (quadrature) part."""
@@ -217,7 +224,7 @@ def c2(s: np.ndarray, context: ChannelContext):
     return value, vjp
 
 
-def c2_core(A: np.ndarray, w: np.ndarray):
+def c2_core(A: np.ndarray, w: np.ndarray) -> tuple[np.ndarray, Callable]:
     """:func:`c2` from all analytic octave bands ``A`` ``(n, K)``. ``vjp(g)``
     returns the cotangents ``(g_re, g_im)`` of ``A.real`` and ``A.imag``.
 

@@ -195,7 +195,7 @@ def test_gabor_bin_weights():
 
 def test_stft_is_the_gabor_frame():
     x = _noise(2, 4)
-    S = so.STFT(x, WIN, HOP)
+    S = so.STFT(x, win_dur=WIN, hop_dur=HOP)
     assert S.frame == so.GaborFrame(WIN, HOP) and S.sft is S.frame.sft(FS)
     assert np.array_equal(S.data, so.GaborFrame(WIN, HOP).analyze(x).data)
     assert so.STFT(x).frame == so.GaborFrame(20e-3)
@@ -260,7 +260,7 @@ def test_constant_schedule_is_the_gabor_frame(name):
     assert np.allclose(tv.frame_power(N, FS), gabor.frame_power(N, FS), rtol=1e-13)
     masked = _masked(S)
     for method in ("synthesize", "adjoint"):
-        y = getattr(tv, method)(so.TVSTFT._from(C, masked.data)).data
+        y = getattr(tv, method)(C._with_data(masked.data)).data
         assert np.allclose(y, getattr(gabor, method)(masked).data, rtol=0, atol=1e-10)
 
 
@@ -366,12 +366,12 @@ def _masked(coefs, seed=0):
     if isinstance(coefs, so.Subbands):
         m = rng.random(coefs._full.shape[:2])[:, :, None]
         return so.Subbands(coefs._full * m, coefs.fs, coefs.filterbank, coefs.pad)
-    return type(coefs)._from(coefs, coefs.data * rng.random(coefs.data.shape[1:]))
+    return coefs._with_data(coefs.data * rng.random(coefs.data.shape[1:]))
 
 
 def _is_padded_grid_case(frame, pad):
     """Padded non-tight filterbank: least squares on the padded grid."""
-    return isinstance(frame, so.Filterbank) and not frame.is_tight(N, FS, pad) and pad != 0
+    return isinstance(frame, so.Filterbank) and not frame.is_tight(N, FS, pad=pad) and pad != 0
 
 
 @pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)
@@ -470,7 +470,7 @@ def test_gabor_adjoint_inner_product(name):
     rng = np.random.default_rng(11)
     c = rng.standard_normal(S.data.shape) + 1j * rng.standard_normal(S.data.shape)
     lhs = np.real(np.einsum("f,cft->", frame.bin_weights(FS), S.data.conj() * c))
-    rhs = x.data[:, 0] @ frame.adjoint(so.STFT._from(S, c)).data[:, 0]
+    rhs = x.data[:, 0] @ frame.adjoint(S._with_data(c)).data[:, 0]
     assert abs(lhs - rhs) < 1e-10 * abs(lhs)
 
 
