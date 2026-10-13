@@ -43,6 +43,16 @@ def test_gallery_link_targets_are_whole():
             assert href.count("(") == href.count(")"), f"{page} links to a cut-off URL {href}"
 
 
+def test_only_links_to_other_sites_open_a_new_tab():
+    """Links to other sites open in a new tab; links within sonore and to sonore-sketch
+    (both on choyun1.github.io) stay in the same one, as on sonore-sketch's page."""
+    for path in [GALLERY / page for page in PAGES] + [ROOT / "docs" / "index.html"]:
+        for tag in re.findall(r"<a [^>]*>", path.read_text()):
+            href = re.search(r'href="([^"]*)"', tag)
+            outside = bool(href) and re.match(r"https?://(?!choyun1\.github\.io/)", href.group(1))
+            assert ('target="_blank"' in tag) == bool(outside), f"{path.name}: {tag}"
+
+
 def test_gallery_anchor_links_have_targets():
     """Every #anchor link on a gallery page, to the same page or another one,
     lands on an element with that id."""
