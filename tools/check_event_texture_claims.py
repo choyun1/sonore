@@ -22,6 +22,11 @@ h at Poisson onset times with rate `rate` per second, each copy scaled by
   E7  gamma-distributed intervals between onsets, from Poisson (shape 1)
       toward regular (large shape): how far the band envelope's spectrum
       peaks at the rate
+  E8  a rate that changes over time, by warping time: unit-mean intervals
+      are summed on a warped clock and mapped back through the inverse of
+      the integrated rate; for exponential intervals this is a Poisson
+      process with that rate at each moment (counts per window have mean
+      and variance equal to the integrated rate)
 """
 
 import numpy as np
@@ -151,3 +156,28 @@ for shape in [1, 4, 16, 64, None]:
     ratio = 10 * np.log10(psd[near].max() / np.median(psd[span]))
     name = "regular" if shape is None else f"gamma shape {shape:2d}"
     print(f"E7 {name} at {rate}/s: envelope spectrum peak at the rate over median {ratio:.1f} dB")
+
+
+# E8: a rate rising exponentially from 1 to 1000 per second over 30 s. Warped time is
+# Lambda(t) = integral of the rate; onsets are Lambda^-1 of a unit-rate process.
+span_s = 30.0
+clock = np.linspace(0, span_s, 300001)
+rate_track = 1000 ** (clock / span_s)
+warped = np.concatenate([[0], np.cumsum((rate_track[1:] + rate_track[:-1]) / 2 * np.diff(clock))])
+n_trials = 400
+edges = np.linspace(0, span_s, 31)
+expected = np.diff(np.interp(edges, clock, warped))
+counts = np.zeros((n_trials, 30))
+for trial in range(n_trials):
+    rng = np.random.default_rng(1000 + trial)
+    unit = np.cumsum(rng.exponential(1.0, int(warped[-1] * 1.2) + 100))
+    onsets = np.interp(unit[unit < warped[-1]], warped, clock)
+    counts[trial] = np.histogram(onsets, edges)[0]
+mean_ratio = counts.mean(0) / expected
+dispersion = counts.var(0) / counts.mean(0)
+print(
+    f"E8 rate 1 to 1000/s over 30 s, {n_trials} draws, 1 s windows (expected counts {expected[0]:.2f} to "
+    f"{expected[-1]:.0f}):"
+)
+print(f"   mean count / integrated rate: {mean_ratio.min():.3f} to {mean_ratio.max():.3f}")
+print(f"   variance / mean (Poisson: 1): {dispersion.min():.3f} to {dispersion.max():.3f}")

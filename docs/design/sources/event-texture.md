@@ -28,16 +28,17 @@ cats. The sonore version is about the idea only: a stimulus and a gallery
 demonstration. This document sets out the model, where it fits in sonore,
 and the decisions for Cho. No code yet.
 
-Status: second draft, after Cho's review of the first (2026-10-13). D1
-(its own source in `sources`) and D7 (a section on the Sound textures
-page) accepted by Cho as recommended. Cho asked for timing, level and pitch
-each to be a distribution the caller gives, and for a name that does not
-tie the source to Poisson timing. D2 to D6 below are rewritten for that.
+Status: all decisions settled by Cho, 2026-10-13. D1 and D7 were accepted
+on the first draft. Cho then asked for timing, level and pitch each to be
+a distribution the caller gives, and for a name that does not tie the
+source to Poisson timing; D2 to D6 were rewritten for that, and D2, D3, D5
+and D6 accepted as recommended. For D4 Cho chose variable rates now (the
+rate track in the design and E8). Ready to build.
 
 ## How the claims are verified
 
 - **[check]**: printed by `tools/check_event_texture_claims.py`. It uses
-  NumPy and SciPy only, shares no code with sonore, and runs in about 40 s.
+  NumPy and SciPy only, shares no code with sonore, and runs in about 45 s.
   The event is a 30 ms sweep from 2 to 6 kHz (exponential in frequency)
   under a Hann window, at 44.1 kHz. Each rate is 4 seeds of 60 s.
 - **[math]**: follows in one line from the formulas shown.
@@ -54,6 +55,18 @@ distribution. The sound is
     x(t) = sum over k of a_k h_k(t - t_k)
 
 where h_k is the event h transposed by r_k.
+
+**A rate that changes over time.** A rate track `rate_scale(t)` (a number,
+or `(times, values)` like sonore's other tracks) multiplies the rate the
+interval distribution gives. It works by warping time. Onsets are first
+drawn on a warped clock, where the intervals keep their distribution, and
+each is then mapped back to real time through the inverse of
+`Lambda(t) = integral from 0 to t of rate_scale`. Where the track is 2,
+events come twice as often; where it is 1, nothing changes. For
+exponential intervals this gives a Poisson process whose rate at each
+moment is the base rate times the track (E8). For regular intervals it
+gives a train whose spacing follows the track smoothly, as a pulse train
+follows an F0 contour.
 
 **Where convolution comes in.** If every event has the same pitch, h_k = h
 for all k, and x is a train of impulses of heights a_k at the onsets,
@@ -119,15 +132,27 @@ gives the statistics: the n-th cumulant of x is
   nearer the regular end (an inference from how rotors work, not measured
   here).
 
-## Proposed design
+- **E8 [check].** A rate rising exponentially from 1 to 1000 per second
+  over 30 s, drawn by the time warp with exponential intervals, 400 draws,
+  counted in 1 s windows (expected counts from 1.1 to 893). The mean count
+  over the integrated rate is 0.94 to 1.05 across the windows, and the
+  variance over the mean (1 for Poisson counts) is 0.81 to 1.19. The
+  widest departures are in the first windows, where about one event is
+  expected and 400 draws leave sampling errors of about 5% on the mean and
+  7% on the ratio.
+
+## Design
 
     from scipy import stats
 
     chorus = so.event_train(chirp, 4.0, stats.expon(scale=1 / 30), level_db=stats.norm(0, 3),
                             pitch_cents=stats.norm(0, 100), rng=1)
+    sweep = so.event_train(chirp, 30.0, stats.expon(scale=1.0), rate_scale=([0, 30], [1, 1000]), rng=2)
 
-`event_train(event, duration, intervals, *, level_db=0.0, pitch_cents=0.0,
-lead=0.0, rng=None)` returns a `Sound` at the event's sampling rate.
+`event_train(event, duration, intervals, *, rate_scale=1.0, level_db=0.0,
+pitch_cents=0.0, lead=0.0, rng=None)` returns a `Sound` at the event's
+sampling rate. (In the sweep, the track rises linearly between its two
+points, as all of sonore's tracks do.)
 
 1. **Distributions.** `intervals` (seconds), `level_db` (dB, relative to
    the event as given) and `pitch_cents` (cents) each take either a
@@ -138,7 +163,8 @@ lead=0.0, rng=None)` returns a `Sound` at the event's sampling rate.
    already a dependency of sonore.
 2. **Onsets.** Intervals are drawn and summed until they pass
    `duration + lead`; the first onset is at `-lead` plus one interval, and
-   each is rounded to the nearest sample (at most 11 µs off at 44.1 kHz,
+   each is mapped through the rate track's warp (above) and rounded to the
+   nearest sample (at most 11 µs off at 44.1 kHz,
    far below the chirp's 30 ms *[math]*). With `lead` set to the event's
    length, an event already under way at t = 0 is heard. For Poisson
    timing that makes the density the same at the start as anywhere else;
@@ -164,10 +190,11 @@ with pitch spread: one resampling per event, so a minute at 1000/s is
 nearest cent and each distinct transposition made once *[estimate]*.
 
 Tests: onset counts and intervals against the given distribution over many
-draws; reproducibility from `rng`; a constant interval giving exactly
-regular onsets; E1, E2 and E6 on the built function within stated
-tolerances; and the single-convolution and one-by-one paths agreeing when
-every pitch is the same.
+draws; counts under a rate track against its integral (E8);
+reproducibility from `rng`; a constant interval giving exactly regular
+onsets; E1, E2 and E6 on the built function within stated tolerances; and
+the single-convolution and one-by-one paths agreeing when every pitch is
+the same.
 
 Texture code is not touched, so texture synthesis stays bit-for-bit
 identical.
@@ -181,17 +208,20 @@ identical.
   levels and pitches as arrays, and a second that renders them, so a
   caller can edit the draws or supply measured onset times in between.
   *Recommended: (a) now. (b) is easy to split out later, because the
-  rendering step is internal to (a) anyway.*
+  rendering step is internal to (a) anyway.* Accepted by Cho 2026-10-13.
 - **D3. How a distribution is given.** (a) A number or a SciPy frozen
   distribution, as above. (b) Also any callable `(rng, n) -> array`, for
   distributions SciPy does not have (an empirical one, say). (c) sonore's
   own short list of names and parameters. *Recommended: (a), adding (b)
-  only when a case needs it.*
+  only when a case needs it.* Accepted by Cho 2026-10-13.
 - **D4. Timing.** (a) A distribution of intervals between onsets, as above
   (a renewal process: Poisson, regular and gamma all fit). (b) Also
   processes whose rate changes over time (a rate that swells and fades),
   which intervals alone cannot express. *Recommended: (a) now; (b) later if
-  wanted, as a rate track like sonore's other tracks.*
+  wanted, as a rate track like sonore's other tracks.* Decided by Cho
+  2026-10-13: both now. The rate track is `rate_scale`, by time warping
+  (the model and E8). The level and pitch distributions stay fixed over
+  time; tracks for them would be a later proposal.
 - **D5. How pitch is changed.** The first draft's D5 (vary each event?) is
   answered by Cho: level and pitch both get distributions. What remains is
   the method. (a) Resampling: pitch and length change together, exactly,
@@ -201,17 +231,18 @@ identical.
   `event(ratio) -> Sound`, so a synthetic chirp is rebuilt at the new
   pitch with its length kept, exactly. *Recommended: (a) by default, and
   accept (c) as well, since a chirp made by sonore can be rebuilt exactly
-  and a recording cannot.*
+  and a recording cannot.* Accepted by Cho 2026-10-13.
 - **D6. Name.** `event_train` (like `pulse_train`, which is its regular
   special case with an impulse for the event), `event_sequence`, or
   `shot_noise` (the textbook name, but it usually means Poisson timing).
-  *Recommended: `event_train`.*
+  *Recommended: `event_train`.* Accepted by Cho 2026-10-13.
 - **D7. Gallery.** A section on the Sound textures page, "From single
   events to a texture": one event, then a ladder of rates (1, 3, 10, 30,
   100, 300 and 1000 per second) as audio with spectrograms, and the
   measured `env_var` in one band against rate as a one-way view (E4).
   Then the other two axes in a few sounds: level spread at one rate (E6),
-  pitch spread, and timing from Poisson to regular (E7). A live slider fits
+  pitch spread, timing from Poisson to regular (E7), and one sound whose
+  rate sweeps from sparse to dense (E8). A live slider fits
   sonore-sketch later. *Accepted by Cho 2026-10-13 (the section); the
   extra sounds for the new axes are proposed here.*
 
