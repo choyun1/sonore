@@ -115,6 +115,20 @@ meant to be readable without them.
   frames". In prose, the classes are always set as code (`Frame`,
   `GaborFrame`, `TVGaborFrame`), so a capital-F "Frame" in plain text never
   stands for the class.
+- **Say what a call makes by position, and every option by name.** The
+  arguments without a default (the sound, the duration and rate, the F0) come
+  first and positionally; everything after them is keyword-only, behind a
+  bare `*`: `so.harmonic_complex(1.0, fs, 200, harmonics=range(1, 11))`,
+  `so.STFT(snd, win_dur=0.025)`. A parameter with a default stays positional
+  only when it names the thing itself rather than tuning it: `ax` of every
+  `.plot`, `n_bands, f_lo, f_hi` of a filterbank or `channel_vocode`, the LF
+  model's `rd`, an LPC's `order`. A new exception is argued in its design
+  document, and the same kind of parameter gets the same treatment
+  everywhere.
+- **Type every public signature, and type an option by the values it
+  accepts.** A string option is a `Literal` (`Literal["linear", "db"]`), not
+  `str`, so an editor offers its values and a checker catches a typo. The
+  package passes mypy with the settings in `pyproject.toml`.
 - **American spelling throughout:** "behavior", "color", "center",
   "analyze", "normalize", "gray", "modeling", "labeled", "license". This
   covers prose, docstrings, comments and names. Outside text keeps its own
