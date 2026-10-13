@@ -9,6 +9,7 @@ the repository root (the output is not committed)::
 """
 
 import inspect
+import re
 from pathlib import Path
 
 import sonore
@@ -91,3 +92,24 @@ def linkcode_resolve(domain, info):
         return None
     end = start + len(lines) - 1
     return f"https://github.com/choyun1/sonore/blob/main/src/sonore/{path.as_posix()}#L{start}-L{end}"
+
+
+# Links to other sites (the [source] links to GitHub, papers) open in a new tab; links within
+# sonore and to sonore-sketch stay in this one, as in the gallery (outside_links in
+# docs/gallery/build.py).
+_OUTSIDE_LINK = re.compile(
+    r'<a ((?:(?!target=)[^>])*?)href="(https?://(?!choyun1\.github\.io/)[^"]*)"((?:(?!target=)[^>])*)>'
+)
+
+
+def _outside_links_in_new_tab(app, exception):
+    if exception is None and app.builder.format == "html":
+        for page in Path(app.outdir).rglob("*.html"):
+            text = page.read_text(encoding="utf-8")
+            new = _OUTSIDE_LINK.sub(r'<a \1href="\2" target="_blank" rel="noopener"\3>', text)
+            if new != text:
+                page.write_text(new, encoding="utf-8")
+
+
+def setup(app):
+    app.connect("build-finished", _outside_links_in_new_tab)

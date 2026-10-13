@@ -979,6 +979,16 @@ def how(binaural: bool) -> str:
   axis to play from that point.{lossless} Start with your volume low.</p>"""
 
 
+# Links to other sites open in a new tab; links within sonore and to sonore-sketch, both on
+# choyun1.github.io, stay in this one. docs/index.html and the API reference (docs/api/source/conf.py)
+# follow the same rule.
+OUTSIDE_LINK = re.compile(r'<a ((?:(?!target=)[^>])*?)href="(https?://(?!choyun1\.github\.io/)[^"]*)"((?:(?!target=)[^>])*)>')
+
+
+def outside_links(page_html: str) -> str:
+    return OUTSIDE_LINK.sub(r'<a \1href="\2" target="_blank" rel="noopener"\3>', page_html)
+
+
 def page(title: str, current: str, header: str, sections_html: str, head: str = "", footer: str = "") -> str:
     fonts = (
         '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" '
@@ -1257,10 +1267,10 @@ class Site:
     def write(self, file: str, make) -> None:
         """``make(variant)`` renders a page; variant 0 links media, 1 inlines it."""
         if self.out_dir:
-            (self.out_dir / file).write_text(make(0))
+            (self.out_dir / file).write_text(outside_links(make(0)))
         if self.single:
             stem = self.single.stem if file == "index.html" else f"{self.single.stem}-{Path(file).stem}"
-            self.single.with_name(stem + self.single.suffix).write_text(make(1))
+            self.single.with_name(stem + self.single.suffix).write_text(outside_links(make(1)))
 
 
 def heading_slug(title_html: str) -> str:
