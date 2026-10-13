@@ -36,16 +36,20 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
 from scipy.special import ndtr
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
+from sonore.core.utils import RNG, as_rng, db_to_amp, n_samples, time_axis
 from sonore.frames.filterbank import Filterbank, Subbands, cosine_filterbank
 from sonore.sources.waveforms import gaussian_noise
 from sonore.views.envelopes import Envelopes
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["Ripple", "RippleSum", "DynamicRipple", "ripple_sound", "render"]
 
@@ -54,6 +58,10 @@ _SCALES = ("linear", "db")
 
 class _Pattern:
     """Shared behavior: addition into sums, and plotting."""
+
+    if TYPE_CHECKING:  # each pattern evaluates itself
+
+        def envelope(self, t: np.ndarray, x: np.ndarray) -> np.ndarray: ...
 
     def __add__(self, other):
         match other:
@@ -71,7 +79,14 @@ class _Pattern:
         ``x`` in octaves above ``filterbank.f_lo``), as Envelopes."""
         return render(self, filterbank, duration, fs)
 
-    def plot(self, duration: float = 1.0, f_lo: float = 250.0, f_hi: float = 8000.0, ax=None, **kwargs):
+    def plot(
+        self,
+        duration: float = 1.0,
+        f_lo: float = 250.0,
+        f_hi: float = 8000.0,
+        ax: Axes | None = None,
+        **kwargs,
+    ) -> Axes:
         """Show the envelope pattern (in dB) over time and frequency."""
         from sonore.plotting import plot_ripple_pattern
 
@@ -229,7 +244,7 @@ class DynamicRipple(_Pattern):
         return db_to_amp(level_db)
 
 
-Pattern = Ripple | RippleSum | DynamicRipple | Callable[[np.ndarray, np.ndarray], np.ndarray]
+Pattern = _Pattern | Callable[[np.ndarray, np.ndarray], np.ndarray]
 
 
 def _evaluate(pattern: Pattern, t: np.ndarray, x: np.ndarray) -> np.ndarray:
@@ -307,7 +322,7 @@ def ripple_sound(
     tones_per_octave: float = 20.0,
     f0: float = 100.0,
     bands_per_octave: float = 24.0,
-    rng=None,
+    rng: RNG = None,
     chunk: int = 32,
 ) -> Sound:
     """Synthesize a sound whose spectrotemporal envelope is ``pattern``.
@@ -342,6 +357,8 @@ def ripple_sound(
     out = np.zeros(length)
 
     if isinstance(carrier, str) and carrier in ("tones", "harmonic"):
+        freqs: np.ndarray
+        weights: np.ndarray
         if carrier == "tones":
             _check_resolution(pattern, tones_per_octave, "tone carrier")
             tone_index = np.arange(int(np.floor(tones_per_octave * np.log2(f_hi / f_lo))) + 1)

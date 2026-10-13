@@ -568,14 +568,14 @@ sounds = talkers
 # - Auger & Flandrin (1995). Improving the readability of time-frequency and time-scale
 #   representations by the reassignment method. *IEEE Trans. Signal Processing* 43(5).
 #   [doi:10.1109/78.382394](https://doi.org/10.1109/78.382394).
-#   [`spectra.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L301)
+#   [`spectra.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L305)
 # - Gabor (1946). Theory of communication. Part 1: The analysis of information. *J. IEE* 93(26).
 #   [doi:10.1049/ji-3-2.1946.0074](https://doi.org/10.1049/ji-3-2.1946.0074).
-#   [`gabor.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L56)
+#   [`gabor.GaborFrame`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/gabor.py#L69)
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
 #   Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
-#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L222)
+#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L230)
 # - Kawahara, Masuda-Katsuse & de Cheveigné (1999). Restructuring speech representations using a
 #   pitch-adaptive time-frequency smoothing and an instantaneous-frequency-based F0 extraction.
 #   *Speech Communication* 27.
@@ -584,11 +584,11 @@ sounds = talkers
 # - Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis,
 #   modification and synthesis framework. *Sādhanā* 36(5).
 #   [doi:10.1007/s12046-011-0043-3](https://doi.org/10.1007/s12046-011-0043-3).
-#   [`spectra.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L220)
+#   [`spectra.tandem_power`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L224)
 # - Kodera, Gendrin & de Villedary (1978). Analysis of time-varying signals with small BT values.
 #   *IEEE Trans. ASSP* 26(1).
 #   [doi:10.1109/TASSP.1978.1163047](https://doi.org/10.1109/TASSP.1978.1163047).
-#   [`spectra.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L301)
+#   [`spectra.reassigned_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L305)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.

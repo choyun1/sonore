@@ -23,12 +23,18 @@ then follows each band's level, not its waveform.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
+from numpy.typing import ArrayLike
 
 from sonore.core.utils import power_to_db, time_axis
 from sonore.frames.filterbank import Subbands
 from sonore.frames.gabor import _FLOOR_DB, STFT, TVSTFT
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["Mask", "ideal_binary_mask", "ideal_ratio_mask"]
 
@@ -51,7 +57,7 @@ class Mask(View):
     )
     back_to_sound = "Multiply coefficients by it and go back from those: (stft * mask).to_sound()."
 
-    def __init__(self, values, like: Coefficients):
+    def __init__(self, values: ArrayLike, like: Coefficients):
         gains = np.array(values, dtype=float)
         if gains.shape != _array(like).shape:
             raise ValueError(f"mask values have shape {gains.shape}, the coefficients {_array(like).shape}")
@@ -78,12 +84,12 @@ class Mask(View):
             raise ValueError("this mask was made for coefficients on a different grid")
         if isinstance(coefs, Subbands):
             return coefs._new(coefs._full * self.values)
-        return type(coefs)._from(coefs, coefs.data * self.values)
+        return coefs._with_data(coefs.data * self.values)
 
     def __repr__(self) -> str:
         return f"Mask({type(self._like).__name__}, mean gain {self.values.mean():.3g})"
 
-    def plot(self, ax=None, channel: int = 0, **kwargs):
+    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
         """Draw one channel's gains as an image on the coefficients' time
         and frequency axes; see :func:`sonore.plotting.plot_mask`."""
         from sonore.plotting import plot_mask

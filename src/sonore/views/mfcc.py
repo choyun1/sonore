@@ -3,15 +3,21 @@ bands on a mel scale, summarized by a discrete cosine transform."""
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Literal
+
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.fft import dct, idct
 from scipy.signal import savgol_filter
 
 from sonore.core.sound import Sound
-from sonore.core.utils import db_to_power, freq_to_mel, mel_to_freq
+from sonore.core.utils import MelScale, db_to_power, freq_to_mel, mel_to_freq
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["mel_filterbank", "symmetric_hamming", "delta_features", "MFCC"]
 
@@ -24,7 +30,7 @@ def mel_filterbank(
     freqs: np.ndarray,
     f_lo: float,
     f_hi: float,
-    scale: str = "htk",
+    scale: MelScale = "htk",
     triangles: str = "height",
     triangle_axis: str = "mel",
 ) -> tuple[np.ndarray, np.ndarray]:
@@ -218,7 +224,7 @@ class MFCC(View):
         n_mels: int = 26,
         f_lo: float = 0.0,
         f_hi: float | None = None,
-        mel_scale: str = "htk",
+        mel_scale: MelScale = "htk",
         triangles: str = "height",
         triangle_axis: str = "mel",
         floor_db: float = -200.0,
@@ -226,6 +232,7 @@ class MFCC(View):
         win_dur: float | None = None,
         hop_dur: float | None = None,
     ):
+        coefs: STFT | TVSTFT
         match source:
             case Sound():
                 win_dur = 0.025 if win_dur is None else win_dur
@@ -312,7 +319,7 @@ class MFCC(View):
         they pick out changes at the rate of syllables and phonemes."""
         return delta_features(self.data, order=order, width=width, axis=-1)
 
-    def envelope(self, f) -> np.ndarray:
+    def envelope(self, f: ArrayLike) -> np.ndarray:
         """The smoothed power spectrum the kept coefficients stand for, at
         frequencies ``f`` [Hz], shape ``(n_channels, len(f), n_windows)``.
 
@@ -339,7 +346,7 @@ class MFCC(View):
         log_power = np.einsum("qm,cmw->cqw", interpolation, smoothed_log_power)
         return np.exp(log_power)
 
-    def envelope_view(self, f=None) -> GridEnvelope:
+    def envelope_view(self, f: ArrayLike | None = None) -> GridEnvelope:
         """:meth:`envelope` on this analysis's time windows, at frequencies
         ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
         wherever a spectral envelope is taken
@@ -352,7 +359,9 @@ class MFCC(View):
         freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft if f is None else np.asarray(f, float)
         return GridEnvelope(self.envelope(freqs), self.t, freqs)
 
-    def plot(self, ax=None, channel: int = 0, kind: str = "mfcc", **kwargs):
+    def plot(
+        self, ax: Axes | None = None, channel: int = 0, kind: Literal["mfcc", "mel"] = "mfcc", **kwargs
+    ) -> Axes:
         """The coefficients against time (``kind="mfcc"``) or the mel
         spectrogram in dB (``kind="mel"``); see :func:`~sonore.plotting.plot_mfcc`."""
         from sonore.plotting import plot_mfcc

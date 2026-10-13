@@ -12,9 +12,11 @@ recognizable one (docs/design/sources/gaussian-spectrogram.md).
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 
-from sonore.core.utils import as_rng, n_samples, time_axis
+from sonore.core.utils import RNG, as_rng, n_samples, time_axis
 from sonore.frames.filterbank import cosine_filterbank
 from sonore.views.envelopes import Envelopes
 
@@ -49,7 +51,7 @@ def gaussian_spectrogram(
     f_lo: float = 20.0,
     f_hi: float = 4000.0,
     window: float = 0.020,
-    rng=None,
+    rng: RNG = None,
 ) -> Envelopes:
     """A random spectrogram after McDermott, Wrobleski & Oxenham (2011).
 
@@ -89,17 +91,18 @@ def gaussian_spectrogram(
         raise ValueError("window must be positive")
     rng = as_rng(rng)
     bank = cosine_filterbank(n_bands, f_lo, f_hi)
+    spacing = cast(float, bank.spacing)  # never None: the bands are evenly spaced
     hop = window / 2
     length = n_samples(duration, fs)
     t = time_axis(length, fs)
     n_windows = int(np.ceil(t[-1] / hop)) + 1 if length else 1  # centers 0, hop, ... cover the sound
 
     field = _correlated_field(
-        n_bands, n_windows, np.exp(-bank.spacing / band_correlation_erb), np.exp(-hop / time_correlation), rng
+        n_bands, n_windows, np.exp(-spacing / band_correlation_erb), np.exp(-hop / time_correlation), rng
     )
     # flat on average: band power in proportion to its width in Hz
     knots = bank.scale.to_scale(bank.band_cfs)
-    widths = bank.scale.from_scale(knots + bank.spacing / 2) - bank.scale.from_scale(knots - bank.spacing / 2)
+    widths = bank.scale.from_scale(knots + spacing / 2) - bank.scale.from_scale(knots - spacing / 2)
     mean_db = 10 * np.log10(widths / widths.mean())
     cell_amplitude = 10 ** ((mean_db[:, None] + sd_db * field) / 20)
 

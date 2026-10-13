@@ -4,6 +4,7 @@ resynthesis with the original or minimum phase, and cepstral F0."""
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -12,6 +13,9 @@ from sonore.core.utils import _parabola_vertex, db_to_amp
 from sonore.frames.gabor import STFT, TVSTFT
 from sonore.views.spectral_envelope import GridEnvelope
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["Cepstrum"]
 
@@ -168,7 +172,7 @@ class Cepstrum(View):
                 data = _minimum_phase(self.data, self.n_fft, axis=1)
             case _:
                 raise ValueError(f"phase must be 'original' or 'minimum', not {phase!r}")
-        return type(self.source)._from(self.source, data)
+        return self.source._with_data(data)
 
     def to_sound(self, phase: str = "original") -> Sound:
         """:meth:`to_stft` synthesized by the source's frame: exact for an
@@ -216,7 +220,7 @@ class Cepstrum(View):
         f0 = self.fs / (peak_index[:, 0] + shift)
         return self.t, np.where(peak >= threshold, f0, 0.0), peak
 
-    def plot(self, ax=None, channel: int = 0, **kwargs):
+    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
         """Cepstrum against time and quefrency in ms (see
         :func:`~sonore.plotting.plot_cepstrum`)."""
         from sonore.plotting import plot_cepstrum

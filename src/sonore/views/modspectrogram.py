@@ -12,6 +12,7 @@ design and the numbers behind it.
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -21,6 +22,11 @@ from sonore.views.modulation import HannModulationFilterbank, _correlate
 from sonore.views.view import View
 
 if TYPE_CHECKING:
+    from matplotlib.animation import FuncAnimation
+    from matplotlib.axes import Axes
+    from matplotlib.figure import Figure
+
+    from sonore.core.sound import Sound
     from sonore.views.envelopes import Envelopes
 
 __all__ = ["ModulationSpectrogram"]
@@ -187,7 +193,9 @@ class ModulationSpectrogram(View):
         with np.errstate(divide="ignore", invalid="ignore"):
             return np.where(mean_sq_sum > tiny, np.sqrt(power_sum / mean_sq_sum), np.nan)
 
-    def plot(self, ax=None, band: float | None = None, rate: float | None = None, **kwargs):
+    def plot(
+        self, ax: Axes | None = None, band: float | None = None, rate: float | None = None, **kwargs
+    ) -> Axes:
         """Depth in dB as an image, invalid cells in gray. By default,
         modulation rate against time, pooled over bands
         (:meth:`pooled_depth`); ``band=`` [Hz] shows the acoustic band
@@ -197,7 +205,7 @@ class ModulationSpectrogram(View):
 
         return plot_modulation_spectrogram(self, ax=ax, band=band, rate=rate, **kwargs)
 
-    def slices(self, t: float, rate: float = 4.0, **kwargs):
+    def slices(self, t: float, rate: float = 4.0, **kwargs) -> Figure:
         """Three linked cuts through the time x band x rate cube with a cursor
         at ``t`` [s]: rate against time (pooled), band against time at
         ``rate``, and band against rate at ``t``. Returns the figure."""
@@ -205,7 +213,9 @@ class ModulationSpectrogram(View):
 
         return plot_modulation_slices(self, t, rate=rate, **kwargs)
 
-    def animate(self, path=None, sound=None, fps: float = 25.0, **kwargs):
+    def animate(
+        self, path: str | os.PathLike | None = None, sound: Sound | None = None, fps: float = 25.0, **kwargs
+    ) -> FuncAnimation:
         """The band x rate image (depth, dB) time window by time window, as a matplotlib
         animation. With ``path``, it is written to a video file (needs
         ffmpeg), and with ``sound`` as well, the sound becomes its audio

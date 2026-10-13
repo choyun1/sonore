@@ -173,5 +173,5 @@ fig, playhead = show(sound)
 # - Siveke, Ewert, Grothe & Wiegrebe (2008). Psychophysical and physiological evidence for fast
 #   binaural processing. *J. Neurosci.* 28(9), 2043–2052.
 #   [doi:10.1523/JNEUROSCI.4488-07.2008](https://doi.org/10.1523/JNEUROSCI.4488-07.2008).
-#   [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L182)
-#   [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L191)
+#   [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L186)
+#   [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L195)

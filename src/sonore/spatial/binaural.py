@@ -7,6 +7,7 @@ ILD = right ear louder**, i.e. positive values point to the right.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
@@ -16,10 +17,13 @@ from scipy.signal.windows import hann
 from sonore.core.processing import match_lengths
 from sonore.core.sound import Sound
 from sonore.core.units import dB
-from sonore.core.utils import n_samples, time_axis
+from sonore.core.utils import RNG, n_samples, time_axis
 from sonore.frames.filterbank import Filterbank
 from sonore.sources.waveforms import gaussian_noise
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = [
     "apply_itd_ild",
@@ -96,7 +100,7 @@ class InterauralCues(View):
     corr0: np.ndarray
     cfs: np.ndarray | None = None
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """ITD and ILD on twin axes, with IAC underneath (see
         :func:`~sonore.plotting.plot_interaural_cues`)."""
         from sonore.plotting import plot_interaural_cues
@@ -179,7 +183,7 @@ def interaural_cues(
     return InterauralCues(t, itd, ild, iac, corr0, cfs)
 
 
-def oscor(duration: float, fs: float, f_mod: float, rng=None, **noise_kwargs) -> Sound:
+def oscor(duration: float, fs: float, f_mod: float, rng: RNG = None, **noise_kwargs) -> Sound:
     """Oscillating-correlation noise (Siveke et al., 2008): the interaural
     correlation follows ``sin(2*pi*f_mod*t)``."""
     noise = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
@@ -188,7 +192,7 @@ def oscor(duration: float, fs: float, f_mod: float, rng=None, **noise_kwargs) ->
     return Sound(np.column_stack([noise[:, 0], right]), fs).normalize()
 
 
-def phasewarp(duration: float, fs: float, f_mod: float, rng=None, **noise_kwargs) -> Sound:
+def phasewarp(duration: float, fs: float, f_mod: float, rng: RNG = None, **noise_kwargs) -> Sound:
     """Phasewarp noise (Siveke et al., 2008): every component's interaural
     phase difference rotates at ``f_mod`` Hz, so the IPD sweeps through 360°
     and the zero-lag interaural correlation follows ``cos(2*pi*f_mod*t)``.

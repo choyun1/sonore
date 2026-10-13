@@ -5,12 +5,19 @@ that decides voicing."""
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from typing import TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from sonore.core.sound import Sound
 from sonore.core.utils import _parabola_vertex
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+    from sonore.sources.waveforms import ContourLike
 
 __all__ = ["F0Track", "f0_track", "scale_f0"]
 
@@ -70,7 +77,7 @@ class F0Track(View):
         f0_range = f", F0 {self.f0[voiced].min():.0f}-{self.f0[voiced].max():.0f} Hz" if voiced.any() else ""
         return f"F0Track({n_windows} time windows, {n_channels} ch, {voiced.mean():.0%} voiced{f0_range})"
 
-    def plot(self, ax=None, channel: int = 0, candidates: bool = False, **kwargs):
+    def plot(self, ax: Axes | None = None, channel: int = 0, candidates: bool = False, **kwargs) -> Axes:
         """F0 against time (see :func:`~sonore.plotting.plot_f0_track`)."""
         from sonore.plotting import plot_f0_track
 
@@ -385,7 +392,7 @@ def _spread_around(values: np.ndarray, median: float, ratio: float, spread: floa
     return median * ratio * (values / median) ** spread
 
 
-def _scaled(values: np.ndarray, ratio: float, spread: float) -> np.ndarray:
+def _scaled(values: ArrayLike, ratio: float, spread: float) -> np.ndarray:
     """Voiced values (> 0, one row per channel) times ratio, spread around
     each row's median on a log scale; 0 and NaN stay as they are."""
     values = np.asarray(values, dtype=float)
@@ -401,7 +408,7 @@ def _scaled(values: np.ndarray, ratio: float, spread: float) -> np.ndarray:
     return out.reshape(values.shape)
 
 
-def scale_f0(contour, ratio: float, *, range: float = 1.0):
+def scale_f0(contour: ContourLike, ratio: float, *, range: float = 1.0) -> ContourLike:
     """An F0 contour with its pitch changed: every voiced value multiplied
     by ``ratio`` and, if ``range`` is not 1, spread around its median on a
     log scale, ``median * ratio * (f0 / median) ** range`` (``range=0`` is a

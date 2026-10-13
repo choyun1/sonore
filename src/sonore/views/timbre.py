@@ -10,12 +10,16 @@ out in ``docs/design/music/timbre-page.md``.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.signal import butter, filtfilt, hilbert, lfilter
 
 from sonore.core.sound import Sound
 from sonore.views.view import View
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["DescriptorTrack", "attack_segment", "log_attack_time", "spectral_centroid", "spectral_flux"]
 
@@ -63,7 +67,7 @@ class DescriptorTrack(View):
         median = f"median {self.median[0]:.4g}{unit}"
         return f"DescriptorTrack({self.name}, {n_windows} time windows, {n_channels} ch, {median})"
 
-    def plot(self, ax=None, channel: int = 0, **kwargs):
+    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
         """The descriptor against time (see :func:`~sonore.plotting.plot_descriptor_track`)."""
         from sonore.plotting import plot_descriptor_track
 

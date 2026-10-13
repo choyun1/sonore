@@ -9,7 +9,7 @@ from importlib.resources import files
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, db_to_amp
+from sonore.core.utils import RNG, as_rng, db_to_amp
 from sonore.frames.filterbank import cosine_filterbank
 from sonore.sources.waveforms import gaussian_noise
 from sonore.views.envelopes import Envelopes
@@ -90,7 +90,7 @@ def synth_ir(
     decay_shape: str = "exponential",
     rt60_profile: str = "ecological",
     drr_profile: str = "ecological",
-    rng=None,
+    rng: RNG = None,
 ) -> Sound:
     """Synthesize a room impulse response (Traer & McDermott, 2016).
 
@@ -175,7 +175,11 @@ def synth_ir(
 
 
 def measure_rt60(
-    ir: Sound, n_bands: int = 30, f_lo: float = 50.0, f_hi: float = 8000.0, fit_range_db=(-5.0, -25.0)
+    ir: Sound,
+    n_bands: int = 30,
+    f_lo: float = 50.0,
+    f_hi: float = 8000.0,
+    fit_range_db: tuple[float, float] = (-5.0, -25.0),
 ) -> tuple[np.ndarray, np.ndarray]:
     """Per-band RT60s of an impulse response: ``(center freqs [Hz], RT60s [s])``.
 

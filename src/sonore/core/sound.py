@@ -10,6 +10,7 @@ from __future__ import annotations
 import numbers
 import warnings
 from os import PathLike
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -25,6 +26,11 @@ from sonore.core.utils import (
     rms,
     time_axis,
 )
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+    from sonore.views.envelopes import Envelope
 
 __all__ = ["Sound", "load"]
 
@@ -307,7 +313,7 @@ class Sound:
         value = db.value if isinstance(db, Decibels) else float(db)
         return self * float(db_to_amp(value))
 
-    def normalize(self, rms: float | None = 1.0, peak: float | None = None) -> Sound:
+    def normalize(self, rms: float = 1.0, peak: float | None = None) -> Sound:
         """Scale to a target RMS (default 1) or, if ``peak`` is given, a target peak."""
         current = self.peak if peak is not None else self.rms
         if current == 0:
@@ -399,7 +405,7 @@ class Sound:
             impulse_response = impulse_response[:, None]
         return Sound(fftconvolve(self._data, impulse_response, axes=0), self.fs)
 
-    def envelope(self, pad: float | str = "auto"):
+    def envelope(self, pad: float | str = "auto") -> Envelope:
         """Hilbert envelope of each channel, as an :class:`~sonore.views.envelopes.Envelope`
         (not a Sound: you apply an envelope to a sound rather than listen to it).
         ``snd / snd.envelope()`` is the fine structure.
@@ -438,7 +444,7 @@ class Sound:
             )
         sf.write(path, self._data, int(self.fs), **kwargs)
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """Waveform plot; returns the matplotlib Axes."""
         from sonore.plotting import plot_waveform
 

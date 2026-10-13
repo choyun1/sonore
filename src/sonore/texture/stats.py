@@ -19,7 +19,10 @@ of a periodic signal, which is what makes synthesized textures loop seamlessly.
 from __future__ import annotations
 
 import json
+import os
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field, fields
+from typing import Any
 
 import numpy as np
 from scipy.signal import hilbert, resample
@@ -329,7 +332,7 @@ class TextureStats(View):
             raise KeyError(f"unknown statistic class {name!r}; choose from {STAT_CLASSES}")
         return getattr(self, name)
 
-    def count(self, classes=PAPER_CLASSES) -> int:
+    def count(self, classes: Sequence[str] = PAPER_CLASSES) -> int:
         """Number of statistics (defined entries; a complex C2 value counts as
         one, as in the paper). The default counts the paper's classes: 1515."""
         if isinstance(classes, str):
@@ -350,7 +353,9 @@ class TextureStats(View):
         floored_var = np.maximum(self.subband_var, 1e-300)
         return 10 * np.log10(floored_var / floored_var.max()) > -range_db
 
-    def snr(self, other: TextureStats, classes=PAPER_CLASSES, range_db: float = 30.0) -> dict[str, float]:
+    def snr(
+        self, other: TextureStats, classes: Sequence[str] = PAPER_CLASSES, range_db: float = 30.0
+    ) -> dict[str, float]:
         """How well ``other`` matches these (target) statistics, per class:
         ``10*log10(sum |target|**2 / sum |target - other|**2)`` in dB, over
         channels within ``range_db`` of the loudest. Pairwise classes (C, C1)
@@ -390,18 +395,18 @@ class TextureStats(View):
             )
         return out
 
-    def save(self, path) -> None:
+    def save(self, path: str | os.PathLike) -> None:
         arrays = {name: getattr(self, name) for name in STAT_CLASSES}
         meta = {"model": asdict(self.model), "duration": self.duration, "version": 1}
         np.savez_compressed(path, meta=np.array(json.dumps(meta)), **arrays)
 
     @classmethod
-    def load(cls, path) -> TextureStats:
+    def load(cls, path: str | os.PathLike) -> TextureStats:
         with np.load(path) as npz:
             meta = json.loads(str(npz["meta"]))
             arrays = {name: npz[name] for name in STAT_CLASSES}
         model_fields = {model_field.name: model_field for model_field in fields(TextureModel)}
-        model_kwargs = {
+        model_kwargs: dict[str, Any] = {
             key: tuple(value) if isinstance(value, list) else value
             for key, value in meta["model"].items()
             if key in model_fields

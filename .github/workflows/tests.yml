@@ -26,6 +26,7 @@ jobs:
       - run: python -m pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check src tests tools  # the gallery and design docs keep their hand-aligned code
+      - run: mypy  # settings in pyproject.toml
       - run: python -m pytest -q
 
   docs:

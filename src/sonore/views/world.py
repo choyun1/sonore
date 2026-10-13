@@ -15,10 +15,16 @@ f0)`` pair, an envelope as ``env(t, f)``, and an aperiodicity as its grid
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
 
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, time_axis
+from sonore.core.utils import RNG, as_rng, time_axis
+
+if TYPE_CHECKING:
+    from sonore.sources.waveforms import ContourLike
 
 __all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "world_fft_size", "world_synthesize"]
 
@@ -34,7 +40,7 @@ floating-point precision.
 2. cheaptrick(q1=...) accepts any value. WORLD's code uses -0.15 (the
    default here); its paper (Morise, 2015) gives -0.09.
 3. world_synthesize(rng=...) accepts a seed or Generator, which replaces
-   WORLD's noise stream with fresh Gaussian noise. The default, rng=None,
+   WORLD's noise stream with fresh Gaussian noise. The default, rng: RNG = None,
    is WORLD's stream, restarted at every call as WORLD does.
 4. harmonic_aperiodicity is not part of WORLD. It measures the share of
    noise by fitting the harmonics; D4C is WORLD's measure.
@@ -62,7 +68,7 @@ _FLOOR_F0 = 71.0  # WORLD's kFloorF0, which sets CheapTrick's FFT size
 _STEPS_PER_LANE = 2040  # a multiple of 12, so each lane yields whole draws
 
 
-_stream_cache = {"draws": np.zeros(0), "next_lane": None, "jump": None}
+_stream_cache: dict[str, Any] = {"draws": np.zeros(0), "next_lane": None, "jump": None}
 
 
 def _step_words(x, y, z, w):
@@ -223,14 +229,20 @@ def _contour_on_grid(times, f0_values, grid) -> np.ndarray:
 class _GaussianNoise:
     """Fresh noise in place of WORLD's stream, from a seed or Generator."""
 
-    def __init__(self, rng):
+    def __init__(self, rng: RNG):
         self.rng = as_rng(rng)
 
     def draw(self, n: int) -> np.ndarray:
         return self.rng.standard_normal(n)
 
 
-def world_synthesize(f0, envelope, aperiodicity, *, rng=None) -> Sound:
+def world_synthesize(
+    f0: ContourLike,
+    envelope: Callable[[np.ndarray, np.ndarray], np.ndarray],
+    aperiodicity: Any,  # an Aperiodicity, which is not imported here: that module imports this one
+    *,
+    rng: RNG = None,
+) -> Sound:
     """WORLD's synthesis, ported exactly.
 
     Pulses are placed where the running phase of the F0 track (linearly
@@ -328,10 +340,11 @@ def _on_grid_of(envelope, aperiodicity) -> np.ndarray:
     held on that grid (a CheapTrick envelope measured with the same track),
     otherwise read there as ``envelope(t, f)``."""
     if (
-        getattr(envelope, "fs", None) == aperiodicity.fs
-        and np.shape(getattr(envelope, "data", None)) == aperiodicity.data.shape
-        and np.array_equal(getattr(envelope, "t", None), aperiodicity.t)
-        and np.array_equal(getattr(envelope, "f", None), aperiodicity.f)
+        all(hasattr(envelope, name) for name in ("fs", "data", "t", "f"))
+        and envelope.fs == aperiodicity.fs
+        and np.shape(envelope.data) == aperiodicity.data.shape
+        and np.array_equal(envelope.t, aperiodicity.t)
+        and np.array_equal(envelope.f, aperiodicity.f)
     ):
         return envelope.data
     if not callable(envelope):

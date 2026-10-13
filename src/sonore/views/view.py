@@ -21,6 +21,11 @@ with :attr:`View.no_plot`, a sentence naming what to plot instead.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any, NoReturn
+
+if TYPE_CHECKING:
+    from sonore.core.sound import Sound
+
 __all__ = ["NotInvertibleError", "View"]
 
 _NO_ROUTE = "sonore has no canonical route from it back to a sound yet."
@@ -47,20 +52,20 @@ class View:
     back_to_sound = ""
     no_plot = ""
 
-    def _refuse(self):
+    def _refuse(self) -> NoReturn:
         raise NotInvertibleError(f"{self.discards} {self.back_to_sound or _NO_ROUTE}")
 
-    def synthesize(self, *args, **kwargs):
+    def synthesize(self, *args, **kwargs) -> Sound:
         """Refuse: raise :class:`NotInvertibleError` with :attr:`discards`
         and :attr:`back_to_sound` as the message."""
         self._refuse()
 
-    def to_sound(self, *args, **kwargs):
+    def to_sound(self, *args, **kwargs) -> Sound:
         """Refuse, as :meth:`synthesize` does, on a view with no canonical
         route back to a sound; views that have one override it."""
         self._refuse()
 
-    def plot(self, *args, **kwargs):
+    def plot(self, *args, **kwargs) -> Any:
         """Refuse, on a view with no single picture: raise
         ``NotImplementedError`` with :attr:`no_plot` as the message. Views
         that have a picture override it."""

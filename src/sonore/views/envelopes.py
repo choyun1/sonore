@@ -36,13 +36,16 @@ from fractions import Fraction
 from typing import TYPE_CHECKING
 
 import numpy as np
+from numpy.typing import ArrayLike
 from scipy.signal import butter, resample, resample_poly, sosfiltfilt
 
-from sonore.core.utils import _fit_length, amp_to_db, as_rng, time_axis
+from sonore.core.utils import RNG, _fit_length, amp_to_db, as_rng, time_axis
 from sonore.frames.filterbank import Subbands, _PaddedBands, cosine_filterbank
 from sonore.views.view import View
 
 if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
     from sonore.core.sound import Sound
     from sonore.frames.filterbank import Filterbank
     from sonore.views.modulation import ModulationSpectrum
@@ -149,7 +152,7 @@ class Envelope(View):
 
     __array_ufunc__ = None
 
-    def __init__(self, data, fs: float):
+    def __init__(self, data: ArrayLike, fs: float):
         values = np.array(data, dtype=float)
         if values.ndim == 1:
             values = values[:, None]
@@ -264,7 +267,7 @@ class Envelope(View):
             raise TypeError("carrier must be a Sound")
         return self * (carrier / carrier.envelope())
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """The envelope against time (see :func:`~sonore.plotting.plot_envelope`)."""
         from sonore.plotting import plot_envelope
 
@@ -305,7 +308,7 @@ class Envelopes(_PaddedBands, View):
 
     __array_ufunc__ = None
 
-    def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
+    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank, pad: int = 0):
         data = np.asarray(data, dtype=float)
         super().__init__(data[:, :, None] if data.ndim == 2 else data, fs, filterbank, pad)
 
@@ -433,7 +436,7 @@ class Envelopes(_PaddedBands, View):
         spectrum._analysis = _EnvelopeAnalysis(filterbank, self.fs, self.n_samples, scale, drop_edges)
         return spectrum
 
-    def to_sound(self, carrier: Sound | str = "noise", fs: float | None = None, rng=None) -> Sound:
+    def to_sound(self, carrier: Sound | str = "noise", fs: float | None = None, rng: RNG = None) -> Sound:
         """These envelopes imposed on a carrier, band by band, and synthesized
         with their filterbank.
 
@@ -481,7 +484,7 @@ class Envelopes(_PaddedBands, View):
                 raise ValueError("carrier must be 'noise', 'tone', or a Sound")
         return (self * fine).to_sound()
 
-    def plot(self, ax=None, **kwargs):
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
         """The envelopes as a cochleagram, time by band in dB (see
         :func:`~sonore.plotting.plot_envelopes`)."""
         from sonore.plotting import plot_envelopes
@@ -496,7 +499,7 @@ def channel_vocode(
     f_hi: float = 8000.0,
     carrier: Sound | str = "noise",
     env_lowpass: float | None = 50.0,
-    rng=None,
+    rng: RNG = None,
 ) -> Sound:
     """A channel vocoder with Hilbert envelopes: the sound's band envelopes on
     a ``carrier``. The default, ``carrier="noise"``, is the noise vocoder of

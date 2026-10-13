@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import functools
 import numbers
+import operator
 from collections.abc import Sequence
+from typing import cast
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -78,7 +81,7 @@ def match_lengths(sounds: Sequence[Sound], mode: str = "pad", align: str = "star
             raise ValueError(f"mode must be 'pad' or 'truncate', not {mode!r}")
 
 
-def normalize(sounds: Sequence[Sound], rms: float | None = 1.0, peak: float | None = None) -> list[Sound]:
+def normalize(sounds: Sequence[Sound], rms: float = 1.0, peak: float | None = None) -> list[Sound]:
     """Scale each sound on its own to a target RMS (default 1) or, if
     ``peak`` is given, a target peak, as :meth:`Sound.normalize` does.
 
@@ -110,7 +113,7 @@ def concat(sounds: Sequence[Sound]) -> Sound:
 def mix(sounds: Sequence[Sound], align: str = "start") -> Sound:
     """Sum sounds of possibly different lengths (zero-padded per ``align``)."""
     _check_fs(sounds)
-    return sum(match_lengths(match_channels(sounds), align=align), start=0)
+    return functools.reduce(operator.add, match_lengths(match_channels(sounds), align=align))
 
 
 def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
@@ -167,7 +170,7 @@ def _track(value: Track, t: np.ndarray, name: str = "value") -> np.ndarray | flo
     if isinstance(value, numbers.Real):
         return float(value)
     try:
-        times, values = value
+        times, values = cast(tuple, value)
     except (TypeError, ValueError):
         raise TypeError(f"{name} must be a number or a (times, values) pair") from None
     times = np.asarray(times, float)
@@ -214,9 +217,9 @@ def _two_zero(x: np.ndarray, a, b, c) -> np.ndarray:
 def _filter(sound: Sound, f: Track, bw: Track, inverse: bool) -> Sound:
     fs = sound.fs
     t = time_axis(len(sound), fs)
-    f, bw = _track(f, t, "f"), _track(bw, t, "bw")
-    _check_resonance(f, bw, fs)
-    a, b, c = _resonator_coefs(f, bw, fs)
+    f_values, bw_values = _track(f, t, "f"), _track(bw, t, "bw")
+    _check_resonance(f_values, bw_values, fs)
+    a, b, c = _resonator_coefs(f_values, bw_values, fs)
     data = sound.data
     if np.ndim(a) == 0:
         numerator, denominator = ([1 / a, -b / a, -c / a], [1.0]) if inverse else ([a], [1.0, -b, -c])

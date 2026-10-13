@@ -37,11 +37,14 @@ their synthesis is the canonical dual.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import KW_ONLY, dataclass
 from functools import lru_cache
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import scipy.fft as sp_fft
+from numpy.typing import ArrayLike
 from scipy.signal import hilbert
 
 from sonore.core.fft import fast_padding, threads
@@ -54,6 +57,11 @@ from sonore.core.utils import (
     erb_bandwidth,
 )
 from sonore.frames.frame import Frame, _check_frame
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+    from sonore.views.envelopes import Envelopes
 
 __all__ = [
     "FilterType",
@@ -620,7 +628,7 @@ def cosine_filterbank(
     *,
     scale: str | FrequencyScale = "erb",
     spacing: float | None = None,
-    centers=None,
+    centers: ArrayLike | None = None,
     width: float = 1.0,
     edges: bool = True,
 ) -> Filterbank:
@@ -645,7 +653,7 @@ def gammatone_filterbank(
     *,
     scale: str | FrequencyScale = "erb",
     spacing: float | None = None,
-    centers=None,
+    centers: ArrayLike | None = None,
     phase: str = "causal",
     order: int = 4,
     bandwidth_factor: float = 1.019,
@@ -671,7 +679,7 @@ def morlet_filterbank(
     *,
     scale: str | FrequencyScale = "octave",
     spacing: float | None = None,
-    centers=None,
+    centers: ArrayLike | None = None,
     cycles: float = 6.0,
     edges: bool = True,
     edge_width: float = 1.0,
@@ -693,7 +701,7 @@ class _PaddedBands:
     each end that :attr:`data` hides. The array is a copy, read-only, so the
     caller's array stays writeable and the object can't change under its users."""
 
-    def __init__(self, data, fs: float, filterbank: Filterbank, pad: int = 0):
+    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank, pad: int = 0):
         bands = np.array(data, dtype=float)
         if bands.ndim != 3 or bands.shape[1] != filterbank.n_filters:
             raise ValueError(
@@ -725,6 +733,10 @@ class _PaddedBands:
     def __len__(self) -> int:
         """Number of bands (including the two edge filters)."""
         return self._full.shape[1]
+
+    if TYPE_CHECKING:  # each subclass returns its own kind of band
+
+        def __getitem__(self, i: int) -> Any: ...
 
     def __iter__(self):
         return (self[i] for i in range(len(self)))
@@ -763,7 +775,7 @@ class Subbands(_PaddedBands):
         with threads():
             return hilbert(self._full, axis=0)
 
-    def envelopes(self, lowpass: float | None = None, fs: float | None = None):
+    def envelopes(self, lowpass: float | None = None, fs: float | None = None) -> Envelopes:
         """Hilbert envelope of every band, as :class:`~sonore.views.envelopes.Envelopes`.
         Optionally lowpass-filtered [Hz] and then resampled to ``fs``."""
         from sonore.views.envelopes import Envelopes
@@ -820,7 +832,7 @@ class Subbands(_PaddedBands):
         add up correctly."""
         return Sound(self.data.sum(axis=1), self.fs)
 
-    def plot(self, axes=None, channel: int = 0, **kwargs):
+    def plot(self, axes: Sequence[Axes] | None = None, channel: int = 0, **kwargs) -> list[Axes]:
         """Stacked band waveforms (see :func:`sonore.plotting.plot_subbands`).
         For an image, plot the envelopes: ``sb.envelopes().plot()``."""
         from sonore.plotting import plot_subbands

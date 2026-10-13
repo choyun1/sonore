@@ -7,6 +7,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from fractions import Fraction
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -95,7 +96,11 @@ _SLANEY_HZ_PER_MEL = 200 / 3  # linear part: 15 mel at 1000 Hz
 _SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.4
 
 
-def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
+#: The two mel scales: HTK's formula and Slaney's (as librosa uses).
+MelScale = Literal["htk", "slaney"]
+
+
+def freq_to_mel(freq: ArrayLike, scale: MelScale = "htk") -> np.ndarray:
     """Frequency [Hz] to mel.
 
     ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses,
@@ -114,7 +119,7 @@ def freq_to_mel(freq, scale: str = "htk") -> np.ndarray:
             raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
 
 
-def mel_to_freq(mel, scale: str = "htk") -> np.ndarray:
+def mel_to_freq(mel: ArrayLike, scale: MelScale = "htk") -> np.ndarray:
     """Mel to frequency [Hz]; the inverse of :func:`freq_to_mel`."""
     mel = np.asarray(mel, dtype=float)
     match scale:
@@ -179,8 +184,8 @@ class FrequencyScale:
 
     name: str
     unit: str
-    to_scale: Callable[[np.ndarray], np.ndarray]
-    from_scale: Callable[[np.ndarray], np.ndarray]
+    to_scale: Callable[[ArrayLike], np.ndarray]  # Hz to scale units
+    from_scale: Callable[[ArrayLike], np.ndarray]  # scale units to Hz
 
     def __post_init__(self):
         # A mismatched or mistyped pair would still build a bank, with every
@@ -248,7 +253,11 @@ def time_axis(n: int, fs: float) -> np.ndarray:
     return np.arange(n) / fs
 
 
-def as_rng(rng: int | np.random.Generator | None) -> np.random.Generator:
+#: A random seed, a NumPy ``Generator``, or None for fresh entropy.
+RNG = int | np.random.Generator | None
+
+
+def as_rng(rng: RNG) -> np.random.Generator:
     """Accept a seed, a Generator, or None and return a Generator."""
     return np.random.default_rng(rng)
 
@@ -277,7 +286,7 @@ def _resample_poly(data: np.ndarray, fs: float, fs_new: float, axis: int = 0, **
     return resample_poly(data, ratio.numerator, ratio.denominator, axis=axis, **kwargs)
 
 
-def _fit_length(data: np.ndarray, length: int, mode: str = "constant") -> np.ndarray:
+def _fit_length(data: np.ndarray, length: int, mode: Literal["constant", "edge"] = "constant") -> np.ndarray:
     """``data`` cut or padded at the end (axis 0) to ``length`` samples; ``mode``
     is ``np.pad``'s (zeros by default, ``"edge"`` repeats the last sample)."""
     if data.shape[0] >= length:

@@ -29,11 +29,12 @@ from __future__ import annotations
 
 import re
 import warnings
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import cached_property
 from os import PathLike
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -65,25 +66,27 @@ SPEED_OF_SOUND = 343.0  # m/s, air at about 20 degrees C
 
 # A path: Cartesian positions [m], shape (n, 3), at emission times t [s], shape (n,).
 SourcePath = Callable[[np.ndarray], np.ndarray]
+#: One coordinate of :func:`hcc_trajectory`: a number, a ``(times, values)`` pair, or a function of time.
+Coordinate = float | tuple[ArrayLike, ArrayLike] | Callable[[np.ndarray], ArrayLike]
 
 
 # ------------------------------------------------------------- coordinates
-def rect_to_sph(x, y, z):
+def rect_to_sph(x: ArrayLike, y: ArrayLike, z: ArrayLike) -> tuple[Any, Any, Any]:
     """Cartesian -> (rho, theta=elevation, phi=angle from +x), radians."""
     horizontal_dist = np.hypot(x, y)
     return np.hypot(horizontal_dist, z), np.arctan2(z, horizontal_dist), np.arctan2(y, x)
 
 
-def sph_to_rect(rho, theta, phi):
+def sph_to_rect(rho: ArrayLike, theta: ArrayLike, phi: ArrayLike) -> tuple[Any, Any, Any]:
     return rho * np.cos(theta) * np.cos(phi), rho * np.cos(theta) * np.sin(phi), rho * np.sin(theta)
 
 
-def rect_to_hcc(x, y, z):
+def rect_to_hcc(x: ArrayLike, y: ArrayLike, z: ArrayLike) -> tuple[Any, Any, Any]:
     rho, theta, phi = rect_to_sph(x, y, z)
     return 100 * rho, np.degrees(theta), np.mod(90 - np.degrees(phi), 360)
 
 
-def hcc_to_rect(dist, elev, azim):
+def hcc_to_rect(dist: ArrayLike, elev: ArrayLike, azim: ArrayLike) -> tuple[Any, Any, Any]:
     return sph_to_rect(np.asarray(dist) / 100, np.radians(elev), np.radians(90 - np.asarray(azim)))
 
 
@@ -100,7 +103,7 @@ def circular_trajectory(start_hcc: ArrayLike, end_hcc: ArrayLike, n: int) -> np.
     return np.column_stack(hcc_to_rect(*hcc.T))
 
 
-def hcc_trajectory(dist, elev, azim) -> SourcePath:
+def hcc_trajectory(dist: Coordinate, elev: Coordinate, azim: Coordinate) -> SourcePath:
     """A path in head-centered coordinates, as a function of time.
 
     Each coordinate is a number, a ``(times, values)`` pair (interpolated
@@ -280,7 +283,7 @@ class HRIRSet:
         return cls(irs[:, :2, :], xyz, fs, **kwargs)
 
     @classmethod
-    def concat(cls, sets, **kwargs) -> HRIRSet:
+    def concat(cls, sets: Iterable[HRIRSet], **kwargs) -> HRIRSet:
         """Merge sets measured at the same sampling rate and length, e.g. one
         per distance, into a single set. ``kwargs`` go to :class:`HRIRSet`."""
         sets = list(sets)
@@ -612,7 +615,7 @@ def _emission_times(
 
 def move_sound(
     sound: Sound,
-    trajectory,
+    trajectory: SourcePath | tuple[ArrayLike, ArrayLike] | ArrayLike,
     hrirs: HRIRSet,
     *,
     room: Sound | None = None,

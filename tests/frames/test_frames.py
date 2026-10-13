@@ -260,7 +260,7 @@ def test_constant_schedule_is_the_gabor_frame(name):
     assert np.allclose(tv.frame_power(N, FS), gabor.frame_power(N, FS), rtol=1e-13)
     masked = _masked(S)
     for method in ("synthesize", "adjoint"):
-        y = getattr(tv, method)(so.TVSTFT._from(C, masked.data)).data
+        y = getattr(tv, method)(C._with_data(masked.data)).data
         assert np.allclose(y, getattr(gabor, method)(masked).data, rtol=0, atol=1e-10)
 
 
@@ -366,7 +366,7 @@ def _masked(coefs, seed=0):
     if isinstance(coefs, so.Subbands):
         m = rng.random(coefs._full.shape[:2])[:, :, None]
         return so.Subbands(coefs._full * m, coefs.fs, coefs.filterbank, coefs.pad)
-    return type(coefs)._from(coefs, coefs.data * rng.random(coefs.data.shape[1:]))
+    return coefs._with_data(coefs.data * rng.random(coefs.data.shape[1:]))
 
 
 def _is_padded_grid_case(frame, pad):
@@ -470,7 +470,7 @@ def test_gabor_adjoint_inner_product(name):
     rng = np.random.default_rng(11)
     c = rng.standard_normal(S.data.shape) + 1j * rng.standard_normal(S.data.shape)
     lhs = np.real(np.einsum("f,cft->", frame.bin_weights(FS), S.data.conj() * c))
-    rhs = x.data[:, 0] @ frame.adjoint(so.STFT._from(S, c)).data[:, 0]
+    rhs = x.data[:, 0] @ frame.adjoint(S._with_data(c)).data[:, 0]
     assert abs(lhs - rhs) < 1e-10 * abs(lhs)
 
 

@@ -26,8 +26,10 @@ the toolbox, listed in :data:`sonore.texture.DIFFERENCES_FROM_TOOLBOX`.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import cached_property
+from typing import Any
 
 import numpy as np
 from scipy.optimize import minimize
@@ -35,7 +37,7 @@ from scipy.signal import resample
 
 from sonore.core.fft import threads
 from sonore.core.sound import Sound
-from sonore.core.utils import as_rng, n_samples
+from sonore.core.utils import RNG, as_rng, n_samples
 from sonore.frames.filterbank import Subbands
 from sonore.texture import grad as tg
 from sonore.texture.stats import PAPER_CLASSES, TextureStats
@@ -69,12 +71,12 @@ class ChannelObjective:
                     targets.append(table[stored_row][..., i])
         return neighbors, targets
 
-    def terms(self):
+    def terms(self) -> list[tuple[str, Callable, np.ndarray]]:
         """``[(name, f(s) -> (value, vjp), target)]`` for this channel."""
         target, k, context = self.target, self.k, self.context
         moments = np.array([target.env_mean[k], target.env_var[k], target.env_skew[k], target.env_kurt[k]])
         active = set(self.classes)
-        out = []
+        out: list[tuple[str, Callable, np.ndarray]] = []
         if active & set(MOMENTS):
             out.append(("env_moments", lambda s: tg.env_moments(s, context), moments))
         if "mod_power" in active:
@@ -91,7 +93,7 @@ class ChannelObjective:
             out.append(("c1", lambda s, o=others: tg.c1(s, o, context), np.stack(pair_targets, axis=-1)))
         return out
 
-    def reference(self, s: np.ndarray, per_term: bool = False):
+    def reference(self, s: np.ndarray, per_term: bool = False) -> tuple:
         """The objective computed class by class from :meth:`terms` (the
         straightforward, separately tested path; :meth:`__call__` must agree)."""
         loss, grad, parts = 0.0, np.zeros_like(s), {}
@@ -112,7 +114,7 @@ class ChannelObjective:
         centered envelopes and octave bands (computed once per channel instead
         of on every objective call)."""
         target, k, context, active = self.target, self.k, self.context, set(self.classes)
-        fixed = {"mask": np.array([m in active for m in MOMENTS], float)}
+        fixed: dict[str, Any] = {"mask": np.array([m in active for m in MOMENTS], float)}
         fixed["moments"] = np.array(
             [target.env_mean[k], target.env_var[k], target.env_skew[k], target.env_kurt[k]]
         )
@@ -129,7 +131,7 @@ class ChannelObjective:
             )
         return fixed
 
-    def __call__(self, s: np.ndarray, per_term: bool = False):
+    def __call__(self, s: np.ndarray, per_term: bool = False) -> tuple:
         """Loss ``0.5 * sum |f(s) - target|**2`` and its gradient.
 
         Fused: one forward transform per filterbank shared by all classes,
@@ -201,7 +203,7 @@ def impose_channel(
     adjusted: np.ndarray | None = None,
     n_iter: int = 5,
     context: tg.ChannelContext | None = None,
-    classes=PAPER_CLASSES,
+    classes: Sequence[str] = PAPER_CLASSES,
     affine: bool = True,
 ) -> tuple[np.ndarray, dict]:
     """Adjust channel ``k`` of ``env`` ``(n, B)`` toward ``target``.
@@ -256,13 +258,13 @@ def _resample_circular(x: np.ndarray, n: int) -> np.ndarray:
 def synthesize(
     target: TextureStats,
     duration: float = 5.0,
-    classes=PAPER_CLASSES,
-    rng=None,
+    classes: Sequence[str] = PAPER_CLASSES,
+    rng: RNG = None,
     max_iter: int = 60,
     stop_db: float = 30.0,
     converged_db: float = 20.0,
     init: Sound | None = None,
-    callback=None,
+    callback: Callable[[int, Sound, dict[str, float]], object] | None = None,
     progress: bool = False,
 ) -> tuple[Sound, dict]:
     """Synthesize a sound whose statistics match ``target``.

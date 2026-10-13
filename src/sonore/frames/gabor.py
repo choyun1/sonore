@@ -20,16 +20,21 @@ back exactly. Levels are in dB, ``20 log10 |X|``.
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 import numpy as np
 from scipy.signal import ShortTimeFFT, get_window
 
 from sonore.core.sound import Sound
-from sonore.core.utils import amp_to_db, as_rng, n_samples
+from sonore.core.utils import RNG, amp_to_db, as_rng, n_samples
 from sonore.frames.frame import Frame, _check_frame
+
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
 
 __all__ = ["GaborFrame", "TVGaborFrame", "STFT", "TVSTFT"]
 
@@ -39,13 +44,21 @@ class _ShortTimeFourierFrame(Frame):
     from :meth:`frame_power`, and the coefficient energy weighted by
     :meth:`bin_weights`, so that it is the energy of the full two-sided STFT."""
 
+    @abstractmethod
+    def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
+        """The diagonal of the frame operator, one value per sample."""
+
+    @abstractmethod
+    def bin_weights(self, fs: float) -> np.ndarray:
+        """Weight of each stored frequency bin in :meth:`energy`."""
+
     def frame_bounds(self, n_samples: int, fs: float) -> tuple[float, float]:
         """``(min s, max s)`` over a signal of ``n_samples`` at ``fs``, in the
         weighted coefficient norm of :meth:`energy`."""
         power_sum = self.frame_power(n_samples, fs)
         return (float(power_sum.min()), float(power_sum.max()))
 
-    def energy(self, coefs) -> np.ndarray:
+    def energy(self, coefs: STFT | TVSTFT) -> np.ndarray:
         """Weighted coefficient energy per channel: the energy of the full
         two-sided STFT."""
         weights = self.bin_weights(coefs.fs)
@@ -239,8 +252,8 @@ class TVGaborFrame(_ShortTimeFourierFrame):
         window's length, or a callable ``n -> array``.
     """
 
-    times: Sequence[float]
-    win_durs: Sequence[float]
+    times: Sequence[float] | np.ndarray  # stored as a tuple of floats
+    win_durs: Sequence[float] | np.ndarray  # stored as a tuple of floats
     n_fft: int | None = None
     window: str | tuple | Callable[[int], np.ndarray] = "hann"
 
@@ -446,6 +459,10 @@ class _ShortTimeCoefficients:
     ``data`` (``(n_channels, n_freqs, n_windows)``), and resynthesis through
     the frame that made them."""
 
+    data: np.ndarray
+    fs: float
+    frame: _ShortTimeFourierFrame
+
     __array_ufunc__ = None
 
     @property
@@ -484,6 +501,8 @@ class STFT(_ShortTimeCoefficients):
         zero-padded FFTs); ``win_dur`` and ``hop_dur`` are then ignored.
     """
 
+    frame: GaborFrame
+
     def __init__(
         self,
         sound: Sound,
@@ -498,11 +517,11 @@ class STFT(_ShortTimeCoefficients):
         self.n_samples = len(sound)
         self.data = self.sft.stft(sound.data.T, axis=-1)
 
-    @classmethod
-    def _from(cls, template: STFT, data: np.ndarray) -> STFT:
-        new = cls.__new__(cls)
-        new.frame, new.fs, new.sft = template.frame, template.fs, template.sft
-        new.n_samples, new.data = template.n_samples, data
+    def _with_data(self, data: np.ndarray) -> STFT:
+        """These coefficients' grid and frame, holding ``data`` instead."""
+        new = STFT.__new__(STFT)
+        new.frame, new.fs, new.sft = self.frame, self.fs, self.sft
+        new.n_samples, new.data = self.n_samples, data
         return new
 
     def __repr__(self) -> str:
@@ -539,11 +558,11 @@ class STFT(_ShortTimeCoefficients):
             case Mask():
                 return other.apply(self)
             case _:
-                return STFT._from(self, self.data * other)
+                return self._with_data(self.data * other)
 
     __rmul__ = __mul__
 
-    def griffin_lim(self, n_iter: int = 100, momentum: float = 0.99, rng=None) -> Sound:
+    def griffin_lim(self, n_iter: int = 100, momentum: float = 0.99, rng: RNG = None) -> Sound:
         """Reconstruct a signal from the magnitude only (fast Griffin-Lim,
         Perraudin et al., 2013). ``momentum=0`` gives classic Griffin-Lim."""
         target_mag = self.magnitude
@@ -557,9 +576,9 @@ class STFT(_ShortTimeCoefficients):
             coefs = projected + momentum * (projected - prev_projected)
             prev_projected = projected
             coefs = target_mag * np.exp(1j * np.angle(coefs))
-        return STFT._from(self, coefs).to_sound()
+        return self._with_data(coefs).to_sound()
 
-    def plot(self, ax=None, channel: int = 0, **kwargs):
+    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
         from sonore.plotting import plot_stft
 
         return plot_stft(self, ax=ax, channel=channel, **kwargs)
@@ -577,12 +596,14 @@ class TVSTFT(_ShortTimeCoefficients):
     :class:`~sonore.views.mask.Mask` to mask.
     """
 
+    frame: TVGaborFrame
+
     def __init__(self, data: np.ndarray, fs: float, n_samples: int, frame: TVGaborFrame):
         self.data, self.fs, self.n_samples, self.frame = data, fs, int(n_samples), frame
 
-    @classmethod
-    def _from(cls, template: TVSTFT, data: np.ndarray) -> TVSTFT:
-        return cls(data, template.fs, template.n_samples, template.frame)
+    def _with_data(self, data: np.ndarray) -> TVSTFT:
+        """These coefficients' grid and frame, holding ``data`` instead."""
+        return TVSTFT(data, self.fs, self.n_samples, self.frame)
 
     def __repr__(self) -> str:
         n_channels, n_freqs, n_windows = self.data.shape
@@ -618,11 +639,11 @@ class TVSTFT(_ShortTimeCoefficients):
             case Mask():
                 return other.apply(self)
             case _:
-                return TVSTFT._from(self, self.data * other)
+                return self._with_data(self.data * other)
 
     __rmul__ = __mul__
 
-    def plot(self, ax=None, channel: int = 0, **kwargs):
+    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
         """Spectrogram in dB at the window centers (see :func:`~sonore.plotting.plot_tf_db`)."""
         from sonore.plotting import plot_tf_db
 
