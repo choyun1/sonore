@@ -7,7 +7,7 @@ name = "sonore"
 dynamic = ["version"]
 description = "Signals and stimuli for auditory research: generators, filterbanks, STFTs, binaural cues, HRIR spatialization, synthetic reverb."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "Adrian Cho", email = "choyun1@gmail.com" }]
 license = "MIT"
 license-files = ["LICENSE"]
@@ -18,7 +18,6 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",

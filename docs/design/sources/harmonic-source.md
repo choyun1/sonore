@@ -167,7 +167,7 @@ both put noise where Harvest has harmonics in weak voiced stretches.
 
 **D1. One function, `harmonic_complex`, whose `f0` is a number or a
 contour (accepted, Cho 2026-10-02).** The pitch is one value that comes in
-two shapes, and a `match` statement (Python 3.10, sonore's minimum) picks
+two shapes, and a `match` statement (Python 3.10) picks
 the case:
 
 - **A number** runs the existing code unchanged, so every fixed-F0 output

@@ -3,7 +3,7 @@
   <img alt="sonore" src="https://raw.githubusercontent.com/choyun1/sonore/main/docs/logo/sonore-banner-light.svg" height="56">
 </picture></a></h1>
 
-[![tests](https://github.com/choyun1/sonore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/choyun1/sonore/actions/workflows/tests.yml) [![PyPI](https://img.shields.io/pypi/v/sonore)](https://pypi.org/project/sonore/) [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://pypi.org/project/sonore/) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
+[![tests](https://github.com/choyun1/sonore/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/choyun1/sonore/actions/workflows/tests.yml) [![PyPI](https://img.shields.io/pypi/v/sonore)](https://pypi.org/project/sonore/) [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://pypi.org/project/sonore/) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 
 **Signals and stimuli for auditory research, built for Jupyter.**
 
@@ -131,7 +131,7 @@ cd sonore
 pip install -e ".[notebook]"
 ```
 
-Requires Python ≥ 3.10, numpy, scipy ≥ 1.12, matplotlib, and soundfile.
+Requires Python ≥ 3.11, numpy, scipy ≥ 1.12, matplotlib, and soundfile.
 
 A first cell in a notebook:
 
