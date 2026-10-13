@@ -17,6 +17,11 @@ h at Poisson onset times with rate `rate` per second, each copy scaled by
       mean, falling toward the Rayleigh value 4 / pi - 1 of Gaussian noise
   E5  a regular train at the same rate instead: its spectrum is lines spaced
       by the rate, unlike the Poisson process's continuous spectrum
+  E6  levels drawn per event, normal in dB with standard deviation sd: the
+      excess kurtosis is multiplied by exp(4 s^2), s = sd ln(10) / 20
+  E7  gamma-distributed intervals between onsets, from Poisson (shape 1)
+      toward regular (large shape): how far the band envelope's spectrum
+      peaks at the rate
 """
 
 import numpy as np
@@ -103,3 +108,46 @@ for name, x in [("regular", regular), ("Poisson", results[rate][0])]:
     keep = (f >= 2500) & (f <= 5000)
     ratio = 10 * np.log10(psd[keep].max() / np.median(psd[keep]))
     print(f"E5 {name} train at {rate}/s: spectrum peak over median in 2.5-5 kHz {ratio:.1f} dB")
+
+
+# E6: levels normal in dB. Amplitude a = 10^(L / 20), so ln a is normal with s = sd ln10 / 20,
+# E[a^n] = exp(n^2 s^2 / 2), and the cumulants rate E[a^n] integral(h^n) multiply the kurtosis
+# by E[a^4] / E[a^2]^2 = exp(4 s^2).
+rate = 100
+n_samples = int(DURATION * FS)
+for sd_db in [3.0, 6.0]:
+    measured = []
+    for seed in SEEDS:
+        rng = np.random.default_rng(seed)
+        impulses = poisson_train(rate, rng, n_samples)
+        events = np.flatnonzero(impulses)
+        impulses[events] *= 10 ** (rng.normal(0, sd_db, len(events)) / 20)
+        measured.append(excess_kurtosis(fftconvolve(impulses, event)[:n_samples]))
+    s = sd_db * np.log(10) / 20
+    predicted = np.exp(4 * s**2) * event_fourth / (rate * event_energy**2)
+    print(
+        f"E6 levels sd {sd_db:.0f} dB at {rate}/s: kurtosis measured {np.mean(measured):.2f}, "
+        f"predicted {predicted:.2f} (factor {np.exp(4 * s**2):.2f})"
+    )
+
+# E7: intervals between onsets drawn from a gamma distribution with mean 1 / rate. Timing jitter
+# smears the fine structure's harmonics of the rate long before it smears the envelope's, so
+# regularity is measured on the envelope: the 2.5-5 kHz band's Hilbert envelope spectrum, the
+# largest peak within 10% of the rate, over the median from 50 to 200 Hz.
+for shape in [1, 4, 16, 64, None]:
+    rng = np.random.default_rng(0)
+    if shape is None:
+        intervals = np.full(int(2 * rate * DURATION), 1 / rate)
+    else:
+        intervals = rng.gamma(shape, 1 / (rate * shape), int(2 * rate * DURATION))
+    onsets = np.round(np.cumsum(intervals) * FS).astype(int)
+    impulses = np.zeros(n_samples)
+    np.add.at(impulses, onsets[onsets < n_samples], 1.0)
+    x = fftconvolve(impulses, event)[:n_samples]
+    envelope = np.abs(hilbert(sosfiltfilt(band, x)))
+    f, psd = welch(envelope - envelope.mean(), FS, nperseg=2**16)
+    near = np.abs(f - rate) <= 0.1 * rate
+    span = (f >= 50) & (f <= 200)
+    ratio = 10 * np.log10(psd[near].max() / np.median(psd[span]))
+    name = "regular" if shape is None else f"gamma shape {shape:2d}"
+    print(f"E7 {name} at {rate}/s: envelope spectrum peak at the rate over median {ratio:.1f} dB")
