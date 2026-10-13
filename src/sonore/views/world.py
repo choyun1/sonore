@@ -159,7 +159,7 @@ def _matlab_round(value: float) -> int:
     return int(value + 0.5) if value > 0 else int(value - 0.5)
 
 
-def world_fft_size(fs: float, f0_floor: float = _FLOOR_F0) -> int:
+def world_fft_size(fs: float, *, f0_floor: float = _FLOOR_F0) -> int:
     """CheapTrick's FFT size: ``2 ** (1 + floor(log2(3 fs / f0_floor + 1)))``,
     long enough for a window three periods of ``f0_floor`` long. 1024 at
     16 kHz and 2048 at 44.1 or 48 kHz with WORLD's floor of 71 Hz."""

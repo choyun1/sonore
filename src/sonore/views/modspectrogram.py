@@ -94,6 +94,7 @@ class ModulationSpectrogram(View):
     def __init__(
         self,
         envelopes: Envelopes,
+        *,
         f_lo: float = 0.5,
         f_hi: float = 64.0,
         per_octave: float = 2,
@@ -167,7 +168,7 @@ class ModulationSpectrogram(View):
         with np.errstate(divide="ignore", invalid="ignore"):
             return np.where(self.mean > tiny, np.sqrt(self.power) / self.mean, np.nan)
 
-    def at(self, t: float, kind: Literal["depth", "power"] = "depth") -> np.ndarray:
+    def at(self, t: float, *, kind: Literal["depth", "power"] = "depth") -> np.ndarray:
         """The acoustic band x modulation rate image at the time window nearest
         ``t`` [s], shape ``(n_channels, n_bands, n_mod)``: Atlas and Shamma's
         joint acoustic and modulation frequency display at one moment.
@@ -175,7 +176,7 @@ class ModulationSpectrogram(View):
         window_index = int(np.argmin(np.abs(self.t - t)))
         return self._kind(kind)[..., window_index]
 
-    def average(self, kind: Literal["depth", "power"] = "power") -> np.ndarray:
+    def average(self, *, kind: Literal["depth", "power"] = "power") -> np.ndarray:
         """Average over time windows, shape ``(n_channels, n_bands, n_mod)``. The
         average power is the per-band modulation power spectrum, the same kind
         of quantity as the texture statistics' ``mod_power``."""
@@ -194,7 +195,7 @@ class ModulationSpectrogram(View):
             return np.where(mean_sq_sum > tiny, np.sqrt(power_sum / mean_sq_sum), np.nan)
 
     def plot(
-        self, ax: Axes | None = None, band: float | None = None, rate: float | None = None, **kwargs
+        self, ax: Axes | None = None, *, band: float | None = None, rate: float | None = None, **kwargs
     ) -> Axes:
         """Depth in dB as an image, invalid cells in gray. By default,
         modulation rate against time, pooled over bands
@@ -205,7 +206,7 @@ class ModulationSpectrogram(View):
 
         return plot_modulation_spectrogram(self, ax=ax, band=band, rate=rate, **kwargs)
 
-    def slices(self, t: float, rate: float = 4.0, **kwargs) -> Figure:
+    def slices(self, t: float, *, rate: float = 4.0, **kwargs) -> Figure:
         """Three linked cuts through the time x band x rate cube with a cursor
         at ``t`` [s]: rate against time (pooled), band against time at
         ``rate``, and band against rate at ``t``. Returns the figure."""
@@ -214,7 +215,12 @@ class ModulationSpectrogram(View):
         return plot_modulation_slices(self, t, rate=rate, **kwargs)
 
     def animate(
-        self, path: str | os.PathLike | None = None, sound: Sound | None = None, fps: float = 25.0, **kwargs
+        self,
+        *,
+        path: str | os.PathLike | None = None,
+        sound: Sound | None = None,
+        fps: float = 25.0,
+        **kwargs,
     ) -> FuncAnimation:
         """The band x rate image (depth, dB) time window by time window, as a matplotlib
         animation. With ``path``, it is written to a video file (needs

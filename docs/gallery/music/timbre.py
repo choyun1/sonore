@@ -142,7 +142,7 @@ def show(snd, tones, starts, labels, fmin=150, fmax=8000, lower="envelope"):
     fig, (ax_s, ax_l) = plt.subplots(
         2, 1, figsize=(10, 5.4), sharex=True, height_ratios=[1.7, 1], layout="constrained"
     )
-    stft = so.STFT(snd, 30e-3, 5e-3)
+    stft = so.STFT(snd, win_dur=30e-3, hop_dur=5e-3)
     keep = (stft.f >= fmin) & (stft.f <= fmax)
     level = stft.db[0][keep]
     ax_s.pcolormesh(stft.t, stft.f[keep], level, vmin=level.max() - 70, vmax=level.max(), cmap="magma")

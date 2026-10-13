@@ -47,13 +47,13 @@ def _finish(data: np.ndarray, fs: float) -> Sound:
     return sound.normalize() if sound.rms > 0 else sound
 
 
-def silence(duration: float, fs: float, n_channels: int = 1) -> Sound:
+def silence(duration: float, fs: float, *, n_channels: int = 1) -> Sound:
     """Zeros, ``duration`` seconds long, in ``n_channels`` channels (RMS 0, the
     one generator not scaled to 1)."""
     return Sound(np.zeros((n_samples(duration, fs), n_channels)), fs)
 
 
-def pure_tone(duration: float, fs: float, freq: float, phase: float = 0.0) -> Sound:
+def pure_tone(duration: float, fs: float, freq: float, *, phase: float = 0.0) -> Sound:
     """``cos(2*pi*freq*t + phase)``."""
     t = time_axis(n_samples(duration, fs), fs)
     return _finish(np.cos(2 * np.pi * freq * t + phase), fs)
@@ -218,11 +218,11 @@ def harmonic_complex(
     duration: float,
     fs: float,
     f0: F0Like,
+    *,
     harmonics: ArrayLike | None = None,
     amplitudes: Amplitudes = None,
     phases: ArrayLike | PhasePreset = "cosine",
     rng: RNG = None,
-    *,
     f_max: float | None = None,
     ramp: float = 0.005,
     unvoiced: Literal["silence", "noise"] = "silence",
@@ -352,6 +352,7 @@ def schroeder_complex(
     duration: float,
     fs: float,
     f0: F0Like,
+    *,
     n_harmonics: int | None = None,
     sign: int = 1,
     **contour,
@@ -366,7 +367,7 @@ def schroeder_complex(
         duration,
         fs,
         f0,
-        np.arange(1, count + 1),
+        harmonics=np.arange(1, count + 1),
         phases="schroeder+" if sign > 0 else "schroeder-",
         **contour,
     )
@@ -376,7 +377,9 @@ def _waveform(duration, fs, f0, phase, harmonics, amplitudes, kind, contour) -> 
     """A named band-limited waveform as a harmonic complex: harmonic ``n`` has
     amplitude ``amplitudes[i]`` and phase ``n * phase``, as a sine or a cosine."""
     phases = harmonics * phase - (np.pi / 2 if kind == "sin" else 0.0)
-    return harmonic_complex(duration, fs, f0, harmonics, amplitudes, phases, **contour)
+    return harmonic_complex(
+        duration, fs, f0, harmonics=harmonics, amplitudes=amplitudes, phases=phases, **contour
+    )
 
 
 def _fixed_only(f0: F0Like, name: str) -> float:
@@ -392,6 +395,7 @@ def square_wave(
     duration: float,
     fs: float,
     f0: F0Like,
+    *,
     phase: float = 0.0,
     bandlimited: bool = True,
     **contour,
@@ -411,6 +415,7 @@ def sawtooth_wave(
     duration: float,
     fs: float,
     f0: F0Like,
+    *,
     phase: float = 0.0,
     bandlimited: bool = True,
     **contour,
@@ -432,6 +437,7 @@ def pulse_train(
     duration: float,
     fs: float,
     f0: F0Like,
+    *,
     phase: float = 0.0,
     bandlimited: bool = True,
     **contour,
@@ -455,13 +461,13 @@ def pulse_train(
     return _finish(data, fs)
 
 
-def linear_chirp(duration: float, fs: float, f0: float, f1: float, phase: float = 0.0) -> Sound:
+def linear_chirp(duration: float, fs: float, f0: float, f1: float, *, phase: float = 0.0) -> Sound:
     """Linear frequency sweep from ``f0`` to ``f1``."""
     t = time_axis(n_samples(duration, fs), fs)
     return _finish(chirp(t, f0, duration, f1, "linear", phi=np.degrees(phase)), fs)
 
 
-def exponential_chirp(duration: float, fs: float, f0: float, f1: float, phase: float = 0.0) -> Sound:
+def exponential_chirp(duration: float, fs: float, f0: float, f1: float, *, phase: float = 0.0) -> Sound:
     """Exponential (log-frequency) sweep from ``f0`` to ``f1``."""
     t = time_axis(n_samples(duration, fs), fs)
     return _finish(chirp(t, f0, duration, f1, "logarithmic", phi=np.degrees(phase)), fs)
@@ -508,6 +514,7 @@ def _spectral_gain(
 def gaussian_noise(
     duration: float,
     fs: float,
+    *,
     band: tuple[float, float] | None = None,
     tilt: float = 0.0,
     spectrum: SpectrumLike | None = None,
@@ -549,7 +556,9 @@ def gaussian_noise(
     return _finish(data, fs)
 
 
-def correlated_noise(duration: float, fs: float, corr: float = 1.0, rng: RNG = None, **noise_kwargs) -> Sound:
+def correlated_noise(
+    duration: float, fs: float, *, corr: float = 1.0, rng: RNG = None, **noise_kwargs
+) -> Sound:
     """Two-channel noise whose interaural correlation is exactly ``corr`` (in
     [-1, 1]), each channel at RMS 1. Extra keyword arguments go to
     :func:`gaussian_noise`.
@@ -577,6 +586,7 @@ def iterated_ripple_noise(
     duration: float,
     fs: float,
     delay: float,
+    *,
     gain: float = 1.0,
     iterations: int = 16,
     network: Literal["add-same", "add-original"] = "add-same",
@@ -894,7 +904,14 @@ def glottal_source(
         coefficients = lf_harmonics(harmonic_numbers, rd, flow=flow)
         amplitudes, phases = 2 * np.abs(coefficients), np.angle(coefficients)
         return harmonic_complex(
-            duration, fs, f0, harmonic_numbers, amplitudes, phases, f_max=f_max, ramp=ramp
+            duration,
+            fs,
+            f0,
+            harmonics=harmonic_numbers,
+            amplitudes=amplitudes,
+            phases=phases,
+            f_max=f_max,
+            ramp=ramp,
         )
     try:
         rd_times, rd_values = (np.asarray(part, float) for part in cast(tuple, rd))
@@ -904,4 +921,6 @@ def glottal_source(
         raise ValueError("an rd track needs one value per time")
     _check_rd(rd_values)
     gains = _rd_track_gains(rd_times, rd_values, harmonic_numbers, flow)
-    return harmonic_complex(duration, fs, f0, harmonic_numbers, gains, f_max=f_max, ramp=ramp)
+    return harmonic_complex(
+        duration, fs, f0, harmonics=harmonic_numbers, amplitudes=gains, f_max=f_max, ramp=ramp
+    )

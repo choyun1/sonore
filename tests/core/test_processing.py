@@ -57,7 +57,9 @@ class TestProcessing:
         f = np.fft.rfftfreq(n, 1 / FS)
         at_cutoff = np.argmin(np.abs(f - 1000))
         for zero_phase, expected_db in ((False, -10 * np.log10(2)), (True, -20 * np.log10(2))):
-            h = np.abs(np.fft.rfft(so.butter_filter(imp, 1000, "lowpass", zero_phase=zero_phase).data[:, 0]))
+            h = np.abs(
+                np.fft.rfft(so.butter_filter(imp, 1000, btype="lowpass", zero_phase=zero_phase).data[:, 0])
+            )
             assert 20 * np.log10(h[at_cutoff]) == pytest.approx(expected_db, abs=0.05)
 
     @pytest.mark.parametrize(
@@ -112,15 +114,15 @@ class TestProcessing:
         """
         imp = self.impulse()
         for order in (2, 4):
-            low = so.butter_filter(imp, 500, "lowpass", order=order, zero_phase=False)
+            low = so.butter_filter(imp, 500, btype="lowpass", order=order, zero_phase=False)
             ratio = np.tan(np.pi * 2000 / FS) / np.tan(np.pi * 500 / FS)
             assert self.gain_db(low, 2000) == pytest.approx(
                 -10 * np.log10(1 + ratio ** (2 * order)), abs=0.05
             )
-        high = so.butter_filter(imp, 4000, "highpass", zero_phase=False)
+        high = so.butter_filter(imp, 4000, btype="highpass", zero_phase=False)
         assert self.gain_db(high, 4000) == pytest.approx(-3.01, abs=0.05)
         assert self.gain_db(high, 500) < -60
-        stop = so.butter_filter(imp, (900, 1100), "bandstop", zero_phase=False)
+        stop = so.butter_filter(imp, (900, 1100), btype="bandstop", zero_phase=False)
         assert self.gain_db(stop, 1000) < -60
         assert self.gain_db(stop, 100) == pytest.approx(0, abs=0.01)
 
@@ -128,8 +130,10 @@ class TestProcessing:
         noise = so.gaussian_noise(0.1, FS, rng=0)
         for order, zero_phase in ((2, False), (6, True)):
             np.testing.assert_array_equal(
-                so.bandpass(noise, 500, 1000, order, zero_phase).data,
-                so.butter_filter(noise, (500, 1000), "bandpass", order, zero_phase).data,
+                so.bandpass(noise, 500, 1000, order=order, zero_phase=zero_phase).data,
+                so.butter_filter(
+                    noise, (500, 1000), btype="bandpass", order=order, zero_phase=zero_phase
+                ).data,
             )
         assert self.gain_db(so.bandpass(self.impulse(), 500, 1000, zero_phase=False), 1000) == pytest.approx(
             -3.01, abs=0.05

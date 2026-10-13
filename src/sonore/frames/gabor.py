@@ -274,6 +274,7 @@ class TVGaborFrame(_ShortTimeFourierFrame):
         cls,
         win_dur_of_t: Callable[[float], float],
         t_end: float,
+        *,
         overlap: float = 4,
         t_start: float = 0.0,
         **kwargs,
@@ -300,6 +301,7 @@ class TVGaborFrame(_ShortTimeFourierFrame):
         f0_times: Sequence[float],
         f0: Sequence[float],
         t_end: float,
+        *,
         periods: float = 3.0,
         overlap: float = 4,
         t_start: float = 0.0,
@@ -486,7 +488,7 @@ class STFT(_ShortTimeCoefficients):
     :meth:`to_sound` is exact for an unmodified STFT, and the least-squares
     signal for a modified one.
 
-    ``STFT(sound, win_dur, hop_dur)`` is
+    ``STFT(sound, win_dur=win_dur, hop_dur=hop_dur)`` is
     ``GaborFrame(win_dur, hop_dur).analyze(sound)``; the frame is kept as
     :attr:`frame` and SciPy's transform as :attr:`sft`.
 
@@ -506,9 +508,9 @@ class STFT(_ShortTimeCoefficients):
     def __init__(
         self,
         sound: Sound,
+        *,
         win_dur: float = 20e-3,
         hop_dur: float | None = None,
-        *,
         frame: GaborFrame | None = None,
     ):
         self.frame = GaborFrame(win_dur, hop_dur) if frame is None else frame
@@ -562,7 +564,7 @@ class STFT(_ShortTimeCoefficients):
 
     __rmul__ = __mul__
 
-    def griffin_lim(self, n_iter: int = 100, momentum: float = 0.99, rng: RNG = None) -> Sound:
+    def griffin_lim(self, *, n_iter: int = 100, momentum: float = 0.99, rng: RNG = None) -> Sound:
         """Reconstruct a signal from the magnitude only (fast Griffin-Lim,
         Perraudin et al., 2013). ``momentum=0`` gives classic Griffin-Lim."""
         target_mag = self.magnitude
@@ -578,7 +580,7 @@ class STFT(_ShortTimeCoefficients):
             coefs = target_mag * np.exp(1j * np.angle(coefs))
         return self._with_data(coefs).to_sound()
 
-    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
         from sonore.plotting import plot_stft
 
         return plot_stft(self, ax=ax, channel=channel, **kwargs)
@@ -643,7 +645,7 @@ class TVSTFT(_ShortTimeCoefficients):
 
     __rmul__ = __mul__
 
-    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
         """Spectrogram in dB at the window centers (see :func:`~sonore.plotting.plot_tf_db`)."""
         from sonore.plotting import plot_tf_db
 

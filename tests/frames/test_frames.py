@@ -195,7 +195,7 @@ def test_gabor_bin_weights():
 
 def test_stft_is_the_gabor_frame():
     x = _noise(2, 4)
-    S = so.STFT(x, WIN, HOP)
+    S = so.STFT(x, win_dur=WIN, hop_dur=HOP)
     assert S.frame == so.GaborFrame(WIN, HOP) and S.sft is S.frame.sft(FS)
     assert np.array_equal(S.data, so.GaborFrame(WIN, HOP).analyze(x).data)
     assert so.STFT(x).frame == so.GaborFrame(20e-3)
@@ -371,7 +371,7 @@ def _masked(coefs, seed=0):
 
 def _is_padded_grid_case(frame, pad):
     """Padded non-tight filterbank: least squares on the padded grid."""
-    return isinstance(frame, so.Filterbank) and not frame.is_tight(N, FS, pad) and pad != 0
+    return isinstance(frame, so.Filterbank) and not frame.is_tight(N, FS, pad=pad) and pad != 0
 
 
 @pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)

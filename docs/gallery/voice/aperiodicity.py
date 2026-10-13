@@ -396,7 +396,7 @@ for label, vowel in vowels.items():
     wrong_track = (window_times, track[1] * 1.01)
     for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", so.d4c)]:
         for f0_name, f0 in [("exact F0", track), ("F0 1% high", wrong_track)]:
-            shares = measure(vowel, f0).bands(band_edges, envelope)[0][:, inside].mean(axis=1)
+            shares = measure(vowel, f0).bands(band_edges, envelope=envelope)[0][:, inside].mean(axis=1)
             row = f"  {name}, {f0_name}"
             print(f"{row:<34}" + "".join(f"{value:>11.1f}" for value in 10 * np.log10(shares)))
 
@@ -431,7 +431,7 @@ print(f"{'Median share of noise [dB], band [Hz]':<44}{bands}")
 for label in talkers:
     voiced = np.interp(d4c_maps[label].t, *harvest[label]) > 0
     for name, maps in [("D4C", d4c_maps), ("harmonic residual", residual_maps)]:
-        shares = maps[label].bands(band_edges, envelopes[label])[0][:, voiced]
+        shares = maps[label].bands(band_edges, envelope=envelopes[label])[0][:, voiced]
         row = f"{label}, {name}"
         print(f"{row:<44}" + "".join(f"{value:>11.1f}" for value in 10 * np.log10(np.median(shares, axis=1))))
 

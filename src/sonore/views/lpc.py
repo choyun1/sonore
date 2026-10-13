@@ -252,6 +252,7 @@ class LPC(View):
     def plot(
         self,
         ax: Axes | None = None,
+        *,
         channel: int = 0,
         db_range: float = 60.0,
         fmax: float | None = None,
@@ -299,7 +300,7 @@ class FormantTrack(View):
             f"medians {medians} Hz)"
         )
 
-    def track(self, number: int, channel: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    def track(self, number: int, *, channel: int = 0) -> tuple[np.ndarray, np.ndarray]:
         """Formant ``number`` (1, 2 or 3) of one channel as a ``(times,
         values)`` pair, the form :func:`~sonore.sources.klatt.klatt_synthesize`
         takes for ``F1``, ``F2`` and ``F3``; time windows where it is missing
@@ -311,6 +312,7 @@ class FormantTrack(View):
     def plot(
         self,
         ax: Axes | None = None,
+        *,
         channel: int = 0,
         candidates: bool = False,
         voiced: ArrayLike | None = None,
@@ -384,9 +386,9 @@ def _track(freqs, bandwidths, nominal, nominal_weight, bandwidth_weight, skip_co
 
 def formant_track(
     sound: Sound,
+    *,
     ceiling: float = 5000.0,
     n_formants: int = 5,
-    *,
     win_dur: float = 0.025,
     hop: float = 0.005,
     nominal: tuple[float, float, float] = (500.0, 1500.0, 2500.0),

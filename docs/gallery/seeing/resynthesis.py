@@ -186,9 +186,9 @@ def show_mask(snd, target, mask):
     axes[0, 0].set_title("Waveform")
     mask.plot(axes[0, 1])
     axes[0, 1].set(title="Ideal binary mask (target > noise)", ylim=(0, 5))
-    so.STFT(snd, 25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
+    so.STFT(snd, win_dur=25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
     axes[1, 0].set_title("Spectrogram of this sound")
-    so.STFT(target, 25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
+    so.STFT(target, win_dur=25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
     axes[1, 1].set_title("The target alone (not played)")
     return fig, [axes[0, 0], axes[1, 0]]
 
@@ -196,7 +196,7 @@ def show_mask(snd, target, mask):
 target = gliding_target()
 masker = so.gaussian_noise(target.duration, FS, tilt=-3, rng=0)
 mixture = target + (masker + 5 * dB)
-S_t, S_m, S_x = (so.STFT(x, 25e-3) for x in (target, masker, mixture))
+S_t, S_m, S_x = (so.STFT(x, win_dur=25e-3) for x in (target, masker, mixture))
 mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)
 snr = 20 * np.log10(target.rms / (masker + 5 * dB).rms)
 print(f"signal-to-noise ratio: {snr:.1f} dB")

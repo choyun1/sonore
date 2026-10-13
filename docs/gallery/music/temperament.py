@@ -154,7 +154,7 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
     fig, (ax_s, ax_c) = plt.subplots(
         2, 1, figsize=(10, 5.4), sharex=True, height_ratios=[1.7, 1], layout="constrained"
     )
-    stft = so.STFT(snd, 80e-3, 10e-3)
+    stft = so.STFT(snd, win_dur=80e-3, hop_dur=10e-3)
     keep = (stft.f >= fmin) & (stft.f <= fmax)
     level = stft.db[0][keep]
     ax_s.pcolormesh(stft.t, stft.f[keep], level, vmin=level.max() - 70, vmax=level.max(), cmap="magma")

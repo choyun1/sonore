@@ -41,14 +41,14 @@ def rms(x: ArrayLike, axis: int | None = None) -> np.ndarray | float:
     return np.sqrt(np.mean(np.square(x), axis=axis))
 
 
-def amp_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
+def amp_to_db(x: ArrayLike, *, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
     """Amplitude (not power) to decibels: ``20*log10(|x|/ref)``, floored."""
     x = np.abs(np.asarray(x)).astype(float) / ref
     with np.errstate(divide="ignore"):
         return np.maximum(20 * np.log10(x), floor_db)
 
 
-def power_to_db(x: ArrayLike, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
+def power_to_db(x: ArrayLike, *, ref: float = 1.0, floor_db: float = -300.0) -> np.ndarray:
     """Power (not amplitude) to decibels: ``10*log10(x/ref)``, floored at
     ``floor_db``.
 
@@ -100,7 +100,7 @@ _SLANEY_LOG_STEP = np.log(6.4) / 27  # logarithmic part: 27 mel per factor of 6.
 MelScale = Literal["htk", "slaney"]
 
 
-def freq_to_mel(freq: ArrayLike, scale: MelScale = "htk") -> np.ndarray:
+def freq_to_mel(freq: ArrayLike, *, scale: MelScale = "htk") -> np.ndarray:
     """Frequency [Hz] to mel.
 
     ``scale="htk"`` is ``2595 log10(1 + f / 700)``, the formula HTK uses,
@@ -119,7 +119,7 @@ def freq_to_mel(freq: ArrayLike, scale: MelScale = "htk") -> np.ndarray:
             raise ValueError(f"scale must be 'htk' or 'slaney', not {scale!r}")
 
 
-def mel_to_freq(mel: ArrayLike, scale: MelScale = "htk") -> np.ndarray:
+def mel_to_freq(mel: ArrayLike, *, scale: MelScale = "htk") -> np.ndarray:
     """Mel to frequency [Hz]; the inverse of :func:`freq_to_mel`."""
     mel = np.asarray(mel, dtype=float)
     match scale:
@@ -149,7 +149,7 @@ _NOTE_STEPS = {"C": 0, "D": 2, "E": 4, "F": 5, "G": 7, "A": 9, "B": 11}
 _ACCIDENTALS = {"#": 1, "\u266f": 1, "b": -1, "\u266d": -1}
 
 
-def note_to_freq(note: str, a4: float = 440.0) -> float:
+def note_to_freq(note: str, *, a4: float = 440.0) -> float:
     """The equal-tempered frequency [Hz] of a note name such as ``"A4"``,
     ``"C#3"`` or ``"Bb2"`` (scientific pitch notation: octave 4 starts at
     middle C; ``#`` or ``b``, or ♯ and ♭, for sharp and flat, repeatable), with A4 at

@@ -77,7 +77,7 @@ class F0Track(View):
         f0_range = f", F0 {self.f0[voiced].min():.0f}-{self.f0[voiced].max():.0f} Hz" if voiced.any() else ""
         return f"F0Track({n_windows} time windows, {n_channels} ch, {voiced.mean():.0%} voiced{f0_range})"
 
-    def plot(self, ax: Axes | None = None, channel: int = 0, candidates: bool = False, **kwargs) -> Axes:
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, candidates: bool = False, **kwargs) -> Axes:
         """F0 against time (see :func:`~sonore.plotting.plot_f0_track`)."""
         from sonore.plotting import plot_f0_track
 
@@ -86,11 +86,11 @@ class F0Track(View):
 
 def f0_track(
     sound: Sound,
+    *,
     f_lo: float = 60.0,
     f_hi: float = 500.0,
     hop: float = 0.005,
     threshold: float = 0.5,
-    *,
     octave_cost: float = 2.0,
     switch_cost: float = 0.5,
     subharmonic_margin: float | None = 0.05,

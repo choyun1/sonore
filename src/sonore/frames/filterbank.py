@@ -169,7 +169,7 @@ class Cosine(FilterType):
     def band_response(self, bank: Filterbank, freqs: np.ndarray) -> np.ndarray:
         return self.responses(bank, freqs, edges=False)
 
-    def responses(self, bank: Filterbank, freqs: np.ndarray, edges: bool | None = None) -> np.ndarray:
+    def responses(self, bank: Filterbank, freqs: np.ndarray, *, edges: bool | None = None) -> np.ndarray:
         with np.errstate(divide="ignore"):
             scale_pos = bank.scale.to_scale(freqs)[:, None]
         knots = bank._knots
@@ -423,13 +423,13 @@ class Filterbank(Frame):
         when every ``s`` is within the tolerance of 1."""
         return _tight_gain(self, int(n), float(fs))
 
-    def is_tight(self, n_samples: int, fs: float, pad: float | str = "auto") -> bool:
+    def is_tight(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> bool:
         """Whether ``s`` is constant (to :data:`TIGHT_TOLERANCE`) on the grid
         :meth:`analyze` would use for ``n_samples`` at ``fs``, padding
         included. Synthesis is then re-filtering, divided by that constant."""
         return self._tight_gain(int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples), fs) is not None
 
-    def ringing(self, fs: float, level_db: float = -60.0) -> int:
+    def ringing(self, fs: float, *, level_db: float = -60.0) -> int:
         """How long [samples] the filters ring: the longest time, over all
         filters, before the zero-phase impulse response stays below
         ``level_db`` re its peak (capped at 2 s). The minimum padding of
@@ -442,7 +442,7 @@ class Filterbank(Frame):
             return fast_padding(int(n_samples), self.ringing(fs))
         return int(round(float(pad) * fs))
 
-    def analyze(self, sound: Sound, pad: float | str = "auto") -> Subbands:
+    def analyze(self, sound: Sound, *, pad: float | str = "auto") -> Subbands:
         """Split ``sound`` into subbands (via FFT).
 
         By default the sound is zero-padded by at least the filters' ringing
@@ -506,7 +506,7 @@ class Filterbank(Frame):
                 signal = sp_fft.irfft(weighted_spectra.sum(axis=1) / power_sum[:, None], n=n_padded, axis=0)
         return Sound(signal[n_pad : n_padded - n_pad], fs)
 
-    def frame_bounds(self, n_samples: int, fs: float, pad: float | str = "auto") -> tuple[float, float]:
+    def frame_bounds(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> tuple[float, float]:
         """``(min s, max s)`` on the DFT grid that :meth:`analyze` would use
         for a signal of ``n_samples`` at ``fs``, including its padding: the
         bounds of the grid the coefficients actually live on, which depends on
@@ -776,7 +776,7 @@ class Subbands(_PaddedBands):
         with threads():
             return hilbert(self._full, axis=0)
 
-    def envelopes(self, lowpass: float | None = None, fs: float | None = None) -> Envelopes:
+    def envelopes(self, *, lowpass: float | None = None, fs: float | None = None) -> Envelopes:
         """Hilbert envelope of every band, as :class:`~sonore.views.envelopes.Envelopes`.
         Optionally lowpass-filtered [Hz] and then resampled to ``fs``."""
         from sonore.views.envelopes import Envelopes
@@ -833,7 +833,7 @@ class Subbands(_PaddedBands):
         add up correctly."""
         return Sound(self.data.sum(axis=1), self.fs)
 
-    def plot(self, axes: Sequence[Axes] | None = None, channel: int = 0, **kwargs) -> list[Axes]:
+    def plot(self, axes: Sequence[Axes] | None = None, *, channel: int = 0, **kwargs) -> list[Axes]:
         """Stacked band waveforms (see :func:`sonore.plotting.plot_subbands`).
         For an image, plot the envelopes: ``sb.envelopes().plot()``."""
         from sonore.plotting import plot_subbands

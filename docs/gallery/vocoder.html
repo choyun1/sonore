@@ -607,7 +607,8 @@ reach of a temporal cue.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">notes = [131, 131, 196, 196, 220, 220, 196]  # C3 C3 G3 G3 A3 A3 G3 [Hz]
 durs = [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.8]
 tones = [
-    so.harmonic_complex(d, fs, f, np.arange(1, 21)).ramp(20e-3) for f, d in zip(notes, durs, strict=True)
+    so.harmonic_complex(d, fs, f, harmonics=np.arange(1, 21)).ramp(20e-3)
+    for f, d in zip(notes, durs, strict=True)
 ]
 melody = finish(so.concat(tones))</code></pre></details></div>
 

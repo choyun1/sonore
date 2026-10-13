@@ -56,7 +56,7 @@ def match_channels(sounds: Sequence[Sound]) -> list[Sound]:
 
 
 def match_lengths(
-    sounds: Sequence[Sound], mode: Literal["pad", "truncate"] = "pad", align: Align = "start"
+    sounds: Sequence[Sound], *, mode: Literal["pad", "truncate"] = "pad", align: Align = "start"
 ) -> list[Sound]:
     """Bring sounds to one length: zero-pad to the longest (``mode="pad"``)
     or cut to the shortest (``mode="truncate"``).
@@ -71,7 +71,7 @@ def match_lengths(
     match mode:
         case "pad":
             length = max(len(s) for s in sounds)
-            return [s.pad_to(length, align) for s in sounds]
+            return [s.pad_to(length, align=align) for s in sounds]
         case "truncate":
             length = min(len(s) for s in sounds)
 
@@ -85,14 +85,14 @@ def match_lengths(
             raise ValueError(f"mode must be 'pad' or 'truncate', not {mode!r}")
 
 
-def normalize(sounds: Sequence[Sound], rms: float = 1.0, peak: float | None = None) -> list[Sound]:
+def normalize(sounds: Sequence[Sound], *, rms: float = 1.0, peak: float | None = None) -> list[Sound]:
     """Scale each sound on its own to a target RMS (default 1) or, if
     ``peak`` is given, a target peak, as :meth:`Sound.normalize` does.
 
     Each sound gets its own gain, so their level differences are lost: with
     ``rms`` they all come out equally loud, with ``peak`` they all peak at
     the same value."""
-    return [s.normalize(rms, peak) for s in sounds]
+    return [s.normalize(rms=rms, peak=peak) for s in sounds]
 
 
 def _check_not_empty(sounds: Sequence[Sound]) -> None:
@@ -114,13 +114,13 @@ def concat(sounds: Sequence[Sound]) -> Sound:
     return Sound(np.concatenate([s.data for s in match_channels(sounds)]), fs)
 
 
-def mix(sounds: Sequence[Sound], align: Align = "start") -> Sound:
+def mix(sounds: Sequence[Sound], *, align: Align = "start") -> Sound:
     """Sum sounds of possibly different lengths (zero-padded per ``align``)."""
     _check_fs(sounds)
     return functools.reduce(operator.add, match_lengths(match_channels(sounds), align=align))
 
 
-def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
+def relative_db(sounds: Sequence[Sound], *, ref: int = 0) -> list[float]:
     """Level of each sound in dB relative to ``sounds[ref]``."""
     ref_rms = sounds[ref].rms
     if ref_rms == 0:
@@ -131,6 +131,7 @@ def relative_db(sounds: Sequence[Sound], ref: int = 0) -> list[float]:
 def butter_filter(
     sound: Sound,
     cutoff: float | tuple[float, float],
+    *,
     btype: Literal["lowpass", "highpass", "bandpass", "bandstop"] = "bandpass",
     order: int = 4,
     zero_phase: bool = True,
@@ -148,17 +149,17 @@ def butter_filter(
     return Sound(run_filter(sos, sound.data, axis=0), sound.fs)
 
 
-def bandpass(sound: Sound, f_lo: float, f_hi: float, order: int = 4, zero_phase: bool = True) -> Sound:
+def bandpass(sound: Sound, f_lo: float, f_hi: float, *, order: int = 4, zero_phase: bool = True) -> Sound:
     """Butterworth band-pass from ``f_lo`` to ``f_hi`` [Hz].
 
-    Shorthand for ``butter_filter(sound, (f_lo, f_hi), "bandpass", order,
-    zero_phase)``; see :func:`butter_filter`. The band edges are where the
+    Shorthand for ``butter_filter(sound, (f_lo, f_hi), btype="bandpass",
+    order=order, zero_phase=zero_phase)``; see :func:`butter_filter`. The band edges are where the
     gain is -3 dB (one way) or -6 dB (``zero_phase=True``). ``order`` is
     SciPy's, so the band-pass has ``2 * order`` poles."""
-    return butter_filter(sound, (f_lo, f_hi), "bandpass", order, zero_phase)
+    return butter_filter(sound, (f_lo, f_hi), btype="bandpass", order=order, zero_phase=zero_phase)
 
 
-def amplitude_modulate(sound: Sound, f_mod: float, depth: float = 1.0, phase: float = 0.0) -> Sound:
+def amplitude_modulate(sound: Sound, f_mod: float, *, depth: float = 1.0, phase: float = 0.0) -> Sound:
     """Multiply by ``1 + depth*sin(2*pi*f_mod*t + phase)``.
 
     ``phase`` is in radians. ``depth`` 1 takes the envelope down to zero;

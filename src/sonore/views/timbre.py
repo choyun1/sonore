@@ -67,7 +67,7 @@ class DescriptorTrack(View):
         median = f"median {self.median[0]:.4g}{unit}"
         return f"DescriptorTrack({self.name}, {n_windows} time windows, {n_channels} ch, {median})"
 
-    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
         """The descriptor against time (see :func:`~sonore.plotting.plot_descriptor_track`)."""
         from sonore.plotting import plot_descriptor_track
 
@@ -90,7 +90,7 @@ def _energy_envelope(sound: Sound, channel: int, cutoff: float, zero_phase: bool
 
 
 def attack_segment(
-    sound: Sound, channel: int = 0, cutoff: float = 20.0, zero_phase: bool = True
+    sound: Sound, *, channel: int = 0, cutoff: float = 20.0, zero_phase: bool = True
 ) -> tuple[float, float]:
     """Start and end of the attack [s], by the weakest-effort method of
     Peeters et al. (2011), III A 2 a.
@@ -126,11 +126,13 @@ def attack_segment(
     return start / sound.fs, end / sound.fs
 
 
-def log_attack_time(sound: Sound, channel: int = 0, cutoff: float = 20.0, zero_phase: bool = True) -> float:
+def log_attack_time(
+    sound: Sound, *, channel: int = 0, cutoff: float = 20.0, zero_phase: bool = True
+) -> float:
     """The base-10 logarithm of the attack's duration in seconds,
     ``log10(end - start)`` with the start and end of :func:`attack_segment`
     (Peeters et al., 2011, eq. 4). One sample is the shortest duration."""
-    start, end = attack_segment(sound, channel, cutoff, zero_phase)
+    start, end = attack_segment(sound, channel=channel, cutoff=cutoff, zero_phase=zero_phase)
     return float(np.log10(max(end - start, 1 / sound.fs)))
 
 
@@ -152,6 +154,7 @@ def _spectra(sound: Sound, win_dur: float, hop_dur: float, scale: str) -> tuple[
 
 def spectral_centroid(
     sound: Sound,
+    *,
     scale: Literal["power", "magnitude"] = "power",
     win_dur: float = WIN_DUR,
     hop_dur: float = HOP_DUR,
@@ -179,6 +182,7 @@ def spectral_centroid(
 
 def spectral_flux(
     sound: Sound,
+    *,
     spacing: float | None = 0.1,
     scale: Literal["power", "magnitude"] = "magnitude",
     win_dur: float = WIN_DUR,

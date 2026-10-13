@@ -8,7 +8,7 @@ PyPI package of that name. Version 0.2 also redesigned the API:
 | `from sigtools.sounds import *` etc. | `import sonore as so` |
 | `PureTone(dur, fs, f)`, `GaussianNoise(...)`, ... | `so.pure_tone(dur, fs, f)`, `so.gaussian_noise(...)`, ... |
 | `GaussianNoise(dur, fs, lo, hi, tilt)` | `so.gaussian_noise(dur, fs, band=(lo, hi), tilt=...)`; tilt is now dB/octave |
-| `SchroederPhase(dur, fs, f0, n)` | `so.schroeder_complex(dur, fs, f0, n)` |
+| `SchroederPhase(dur, fs, f0, n)` | `so.schroeder_complex(dur, fs, f0, n_harmonics=n)` |
 | `SoundLoader(path)`, `Silence(dur, fs)` | `so.load(path)`, `so.silence(dur, fs)` |
 | `snd + 6` (dB gain) | `snd + 6*dB` |
 | `snd.make_binaural()`, `snd.extract_envelope()` | `snd.to_stereo()`, `snd.envelope()` (now returns an `Envelope`, not a Sound) |
@@ -18,11 +18,11 @@ PyPI package of that name. Version 0.2 also redesigned the API:
 | `normalize_rms`, `zero_mean`, `concat_sounds`, `compare_relative_db` | `so.normalize`, `snd.zero_mean()`, `so.concat`, `so.relative_db` |
 | `sum(zeropad_sounds([a, b]))` | `so.mix([a, b])` |
 | `MagnitudeSpectrum(s).to_Noise(dur, fs)` | `so.long_term_spectrum(s).to_sound(dur, fs)` |
-| `STFT(snd, win)`, `S.to_Sound()`, `method="GLA"` | `so.STFT(snd, win)`, `S.to_sound()`, `S.griffin_lim()` |
+| `STFT(snd, win)`, `S.to_Sound()`, `method="GLA"` | `so.STFT(snd, win_dur=win)`, `S.to_sound()`, `S.griffin_lim()` |
 | `IBM = S_t > S_m + lc`; `IBM * S_mix` | `so.ideal_binary_mask(S_t, S_m, lc_db=lc)`; `S_mix * mask` |
 | `Subbands(snd, n)`, `.extract_envelopes()`, `.to_Sound()` | `so.cosine_filterbank(n).analyze(snd)`, `.envelopes()`, `.to_sound()` |
-| `InterauralCues(snd, win)` | `so.interaural_cues(snd, win)` |
-| `SimpleBIR(fs, itd, ild)` | `so.simple_bir(fs, itd, ild)` or `so.apply_itd_ild(snd, itd, ild)` |
+| `InterauralCues(snd, win)` | `so.interaural_cues(snd, win_dur=win)` |
+| `SimpleBIR(fs, itd, ild)` | `so.simple_bir(fs, itd=itd, ild=ild)` or `so.apply_itd_ild(snd, itd=itd, ild=ild)` |
 | `SynthIR(drr, rt60, dB_thresh, fs)` | `so.synth_ir(rt60, fs, drr_db=..., decay_db=-dB_thresh)` |
 | `move_sound(traj, snd)` | `so.move_sound(snd, traj, hrirs)` with `so.load_hrirs()` (downloads PKU-IOA), `so.HRIRSet.from_pku_ioa(dir)` or `.from_sofa(path)` |
 | `display_STFT(x, S)`, `AudioControl(snd).display()` | `so.overview(x)`; put `snd` at the end of a cell |

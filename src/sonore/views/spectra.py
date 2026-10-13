@@ -100,6 +100,7 @@ class Spectrum(View):
         self,
         duration: float,
         fs: float,
+        *,
         carrier: Literal["noise", "minimum"] | Sound = "noise",
         rng: RNG = None,
         **noise_kwargs,
@@ -164,7 +165,7 @@ def _one_sided(length: int) -> np.ndarray:
     return weights
 
 
-def long_term_spectrum(sounds: Sound | Sequence[Sound], win_dur: float = 0.1) -> Spectrum:
+def long_term_spectrum(sounds: Sound | Sequence[Sound], *, win_dur: float = 0.1) -> Spectrum:
     """Long-term average spectrum via Welch's method, averaged over sounds
     (weighted by duration), in dB re 1 per Hz. This is the right input for
     speech-shaped noise.
@@ -219,7 +220,7 @@ class TFPower(View):
         """``10*log10(power)``, floored like the other representations."""
         return power_to_db(self.power, floor_db=_FLOOR_DB)
 
-    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
         """Power in dB (see :func:`~sonore.plotting.plot_tf_db`)."""
         from sonore.plotting import plot_tf_db
 
@@ -230,6 +231,7 @@ def tandem_power(
     sound: Sound,
     f0_times: Sequence[float],
     f0: Sequence[float],
+    *,
     periods: float = 2.5,
     overlap: float = 4,
     window: str | tuple = "blackman",
@@ -308,7 +310,7 @@ class ReassignedSpectrogram(View):
 
 
 def reassigned_spectrogram(
-    sound: Sound, frame: GaborFrame, threshold_db: float = -60.0
+    sound: Sound, frame: GaborFrame, *, threshold_db: float = -60.0
 ) -> ReassignedSpectrogram:
     """The reassigned spectrogram (Kodera et al., 1978; Auger & Flandrin, 1995).
 

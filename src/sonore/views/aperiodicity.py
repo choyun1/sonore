@@ -92,7 +92,7 @@ class Aperiodicity(_FrequencyView):
         """The noise share in dB, ``20 log10 data``."""
         return 20 * np.log10(self.data)
 
-    def bands(self, edges: Sequence[float], envelope: SpectralEnvelope | None = None) -> np.ndarray:
+    def bands(self, edges: Sequence[float], *, envelope: SpectralEnvelope | None = None) -> np.ndarray:
         """The noise share averaged over each band ``[edges[i], edges[i+1])``,
         shape ``(n_channels, n_bands, n_windows)``. With an ``envelope``, the
         average is weighted by its power, so the result is the band's noise
@@ -107,7 +107,7 @@ class Aperiodicity(_FrequencyView):
         return np.stack(out, axis=1)
 
     def plot(
-        self, ax: Axes | None = None, channel: int = 0, db_range: float = 60.0, fmax: float | None = None
+        self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 60.0, fmax: float | None = None
     ) -> Axes:
         """The noise share in dB as a time-frequency image (0 dB is all noise)."""
         from sonore.plotting import plot_tf_db
@@ -162,7 +162,7 @@ def d4c(
     """
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
-    n_fft_out = world_fft_size(fs, f0_floor)
+    n_fft_out = world_fft_size(fs, f0_floor=f0_floor)
     n_fft = _periods_fft_size(fs, 4.0, _FLOOR_F0_D4C)
     n_bands = int(min(_D4C_UPPER_LIMIT, fs / 2.0 - _D4C_BAND_SPACING) / _D4C_BAND_SPACING)
     window_length = int(_D4C_BAND_SPACING * n_fft / fs) * 2 + 1
@@ -285,7 +285,7 @@ def harmonic_aperiodicity(
     """
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
-    n_fft_out = world_fft_size(fs, f0_floor)
+    n_fft_out = world_fft_size(fs, f0_floor=f0_floor)
     freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
     data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))
     sample_times = time_axis(sound.n_samples, fs)

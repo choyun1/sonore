@@ -246,7 +246,11 @@ class TextureStats(View):
 
     @classmethod
     def measure(
-        cls, sound: Sound, model: TextureModel | None = None, window: Literal["ramped", "uniform"] = "ramped"
+        cls,
+        sound: Sound,
+        *,
+        model: TextureModel | None = None,
+        window: Literal["ramped", "uniform"] = "ramped",
     ) -> TextureStats:
         """Measure the statistics of ``sound``. ``window="ramped"`` (the
         default, for recorded originals) downweights the ends with
@@ -254,11 +258,11 @@ class TextureStats(View):
         equally (as for circular synthetic signals)."""
         model = TextureModel() if model is None else model
         x = model.prepare(sound)
-        return cls.from_subbands(model.subbands(x), model, window)
+        return cls.from_subbands(model.subbands(x), model, window=window)
 
     @classmethod
     def from_subbands(
-        cls, sb: np.ndarray, model: TextureModel, window: Literal["ramped", "uniform"] = "ramped"
+        cls, sb: np.ndarray, model: TextureModel, *, window: Literal["ramped", "uniform"] = "ramped"
     ) -> TextureStats:
         env = model.envelopes(sb)
         n_env = env.shape[0]
@@ -266,7 +270,7 @@ class TextureStats(View):
         # the window at the full rate
         full_rate_weights = np.repeat(env_weights, model.decimation) / model.decimation
         subband_variance = full_rate_weights @ (sb - full_rate_weights @ sb) ** 2
-        return cls.from_envelopes(env, subband_variance, model, window)
+        return cls.from_envelopes(env, subband_variance, model, window=window)
 
     @staticmethod
     def _window(model: TextureModel, n_env: int, window: Literal["ramped", "uniform"]) -> np.ndarray:
@@ -285,6 +289,7 @@ class TextureStats(View):
         env: np.ndarray,
         subband_var: np.ndarray,
         model: TextureModel,
+        *,
         window: Literal["ramped", "uniform"] = "uniform",
     ) -> TextureStats:
         """Statistics of compressed, downsampled envelopes ``(n_env, B)``
@@ -340,7 +345,7 @@ class TextureStats(View):
             raise KeyError(f"unknown statistic class {name!r}; choose from {STAT_CLASSES}")
         return getattr(self, name)
 
-    def count(self, classes: Sequence[str] = PAPER_CLASSES) -> int:
+    def count(self, *, classes: Sequence[str] = PAPER_CLASSES) -> int:
         """Number of statistics (defined entries; a complex C2 value counts as
         one, as in the paper). The default counts the paper's classes: 1515."""
         if isinstance(classes, str):
@@ -354,7 +359,7 @@ class TextureStats(View):
 
         return replace(self, **changes)
 
-    def channel_mask(self, range_db: float = 30.0) -> np.ndarray:
+    def channel_mask(self, *, range_db: float = 30.0) -> np.ndarray:
         """Channels whose subband variance is within ``range_db`` of the
         loudest. Quieter channels are ignored by :meth:`snr` (as in the
         toolbox): their statistics are dominated by noise and inaudible."""
@@ -362,7 +367,7 @@ class TextureStats(View):
         return 10 * np.log10(floored_var / floored_var.max()) > -range_db
 
     def snr(
-        self, other: TextureStats, classes: Sequence[str] = PAPER_CLASSES, range_db: float = 30.0
+        self, other: TextureStats, *, classes: Sequence[str] = PAPER_CLASSES, range_db: float = 30.0
     ) -> dict[str, float]:
         """How well ``other`` matches these (target) statistics, per class:
         ``10*log10(sum |target|**2 / sum |target - other|**2)`` in dB, over
@@ -375,7 +380,7 @@ class TextureStats(View):
         fluctuation dominates the ratio."""
         if isinstance(classes, str):
             classes = (classes,)
-        loud = self.channel_mask(range_db)
+        loud = self.channel_mask(range_db=range_db)
         n_channels = len(loud)
         out = {}
         for stat_class in classes:

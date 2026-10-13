@@ -165,7 +165,7 @@ def show_room(ax_decay, ax_rt60, ir, kw=None):
     cfs, rt = so.measure_rt60(tail)
     ax_rt60.semilogx(
         cfs,
-        so.band_rt60s(1.0, cfs, "ecological"),
+        so.band_rt60s(1.0, cfs, profile="ecological"),
         color="k",
         lw=1.2,
         ls="--",
@@ -175,7 +175,7 @@ def show_room(ax_decay, ax_rt60, ir, kw=None):
     if profile:
         # requested profile, computed over synth_ir's own bands (which run to 16 kHz)
         synth_cfs = so.cosine_filterbank(32, 20, min(16000, FS / 2)).cfs
-        requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile))
+        requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile=profile))
         ax_rt60.semilogx(cfs, requested, color="tab:purple", lw=1, ls=":", label=f"requested ({profile})")
     if not kw or "decay_shape" not in kw:
         ax_rt60.semilogx(cfs, rt, color="tab:purple", lw=1.2, marker=".", label="this IR (measured)")
@@ -357,7 +357,7 @@ fig, playhead = show_pair(sounds, ir_far, panels=show_distance)
 
 # %%
 for profile in ("ecological", "inverted", "exaggerated", "reduced"):
-    print(f"{profile:12s} median RT60 {np.median(so.band_rt60s(1.0, bands, profile)):.2f} s")
+    print(f"{profile:12s} median RT60 {np.median(so.band_rt60s(1.0, bands, profile=profile)):.2f} s")
 
 # %% [about]
 # The same decay run backwards: the reverberation swells up to the shot instead of dying away

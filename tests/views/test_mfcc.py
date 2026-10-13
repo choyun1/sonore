@@ -124,8 +124,8 @@ def test_lifter_is_a_fixed_gain_per_coefficient():
 @pytest.mark.parametrize("scale", ["htk", "slaney"])
 def test_mel_scale_round_trip_and_landmarks(scale):
     freqs = np.array([0.0, 200.0, 1000.0, 4000.0, 8000.0])
-    assert np.allclose(mel_to_freq(freq_to_mel(freqs, scale), scale), freqs)
-    assert freq_to_mel(1000.0, scale) == pytest.approx(1000.0 if scale == "htk" else 15.0, rel=1e-3)
+    assert np.allclose(mel_to_freq(freq_to_mel(freqs, scale=scale), scale=scale), freqs)
+    assert freq_to_mel(1000.0, scale=scale) == pytest.approx(1000.0 if scale == "htk" else 15.0, rel=1e-3)
 
 
 def test_height_triangles_sum_to_one_between_the_outer_centers():

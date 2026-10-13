@@ -188,7 +188,7 @@ class Envelope(View):
     def __repr__(self) -> str:
         return f"Envelope({self.duration:.3f} s, {self.fs:g} Hz, {self._data.shape[1]} ch)"
 
-    def lowpass(self, cutoff: float, order: int = 4) -> Envelope:
+    def lowpass(self, cutoff: float, *, order: int = 4) -> Envelope:
         """Zero-phase Butterworth lowpass at ``cutoff`` Hz (result clipped at 0)."""
         return Envelope(_lowpass(self._data, cutoff, self.fs, order), self.fs)
 
@@ -308,7 +308,7 @@ class Envelopes(_PaddedBands, View):
 
     __array_ufunc__ = None
 
-    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank, pad: int = 0):
+    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank, *, pad: int = 0):
         data = np.asarray(data, dtype=float)
         super().__init__(data[:, :, None] if data.ndim == 2 else data, fs, filterbank, pad)
 
@@ -335,10 +335,10 @@ class Envelopes(_PaddedBands, View):
 
     def _new(self, full, fs=None, pad=None) -> Envelopes:
         return Envelopes(
-            full, self.fs if fs is None else fs, self.filterbank, self.pad if pad is None else pad
+            full, self.fs if fs is None else fs, self.filterbank, pad=self.pad if pad is None else pad
         )
 
-    def lowpass(self, cutoff: float, order: int = 4) -> Envelopes:
+    def lowpass(self, cutoff: float, *, order: int = 4) -> Envelopes:
         """Zero-phase Butterworth lowpass of every band at ``cutoff`` Hz,
         padding included (result clipped at 0)."""
         return self._new(_lowpass(self._full, cutoff, self.fs, order))
@@ -408,7 +408,7 @@ class Envelopes(_PaddedBands, View):
     __rmul__ = __mul__
 
     def modulation_spectrum(
-        self, scale: Literal["linear", "db"] = "linear", drop_edges: bool = True
+        self, *, scale: Literal["linear", "db"] = "linear", drop_edges: bool = True
     ) -> ModulationSpectrum:
         """2-D modulation spectrum (temporal Hz x spectral cycles per scale unit).
 
@@ -438,7 +438,7 @@ class Envelopes(_PaddedBands, View):
         spectrum._analysis = _EnvelopeAnalysis(filterbank, self.fs, self.n_samples, scale, drop_edges)
         return spectrum
 
-    def to_sound(self, carrier: Sound | str = "noise", fs: float | None = None, rng: RNG = None) -> Sound:
+    def to_sound(self, *, carrier: Sound | str = "noise", fs: float | None = None, rng: RNG = None) -> Sound:
         """These envelopes imposed on a carrier, band by band, and synthesized
         with their filterbank.
 
@@ -499,6 +499,7 @@ def channel_vocode(
     n_bands: int = 16,
     f_lo: float = 80.0,
     f_hi: float = 8000.0,
+    *,
     carrier: Sound | str = "noise",
     env_lowpass: float | None = 50.0,
     rng: RNG = None,
@@ -526,11 +527,11 @@ def channel_vocode(
                 raise ValueError(f"sample rates differ ({carrier.fs:g} Hz carrier vs {sound.fs:g} Hz sound)")
             if len(carrier) < len(sound):
                 raise ValueError("carrier is shorter than the sound")
-            vocoded = envelopes.to_sound(Sound(carrier.data[: len(sound)], carrier.fs))
+            vocoded = envelopes.to_sound(carrier=Sound(carrier.data[: len(sound)], carrier.fs))
         case str("noise"):
-            vocoded = envelopes.to_sound("noise", rng=rng)
+            vocoded = envelopes.to_sound(carrier="noise", rng=rng)
         case str("tone"):
-            vocoded = envelopes.to_sound("tone")
+            vocoded = envelopes.to_sound(carrier="tone")
         case _:
             raise ValueError("carrier must be 'noise', 'tone', or a Sound")
-    return vocoded.normalize(sound.rms)
+    return vocoded.normalize(rms=sound.rms)

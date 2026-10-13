@@ -162,7 +162,7 @@ def _as_path(trajectory, duration: float) -> SourcePath:
     return path
 
 
-def distance_gain_db(distance: ArrayLike, ref: float = 1.0) -> np.ndarray:
+def distance_gain_db(distance: ArrayLike, *, ref: float = 1.0) -> np.ndarray:
     """Inverse-square-law level change [dB] for a point source re ``ref`` meters:
     ``-20*log10(d/ref)``, i.e. -6 dB per doubling of distance."""
     return -20 * np.log10(np.asarray(distance, float) / ref)
@@ -225,7 +225,7 @@ class HRIRSet:
 
     # ---- loaders
     @classmethod
-    def from_pku_ioa(cls, directory: str | PathLike, fs: float = 65536, **kwargs) -> HRIRSet:
+    def from_pku_ioa(cls, directory: str | PathLike, *, fs: float = 65536, **kwargs) -> HRIRSet:
         """Load the PKU-IOA database from its original ``.dat`` files
         (``azi{A}_elev{E}_dist{D}.dat``, float64, left then right), found in
         ``directory`` or any folder below it, such as the distributed
@@ -498,7 +498,7 @@ class HRIRSet:
         filters = np.array([minimum_phase(linear_phase[ear], method="homomorphic") for ear in range(2)])
         return energy, filters
 
-    def at(self, positions: ArrayLike, fs: float | None = None) -> np.ndarray:
+    def at(self, positions: ArrayLike, *, fs: float | None = None) -> np.ndarray:
         """Interpolated HRIRs at Cartesian ``positions`` (N, 3), resampled to
         ``fs``. Returns shape ``(N, 2, n_taps)``."""
         points = np.atleast_2d(np.asarray(positions, float))
@@ -514,7 +514,7 @@ class HRIRSet:
 
 
 def spatialize(
-    sound: Sound, position: ArrayLike, hrirs: HRIRSet, speed_of_sound: float = SPEED_OF_SOUND
+    sound: Sound, position: ArrayLike, hrirs: HRIRSet, *, speed_of_sound: float = SPEED_OF_SOUND
 ) -> Sound:
     """Render a mono sound at a fixed Cartesian position [m].
 

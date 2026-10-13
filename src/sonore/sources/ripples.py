@@ -81,16 +81,17 @@ class _Pattern:
 
     def plot(
         self,
+        ax: Axes | None = None,
+        *,
         duration: float = 1.0,
         f_lo: float = 250.0,
         f_hi: float = 8000.0,
-        ax: Axes | None = None,
         **kwargs,
     ) -> Axes:
         """Show the envelope pattern (in dB) over time and frequency."""
         from sonore.plotting import plot_ripple_pattern
 
-        return plot_ripple_pattern(self, duration, f_lo, f_hi, ax=ax, **kwargs)
+        return plot_ripple_pattern(self, ax, duration=duration, f_lo=f_lo, f_hi=f_hi, **kwargs)
 
 
 def _components(pattern) -> tuple[Ripple, ...]:
@@ -316,6 +317,7 @@ def ripple_sound(
     pattern: Pattern,
     duration: float,
     fs: float,
+    *,
     f_lo: float = 250.0,
     f_hi: float = 8000.0,
     carrier: Literal["tones", "harmonic", "noise", "low-noise"] | Sound = "tones",

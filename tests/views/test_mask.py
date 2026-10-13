@@ -22,7 +22,7 @@ def test_ideal_ratio_mask_known_cases():
     noise = so.STFT(so.gaussian_noise(0.2, FS, rng=0))
     silent = so.STFT(so.silence(0.2, FS))
     for beta in (0.5, 1.0, 2.0):
-        np.testing.assert_allclose(so.ideal_ratio_mask(noise, noise, beta).values, 0.5**beta, rtol=1e-12)
+        np.testing.assert_allclose(so.ideal_ratio_mask(noise, noise, beta=beta).values, 0.5**beta, rtol=1e-12)
     np.testing.assert_allclose(so.ideal_ratio_mask(noise, silent).values, 1.0, rtol=1e-12)
     np.testing.assert_array_equal(so.ideal_ratio_mask(silent, noise).values, 0.0)
     np.testing.assert_array_equal(so.ideal_ratio_mask(silent, silent).values, 0.0)

@@ -35,7 +35,7 @@ __all__ = [
 ]
 
 
-def apply_itd_ild(sound: Sound, itd: float = 0.0, ild: float = 0.0) -> Sound:
+def apply_itd_ild(sound: Sound, *, itd: float = 0.0, ild: float = 0.0) -> Sound:
     """Impose an ITD [s] and ILD [dB] on a mono (or diotic stereo) sound.
 
     The lagging ear is delayed by ``|itd|`` (fractional delays are exact up
@@ -62,7 +62,7 @@ def _fractional_impulse(delay: float, n: int, half_width: int = 32) -> np.ndarra
     return np.sinc(offset) * window
 
 
-def simple_bir(fs: float, itd: float = 0.0, ild: float = 0.0, half_width: int = 32) -> Sound:
+def simple_bir(fs: float, *, itd: float = 0.0, ild: float = 0.0, half_width: int = 32) -> Sound:
     """A binaural impulse response with only an ITD [s] and ILD [dB].
 
     Each ear is a (possibly fractionally delayed) unit impulse scaled by
@@ -110,6 +110,7 @@ class InterauralCues(View):
 
 def interaural_cues(
     sound: Sound,
+    *,
     win_dur: float = 20e-3,
     hop_dur: float | None = None,
     max_itd: float = 1e-3,
@@ -183,7 +184,7 @@ def interaural_cues(
     return InterauralCues(t, itd, ild, iac, corr0, cfs)
 
 
-def oscor(duration: float, fs: float, f_mod: float, rng: RNG = None, **noise_kwargs) -> Sound:
+def oscor(duration: float, fs: float, f_mod: float, *, rng: RNG = None, **noise_kwargs) -> Sound:
     """Oscillating-correlation noise (Siveke et al., 2008): the interaural
     correlation follows ``sin(2*pi*f_mod*t)``."""
     noise = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
@@ -192,7 +193,7 @@ def oscor(duration: float, fs: float, f_mod: float, rng: RNG = None, **noise_kwa
     return Sound(np.column_stack([noise[:, 0], right]), fs).normalize()
 
 
-def phasewarp(duration: float, fs: float, f_mod: float, rng: RNG = None, **noise_kwargs) -> Sound:
+def phasewarp(duration: float, fs: float, f_mod: float, *, rng: RNG = None, **noise_kwargs) -> Sound:
     """Phasewarp noise (Siveke et al., 2008): every component's interaural
     phase difference rotates at ``f_mod`` Hz, so the IPD sweeps through 360°
     and the zero-lag interaural correlation follows ``cos(2*pi*f_mod*t)``.

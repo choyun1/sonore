@@ -302,7 +302,7 @@ def texture_fig(snd, original, synthetic=False):
     gs = fig.add_gridspec(2, 3)
     ax_s = fig.add_subplot(gs[0, :2])
     ax_l, ax_m, ax_v, ax_p = (fig.add_subplot(gs[r, c]) for r, c in ((0, 2), (1, 0), (1, 1), (1, 2)))
-    so.STFT(snd, 20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
+    so.STFT(snd, win_dur=20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
     ax_s.set_title(&quot;Spectrogram&quot;)
     so.long_term_spectrum(snd).plot(ax_l, lw=1.2, label=&quot;this sound&quot;)
     if synthetic:

@@ -33,7 +33,7 @@ RT60_PROFILES = get_args(RT60Profile)
 DRR_PROFILES = get_args(DRRProfile)
 
 
-def band_rt60s(rt60: float, freqs: np.ndarray, profile: RT60Profile = "ecological") -> np.ndarray:
+def band_rt60s(rt60: float, freqs: np.ndarray, *, profile: RT60Profile = "ecological") -> np.ndarray:
     """Per-band RT60s [s] at ``freqs`` for a broadband (median) RT60, from the
     regression fits of Traer & McDermott (2016, Eq. S11), or one of the
     paper's atypical variants (Eq. S15 and following):
@@ -85,6 +85,7 @@ def _decay_envelopes(t, onset_db, taus, shape):
 def synth_ir(
     rt60: float,
     fs: float,
+    *,
     drr_db: float | None = None,
     decay_db: float = 60.0,
     n_bands: int = 32,
@@ -142,7 +143,7 @@ def synth_ir(
     filterbank = cosine_filterbank(n_bands, f_lo, f_hi)
     cfs = filterbank.cfs
 
-    taus = band_rt60s(rt60, cfs, rt60_profile)
+    taus = band_rt60s(rt60, cfs, profile=rt60_profile)
     match drr_profile:
         case "ecological":
             onset_db = fit_drr[:, 0] * np.log10(rt60) + fit_drr[:, 1]
@@ -180,6 +181,7 @@ def synth_ir(
 
 def measure_rt60(
     ir: Sound,
+    *,
     n_bands: int = 30,
     f_lo: float = 50.0,
     f_hi: float = 8000.0,

@@ -44,6 +44,7 @@ def _correlated_field(n_bands: int, n_windows: int, rho_band: float, rho_time: f
 def gaussian_spectrogram(
     duration: float,
     fs: float,
+    *,
     band_correlation_erb: float = 8.78,
     time_correlation: float = 0.154,
     sd_db: float = 14.1,

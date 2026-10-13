@@ -30,6 +30,7 @@ def mel_filterbank(
     freqs: np.ndarray,
     f_lo: float,
     f_hi: float,
+    *,
     scale: MelScale = "htk",
     triangles: Literal["height", "area"] = "height",
     triangle_axis: Literal["mel", "hz"] = "mel",
@@ -54,11 +55,11 @@ def mel_filterbank(
         raise ValueError(f"triangles must be 'height' or 'area', not {triangles!r}")
     if triangle_axis not in ("mel", "hz"):
         raise ValueError(f"triangle_axis must be 'mel' or 'hz', not {triangle_axis!r}")
-    edge_mels = np.linspace(freq_to_mel(f_lo, scale), freq_to_mel(f_hi, scale), n_mels + 2)
-    edges = mel_to_freq(edge_mels, scale)
+    edge_mels = np.linspace(freq_to_mel(f_lo, scale=scale), freq_to_mel(f_hi, scale=scale), n_mels + 2)
+    edges = mel_to_freq(edge_mels, scale=scale)
     freqs = np.asarray(freqs, dtype=float)
     if triangle_axis == "mel":
-        positions, edge_positions = freq_to_mel(freqs, scale), edge_mels
+        positions, edge_positions = freq_to_mel(freqs, scale=scale), edge_mels
     else:
         positions, edge_positions = freqs, edges
     weights = np.zeros((n_mels, len(freqs)))
@@ -80,7 +81,7 @@ def symmetric_hamming(n_samples: int) -> np.ndarray:
     return 0.54 - 0.46 * np.cos(2 * np.pi * np.arange(n_samples) / (n_samples - 1))
 
 
-def delta_features(values: np.ndarray, order: int = 1, width: int = 5, axis: int = -1) -> np.ndarray:
+def delta_features(values: np.ndarray, *, order: int = 1, width: int = 5, axis: int = -1) -> np.ndarray:
     """Time derivatives of a feature track, computed as librosa's
     ``feature.delta`` does.
 
@@ -262,7 +263,7 @@ class MFCC(View):
         self.lifter = lifter
         bin_freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
         self.weights, self.edges = mel_filterbank(
-            n_mels, bin_freqs, f_lo, f_hi, mel_scale, triangles, triangle_axis
+            n_mels, bin_freqs, f_lo, f_hi, scale=mel_scale, triangles=triangles, triangle_axis=triangle_axis
         )
         power = np.abs(coefs.data) ** 2
         self.mel_power = np.einsum("mk,ckw->cmw", self.weights, power)
@@ -309,7 +310,7 @@ class MFCC(View):
         """The floored mel spectrogram in dB, shape ``(n_channels, n_mels, n_windows)``."""
         return 10 * np.log10(self._floored(self.mel_power))
 
-    def deltas(self, order: int = 1, width: int = 5) -> np.ndarray:
+    def deltas(self, *, order: int = 1, width: int = 5) -> np.ndarray:
         """Time derivatives of the coefficients, per time window, computed as
         librosa's ``feature.delta`` (see :func:`delta_features`); ``width=9``
         is librosa's default. Same shape as :attr:`data`.
@@ -336,8 +337,8 @@ class MFCC(View):
         padded = np.zeros((n_channels, n_mels, n_windows))
         padded[:, :n_mfcc] = self.data / self._lifter_gains(n_mfcc)[:, None]
         smoothed_log_power = idct(padded, type=2, norm="ortho", axis=1)
-        center_mels = freq_to_mel(self.cfs, self.mel_scale)
-        query_mels = freq_to_mel(np.asarray(f, dtype=float), self.mel_scale)
+        center_mels = freq_to_mel(self.cfs, scale=self.mel_scale)
+        query_mels = freq_to_mel(np.asarray(f, dtype=float), scale=self.mel_scale)
         # Linear interpolation is linear in the values, so it is a matrix:
         # column m interpolates the m-th unit vector.
         interpolation = np.stack(
@@ -360,7 +361,7 @@ class MFCC(View):
         return GridEnvelope(self.envelope(freqs), self.t, freqs)
 
     def plot(
-        self, ax: Axes | None = None, channel: int = 0, kind: Literal["mfcc", "mel"] = "mfcc", **kwargs
+        self, ax: Axes | None = None, *, channel: int = 0, kind: Literal["mfcc", "mel"] = "mfcc", **kwargs
     ) -> Axes:
         """The coefficients against time (``kind="mfcc"``) or the mel
         spectrogram in dB (``kind="mel"``); see :func:`~sonore.plotting.plot_mfcc`."""

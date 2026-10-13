@@ -72,7 +72,7 @@ class ModulationFilterbank:
         """Magnitude responses, shape ``(len(freqs), n_bands)`` (``freqs`` >= 0)."""
         raise NotImplementedError
 
-    def filter(self, x: ArrayLike, fs: float, axis: int = 0, analytic: bool = False) -> np.ndarray:
+    def filter(self, x: ArrayLike, fs: float, *, axis: int = 0, analytic: bool = False) -> np.ndarray:
         """Filter ``x`` (circularly) along ``axis`` with every band.
 
         The band index is appended as a new *last* axis. With ``analytic=True``
@@ -257,6 +257,7 @@ class HannModulationFilterbank(ModulationFilterbank):
         self,
         x: ArrayLike,
         fs: float,
+        *,
         axis: int = 0,
         analytic: bool = False,
         align: Literal["center", "causal"] = "center",
@@ -378,7 +379,7 @@ class ModulationSpectrum(View):
     _rms_depth: float | None = None  # set by from_blobs, which refuses to clip
     _long_term_phase: np.ndarray | None = None  # phase of the zero-rate column, kept by random draws
 
-    def __init__(self, stft: STFT, channel: int = 0):
+    def __init__(self, stft: STFT, *, channel: int = 0):
         spectrogram_db = stft.db[channel]
         bin_spacing = stft.f[1] - stft.f[0]
         dt = stft.sft.hop / stft.fs
@@ -418,6 +419,7 @@ class ModulationSpectrum(View):
     def octave(
         cls,
         sound: Sound,
+        *,
         bands_per_octave: float = 12,
         f_lo: float = 125.0,
         f_hi: float = 8000.0,
@@ -435,13 +437,14 @@ class ModulationSpectrum(View):
 
         f_hi = min(f_hi, sound.fs / 2)
         fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
-        return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
+        return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale=scale)
 
     @classmethod
     def from_blobs(
         cls,
         blobs: ModulationBlob | Sequence[ModulationBlob],
         duration: float,
+        *,
         f_lo: float = 250.0,
         f_hi: float = 8000.0,
         bands_per_octave: float = 12,
@@ -569,7 +572,7 @@ class ModulationSpectrum(View):
         new.level = np.maximum(self.level + amp_to_db(shown, floor_db=-400.0), _FLOOR_DB)
         return new
 
-    def to_envelopes(self, carrier: Sound | None = None, rng: RNG = None) -> Envelopes:
+    def to_envelopes(self, *, carrier: Sound | None = None, rng: RNG = None) -> Envelopes:
         """The envelopes this spectrum describes, given a modulation phase.
 
         The stored magnitudes and mean fix everything but the phase of the
@@ -645,6 +648,7 @@ class ModulationSpectrum(View):
 
     def to_sound(
         self,
+        *,
         carrier: Literal["tones", "noise"] | Sound = "tones",
         fs: float | None = None,
         rng: RNG = None,
@@ -694,7 +698,7 @@ class ModulationSpectrum(View):
                     raise TypeError("rng applies only to carrier='tones' or 'noise'")
                 if fs is not None and fs != carrier.fs:
                     raise ValueError(f"fs {fs} differs from the carrier's {carrier.fs}")
-                envelopes = self.to_envelopes(carrier)
+                envelopes = self.to_envelopes(carrier=carrier)
                 fs = carrier.fs
             case "tones" | "noise":
                 if fs is None:
@@ -728,7 +732,7 @@ class ModulationSpectrum(View):
             sound = Sound(sound.data[:n_audio], fs)
         return sound.normalize() if sound.rms > 0 else sound
 
-    def peak(self, exclude_dc: bool = True) -> tuple[float, float]:
+    def peak(self, *, exclude_dc: bool = True) -> tuple[float, float]:
         """``(temporal Hz, spectral)`` coordinates of the largest component.
 
         At zero spectral modulation, ``+rate`` and ``-rate`` are mirror images

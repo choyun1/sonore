@@ -63,7 +63,9 @@ def test_to_sound_noise_carrier_is_shaped_noise():
 
 
 def test_to_sound_with_a_sounds_phase_gives_it_back():
-    sound = so.harmonic_complex(0.3, FS, 220.0, np.arange(1, 12)) + 0.1 * so.gaussian_noise(0.3, FS, rng=1)
+    sound = so.harmonic_complex(0.3, FS, 220.0, harmonics=np.arange(1, 12)) + 0.1 * so.gaussian_noise(
+        0.3, FS, rng=1
+    )
     rebuilt = so.Spectrum.from_sound(sound).to_sound(sound.duration, FS, carrier=sound)
     # the -200 dB floor on the density lifts the near-zero 0 Hz bin, an offset of about 2e-10
     assert np.max(np.abs(rebuilt.data - sound.normalize().data)) < 1e-9

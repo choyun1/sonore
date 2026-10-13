@@ -573,7 +573,7 @@ for label, (change_db, coefficient_change) in changes.items():
 # - Davis & Mermelstein (1980). Comparison of parametric representations for monosyllabic word
 #   recognition in continuously spoken sentences. *IEEE Trans. Acoust., Speech, Signal Process.*
 #   28(4), 357–366.
-#   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L105)
+#   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L106)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.

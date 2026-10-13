@@ -207,7 +207,7 @@ class SpectralEnvelope(_FrequencyView):
         """``10 log10`` of the power."""
         return 10 * np.log10(self.data)
 
-    def amplitude(self, t: ArrayLike, f: ArrayLike, channel: int = 0) -> np.ndarray:
+    def amplitude(self, t: ArrayLike, f: ArrayLike, *, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
         f[i])``, ``t`` and ``f`` of the same shape: the form
         :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
@@ -216,7 +216,7 @@ class SpectralEnvelope(_FrequencyView):
         return np.exp(0.5 * _pointwise(np.log(self.data[channel]), self.t, self.f, t, f))
 
     def plot(
-        self, ax: Axes | None = None, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
+        self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
     ) -> Axes:
         """The envelope in dB as a time-frequency image."""
         return _plot_envelope(self, ax, channel, db_range, fmax)
@@ -255,7 +255,7 @@ def cheaptrick(
     """
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
-    n_fft = world_fft_size(fs, f0_floor)
+    n_fft = world_fft_size(fs, f0_floor=f0_floor)
     analysis_floor = 3.0 * fs / (n_fft - 3.0)
     quefrencies = np.arange(n_fft // 2 + 1) / fs
     data = np.empty((sound.n_channels, n_fft // 2 + 1, len(times)))
@@ -348,7 +348,7 @@ class GridEnvelope(View):
         at_freqs = log_values[:, f_lower] * (1 - f_weight) + log_values[:, f_upper] * f_weight
         return np.exp(at_freqs[:, :, t_lower] * (1 - t_weight) + at_freqs[:, :, t_upper] * t_weight)
 
-    def amplitude(self, t: ArrayLike, f: ArrayLike, channel: int = 0) -> np.ndarray:
+    def amplitude(self, t: ArrayLike, f: ArrayLike, *, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
         f[i])``, ``t`` and ``f`` of the same shape: the form
         :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
@@ -356,7 +356,7 @@ class GridEnvelope(View):
         return np.exp(0.5 * _pointwise(self._log()[channel], self.t, self.f, t, f))
 
     def plot(
-        self, ax: Axes | None = None, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
+        self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
     ) -> Axes:
         """The envelope in dB as a time-frequency image."""
         return _plot_envelope(self, ax, channel, db_range, fmax)

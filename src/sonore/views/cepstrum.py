@@ -73,7 +73,7 @@ class Cepstrum(View):
         "exactly only for an unliftered cepstrum with phase='original'."
     )
 
-    def __init__(self, coefs: STFT | TVSTFT, floor_db: float = -200.0):
+    def __init__(self, coefs: STFT | TVSTFT, *, floor_db: float = -200.0):
         if not isinstance(coefs, (STFT, TVSTFT)):
             raise TypeError(f"expected an STFT or TVSTFT, not {type(coefs).__name__}")
         self.source = coefs
@@ -114,7 +114,7 @@ class Cepstrum(View):
         mirror = self.data[:, 1 : self.n_fft - n_half + 1][:, ::-1]
         return np.concatenate([self.data, mirror], axis=1)
 
-    def lifter(self, cutoff: float | Sequence[float], keep: Literal["low", "high"] = "low") -> Cepstrum:
+    def lifter(self, cutoff: float | Sequence[float], *, keep: Literal["low", "high"] = "low") -> Cepstrum:
         """A rectangular lifter. ``keep="low"`` keeps the quefrencies below
         ``cutoff`` [s], the smooth spectral envelope; ``"high"`` keeps the
         rest, the fine structure such as the harmonics. ``cutoff`` is one
@@ -152,7 +152,7 @@ class Cepstrum(View):
         freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
         return GridEnvelope(self.envelope() ** 2, self.t, freqs)
 
-    def to_stft(self, phase: Literal["original", "minimum"] = "original") -> STFT | TVSTFT:
+    def to_stft(self, *, phase: Literal["original", "minimum"] = "original") -> STFT | TVSTFT:
         """Coefficients of the source's type and frame with :meth:`envelope`
         as magnitude.
 
@@ -174,16 +174,16 @@ class Cepstrum(View):
                 raise ValueError(f"phase must be 'original' or 'minimum', not {phase!r}")
         return self.source._with_data(data)
 
-    def to_sound(self, phase: Literal["original", "minimum"] = "original") -> Sound:
+    def to_sound(self, *, phase: Literal["original", "minimum"] = "original") -> Sound:
         """:meth:`to_stft` synthesized by the source's frame: exact for an
         unliftered cepstrum with the original phase, as long as no
         magnitude fell below ``floor_db`` (those are raised to the floor),
         and otherwise the least-squares signal for those coefficients. It is not an inverse of
         the cepstrum alone: the phase comes from the source STFT."""
-        return self.to_stft(phase).to_sound()
+        return self.to_stft(phase=phase).to_sound()
 
     def f0(
-        self, f_lo: float = 75.0, f_hi: float = 400.0, threshold: float = 0.1
+        self, *, f_lo: float = 75.0, f_hi: float = 400.0, threshold: float = 0.1
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Classic cepstral F0 (Noll, 1967): the largest cepstral peak between
         quefrencies ``1/f_hi`` and ``1/f_lo``, refined by a parabola through it
@@ -220,7 +220,7 @@ class Cepstrum(View):
         f0 = self.fs / (peak_index[:, 0] + shift)
         return self.t, np.where(peak >= threshold, f0, 0.0), peak
 
-    def plot(self, ax: Axes | None = None, channel: int = 0, **kwargs) -> Axes:
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
         """Cepstrum against time and quefrency in ms (see
         :func:`~sonore.plotting.plot_cepstrum`)."""
         from sonore.plotting import plot_cepstrum

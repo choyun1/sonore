@@ -93,7 +93,7 @@ class ChannelObjective:
             out.append(("c1", lambda s, o=others: tg.c1(s, o, context), np.stack(pair_targets, axis=-1)))
         return out
 
-    def reference(self, s: np.ndarray, per_term: bool = False) -> tuple:
+    def reference(self, s: np.ndarray, *, per_term: bool = False) -> tuple:
         """The objective computed class by class from :meth:`terms` (the
         straightforward, separately tested path; :meth:`__call__` must agree)."""
         loss, grad, parts = 0.0, np.zeros_like(s), {}
@@ -200,6 +200,7 @@ def impose_channel(
     target: TextureStats,
     env: np.ndarray,
     k: int,
+    *,
     adjusted: np.ndarray | None = None,
     n_iter: int = 5,
     context: tg.ChannelContext | None = None,
@@ -257,6 +258,7 @@ def _resample_circular(x: np.ndarray, n: int) -> np.ndarray:
 
 def synthesize(
     target: TextureStats,
+    *,
     duration: float = 5.0,
     classes: Sequence[str] = PAPER_CLASSES,
     rng: RNG = None,
@@ -319,7 +321,9 @@ def synthesize(
         """SNR of iterate ``x``, from the analysis the next iteration needs anyway."""
         nonlocal best
         subband_var = np.mean(subbands**2, axis=0) - np.mean(subbands, axis=0) ** 2
-        snr = target.snr(TextureStats.from_envelopes(env, subband_var, model, window="uniform"), classes)
+        snr = target.snr(
+            TextureStats.from_envelopes(env, subband_var, model, window="uniform"), classes=classes
+        )
         history.append(snr)
         average_snr = float(np.mean(list(snr.values())))
         if average_snr > best[0]:
@@ -344,7 +348,7 @@ def synthesize(
         n_cg_iter = 5 + round(0.2 * (iteration - 1))
         for k in order:
             env[:, k], _ = impose_channel(
-                target, env, k, adjusted, n_iter=n_cg_iter, context=context, classes=classes
+                target, env, k, adjusted=adjusted, n_iter=n_cg_iter, context=context, classes=classes
             )
             adjusted[k] = True
 
