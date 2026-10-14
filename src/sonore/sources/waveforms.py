@@ -268,6 +268,11 @@ def harmonic_complex(
     contour, ``phases`` has one value per harmonic number up to the highest
     that fits below ``f_max`` at the lowest voiced F0, unless ``harmonics``
     is given.
+
+    Octave-numbered harmonics (``harmonics=2 ** np.arange(n)``) with a
+    bell-shaped level over log frequency make a Shepard tone, and the same
+    with a rising contour a Risset glide; the recipes are in
+    ``docs/design/views/chroma.md``.
     """
     contour = _contour(f0)
     if contour is not None:

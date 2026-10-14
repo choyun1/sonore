@@ -27,6 +27,7 @@ VIEW_NAMES = [
     "TextureStats",
     "PVAnalysis",
     "EnvelopePeaks",
+    "Chroma",
 ]
 
 
@@ -98,7 +99,7 @@ def test_frames_and_tools_are_not_views():
 
 
 # Views with a canonical route back to a sound; every other view refuses to_sound.
-ROUTES_BACK = {"Spectrum", "Cepstrum", "PVAnalysis", "ModulationSpectrum", "Envelope", "Envelopes"}
+ROUTES_BACK = {"Spectrum", "Cepstrum", "PVAnalysis", "ModulationSpectrum", "Envelope", "Envelopes", "Chroma"}
 
 
 @pytest.mark.parametrize("view", list(_public_subclasses(View)), ids=lambda view: view.__name__)
