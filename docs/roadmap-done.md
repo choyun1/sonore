@@ -174,8 +174,10 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   over too loud a background. A longer synthesis or more iterations did not
   help by ear. Synthesizing the recording with its pops limited away and
   adding its own pops back with `event_train`, at the exponent and rate
-  measured with `so.envelope_peaks`, sounded better on our fire, two of the
-  paper's fires and a clapper close to the microphone; not on rhythmic or
-  impact sounds, which the paper lists among the model's failures. Shown as
-  a recipe on the Sound textures gallery page; `synthesize` is unchanged
+  measured with `so.envelope_peaks`, sounded better to one listener on our
+  fire, two of the paper's fires and a clapper close to the microphone; not
+  on rhythmic or impact sounds, which the paper lists among the model's
+  failures. The recipe is sonore's own and untested beyond that listening,
+  so it is shown as a recipe on the Sound textures gallery page, not built
+  into the library; `synthesize` is unchanged
   (`docs/design/views/envelope-peaks.md`, D5).

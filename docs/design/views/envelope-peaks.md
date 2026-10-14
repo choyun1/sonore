@@ -218,7 +218,9 @@ synthesis; a recipe on the gallery page instead.** Texture synthesis of the
 fire with its pops limited away, plus the recording's own pops added back
 with `event_train` at the measured exponent and rate, sounded better than
 the plain synthesis on our fire, two of the paper's fires and the close
-clapper. Making the plain synthesis longer (20 s) or iterating longer did
+clapper, to Cho's ear. The recipe is our own combination of standard parts,
+not from a paper, and that listening is its only test, so the gallery
+says so and claims no more. Making the plain synthesis longer (20 s) or iterating longer did
 not help. It does not help rhythmic or impact sounds (tapping, a bongo
 loop, a typewriter, castanets), which the paper itself lists among the
 model's failures (rhythm). Imposing the alignment of extremes across

@@ -1007,18 +1007,15 @@ fig, playhead = pops_fig(sound)</code></pre></details>
 <p>The fire's synthesis keeps pops, but too many of them are medium-sized, and the background
 sits too close to the biggest: the median bin is 35 dB below the biggest pops in the
 synthesis, 43 dB in the original. A synthesis as long as the original does no better. What
-works is to take the pops out, synthesize the rest, and put pops back with <code>so.event_train</code>:</p>
-<p>1. <strong>Remove the pops.</strong> Scale each 5 ms bin so that its largest envelope value is at most twice
-   the 80th percentile of those values, with the gain smoothed over 2 ms.
-2. <strong>Synthesize the background.</strong> Without its pops the fire is an ordinary texture, and the
-   model matches it well (39 dB average statistic SNR, against 21 dB for the whole fire).
-3. <strong>Add pops.</strong> The recording's eight biggest pops, 15 ms each, as events at Poisson onsets
-   at the rate pops cross the threshold in the original, with power-law levels at the exponent
-   measured on the original, from the threshold up to the biggest pop. The background goes
-   3 dB down, which sounds closer to the original than leaving it as it is.</p>
-<p>It suits pops that are random in time and unlike each other over a steady background: on the
-paper's recordings it also helped two other fires and a clapper close to the microphone. It
-does not help rhythmic or impact sounds (tapping, a bongo loop, a typewriter, castanets),
+sounded closer to the original by ear was to take the pops out, synthesize the rest, and put
+pops back with <code>so.event_train</code>:</p>
+<ul><li><strong>Remove the pops.</strong> Scale each 5 ms bin so that its largest envelope value is at most twice the 80th percentile of those values, with the gain smoothed over 2 ms.</li><li><strong>Synthesize the background.</strong> Without its pops the fire is an ordinary texture, and the model matches it well (39 dB average statistic SNR, against 21 dB for the whole fire).</li><li><strong>Add pops.</strong> The recording's eight biggest pops, 15 ms each, as events at Poisson onsets at the rate pops cross the threshold in the original, with power-law levels at the exponent measured on the original, from the threshold up to the biggest pop. The background goes 3 dB down, which sounds closer to the original than leaving it as it is.</li></ul>
+<p>This recipe is sonore's own, put together for this page from standard parts (texture
+synthesis, and shot noise with power-law sizes); we know of no paper that describes it, and it
+is not a validated method. Its only test is one listener comparing it by ear with the plain
+synthesis on a handful of the paper's recordings. There it sounded closer on two other fires
+and a clapper close to the microphone, pops that are random in time over a steady background,
+and no better on rhythmic or impact sounds (tapping, a bongo loop, a typewriter, castanets),
 which the texture model also synthesizes poorly on its own; McDermott &amp; Simoncelli (2011) list
 rhythm among the model's failures.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def remove_pops(sound):

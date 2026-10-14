@@ -21,8 +21,9 @@ version (0.x.y) only fixes bugs.
 - `plot_envelopes(db_max=...)` (and `Envelopes.plot`): the top of the
   color scale in dB, so several cochleagrams can be drawn on one scale. The
   Sound quilts page draws each quilt on its original's scale.
-- Gallery: "Background plus pops" on the Sound textures page, a recipe for
-  pop-like textures such as fire: synthesize the recording with its pops
+- Gallery: "Background plus pops" on the Sound textures page, a recipe of
+  sonore's own (not from a paper, judged only by ear) for pop-like textures
+  such as fire: synthesize the recording with its pops
   limited away, then add its own pops back with `so.event_train` at the
   exponent and rate it measures. The section opens with the math of heavy
   tails. `tools/make_texture_synths.py` stores the fire's background
