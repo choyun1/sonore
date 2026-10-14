@@ -19,8 +19,8 @@ just particular choices of harmonics and amplitudes. This document proposes
 the rest. It adds no library code; the decisions at the end come first.
 
 Status: Cho accepted D1, D2, D5 and D6 as recommended on 2026-10-14. D4
-is Cho's ruling. D3 is open: Cho asked why the way back is a Shepard tone,
-and the answer is under D3.
+is Cho's ruling. D3 accepted by Cho the same day, with the spread over
+octaves as an option (below).
 
 ## How the claims are verified
 
@@ -176,8 +176,14 @@ loud the window was, so `plot` can offer it and the data stays as measured.
 A tuning offset estimated from the sound is left out: it is a guess about
 the recording, not part of the view.
 
-**D3. `Chroma.to_sound`. Recommended: yes, as Shepard tones. Open.** Arguments:
-the bell's center and width (the height the view dropped), and `fs`. Each
+**D3. `Chroma.to_sound`. Accepted by Cho: yes, as Shepard tones by default,
+with the spread over octaves as an option.** One argument, `octaves`, says
+how each pitch class's energy spreads across octaves, which is what the view
+dropped: the Shepard bell by default (no height), a note or frequency such
+as `"C4"` for a narrow bell there (every pitch class near that octave), or
+a function of frequency for any other spread. All of them come back to the
+same chroma, because every partial is still an octave of its pitch class.
+Also `fs`. Each
 pitch class's row becomes the time-varying level of one Shepard-tone recipe
 (one `harmonic_complex` call per pitch class, summed). That shows on one
 page what chroma keeps and what it drops.
@@ -190,6 +196,19 @@ had. Noise bands for each pitch class across octaves come back unchanged
 only on average, and differ from run to run. The Shepard tone is the
 deterministic choice that invents no height. The alternative is no route
 back: `to_sound` refuses and names Shepard tones as a recipe.
+
+An option does not break the rule for `to_sound`: the rule is that its
+arguments are what the view dropped, not that there is one answer
+(`Spectrum.to_sound` takes `carrier="noise"`, `"minimum"` or a Sound).
+
+No separate helper that picks an octave for any harmonic complex. For a
+Shepard tone, where the energy sits is the height. For an ordinary harmonic
+tone, the pitch stays at its F0 wherever the energy sits (the missing
+fundamental), and moving the energy only makes it brighter or duller. One
+helper would then pick an octave for some sounds and change only the timbre
+of others. Reweighting partials by a level over log frequency is already
+`harmonic_complex`'s `amplitudes=`, and the Shepard recipe with a narrower
+bell picks an octave.
 
 **D4. Shepard and Risset recipes. Settled by Cho: recipes, no new code.**
 They live in the gallery page and in one line of `harmonic_complex`'s
