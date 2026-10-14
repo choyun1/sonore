@@ -297,9 +297,17 @@ fig, playhead = show(sound)
 # `octaves`. By default it plays each pitch class as a Shepard tone, with a bell centered
 # between the lowest and highest band (A1 and A8) and one octave wide. A Shepard tone's partials
 # are all octaves of one pitch class, so its chroma comes back unchanged; a harmonic tone could
-# not do that, since its overtones land on other pitch classes. Given a note such as `"C4"`,
+# not do that, since its overtones land on other pitch classes. Given a note such as `"E4"`,
 # the bell is narrow and centered there, and each pitch class sounds in the octave nearest that
-# note. The cell compares the chroma of each sound below with the tune's.
+# note. The tune below runs from C4 to A4, all within half an octave of E4, so near E4 its notes
+# come back in their own octave, and near E6 two octaves up.
+#
+# Every change of note splashes a little power into the neighboring semitones for a moment: a
+# note that starts or stops is no longer a steady tone at one band's center. Chroma keeps that
+# splash, and played back it sounds like a grace note a semitone away. A 100 ms time window
+# instead of the default 50 ms spreads the same splash over a longer window, so at its peak it
+# takes less than half the share it did; the notes here last 400 ms, so they stay distinct. The cell
+# compares the chroma of each sound below with the tune's.
 
 # %%
 # The first two lines of Twinkle, Twinkle, Little Star, as (note, beats); each line ends on a
@@ -325,15 +333,16 @@ melody = sequence(
     [harmonic_tone(so.note_to_freq(note), beats * BEAT + 0.02) for note, beats in TUNE],
     [beats * BEAT for _, beats in TUNE],
 )
-melody_chroma = so.chroma(melody)
+WINDOW = 0.1  # [s]
+melody_chroma = so.chroma(melody, window=WINDOW)
 played = {
     "the tune": melody,
     "its chroma, no height": melody_chroma.to_sound(FS),
-    "its chroma, near C4": melody_chroma.to_sound(FS, octaves="C4"),
-    "its chroma, near C6": melody_chroma.to_sound(FS, octaves="C6"),
+    "its chroma, near E4": melody_chroma.to_sound(FS, octaves="E4"),
+    "its chroma, near E6": melody_chroma.to_sound(FS, octaves="E6"),
 }
 for label, snd in played.items():
-    measured = so.chroma(snd).power[:, :, 0]
+    measured = so.chroma(snd, window=WINDOW).power[:, :, 0]
     shares = measured.sum(axis=0) / measured.sum()
     reference = melody_chroma.power[:, :, 0].sum(axis=0) / melody_chroma.power.sum()
     difference = np.abs(shares - reference).max()
@@ -341,10 +350,12 @@ for label, snd in played.items():
 
 # %% [about]
 # The tune, then its chroma played three ways: as Shepard tones with no height, and with the
-# bell narrowed to the octaves near C4 and near C6. The three have the tune's chroma; they
+# bell narrowed to the octaves near E4 and near E6. The three have the tune's chroma; they
 # differ in what the chroma dropped. The chroma of the original includes its overtones, so the
-# Shepard tones play those pitch classes too, quietly. The chroma keeps one value per 50 ms
-# time window, so each note of the playback starts and stops over about that long.
+# Shepard tones play those pitch classes too, quietly. The chroma keeps one value per 100 ms
+# time window, so each note of the playback starts and stops over about that long, and the
+# splash at each change of note is still there, softly. The chroma drawn here uses the
+# default 50 ms window.
 
 # %% [demo pc6] A tune and its chroma played back
 sounds = {label: finish(snd) for label, snd in played.items()}
