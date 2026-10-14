@@ -129,7 +129,7 @@ def quilt_demo(passage):
     for seg in SEGMENTS:
         sounds[f"{seg * 1000:.0f} ms"] = so.quilt(passage, seg, QUILT_DUR, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 9), sharex=True, layout="constrained")
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 5.6), sharex=True, layout="constrained")
     for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
         quilt_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
         title = label if label == "Original" else f"Quilt, {label} segments"
@@ -218,7 +218,7 @@ def texture_quilt_demo(recording, duration, segments=(0.03, 0.12, 0.96)):
     for seg in segments:
         sounds[f"{seg * 1000:.0f} ms"] = so.quilt(recording, seg, duration, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 7.6), sharex=True, layout="constrained")
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 4.6), sharex=True, layout="constrained")
     for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
         texture_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
         title = label if label == "Original" else f"Quilt, {label} segments"
