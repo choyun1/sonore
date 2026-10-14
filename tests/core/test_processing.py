@@ -212,3 +212,44 @@ class TestResonator:
     def test_rejects_bad_values(self, f, bw):
         with pytest.raises(ValueError):
             so.resonator(so.silence(0.01, FS), f, bw)
+
+
+class TestSplice:
+    fs = 16000
+    noise = so.gaussian_noise(1.0, 16000, rng=0)
+    tone = so.Sound(np.sin(2 * np.pi * 100 * np.arange(16000) / 16000), 16000)
+
+    def test_segments_in_their_own_order_rebuild_the_sound(self):
+        # the cross-fades of neighbors in the sound sum to one
+        y = so.splice(self.noise, [0.0, 0.1, 0.2, 0.3], 0.1, max_shift=0)
+        np.testing.assert_allclose(y.data, self.noise.data[: 4 * 1600], atol=1e-12)
+
+    def test_length_is_whole_segments(self):
+        y = so.splice(self.noise, [0.5, 0.0, 0.25], 0.12)
+        assert len(y) == 3 * 1920
+
+    def test_alignment_keeps_a_tone_continuous(self):
+        # starts that are not whole periods of 100 Hz; the shift finds the phase
+        starts = [0.0, 0.1031, 0.2517, 0.4093]
+        ref = np.sin(2 * np.pi * 100 * np.arange(4 * 1600) / self.fs)
+        aligned = so.splice(self.tone, starts, 0.1)
+        unaligned = so.splice(self.tone, starts, 0.1, max_shift=0)
+        np.testing.assert_allclose(aligned.data[:, 0], ref, atol=1e-9)
+        assert np.max(np.abs(unaligned.data[:, 0] - ref)) > 1
+
+    def test_without_crossfade_segments_are_copied(self):
+        y = so.splice(self.noise, [0.3, 0.1], 0.1, crossfade=0)
+        np.testing.assert_array_equal(y.data[:1600], self.noise.data[4800:6400])
+        np.testing.assert_array_equal(y.data[1600:], self.noise.data[1600:3200])
+
+    @pytest.mark.parametrize(
+        "call, message",
+        [
+            (lambda x: so.splice(x.to_channels(2), [0.0], 0.1), "mono"),
+            (lambda x: so.splice(x, [0.95], 0.1), "inside the sound"),
+            (lambda x: so.splice(x, [0.0], 0.1, crossfade=0.2), "crossfade"),
+        ],
+    )
+    def test_refuses(self, call, message):
+        with pytest.raises(ValueError, match=message):
+            call(self.noise)

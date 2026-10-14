@@ -26,6 +26,7 @@ from sonore.core.processing import (
     normalize,
     relative_db,
     resonator,
+    splice,
 )
 from sonore.core.sound import Sound, load
 from sonore.core.units import Decibels, dB
@@ -115,6 +116,7 @@ from sonore.views.modulation import (
     OctaveModulationFilterbank,
 )
 from sonore.views.phasevocoder import PVAnalysis, pitch_shift, pv_analyze, time_stretch
+from sonore.views.quilting import quilt
 from sonore.views.spectra import (
     ReassignedSpectrogram,
     Spectrum,
@@ -214,6 +216,7 @@ __all__ = [
     "butter_filter",
     "circular_trajectory",
     "concat",
+    "splice",
     "correlated_noise",
     "dB",
     "db_to_amp",
@@ -252,6 +255,7 @@ __all__ = [
     "ModulationSpectrum",
     "move_sound",
     "channel_vocode",
+    "quilt",
     "normalize",
     "oscor",
     "overview",
