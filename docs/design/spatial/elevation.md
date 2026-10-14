@@ -5,7 +5,8 @@ plane, what PKU-IOA's HRIRs hold across elevation, one place where
 `HRIRSet.at` gives a wrong answer, and what a gallery section on elevation
 would show. It ends with the decisions for Cho.
 
-Status: proposed 2026-10-14, nothing built yet.
+Status: D1–D3 accepted by Cho 2026-10-14, all as recommended, and built
+(see "As built" below).
 
 ## Why
 
@@ -125,6 +126,24 @@ it download the 1 m PKU-IOA file, as Moving talkers does.
   and the measured shortfall (about 1 dB better than the nearest ring) is
   a reason to say so on the page, not yet a reason to build a different
   interpolation.
+
+## As built
+
+- `HRIRSet` marks, on each measured distance, the hull triangles whose
+  longest side is more than twice the median longest side (62 of PKU-IOA's
+  1582 at 1 m, all on the bottom face). A direction that lies only in such
+  triangles raises `ValueError`; one on the edge of a wide triangle and a
+  narrow one is kept, with the triangle it had before, so every direction
+  above −40° gives the same HRIR to the bit (compared once with the code
+  before this change, on 3000 random directions and the 793 measured ones
+  at 1 m).
+- The Binaural cues page has an "Up and down" section: noise at −40°, 0°,
+  40° and 80° in front, with the left ear's spectrogram and responses, and
+  noise moving through the median plane from −40° in front to −40° behind
+  over 6 s, with its ITD and ILD drawn to the scale of a source at the right.
+  The numbers it states are the median-plane and side numbers above. On the
+  rendered sweep, measured in 10 ms windows, the ITD stays within 39 µs and
+  the ILD within 2.8 dB.
 
 ## References
 

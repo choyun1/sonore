@@ -804,7 +804,7 @@ TOPICS = [
         "Spatial hearing",
         "spatial",
         [
-            ("binaural.html", "differences between the ears: timing, binaural beats, and correlation that changes."),
+            ("binaural.html", "differences between the ears (timing, binaural beats, correlation that changes), and up and down, where they hardly change."),
             ("reverb.html", "distance, rooms built from the statistics of real ones, and rooms that break them."),
             ("moving.html", "talkers rendered through measured HRIRs: moving, among maskers of either sex, walking in."),
         ],

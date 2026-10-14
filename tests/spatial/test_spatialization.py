@@ -31,6 +31,21 @@ class TestSpatialization:
         n = hs.irs.shape[-1]
         np.testing.assert_allclose(h[:, :n], hs.irs[5], atol=1e-6)
 
+    def test_no_interpolation_below_the_lowest_ring(self):
+        # the toy set's lowest ring is at -40 degrees; the hull closes the hole under it
+        # with triangles whose corners are far apart in azimuth
+        hs, _ = toy_hrirs()
+        for elev, azim in ((-50, 0), (-60, 90), (-90, 0)):
+            with pytest.raises(ValueError, match="gap in the measured directions"):
+                hs.at(np.column_stack(so.hcc_to_rect(100, elev, azim)))
+        with pytest.raises(ValueError, match="gap in the measured directions"):
+            so.move_sound(so.gaussian_noise(0.1, hs.fs, rng=1), so.hcc_trajectory(100, -60, 0), hs)
+        # on and above the lowest ring, including its measured directions, it interpolates
+        on_ring = np.column_stack(so.hcc_to_rect(100, [-40, -40, -30, 85], [0, 15, 200, 10]))
+        assert np.all(np.isfinite(hs.at(on_ring)))
+        n = hs.irs.shape[-1]
+        np.testing.assert_allclose(hs.at(hs.positions)[..., :n], hs.irs, atol=1e-6)
+
     def test_moving_sound_itd_sweeps(self):
         hs, _ = toy_hrirs()
         x = so.gaussian_noise(2, 48000, band=(200, 3000), rng=0)

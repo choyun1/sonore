@@ -154,9 +154,13 @@ def main():
     corner_counts = np.bincount(triangles[cap].ravel(), minlength=len(unit))
     hub = np.argmax(corner_counts)
     report(f"  bottom-face triangles sharing one corner (azimuth {azimuth[hub]:g} deg)", corner_counts[hub])
+    _, _, inverse = hrirs._shells[0]
+    print("  blending the hull triangle a direction falls in, as HRIRSet.at did before it refused:")
     for elev, azim in ((-45, 0), (-50, 90), (-60, 0), (-90, 0)):
-        point = np.column_stack(so.hcc_to_rect(DISTANCE, elev, azim))
-        corners, weights = hrirs._weights(point)
+        direction = np.column_stack(so.hcc_to_rect(DISTANCE, elev, azim))[0] / (DISTANCE / 100)
+        barycentric = np.einsum("tij,j->ti", inverse, direction)
+        triangle = np.argmax(np.all(barycentric >= -1e-9, axis=1))  # the lowest-numbered holding it
+        corners, weights = triangles[[triangle]], barycentric[[triangle]] / barycentric[triangle].sum()
         spread = np.abs((azimuth[corners[0]] - azim + 180) % 360 - 180)
         blended = ", ".join(f"{a:g}" for a in azimuth[corners[0]])
         report(
@@ -164,10 +168,22 @@ def main():
             weights[0][spread >= 90].sum(),
         )
 
-    print("\nA path through the median plane")
-    sweep = so.hcc_trajectory(dist=DISTANCE, elev=([0, 3], [rings.min(), 90]), azim=0)
-    rendered = so.move_sound(so.gaussian_noise(3.0, 16000, rng=1), sweep, hrirs)
-    report("  3 s of noise from the lowest ring to overhead, rendered: seconds", rendered.duration, "s")
+    wide = hrirs._wide_triangles[0]
+    report("  triangles sonore treats as a gap (longest side over twice the median)", wide.sum())
+    report("      of them on the bottom face", np.sum(wide & cap))
+    try:
+        hrirs.at(np.column_stack(so.hcc_to_rect(DISTANCE, -45, 0)))
+        report("  HRIRSet.at at (-45, 0) interpolated; expected a ValueError", float("nan"))
+    except ValueError:
+        report("  HRIRSet.at at (-45, 0) raises ValueError (1 = yes)", 1)
+
+    print("\nThe gallery's path through the median plane (Binaural cues, Over the head)")
+    sweep = so.hcc_trajectory(dist=DISTANCE, elev=([0, 6], [rings.min(), 180 - rings.min()]), azim=0)
+    rendered = so.move_sound(so.gaussian_noise(6.0, 44100, rng=4), sweep, hrirs)
+    cues = so.interaural_cues(rendered, win_dur=10e-3)
+    report("  rendered, lowest ring in front to lowest ring behind", rendered.duration, "s")
+    report("  largest |ITD| in 10 ms windows", np.nanmax(np.abs(cues.itd)) * 1e6, "us")
+    report("  largest |ILD| in 10 ms windows", np.nanmax(np.abs(cues.ild)), "dB")
 
 
 if __name__ == "__main__":

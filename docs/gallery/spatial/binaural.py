@@ -22,6 +22,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Correlation that changes](#h-correlation-that-changes): binaural beats, phasewarp and Oscor,
 #   sounds whose interaural phase or correlation changes over time while each ear alone hears
 #   something steady.
+# - [Up and down](#h-up-and-down): a source that rises in front of the head and drops behind it,
+#   where none of these change and the spectrum does.
 #
 # For real sources at real positions, with every cue together, see [Moving talkers](moving.html),
 # where three talkers are rendered through measured head-related impulse responses and one of them
@@ -166,12 +168,95 @@ sound = finish(so.oscor(4, FS, f_mod=3, rng=0))
 fig, playhead = show(sound)
 
 # %% [markdown]
+# ## Up and down
+#
+# A source straight ahead that rises overhead and drops behind the head stays the same distance
+# from both ears, so the cues above hardly change. In the head-related impulse responses (HRIRs)
+# used here, measured on a KEMAR manikin at 1 m (PKU-IOA, Qu et al., 2009), the ITD stays under
+# 46 µs and the ILD under 1.8 dB at every measured direction on that path (the median plane),
+# against 763 µs and 15.2 dB for a source at the right. What changes is the spectrum both ears
+# hear, shaped mostly by the outer ear (Middlebrooks & Green, 1991). These HRIRs are one
+# manikin's, not yours: with HRIRs measured on someone else, elevation and front versus back are
+# where listeners make the most errors (Wenzel et al., 1993), so these sounds may not rise or pass
+# behind for every listener. PKU-IOA measures nothing below −40°, and sonore will not interpolate
+# there.
+
+# %%
+hrirs = so.load_hrirs()  # PKU-IOA KEMAR at 1 m; downloaded on first use
+
+
+def in_front(elevation):
+    """A Cartesian point 1 m away, straight ahead and ``elevation`` degrees up."""
+    return np.column_stack(so.hcc_to_rect(100, elevation, 0))[0]
+
+
+# %% [about]
+# Noise from four heights in front: 40° below, level, 40° and 80° above. Each is the same noise
+# filtered by the HRIRs measured there. In the left ear's response (right panel), the clearest
+# differences are the dips above about 5 kHz, which sit at different frequencies at each height;
+# the spectrogram shows them as dark bands in each burst.
+
+# %% [demo u1] Four heights in front
+HEIGHTS = [-40, 0, 40, 80]
+bursts = []
+for i, elevation in enumerate(HEIGHTS):
+    noise = so.gaussian_noise(0.6, FS, rng=i).ramp(20e-3)
+    bursts += [so.spatialize(noise, in_front(elevation), hrirs), so.silence(0.25, FS).to_stereo()]
+sound = finish(so.concat(bursts[:-1]))
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), layout="constrained", width_ratios=[1.6, 1])
+so.STFT(sound, win_dur=20e-3).plot(axes[0], fmax=16000, db_range=60, colorbar=False)
+axes[0].set_title("Left ear")
+irs = hrirs.at(np.array([in_front(e) for e in HEIGHTS]))
+freqs = np.fft.rfftfreq(4096, 1 / hrirs.fs)
+for elevation, ir in zip(HEIGHTS, irs, strict=True):
+    axes[1].semilogx(freqs, 20 * np.log10(np.abs(np.fft.rfft(ir[0], 4096))), lw=1, label=f"{elevation:+d}°")
+axes[1].set(xlim=(500, 16000), ylim=(-50, 25), xlabel="Frequency [Hz]", ylabel="Level [dB]")
+axes[1].set_title("Left ear's response, in front")
+axes[1].legend(fontsize=8)
+axes[1].grid(ls=":")
+playhead = [axes[0]]
+
+# %% [about]
+# Noise moving through the median plane over 6 s: from 40° below in front, up and over the head,
+# down to 40° below behind. `so.hcc_trajectory` takes elevations past 90°, which come down behind
+# the head. The spectrogram's dark bands slide as the source moves. The ITD and ILD panel is drawn
+# to the scale of a source at the right (±800 µs, ±16 dB), and on it they barely leave zero.
+
+# %% [demo u2] Over the head
+DURATION = 6.0
+path = so.hcc_trajectory(dist=100, elev=([0, DURATION], [-40, 220]), azim=0)
+sound = finish(so.move_sound(so.gaussian_noise(DURATION, FS, rng=4), path, hrirs))
+fig, axes = plt.subplots(3, 1, figsize=(10, 7), sharex=True, layout="constrained", height_ratios=[2, 1, 1])
+so.STFT(sound, win_dur=20e-3).plot(axes[0], fmax=16000, db_range=60, colorbar=False)
+axes[0].set(title="Left ear", xlabel="")
+t = np.linspace(0, DURATION, 200)
+axes[1].plot(t, np.interp(t, [0, DURATION], [-40, 220]), color="k", lw=1)
+axes[1].set_yticks([-40, 0, 90, 180, 220], ["below, front", "front", "overhead", "behind", "below, behind"])
+axes[1].set_title("Where the source is")
+axes[1].grid(ls=":")
+so.interaural_cues(sound, win_dur=10e-3).plot(axes[2])
+axes[2].set(xlim=(0, DURATION), ylim=(-800, 800))
+fig.axes[-1].set_ylim(-16, 16)  # the ILD axis, which the cues plot adds last
+playhead = list(axes)
+
+# %% [markdown]
 # ## References
 #
 # - Licklider, Webster & Hedlun (1950). On the frequency limits of binaural beats. *J. Acoust.
 #   Soc. Am.* 22(4), 468–473. [doi:10.1121/1.1906629](https://doi.org/10.1121/1.1906629).
+# - Middlebrooks & Green (1991). Sound localization by human listeners. *Annu. Rev. Psychol.* 42,
+#   135–159. [doi:10.1146/annurev.ps.42.020191.001031](https://doi.org/10.1146/annurev.ps.42.020191.001031).
+# - Qu, Xiao, Gong, Huang, Li & Wu (2009). Distance-dependent head-related transfer functions
+#   measured with high spatial resolution using a spark gap. *IEEE Trans. Audio, Speech, Lang.
+#   Process.* 17(6), 1124–1132. [PKU
+#   Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial).
+#   The HRIRs.
+#   [`hrir_data.load_hrirs`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/hrir_data.py#L124)
 # - Siveke, Ewert, Grothe & Wiegrebe (2008). Psychophysical and physiological evidence for fast
 #   binaural processing. *J. Neurosci.* 28(9), 2043–2052.
 #   [doi:10.1523/JNEUROSCI.4488-07.2008](https://doi.org/10.1523/JNEUROSCI.4488-07.2008).
 #   [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L187)
 #   [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L196)
+# - Wenzel, Arruda, Kistler & Wightman (1993). Localization using nonindividualized head-related
+#   transfer functions. *J. Acoust. Soc. Am.* 94(1), 111–123.
+#   [doi:10.1121/1.407089](https://doi.org/10.1121/1.407089).
