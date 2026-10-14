@@ -194,7 +194,8 @@ More in the gallery:
 **Voices**
 
 - [Two talkers](https://choyun1.github.io/sonore/gallery/talkers.html): the male and female talker every speech page uses. [▶ both](https://choyun1.github.io/sonore/gallery/talkers.html#d-tk1)
-- [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html): Klatt's synthesizer taken apart, and a sentence copied from its formants. [▶ copy](https://choyun1.github.io/sonore/gallery/formants.html#d-ft5)
+- [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html): Klatt's synthesizer taken apart. [▶ ga](https://choyun1.github.io/sonore/gallery/formants.html#d-fc3)
+- [Finding formants](https://choyun1.github.io/sonore/gallery/lpc.html): linear prediction, and a sentence copied from its formants. [▶ copy](https://choyun1.github.io/sonore/gallery/lpc.html#d-ft5)
 - [Pitch tracking](https://choyun1.github.io/sonore/gallery/pitch.html): three trackers, where each fails, and how the errors sound. [▶ buzz on the track](https://choyun1.github.io/sonore/gallery/pitch.html#d-hp2)
 - [Spectral envelope](https://choyun1.github.io/sonore/gallery/cepstrum.html): timbre without pitch, and MFCCs. [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3)
 - [Source and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html): how much of a voice is noise. [▶ whispered](https://choyun1.github.io/sonore/gallery/aperiodicity.html#d-ap13)

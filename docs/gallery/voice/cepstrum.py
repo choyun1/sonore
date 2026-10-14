@@ -553,7 +553,7 @@ for label, (change_db, coefficient_change) in changes.items():
 # - **Linear prediction.** The other classic envelope is an all-pole fit to each time window
 #   (`so.LPC`). Its envelope follows the peaks of the spectrum rather than its average, and the
 #   roots of its polynomial are resonances, so formants can be read off directly;
-#   [Finding the formants again](formants.html#h-finding-the-formants-again) compares it with the
+#   [Finding formants](lpc.html#h-linear-prediction) compares it with the
 #   cepstral, CheapTrick and MFCC envelopes on one vowel.
 # - **Other cepstra on a warped axis.** The mel-generalized cepstra of speech synthesis warp the
 #   frequency axis inside the cepstrum rather than with bands; PLP and gammatone cepstra use other

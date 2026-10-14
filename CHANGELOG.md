@@ -43,6 +43,9 @@ version (0.x.y) only fixes bugs.
   the event-train and fire-pop sections ("From single events to a texture",
   "How big the pops are") off Sound textures. Old links to them on Sound
   textures forward to the new page.
+- Gallery: "Finding formants", a page of its own in Voices after Formant
+  synthesis, takes linear prediction, the two talkers' formant tracks and
+  the copy synthesis off Formant synthesis. Old links forward to it.
 
 ## [0.7.0] - 2026-10-14
 
