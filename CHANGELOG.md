@@ -40,6 +40,10 @@ Breaking changes since 0.6.0 (each is described under Changed):
   phase from `rng` and takes only the fine structure from the Sound, so a
   drawn target (`from_blobs`) can be heard on a harmonic complex, a
   recording or a vowel. This call used to raise a `TypeError`.
+- Gallery: an "Up and down" section on the Binaural cues page, noise at four
+  heights in front and noise passing over the head, through PKU-IOA's HRIRs
+  at 1 m, with the measured ITD and ILD in the median plane next to those at
+  the side (docs/design/spatial/elevation.md, `tools/check_elevation_claims.py`).
 
 ### Changed
 
@@ -54,6 +58,16 @@ Breaking changes since 0.6.0 (each is described under Changed):
   tests 3.11 and 3.14.
 - CI checks formatting with `ruff format --check` on the package, tests and
   tools.
+
+### Fixed
+
+- `HRIRSet.at`, and so `spatialize` and `move_sound`, raise a `ValueError` for
+  a direction in a gap in the measured directions, such as below PKU-IOA's
+  lowest ring at −40°. The convex hull closed that hole with triangles whose
+  corners are far apart, so a direction below −40° was blended, without a
+  warning, from directions up to 180° apart in azimuth (straight below was
+  half 105° and half 285°). Every direction the measurements cover gives the
+  same HRIR as before (docs/design/spatial/elevation.md).
 
 ## [0.6.0] - 2026-10-10
 
