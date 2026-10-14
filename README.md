@@ -206,6 +206,7 @@ More in the gallery:
 - [Binaural cues](https://choyun1.github.io/sonore/gallery/binaural.html): timing and correlation between the ears, and height. [▶ over the head](https://choyun1.github.io/sonore/gallery/binaural.html#d-u2)
 - [Rooms](https://choyun1.github.io/sonore/gallery/reverb.html): distance, and rooms built from the statistics of real ones. [▶ time-reversed decay](https://choyun1.github.io/sonore/gallery/reverb.html#d-18)
 - [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html): talkers rendered through measured HRIRs. [▶ pass-by](https://choyun1.github.io/sonore/gallery/moving.html#d-m7)
+- [A "cocktail party"](https://choyun1.github.io/sonore/gallery/cocktail.html): two to six talkers walking around the listener. [▶ six talkers](https://choyun1.github.io/sonore/gallery/cocktail.html#d-cp5)
 
 **Music**
 

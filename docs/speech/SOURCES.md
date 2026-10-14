@@ -7,7 +7,7 @@ and the same sentence read by a female talker, whose voice is about a fifth
 higher (median F0 183 Hz against 119 Hz by `so.f0_track`; the gallery's Two
 talkers page measures both), used beside the male talker on every speech page
 of the gallery and in tools/check_female_voices.py; and four passages
-from LibriSpeech for the cocktail-party scenes on the moving talkers page.
+from LibriSpeech for the scenes of the "cocktail party" gallery page.
 
 ## Sources
 
