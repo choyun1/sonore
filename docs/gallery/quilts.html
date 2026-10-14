@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -335,14 +335,15 @@ def quilt_demo(passage):
     for seg in SEGMENTS:
         sounds[f&quot;{seg * 1000:.0f} ms&quot;] = so.quilt(passage, seg, QUILT_DUR, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 5.6), sharex=True, layout=&quot;constrained&quot;)
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(7, 5), sharex=True, layout=&quot;constrained&quot;)
     envelopes = {label: quilt_bank.analyze(snd).envelopes() for label, snd in sounds.items()}
     top = envelopes[&quot;Original&quot;].db[:, 1:-1].max()  # all on the original&#x27;s color scale
     for ax, (label, env) in zip(axes, envelopes.items(), strict=True):
         env.plot(ax, colorbar=False, db_max=top)
         title = label if label == &quot;Original&quot; else f&quot;Quilt, {label} segments&quot;
-        ax.set(title=title, xlabel=&quot;&quot;, xlim=(0, QUILT_DUR))
+        ax.set(title=title, xlabel=&quot;&quot;, ylabel=&quot;&quot;, xlim=(0, QUILT_DUR))
     axes[-1].set_xlabel(&quot;Time [s]&quot;)
+    fig.supylabel(&quot;Frequency [Hz]&quot;, fontsize=9)
     return fig, sounds, {label: [ax] for label, ax in zip(sounds, axes, strict=True)}</code></pre></details><pre class="out">Male reader: 24.6 s without pauses
 Female reader: 23.8 s without pauses</pre></div>
 
@@ -356,24 +357,24 @@ similar spectra, and the cochleagram shows long, steady stretches that the passa
 have.</p></div>
     <div class="players">
     <div><p class="track">Original</p>
-    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_original.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.16935491226438415, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_original.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.05191038888888877, &quot;bottom&quot;: 0.1656775017361113, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq1_quilts_of_a_male_reader_original.flac, 6.0 s, mono</p></div>
     <div><p class="track">30 ms</p>
-    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.23182510075644747, &quot;bottom&quot;: 0.35483145151289686, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.2356441128472221, &quot;bottom&quot;: 0.34941122569444427, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq1_quilts_of_a_male_reader_30_ms.flac, 6.0 s, mono</p></div>
     <div><p class="track">120 ms</p>
-    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.4173016400049603, &quot;bottom&quot;: 0.5403079907614083, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.4193778368055552, &quot;bottom&quot;: 0.5331449496527775, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq1_quilts_of_a_male_reader_120_ms.flac, 6.0 s, mono</p></div>
     <div><p class="track">480 ms</p>
-    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_480_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.6027781792534719, &quot;bottom&quot;: 0.7257845300099205, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_480_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.6031115607638886, &quot;bottom&quot;: 0.716878673611111, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq1_quilts_of_a_male_reader_480_ms.flac, 6.0 s, mono</p></div>
     <div><p class="track">960 ms</p>
-    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.7882547185019839, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq1_quilts_of_a_male_reader_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.7868452847222221, &quot;bottom&quot;: 0.9006123975694444, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq1_quilts_of_a_male_reader_960_ms.flac, 6.0 s, mono</p></div>
     </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/sq1_quilts_of_a_male_reader.png" width="1000" height="560" alt="Plots of the quilts of a male reader sounds" loading="lazy">
+    <img src="img/sq1_quilts_of_a_male_reader.png" width="700" height="500" alt="Plots of the quilts of a male reader sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, sounds, playhead = quilt_demo(passages[&quot;Male reader&quot;])</code></pre></details>
@@ -385,24 +386,24 @@ have.</p></div>
     <div class="desc"><p>The same for the female reader.</p></div>
     <div class="players">
     <div><p class="track">Original</p>
-    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_original.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.16935491226438415, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_original.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.05191038888888877, &quot;bottom&quot;: 0.1656775017361113, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq2_quilts_of_a_female_reader_original.flac, 6.0 s, mono</p></div>
     <div><p class="track">30 ms</p>
-    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.23182510075644747, &quot;bottom&quot;: 0.35483145151289686, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.2356441128472221, &quot;bottom&quot;: 0.34941122569444427, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq2_quilts_of_a_female_reader_30_ms.flac, 6.0 s, mono</p></div>
     <div><p class="track">120 ms</p>
-    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.4173016400049603, &quot;bottom&quot;: 0.5403079907614083, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.4193778368055552, &quot;bottom&quot;: 0.5331449496527775, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq2_quilts_of_a_female_reader_120_ms.flac, 6.0 s, mono</p></div>
     <div><p class="track">480 ms</p>
-    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_480_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.6027781792534719, &quot;bottom&quot;: 0.7257845300099205, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_480_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.6031115607638886, &quot;bottom&quot;: 0.716878673611111, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq2_quilts_of_a_female_reader_480_ms.flac, 6.0 s, mono</p></div>
     <div><p class="track">960 ms</p>
-    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.7882547185019839, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq2_quilts_of_a_female_reader_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9885114285714287, &quot;top&quot;: 0.7868452847222221, &quot;bottom&quot;: 0.9006123975694444, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]"></audio>
     <p class="file">sq2_quilts_of_a_female_reader_960_ms.flac, 6.0 s, mono</p></div>
     </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/sq2_quilts_of_a_female_reader.png" width="1000" height="560" alt="Plots of the quilts of a female reader sounds" loading="lazy">
+    <img src="img/sq2_quilts_of_a_female_reader.png" width="700" height="500" alt="Plots of the quilts of a female reader sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, sounds, playhead = quilt_demo(passages[&quot;Female reader&quot;])</code></pre></details>
@@ -423,7 +424,7 @@ boundaries (medians in the legend); the random joins change between two and thre
 much.</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/sq3_change_across_the_joins.png" width="700" height="340" alt="Change across the joins" loading="lazy">
+    <img src="img/sq3_change_across_the_joins.png" width="600" height="300" alt="Change across the joins" loading="lazy">
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">def join_changes(snd, segment, border=0.03):
     &quot;&quot;&quot;The cochleagram change across every boundary at a multiple of ``segment`` [s].&quot;&quot;&quot;
@@ -443,7 +444,7 @@ changes = {
     &quot;Quilts&quot;: np.concatenate([join_changes(q, seg) for q in quilts]),
     &quot;Random order&quot;: np.concatenate([join_changes(s, seg) for s in shuffled]),
 }
-fig, ax = plt.subplots(figsize=(7, 3.4), layout=&quot;constrained&quot;)
+fig, ax = plt.subplots(figsize=(6, 3), layout=&quot;constrained&quot;)
 bins = np.linspace(0, np.percentile(np.concatenate(list(changes.values())), 99), 40)
 for label, values in changes.items():
     legend = f&quot;{label} (median {np.median(values):.4f})&quot;
@@ -470,14 +471,15 @@ def texture_quilt_demo(recording, duration, segments=(0.03, 0.12, 0.96)):
     for seg in segments:
         sounds[f&quot;{seg * 1000:.0f} ms&quot;] = so.quilt(recording, seg, duration, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 4.6), sharex=True, layout=&quot;constrained&quot;)
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(7, 4), sharex=True, layout=&quot;constrained&quot;)
     envelopes = {label: texture_bank.analyze(snd).envelopes() for label, snd in sounds.items()}
     top = envelopes[&quot;Original&quot;].db[:, 1:-1].max()  # all on the original&#x27;s color scale
     for ax, (label, env) in zip(axes, envelopes.items(), strict=True):
         env.plot(ax, colorbar=False, db_max=top)
         title = label if label == &quot;Original&quot; else f&quot;Quilt, {label} segments&quot;
-        ax.set(title=title, xlabel=&quot;&quot;, xlim=(0, duration))
+        ax.set(title=title, xlabel=&quot;&quot;, ylabel=&quot;&quot;, xlim=(0, duration))
     axes[-1].set_xlabel(&quot;Time [s]&quot;)
+    fig.supylabel(&quot;Frequency [Hz]&quot;, fontsize=9)
     return fig, sounds, {label: [ax] for label, ax in zip(sounds, axes, strict=True)}</code></pre></details></div>
 
 <article class="sound pair" id="d-sq4">
@@ -490,21 +492,21 @@ from the rest of the recording, and the loudest of them sets the one gain all fo
 at, so the quilts' quieter stretches play at the same level as the original's.</p></div>
     <div class="players">
     <div><p class="track">Original</p>
-    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_original.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9920361249999999, &quot;top&quot;: 0.05642433574879213, &quot;bottom&quot;: 0.20827275296271097, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_original.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.988617455357143, &quot;top&quot;: 0.0648879861111109, &quot;bottom&quot;: 0.2020136659071181, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
     <p class="file">sq4_quilts_of_a_fire_original.flac, 5.0 s, mono</p></div>
     <div><p class="track">30 ms</p>
-    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9920361249999999, &quot;top&quot;: 0.2843234172139185, &quot;bottom&quot;: 0.436171834427838, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.988617455357143, &quot;top&quot;: 0.2894719297960069, &quot;bottom&quot;: 0.42659760959201387, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
     <p class="file">sq4_quilts_of_a_fire_30_ms.flac, 5.0 s, mono</p></div>
     <div><p class="track">120 ms</p>
-    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9920361249999999, &quot;top&quot;: 0.5122224986790459, &quot;bottom&quot;: 0.6640709158929652, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.988617455357143, &quot;top&quot;: 0.5140558734809028, &quot;bottom&quot;: 0.65118155327691, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
     <p class="file">sq4_quilts_of_a_fire_120_ms.flac, 5.0 s, mono</p></div>
     <div><p class="track">960 ms</p>
-    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9920361249999999, &quot;top&quot;: 0.7401215801441725, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.988617455357143, &quot;top&quot;: 0.7386398171657984, &quot;bottom&quot;: 0.8757654969618056, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
     <p class="file">sq4_quilts_of_a_fire_960_ms.flac, 5.0 s, mono</p></div>
     </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/sq4_quilts_of_a_fire.png" width="1000" height="460" alt="Plots of the quilts of a fire sounds" loading="lazy">
+    <img src="img/sq4_quilts_of_a_fire.png" width="700" height="400" alt="Plots of the quilts of a fire sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, sounds, playhead = texture_quilt_demo(so.load(fetch(&quot;docs/textures/fire.flac&quot;)), 5.0)</code></pre></details>
@@ -522,21 +524,21 @@ stream play about 1 dB quieter. <code>so.quilt</code> scales each cross-fade by 
 measures between the two segments (<code>fade=&quot;adaptive&quot;</code>, the default), which keeps the level.</p></div>
     <div class="players">
     <div><p class="track">Original</p>
-    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_original.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.05642433574879213, &quot;bottom&quot;: 0.20827275296271097, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_original.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9806040625, &quot;top&quot;: 0.0648879861111109, &quot;bottom&quot;: 0.2020136659071181, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
     <p class="file">sq6_quilts_of_a_stream_original.flac, 4.0 s, mono</p></div>
     <div><p class="track">30 ms</p>
-    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.2843234172139185, &quot;bottom&quot;: 0.436171834427838, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9806040625, &quot;top&quot;: 0.2894719297960069, &quot;bottom&quot;: 0.42659760959201387, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
     <p class="file">sq6_quilts_of_a_stream_30_ms.flac, 4.0 s, mono</p></div>
     <div><p class="track">120 ms</p>
-    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.5122224986790459, &quot;bottom&quot;: 0.6640709158929652, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9806040625, &quot;top&quot;: 0.5140558734809028, &quot;bottom&quot;: 0.65118155327691, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
     <p class="file">sq6_quilts_of_a_stream_120_ms.flac, 4.0 s, mono</p></div>
     <div><p class="track">960 ms</p>
-    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.7401215801441725, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.08049676277281748, &quot;x1&quot;: 0.9806040625, &quot;top&quot;: 0.7386398171657984, &quot;bottom&quot;: 0.8757654969618056, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
     <p class="file">sq6_quilts_of_a_stream_960_ms.flac, 4.0 s, mono</p></div>
     </div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/sq6_quilts_of_a_stream.png" width="1000" height="460" alt="Plots of the quilts of a stream sounds" loading="lazy">
+    <img src="img/sq6_quilts_of_a_stream.png" width="700" height="400" alt="Plots of the quilts of a stream sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">fig, sounds, playhead = texture_quilt_demo(so.load(fetch(&quot;docs/textures/stream.flac&quot;)), 4.0)</code></pre></details>
@@ -556,13 +558,13 @@ fluctuations, below a few hertz, where fire's quilts have less power than the re
 fire's peakiness, which depends on which pops a quilt happens to draw.</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/sq5_what_a_texture_quilt_keeps.png" width="1000" height="600" alt="What a texture quilt keeps" loading="lazy">
+    <img src="img/sq5_what_a_texture_quilt_keeps.png" width="750" height="460" alt="What a texture quilt keeps" loading="lazy">
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">from sonore.texture import TextureModel, TextureStats
 
 model = TextureModel()
 band_cfs, rate_cfs = model.filterbank.cfs, model.mod_bank.cfs
-fig, axes = plt.subplots(2, 3, figsize=(10, 6), layout=&quot;constrained&quot;)
+fig, axes = plt.subplots(2, 3, figsize=(7.5, 4.6), layout=&quot;constrained&quot;)
 for row, (name, duration) in enumerate(((&quot;fire&quot;, 5.0), (&quot;stream&quot;, 4.0))):
     recording = so.load(fetch(f&quot;docs/textures/{name}.flac&quot;))
     stats = {&quot;Recording&quot;: TextureStats.measure(recording)}
