@@ -25,6 +25,11 @@ Breaking changes since 0.6.0 (each is described under Changed):
   copy's level and each copy's pitch are drawn from distributions given as
   numbers or SciPy distributions, and a rate track speeds the onsets up or
   slows them down over time (docs/design/sources/event-texture.md).
+- `so.quilt`: the sound quilts of Overath et al. (2015), segments of a
+  sound in a new order, each chosen so that its join changes the
+  cochleagram as much as the sound itself did there; and `so.splice`, which
+  joins segments of a sound with cross-fades aligned by cross-correlation
+  (docs/design/views/quilting.md).
 - `ModulationSpectrum` has public hooks for the search `to_sound(iterations=n)`
   takes: `filterbank`, `modulation_phase(sound)`, `to_envelopes(phase=...,
   quiet=True)` and `iterate(sound)`, one step of the search, which

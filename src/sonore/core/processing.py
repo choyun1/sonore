@@ -21,6 +21,7 @@ __all__ = [
     "match_lengths",
     "normalize",
     "concat",
+    "splice",
     "mix",
     "relative_db",
     "butter_filter",
@@ -112,6 +113,106 @@ def concat(sounds: Sequence[Sound]) -> Sound:
     """Join end to end (mono sounds are upmixed to match)."""
     fs = _check_fs(sounds)
     return Sound(np.concatenate([s.data for s in match_channels(sounds)]), fs)
+
+
+def splice(
+    sound: Sound,
+    starts: ArrayLike,
+    segment_dur: float,
+    *,
+    crossfade: float = 0.03,
+    max_shift: float = 0.015,
+) -> Sound:
+    """Segments of ``sound`` joined in a new order, with aligned cross-fades.
+
+    Segment ``i`` of the output is the stretch of ``sound`` that begins at
+    ``starts[i]`` [s] and lasts ``segment_dur`` [s]. The output is
+    ``len(starts)`` segments long, and the join between segments ``i`` and
+    ``i + 1`` sits at ``(i + 1) * segment_dur``. Each join is a raised-cosine
+    cross-fade ``crossfade`` long, centered on the join, so a segment brings
+    half a cross-fade of the sound beyond each of its ends. The first
+    segment starts and the last one ends at full level.
+
+    Before a segment is added, the point it is read from may move by up to
+    ``max_shift`` either way, to where its waveform best matches what is
+    already written: the shift that maximizes the cross-correlation over the
+    cross-fade, weighted by both ramps so that the middle of the cross-fade
+    counts most. The correlation is not normalized, so a shift where the new
+    segment is louder can win. Shifts are limited to reads inside the sound;
+    when none is (a segment at the very start with ``max_shift`` shorter
+    than half the cross-fade), the segment is read at its start and the
+    samples outside the sound count as silence. ``max_shift=0`` joins at the
+    given starts exactly, and segments that follow each other in the sound
+    then join back into the sound itself.
+
+    This is the joining step of sound quilts (:func:`sonore.quilt`).
+    Overath et al. (2015) call it pitch-synchronous overlap-add (PSOLA), but
+    no pitch marks are used: it is overlap-add aligned by waveform
+    similarity, the idea of WSOLA (Verhelst & Roelands, 1993).
+
+    Mono only, because one shift per join cannot align several channels at
+    once.
+    """
+    if sound.n_channels != 1:
+        raise ValueError(f"splice needs a mono sound, not {sound.n_channels} channels")
+    fs = sound.fs
+    n_segment = int(round(segment_dur * fs))
+    n_fade = int(round(crossfade * fs))
+    n_shift = int(round(max_shift * fs))
+    if n_segment < 1:
+        raise ValueError("segment_dur is shorter than one sample")
+    if not 0 <= n_fade <= n_segment:
+        raise ValueError("crossfade must be between 0 and segment_dur")
+    if n_shift < 0:
+        raise ValueError("max_shift must not be negative")
+    start_samples = np.round(np.atleast_1d(np.asarray(starts, dtype=float)) * fs).astype(int)
+    if start_samples.ndim != 1 or len(start_samples) == 0:
+        raise ValueError("starts must be a non-empty list of times")
+    n_source = len(sound)
+    if start_samples.min() < 0 or start_samples.max() + n_segment > n_source:
+        raise ValueError(f"every segment must lie inside the sound ({n_source / fs:g} s)")
+
+    joined, _ = _aligned_overlap_add(sound.data[:, 0], start_samples, n_segment, n_fade, n_shift)
+    return Sound(joined, fs)
+
+
+def _aligned_overlap_add(
+    signal: np.ndarray, start_samples: np.ndarray, n_segment: int, n_fade: int, n_shift: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """:func:`splice` on a 1-D array, in samples; also returns the shift
+    chosen for each segment."""
+    before = n_fade // 2  # the part of a cross-fade before its join
+    after = n_fade - before
+    rise = 0.5 * (1 - np.cos(np.pi * np.arange(n_fade) / n_fade)) if n_fade else np.zeros(0)
+    fall = 1 - rise
+    # Zeros around the sound, so that any read the search can ask for exists.
+    margin = before + after + n_shift
+    source = np.pad(signal, margin)
+    n_out = len(start_samples) * n_segment
+    # The output with room for the first segment's lead-in and the last one's tail.
+    written = np.zeros(before + n_out + after)
+    shifts = np.arange(-n_shift, n_shift + 1)
+    chosen = np.zeros(len(start_samples), dtype=int)
+    for i, start in enumerate(start_samples):
+        shift = 0
+        if i > 0 and n_fade > 0 and n_shift > 0:
+            # what is already written over this join, weighted by the coming ramp
+            target = written[i * n_segment : i * n_segment + n_fade] * rise
+            block = source[margin + start - before - n_shift : margin + start - before + n_fade + n_shift]
+            score = np.correlate(block, target, mode="valid")
+            inside = (start + shifts - before >= 0) & (start + shifts + n_segment + after <= len(signal))
+            if inside.any():
+                score[~inside] = -np.inf
+                shift = int(shifts[np.argmax(score)])
+        chosen[i] = shift
+        read = margin + start + shift
+        piece = source[read - before : read + n_segment + after].copy()
+        if i > 0:
+            piece[:n_fade] *= rise
+        if i < len(start_samples) - 1:
+            piece[len(piece) - n_fade :] *= fall
+        written[i * n_segment : i * n_segment + len(piece)] += piece
+    return written[before : before + n_out], chosen
 
 
 def mix(sounds: Sequence[Sound], *, align: Align = "start") -> Sound:
