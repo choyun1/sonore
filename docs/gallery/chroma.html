@@ -287,9 +287,9 @@ def bell(t, f):
     return np.exp(-0.5 * (np.log2(f / BELL_CENTER) / BELL_WIDTH) ** 2)
 
 
-def harmonic_tone(f0, duration):
-    &quot;&quot;&quot;An ordinary note: ten harmonics falling as 1/n.&quot;&quot;&quot;
-    return so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS).ramp(FADE)
+def harmonic_tone(f0, duration, fade=FADE):
+    &quot;&quot;&quot;An ordinary note: ten harmonics falling as 1/n, faded in and out over ``fade`` seconds.&quot;&quot;&quot;
+    return so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS).ramp(fade)
 
 
 def shepard_tone(freq, duration):
@@ -542,11 +542,14 @@ not do that, since its overtones land on other pitch classes. Given a note such 
 the bell is narrow and centered there, and each pitch class sounds in the octave nearest that
 note. The tune below runs from C4 to A4, all within half an octave of E4, so near E4 its notes
 come back in their own octave, and near E6 two octaves up.</p>
-<p>Every change of note splashes a little power into the neighboring semitones for a moment: a
-note that starts or stops is no longer a steady tone at one band's center. Chroma keeps that
-splash, and played back it sounds like a grace note a semitone away. A 100 ms time window
-instead of the default 50 ms spreads the same splash over a longer window, so at its peak it
-takes less than half the share it did; the notes here last 400 ms, so they stay distinct. The cell
+<p>A note that starts or stops is no longer a steady tone at one band's center, so for a moment
+it splashes a little power into the neighboring semitones, its overtones included. Chroma
+keeps that splash, and played back it sounds like a grace note a semitone away. The gentler
+the change, the smaller the splash: here each note fades in and out over 60 ms. The same
+semitone-wide bands also blur timing: a band one semitone wide keeps ringing for tens of
+milliseconds after its tone stops (longer for lower notes), so a silence between notes comes
+back shallower and shorter than it went in. The tune is played detached, with 150 ms of
+silence after each note, so that repeated notes stay apart in the playback. The cell
 compares the chroma of each sound below with the tune's.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The first two lines of Twinkle, Twinkle, Little Star, as (note, beats); each line ends on a
 # note held for two beats.
@@ -566,13 +569,12 @@ TUNE = [
     (&quot;D4&quot;, 1),
     (&quot;C4&quot;, 2),
 ]
-BEAT = 0.4  # [s]
+BEAT, GAP = 0.4, 0.15  # a beat, and the silence after each note [s]
 melody = sequence(
-    [harmonic_tone(so.note_to_freq(note), beats * BEAT + 0.02) for note, beats in TUNE],
+    [harmonic_tone(so.note_to_freq(note), beats * BEAT - GAP, fade=0.06) for note, beats in TUNE],
     [beats * BEAT for _, beats in TUNE],
 )
-WINDOW = 0.1  # [s]
-melody_chroma = so.chroma(melody, window=WINDOW)
+melody_chroma = so.chroma(melody)
 played = {
     &quot;the tune&quot;: melody,
     &quot;its chroma, no height&quot;: melody_chroma.to_sound(FS),
@@ -580,14 +582,14 @@ played = {
     &quot;its chroma, near E6&quot;: melody_chroma.to_sound(FS, octaves=&quot;E6&quot;),
 }
 for label, snd in played.items():
-    measured = so.chroma(snd, window=WINDOW).power[:, :, 0]
+    measured = so.chroma(snd).power[:, :, 0]
     shares = measured.sum(axis=0) / measured.sum()
     reference = melody_chroma.power[:, :, 0].sum(axis=0) / melody_chroma.power.sum()
     difference = np.abs(shares - reference).max()
     print(f&quot;{label:24s} largest difference in a pitch class&#x27;s share of the power: {difference:.4f}&quot;)</code></pre></details><pre class="out">the tune                 largest difference in a pitch class&#x27;s share of the power: 0.0000
-its chroma, no height    largest difference in a pitch class&#x27;s share of the power: 0.0008
-its chroma, near E4      largest difference in a pitch class&#x27;s share of the power: 0.0018
-its chroma, near E6      largest difference in a pitch class&#x27;s share of the power: 0.0003</pre></div>
+its chroma, no height    largest difference in a pitch class&#x27;s share of the power: 0.0014
+its chroma, near E4      largest difference in a pitch class&#x27;s share of the power: 0.0046
+its chroma, near E6      largest difference in a pitch class&#x27;s share of the power: 0.0004</pre></div>
 
 <article class="sound pair" id="d-pc6">
   <div class="about">
@@ -595,23 +597,22 @@ its chroma, near E6      largest difference in a pitch class&#x27;s share of the
     <div class="desc"><p>The tune, then its chroma played three ways: as Shepard tones with no height, and with the
 bell narrowed to the octaves near E4 and near E6. The three have the tune's chroma; they
 differ in what the chroma dropped. The chroma of the original includes its overtones, so the
-Shepard tones play those pitch classes too, quietly. The chroma keeps one value per 100 ms
+Shepard tones play those pitch classes too, quietly. The chroma keeps one value per 50 ms
 time window, so each note of the playback starts and stops over about that long, and the
-splash at each change of note is still there, softly. The chroma drawn here uses the
-default 50 ms window.</p></div>
+splash at each change of note is still there, softly.</p></div>
     <div class="players">
     <div><p class="track">the tune</p>
-    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_the_tune.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.027036660879629526, &quot;bottom&quot;: 0.19448562373408607, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.92}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166232, &quot;top&quot;: 0.027036660879629526, &quot;bottom&quot;: 0.19448562373408607, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.92}]"></audio>
-    <p class="file">pc6_a_tune_and_its_chroma_played_back_the_tune.flac, 6.9 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_the_tune.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.027036660879629526, &quot;bottom&quot;: 0.19448562373408607, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.749977324263039}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166232, &quot;top&quot;: 0.027036660879629526, &quot;bottom&quot;: 0.19448562373408607, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.749977324263039}]"></audio>
+    <p class="file">pc6_a_tune_and_its_chroma_played_back_the_tune.flac, 6.7 s, mono</p></div>
     <div><p class="track">its chroma, no height</p>
-    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_its_chroma_no_height.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.2782866608796297, &quot;bottom&quot;: 0.44573562373408593, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.9}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166231, &quot;top&quot;: 0.2782866608796297, &quot;bottom&quot;: 0.44573562373408593, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.9}]"></audio>
-    <p class="file">pc6_a_tune_and_its_chroma_played_back_its_chroma_no_height.flac, 6.9 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_its_chroma_no_height.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.2782866608796297, &quot;bottom&quot;: 0.44573562373408593, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.746938775510204}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166231, &quot;top&quot;: 0.2782866608796297, &quot;bottom&quot;: 0.44573562373408593, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.746938775510204}]"></audio>
+    <p class="file">pc6_a_tune_and_its_chroma_played_back_its_chroma_no_height.flac, 6.7 s, mono</p></div>
     <div><p class="track">its chroma, near E4</p>
-    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e4.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.5295366608796295, &quot;bottom&quot;: 0.6969856237340862, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.9}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166231, &quot;top&quot;: 0.5295366608796295, &quot;bottom&quot;: 0.6969856237340862, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.9}]"></audio>
-    <p class="file">pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e4.flac, 6.9 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e4.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.5295366608796295, &quot;bottom&quot;: 0.6969856237340862, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.746938775510204}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166231, &quot;top&quot;: 0.5295366608796295, &quot;bottom&quot;: 0.6969856237340862, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.746938775510204}]"></audio>
+    <p class="file">pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e4.flac, 6.7 s, mono</p></div>
     <div><p class="track">its chroma, near E6</p>
-    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e6.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.7807866608796297, &quot;bottom&quot;: 0.9482356237340857, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.9}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166231, &quot;top&quot;: 0.7807866608796297, &quot;bottom&quot;: 0.9482356237340857, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.9}]"></audio>
-    <p class="file">pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e6.flac, 6.9 s, mono</p></div>
+    <audio controls preload="metadata" src="audio/pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e6.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.45426748615831164, &quot;top&quot;: 0.7807866608796297, &quot;bottom&quot;: 0.9482356237340857, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.746938775510204}, {&quot;x0&quot;: 0.5119119631548393, &quot;x1&quot;: 0.9126101598166231, &quot;top&quot;: 0.7807866608796297, &quot;bottom&quot;: 0.9482356237340857, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.746938775510204}]"></audio>
+    <p class="file">pc6_a_tune_and_its_chroma_played_back_its_chroma_near_e6.flac, 6.7 s, mono</p></div>
     </div>
   </div>
   <figure class="plot"><div class="plate">

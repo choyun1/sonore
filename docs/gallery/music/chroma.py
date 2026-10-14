@@ -79,9 +79,9 @@ def bell(t, f):
     return np.exp(-0.5 * (np.log2(f / BELL_CENTER) / BELL_WIDTH) ** 2)
 
 
-def harmonic_tone(f0, duration):
-    """An ordinary note: ten harmonics falling as 1/n."""
-    return so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS).ramp(FADE)
+def harmonic_tone(f0, duration, fade=FADE):
+    """An ordinary note: ten harmonics falling as 1/n, faded in and out over ``fade`` seconds."""
+    return so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS).ramp(fade)
 
 
 def shepard_tone(freq, duration):
@@ -302,11 +302,14 @@ fig, playhead = show(sound)
 # note. The tune below runs from C4 to A4, all within half an octave of E4, so near E4 its notes
 # come back in their own octave, and near E6 two octaves up.
 #
-# Every change of note splashes a little power into the neighboring semitones for a moment: a
-# note that starts or stops is no longer a steady tone at one band's center. Chroma keeps that
-# splash, and played back it sounds like a grace note a semitone away. A 100 ms time window
-# instead of the default 50 ms spreads the same splash over a longer window, so at its peak it
-# takes less than half the share it did; the notes here last 400 ms, so they stay distinct. The cell
+# A note that starts or stops is no longer a steady tone at one band's center, so for a moment
+# it splashes a little power into the neighboring semitones, its overtones included. Chroma
+# keeps that splash, and played back it sounds like a grace note a semitone away. The gentler
+# the change, the smaller the splash: here each note fades in and out over 60 ms. The same
+# semitone-wide bands also blur timing: a band one semitone wide keeps ringing for tens of
+# milliseconds after its tone stops (longer for lower notes), so a silence between notes comes
+# back shallower and shorter than it went in. The tune is played detached, with 150 ms of
+# silence after each note, so that repeated notes stay apart in the playback. The cell
 # compares the chroma of each sound below with the tune's.
 
 # %%
@@ -328,13 +331,12 @@ TUNE = [
     ("D4", 1),
     ("C4", 2),
 ]
-BEAT = 0.4  # [s]
+BEAT, GAP = 0.4, 0.15  # a beat, and the silence after each note [s]
 melody = sequence(
-    [harmonic_tone(so.note_to_freq(note), beats * BEAT + 0.02) for note, beats in TUNE],
+    [harmonic_tone(so.note_to_freq(note), beats * BEAT - GAP, fade=0.06) for note, beats in TUNE],
     [beats * BEAT for _, beats in TUNE],
 )
-WINDOW = 0.1  # [s]
-melody_chroma = so.chroma(melody, window=WINDOW)
+melody_chroma = so.chroma(melody)
 played = {
     "the tune": melody,
     "its chroma, no height": melody_chroma.to_sound(FS),
@@ -342,7 +344,7 @@ played = {
     "its chroma, near E6": melody_chroma.to_sound(FS, octaves="E6"),
 }
 for label, snd in played.items():
-    measured = so.chroma(snd, window=WINDOW).power[:, :, 0]
+    measured = so.chroma(snd).power[:, :, 0]
     shares = measured.sum(axis=0) / measured.sum()
     reference = melody_chroma.power[:, :, 0].sum(axis=0) / melody_chroma.power.sum()
     difference = np.abs(shares - reference).max()
@@ -352,10 +354,9 @@ for label, snd in played.items():
 # The tune, then its chroma played three ways: as Shepard tones with no height, and with the
 # bell narrowed to the octaves near E4 and near E6. The three have the tune's chroma; they
 # differ in what the chroma dropped. The chroma of the original includes its overtones, so the
-# Shepard tones play those pitch classes too, quietly. The chroma keeps one value per 100 ms
+# Shepard tones play those pitch classes too, quietly. The chroma keeps one value per 50 ms
 # time window, so each note of the playback starts and stops over about that long, and the
-# splash at each change of note is still there, softly. The chroma drawn here uses the
-# default 50 ms window.
+# splash at each change of note is still there, softly.
 
 # %% [demo pc6] A tune and its chroma played back
 sounds = {label: finish(snd) for label, snd in played.items()}
