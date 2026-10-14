@@ -340,7 +340,6 @@ fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
 # the onsets a Poisson process. Its long-term spectrum is the event's own at every rate; what the
 # rate changes is how many events overlap, and with it the statistics beyond the spectrum (the
 # design notes measure both: [event-texture.md](https://github.com/choyun1/sonore/blob/main/docs/design/sources/event-texture.md)).
-# The event is a synthetic sweep, not a recording or a model of any animal.
 
 # %%
 from scipy import stats
@@ -462,15 +461,15 @@ sound = finish(so.event_train(chirp, 5.0, stats.gamma(16, scale=1 / (30 * 16)), 
 fig, playhead = events_fig(sound)
 
 # %% [about]
-# A rate that changes over time: `rate_scale` steps from 1 to 10, 100 and 1000 events per second,
-# 5 s at each. A track is interpolated linearly between its points, so each step is written as
+# A rate that changes over time: `rate_scale` steps from 10 to 100 and 1000 events per second,
+# 3 s at each. A track is interpolated linearly between its points, so each step is written as
 # two points a microsecond apart.
 
-# %% [demo e14] Steps of 1, 10, 100 and 1000 events per second
-step_rates = [1, 10, 100, 1000]
-step_times = [t for k in range(len(step_rates)) for t in (5 * k, 5 * (k + 1) - 1e-6)]
+# %% [demo e14] Steps of 10, 100 and 1000 events per second
+step_rates = [10, 100, 1000]
+step_times = [t for k in range(len(step_rates)) for t in (3 * k, 3 * (k + 1) - 1e-6)]
 steps = (step_times, np.repeat(step_rates, 2))
-sound = finish(so.event_train(chirp, 20.0, stats.expon(scale=1.0), rate_scale=steps, rng=0))
+sound = finish(so.event_train(chirp, 9.0, stats.expon(scale=1.0), rate_scale=steps, rng=0))
 fig, playhead = events_fig(sound)
 
 # %% [markdown]

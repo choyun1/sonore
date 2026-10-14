@@ -249,7 +249,8 @@ identical.
   2026-10-14: the audio ladder keeps 3, 30 and 300 per second (the
   sparsity plot keeps all seven rates); a 9 dB level spread, a 150 cent
   pitch spread and both together; nearly regular timing only; and a rate
-  in steps of 1, 10, 100 and 1000 per second instead of a smooth rise.
+  in steps of 10, 100 and 1000 per second, 3 s each, instead of a smooth
+  rise.
 
 ## As built
 
