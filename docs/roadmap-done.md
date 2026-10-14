@@ -189,3 +189,13 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   the view drops. Shepard tones and the Risset glide are recipes for
   `harmonic_complex`, not new functions, on the "Pitch class and height"
   gallery page (`docs/design/views/chroma.md`).
+- **Texture channels imposed one at a time, kept.** The roadmap asked
+  whether imposing all envelope channels at once, in one optimization,
+  would be faster than the loop over channels. Measured, it is not: each
+  channel's objective spends about a quarter of its time on fixed per-call
+  costs, so batching the channels could save at most about 12% of a
+  synthesis, and the joint optimization needed two to three times as many
+  objective evaluations per iteration. It came within about 1 dB of the
+  loop on stream and applause and was about 4 dB worse on fire, mostly in
+  the correlations between channels. `synthesize` is unchanged. A one-off
+  comparison; the scripts are not part of the repository.
