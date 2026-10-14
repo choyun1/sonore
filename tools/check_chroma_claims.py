@@ -50,10 +50,16 @@ def k2_exact():
     freqs = np.fft.rfftfreq(len(signal), 1 / FS)
     centers = np.log2(55.0) + np.arange(0, 7 * 12 + 1) / 12  # A1 to A8 in semitones
     bank = cosine_bank(freqs, centers, 1 / 12)
-    report("K2", "largest |sum of squared responses - 1| on the DFT grid", np.max(np.abs((bank**2).sum(1) - 1)))
+    report(
+        "K2", "largest |sum of squared responses - 1| on the DFT grid", np.max(np.abs((bank**2).sum(1) - 1))
+    )
     bands = np.fft.irfft(spectrum[:, None] * bank, n=len(signal), axis=0)  # analysis
     back = np.fft.irfft(np.fft.rfft(bands, axis=0) * bank, n=len(signal), axis=0).sum(1)  # synthesis
-    report("K2", "relative error of analysis then synthesis, 2 s of white noise", np.linalg.norm(back - signal) / np.linalg.norm(signal))
+    report(
+        "K2",
+        "relative error of analysis then synthesis, 2 s of white noise",
+        np.linalg.norm(back - signal) / np.linalg.norm(signal),
+    )
     report("K2", "real values kept per input sample (bands, undecimated)", bank.shape[1])
 
 
@@ -89,7 +95,11 @@ def k4_octave():
     every_amps = np.concatenate([low_amps, high_amps])
     differing_power = sum(every_amps[every == f][0] ** 2 for f in differing)
     report("K4", "partials shared by a Shepard tone and the one an octave up", len(shared))
-    report("K4", "power in partials not shared, as a fraction of one tone's power", differing_power / (low_amps**2).sum())
+    report(
+        "K4",
+        "power in partials not shared, as a fraction of one tone's power",
+        differing_power / (low_amps**2).sum(),
+    )
 
 
 def centroid_oct(freqs, amps):
@@ -99,7 +109,11 @@ def centroid_oct(freqs, amps):
 def k5_tritone():
     c_freqs, c_amps = shepard_partials(261.63 / 16)
     fs_freqs, fs_amps = shepard_partials(261.63 / 16 * 2 ** (6 / 12))
-    report("K5", "power-weighted mean log2 frequency, C minus F# Shepard tone [oct]", centroid_oct(c_freqs, c_amps) - centroid_oct(fs_freqs, fs_amps))
+    report(
+        "K5",
+        "power-weighted mean log2 frequency, C minus F# Shepard tone [oct]",
+        centroid_oct(c_freqs, c_amps) - centroid_oct(fs_freqs, fs_amps),
+    )
     shifts = np.arange(12)
     centroids = [centroid_oct(*shepard_partials(261.63 / 16 * 2 ** (k / 12))) for k in shifts]
     report("K5", "largest spread of that mean over the 12 pitch classes [oct]", np.ptp(centroids))
@@ -124,7 +138,11 @@ def k6_glide():
     windows = signal[: int(duration * FS) // FS * FS].reshape(-1, FS)
     rms = np.sqrt(np.mean(windows**2, axis=1))
     report("K6", "RMS per second, largest / smallest, over 8 s of glide", rms.max() / rms.min())
-    report("K6", "spread of the power-weighted mean log2 frequency over the glide [oct]", np.ptp(log_centroid / weight))
+    report(
+        "K6",
+        "spread of the power-weighted mean log2 frequency over the glide [oct]",
+        np.ptp(log_centroid / weight),
+    )
 
 
 if __name__ == "__main__":

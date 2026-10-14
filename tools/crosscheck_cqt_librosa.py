@@ -21,7 +21,10 @@ print(f"librosa {librosa.__version__}")
 for bins_per_octave, hop in [(12, 256), (36, 256), (36, 64), (48, 32)]:
     n_bins = 7 * bins_per_octave
     coefs = librosa.cqt(noise, sr=FS, fmin=55, n_bins=n_bins, bins_per_octave=bins_per_octave, hop_length=hop)
-    back = librosa.icqt(coefs, sr=FS, fmin=55, bins_per_octave=bins_per_octave, hop_length=hop, length=len(noise))
+    back = librosa.icqt(
+        coefs, sr=FS, fmin=55, bins_per_octave=bins_per_octave, hop_length=hop, length=len(noise)
+    )
     gain = np.dot(back[middle], noise[middle]) / np.dot(back[middle], back[middle])
     error = np.linalg.norm(noise[middle] - gain * back[middle]) / np.linalg.norm(noise[middle])
-    print(f"K7   {bins_per_octave:2d} bins per octave, hop {hop:3d}: relative error {error:.4f}, gain {gain:.4f}")
+    setting = f"{bins_per_octave:2d} bins per octave, hop {hop:3d}"
+    print(f"K7   {setting}: relative error {error:.4f}, gain {gain:.4f}")
