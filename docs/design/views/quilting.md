@@ -147,10 +147,10 @@ The paper's step 5 reads "repeat steps 1-3"; steps 3-4 are meant.
    (`border_dur=0.03`), flattened over bands.
 3. Every pair's distance from one matrix product (Q2).
 4. The order by the paper's rule (D2), with the first segment from `rng`.
-5. Joining (D3), then trim to `duration`.
+5. Join with `so.splice` (D1, D3), then trim to `duration`.
 
-Rough size, an estimate: 150 to 250 lines in `views/quilting.py`, about as
-many in tests.
+Rough size, an estimate: 150 to 250 lines in `views/quilting.py` and
+`core/processing.py` together, about as many in tests.
 
 ## Decisions
 
@@ -163,10 +163,20 @@ many in tests.
   textures and the texture names stay behind `so.texture`. (c) Only
   `so.quilt`, with the order kept internal. One name fewer, but the
   change distributions (the toolbox's own diagnostic, and the gallery's
-  plot) would be out of reach. (d) The joining step public as well, in
-  `core/processing.py` beside `concat`, as a general "splice segments with
-  aligned cross-fades". Nothing else needs it yet, and the philosophy adds
-  generality when an experiment needs it. *Recommended: (a).*
+  plot) would be out of reach. (d) As (a), with the joining step public
+  as well, in `core/processing.py` beside `concat`:
+  `so.splice(sound, starts, segment_dur, *, crossfade=0.03,
+  max_shift=0.015)` joins segments of one sound, taken from `starts` [s]
+  in that order, with aligned cross-fades. `quilt` then calls it, so
+  there is still one copy of the joining code. It serves stimuli that
+  rearrange a sound by another rule (segments in random order as a control
+  without the cochleagram rule, a segment repeated, a word spliced into a
+  carrier) and lets a reader hear what the alignment does by setting
+  `max_shift=0`. It takes source and positions rather than a list of
+  sounds, because the shift reads samples beyond each segment's own
+  edges. *Recommended: (d) (revised 2026-10-14 after Cho asked; the first
+  draft said (a), keeping the joining private until something else needed
+  it).*
 - **D2. Which segments may follow.** (a) The paper's rule: anything not
   used before and not the source's own next segment. Near the ends of the
   source, the ±15 ms shift is limited to what the signal holds. (b) The
