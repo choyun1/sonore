@@ -752,8 +752,7 @@ TITLES = {
 # alone; seeing a sound in time and frequency, changing it there, then its envelopes and their
 # modulation; textures, summarized by statistics of those envelopes; voices, from the two
 # talkers every speech page uses to a voice rebuilt and changed; then spatial hearing and music.
-# Each idea is taught on one page and linked from the others. A page built but in no group (the
-# pipe organ, until it has sounds) is reachable by its URL only.
+# Each idea is taught on one page and linked from the others.
 TOPICS = [
     (
         "Synthetic sounds",
@@ -844,6 +843,7 @@ TOPICS = [
                 "temperament.html",
                 "just intonation, equal temperament and others, heard and drawn as Lissajous figures.",
             ),
+            ("organ.html", "organ stops as additive synthesis (a template, sounds to come)."),
         ],
     ),
 ]

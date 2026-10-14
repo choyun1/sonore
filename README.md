@@ -209,6 +209,7 @@ More in the gallery:
 
 - [Timbre](https://choyun1.github.io/sonore/gallery/timbre.html): attack, brightness and spectral flux, measured.
 - [Tuning and temperament](https://choyun1.github.io/sonore/gallery/temperament.html): just and tempered intervals, and Twinkle, Twinkle in four tunings. [▶ just intonation](https://choyun1.github.io/sonore/gallery/temperament.html#d-tt3)
+- [The pipe organ](https://choyun1.github.io/sonore/gallery/organ.html): stops as additive synthesis (a template).
 
 ## Conventions
 

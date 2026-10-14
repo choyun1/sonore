@@ -36,8 +36,7 @@ version (0.x.y) only fixes bugs.
   envelope and modulation pages, in one group), Textures (Sound textures and
   Sound quilts, now after the modulation pages), Voices (now after
   Textures), Spatial hearing, Music. The page "Synthetic sounds" is now
-  "Tones and noises". The pipe organ page leaves the menus until it has
-  sounds. Page URLs are unchanged; the scripts of Seeing speech, Sound
+  "Tones and noises". Page URLs are unchanged; the scripts of Seeing speech, Sound
   textures and Sound quilts moved to docs/gallery/seeing and
   docs/gallery/textures.
 
