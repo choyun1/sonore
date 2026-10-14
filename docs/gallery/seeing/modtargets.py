@@ -19,9 +19,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # A magnitude is not enough to make a sound. The spectrum has dropped the phase of the
 # modulations, which says when each event happens, and the fine structure under each band's
-# envelope. `ModulationSpectrum.to_sound(carrier=...)` takes both from a *carrier*: a sound lends
-# its own, while `"tones"` and `"noise"` draw a random modulation phase and put the envelopes on
-# steady tones or on noise.
+# envelope. `ModulationSpectrum.to_sound(carrier=...)` puts envelopes with the spectrum's
+# magnitudes on a *carrier*, always named: a sound lends its own modulation phase and fine
+# structure, while `carrier="tone"` draws a random modulation phase and puts the envelopes on
+# steady tones.
 #
 # The sentence is read by the [two talkers](talkers.html) every speech page uses, and every demo
 # on it plays both.
@@ -134,7 +135,7 @@ def show_pair(sounds, targets=None, f_lo=125):
 # ## Same spectrum, different sound
 #
 # Each talker's modulation spectrum, measured in 12 bands per octave from 125 Hz to 8 kHz, then
-# heard with the sentence's own modulation phase thrown away. `to_sound` with `carrier="tones"`
+# heard with the sentence's own modulation phase thrown away. `to_sound` with `carrier="tone"`
 # draws a random phase, builds the envelopes from it and the stored magnitudes, and puts each one
 # on a steady tone at its band's center. The random phase leaves the zero-rate column alone,
 # since that column (its phase as well as its magnitudes) is the sentence's long-term spectrum:
@@ -167,7 +168,7 @@ fig, playhead = show_pair(sounds)
 
 # %% [demo mt2] Its modulation spectrum, random modulation phase
 sounds = {
-    label: finish(spectra_of[label].to_sound(carrier="tones", fs=snd.fs, rng=0))
+    label: finish(spectra_of[label].to_sound(carrier="tone", fs=snd.fs, rng=0))
     for label, snd in talkers.items()
 }
 fig, playhead = show_pair(sounds, targets=spectra_of)
@@ -226,17 +227,19 @@ for label, snd in talkers.items():
 
 # %% [demo mt3] A drawn blob, on tones
 target = so.ModulationSpectrum.from_blobs(so.ModulationBlob(4, 0.5), duration=3.0)
-on_tones = target.to_sound(carrier="tones", fs=FS, rng=0)
+on_tones = target.to_sound(carrier="tone", fs=FS, rng=0)
 sound = finish(on_tones)
 fig, playhead = show(sound, target=target)
 
 # %% [about]
-# The same target on noise: each envelope multiplies a band of noise instead of a tone. The
-# sweeps are still there, under a hiss whose own random fluctuations fill the whole modulation
-# spectrum.
+# The same target on a noise: each envelope multiplies the fine structure of a band of noise
+# instead of a tone, with the same drawn modulation phase. The sweeps are still there, under a
+# hiss whose own fluctuations fill the whole modulation spectrum. A noise passed as the carrier
+# gives only its fine structure; bands of noise as they come would bring random envelopes of
+# their own on top.
 
 # %% [demo mt4] The same blob, on noise
-on_noise = target.to_sound(carrier="noise", fs=FS, rng=0)
+on_noise = target.to_sound(carrier=so.gaussian_noise(3.0, FS, rng=1), rng=0)
 sound = finish(on_noise)
 fig, playhead = show(sound, target=target)
 
@@ -283,8 +286,8 @@ for name, snd, drawn in carriers:
 # modulation of its own, so the target survives. Noise and speech fluctuate inside every band,
 # and those fluctuations land in the measured spectrum on top of the drawn one; a tone vocoder
 # keeps fast envelope modulations better than a noise vocoder for the same reason
-# ([Noise or tones](vocoder.html#h-noise-or-tones)). That is why `"tones"` is the default
-# carrier.
+# ([Noise or tones](vocoder.html#h-noise-or-tones)). That is why `"tone"` is the carrier to try
+# first for hearing a target.
 
 # %% [markdown]
 # ## Random spectrograms
@@ -387,7 +390,7 @@ fig, playhead = show_pair(sounds, targets=slow)
 
 # %% [demo mt8] The same edit, on tones
 on_tones_edit = {
-    label: slow[label].to_sound(carrier="tones", fs=snd.fs, rng=0) for label, snd in talkers.items()
+    label: slow[label].to_sound(carrier="tone", fs=snd.fs, rng=0) for label, snd in talkers.items()
 }
 sounds = {label: finish(snd) for label, snd in on_tones_edit.items()}
 fig, playhead = show_pair(sounds, targets=slow)
@@ -562,16 +565,16 @@ fig, playhead = show(sound, f_lo=125)
 # - Elliott & Theunissen (2009). The modulation transfer function for speech intelligibility.
 #   *PLoS Comput. Biol.* 5(3), e1000302.
 #   [doi:10.1371/journal.pcbi.1000302](https://doi.org/10.1371/journal.pcbi.1000302).
-#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L564)
+#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L281)
 # - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE
 #   Trans. Acoust. Speech Signal Process.* 32(2), 236–243.
 #   [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L705)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L422)
 # - Hsu, Woolley, Fremouw & Theunissen (2004). Modulation power and phase spectrum of natural
 #   sounds enhance neural encoding performed by single auditory neurons. *J. Neurosci.* 24(41),
 #   9201–9211.
 #   [doi:10.1523/JNEUROSCI.2449-04.2004](https://doi.org/10.1523/JNEUROSCI.2449-04.2004).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L705)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L422)
 # - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
@@ -582,4 +585,4 @@ fig, playhead = show(sound, f_lo=125)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.
 #   [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067).
-#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L353)
+#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L68)

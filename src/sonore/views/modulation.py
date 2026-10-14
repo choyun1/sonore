@@ -1,7 +1,16 @@
-"""Modulation filterbanks: bandpass filters applied to envelopes.
+"""Modulation spectra, and the filterbanks that measure modulation over time.
 
-Two banks from McDermott & Simoncelli (2011), usable on their own (e.g. for
-Dau-style modulation models) and by :mod:`sonore.texture`:
+:class:`ModulationSpectrum` is the 2-D Fourier transform of a time-frequency
+envelope (Singh & Theunissen, 2003; Chi et al., 1999): how much of the
+envelope's pattern moves at each temporal rate [Hz] and each spectral density
+[cycles/octave or cycles/kHz]. It has no time axis, tells upward sweeps from
+downward ones, and goes back to sound with
+:meth:`ModulationSpectrum.to_sound`. :class:`ModulationBlob` draws a target
+spectrum in code.
+
+The modulation filterbanks are tools rather than views: they filter envelopes
+along time, band by band. Two come from McDermott & Simoncelli (2011) and are
+used by :mod:`sonore.texture`:
 
 * :class:`ConstantQModulationFilterbank`: half-cycle cosines on a *linear*
   frequency axis, each spanning ``cf +/- cf/Q``, with centers log-spaced. Used
@@ -10,7 +19,7 @@ Dau-style modulation models) and by :mod:`sonore.texture`:
   two octaves wide (``cf/2 .. 2*cf``), centers one octave apart. Used for the
   C1/C2 modulation correlations.
 
-Filtering is done in the frequency domain and is therefore *circular*: the
+These two filter in the frequency domain and are therefore *circular*: the
 envelope is treated as one period of a periodic signal. That is exact for
 texture synthesis (seamless loops); for other uses pad the envelope first.
 
@@ -46,15 +55,524 @@ if TYPE_CHECKING:
     from sonore.views.envelopes import Envelopes, _EnvelopeAnalysis
 
 __all__ = [
+    "ModulationSpectrum",
+    "ModulationBlob",
     "ModulationFilterbank",
     "ConstantQModulationFilterbank",
     "OctaveModulationFilterbank",
     "HannModulationFilterbank",
-    "ModulationSpectrum",
-    "ModulationBlob",
 ]
 
 
+# ------------------------------------------------------ modulation spectrum
+class ModulationSpectrum(View):
+    """2-D Fourier transform of a time-frequency envelope (Singh & Theunissen,
+    2003; Chi et al., 1999).
+
+    ``ModulationSpectrum(stft)`` uses a dB spectrogram, so spectral modulation
+    is w.r.t. *linear* frequency (cycles/kHz). :meth:`octave` uses subband
+    envelopes on a log-frequency axis (cycles/octave), the axis on which
+    ripples (:mod:`sonore.sources.ripples`) are defined; more generally, any
+    :class:`~sonore.views.envelopes.Envelopes` has ``.modulation_spectrum()``.
+
+    Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at
+    ``(+rate, +density)``. Only non-negative spectral modulations are stored
+    (the other half is the complex conjugate).
+
+    A view: before the transform the envelope's mean is removed and a Hann
+    taper applied in time, and only the level (dB, floored) is kept, so the
+    phase of the modulations is dropped and no envelope can be read back.
+
+    A spectrum made from :class:`~sonore.views.envelopes.Envelopes` (by
+    :meth:`octave` or ``env.modulation_spectrum()``) also keeps, for
+    :meth:`to_sound`, the magnitude of the untapered transform on the whole
+    plane, the envelope's mean, and how the envelopes were made. Edit it with
+    :meth:`with_gain`, and hear it with :meth:`to_sound`, whose carrier
+    supplies the phases it lacks (see ``docs/design/views/modulation-targets.md``).
+    """
+
+    discards = (
+        "ModulationSpectrum keeps only the magnitude of the 2-D Fourier transform of an envelope: it "
+        "discards the phase of the modulations, which holds the timing of every event, and the fine "
+        "structure under the envelope."
+    )
+    back_to_sound = (
+        "ModulationSpectrum.to_sound(carrier=...) puts envelopes with these magnitudes on a carrier. A "
+        "Sound carrier lends its own modulation phase (unless rng is given) and its own fine structure; "
+        "carrier='tone' draws a random modulation phase from rng and puts each envelope on a steady tone "
+        "at its band's center."
+    )
+    _analysis: _EnvelopeAnalysis | None = None  # set when made from Envelopes or blobs
+    _rms_depth: float | None = None  # set by from_blobs, which refuses to clip
+    _long_term_phase: np.ndarray | None = None  # phase of the zero-rate column, kept by random draws
+
+    def __init__(self, stft: STFT, *, channel: int = 0):
+        spectrogram_db = stft.db[channel]
+        bin_spacing = stft.f[1] - stft.f[0]
+        dt = stft.sft.hop / stft.fs
+        self._compute(spectrogram_db, dt=dt, dx=bin_spacing / 1000, spectral_unit="cyc/kHz")
+
+    @classmethod
+    def from_array(cls, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> ModulationSpectrum:
+        """From a (frequency, time) envelope array sampled every ``dt`` seconds
+        and ``dx`` scale units."""
+        new = cls.__new__(cls)
+        new._compute(env, dt, dx, spectral_unit)
+        return new
+
+    def _compute(self, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> None:
+        # Taper in time: the 2-D FFT treats the envelope as periodic, and the jump
+        # between its end and start otherwise leaks energy across modulation rates
+        # (enough to misplace the peak when a modulation isn't a whole number of
+        # cycles long). Removing each band's own mean instead would also work but
+        # would erase static spectral structure (rate-0 ripples).
+        self._mean = float(env.mean())
+        untapered = np.fft.fft2(env - self._mean)  # whole plane, for to_sound
+        self._magnitude = np.abs(untapered)
+        # The zero-rate column is the long-term spectrum: its magnitudes alone don't say which
+        # band is loud, its phase does, so a random modulation phase must leave it alone.
+        self._long_term_phase = np.angle(untapered[:, 0])
+        env = (env - self._mean) * np.hanning(env.shape[1])[None, :]
+        spectrum = np.fft.fft2(env)
+        w_f = np.fft.fftfreq(env.shape[0], d=dx)
+        w_t = np.fft.fftfreq(env.shape[1], d=dt)
+        keep = w_f >= 0
+        self.w_f = w_f[keep]
+        self.w_t = np.fft.fftshift(w_t)
+        self.level = amp_to_db(np.fft.fftshift(spectrum[keep], axes=1), floor_db=_FLOOR_DB)
+        self.spectral_unit = spectral_unit
+
+    @classmethod
+    def octave(
+        cls,
+        sound: Sound,
+        *,
+        bands_per_octave: float = 12,
+        f_lo: float = 125.0,
+        f_hi: float = 8000.0,
+        env_fs: float = 1000.0,
+        scale: Literal["linear", "db"] = "linear",
+    ) -> ModulationSpectrum:
+        """Modulation spectrum on a log-frequency axis [cycles/octave].
+
+        Shorthand for::
+
+            fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
+            fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
+        """
+        from sonore.frames.filterbank import cosine_filterbank
+
+        f_hi = min(f_hi, sound.fs / 2)
+        fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
+        return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale=scale)
+
+    @classmethod
+    def from_blobs(
+        cls,
+        blobs: ModulationBlob | Sequence[ModulationBlob],
+        duration: float,
+        *,
+        f_lo: float = 250.0,
+        f_hi: float = 8000.0,
+        bands_per_octave: float = 12,
+        env_fs: float = 1000.0,
+        rms_depth: float | None = None,
+        scale: Literal["linear", "db"] = "linear",
+        sd_db: float | None = None,
+    ) -> ModulationSpectrum:
+        """A target spectrum drawn in code: the sum of :class:`ModulationBlob`
+        powers, on the grid :meth:`octave` would measure for a sound of
+        ``duration`` seconds, ready for :meth:`to_sound`.
+
+        A drawing sets a shape, not a depth, and no long-term spectrum: every
+        band gets the same mean envelope, and the depth is given separately.
+        With ``scale="linear"`` the blobs describe the envelopes themselves
+        and ``rms_depth`` (default 0.2) scales the modulation: the rms of the
+        envelope array about its mean, relative to the mean. Because
+        envelopes cannot go below zero, a random draw reaches only a limited
+        depth: about 0.28 for a one-blob target (measured in
+        ``docs/design/views/modulation-targets.md``), against 0.71 for one
+        full ripple. :meth:`to_envelopes` refuses a draw that would need
+        clipping and names the largest depth that fits it.
+
+        With ``scale="db"`` the blobs describe the envelopes in dB, as the
+        spectrum of ``octave(..., scale="db")`` does, and ``sd_db`` (default
+        6) is the rms of that dB array about its mean. Any level in dB is a
+        positive envelope, so nothing is clipped and the modulation can be as
+        deep as wanted: a random draw is a Gaussian field of levels, as
+        :func:`~sonore.sources.gaussian_spectrogram.gaussian_spectrogram` is
+        for exponential correlations. Deep dB draws spread some of the
+        modulation power of the linear envelopes away from the blobs.
+
+        :attr:`level` shows the drawn power itself (no taper).
+        """
+        from sonore.core.utils import n_samples
+        from sonore.frames.filterbank import cosine_filterbank
+        from sonore.views.envelopes import _EnvelopeAnalysis
+
+        if isinstance(blobs, ModulationBlob):
+            blobs = [blobs]
+        if not blobs:
+            raise ValueError("give at least one ModulationBlob")
+        match scale:
+            case "linear":
+                if sd_db is not None:
+                    raise TypeError('sd_db applies only to scale="db"; use rms_depth')
+                depth = 0.2 if rms_depth is None else rms_depth
+                if depth <= 0:
+                    raise ValueError("rms_depth must be positive")
+            case "db":
+                if rms_depth is not None:
+                    raise TypeError('rms_depth applies only to scale="linear"; use sd_db')
+                depth = 6.0 if sd_db is None else sd_db
+                if depth <= 0:
+                    raise ValueError("sd_db must be positive")
+            case _:
+                raise ValueError(f'scale must be "linear" or "db", not {scale!r}')
+        bank = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
+        n_bands, n_times = bank.n_filters - 2, n_samples(duration, env_fs)
+        new = cls.__new__(cls)
+        new._analysis = _EnvelopeAnalysis(bank, env_fs, n_times, scale, True)
+        rate, density = new._full_axes(shape=(n_bands, n_times))
+        power = cast(np.ndarray, sum(blob.power(rate, density) for blob in blobs))
+        power = (power + np.roll(power[::-1, ::-1], 1, axis=(0, 1))) / 2  # the same at (-rate, -density)
+        magnitude = np.sqrt(power)
+        if not np.any(magnitude > 0):
+            raise ValueError("the blobs fall outside this grid's rates and densities")
+        # Parseval: the rms of an array is the norm of its unnormalized 2-D DFT over the cell count.
+        # A linear array has mean 1, so its rms is the depth; a dB array's mean (0 dB) only sets
+        # the overall level.
+        new._mean = 1.0 if scale == "linear" else 0.0
+        new._magnitude = magnitude * (depth * magnitude.size / np.linalg.norm(magnitude))
+        new._rms_depth = depth if scale == "linear" else None
+        spacing = cast(float, bank.spacing)  # never None: the bands are evenly spaced
+        keep = np.fft.fftfreq(n_bands, spacing) >= 0
+        new.w_f = np.fft.fftfreq(n_bands, spacing)[keep]
+        new.w_t = np.fft.fftshift(np.fft.fftfreq(n_times, 1 / env_fs))
+        new.level = amp_to_db(np.fft.fftshift(new._magnitude[keep], axes=1), floor_db=_FLOOR_DB)
+        new.spectral_unit = f"cyc/{bank.unit}"
+        return new
+
+    def _full_axes(self, shape=None) -> tuple[np.ndarray, np.ndarray]:
+        """Rate [Hz] (row) and density (column) of every cell of the
+        untapered transform, in FFT order."""
+        n_density, n_times = self._magnitude.shape if shape is None else shape
+        analysis = self._envelope_analysis("with_gain")
+        rate = np.fft.fftfreq(n_times, 1 / analysis.fs)[None, :]
+        spacing = cast(float, analysis.filterbank.spacing)  # never None: Envelopes.modulation_spectrum checks
+        density = np.fft.fftfreq(n_density, spacing)[:, None]
+        return rate, density
+
+    def _envelope_analysis(self, what: str) -> _EnvelopeAnalysis:
+        """How this spectrum's envelopes were made; ``what`` needs it, and
+        is named in the error when the spectrum was not made from Envelopes."""
+        if self._analysis is None:
+            raise TypeError(
+                f"{what} needs a modulation spectrum made from Envelopes (ModulationSpectrum.octave or "
+                "env.modulation_spectrum()); this one was made from an STFT or an array"
+            )
+        return self._analysis
+
+    @property
+    def filterbank(self) -> Filterbank:
+        """The filterbank whose envelopes this spectrum describes."""
+        return self._envelope_analysis("filterbank").filterbank
+
+    def with_gain(self, gain: float | Callable[[np.ndarray, np.ndarray], ArrayLike]) -> ModulationSpectrum:
+        """A copy with every cell's amplitude multiplied by ``gain``.
+
+        ``gain`` is a function ``g(rate, density)`` of rate [Hz] and spectral
+        modulation, evaluated with ``rate`` as a row and ``density`` as a
+        column (as ripple patterns are), or a number. A sound's spectrum is
+        the same at ``(rate, density)`` and ``(-rate, -density)``, so the gain
+        is averaged over each such pair; ``g = lambda r, d: abs(r) <= 4``
+        removes every modulation faster than 4 Hz, ``lambda r, d: r * d <= 0``
+        every downward sweep. The displayed :attr:`level` (Hann-tapered) gets
+        the same gain, which is exact where the gain is smooth across the
+        taper's rate resolution.
+        """
+        self._envelope_analysis("with_gain")
+        rate, density = self._full_axes()
+        values = gain(rate, density) if callable(gain) else gain
+        values = np.broadcast_to(np.asarray(values, float), self._magnitude.shape)
+        if np.any(values < 0):
+            raise ValueError("gains must be non-negative")
+        mirrored = np.roll(values[::-1, ::-1], 1, axis=(0, 1))  # the value at (-rate, -density)
+        values = (values + mirrored) / 2
+        new = copy.copy(self)
+        new._magnitude = self._magnitude * values
+        shown = np.fft.fftshift(values[: len(self.w_f)], axes=1)  # the level's rows and column order
+        new.level = np.maximum(self.level + amp_to_db(shown, floor_db=-400.0), _FLOOR_DB)
+        return new
+
+    def to_envelopes(
+        self,
+        *,
+        carrier: Sound | None = None,
+        rng: RNG = None,
+        phase: np.ndarray | None = None,
+        quiet: bool = False,
+    ) -> Envelopes:
+        """The envelopes this spectrum describes, given a modulation phase.
+
+        The stored magnitudes and mean fix everything but the phase of the
+        2-D transform, which holds when each event happens and how the bands
+        line up. A :class:`~sonore.Sound` ``carrier`` lends the phase of its
+        own envelopes (analyzed as this spectrum's were), so the spectrum of
+        ``x`` with ``carrier=x`` gives back ``x``'s envelopes; with no carrier
+        the phase is drawn at random from ``rng`` at every nonzero rate, while
+        the zero-rate column keeps its own phase, so each band keeps its
+        long-term level (the long-term spectrum). Envelopes rebuilt from a
+        linear-scale spectrum can go below zero; they are clipped, with a
+        warning saying how much, which changes their spectrum. Edge bands
+        that the spectrum dropped are zero.
+
+        ``phase`` gives the modulation phase directly, in the shape
+        :meth:`modulation_phase` returns, in place of a carrier or a draw.
+        ``quiet`` clips negative values without a warning, and without the
+        refusal of a :meth:`from_blobs` target, as inside a search.
+        """
+        analysis = self._envelope_analysis("to_envelopes")
+        if phase is not None:
+            if carrier is not None or rng is not None:
+                raise TypeError("phase gives the modulation phase; it cannot be combined with carrier or rng")
+            phase = np.asarray(phase)
+            if phase.shape != self._magnitude.shape:
+                raise ValueError(
+                    f"phase has shape {phase.shape}; the stored magnitudes have shape {self._magnitude.shape}"
+                )
+        elif carrier is None:
+            phase = np.angle(np.fft.fft2(as_rng(rng).standard_normal(self._magnitude.shape)))
+            if self._long_term_phase is not None:
+                phase[:, 0] = self._long_term_phase
+        else:
+            if rng is not None:
+                raise TypeError("rng applies only when no carrier is given")
+            phase = self.modulation_phase(analysis.filterbank.analyze(_cut_to(analysis, carrier, "carrier")))
+        return self._rebuild(phase, quiet)
+
+    def modulation_phase(self, sound: Sound | Subbands) -> np.ndarray:
+        """Phase of the 2-D transform of the envelopes of ``sound``, analyzed
+        as this spectrum's were, in the shape of the stored magnitudes.
+
+        A :class:`~sonore.Sound` is analyzed by :attr:`filterbank` (in mono,
+        cut to the analyzed duration); :class:`~sonore.frames.filterbank.Subbands`
+        must come from that filterbank and span the analyzed duration.
+        """
+        analysis = self._envelope_analysis("modulation_phase")
+        match sound:
+            case Sound():
+                subbands = analysis.filterbank.analyze(_cut_to(analysis, sound, "sound"))
+            case _:
+                subbands = sound
+        kept = slice(1, -1) if analysis.drop_edges else slice(None)
+        own = subbands.envelopes(fs=analysis.fs).data.mean(axis=2)[:, kept]
+        if own.shape[0] != analysis.n_samples:
+            raise ValueError(
+                f"the envelopes have {own.shape[0]} samples; the analyzed grid has {analysis.n_samples}"
+            )
+        if analysis.scale == "db":
+            own = amp_to_db(own + 1e-12 * (own.max() or 1.0))
+        return np.angle(np.fft.fft2(own.T - own.mean()))
+
+    def _rebuild(self, phase: np.ndarray, quiet: bool = False) -> Envelopes:
+        """Envelopes from the stored magnitudes and mean and this phase;
+        ``quiet`` clips without a word (inside a search)."""
+        from sonore.views.envelopes import Envelopes
+
+        analysis = self._envelope_analysis("to_envelopes")
+        bank, n_env = analysis.filterbank, analysis.n_samples
+        kept = slice(1, -1) if analysis.drop_edges else slice(None)
+        rebuilt = self._mean + np.real(np.fft.ifft2(self._magnitude * np.exp(1j * phase)))
+        if analysis.scale == "db":
+            values = db_to_amp(rebuilt)
+        else:
+            clipped = 0.0 if quiet else float(np.mean(rebuilt < -1e-9 * (np.max(np.abs(rebuilt)) or 1.0)))
+            if clipped > 0 and self._rms_depth is not None:
+                fits = self._rms_depth * self._mean / np.max(self._mean - rebuilt)
+                raise ValueError(
+                    f"rms_depth {self._rms_depth:g} would push {clipped:.1%} of this draw's envelope values "
+                    f"below zero; at most {fits:.3g} fits it (or draw again with another rng)"
+                )
+            if clipped > 0:
+                warnings.warn(
+                    f"{clipped:.1%} of the rebuilt envelope values were below zero and were clipped, "
+                    "which changes their modulation spectrum",
+                    stacklevel=4,
+                )
+            values = np.maximum(rebuilt, 0.0)
+        bands = np.zeros((n_env, bank.n_filters))
+        bands[:, kept] = values.T
+        return Envelopes(bands, analysis.fs, bank)
+
+    def iterate(self, sound: Sound) -> Sound:
+        """One step of the search ``to_sound(iterations=n)`` takes: analyze
+        ``sound``, keep its fine structure and modulation phase, impose the
+        stored magnitudes, and resynthesize.
+
+        ``sound`` (mono, at any rate) must be at least as long as the
+        analyzed envelopes and is cut to their duration; so is the result,
+        which is not normalized.
+        """
+        analysis = self._envelope_analysis("iterate")
+        subbands = analysis.filterbank.analyze(_cut_to(analysis, sound, "sound"))
+        envelopes = self.to_envelopes(phase=self.modulation_phase(subbands), quiet=True)
+        return _cut_to(analysis, (envelopes * subbands.tfs()).to_sound(), "sound")
+
+    def to_sound(
+        self,
+        *,
+        carrier: Literal["tone"] | Sound,
+        fs: float | None = None,
+        rng: RNG = None,
+        iterations: int = 0,
+    ) -> Sound:
+        """A sound whose envelopes have this modulation spectrum: the
+        envelopes of :meth:`to_envelopes`, put on the carrier by
+        :meth:`Envelopes.to_sound <sonore.views.envelopes.Envelopes.to_sound>`.
+
+        A modulation spectrum lacks two kinds of phase, and the carrier
+        supplies both:
+
+        * the **modulation phase** (when each event happens, how the bands
+          line up; see :meth:`to_envelopes`): a :class:`~sonore.Sound` lends
+          its own, unless ``rng`` is given; with ``"tone"``, or a Sound and
+          ``rng``, it is drawn at random from ``rng`` and keeps each band's
+          long-term level;
+        * the **fine structure** under each band's envelope: a Sound's own,
+          whatever the sound is (a noise of any color, a sentence, a harmonic
+          complex), or a steady tone at each band's center (``"tone"``).
+
+        Unlike :meth:`Envelopes.to_sound
+        <sonore.views.envelopes.Envelopes.to_sound>`, there is no ``"noise"``
+        carrier here: bands of noise keep random envelopes of their own, which
+        would add modulation that the spectrum does not have. For a noise,
+        pass one: ``to_sound(carrier=so.gaussian_noise(duration, fs),
+        rng=seed)`` uses only its fine structure.
+
+        ``to_sound(carrier=x)`` on the spectrum of ``x`` itself rebuilds
+        ``x``'s envelopes, so an edit made with :meth:`with_gain` keeps the
+        sound's timing wherever the gain is 1. ``fs`` is the audio rate,
+        needed for ``"tone"``; a Sound sets its own and must be at least as
+        long as the analyzed envelopes. The result has RMS 1.
+
+        A fine structure that fluctuates within a band (a sound's own, or a
+        noise's) adds modulation of its own when the result is analyzed
+        again, so an edit survives best on ``"tone"``: removing every rate
+        above 4 Hz from a sentence leaves 12.6-14.4 dB less power at 6-40 Hz
+        on tones (two talkers, five random modulation phases each), but only
+        2.5-4.2 dB less on a noise's or the sentence's own fine structure
+        (``tools/check_modulation_carriers.py``).
+
+        ``iterations`` then searches for a sound whose own envelopes come
+        closer to the spectrum, as Griffin & Lim (1984) do for a
+        spectrogram: analyze the sound, keep its fine structure and its
+        modulation phase, impose the stored magnitudes again, and go back.
+        On the same sentence edit, 20 iterations from the sentence's own
+        fine structure leave 16.5 dB less power at 6-40 Hz (measured in
+        ``docs/design/views/modulation-targets.md``); each iteration costs one analysis and one
+        synthesis. One iteration is public as :meth:`iterate`.
+
+        A drawn target (:meth:`from_blobs`) has no timing of its own, so a
+        Sound carrier with ``rng`` pairs a drawn timing with a chosen fine
+        structure, such as a harmonic complex's: ``to_sound(carrier=tone,
+        rng=seed)``.
+        """
+        analysis = self._envelope_analysis("to_sound")
+        match carrier:
+            case Sound():
+                if fs is not None and fs != carrier.fs:
+                    raise ValueError(f"fs {fs} differs from the carrier's {carrier.fs}")
+                fs = carrier.fs
+                carrier = _cut_to(analysis, carrier, "carrier")
+                if rng is None:
+                    envelopes = self.to_envelopes(carrier=carrier)
+                else:
+                    envelopes = self.to_envelopes(rng=rng)
+                sound = envelopes.to_sound(carrier=carrier)
+            case "tone":
+                if fs is None:
+                    raise TypeError("fs is needed for carrier='tone'")
+                sound = self.to_envelopes(rng=rng).to_sound(carrier="tone", fs=fs)
+            case _:
+                raise ValueError(f"carrier must be 'tone' or a Sound, not {carrier!r}")
+        n_audio = int(round(analysis.n_samples * fs / analysis.fs))
+        sound = Sound(sound.data[:n_audio], fs)
+        for _ in range(int(iterations)):
+            sound = self.iterate(sound)
+        return sound.normalize() if sound.rms > 0 else sound
+
+    def peak(self, *, exclude_dc: bool = True) -> tuple[float, float]:
+        """``(temporal Hz, spectral)`` coordinates of the largest component.
+
+        At zero spectral modulation, ``+rate`` and ``-rate`` are mirror images
+        (the envelope is the same at every frequency, so it has no direction),
+        and the rate is reported as non-negative.
+        """
+        level = self.level.copy()
+        if exclude_dc:
+            level[np.ix_(self.w_f == 0, self.w_t == 0)] = -np.inf
+        i, j = np.unravel_index(np.argmax(level), level.shape)
+        rate = float(self.w_t[j])
+        return (abs(rate) if self.w_f[i] == 0 else rate), float(self.w_f[i])
+
+    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
+        """The modulation spectrum as an image in dB (see
+        :func:`~sonore.plotting.plot_modulation_spectrum`)."""
+        from sonore.plotting import plot_modulation_spectrum
+
+        return plot_modulation_spectrum(self, ax=ax, **kwargs)
+
+
+@dataclass(frozen=True)
+class ModulationBlob:
+    """A patch of modulation power, for drawing a target spectrum in code
+    (:meth:`ModulationSpectrum.from_blobs`).
+
+    A Gaussian bump centered on ``rate`` [Hz] and ``density`` [cycles/octave]:
+    ``rate_width`` is its standard deviation in octaves of rate,
+    ``density_width`` in cycles/octave, and ``level`` its peak power [dB]
+    relative to the other blobs. The signs follow :class:`~sonore.Ripple`:
+    positive rate and density are downward sweeps, a negative rate upward
+    ones, and a blob at density 0 is temporal modulation alone. A ripple is a
+    blob of zero width.
+    """
+
+    rate: float
+    density: float
+    rate_width: float = 0.5
+    density_width: float = 0.25
+    level: float = 0.0
+
+    def __post_init__(self):
+        if self.rate == 0:
+            raise ValueError("a blob needs a nonzero rate (its width is in octaves of rate)")
+        if self.rate_width <= 0 or self.density_width <= 0:
+            raise ValueError("widths must be positive")
+
+    def power(self, rate: np.ndarray, density: np.ndarray) -> np.ndarray:
+        """Relative power at every ``(rate, density)`` (broadcast), zero on
+        the other side of the rate axis."""
+        same_side = np.sign(rate) == np.sign(self.rate)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            octaves = np.log2(np.abs(rate) / abs(self.rate))
+        bump = np.exp(
+            -(octaves**2) / (2 * self.rate_width**2)
+            - (density - self.density) ** 2 / (2 * self.density_width**2)
+        )
+        return np.where(same_side, 10 ** (self.level / 10) * bump, 0.0)
+
+
+def _cut_to(analysis: _EnvelopeAnalysis, sound: Sound, name: str) -> Sound:
+    """``sound`` in mono, cut to the analyzed envelopes' duration at its own
+    rate; ``name`` names it in the error when it is shorter."""
+    n_audio = int(round(analysis.n_samples * sound.fs / analysis.fs))
+    if sound.n_samples < n_audio:
+        raise ValueError(f"the {name} is shorter than the analyzed {analysis.n_samples / analysis.fs:g} s")
+    return Sound(sound.mono().data[:n_audio], sound.fs)
+
+
+# ------------------------------------------------------ modulation filterbanks
 @dataclass(frozen=True)
 class ModulationFilterbank:
     """Base class. Subclasses define ``n_bands``, :attr:`cfs` and :meth:`response`.
@@ -281,15 +799,6 @@ class HannModulationFilterbank(ModulationFilterbank):
         return np.moveaxis(filtered, 0, axis) if axis != 0 else filtered
 
 
-def _cut_to(analysis: _EnvelopeAnalysis, sound: Sound, name: str) -> Sound:
-    """``sound`` in mono, cut to the analyzed envelopes' duration at its own
-    rate; ``name`` names it in the error when it is shorter."""
-    n_audio = int(round(analysis.n_samples * sound.fs / analysis.fs))
-    if sound.n_samples < n_audio:
-        raise ValueError(f"the {name} is shorter than the analyzed {analysis.n_samples / analysis.fs:g} s")
-    return Sound(sound.mono().data[:n_audio], sound.fs)
-
-
 def _hann_ft(u: np.ndarray) -> np.ndarray:
     """Fourier transform of a unit-area Hann window of length 1, at ``u``
     cycles per window length: sinc(u) / (1 - u^2), with its limit at |u| = 1."""
@@ -308,508 +817,3 @@ def _correlate(x: np.ndarray, h: np.ndarray, align: Literal["center", "causal"])
         full = fftconvolve(x, reversed_conj_kernel, axes=0)  # full[m] = sum_j x[m - L + 1 + j] conj(h[j])
     start = 0 if align == "causal" else (L - 1) // 2
     return full[start : start + n_samples]
-
-
-# ------------------------------------------------------ modulation spectrum
-@dataclass(frozen=True)
-class ModulationBlob:
-    """A patch of modulation power, for drawing a target spectrum in code
-    (:meth:`ModulationSpectrum.from_blobs`).
-
-    A Gaussian bump centered on ``rate`` [Hz] and ``density`` [cycles/octave]:
-    ``rate_width`` is its standard deviation in octaves of rate,
-    ``density_width`` in cycles/octave, and ``level`` its peak power [dB]
-    relative to the other blobs. The signs follow :class:`~sonore.Ripple`:
-    positive rate and density are downward sweeps, a negative rate upward
-    ones, and a blob at density 0 is temporal modulation alone. A ripple is a
-    blob of zero width.
-    """
-
-    rate: float
-    density: float
-    rate_width: float = 0.5
-    density_width: float = 0.25
-    level: float = 0.0
-
-    def __post_init__(self):
-        if self.rate == 0:
-            raise ValueError("a blob needs a nonzero rate (its width is in octaves of rate)")
-        if self.rate_width <= 0 or self.density_width <= 0:
-            raise ValueError("widths must be positive")
-
-    def power(self, rate: np.ndarray, density: np.ndarray) -> np.ndarray:
-        """Relative power at every ``(rate, density)`` (broadcast), zero on
-        the other side of the rate axis."""
-        same_side = np.sign(rate) == np.sign(self.rate)
-        with np.errstate(divide="ignore", invalid="ignore"):
-            octaves = np.log2(np.abs(rate) / abs(self.rate))
-        bump = np.exp(
-            -(octaves**2) / (2 * self.rate_width**2)
-            - (density - self.density) ** 2 / (2 * self.density_width**2)
-        )
-        return np.where(same_side, 10 ** (self.level / 10) * bump, 0.0)
-
-
-class ModulationSpectrum(View):
-    """2-D Fourier transform of a time-frequency envelope (Singh & Theunissen,
-    2003; Chi et al., 1999).
-
-    ``ModulationSpectrum(stft)`` uses a dB spectrogram, so spectral modulation
-    is w.r.t. *linear* frequency (cycles/kHz). :meth:`octave` uses subband
-    envelopes on a log-frequency axis (cycles/octave), the axis on which
-    ripples (:mod:`sonore.sources.ripples`) are defined; more generally, any
-    :class:`~sonore.views.envelopes.Envelopes` has ``.modulation_spectrum()``.
-
-    Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at
-    ``(+rate, +density)``. Only non-negative spectral modulations are stored
-    (the other half is the complex conjugate).
-
-    A view: before the transform the envelope's mean is removed and a Hann
-    taper applied in time, and only the level (dB, floored) is kept, so the
-    phase of the modulations is dropped and no envelope can be read back.
-
-    A spectrum made from :class:`~sonore.views.envelopes.Envelopes` (by
-    :meth:`octave` or ``env.modulation_spectrum()``) also keeps, for
-    :meth:`to_sound`, the magnitude of the untapered transform on the whole
-    plane, the envelope's mean, and how the envelopes were made. Edit it with
-    :meth:`with_gain`, and hear it with :meth:`to_sound`, whose carrier
-    supplies the phases it lacks (see ``docs/design/views/modulation-targets.md``).
-    """
-
-    discards = (
-        "ModulationSpectrum keeps only the magnitude of the 2-D Fourier transform of an envelope: it "
-        "discards the phase of the modulations, which holds the timing of every event, and the fine "
-        "structure under the envelope."
-    )
-    back_to_sound = (
-        "ModulationSpectrum.to_sound(carrier=...) takes both from a carrier: a Sound lends its own "
-        "modulation phase (unless rng is given) and fine structure, 'tones' and 'noise' draw a random "
-        "modulation phase."
-    )
-    _analysis: _EnvelopeAnalysis | None = None  # set when made from Envelopes or blobs
-    _rms_depth: float | None = None  # set by from_blobs, which refuses to clip
-    _long_term_phase: np.ndarray | None = None  # phase of the zero-rate column, kept by random draws
-
-    def __init__(self, stft: STFT, *, channel: int = 0):
-        spectrogram_db = stft.db[channel]
-        bin_spacing = stft.f[1] - stft.f[0]
-        dt = stft.sft.hop / stft.fs
-        self._compute(spectrogram_db, dt=dt, dx=bin_spacing / 1000, spectral_unit="cyc/kHz")
-
-    @classmethod
-    def from_array(cls, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> ModulationSpectrum:
-        """From a (frequency, time) envelope array sampled every ``dt`` seconds
-        and ``dx`` scale units."""
-        new = cls.__new__(cls)
-        new._compute(env, dt, dx, spectral_unit)
-        return new
-
-    def _compute(self, env: np.ndarray, dt: float, dx: float, spectral_unit: str) -> None:
-        # Taper in time: the 2-D FFT treats the envelope as periodic, and the jump
-        # between its end and start otherwise leaks energy across modulation rates
-        # (enough to misplace the peak when a modulation isn't a whole number of
-        # cycles long). Removing each band's own mean instead would also work but
-        # would erase static spectral structure (rate-0 ripples).
-        self._mean = float(env.mean())
-        untapered = np.fft.fft2(env - self._mean)  # whole plane, for to_sound
-        self._magnitude = np.abs(untapered)
-        # The zero-rate column is the long-term spectrum: its magnitudes alone don't say which
-        # band is loud, its phase does, so a random modulation phase must leave it alone.
-        self._long_term_phase = np.angle(untapered[:, 0])
-        env = (env - self._mean) * np.hanning(env.shape[1])[None, :]
-        spectrum = np.fft.fft2(env)
-        w_f = np.fft.fftfreq(env.shape[0], d=dx)
-        w_t = np.fft.fftfreq(env.shape[1], d=dt)
-        keep = w_f >= 0
-        self.w_f = w_f[keep]
-        self.w_t = np.fft.fftshift(w_t)
-        self.level = amp_to_db(np.fft.fftshift(spectrum[keep], axes=1), floor_db=_FLOOR_DB)
-        self.spectral_unit = spectral_unit
-
-    @classmethod
-    def octave(
-        cls,
-        sound: Sound,
-        *,
-        bands_per_octave: float = 12,
-        f_lo: float = 125.0,
-        f_hi: float = 8000.0,
-        env_fs: float = 1000.0,
-        scale: Literal["linear", "db"] = "linear",
-    ) -> ModulationSpectrum:
-        """Modulation spectrum on a log-frequency axis [cycles/octave].
-
-        Shorthand for::
-
-            fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
-            fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale)
-        """
-        from sonore.frames.filterbank import cosine_filterbank
-
-        f_hi = min(f_hi, sound.fs / 2)
-        fb = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
-        return fb.analyze(sound.mono()).envelopes(fs=env_fs).modulation_spectrum(scale=scale)
-
-    @classmethod
-    def from_blobs(
-        cls,
-        blobs: ModulationBlob | Sequence[ModulationBlob],
-        duration: float,
-        *,
-        f_lo: float = 250.0,
-        f_hi: float = 8000.0,
-        bands_per_octave: float = 12,
-        env_fs: float = 1000.0,
-        rms_depth: float | None = None,
-        scale: Literal["linear", "db"] = "linear",
-        sd_db: float | None = None,
-    ) -> ModulationSpectrum:
-        """A target spectrum drawn in code: the sum of :class:`ModulationBlob`
-        powers, on the grid :meth:`octave` would measure for a sound of
-        ``duration`` seconds, ready for :meth:`to_sound`.
-
-        A drawing sets a shape, not a depth, and no long-term spectrum: every
-        band gets the same mean envelope, and the depth is given separately.
-        With ``scale="linear"`` the blobs describe the envelopes themselves
-        and ``rms_depth`` (default 0.2) scales the modulation: the rms of the
-        envelope array about its mean, relative to the mean. Because
-        envelopes cannot go below zero, a random draw reaches only a limited
-        depth: about 0.28 for a one-blob target in
-        ``docs/design/views/modulation-targets.md`` (C2), against 0.71 for one
-        full ripple. :meth:`to_envelopes` refuses a draw that would need
-        clipping and names the largest depth that fits it.
-
-        With ``scale="db"`` the blobs describe the envelopes in dB, as the
-        spectrum of ``octave(..., scale="db")`` does, and ``sd_db`` (default
-        6) is the rms of that dB array about its mean. Any level in dB is a
-        positive envelope, so nothing is clipped and the modulation can be as
-        deep as wanted: a random draw is a Gaussian field of levels, as
-        :func:`~sonore.sources.gaussian_spectrogram.gaussian_spectrogram` is
-        for exponential correlations. Deep dB draws spread some of the
-        modulation power of the linear envelopes away from the blobs.
-
-        :attr:`level` shows the drawn power itself (no taper).
-        """
-        from sonore.core.utils import n_samples
-        from sonore.frames.filterbank import cosine_filterbank
-        from sonore.views.envelopes import _EnvelopeAnalysis
-
-        if isinstance(blobs, ModulationBlob):
-            blobs = [blobs]
-        if not blobs:
-            raise ValueError("give at least one ModulationBlob")
-        if scale == "linear":
-            if sd_db is not None:
-                raise TypeError('sd_db applies only to scale="db"; use rms_depth')
-            depth = 0.2 if rms_depth is None else rms_depth
-            if depth <= 0:
-                raise ValueError("rms_depth must be positive")
-        elif scale == "db":
-            if rms_depth is not None:
-                raise TypeError('rms_depth applies only to scale="linear"; use sd_db')
-            depth = 6.0 if sd_db is None else sd_db
-            if depth <= 0:
-                raise ValueError("sd_db must be positive")
-        else:
-            raise ValueError(f'scale must be "linear" or "db", not {scale!r}')
-        bank = cosine_filterbank(f_lo=f_lo, f_hi=f_hi, spacing=1 / bands_per_octave, scale="octave")
-        n_bands, n_times = bank.n_filters - 2, n_samples(duration, env_fs)
-        new = cls.__new__(cls)
-        new._analysis = _EnvelopeAnalysis(bank, env_fs, n_times, scale, True)
-        rate, density = new._full_axes(shape=(n_bands, n_times))
-        power = cast(np.ndarray, sum(blob.power(rate, density) for blob in blobs))
-        power = (power + np.roll(power[::-1, ::-1], 1, axis=(0, 1))) / 2  # the same at (-rate, -density)
-        magnitude = np.sqrt(power)
-        if not np.any(magnitude > 0):
-            raise ValueError("the blobs fall outside this grid's rates and densities")
-        # Parseval: the rms of an array is the norm of its unnormalized 2-D DFT over the cell count.
-        # A linear array has mean 1, so its rms is the depth; a dB array's mean (0 dB) only sets
-        # the overall level.
-        new._mean = 1.0 if scale == "linear" else 0.0
-        new._magnitude = magnitude * (depth * magnitude.size / np.linalg.norm(magnitude))
-        new._rms_depth = depth if scale == "linear" else None
-        spacing = cast(float, bank.spacing)  # never None: the bands are evenly spaced
-        keep = np.fft.fftfreq(n_bands, spacing) >= 0
-        new.w_f = np.fft.fftfreq(n_bands, spacing)[keep]
-        new.w_t = np.fft.fftshift(np.fft.fftfreq(n_times, 1 / env_fs))
-        new.level = amp_to_db(np.fft.fftshift(new._magnitude[keep], axes=1), floor_db=_FLOOR_DB)
-        new.spectral_unit = f"cyc/{bank.unit}"
-        return new
-
-    def _full_axes(self, shape=None) -> tuple[np.ndarray, np.ndarray]:
-        """Rate [Hz] (row) and density (column) of every cell of the
-        untapered transform, in FFT order."""
-        n_density, n_times = self._magnitude.shape if shape is None else shape
-        analysis = self._envelope_analysis("with_gain")
-        rate = np.fft.fftfreq(n_times, 1 / analysis.fs)[None, :]
-        spacing = cast(float, analysis.filterbank.spacing)  # never None: Envelopes.modulation_spectrum checks
-        density = np.fft.fftfreq(n_density, spacing)[:, None]
-        return rate, density
-
-    def _envelope_analysis(self, what: str) -> _EnvelopeAnalysis:
-        """How this spectrum's envelopes were made; ``what`` needs it, and
-        is named in the error when the spectrum was not made from Envelopes."""
-        if self._analysis is None:
-            raise TypeError(
-                f"{what} needs a modulation spectrum made from Envelopes (ModulationSpectrum.octave or "
-                "env.modulation_spectrum()); this one was made from an STFT or an array"
-            )
-        return self._analysis
-
-    @property
-    def filterbank(self) -> Filterbank:
-        """The filterbank whose envelopes this spectrum describes."""
-        return self._envelope_analysis("filterbank").filterbank
-
-    def with_gain(self, gain: float | Callable[[np.ndarray, np.ndarray], ArrayLike]) -> ModulationSpectrum:
-        """A copy with every cell's amplitude multiplied by ``gain``.
-
-        ``gain`` is a function ``g(rate, density)`` of rate [Hz] and spectral
-        modulation, evaluated with ``rate`` as a row and ``density`` as a
-        column (as ripple patterns are), or a number. A sound's spectrum is
-        the same at ``(rate, density)`` and ``(-rate, -density)``, so the gain
-        is averaged over each such pair; ``g = lambda r, d: abs(r) <= 4``
-        removes every modulation faster than 4 Hz, ``lambda r, d: r * d <= 0``
-        every downward sweep. The displayed :attr:`level` (Hann-tapered) gets
-        the same gain, which is exact where the gain is smooth across the
-        taper's rate resolution.
-        """
-        self._envelope_analysis("with_gain")
-        rate, density = self._full_axes()
-        values = gain(rate, density) if callable(gain) else gain
-        values = np.broadcast_to(np.asarray(values, float), self._magnitude.shape)
-        if np.any(values < 0):
-            raise ValueError("gains must be non-negative")
-        mirrored = np.roll(values[::-1, ::-1], 1, axis=(0, 1))  # the value at (-rate, -density)
-        values = (values + mirrored) / 2
-        new = copy.copy(self)
-        new._magnitude = self._magnitude * values
-        shown = np.fft.fftshift(values[: len(self.w_f)], axes=1)  # the level's rows and column order
-        new.level = np.maximum(self.level + amp_to_db(shown, floor_db=-400.0), _FLOOR_DB)
-        return new
-
-    def to_envelopes(
-        self,
-        *,
-        carrier: Sound | None = None,
-        rng: RNG = None,
-        phase: np.ndarray | None = None,
-        quiet: bool = False,
-    ) -> Envelopes:
-        """The envelopes this spectrum describes, given a modulation phase.
-
-        The stored magnitudes and mean fix everything but the phase of the
-        2-D transform, which holds when each event happens and how the bands
-        line up. A :class:`~sonore.Sound` ``carrier`` lends the phase of its
-        own envelopes (analyzed as this spectrum's were), so the spectrum of
-        ``x`` with ``carrier=x`` gives back ``x``'s envelopes; with no carrier
-        the phase is drawn at random from ``rng`` at every nonzero rate, while
-        the zero-rate column keeps its own phase, so each band keeps its
-        long-term level (the long-term spectrum). Envelopes rebuilt from a
-        linear-scale spectrum can go below zero; they are clipped, with a
-        warning saying how much, which changes their spectrum. Edge bands
-        that the spectrum dropped are zero.
-
-        ``phase`` gives the modulation phase directly, in the shape
-        :meth:`modulation_phase` returns, in place of a carrier or a draw.
-        ``quiet`` clips negative values without a warning, and without the
-        refusal of a :meth:`from_blobs` target, as inside a search.
-        """
-        analysis = self._envelope_analysis("to_envelopes")
-        if phase is not None:
-            if carrier is not None or rng is not None:
-                raise TypeError("phase gives the modulation phase; it cannot be combined with carrier or rng")
-            phase = np.asarray(phase)
-            if phase.shape != self._magnitude.shape:
-                raise ValueError(
-                    f"phase has shape {phase.shape}; the stored magnitudes have shape {self._magnitude.shape}"
-                )
-        elif carrier is None:
-            phase = np.angle(np.fft.fft2(as_rng(rng).standard_normal(self._magnitude.shape)))
-            if self._long_term_phase is not None:
-                phase[:, 0] = self._long_term_phase
-        else:
-            if rng is not None:
-                raise TypeError("rng applies only when no carrier is given")
-            phase = self.modulation_phase(analysis.filterbank.analyze(_cut_to(analysis, carrier, "carrier")))
-        return self._rebuild(phase, quiet)
-
-    def modulation_phase(self, sound: Sound | Subbands) -> np.ndarray:
-        """Phase of the 2-D transform of the envelopes of ``sound``, analyzed
-        as this spectrum's were, in the shape of the stored magnitudes.
-
-        A :class:`~sonore.Sound` is analyzed by :attr:`filterbank` (in mono,
-        cut to the analyzed duration); :class:`~sonore.frames.filterbank.Subbands`
-        must come from that filterbank and span the analyzed duration.
-        """
-        analysis = self._envelope_analysis("modulation_phase")
-        match sound:
-            case Sound():
-                subbands = analysis.filterbank.analyze(_cut_to(analysis, sound, "sound"))
-            case _:
-                subbands = sound
-        kept = slice(1, -1) if analysis.drop_edges else slice(None)
-        own = subbands.envelopes(fs=analysis.fs).data.mean(axis=2)[:, kept]
-        if own.shape[0] != analysis.n_samples:
-            raise ValueError(
-                f"the envelopes have {own.shape[0]} samples; the analyzed grid has {analysis.n_samples}"
-            )
-        if analysis.scale == "db":
-            own = amp_to_db(own + 1e-12 * (own.max() or 1.0))
-        return np.angle(np.fft.fft2(own.T - own.mean()))
-
-    def _rebuild(self, phase: np.ndarray, quiet: bool = False) -> Envelopes:
-        """Envelopes from the stored magnitudes and mean and this phase;
-        ``quiet`` clips without a word (inside a search)."""
-        from sonore.views.envelopes import Envelopes
-
-        analysis = self._envelope_analysis("to_envelopes")
-        bank, n_env = analysis.filterbank, analysis.n_samples
-        kept = slice(1, -1) if analysis.drop_edges else slice(None)
-        rebuilt = self._mean + np.real(np.fft.ifft2(self._magnitude * np.exp(1j * phase)))
-        if analysis.scale == "db":
-            values = db_to_amp(rebuilt)
-        else:
-            clipped = 0.0 if quiet else float(np.mean(rebuilt < -1e-9 * (np.max(np.abs(rebuilt)) or 1.0)))
-            if clipped > 0 and self._rms_depth is not None:
-                fits = self._rms_depth * self._mean / np.max(self._mean - rebuilt)
-                raise ValueError(
-                    f"rms_depth {self._rms_depth:g} would push {clipped:.1%} of this draw's envelope values "
-                    f"below zero; at most {fits:.3g} fits it (or draw again with another rng)"
-                )
-            if clipped > 0:
-                warnings.warn(
-                    f"{clipped:.1%} of the rebuilt envelope values were below zero and were clipped, "
-                    "which changes their modulation spectrum",
-                    stacklevel=4,
-                )
-            values = np.maximum(rebuilt, 0.0)
-        bands = np.zeros((n_env, bank.n_filters))
-        bands[:, kept] = values.T
-        return Envelopes(bands, analysis.fs, bank)
-
-    def iterate(self, sound: Sound) -> Sound:
-        """One step of the search ``to_sound(iterations=n)`` takes: analyze
-        ``sound``, keep its fine structure and modulation phase, impose the
-        stored magnitudes, and resynthesize.
-
-        ``sound`` (mono, at any rate) must be at least as long as the
-        analyzed envelopes and is cut to their duration; so is the result,
-        which is not normalized.
-        """
-        analysis = self._envelope_analysis("iterate")
-        subbands = analysis.filterbank.analyze(_cut_to(analysis, sound, "sound"))
-        envelopes = self.to_envelopes(phase=self.modulation_phase(subbands), quiet=True)
-        return _cut_to(analysis, (envelopes * subbands.tfs()).to_sound(), "sound")
-
-    def to_sound(
-        self,
-        *,
-        carrier: Literal["tones", "noise"] | Sound = "tones",
-        fs: float | None = None,
-        rng: RNG = None,
-        iterations: int = 0,
-    ) -> Sound:
-        """A sound whose envelopes have this modulation spectrum.
-
-        A modulation spectrum lacks two kinds of phase, and the ``carrier``
-        supplies both:
-
-        * the **modulation phase** (when each event happens, how the bands
-          line up; see :meth:`to_envelopes`): a :class:`~sonore.Sound` lends
-          its own, unless ``rng`` is given, which draws one as for tones and
-          noise; ``"tones"`` and ``"noise"`` draw a random one from ``rng``
-          that keeps each band's long-term level;
-        * the **fine structure** under each band's envelope: a Sound's own
-          (``(envelopes * subbands.tfs()).to_sound()``, the vocoder's route),
-          narrowband noise (``"noise"``, the same route), or a steady tone at
-          each band's center (``"tones"``), added without re-filtering.
-
-        ``to_sound(carrier=x)`` on the spectrum of ``x`` itself rebuilds
-        ``x``'s envelopes, so an edit made with :meth:`with_gain` keeps the
-        sound's timing wherever the gain is 1. ``fs`` is the audio rate,
-        needed unless the carrier is a Sound, which must be at least as long
-        as the analyzed envelopes. The result has RMS 1.
-
-        A fine structure that fluctuates within a band (a sound's own, or
-        noise) adds modulation of its own when the result is analyzed again,
-        so an edit survives best on ``"tones"``: removing every rate above
-        4 Hz from a sentence leaves about 15 dB less power at 6-40 Hz on
-        tones, but only 3-5 dB less on noise or the sentence's own fine
-        structure (``docs/design/views/modulation-targets.md``, C6).
-
-        ``iterations`` then searches for a sound whose own envelopes come
-        closer to the spectrum, as Griffin & Lim (1984) do for a
-        spectrogram: analyze the sound, keep its fine structure and its
-        modulation phase, impose the stored magnitudes again, and go back.
-        On the same sentence edit, 20 iterations from the sentence's own
-        fine structure leave 16.5 dB less power at 6-40 Hz (C7 of the design
-        note); each iteration costs one analysis and one synthesis. One
-        iteration is public as :meth:`iterate`.
-
-        A drawn target (:meth:`from_blobs`) has no timing of its own, so a
-        Sound carrier with ``rng`` pairs a drawn timing with a chosen fine
-        structure, such as a harmonic complex's: ``to_sound(carrier=tone,
-        rng=seed)``.
-        """
-        from sonore.frames.filterbank import Subbands
-        from sonore.sources.waveforms import gaussian_noise
-
-        match carrier:
-            case Sound():
-                if fs is not None and fs != carrier.fs:
-                    raise ValueError(f"fs {fs} differs from the carrier's {carrier.fs}")
-                if rng is None:
-                    envelopes = self.to_envelopes(carrier=carrier)
-                else:
-                    envelopes = self.to_envelopes(rng=as_rng(rng))
-                fs = carrier.fs
-            case "tones" | "noise":
-                if fs is None:
-                    raise TypeError("fs is needed for carrier='tones' or 'noise'")
-                rng = as_rng(rng)
-                envelopes = self.to_envelopes(rng=rng)
-            case _:
-                raise ValueError(f"carrier must be 'tones', 'noise' or a Sound, not {carrier!r}")
-        analysis = self._envelope_analysis("to_sound")
-        bank = analysis.filterbank
-        n_audio = int(round(analysis.n_samples * fs / analysis.fs))
-
-        match carrier:
-            case Sound():
-                fine = bank.analyze(_cut_to(analysis, carrier, "carrier")).tfs()
-                sound = (envelopes * fine).to_sound()
-            case "noise":
-                fine = bank.analyze(gaussian_noise(n_audio / fs, fs, rng=rng)).tfs()
-                sound = (envelopes * fine).to_sound()
-            case "tones":
-                t = np.arange(n_audio)[:, None] / fs
-                tones = np.cos(
-                    2 * np.pi * bank.cfs[None, :] * t + as_rng(rng).uniform(0, 2 * np.pi, bank.n_filters)
-                )
-                sound = (envelopes * Subbands(tones[:, :, None], fs, bank)).sum()
-        sound = Sound(sound.data[:n_audio], fs)
-        for _ in range(int(iterations)):
-            sound = self.iterate(sound)
-        return sound.normalize() if sound.rms > 0 else sound
-
-    def peak(self, *, exclude_dc: bool = True) -> tuple[float, float]:
-        """``(temporal Hz, spectral)`` coordinates of the largest component.
-
-        At zero spectral modulation, ``+rate`` and ``-rate`` are mirror images
-        (the envelope is the same at every frequency, so it has no direction),
-        and the rate is reported as non-negative.
-        """
-        level = self.level.copy()
-        if exclude_dc:
-            level[np.ix_(self.w_f == 0, self.w_t == 0)] = -np.inf
-        i, j = np.unravel_index(np.argmax(level), level.shape)
-        rate = float(self.w_t[j])
-        return (abs(rate) if self.w_f[i] == 0 else rate), float(self.w_f[i])
-
-    def plot(self, ax: Axes | None = None, **kwargs) -> Axes:
-        """The modulation spectrum as an image in dB (see
-        :func:`~sonore.plotting.plot_modulation_spectrum`)."""
-        from sonore.plotting import plot_modulation_spectrum
-
-        return plot_modulation_spectrum(self, ax=ax, **kwargs)

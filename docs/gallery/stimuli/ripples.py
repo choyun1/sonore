@@ -184,7 +184,7 @@ fig, playhead = show(sound, dmr, dmr=True)
 #   speech intelligibility. *J. Acoust. Soc. Am.* 106(5), 2719–2732.
 #   [JASA](https://pubs.aip.org/asa/jasa/article/106/5/2719/550617).
 #   [`ripples.Ripple`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/ripples.py#L102)
-#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L353)
+#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L68)
 # - Escabí & Schreiner (2002). Nonlinear spectrotemporal sound analysis by neurons in the auditory
 #   midbrain. *J. Neurosci.* 22(10), 4114–4131.
 #   [doi:10.1523/JNEUROSCI.22-10-04114.2002](https://doi.org/10.1523/JNEUROSCI.22-10-04114.2002).
@@ -197,4 +197,4 @@ fig, playhead = show(sound, dmr, dmr=True)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.
 #   [doi:10.1121/1.1624067](https://doi.org/10.1121/1.1624067).
-#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L353)
+#   [`modulation.ModulationSpectrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L68)

@@ -11,7 +11,11 @@ are implemented (`ModulationSpectrum.to_envelopes`, `with_gain` and
 `tests/views/test_modulation.py`), and so are D1's blobs and D6's
 `rms_depth` (`ModulationBlob`, `ModulationSpectrum.from_blobs`), and D7
 (`to_sound(iterations=...)`, after C7), and D9 (the gallery page
-`docs/gallery/seeing/modtargets.py`). The claims are checked by
+`docs/gallery/seeing/modtargets.py`). Changed by the code audit
+(2026-10-14): `to_sound` is a recipe over `Envelopes.to_sound`, its carrier
+has no default and is `"tone"` (re-filtered, zero starting phase) or a
+Sound; `"noise"` was removed (pass a noise as the Sound), so D2 and D5
+below describe the first version. The claims are checked by
 `tools/check_modulation_targets_claims.py` (C1–C7), which uses only NumPy,
 SciPy and soundfile, writes every filter and transform out from its
 formula, and shares no code with sonore. It runs in about 45 s. The numbers

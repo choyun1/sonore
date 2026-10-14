@@ -177,10 +177,17 @@ class ModulationSpectrogram(View):
         return self._kind(kind)[..., window_index]
 
     def average(self, *, kind: Literal["depth", "power"] = "power") -> np.ndarray:
-        """Average over time windows, shape ``(n_channels, n_bands, n_mod)``. The
-        average power is the per-band modulation power spectrum, the same kind
-        of quantity as the texture statistics' ``mod_power``."""
-        return np.nanmean(self._kind(kind), axis=-1)
+        """Average over the time windows where the cell is :attr:`valid`,
+        shape ``(n_channels, n_bands, n_mod)``; NaN where a band and rate has
+        no valid window (its rate exceeds the band's width, or no window of
+        that rate fits inside the sound). The average power is the per-band
+        modulation power spectrum, the same kind of quantity as the texture
+        statistics' ``mod_power``."""
+        values = self._kind(kind)
+        counted = self.valid[None] & ~np.isnan(values)
+        n_counted = counted.sum(axis=-1)
+        total = np.sum(np.where(counted, values, 0.0), axis=-1)
+        return np.where(n_counted > 0, total / np.maximum(n_counted, 1), np.nan)
 
     def pooled_depth(self) -> np.ndarray:
         """Depth pooled over acoustic bands, shape ``(n_channels, n_mod,

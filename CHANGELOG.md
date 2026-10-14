@@ -64,6 +64,21 @@ version (0.x.y) only fixes bugs.
 - Gallery: 'A "cocktail party"', a page of its own in Spatial hearing after
   Moving talkers, takes the five walking-talker scenes off Moving talkers.
   Old links forward to it.
+- `ModulationSpectrum.to_sound` is now a recipe: the envelopes of
+  `to_envelopes`, put on the carrier by `Envelopes.to_sound`, so the tones
+  are re-filtered by the filterbank's synthesis like every other carrier.
+  `carrier` must be named (no default) and is `"tone"` (was `"tones"`; the
+  tones now start at zero phase, as in `Envelopes.to_sound`) or a Sound.
+  `carrier="noise"` is gone: it meant a noise's fine structure here and
+  bands of noise in `Envelopes.to_sound`; pass a noise as the Sound for the
+  first. Measured in `tools/check_modulation_carriers.py`.
+- `ModulationSpectrogram.average()` averages only the time windows where a
+  cell is `valid`, and is NaN for a band and rate with none (a rate faster
+  than the band is wide, or a window longer than the sound). It used to
+  count the windows that run past the ends, which read 3-4 dB high at slow
+  rates on a sentence.
+- `views/modulation.py` opens with `ModulationSpectrum` (Singh & Theunissen,
+  2003); the modulation filterbanks follow.
 
 ## [0.7.0] - 2026-10-14
 
