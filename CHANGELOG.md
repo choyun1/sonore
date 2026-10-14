@@ -39,6 +39,10 @@ version (0.x.y) only fixes bugs.
   "Tones and noises". Page URLs are unchanged; the scripts of Seeing speech, Sound
   textures and Sound quilts moved to docs/gallery/seeing and
   docs/gallery/textures.
+- Gallery: "Events and pops", a page of its own in the Textures group, takes
+  the event-train and fire-pop sections ("From single events to a texture",
+  "How big the pops are") off Sound textures. Old links to them on Sound
+  textures forward to the new page.
 
 ## [0.7.0] - 2026-10-14
 

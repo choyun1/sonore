@@ -188,6 +188,7 @@ More in the gallery:
 **Textures**
 
 - [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): syntheses from statistics (McDermott & Simoncelli, 2011). [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b)
+- [Events and pops](https://choyun1.github.io/sonore/gallery/events.html): one event copied into a texture, and the power law of a fire's pops. [▶ 30 events per second](https://choyun1.github.io/sonore/gallery/events.html#d-e04)
 - [Sound quilts](https://choyun1.github.io/sonore/gallery/quilts.html): recordings cut into segments and reordered (Overath et al., 2015). [▶ fire](https://choyun1.github.io/sonore/gallery/quilts.html#d-sq4)
 
 **Voices**
