@@ -79,9 +79,10 @@ def bell(t, f):
     return np.exp(-0.5 * (np.log2(f / BELL_CENTER) / BELL_WIDTH) ** 2)
 
 
-def harmonic_tone(f0, duration, fade=FADE):
-    """An ordinary note: ten harmonics falling as 1/n, faded in and out over ``fade`` seconds."""
-    return so.harmonic_complex(duration, FS, f0, harmonics=PARTIALS, amplitudes=1 / PARTIALS).ramp(fade)
+def harmonic_tone(f0, duration, fade=FADE, partials=PARTIALS):
+    """An ordinary note: ten harmonics (or ``partials``) falling as 1/n, faded in and out over
+    ``fade`` seconds."""
+    return so.harmonic_complex(duration, FS, f0, harmonics=partials, amplitudes=1 / partials).ramp(fade)
 
 
 def shepard_tone(freq, duration):
@@ -309,8 +310,11 @@ fig, playhead = show(sound)
 # semitone-wide bands also blur timing: a band one semitone wide keeps ringing for tens of
 # milliseconds after its tone stops (longer for lower notes), so a silence between notes comes
 # back shallower and shorter than it went in. The tune is played detached, with 150 ms of
-# silence after each note, so that repeated notes stay apart in the playback. The cell
-# compares the chroma of each sound below with the tune's.
+# silence after each note, so that repeated notes stay apart in the playback. Its notes have
+# six harmonics, not ten: the seventh harmonic lies 31 cents below an equal-tempered pitch
+# class, and played back as that pitch class it sounds out of tune with the rest. The first
+# six land on the note, its fifth and its major third. The cell compares the chroma of each
+# sound below with the tune's.
 
 # %%
 # The first two lines of Twinkle, Twinkle, Little Star, as (note, beats); each line ends on a
@@ -333,7 +337,10 @@ TUNE = [
 ]
 BEAT, GAP = 0.4, 0.15  # a beat, and the silence after each note [s]
 melody = sequence(
-    [harmonic_tone(so.note_to_freq(note), beats * BEAT - GAP, fade=0.06) for note, beats in TUNE],
+    [
+        harmonic_tone(so.note_to_freq(note), beats * BEAT - GAP, fade=0.06, partials=np.arange(1, 7))
+        for note, beats in TUNE
+    ],
     [beats * BEAT for _, beats in TUNE],
 )
 melody_chroma = so.chroma(melody)
