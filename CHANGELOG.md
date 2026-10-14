@@ -18,6 +18,9 @@ version (0.x.y) only fixes bugs.
 - Gallery: "How big the pops are" on the Sound textures page, the envelope
   peaks of the fire recording and its synthesis, and pops from
   `so.event_train` at power-law exponents 1, 2 and 4.
+- `plot_envelopes(db_max=...)` (and `Envelopes.plot`): the top of the
+  color scale in dB, so several cochleagrams can be drawn on one scale. The
+  Sound quilts page draws each quilt on its original's scale.
 
 ## [0.7.0] - 2026-10-14
 

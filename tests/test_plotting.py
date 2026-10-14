@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 import sonore as so
-from sonore.plotting import plot_lissajous
+from sonore.plotting import plot_envelopes, plot_lissajous
 
 
 def test_plot_lissajous_draws_left_against_right():
@@ -22,3 +22,14 @@ def test_plot_lissajous_draws_left_against_right():
 def test_plot_lissajous_needs_two_channels():
     with pytest.raises(ValueError, match="two-channel"):
         plot_lissajous(so.pure_tone(0.1, 8000, 200))
+
+
+def test_plot_envelopes_shares_a_color_scale():
+    bank = so.cosine_filterbank(8, 100, 3000)
+    noise = so.gaussian_noise(0.2, 8000, rng=0)
+    loud, quiet = bank.analyze(noise).envelopes(), bank.analyze(noise * 0.1).envelopes()
+    top = float(loud.db[:, 1:-1].max())  # the edge bands are not drawn
+    own = plot_envelopes(quiet, colorbar=False).collections[0].get_clim()
+    shared = plot_envelopes(quiet, db_max=top, colorbar=False).collections[0].get_clim()
+    assert own[1] == pytest.approx(top - 20, abs=1e-6)  # its own maximum, 20 dB lower
+    assert shared == pytest.approx((top - 40, top))
