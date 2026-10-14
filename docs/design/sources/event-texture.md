@@ -33,7 +33,8 @@ on the first draft. Cho then asked for timing, level and pitch each to be
 a distribution the caller gives, and for a name that does not tie the
 source to Poisson timing; D2 to D6 were rewritten for that, and D2, D3, D5
 and D6 accepted as recommended. For D4 Cho chose variable rates now (the
-rate track in the design and E8). Ready to build.
+rate track in the design and E8). Built as `so.event_train` (see "As
+built").
 
 ## How the claims are verified
 
@@ -245,6 +246,29 @@ identical.
   rate sweeps from sparse to dense (E8). A live slider fits
   sonore-sketch later. *Accepted by Cho 2026-10-13 (the section); the
   extra sounds for the new axes are proposed here.*
+
+## As built
+
+`src/sonore/sources/events.py`: `event_train(event, duration, intervals,
+*, rate_scale=1.0, level_db=0.0, pitch_cents=0.0, lead=0.0, rng=None)`,
+as designed. Intervals are drawn in batches that double in size until
+their running sum passes the end of the warped clock, which is the
+integral of `rate_scale` on the sample grid (trapezoids). Draws come in a
+fixed order (intervals, then levels, then pitches), so fixing the pitch
+does not change the onsets. Pitch shifts are always rounded to the nearest
+cent; each distinct shift is made once. With one shift for every event the
+weighted impulse train goes through `Sound.convolve`; otherwise the copies
+are added one by one. A minute at 1000 events per second with a pitch
+spread of 100 cents took 7.5 s on the build machine (one run), most of it
+resampling about 600 distinct shifts; without a pitch spread, 4 s took
+0.02 s.
+
+Tests are in `tests/sources/test_events.py`: Poisson counts (mean and
+variance over 400 draws), regular onsets from a constant interval,
+reproducibility, counts under a rising rate track against its integral,
+the kurtosis of E2 and its level-spread factor of E6, the two rendering
+paths agreeing, a resampled copy an octave up lasting half as long, the
+lead-in, and the argument checks.
 
 ## What this document does not claim
 
