@@ -30,6 +30,14 @@ Breaking changes since 0.6.0 (each is described under Changed):
   cochleagram as much as the sound itself did there; and `so.splice`, which
   joins segments of a sound with cross-fades aligned by cross-correlation
   (docs/design/views/quilting.md).
+- `ModulationSpectrum` has public hooks for the search `to_sound(iterations=n)`
+  takes: `filterbank`, `modulation_phase(sound)`, `to_envelopes(phase=...,
+  quiet=True)` and `iterate(sound)`, one step of the search, which
+  `to_sound` now calls. Every existing call gives the same samples.
+- `ModulationSpectrum.to_sound(carrier=sound, rng=seed)` draws the modulation
+  phase from `rng` and takes only the fine structure from the Sound, so a
+  drawn target (`from_blobs`) can be heard on a harmonic complex, a
+  recording or a vowel. This call used to raise a `TypeError`.
 
 ### Changed
 
