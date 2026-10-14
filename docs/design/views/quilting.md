@@ -298,6 +298,15 @@ one on, and the list is short.
   that crackle or another large pop, were turned down 16 to 17 dB and the
   original 6 dB, so the quilts played about 10 dB quieter. The page now
   plays a recording and its quilts at one gain.
+- **Short segments lose a little level [sound][math].** On a 7 s stream
+  recording, 4 s quilts of 30 ms segments have a median level (100 ms
+  windows) 0.7 to 1.2 dB below the recording's over five seeds; 120 and
+  960 ms quilts are within 0.3 dB. With the cross-fade as long as the
+  segment, every sample lies in a cross-fade, and raised-cosine ramps keep
+  on average (1 + 1/2) / 2 = 3/4 of the power of two uncorrelated signals,
+  1.2 dB less; the alignment correlates them a little, so the loss is
+  smaller. The paper's settings (30 ms segments, 30 ms cross-fades) do the
+  same.
 
 ## References
 

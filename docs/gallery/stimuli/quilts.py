@@ -20,8 +20,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   joining.
 # - [Quilting speech](#h-quilting-speech): two readers quilted at segment lengths from 30 to
 #   960 ms, and how much the joins change the cochleagram.
-# - [Quilting a texture](#h-quilting-a-texture): fire quilted the same way, and measured with the
-#   texture statistics of [Sound textures](textures.html).
+# - [Quilting a texture](#h-quilting-a-texture): fire and a stream quilted the same way, and fire
+#   and mud measured with the texture statistics of [Sound textures](textures.html).
 
 # %% [markdown]
 # ## Code the examples share
@@ -207,28 +207,46 @@ ax.legend()
 # model of the auditory periphery, and a quilt that is another sample of the texture should match
 # them as well as another stretch of the recording does.
 
+# %%
+texture_bank = so.cosine_filterbank(30, 20, 10000)
+
+
+def texture_quilt_demo(recording, duration, segments=(0.03, 0.12, 0.96)):
+    """The recording's first ``duration`` seconds and a quilt of the whole recording at each
+    segment length, played at one gain, with their cochleagrams."""
+    sounds = {"Original": so.Sound(recording.data[: int(duration * recording.fs)], recording.fs)}
+    for seg in segments:
+        sounds[f"{seg * 1000:.0f} ms"] = so.quilt(recording, seg, duration, rng=1)
+    sounds = finish_together(sounds)
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 7.6), sharex=True, layout="constrained")
+    for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
+        texture_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
+        title = label if label == "Original" else f"Quilt, {label} segments"
+        ax.set(title=title, xlabel="", xlim=(0, duration))
+    axes[-1].set_xlabel("Time [s]")
+    return fig, sounds, {label: [ax] for label, ax in zip(sounds, axes, strict=True)}
+
+
 # %% [about]
 # The first 5 s of a 20 s recording of fire, then 5 s quilts of the whole recording made of 30,
-# 120 and 960 ms segments.
-# The recording has one crackle, at 10 s, that peaks about five times higher than anything in its
-# first 5 s. Each quilt here draws that crackle or another large pop from the rest of the
-# recording, and the loudest of them sets the one gain all four are played at, so the quilts'
-# quieter stretches play at the same level as the original's.
+# 120 and 960 ms segments. The recording has one crackle, at 10 s, that peaks about five times
+# higher than anything in its first 5 s. Each quilt here draws that crackle or another large pop
+# from the rest of the recording, and the loudest of them sets the one gain all four are played
+# at, so the quilts' quieter stretches play at the same level as the original's.
 
 # %% [demo sq4] Quilts of a fire
-fire = so.load(fetch("docs/textures/fire.flac"))
-sounds = {"Original": so.Sound(fire.data[: int(5 * fire.fs)], fire.fs)}
-for seg in (0.03, 0.12, 0.96):
-    sounds[f"{seg * 1000:.0f} ms"] = so.quilt(fire, seg, 5.0, rng=1)
-sounds = finish_together(sounds)
-fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 7.6), sharex=True, layout="constrained")
-fire_bank = so.cosine_filterbank(30, 20, 10000)
-for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
-    fire_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
-    title = label if label == "Original" else f"Quilt, {label} segments"
-    ax.set(title=title, xlabel="", xlim=(0, 5))
-axes[-1].set_xlabel("Time [s]")
-playhead = {label: [ax] for label, ax in zip(sounds, axes, strict=True)}
+fig, sounds, playhead = texture_quilt_demo(so.load(fetch("docs/textures/fire.flac")), 5.0)
+
+# %% [about]
+# The same for 7 s of a stream (the recording on [Sound textures](textures.html)), with 4 s
+# quilts. The recording is short: a quilt of 960 ms segments uses 5 of its 7 segments, so the
+# rule has few to choose from, and a quilt of 30 ms segments uses 134 of 233. The 30 ms quilts
+# play about 1 dB quieter (median level of 100 ms windows, five seeds): with 30 ms cross-fades on
+# 30 ms segments every sample lies in a cross-fade, and two unrelated stretches of noise
+# cross-faded with raised-cosine ramps keep on average 3/4 of their power, 1.2 dB less.
+
+# %% [demo sq6] Quilts of a stream
+fig, sounds, playhead = texture_quilt_demo(so.load(fetch("docs/textures/stream.flac")), 4.0)
 
 # %% [about]
 # How closely 5 s of sound matches the texture statistics of the whole 20 s recording of fire, and

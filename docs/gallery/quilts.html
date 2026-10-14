@@ -234,7 +234,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 <p>A <em>sound quilt</em> (Overath et al., 2015) cuts a recording into segments of one length and strings
 them together in a new order, keeping the recording's structure inside each segment and
 scrambling everything longer than a segment.</p>
-<ul><li><a href="#h-how-a-quilt-is-made">How a quilt is made</a>: the rule that picks the order, and the joining.</li><li><a href="#h-quilting-speech">Quilting speech</a>: two readers quilted at segment lengths from 30 to 960 ms, and how much the joins change the cochleagram.</li><li><a href="#h-quilting-a-texture">Quilting a texture</a>: fire quilted the same way, and measured with the texture statistics of <a href="textures.html">Sound textures</a>.</li></ul>
+<ul><li><a href="#h-how-a-quilt-is-made">How a quilt is made</a>: the rule that picks the order, and the joining.</li><li><a href="#h-quilting-speech">Quilting speech</a>: two readers quilted at segment lengths from 30 to 960 ms, and how much the joins change the cochleagram.</li><li><a href="#h-quilting-a-texture">Quilting a texture</a>: fire and a stream quilted the same way, and fire and mud measured with the texture statistics of <a href="textures.html">Sound textures</a>.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/quilts.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/quilts.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
@@ -457,16 +457,32 @@ segments, as McDermott's notes to the quilting toolbox observe. The texture stat
 <a href="textures.html">Sound textures</a> make that measurable: they are the time-averaged statistics of a
 model of the auditory periphery, and a quilt that is another sample of the texture should match
 them as well as another stretch of the recording does.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">texture_bank = so.cosine_filterbank(30, 20, 10000)
+
+
+def texture_quilt_demo(recording, duration, segments=(0.03, 0.12, 0.96)):
+    &quot;&quot;&quot;The recording&#x27;s first ``duration`` seconds and a quilt of the whole recording at each
+    segment length, played at one gain, with their cochleagrams.&quot;&quot;&quot;
+    sounds = {&quot;Original&quot;: so.Sound(recording.data[: int(duration * recording.fs)], recording.fs)}
+    for seg in segments:
+        sounds[f&quot;{seg * 1000:.0f} ms&quot;] = so.quilt(recording, seg, duration, rng=1)
+    sounds = finish_together(sounds)
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 7.6), sharex=True, layout=&quot;constrained&quot;)
+    for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
+        texture_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
+        title = label if label == &quot;Original&quot; else f&quot;Quilt, {label} segments&quot;
+        ax.set(title=title, xlabel=&quot;&quot;, xlim=(0, duration))
+    axes[-1].set_xlabel(&quot;Time [s]&quot;)
+    return fig, sounds, {label: [ax] for label, ax in zip(sounds, axes, strict=True)}</code></pre></details></div>
 
 <article class="sound pair" id="d-sq4">
   <div class="about">
     <h3>Quilts of a fire</h3>
     <div class="desc"><p>The first 5 s of a 20 s recording of fire, then 5 s quilts of the whole recording made of 30,
-120 and 960 ms segments.
-The recording has one crackle, at 10 s, that peaks about five times higher than anything in its
-first 5 s. Each quilt here draws that crackle or another large pop from the rest of the
-recording, and the loudest of them sets the one gain all four are played at, so the quilts'
-quieter stretches play at the same level as the original's.</p></div>
+120 and 960 ms segments. The recording has one crackle, at 10 s, that peaks about five times
+higher than anything in its first 5 s. Each quilt here draws that crackle or another large pop
+from the rest of the recording, and the loudest of them sets the one gain all four are played
+at, so the quilts' quieter stretches play at the same level as the original's.</p></div>
     <div class="players">
     <div><p class="track">Original</p>
     <audio controls preload="metadata" src="audio/sq4_quilts_of_a_fire_original.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9920361249999999, &quot;top&quot;: 0.03415157163742699, &quot;bottom&quot;: 0.2247440346879569, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]"></audio>
@@ -486,19 +502,38 @@ quieter stretches play at the same level as the original's.</p></div>
     <img src="img/sq4_quilts_of_a_fire.png" width="1000" height="760" alt="Plots of the quilts of a fire sounds" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">fire = so.load(fetch(&quot;docs/textures/fire.flac&quot;))
-sounds = {&quot;Original&quot;: so.Sound(fire.data[: int(5 * fire.fs)], fire.fs)}
-for seg in (0.03, 0.12, 0.96):
-    sounds[f&quot;{seg * 1000:.0f} ms&quot;] = so.quilt(fire, seg, 5.0, rng=1)
-sounds = finish_together(sounds)
-fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 7.6), sharex=True, layout=&quot;constrained&quot;)
-fire_bank = so.cosine_filterbank(30, 20, 10000)
-for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
-    fire_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
-    title = label if label == &quot;Original&quot; else f&quot;Quilt, {label} segments&quot;
-    ax.set(title=title, xlabel=&quot;&quot;, xlim=(0, 5))
-axes[-1].set_xlabel(&quot;Time [s]&quot;)
-playhead = {label: [ax] for label, ax in zip(sounds, axes, strict=True)}</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, sounds, playhead = texture_quilt_demo(so.load(fetch(&quot;docs/textures/fire.flac&quot;)), 5.0)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-sq6">
+  <div class="about">
+    <h3>Quilts of a stream</h3>
+    <div class="desc"><p>The same for 7 s of a stream (the recording on <a href="textures.html">Sound textures</a>), with 4 s
+quilts. The recording is short: a quilt of 960 ms segments uses 5 of its 7 segments, so the
+rule has few to choose from, and a quilt of 30 ms segments uses 134 of 233. The 30 ms quilts
+play about 1 dB quieter (median level of 100 ms windows, five seeds): with 30 ms cross-fades on
+30 ms segments every sample lies in a cross-fade, and two unrelated stretches of noise
+cross-faded with raised-cosine ramps keep on average 3/4 of their power, 1.2 dB less.</p></div>
+    <div class="players">
+    <div><p class="track">Original</p>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_original.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.03415157163742699, &quot;bottom&quot;: 0.2247440346879569, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <p class="file">sq6_quilts_of_a_stream_original.flac, 4.0 s, mono</p></div>
+    <div><p class="track">30 ms</p>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_30_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.27077469989263525, &quot;bottom&quot;: 0.46136716294316515, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <p class="file">sq6_quilts_of_a_stream_30_ms.flac, 4.0 s, mono</p></div>
+    <div><p class="track">120 ms</p>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_120_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.5073978281478435, &quot;bottom&quot;: 0.6979902911983735, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <p class="file">sq6_quilts_of_a_stream_120_ms.flac, 4.0 s, mono</p></div>
+    <div><p class="track">960 ms</p>
+    <audio controls preload="metadata" src="audio/sq6_quilts_of_a_stream_960_ms.flac" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9864189375, &quot;top&quot;: 0.744020956403052, &quot;bottom&quot;: 0.9346134194535819, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]"></audio>
+    <p class="file">sq6_quilts_of_a_stream_960_ms.flac, 4.0 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sq6_quilts_of_a_stream.png" width="1000" height="760" alt="Plots of the quilts of a stream sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, sounds, playhead = texture_quilt_demo(so.load(fetch(&quot;docs/textures/stream.flac&quot;)), 4.0)</code></pre></details>
 </article>
 
 <article class="still" id="d-sq5">
