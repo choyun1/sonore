@@ -169,3 +169,13 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   The measurement is checked by `tools/check_envelope_peaks_claims.py`;
   the survey of the recordings is not part of the repository
   (`docs/design/views/envelope-peaks.md`).
+- **Sparse pops: background plus pops.** Some texture syntheses lose their
+  original's pops, or, like our fire's, make too many of them medium-sized
+  over too loud a background. A longer synthesis or more iterations did not
+  help by ear. Synthesizing the recording with its pops limited away and
+  adding its own pops back with `event_train`, at the exponent and rate
+  measured with `so.envelope_peaks`, sounded better on our fire, two of the
+  paper's fires and a clapper close to the microphone; not on rhythmic or
+  impact sounds, which the paper lists among the model's failures. Shown as
+  a recipe on the Sound textures gallery page; `synthesize` is unchanged
+  (`docs/design/views/envelope-peaks.md`, D5).
