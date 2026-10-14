@@ -372,7 +372,7 @@ fig, playhead, live = show(sound, marks=[4.0, 8.0, 12.0], start=2.0)
 # talker's own sentence six times over, each copy repeated end to end and started at a random
 # point. Speech is modulated most strongly at a few hertz, the rate of its syllables (Greenberg &
 # Kingsbury, 1997). That rhythm is what babble
-# partly hides and speech-shaped noise ([Synthetic sounds](classic.html#d-k1)) lacks entirely.
+# partly hides and speech-shaped noise ([Tones and noises](classic.html#d-k1)) lacks entirely.
 # [Hearing a modulation spectrum](modtargets.html#d-mt1) measures the male talker's sentence as a
 # whole, and hears what is left when its modulation keeps its rates but loses its timing
 # ([mt2](modtargets.html#d-mt2)).

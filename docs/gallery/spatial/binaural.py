@@ -129,7 +129,7 @@ fig, playhead = show(sound)
 # jumps back when the next cycle of the tone comes closer, while the coherence (the peak over lags)
 # stays close to 1. Binaural beats are heard only at low frequencies, and only for small
 # differences (Licklider, Webster & Hedlun, 1950). Mixed into the same sound, the same two tones
-# beat in loudness instead: [Synthetic sounds](classic.html#d-b1) plays 440 and 444 Hz added
+# beat in loudness instead: [Tones and noises](classic.html#d-b1) plays 440 and 444 Hz added
 # together, and [440 and 480 Hz](classic.html#d-b2), whose 40 Hz beat is heard as roughness.
 
 # %% [demo b4] Binaural beats, 4 Hz

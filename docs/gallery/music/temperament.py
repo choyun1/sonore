@@ -188,7 +188,7 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
 # beat at the difference of their frequencies ([Beats and
 # roughness](classic.html#h-beats-and-roughness) plays this with two pure tones), which the
 # cell prints for intervals above A3 = 220 Hz. Two pure tones a just major third apart have no
-# partials to beat and sound smooth, as on the [Synthetic sounds](classic.html#d-b3) page.
+# partials to beat and sound smooth, as on the [Tones and noises](classic.html#d-b3) page.
 
 # %%
 A3 = 220.0

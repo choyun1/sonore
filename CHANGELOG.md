@@ -29,6 +29,18 @@ version (0.x.y) only fixes bugs.
   tails. `tools/make_texture_synths.py` stores the fire's background
   synthesis (`--backgrounds-only` makes only those).
 
+### Changed
+
+- Gallery regrouped: Synthetic sounds (was Stimuli), Seeing and changing
+  sound (Seeing speech, Analysis and resynthesis, Phase vocoder and the
+  envelope and modulation pages, in one group), Textures (Sound textures and
+  Sound quilts, now after the modulation pages), Voices (now after
+  Textures), Spatial hearing, Music. The page "Synthetic sounds" is now
+  "Tones and noises". The pipe organ page leaves the menus until it has
+  sounds. Page URLs are unchanged; the scripts of Seeing speech, Sound
+  textures and Sound quilts moved to docs/gallery/seeing and
+  docs/gallery/textures.
+
 ## [0.7.0] - 2026-10-14
 
 Sound quilts (`so.quilt`, `so.splice`) and event trains (`so.event_train`),

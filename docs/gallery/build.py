@@ -721,7 +721,7 @@ EXAMPLE_HEAD = f"""<link rel="stylesheet" href="{KATEX}katex.min.css" crossorigi
 
 TITLES = {
     "index.html": "Listening gallery",
-    "classic.html": "Synthetic sounds",
+    "classic.html": "Tones and noises",
     "irn.html": "Iterated rippled noise",
     "ripples.html": "Spectrotemporal ripples",
     "binaural.html": "Binaural cues",
@@ -746,16 +746,17 @@ TITLES = {
     "organ.html": "The pipe organ",
 }
 
-# The topic pages in groups, for the index and the menus at the top of every page. Each
-# group's scripts live in a folder of docs/gallery (two groups may share one).
-# Groups and the pages within them run from simple to elaborate: stimuli from plain generators
-# to textures; analysis and resynthesis with frames and a phase vocoder; voices, from the two
-# talkers every speech page uses to a voice rebuilt and changed; envelopes and modulation; then
-# spatial hearing and music. Each idea is taught on one page and linked from the others.
+# The topic pages in groups, for the index and the menus at the top of every page. A page's
+# script is docs/gallery/<folder>/<name>.py, in whichever folder it sits (script_path).
+# Groups and the pages within them run from simple to elaborate: sounds made from parameters
+# alone; seeing a sound in time and frequency, changing it there, then its envelopes and their
+# modulation; textures, summarized by statistics of those envelopes; voices, from the two
+# talkers every speech page uses to a voice rebuilt and changed; then spatial hearing and music.
+# Each idea is taught on one page and linked from the others. A page built but in no group (the
+# pipe organ, until it has sounds) is reachable by its URL only.
 TOPICS = [
     (
-        "Stimuli",
-        "stimuli",
+        "Synthetic sounds",
         [
             (
                 "classic.html",
@@ -763,26 +764,48 @@ TOPICS = [
             ),
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
-            ("textures.html", "recordings and their syntheses from statistics."),
-            ("quilts.html", "recordings cut into segments and put back in a new order: speech, and a texture."),
         ],
     ),
     (
-        "Analysis and resynthesis",
-        "seeing",
+        "Seeing and changing sound",
         [
-            ("resynthesis.html", "a filterbank that reconstructs exactly, why nothing is lost, and spectrogram masking."),
+            (
+                "speech.html",
+                "a short course in time-frequency analysis on one sentence, read by both talkers.",
+            ),
+            (
+                "resynthesis.html",
+                "a filterbank that reconstructs exactly, why nothing is lost, and spectrogram masking.",
+            ),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
+            ("vocoder.html", "a simulation of cochlear-implant hearing."),
+            ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
+            (
+                "modtargets.html",
+                "sounds made from a modulation spectrum: measured, edited, drawn, random spectrograms, or"
+                " traded between sounds.",
+            ),
+        ],
+    ),
+    (
+        "Textures",
+        [
+            ("textures.html", "recordings and their syntheses from statistics."),
+            (
+                "quilts.html",
+                "recordings cut into segments and put back in a new order: speech, and a texture.",
+            ),
         ],
     ),
     (
         "Voices",
-        "voice",
         [
             ("talkers.html", "the male and the female talker every speech page uses, measured once."),
-            ("speech.html", "a short course in time-frequency analysis on one sentence, read by both talkers."),
             ("formants.html", "vowels and consonants written as a source, formants and a few numbers."),
-            ("pitch.html", "three ways to track a voice's pitch, where each fails, and how the errors sound."),
+            (
+                "pitch.html",
+                "three ways to track a voice's pitch, where each fails, and how the errors sound.",
+            ),
             ("cepstrum.html", "a voice's timbre without its pitch: the cepstrum, CheapTrick and MFCCs."),
             (
                 "aperiodicity.html",
@@ -790,42 +813,37 @@ TOPICS = [
             ),
             (
                 "voice.html",
-                "a voice rebuilt from its pitch and envelope, then changed: pitch, formants, range, another talker.",
-            ),
-        ],
-    ),
-    (
-        "Envelopes and modulation",
-        "seeing",
-        [
-            ("vocoder.html", "a simulation of cochlear-implant hearing."),
-            ("modspectrogram.html", "how fast and how deeply each band's envelope moves, moment by moment."),
-            (
-                "modtargets.html",
-                "sounds made from a modulation spectrum: measured, edited, drawn, random spectrograms, or traded"
-                " between sounds.",
+                "a voice rebuilt from its pitch and envelope, then changed: pitch, formants, range,"
+                " another talker.",
             ),
         ],
     ),
     (
         "Spatial hearing",
-        "spatial",
         [
-            ("binaural.html", "differences between the ears (timing, binaural beats, correlation that changes), and up and down, where they hardly change."),
-            ("reverb.html", "distance, rooms built from the statistics of real ones, and rooms that break them."),
-            ("moving.html", "talkers rendered through measured HRIRs: moving, among maskers of either sex, walking in."),
+            (
+                "binaural.html",
+                "differences between the ears (timing, binaural beats, correlation that changes), and up"
+                " and down, where they hardly change.",
+            ),
+            (
+                "reverb.html",
+                "distance, rooms built from the statistics of real ones, and rooms that break them.",
+            ),
+            (
+                "moving.html",
+                "talkers rendered through measured HRIRs: moving, among maskers of either sex, walking in.",
+            ),
         ],
     ),
     (
         "Music",
-        "music",
         [
             ("timbre.html", "attack time, brightness and spectral flux, heard and measured."),
             (
                 "temperament.html",
                 "just intonation, equal temperament and others, heard and drawn as Lissajous figures.",
             ),
-            ("organ.html", "organ stops as additive synthesis (a template, sounds to come)."),
         ],
     ),
 ]
@@ -918,7 +936,7 @@ def nav(current: str) -> str:
 
     here = ' aria-current="page"' if current == "index.html" else ""
     parts = [f'<a class="home" href="index.html"{here}>{LOGO_MARK}{TITLES["index.html"]}</a>']
-    for group, _, pages in TOPICS:
+    for group, pages in TOPICS:
         hrefs = [href for href, _ in pages]
         here = ' class="here"' if current in hrefs else ""
         items = "".join(f"<li>{link(href)}</li>" for href in hrefs)
@@ -963,7 +981,7 @@ def sidebar(current: str, sections_html: str) -> str:
         'title="Hide the menu">&laquo;</button></div>'
     )
     groups = []
-    for group, _, pages in TOPICS:
+    for group, pages in TOPICS:
         is_current_group = current in [href for href, _ in pages]
         css_class = "group here" if is_current_group else "group"
         is_open = " open" if is_current_group else ""
@@ -1297,8 +1315,8 @@ def section_html(title_html: str, parts: list[str], intro: str = "") -> str:
 
 def script_path(name: str) -> str:
     """Where a page's script lives, relative to the repository root."""
-    folder = next(folder for _, folder, pages in TOPICS if f"{name}.html" in dict(pages))
-    return f"docs/gallery/{folder}/{name}.py"
+    (script,) = HERE.glob(f"*/{name}.py")
+    return str(script.relative_to(ROOT))
 
 
 def build_example_page(site: Site, name: str) -> list[str]:
@@ -1477,7 +1495,7 @@ def build(out_dir: Path | None, single: Path | None) -> None:
                 + "</ul>"
             ],
         )
-        for group, _, pages in TOPICS
+        for group, pages in TOPICS
     )
     site.write("index.html", lambda v: page("Listening to sonore", "index.html", header, sections, redirect))
 

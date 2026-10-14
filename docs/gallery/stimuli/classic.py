@@ -1,4 +1,4 @@
-"""Synthetic sounds: speech-shaped noise, beats, tone sequences and band-limited waveforms.
+"""Tones and noises: speech-shaped noise, beats, tone sequences and band-limited waveforms.
 
 This script is the gallery page https://choyun1.github.io/sonore/gallery/classic.html:
 docs/gallery/build.py runs it cell by cell from the repository root and shows each
@@ -10,7 +10,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 """
 
 # %% [markdown]
-# # Synthetic sounds
+# # Tones and noises
 #
 # A few stimuli made from parameters alone that turn up again and again in hearing research,
 # each built in a line or two from sonore's generators.
