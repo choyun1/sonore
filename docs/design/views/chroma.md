@@ -18,11 +18,13 @@ functions. They are recipes for `so.harmonic_complex`, because they are
 just particular choices of harmonics and amplitudes. This document proposes
 the rest. It adds no library code; the decisions at the end come first.
 
-Status: proposed, waiting for Cho on D1 to D6.
+Status: Cho accepted D1, D2, D5 and D6 as recommended on 2026-10-14. D4
+is Cho's ruling. D3 is open: Cho asked why the way back is a Shepard tone,
+and the answer is under D3.
 
 ## How the claims are verified
 
-- **[check]**: printed by `tools/check_chroma_claims.py` (K1 to K6). It uses
+- **[check]**: printed by `tools/check_chroma_claims.py` (K1 to K6, K8). It uses
   NumPy only, shares no code with sonore, and runs in about 1 s.
 - **[librosa]**: printed by `tools/crosscheck_cqt_librosa.py` (K7), run with
   librosa 1.0.0. librosa is not a sonore dependency.
@@ -97,6 +99,15 @@ row as a Shepard tone, and the missing height comes in as the bell-shaped
 level over log frequency the Shepard tones use (D3). Its output is a
 recipe of `harmonic_complex` calls, as in section 3.
 
+The reason it is a Shepard tone and not some other sound with that pitch
+class: every partial of a Shepard tone is an octave of one pitch class, so
+all of its power folds into that one row. Through the semitone bank, a
+steady Shepard tone on C puts all of its chroma in C (share 1 to six
+digits), and a harmonic tone C4 puts 86% there, the rest leaking through its
+overtones [check K8]. So the chroma of the sound that `to_sound` makes is the
+chroma it was given, up to the smoothing of the time windows, which is not
+checked yet.
+
 ## 3. Shepard tones and the Risset glide, as recipes
 
 **Shepard tone** (Shepard, 1964). Its partials are an octave apart, so
@@ -147,7 +158,7 @@ nothing is added.
 
 ## Decisions
 
-**D1. Chroma as a view. Recommended: `so.chroma(sound, ...)` returning
+**D1. Chroma as a view. Accepted by Cho, as recommended: `so.chroma(sound, ...)` returning
 `Chroma`, a `View` in `views/chroma.py`.** It builds the semitone bank,
 takes power envelopes, averages them over time windows and folds the
 octaves. `Chroma` holds the array (time windows × 12 × channels), the times,
@@ -157,7 +168,7 @@ semitone band". The alternative, a method on `Subbands`, would only work
 on a bank spaced in whole semitones, and the bank would have to know about
 pitch classes.
 
-**D2. Defaults. Recommended (estimates, to settle when built):** one band
+**D2. Defaults. Accepted by Cho, as recommended (estimates, to settle when built):** one band
 per semitone from A1 (55 Hz) to A8 (7040 Hz), reference A4 = 440 Hz (an
 argument, for recordings tuned elsewhere), 0.05 s time windows. Power is
 kept as measured, with no normalization per window. Normalizing hides how
@@ -165,12 +176,20 @@ loud the window was, so `plot` can offer it and the data stays as measured.
 A tuning offset estimated from the sound is left out: it is a guess about
 the recording, not part of the view.
 
-**D3. `Chroma.to_sound`. Recommended: yes, as Shepard tones.** Arguments:
+**D3. `Chroma.to_sound`. Recommended: yes, as Shepard tones. Open.** Arguments:
 the bell's center and width (the height the view dropped), and `fs`. Each
 pitch class's row becomes the time-varying level of one Shepard-tone recipe
 (one `harmonic_complex` call per pitch class, summed). That shows on one
-page what chroma keeps and what it drops. The alternative is no route back:
-`to_sound` refuses and names Shepard tones as a recipe.
+page what chroma keeps and what it drops.
+
+Why a Shepard tone (Cho asked): it is the sound whose chroma comes back
+unchanged (section 2, K8), and its one free choice, the bell, is exactly
+what the view dropped. It is not the only sound that comes back unchanged.
+Pure tones in one octave do too, but they put back a height the view never
+had. Noise bands for each pitch class across octaves come back unchanged
+only on average, and differ from run to run. The Shepard tone is the
+deterministic choice that invents no height. The alternative is no route
+back: `to_sound` refuses and names Shepard tones as a recipe.
 
 **D4. Shepard and Risset recipes. Settled by Cho: recipes, no new code.**
 They live in the gallery page and in one line of `harmonic_complex`'s
@@ -178,13 +197,13 @@ docstring that points to it. Proposed for that line: "octave-numbered
 harmonics with a bell-shaped level over log frequency make a Shepard tone;
 see the gallery".
 
-**D5. Constant-Q. Recommended: no new function.** The gallery shows that
+**D5. Constant-Q. Accepted by Cho, as recommended: no new function.** The gallery shows that
 `cosine_filterbank(scale="cents", spacing=100)` is an exact constant-Q
 filter bank, gives its Q, and says what it costs (undecimated). A
 decimated exact version (nonstationary Gabor frames) stays where it already
 is, on the README roadmap, as separate work.
 
-**D6. Gallery. Recommended: a new Music page, "Pitch class and height",
+**D6. Gallery. Accepted by Cho, as recommended: a new Music page, "Pitch class and height",
 after Tuning and temperament.** Sections:
 
 1. A constant-Q filter bank: the bank, its Q, the exact round trip.

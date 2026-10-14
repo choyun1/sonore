@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/views/chroma.md (K1 to K6).
+"""Numerical checks for the claims in docs/design/views/chroma.md (K1 to K6, K8).
 
 Like the other design checkers, this shares no code with sonore: NumPy only, every formula
 written out here. Each line prints the claim number and the number that supports it.
@@ -145,6 +145,26 @@ def k6_glide():
     )
 
 
+def k8_round_trip():
+    # Steady tones through the semitone bank of K2, folded to pitch classes: the share of power
+    # that lands in the tone's own pitch class.
+    centers = np.log2(55.0) + np.arange(0, 7 * 12 + 1) / 12  # A1 to A8 in semitones
+    classes = (np.arange(len(centers)) + 9) % 12  # A1 is pitch class 9
+
+    def own_class_share(freqs, amps, own):
+        band_power = (cosine_bank(freqs, centers, 1 / 12) ** 2 * (amps**2)[:, None]).sum(0)
+        return band_power[classes == own].sum() / band_power.sum()
+
+    c_freqs, c_amps = shepard_partials(261.63 / 16)
+    report("K8", "Shepard tone on C: share of its chroma in C", own_class_share(c_freqs, c_amps, 0))
+    harmonics = np.arange(1, 11)
+    report(
+        "K8",
+        "harmonic tone C4 (amplitudes 1/n, 10 harmonics): share of its chroma in C",
+        own_class_share(261.63 * harmonics, 1 / harmonics, 0),
+    )
+
+
 if __name__ == "__main__":
     k1_q()
     k2_exact()
@@ -152,3 +172,4 @@ if __name__ == "__main__":
     k4_octave()
     k5_tritone()
     k6_glide()
+    k8_round_trip()
