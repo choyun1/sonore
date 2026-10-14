@@ -12,7 +12,8 @@ structure, up to about 500 ms. This document sets out the method, how it fits
 sonore, and the decisions for Cho.
 
 Status: proposed 2026-10-14. Cho agreed to a clean-room implementation from
-the paper's methods, not a port of the MATLAB toolbox.
+the paper's methods, not a port of the MATLAB toolbox. D3 accepted by Cho
+2026-10-14 (the paper's joining procedure, named aligned overlap-add).
 
 ## How the claims are verified, and what was read
 
