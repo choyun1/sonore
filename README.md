@@ -331,11 +331,6 @@ Only work still to do is listed here. Finished items are in
   sitting, each closing the gaps in its tests; progress in
   [issue #48](https://github.com/choyun1/sonore/issues/48).
 
-**Texture synthesis**
-
-- **All channels at once.** Impose the channels jointly; the per-channel
-  objective is overhead-bound (about 2 s per iteration for 5 s of sound).
-
 **Other**
 
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
