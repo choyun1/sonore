@@ -156,7 +156,7 @@ meant to be readable without them.
   a docstring quotes about sonore's behavior names the test or script that
   measures it.
 - **Cross-check against independent implementations** where one exists (see
-  "Reference implementations" in the README).
+  "Reference implementations" in docs/references.md).
 - **Document every deviation and data choice.** Differences from reference
   toolboxes, texture recordings and design decisions are written down
   (`so.texture.DIFFERENCES_FROM_TOOLBOX`, `docs/textures/SOURCES.md`, this

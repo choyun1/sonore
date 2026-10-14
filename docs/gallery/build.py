@@ -6,6 +6,10 @@
 Everything is generated from sonore itself with fixed seeds, so the gallery is
 reproducible. Audio is FLAC (lossless: lossy codecs would alter the interaural
 phase and correlation that the binaural examples are about).
+
+Commit only the pages whose code or sound changed. Every FLAC and PNG that is
+committed stays in the repository's history, and git cannot shrink a new
+version of one against the old, so re-rendering unchanged pages only adds weight.
 """
 
 from __future__ import annotations
