@@ -505,6 +505,10 @@ def plot_envelope_peaks(peaks: EnvelopePeaks, ax: Axes | None = None, **kwargs) 
     )
     ax.legend(loc="lower left")
     ax.grid(ls=":", which="both")
+    from matplotlib.ticker import NullFormatter
+
+    # on an axis less than a decade wide, matplotlib would label every minor tick and overlap them
+    ax.xaxis.set_minor_formatter(NullFormatter())
     return ax
 
 

@@ -20,7 +20,7 @@ each 5 ms bin.
 Status: D1 to D4 settled by Cho, 2026-10-14. D1: a `View` class under
 `views`. D2: `so.envelope_peaks` returning `EnvelopePeaks`, after Cho
 turned down `pop_tail` ("tail" also means a reverberant decay). D3 and D4
-as recommended. D5 and D6 settled as recommended, 2026-10-14.
+as recommended. D6 as recommended. D5 settled by ear, 2026-10-14 (below).
 
 ## How the claims are verified
 
@@ -213,16 +213,20 @@ plots side by side, and `event_train` with power-law levels at a few
 exponents to hear what the number means. The paper's recordings cannot be
 used (licences unknown).
 
-**D5. Imposing it. Settled: a separate document later**, decided by ear
-after D4. The finding above suggests the target is the alignment of
-extremes across channels, not each channel's tail, which neither a tail
-term per channel nor the current correlations would give. Texture
-synthesis of the background plus `event_train` pops is the other route.
-Both change synthesis output.
+**D5. Imposing it. Settled by Cho, 2026-10-14, by ear: no change to
+synthesis; a recipe on the gallery page instead.** Texture synthesis of the
+fire with its pops limited away, plus the recording's own pops added back
+with `event_train` at the measured exponent and rate, sounded better than
+the plain synthesis on our fire, two of the paper's fires and the close
+clapper. Making the plain synthesis longer (20 s) or iterating longer did
+not help. It does not help rhythmic or impact sounds (tapping, a bongo
+loop, a typewriter, castanets), which the paper itself lists among the
+model's failures (rhythm). Imposing the alignment of extremes across
+channels stays an idea, not a plan.
 
 **D6. Roadmap. Settled:** the README's "Sparse pops" item points
-here now; once built, the view moves to `docs/roadmap-done.md` and the
-item keeps only D5.
+here now; once built, the view moves to `docs/roadmap-done.md`. With D5
+settled, the item is done too.
 
 ## References
 

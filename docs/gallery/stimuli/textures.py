@@ -478,17 +478,30 @@ fig, playhead = events_fig(sound)
 # %% [markdown]
 # ## How big the pops are
 #
-# A fire's pops come in every size, and the sizes follow a power law: the fraction of moments
-# louder than $x$ falls as $x^{-\alpha}$. When the exponent $\alpha$ is small, the envelope's
-# variance and kurtosis, which the texture model measures, have no stable value: over 1 s pieces
-# of the fire recording the envelope kurtosis is about 220, over all 20 s about 1900. The exponent
-# does not drift that way. `so.envelope_peaks` measures it: it high-passes the sound (at 300 Hz
-# and 2 kHz), takes the largest envelope value in each 5 ms bin, and fits the upper tail of those
-# maxima (the largest 5%) by the Hill estimator, with an uncertainty of
-# $\alpha / \sqrt{k}$ for $k$ values fitted. Below about 2 a sound is made of pops; on this page
-# the stream gives about 3, the rain about 5 and the crickets about 10. The design notes give
-# the measurement, how far to trust it, and a survey of the 168 recordings of McDermott &
-# Simoncelli (2011):
+# A fire's pops come in every size. Write $A$ for the size of a pop, say the largest envelope value
+# in a short bin. A power-law (Pareto) tail means
+#
+# $$P(A > x) = (x / x_0)^{-\alpha}, \qquad x \ge x_0,$$
+#
+# so a pop ten times bigger is $10^{\alpha}$ times rarer. The moments of such a tail are
+#
+# $$E[A^n] = \frac{\alpha}{\alpha - n}\, x_0^n \quad \text{for } n < \alpha,$$
+#
+# and infinite for $n \ge \alpha$: the variance needs $\alpha > 2$ and the kurtosis $\alpha > 4$.
+# Below that, a moment measured on a recording keeps growing with the recording's length, because
+# a longer recording catches rarer, bigger pops: over 1 s pieces of the fire recording the
+# envelope kurtosis is about 220, over all 20 s about 1900. The texture model describes each band
+# by such moments, so for a sound like this it matches numbers that belong to the excerpt more
+# than to the sound. The exponent does not drift. From the $k$ largest values,
+# $x_{(1)} \ge x_{(2)} \ge \dots \ge x_{(k+1)}$, the Hill estimator is
+#
+# $$\hat\alpha = \frac{k}{\sum_{i=1}^{k} \ln\bigl(x_{(i)} / x_{(k+1)}\bigr)},$$
+#
+# with a standard error of about $\hat\alpha / \sqrt{k}$. `so.envelope_peaks` applies it to the
+# largest envelope value in each 5 ms bin of the sound high-passed at 300 Hz and at 2 kHz,
+# fitting the largest 5%. Below about 2 a sound is made of pops; on this page the stream gives
+# about 3, the rain about 5 and the crickets about 10. The design notes give the measurement, how
+# far to trust it, and a survey of the 168 recordings of McDermott & Simoncelli (2011):
 # [envelope-peaks.md](https://github.com/choyun1/sonore/blob/main/docs/design/views/envelope-peaks.md).
 
 # %% [about]
@@ -508,8 +521,9 @@ ax_synthesis.set_title("Fire, synthesized")
 
 # %% [markdown]
 # To hear what the exponent means, `so.event_train` can make pops whose sizes follow a power law
-# with a chosen exponent: if amplitudes follow a power law with exponent $\alpha$, their levels in
-# dB are exponentially distributed with scale $20 / (\alpha \ln 10)$. Below, a 3 ms burst of noise,
+# with a chosen exponent. A pop's level in dB above the smallest, $L = 20 \log_{10}(A / x_0)$, has
+# $P(L > l) = e^{-l \alpha \ln 10 / 20}$: power-law sizes are exponentially distributed levels, with
+# scale $20 / (\alpha \ln 10)$ dB. Below, a 3 ms burst of noise,
 # 30 times a second on average, with levels capped at 40 dB above the smallest. The exponent
 # measured on each comes out close to the one asked for.
 
@@ -553,6 +567,116 @@ fig, playhead = pops_fig(sound)
 
 # %% [demo tp3] Pops, exponent 4
 sound = finish(pops(4.0))
+fig, playhead = pops_fig(sound)
+
+# %% [markdown]
+# ### Background plus pops
+#
+# The fire's synthesis keeps pops, but too many of them are medium-sized, and the background
+# sits too close to the biggest: the median bin is 35 dB below the biggest pops in the
+# synthesis, 43 dB in the original. A synthesis as long as the original does no better. What
+# works is to take the pops out, synthesize the rest, and put pops back with `so.event_train`:
+#
+# 1. **Remove the pops.** Scale each 5 ms bin so that its largest envelope value is at most twice
+#    the 80th percentile of those values, with the gain smoothed over 2 ms.
+# 2. **Synthesize the background.** Without its pops the fire is an ordinary texture, and the
+#    model matches it well (39 dB average statistic SNR, against 21 dB for the whole fire).
+# 3. **Add pops.** The recording's eight biggest pops, 15 ms each, as events at Poisson onsets
+#    at the rate pops cross the threshold in the original, with power-law levels at the exponent
+#    measured on the original, from the threshold up to the biggest pop. The background goes
+#    3 dB down, which sounds closer to the original than leaving it as it is.
+#
+# It suits pops that are random in time and unlike each other over a steady background: on the
+# paper's recordings it also helped two other fires and a clapper close to the microphone. It
+# does not help rhythmic or impact sounds (tapping, a bongo loop, a typewriter, castanets),
+# which the texture model also synthesizes poorly on its own; McDermott & Simoncelli (2011) list
+# rhythm among the model's failures.
+
+# %%
+def remove_pops(sound):
+    """The sound with its pops limited away: each 5 ms bin is scaled so that its largest envelope
+    value above 300 Hz is at most twice the 80th percentile of those values. The gain is
+    smoothed over 2 ms so the cuts do not click. tools/make_texture_synths.py synthesizes the
+    fire's background with this same function."""
+    peaks = so.envelope_peaks(sound, cutoffs_hz=(300.0,))
+    maxima = peaks.maxima[:, 0]
+    threshold = 2 * np.percentile(maxima, 80)
+    bin_length = int(round(peaks.bin_seconds * sound.fs))
+    gain = np.ones(len(sound))
+    gain[: len(maxima) * bin_length] = np.repeat(np.minimum(1.0, threshold / maxima), bin_length)
+    smoothing = np.hanning(int(0.002 * sound.fs))
+    gain = np.minimum(gain, np.convolve(gain, smoothing / smoothing.sum(), "same"))
+    return sound * gain[:, None]
+
+
+def biggest_pops(sound, count=8, length=0.015):
+    """The `count` biggest pops, each `length` long from 2 ms before its peak, at least 0.1 s apart,
+    with softened edges and unit peak."""
+    peaks = so.envelope_peaks(sound, cutoffs_hz=(300.0,))
+    maxima = peaks.maxima[:, 0]
+    chosen = []
+    for bin_index in np.argsort(maxima)[::-1]:
+        if all(abs(bin_index - other) * peaks.bin_seconds > 0.1 for other in chosen):
+            chosen.append(bin_index)
+        if len(chosen) == count:
+            break
+    samples, fs = sound.data[:, 0], sound.fs
+    bin_length = int(round(peaks.bin_seconds * fs))
+    n_event = int(length * fs)
+    events = []
+    for bin_index in chosen:
+        in_bin = samples[bin_index * bin_length : (bin_index + 1) * bin_length]
+        start = max(bin_index * bin_length + int(np.argmax(np.abs(in_bin))) - int(0.002 * fs), 0)
+        piece = samples[start : start + n_event] * np.hanning(n_event) ** 0.25
+        events.append(so.Sound(piece / np.abs(piece).max(), fs))
+    return events
+
+
+def background_plus_pops(sound, background, background_db=-3.0, seed=0):
+    """`background` (a synthesis of `remove_pops(sound)`) with pops from `sound` added: the rate, the
+    exponent and the range of sizes are measured on `sound`, the smallest pop sits at the
+    threshold `remove_pops` limits to, and the background is `background_db` down."""
+    peaks = so.envelope_peaks(sound, cutoffs_hz=(300.0,))
+    maxima = peaks.maxima[:, 0]
+    threshold = 2 * np.percentile(maxima, 80)
+    rate = np.sum((maxima[1:] > threshold) & (maxima[:-1] <= threshold)) / sound.duration
+    range_db = 20 * np.log10(maxima.max() / threshold)
+    scale = 20 / (peaks.exponent[0] * np.log(10))  # dB
+    levels = stats.truncexpon(b=range_db / scale, scale=scale)
+    events = biggest_pops(sound)
+    out = background * 10 ** (background_db / 20)
+    for k, event in enumerate(events):
+        size = so.envelope_peaks(event.pad(0.05, 0.05), cutoffs_hz=(300.0,)).maxima.max()
+        train = so.event_train(event * (threshold / size), background.duration,
+                               stats.expon(scale=len(events) / rate), level_db=levels, rng=seed + k)
+        out = out + train[: background.duration]
+    return out
+
+
+fire = original("fire")
+fire_background = synthesized("fire", "background")
+fire_background = fire_background * (remove_pops(fire).rms / fire_background.rms)
+
+# %% [about]
+# The fire with its pops limited away: the hiss and rumble under the pops.
+
+# %% [demo tp4] Fire with its pops removed
+sound = finish(remove_pops(fire))
+fig, playhead = pops_fig(sound)
+
+# %% [about]
+# The fire's background synthesized from its statistics alone, 10 s. {{ report("fire__background") }}
+
+# %% [demo tp5] Background synthesized
+sound = finish(fire_background)
+fig, playhead = pops_fig(sound)
+
+# %% [about]
+# The synthesized background, 3 dB down, with the recording's own pops added back at power-law
+# sizes. Compare with the original and the synthesis at the top of the page.
+
+# %% [demo tp6] Background plus pops
+sound = finish(background_plus_pops(fire, fire_background))
 fig, playhead = pops_fig(sound)
 
 # %% [markdown]

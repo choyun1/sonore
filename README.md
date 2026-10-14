@@ -330,14 +330,6 @@ Only work still to do is listed here. Finished items are in
 
 - **All channels at once.** Impose the channels jointly; the per-channel
   objective is overhead-bound (about 2 s per iteration for 5 s of sound).
-- **Sparse pops.** Some texture syntheses lose the pops of their
-  original: measured on envelope peaks above 2 kHz, a clapper close to the
-  microphone goes from a tail exponent of 1.4 to 3.6 and a typewriter from
-  1.8 to 3.9, and both stop sounding like themselves. The pops seem to be
-  lost across channels, not within them: each band keeps its tail, but the
-  big moments no longer line up. Open: whether and how synthesis should
-  impose that, to be decided by ear from the "How big the pops are" section
-  of the Sound textures gallery page (`docs/design/views/envelope-peaks.md`).
 
 **Other**
 
