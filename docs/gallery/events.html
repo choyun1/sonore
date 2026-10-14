@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -368,7 +368,7 @@ def events_fig(snd):
     ax_m.set_ylim(1900, 6000)
     return fig, playhead</code></pre></details></div>
 
-<article class="sound" id="d-e00" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6410245509259261, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-e00" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.641355280092593, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>The event</h3>
     <div class="desc"><p>The event: a 30 ms sweep from 2 to 6 kHz, exponential in frequency, under a Hann window,
@@ -384,7 +384,7 @@ repeated once a second here so it can be heard on its own.</p></div>
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e02" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6450349675925928, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e02" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6450323634259262, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>3 events per second</h3>
     <div class="desc"><p>Three per second on average. With Poisson timing the gaps are irregular, and an event of 30 ms
@@ -400,7 +400,7 @@ overlaps another about 16% of the time.</p></div>
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e04" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e04" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6451729884259262, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>30 events per second</h3>
     <div class="desc"><p>Thirty per second: about one event sounding at any moment, and most events overlap another.</p></div>
@@ -415,7 +415,7 @@ fig, playhead = events_fig(sound)</code></pre></details>
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e06" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6477016342592595, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e06" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6476938217592597, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>300 events per second</h3>
     <div class="desc"><p>Three hundred per second: nine events sounding at once on average. The sum starts resembling
@@ -467,7 +467,7 @@ other. A spread in level leaves a few loud events standing out of the rest, whic
 sound sparse by the measure above for longer as the rate rises; a spread in pitch widens the
 spectrum. Nearly regular timing puts a steady rhythm at the rate into the envelope.</p>
 
-<article class="sound" id="d-e10" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e10" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6451729884259262, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Level spread, 9 dB</h3>
     <div class="desc"><p>Levels drawn from a normal distribution in dB, standard deviation 9 dB.</p></div>
@@ -482,7 +482,7 @@ spectrum. Nearly regular timing puts a steady rhythm at the rate into the envelo
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e11" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e11" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6451729884259262, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Pitch spread, 150 cents</h3>
     <div class="desc"><p>Pitch shifts drawn from a normal distribution in cents, standard deviation 150 cents. Each copy
@@ -498,7 +498,7 @@ is resampled, so a higher copy is also a shorter one.</p></div>
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e13" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e13" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6451729884259262, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Level and pitch spread together</h3>
     <div class="desc"><p>Both spreads at once: levels with a standard deviation of 9 dB and pitch shifts with a standard
@@ -514,7 +514,7 @@ deviation of 150 cents, drawn independently for each copy.</p></div>
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e12" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e12" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6451729884259262, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Nearly regular timing</h3>
     <div class="desc"><p>Intervals from a gamma distribution with shape 16: the same mean rate, but intervals vary by
@@ -530,7 +530,7 @@ only a quarter of their mean, so the events come almost evenly.</p></div>
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e14" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6326570740740742, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
+<article class="sound" id="d-e14" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.6326544699074076, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
   <div class="about">
     <h3>Steps of 10, 100 and 1000 events per second</h3>
     <div class="desc"><p>A rate that changes over time: <code>rate_scale</code> steps from 10 to 100 and 1000 events per second,
@@ -618,7 +618,7 @@ def pops_fig(snd):
     so.envelope_peaks(snd).plot(ax_peaks)
     return fig, [ax_wave]</code></pre></details></div>
 
-<article class="sound" id="d-tp1" data-regions="[{&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.5795805154574654, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+<article class="sound" id="d-tp1" data-regions="[{&quot;x0&quot;: 0.06931147699652779, &quot;x1&quot;: 0.5795797537989196, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
   <div class="about">
     <h3>Pops, exponent 1</h3>
     <div class="desc"><p>Exponent 1: most pops are small, and every few seconds one is far louder than the rest.</p></div>
@@ -633,7 +633,7 @@ def pops_fig(snd):
 fig, playhead = pops_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tp2" data-regions="[{&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.5791031771200474, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+<article class="sound" id="d-tp2" data-regions="[{&quot;x0&quot;: 0.06931147699652779, &quot;x1&quot;: 0.5791024088655923, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
   <div class="about">
     <h3>Pops, exponent 2</h3>
     <div class="desc"><p>Exponent 2: the loudest pops stand out less.</p></div>
@@ -648,7 +648,7 @@ fig, playhead = pops_fig(sound)</code></pre></details>
 fig, playhead = pops_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tp3" data-regions="[{&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.5784671862222699, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+<article class="sound" id="d-tp3" data-regions="[{&quot;x0&quot;: 0.06931147699652779, &quot;x1&quot;: 0.578466409179628, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
   <div class="about">
     <h3>Pops, exponent 4</h3>
     <div class="desc"><p>Exponent 4: the pops are all of a similar size.</p></div>
@@ -741,7 +741,7 @@ fire = original(&quot;fire&quot;)
 fire_background = synthesized(&quot;fire&quot;, &quot;background&quot;)
 fire_background = fire_background * (remove_pops(fire).rms / fire_background.rms)</code></pre></details></div>
 
-<article class="sound" id="d-tp4" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.5751798921006946, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+<article class="sound" id="d-tp4" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.5751869233506944, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
   <div class="about">
     <h3>Fire with its pops removed</h3>
     <div class="desc"><p>The fire with its pops limited away: the hiss and rumble under the pops.</p></div>

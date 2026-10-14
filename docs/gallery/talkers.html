@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -311,7 +311,7 @@ def show_pair(sounds, title, contours=None, fmax=5000):
 lines, are visibly farther apart.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">tk1_the_sentence_read_by_each_talker_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
@@ -504,10 +504,10 @@ The female talker's pitch puts fewer harmonics under each formant peak, so the p
 by fewer points, and a harmonic can miss a peak by up to half the spacing.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/tk5_one_vowel_at_the_two_pitches_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05880366449652779, &quot;x1&quot;: 0.4749580000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.24645791508838388, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]"></audio>
+    <audio controls preload="metadata" src="audio/tk5_one_vowel_at_the_two_pitches_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05880366449652779, &quot;x1&quot;: 0.4749697187500001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.24645791508838388, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]"></audio>
     <p class="file">tk5_one_vowel_at_the_two_pitches_male_talker.flac, 0.6 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/tk5_one_vowel_at_the_two_pitches_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5638036644965277, &quot;x1&quot;: 0.9799580000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.24645791508838388, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]"></audio>
+    <audio controls preload="metadata" src="audio/tk5_one_vowel_at_the_two_pitches_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5638036644965277, &quot;x1&quot;: 0.97996971875, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.24645791508838388, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.6}]"></audio>
     <p class="file">tk5_one_vowel_at_the_two_pitches_female_talker.flac, 0.6 s, mono</p></div>
     </div>
   </div>
@@ -563,9 +563,12 @@ talker:</p>
       heads.appendChild(d);
       return d;
     });
-    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
-    const canvas = extras && el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
     const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {

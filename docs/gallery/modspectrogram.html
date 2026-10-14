@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -471,7 +471,7 @@ the window would run past the sound, it holds the nearest moment that was measur
 at 50% depth throughout. The modulation is applied to the whole noise, so every band carries
 it.</p>
 
-<article class="sound" id="d-g1" data-regions="[{&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8688815339694251, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8688815339694251, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8688815339694251, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}]">
+<article class="sound" id="d-g1" data-regions="[{&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8688537561916473, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8688537561916473, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8688537561916473, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}]">
   <div class="about">
     <h3>A gliding modulation rate</h3>
     <div class="desc"><p>You hear a slow throb speed up into a flutter and then a rough buzz. The cochleagram is a
@@ -523,7 +523,7 @@ def in_band(snd, center, width=1 / 3, background_db=-30):
     background = so.Sound(glide_rng.standard_normal(len(snd)), snd.fs)
     return band + background.normalize(rms=band.rms * 10 ** (background_db / 20))</code></pre></details></div>
 
-<article class="sound" id="d-g2" data-regions="[{&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8692773673027585, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8692773673027585, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8692773673027585, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}]">
+<article class="sound" id="d-g2" data-regions="[{&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8692495895249808, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8692495895249808, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8692495895249808, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 7.999499999999999}]">
   <div class="about">
     <h3>Bursts in a band that glides up</h3>
     <div class="desc"><p>You hear a crackle rise in pitch. In the cochleagram each burst is a short mark, and the marks
@@ -555,7 +555,7 @@ band's center each gliding up or down. The four combinations follow one another,
 up and frequency up, rate up and frequency down, rate down and frequency up, and both down. The
 rate glides between 2 and 32 Hz, the center between 500 Hz and 4 kHz.</p>
 
-<article class="sound" id="d-g3" data-regions="[{&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8692773673027585, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 15.999500000000001}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8692773673027585, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 15.999500000000001}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8692773673027585, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 15.999500000000001}]">
+<article class="sound" id="d-g3" data-regions="[{&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8692495895249808, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 15.999500000000001}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8692495895249808, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 15.999500000000001}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8692495895249808, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 15.999500000000001}]">
   <div class="about">
     <h3>Rate and frequency gliding together</h3>
     <div class="desc"><p>Next to the player a single spot moves diagonally: up and to the right, down and to the right,
@@ -652,10 +652,10 @@ The difference between the voices is in a spectrogram
 (<a href="talkers.html#h-harmonics-sample-the-envelope">Two talkers</a>), not here.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/s1_speech_babble_and_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06112255606192132, &quot;x1&quot;: 0.4108971764422382, &quot;top&quot;: 0.04797700797032822, &quot;bottom&quot;: 0.24322394097222266, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.524999999999999}, {&quot;x0&quot;: 0.06112255606192132, &quot;x1&quot;: 0.4108971764422382, &quot;top&quot;: 0.2750269460227278, &quot;bottom&quot;: 0.47027387902462203, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.524999999999999}, {&quot;x0&quot;: 0.06112255606192132, &quot;x1&quot;: 0.4108971764422382, &quot;top&quot;: 0.5020768840751272, &quot;bottom&quot;: 0.6973238170770211, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.524999999999999}]"></audio>
+    <audio controls preload="metadata" src="audio/s1_speech_babble_and_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06070588939525466, &quot;x1&quot;: 0.41087634310890503, &quot;top&quot;: 0.04797700797032822, &quot;bottom&quot;: 0.24322394097222222, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.524999999999999}, {&quot;x0&quot;: 0.06070588939525466, &quot;x1&quot;: 0.41087634310890503, &quot;top&quot;: 0.2750269460227275, &quot;bottom&quot;: 0.47027387902462137, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.524999999999999}, {&quot;x0&quot;: 0.06070588939525466, &quot;x1&quot;: 0.41087634310890503, &quot;top&quot;: 0.5020768840751264, &quot;bottom&quot;: 0.6973238170770206, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.524999999999999}]"></audio>
     <p class="file">s1_speech_babble_and_noise_male_talker.flac, 10.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/s1_speech_babble_and_noise_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5661225560619212, &quot;x1&quot;: 0.9158971764422381, &quot;top&quot;: 0.047977007970328445, &quot;bottom&quot;: 0.24322394097222244, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.635000000000002}, {&quot;x0&quot;: 0.5661225560619212, &quot;x1&quot;: 0.9158971764422381, &quot;top&quot;: 0.2750269460227276, &quot;bottom&quot;: 0.4702738790246217, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.635000000000002}, {&quot;x0&quot;: 0.5661225560619212, &quot;x1&quot;: 0.9158971764422381, &quot;top&quot;: 0.5020768840751267, &quot;bottom&quot;: 0.6973238170770205, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.635000000000002}]"></audio>
+    <audio controls preload="metadata" src="audio/s1_speech_babble_and_noise_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5657058893952545, &quot;x1&quot;: 0.9158763431089048, &quot;top&quot;: 0.047977007970328445, &quot;bottom&quot;: 0.24322394097222244, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.635000000000002}, {&quot;x0&quot;: 0.5657058893952545, &quot;x1&quot;: 0.9158763431089048, &quot;top&quot;: 0.2750269460227276, &quot;bottom&quot;: 0.4702738790246216, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.635000000000002}, {&quot;x0&quot;: 0.5657058893952545, &quot;x1&quot;: 0.9158763431089048, &quot;top&quot;: 0.5020768840751264, &quot;bottom&quot;: 0.6973238170770205, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.635000000000002}]"></audio>
     <p class="file">s1_speech_babble_and_noise_female_talker.flac, 10.6 s, mono</p></div>
     </div>
   </div>
@@ -692,7 +692,7 @@ for name, begin in ((&quot;crickets&quot;, 0.0), (&quot;applause&quot;, 3.5), (&
 applause  deepest at    3 Hz ( -5.9 dB), median over 2 to 64 Hz -20.0 dB
 rain      deepest at    2 Hz (-18.0 dB), median over 2 to 64 Hz -21.8 dB</pre></div>
 
-<article class="sound" id="d-x1" data-regions="[{&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8688815339694251, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8688815339694251, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.08149674141589507, &quot;x1&quot;: 0.8688815339694251, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}]">
+<article class="sound" id="d-x1" data-regions="[{&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8688537561916473, &quot;top&quot;: 0.03089904100529106, &quot;bottom&quot;: 0.3064484033978173, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8688537561916473, &quot;top&quot;: 0.3480951957258597, &quot;bottom&quot;: 0.6236445581183863, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}, {&quot;x0&quot;: 0.0809411858603395, &quot;x1&quot;: 0.8688537561916473, &quot;top&quot;: 0.6652913504464285, &quot;bottom&quot;: 0.940840712838955, &quot;t0&quot;: -0.005, &quot;t1&quot;: 10.499500000000001}]">
   <div class="about">
     <h3>Crickets, applause and rain</h3>
     <div class="desc"><p>The printout gives each texture's pooled depth, median over its middle 2.5 s. The crickets

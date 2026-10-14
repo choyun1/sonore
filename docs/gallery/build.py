@@ -36,6 +36,7 @@ import sonore as so  # noqa: E402
 
 HERE = Path(__file__).parent
 plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "figure.dpi": 100})
+PIXEL_RATIO = 2  # image pixels per CSS pixel: figures are drawn at 200 dpi and shown at 100
 
 
 # ------------------------------------------------------------------- figures
@@ -45,6 +46,9 @@ def encode_figure(fig, time_axes) -> tuple[bytes, list[dict] | dict[str, list[di
     # Constrained layout moves the axes a little on its second pass, so lay the figure out once without
     # drawing anything, then draw it for real: the pixels and the playhead regions below then come from
     # the same, settled layout, and the figure is rendered only once.
+    # The pixels are drawn at twice the figure dpi and shown at half their size, so the plots stay sharp
+    # on high-density screens and when the browser zooms in.
+    fig.set_dpi(PIXEL_RATIO * fig.dpi)
     fig.draw_without_rendering()
     fig.canvas.draw()
 
@@ -60,14 +64,15 @@ def encode_figure(fig, time_axes) -> tuple[bytes, list[dict] | dict[str, list[di
         return regions
 
     regions = {k: where(v) for k, v in time_axes.items()} if isinstance(time_axes, dict) else where(time_axes)
-    # The pixels of that draw are what savefig would write (the figure dpi is 100 in rcParams, and there
-    # is no bbox_inches cropping, which keeps figure fractions valid for the playhead).
+    # The pixels of that draw are what savefig would write (there is no bbox_inches cropping, which
+    # keeps figure fractions valid for the playhead).
     image = Image.fromarray(np.asarray(fig.canvas.buffer_rgba())).convert("RGB")
     plt.close(fig)
     quantized = image.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
     out = io.BytesIO()
     quantized.save(out, "PNG", optimize=True)
-    return out.getvalue(), regions, image.size
+    width, height = image.size
+    return out.getvalue(), regions, (width // PIXEL_RATIO, height // PIXEL_RATIO)
 
 
 def flac_bytes(snd: so.Sound) -> bytes:
@@ -393,9 +398,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }

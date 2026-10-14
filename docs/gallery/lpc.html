@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -475,7 +475,7 @@ ax.set_title(&quot;Given (dots) and found by so.formant_track (arrow tips)&quot;
         axes.plot(track.t, np.where(keep, track.frequencies[0, number], np.nan) / 1000, color=&quot;w&quot;, lw=1.4)
         axes.plot(track.t, np.where(keep, track.frequencies[0, number], np.nan) / 1000, color=&quot;C3&quot;, lw=0.8)</code></pre></details></div>
 
-<article class="sound" id="d-ft3" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.98248925, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.98248925, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-ft3" data-regions="[{&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.9824970625, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.9824970625, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>The estimate as the pitch rises</h3>
     <div class="desc"><p>The vowel of "hod" with the pitch gliding from 100 to 300 Hz. The dashed lines are the formants
@@ -531,7 +531,7 @@ are higher, and the tracks are less steady: with the harmonics farther apart the
 envelope for LPC to fit, as in the glide above.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ft4_formant_tracks_of_two_talkers_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/ft4_formant_tracks_of_two_talkers_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">ft4_formant_tracks_of_two_talkers_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/ft4_formant_tracks_of_two_talkers_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
@@ -607,10 +607,10 @@ than this talker's voice. How intelligible the
 copy is has not been measured.</p></div>
     <div class="players">
     <div><p class="track">Recording</p>
-    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_the_copy_recording.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_the_copy_recording.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">ft5_the_male_talker_and_the_copy_recording.flac, 2.5 s, mono</p></div>
     <div><p class="track">Copy</p>
-    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_the_copy_copy.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.9909013396942505, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/ft5_the_male_talker_and_the_copy_copy.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.9908973943817884, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">ft5_the_male_talker_and_the_copy_copy.flac, 2.5 s, mono</p></div>
     </div>
   </div>

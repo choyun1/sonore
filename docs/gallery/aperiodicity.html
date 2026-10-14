@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -403,7 +403,7 @@ sound = finish(formants(buzz, HOD[&quot;Male talker&quot;]))
 fig, playhead = show(sound, &quot;harmonics through the formants (A = 0)&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-ap2" data-regions="[{&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0692255394965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-ap2" data-regions="[{&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>The hiss alone</h3>
     <div class="desc"><p>The hiss alone: white noise through the same formants, <span class="tex">A = 1</span> everywhere. The vowel is still
@@ -730,7 +730,7 @@ time windows the track calls unvoiced are always noise.)</p>
     <div class="desc"><p>The sentence, for reference.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap9_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48571352737653944, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48571352737653944, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/ap9_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857095820640773, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857095820640773, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">ap9_the_sentence_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/ap9_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
@@ -752,7 +752,7 @@ fig, playhead = show_pair(sounds, titled(&quot;the sentence&quot;), fmax=8000)</
 sample for sample.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865537263453465, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865537263453465, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap10_resynthesis_with_d4c_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
@@ -776,7 +776,7 @@ fig, playhead = show_pair(sounds, titled(&quot;with so.d4c&quot;), fmax=8000)</c
 mostly at high frequencies.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4867790696564434, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4867790696564434, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.48677511653152167, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.48677511653152167, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap11_with_the_harmonic_residual_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
@@ -801,7 +801,7 @@ fig, playhead = show_pair(sounds, titled(&quot;with so.harmonic_aperiodicity&quo
 picture. The voiced parts are harmonics all the way up.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865537263453465, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865537263453465, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap12_no_noise_in_the_voice_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
@@ -826,7 +826,7 @@ fig, playhead = show_pair(sounds, titled(&quot;with A = 0&quot;), fmax=8000)</co
 sentence is whispered; it is still intelligible, because the envelope carries the words.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48655369503220125, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48655369503220125, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48654974190727934, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48654974190727934, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap13_nothing_but_noise_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
@@ -870,9 +870,12 @@ fig, playhead = show_pair(sounds, titled(&quot;with A = 1&quot;), fmax=8000)</co
       heads.appendChild(d);
       return d;
     });
-    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
-    const canvas = extras && el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
     const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {

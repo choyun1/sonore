@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -372,7 +372,7 @@ two-dimensional one of <a href="ripples.html#h-how-a-ripple-is-made">Spectrotemp
 density across bands as well, is measured for the crickets, applause and rain on <a href="modspectrogram.html#d-x1">Modulation
 spectrogram</a>.</p>
 
-<article class="sound" id="d-t00a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.656181795364038, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+<article class="sound" id="d-t00a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6573752344479952, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
   <div class="about">
     <h3>Rain, original</h3>
     <div class="desc"><p>Steady rain (nick121087, Freesound, CC0).</p></div>
@@ -387,7 +387,7 @@ spectrogram</a>.</p>
 fig, playhead = texture_fig(sound, original(&quot;rain&quot;))</code></pre></details>
 </article>
 
-<article class="sound" id="d-t00b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.656181795364038, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-t00b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6572027916666667, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Rain, synthesized</h3>
     <div class="desc"><p>Gaussian noise adjusted until its statistics match the original's. Average statistic SNR 36 dB after 28 iterations.</p></div>
@@ -402,7 +402,7 @@ fig, playhead = texture_fig(sound, original(&quot;rain&quot;))</code></pre></det
 fig, playhead = texture_fig(sound, original(&quot;rain&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-t01a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6509738990622799, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+<article class="sound" id="d-t01a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6522444583333337, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
   <div class="about">
     <h3>Stream, original</h3>
     <div class="desc"><p>Water burbling over rocks in a small creek (cognito perceptu, Freesound, CC0).</p></div>
@@ -417,7 +417,7 @@ fig, playhead = texture_fig(sound, original(&quot;rain&quot;), synthetic=True)</
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;))</code></pre></details>
 </article>
 
-<article class="sound" id="d-t01b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-t01b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Stream, synthesized</h3>
     <div class="desc"><p>Gaussian noise adjusted until its statistics match the original's. Average statistic SNR 37 dB after 30 iterations.</p></div>
@@ -432,7 +432,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;))</code></pre></d
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-t02a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+<article class="sound" id="d-t02a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6548720625000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
   <div class="about">
     <h3>Crickets, original</h3>
     <div class="desc"><p>Crickets around midnight (sengjinn, Freesound, CC0).</p></div>
@@ -447,7 +447,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)
 fig, playhead = texture_fig(sound, original(&quot;crickets&quot;))</code></pre></details>
 </article>
 
-<article class="sound" id="d-t02b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-t02b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.654694979166667, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Crickets, synthesized</h3>
     <div class="desc"><p>Gaussian noise adjusted until its statistics match the original's. Average statistic SNR 36 dB after 30 iterations.</p></div>
@@ -462,7 +462,7 @@ fig, playhead = texture_fig(sound, original(&quot;crickets&quot;))</code></pre><
 fig, playhead = texture_fig(sound, original(&quot;crickets&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-t03a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6478867552083335, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.5}]">
+<article class="sound" id="d-t03a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6484475833333337, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.5}]">
   <div class="about">
     <h3>Applause, original</h3>
     <div class="desc"><p>About thirty people clapping (Breviceps, Freesound, CC0). Only 3.5 s of original.</p></div>
@@ -477,7 +477,7 @@ fig, playhead = texture_fig(sound, original(&quot;crickets&quot;), synthetic=Tru
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;))</code></pre></details>
 </article>
 
-<article class="sound" id="d-t03b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-t03b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Applause, synthesized</h3>
     <div class="desc"><p>Gaussian noise adjusted until its statistics match the original's. Average statistic SNR 43 dB after 30 iterations.</p></div>
@@ -492,7 +492,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;))</code></pre><
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-t04a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.631253490596065, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+<article class="sound" id="d-t04a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6332988564814815, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
   <div class="about">
     <h3>Fire, original</h3>
     <div class="desc"><p>A small backyard fire: sparse pops over a low rumble (Sauron974, Freesound, CC0).</p></div>
@@ -507,7 +507,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=Tru
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;))</code></pre></details>
 </article>
 
-<article class="sound" id="d-t04b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-t04b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Fire, synthesized</h3>
     <div class="desc"><p>Gaussian noise adjusted until its statistics match the original's. Average statistic SNR 21 dB after 29 iterations.</p></div>
@@ -522,7 +522,7 @@ fig, playhead = texture_fig(sound, original(&quot;fire&quot;))</code></pre></det
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-t05a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.631253490596065, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+<article class="sound" id="d-t05a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6332988564814815, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
   <div class="about">
     <h3>Bubbling mud, original</h3>
     <div class="desc"><p>Gas venting through a Yellowstone mud pot (NPS / Jennifer Jerrett, public domain).</p></div>
@@ -537,7 +537,7 @@ fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</
 fig, playhead = texture_fig(sound, original(&quot;mud&quot;))</code></pre></details>
 </article>
 
-<article class="sound" id="d-t05b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6510578920047857, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-t05b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6395488564814817, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Bubbling mud, synthesized</h3>
     <div class="desc"><p>Gaussian noise adjusted until its statistics match the original's. Average statistic SNR 38 dB after 29 iterations.</p></div>
@@ -552,7 +552,7 @@ fig, playhead = texture_fig(sound, original(&quot;mud&quot;))</code></pre></deta
 fig, playhead = texture_fig(sound, original(&quot;mud&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-t06a" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+<article class="sound" id="d-t06a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.654817375, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
   <div class="about">
     <h3>Wind and rain, original</h3>
     <div class="desc"><p>A winter storm, wind with heavy rain (sonicwars, Freesound, CC0).</p></div>
@@ -567,7 +567,7 @@ fig, playhead = texture_fig(sound, original(&quot;mud&quot;), synthetic=True)</c
 fig, playhead = texture_fig(sound, original(&quot;wind_rain&quot;))</code></pre></details>
 </article>
 
-<article class="sound" id="d-t06b" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.6535573436844119, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-t06b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6546402916666668, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Wind and rain, synthesized</h3>
     <div class="desc"><p>Gaussian noise adjusted until its statistics match the original's. Average statistic SNR 39 dB after 30 iterations.</p></div>
@@ -592,7 +592,7 @@ right rhythm or the coordination across bands. <a href="modtargets.html#d-mt15">
 spectrum</a> makes the converse point with the fire: each band's
 modulation spectrum kept, with random phases, and the crackles are gone.</p>
 
-<article class="sound" id="d-u00" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-u00" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Applause, marginals only</h3>
     <div class="desc"><p>Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band's envelope).</p></div>
@@ -607,7 +607,7 @@ modulation spectrum kept, with random phases, and the crackles are gone.</p>
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-u01" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-u01" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Applause, marginals and modulation power</h3>
     <div class="desc"><p>Envelope marginals plus modulation power; no correlations across bands or modulation bands.</p></div>
@@ -622,7 +622,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=Tru
 fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-u10" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-u10" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Stream, marginals only</h3>
     <div class="desc"><p>Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band's envelope).</p></div>
@@ -637,7 +637,7 @@ fig, playhead = texture_fig(sound, original(&quot;applause&quot;), synthetic=Tru
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-u11" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-u11" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Stream, marginals and modulation power</h3>
     <div class="desc"><p>Envelope marginals plus modulation power; no correlations across bands or modulation bands.</p></div>
@@ -652,7 +652,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)
 fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-u20" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-u20" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Fire, marginals only</h3>
     <div class="desc"><p>Only the envelope marginals imposed (mean, variance, skew, kurtosis of each band's envelope).</p></div>
@@ -667,7 +667,7 @@ fig, playhead = texture_fig(sound, original(&quot;stream&quot;), synthetic=True)
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</code></pre></details>
 </article>
 
-<article class="sound" id="d-u21" data-regions="[{&quot;x0&quot;: 0.05534803949652778, &quot;x1&quot;: 0.65097389906228, &quot;top&quot;: 0.035606565656565614, &quot;bottom&quot;: 0.4256897306397306, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-u21" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Fire, marginals and modulation power</h3>
     <div class="desc"><p>Envelope marginals plus modulation power; no correlations across bands or modulation bands.</p></div>

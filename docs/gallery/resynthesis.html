@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -298,7 +298,7 @@ the original, up to floating-point rounding.</p>
     r[2].grid(ls=&quot;:&quot;)
     return fig, list(band_axes) + list(r)</code></pre></details></div>
 
-<article class="sound" id="d-26" data-regions="[{&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.0338715053763442, &quot;bottom&quot;: 0.12599652305247633, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.147278960328462, &quot;bottom&quot;: 0.23940397800459223, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.260686415280578, &quot;bottom&quot;: 0.35281143295670947, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.37409387023269514, &quot;bottom&quot;: 0.46621888790882615, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.4875013251848118, &quot;bottom&quot;: 0.5796263428609434, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.600908780136929, &quot;bottom&quot;: 0.6930337978130596, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.7143162350890453, &quot;bottom&quot;: 0.806441252765177, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04812880555555543, &quot;x1&quot;: 0.5512126542553191, &quot;top&quot;: 0.8277236900411626, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628761443751847, &quot;x1&quot;: 0.9824892499999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.29690858954973076, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628761443751847, &quot;x1&quot;: 0.9824892499999999, &quot;top&quot;: 0.35333327592965913, &quot;bottom&quot;: 0.6083786486335123, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628761443751847, &quot;x1&quot;: 0.9824892499999999, &quot;top&quot;: 0.6648033350134408, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-26" data-regions="[{&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.0338715053763442, &quot;bottom&quot;: 0.12599652305247633, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.147278960328462, &quot;bottom&quot;: 0.23940397800459223, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.260686415280578, &quot;bottom&quot;: 0.35281143295670947, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.37409387023269514, &quot;bottom&quot;: 0.46621888790882615, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.4875013251848118, &quot;bottom&quot;: 0.5796263428609434, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.600908780136929, &quot;bottom&quot;: 0.6930337978130596, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.7143162350890453, &quot;bottom&quot;: 0.806441252765177, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.04811318055555544, &quot;x1&quot;: 0.551220466755319, &quot;top&quot;: 0.8277236900411626, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628769256251847, &quot;x1&quot;: 0.9824970624999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.29690858954973076, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628769256251847, &quot;x1&quot;: 0.9824970624999999, &quot;top&quot;: 0.35333327592965913, &quot;bottom&quot;: 0.6083786486335123, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.628769256251847, &quot;x1&quot;: 0.9824970624999999, &quot;top&quot;: 0.6648033350134408, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Perfect reconstruction</h3>
     <div class="desc"><p>An exponential sweep split into 6 ERB-spaced bands plus the lowpass and highpass edge filters,
@@ -413,7 +413,7 @@ mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)
 snr = 20 * np.log10(target.rms / (masker + 5 * dB).rms)
 print(f&quot;signal-to-noise ratio: {snr:.1f} dB&quot;)</code></pre></details><pre class="out">signal-to-noise ratio: -8.6 dB</pre></div>
 
-<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.49137499999999984, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.49137499999999984, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.4913828124999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.4913828124999999, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Target in noise</h3>
     <div class="desc"><p>A gliding harmonic target (a stand-in for a voice) in pink noise, at a signal-to-noise ratio of
@@ -429,7 +429,7 @@ print(f&quot;signal-to-noise ratio: {snr:.1f} dB&quot;)</code></pre></details><p
 fig, playhead = show_mask(sound, target, mask)</code></pre></details>
 </article>
 
-<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.49114843750000015, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.49114843750000015, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4911562500000001, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4911562500000001, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Ideal binary mask</h3>
     <div class="desc"><p>The same mixture with every time-frequency cell where the noise dominates switched off. The
@@ -468,9 +468,12 @@ fig, playhead = show_mask(sound, target, mask)</code></pre></details>
       heads.appendChild(d);
       return d;
     });
-    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
-    const canvas = extras && el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
     const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {

@@ -130,14 +130,15 @@ def quilt_demo(passage):
     for seg in SEGMENTS:
         sounds[f"{seg * 1000:.0f} ms"] = so.quilt(passage, seg, QUILT_DUR, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 5.6), sharex=True, layout="constrained")
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(7, 5), sharex=True, layout="constrained")
     envelopes = {label: quilt_bank.analyze(snd).envelopes() for label, snd in sounds.items()}
     top = envelopes["Original"].db[:, 1:-1].max()  # all on the original's color scale
     for ax, (label, env) in zip(axes, envelopes.items(), strict=True):
         env.plot(ax, colorbar=False, db_max=top)
         title = label if label == "Original" else f"Quilt, {label} segments"
-        ax.set(title=title, xlabel="", xlim=(0, QUILT_DUR))
+        ax.set(title=title, xlabel="", ylabel="", xlim=(0, QUILT_DUR))
     axes[-1].set_xlabel("Time [s]")
+    fig.supylabel("Frequency [Hz]", fontsize=9)
     return fig, sounds, {label: [ax] for label, ax in zip(sounds, axes, strict=True)}
 
 
@@ -192,7 +193,7 @@ changes = {
     "Quilts": np.concatenate([join_changes(q, seg) for q in quilts]),
     "Random order": np.concatenate([join_changes(s, seg) for s in shuffled]),
 }
-fig, ax = plt.subplots(figsize=(7, 3.4), layout="constrained")
+fig, ax = plt.subplots(figsize=(6, 3), layout="constrained")
 bins = np.linspace(0, np.percentile(np.concatenate(list(changes.values())), 99), 40)
 for label, values in changes.items():
     legend = f"{label} (median {np.median(values):.4f})"
@@ -221,14 +222,15 @@ def texture_quilt_demo(recording, duration, segments=(0.03, 0.12, 0.96)):
     for seg in segments:
         sounds[f"{seg * 1000:.0f} ms"] = so.quilt(recording, seg, duration, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 4.6), sharex=True, layout="constrained")
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(7, 4), sharex=True, layout="constrained")
     envelopes = {label: texture_bank.analyze(snd).envelopes() for label, snd in sounds.items()}
     top = envelopes["Original"].db[:, 1:-1].max()  # all on the original's color scale
     for ax, (label, env) in zip(axes, envelopes.items(), strict=True):
         env.plot(ax, colorbar=False, db_max=top)
         title = label if label == "Original" else f"Quilt, {label} segments"
-        ax.set(title=title, xlabel="", xlim=(0, duration))
+        ax.set(title=title, xlabel="", ylabel="", xlim=(0, duration))
     axes[-1].set_xlabel("Time [s]")
+    fig.supylabel("Frequency [Hz]", fontsize=9)
     return fig, sounds, {label: [ax] for label, ax in zip(sounds, axes, strict=True)}
 
 
@@ -270,7 +272,7 @@ from sonore.texture import TextureModel, TextureStats
 
 model = TextureModel()
 band_cfs, rate_cfs = model.filterbank.cfs, model.mod_bank.cfs
-fig, axes = plt.subplots(2, 3, figsize=(10, 6), layout="constrained")
+fig, axes = plt.subplots(2, 3, figsize=(7.5, 4.6), layout="constrained")
 for row, (name, duration) in enumerate((("fire", 5.0), ("stream", 4.0))):
     recording = so.load(fetch(f"docs/textures/{name}.flac"))
     stats = {"Recording": TextureStats.measure(recording)}

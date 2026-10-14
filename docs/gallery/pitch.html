@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -349,10 +349,10 @@ where the cepstral F0 is an octave below Harvest's (within 5%). Each time window
 its own, with no continuity from one to the next.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/c2_the_cepstrogram_and_its_pitch_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05842866449652778, &quot;x1&quot;: 0.48574352734742177, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05842866449652778, &quot;x1&quot;: 0.48574352734742177, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/c2_the_cepstrogram_and_its_pitch_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05841303949652779, &quot;x1&quot;: 0.485739738284808, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05841303949652779, &quot;x1&quot;: 0.485739738284808, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">c2_the_cepstrogram_and_its_pitch_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/c2_the_cepstrogram_and_its_pitch_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5634286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5634286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/c2_the_cepstrogram_and_its_pitch_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5634130394965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5634130394965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">c2_the_cepstrogram_and_its_pitch_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -434,10 +434,10 @@ pitch tracks together. Where the tracker and Harvest both call a time window voi
 Harvest voices more time windows, mostly stretches where the tracker's best score is below 0.5.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/f1_cepstral_f0_a_tracker_and_harvest_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05842866449652778, &quot;x1&quot;: 0.48574352734742177, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05842866449652778, &quot;x1&quot;: 0.48574352734742177, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/f1_cepstral_f0_a_tracker_and_harvest_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05841303949652779, &quot;x1&quot;: 0.485739738284808, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05841303949652779, &quot;x1&quot;: 0.485739738284808, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">f1_cepstral_f0_a_tracker_and_harvest_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/f1_cepstral_f0_a_tracker_and_harvest_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5634286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5634286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/f1_cepstral_f0_a_tracker_and_harvest_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5634130394965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.44756972113715277, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5634130394965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5100399096292162, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">f1_cepstral_f0_a_tracker_and_harvest_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -610,10 +610,10 @@ def sawtooths(name):
     <div class="desc"><p>Each talker's sentence, for reference.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/hp0_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/hp0_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">hp0_the_sentence_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/hp0_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/hp0_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">hp0_the_sentence_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -634,10 +634,10 @@ sentence, drops an octave for a moment at the time windows printed under <a href
 its pitch</a>.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/hp1_a_sawtooth_on_the_cepstral_f0_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/hp1_a_sawtooth_on_the_cepstral_f0_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">hp1_a_sawtooth_on_the_cepstral_f0_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/hp1_a_sawtooth_on_the_cepstral_f0_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/hp1_a_sawtooth_on_the_cepstral_f0_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">hp1_a_sawtooth_on_the_cepstral_f0_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -656,10 +656,10 @@ fig, playhead = show_pair(sounds, &quot;sawtooth on the cepstral F0&quot;, conto
 waveform stops repeating well, so the buzz comes in syllables.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/hp2_a_sawtooth_on_so.f0_track_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/hp2_a_sawtooth_on_so.f0_track_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">hp2_a_sawtooth_on_so.f0_track_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/hp2_a_sawtooth_on_so.f0_track_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/hp2_a_sawtooth_on_so.f0_track_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">hp2_a_sawtooth_on_so.f0_track_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -678,10 +678,10 @@ fig, playhead = show_pair(sounds, &quot;sawtooth on so.f0_track&quot;, contours)
 through some of the consonants that <code>so.f0_track</code> leaves silent.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/hp3_a_sawtooth_on_harvest_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05339741449652778, &quot;x1&quot;: 0.4857938397985889, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/hp3_a_sawtooth_on_harvest_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05338960199652778, &quot;x1&quot;: 0.485789972611051, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">hp3_a_sawtooth_on_harvest_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/hp3_a_sawtooth_on_harvest_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583974144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/hp3_a_sawtooth_on_harvest_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5583896019965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">hp3_a_sawtooth_on_harvest_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -719,9 +719,12 @@ fig, playhead = show_pair(sounds, &quot;sawtooth on Harvest&quot;, contours)</co
       heads.appendChild(d);
       return d;
     });
-    const extras = k === 0;  // a scene, live image or Lissajous figure belongs to a demo with one sound
-    const canvas = extras && el.querySelector(".scene");
-    const scene = canvas ? JSON.parse(canvas.dataset.scene) : null;
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
     const liveCanvas = extras && el.querySelector(".live");
     let live = null;
     if (liveCanvas) {
