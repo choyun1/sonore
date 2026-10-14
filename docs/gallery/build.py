@@ -120,6 +120,7 @@ EXAMPLE_PAGES = [
     "binaural",
     "classic",
     "textures",
+    "events",
     "quilts",
     "moving",
     "reverb",
@@ -726,6 +727,7 @@ TITLES = {
     "ripples.html": "Spectrotemporal ripples",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
+    "events.html": "Events and pops",
     "quilts.html": "Sound quilts",
     "speech.html": "Seeing speech",
     "resynthesis.html": "Analysis and resynthesis",
@@ -790,6 +792,7 @@ TOPICS = [
         "Textures",
         [
             ("textures.html", "recordings and their syntheses from statistics."),
+            ("events.html", "one event copied into a texture, and the power law of a fire's pops."),
             (
                 "quilts.html",
                 "recordings cut into segments and put back in a new order: speech, and a texture.",
@@ -1434,6 +1437,14 @@ MOVED = {
     "modspectrogram": {"d-sv1": "modspectrogram.html#d-s1",
                        "h-a-higher-voice": "modspectrogram.html#h-speech-babble-and-noise"},
     "irn": {"h-rippled-noise-and-moving-ripples": "ripples.html#h-ripples-and-rippled-noise"},
+    "textures": {
+        **{f"d-{key}": f"events.html#d-{key}" for key in
+           ("e00", "e02", "e04", "e06", "e08", "e10", "e11", "e12", "e13", "e14")},
+        **{f"d-tp{i}": f"events.html#d-tp{i}" for i in range(7)},
+        **{f"h-{slug}": f"events.html#h-{slug}" for slug in (
+            "from-single-events-to-a-texture", "level-pitch-and-timing", "how-big-the-pops-are",
+            "background-plus-pops")},
+    },
 }
 
 

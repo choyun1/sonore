@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Events and pops</title>
+<link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { width: 100%; max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.home { display: inline-flex; align-items: center; gap: 0.3rem; }
+nav.pages .home .logo { width: 2.1rem; height: 2.1rem; margin: -0.5rem 0 -0.5rem -0.4rem; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+.links { display: flex; align-items: center; gap: 0.5rem 1.25rem; font-family: var(--sans); }
+.links a { display: inline-flex; align-items: center; gap: 0.45rem; }
+.links svg { width: 1.15rem; height: 1.15rem; }
+footer .links { margin-top: 1rem; font-size: 0.95rem; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h3.sub { font-weight: 500; font-size: 1.45rem; margin: 2.5rem 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
+  footer .links { display: none; }
+  .side-repo { display: none; }
+  .side-closed .side-repo { display: flex; justify-content: center; margin-top: auto; color: var(--muted); }
+  .side-closed .side-repo:hover { color: var(--ink); }
+  .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
+  .side-foot { margin-top: auto; padding-top: 2rem; }
+  .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
+    border-top: 1px solid var(--rule); }
+  .side-closed .layout { grid-template-columns: 4.25rem minmax(0, 1fr); }
+  .side { scrollbar-gutter: stable; }  /* room for a scrollbar always, so opening a list never rewraps the menu */
+  .side-closed .side { padding: 2.5rem 0 1.5rem; overflow: hidden; scrollbar-gutter: auto; }
+  .side-closed .side .home-title, .side-closed .side-body { display: none; }
+  .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
+  .side-closed .side .home { padding: 0; border: 0; }
+  .side-closed .side .home .logo { width: 2.8rem; height: 2.8rem; margin: 0; }
+  .side-toggle { margin-top: 3.8rem; }  /* level with where it sits under the logo in the folded strip */
+  .side-closed .side-toggle { margin-top: 0; }
+  /* With the sidebar folded, the top menu stays in view while the page scrolls. */
+  .side-closed nav.pages { position: sticky; top: 0; z-index: 20; background: var(--paper);
+    padding: 0.9rem 0; margin-top: -0.9rem; border-bottom: 1px solid var(--rule); }
+  html.side-closed { scroll-padding-top: 4rem; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home-title, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home-title, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home-title, .side-opening .side-body, .side-closing .side .home-title, .side-closing .side-body { animation: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home-title { display: block; }
+.side .home .logo { display: block; width: 2.6rem; height: 2.6rem; margin: -0.4rem 0 0.1rem -0.35rem; }
+.logo .logo-ink { stroke: var(--ink); } .logo .logo-accent { stroke: var(--accent); }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-label="Listening gallery"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="home-title">Listening gallery</span></a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group"><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="group"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group here" open><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li class="has-sections"><a href="events.html" aria-current="page">Events and pops</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-from-single-events-to-a-texture">From single events to a texture</a></li><li><a href="#h-how-big-the-pops-are">How big the pops are</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="group"><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details class="group"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><div class="side-foot"><div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></div></div><a class="side-repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded on every page load.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    showSections(false);
+    // Going back to a page can restore it as it was left; fold its sections then too.
+    addEventListener("pageshow", (event) => { if (event.persisted) showSections(false); });
+    sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
+  // Only the group of the page being read starts open; groups opened on another page do not stay open.
+  addEventListener("pageshow", (event) => { if (event.persisted)
+    groups.forEach((group) => { group.open = group.classList.contains("here"); }); });
+  groups.forEach((group) => {
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><details><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="here"><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html" aria-current="page">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="formants.html">Formant synthesis</a></li><li><a href="pitch.html">Pitch tracking</a></li><li><a href="cepstrum.html">Spectral envelope</a></li><li><a href="aperiodicity.html">Source and aperiodicity</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>Events and pops</h1>
+<p>A sound texture is made of many similar events. This page builds one from a single event with
+<code>so.event_train</code>, then measures the events of a real texture, a fire's pops, and what a
+synthesis from the texture model of <a href="textures.html">Sound textures</a> keeps of them.</p>
+<ul><li><a href="#h-from-single-events-to-a-texture">From single events to a texture</a>: one chirp copied at rising rates, from events that stand apart to a dense sum, and what level, pitch and timing spreads do.</li><li><a href="#h-how-big-the-pops-are">How big the pops are</a>: the sizes of a fire's pops follow a power law, measured by its exponent, and what a synthesis keeps of it.</li></ul>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/events.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/events.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
+</header>
+<section aria-labelledby="h-code-the-examples-share">
+<h2 id="h-code-the-examples-share">Code the examples share</h2>
+<p>Every example below is the code shown with it, run after this cell: loading a recording and
+its synthesis, the level the gallery plays sounds at, and the plots of the texture model's
+statistics, the same as on <a href="textures.html">Sound textures</a>.</p>
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">import json
+
+from sonore.texture import TextureStats
+
+FS = 44100
+
+
+def original(name):
+    &quot;&quot;&quot;A recording; docs/textures/SOURCES.md says where each comes from and which excerpt.&quot;&quot;&quot;
+    return so.load(fetch(f&quot;docs/textures/{name}.flac&quot;))
+
+
+def synthesized(name, imposed=&quot;&quot;):
+    &quot;&quot;&quot;A synthesis precomputed by tools/make_texture_synths.py (below).&quot;&quot;&quot;
+    suffix = f&quot;__{imposed}&quot; if imposed else &quot;&quot;
+    return so.load(fetch(f&quot;docs/textures/synth/{name}{suffix}.flac&quot;)).resample(FS)
+
+
+def report(name):
+    &quot;&quot;&quot;How closely the synthesis matches: the statistic SNR averaged over classes.&quot;&quot;&quot;
+    info = json.loads(open(fetch(f&quot;docs/textures/synth/{name}.json&quot;)).read())
+    snr = np.mean(list(info[&quot;snr_all_classes&quot;].values()))
+    return f&quot;Average statistic SNR {snr:.0f} dB after {info[&#x27;best_iteration&#x27;]} iterations.&quot;
+
+
+def texture_fig(snd, original, synthetic=False):
+    &quot;&quot;&quot;General-purpose plots (spectrogram, long-term spectrum) plus the texture
+    model&#x27;s own statistics drawn with plain matplotlib: modulation power by
+    band and rate (the model&#x27;s modulation spectrum), envelope sparsity, and
+    band-averaged modulation power. Dashed black: the original.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 6.6), layout=&quot;constrained&quot;)
+    gs = fig.add_gridspec(2, 3)
+    ax_s = fig.add_subplot(gs[0, :2])
+    ax_l, ax_m, ax_v, ax_p = (fig.add_subplot(gs[r, c]) for r, c in ((0, 2), (1, 0), (1, 1), (1, 2)))
+    so.STFT(snd, win_dur=20e-3).plot(ax_s, fmax=10000, db_range=70, colorbar=False)
+    ax_s.set_title(&quot;Spectrogram&quot;)
+    so.long_term_spectrum(snd).plot(ax_l, lw=1.2, label=&quot;this sound&quot;)
+    if synthetic:
+        so.long_term_spectrum(original).plot(ax_l, color=&quot;k&quot;, ls=&quot;--&quot;, lw=1, label=&quot;original&quot;)
+        ax_l.legend(fontsize=7)
+    ax_l.set(xlim=(20, 10000), ylim=(-70, 3), title=&quot;Long-term spectrum&quot;)
+    target = TextureStats.measure(original)
+    this = TextureStats.measure(snd, window=&quot;uniform&quot; if synthetic else &quot;ramped&quot;)  # syntheses are circular
+    cfs = target.model.filterbank.cfs[1:-1]
+    ok = target.channel_mask()
+    # The model&#x27;s modulation spectrum: power at each modulation rate, in each cochlear band.
+    mcf = target.model.mod_bank.cfs
+    lev = 10 * np.log10(np.maximum(this.mod_power[1:-1], 1e-6))
+    ax_m.pcolormesh(mcf, cfs, lev, cmap=&quot;magma&quot;, vmin=lev.max() - 25, vmax=lev.max(), shading=&quot;nearest&quot;)
+    ax_m.set(
+        xscale=&quot;log&quot;,
+        yscale=&quot;log&quot;,
+        xlabel=&quot;Modulation rate [Hz]&quot;,
+        ylabel=&quot;Band center [Hz]&quot;,
+        title=&quot;Modulation spectrum by band&quot;,
+    )
+    ax_v.semilogx(cfs, this.env_var[1:-1], lw=1.2)
+    ax_p.loglog(target.model.mod_bank.cfs, this.mod_power[ok].mean(0), lw=1.2)
+    if synthetic:
+        ax_v.semilogx(cfs, target.env_var[1:-1], &quot;k--&quot;, lw=1)
+        ax_p.loglog(target.model.mod_bank.cfs, target.mod_power[ok].mean(0), &quot;k--&quot;, lw=1)
+    ax_v.set(xlabel=&quot;Band center [Hz]&quot;, ylabel=&quot;var / mean²&quot;, title=&quot;Envelope sparsity by band&quot;)
+    ax_p.set(
+        xlabel=&quot;Modulation rate [Hz]&quot;, ylabel=&quot;Power / variance&quot;, title=&quot;Modulation power (band average)&quot;
+    )
+    for ax in (ax_v, ax_p):
+        ax.grid(ls=&quot;:&quot;, which=&quot;both&quot;, lw=0.5)
+    return fig, [ax_s]  # the playhead follows the spectrogram</code></pre></details></div>
+</section>
+<section aria-labelledby="h-from-single-events-to-a-texture">
+<h2 id="h-from-single-events-to-a-texture">From single events to a texture</h2>
+<p>A texture, by the definition on <a href="textures.html">Sound textures</a>, is many similar events, and
+that can be built directly. <code>so.event_train</code> copies one
+event at onsets whose intervals are drawn from a distribution, here exponential, which makes
+the onsets a Poisson process. Its long-term spectrum is the event's own at every rate; what the
+rate changes is how many events overlap, and with it the statistics beyond the spectrum (the
+design notes measure both: <a href="https://github.com/choyun1/sonore/blob/main/docs/design/sources/event-texture.md" target="_blank" rel="noopener">event-texture.md</a>).</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from scipy import stats
+
+chirp = so.exponential_chirp(0.03, FS, 2000, 6000)
+chirp = chirp * np.hanning(len(chirp))[:, None]
+
+
+def chorus(rate, duration=5.0, seed=0, **kwargs):
+    &quot;&quot;&quot;Copies of the chirp at Poisson onsets, `rate` per second on average.&quot;&quot;&quot;
+    return so.event_train(chirp, duration, stats.expon(scale=1 / rate), lead=0.03, rng=seed, **kwargs)
+
+
+def events_fig(snd):
+    &quot;&quot;&quot;The same plots as the recordings on Sound textures, measured on this sound alone. The panels by band
+    show only the bands from 2 to 6 kHz, where the chirp has its energy: elsewhere the
+    statistics are those of numerical noise.&quot;&quot;&quot;
+    fig, playhead = texture_fig(snd, snd)
+    _, _, ax_m, ax_v, _ = fig.axes
+    band_centers, sparsity_by_band = ax_v.lines[0].get_data()
+    in_band = (band_centers &gt;= 2000) &amp; (band_centers &lt;= 6000)
+    ax_v.set(xlim=(1900, 6000), ylim=(0, 1.1 * sparsity_by_band[in_band].max()))
+    ax_m.set_ylim(1900, 6000)
+    return fig, playhead</code></pre></details></div>
+
+<article class="sound" id="d-e00" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6410245509259261, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+  <div class="about">
+    <h3>The event</h3>
+    <div class="desc"><p>The event: a 30 ms sweep from 2 to 6 kHz, exponential in frequency, under a Hann window,
+repeated once a second here so it can be heard on its own.</p></div>
+    <audio controls preload="metadata" src="audio/e00_the_event.flac"></audio>
+    <p class="file">e00_the_event.flac, 3.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e00_the_event.png" width="1000" height="660" alt="Plots of the the event sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.event_train(chirp, 3.0, 1.0, lead=0.5))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-e02" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6450349675925928, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>3 events per second</h3>
+    <div class="desc"><p>Three per second on average. With Poisson timing the gaps are irregular, and an event of 30 ms
+overlaps another about 16% of the time.</p></div>
+    <audio controls preload="metadata" src="audio/e02_3_events_per_second.flac"></audio>
+    <p class="file">e02_3_events_per_second.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e02_3_events_per_second.png" width="1000" height="660" alt="Plots of the 3 events per second sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(3))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-e04" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>30 events per second</h3>
+    <div class="desc"><p>Thirty per second: about one event sounding at any moment, and most events overlap another.</p></div>
+    <audio controls preload="metadata" src="audio/e04_30_events_per_second.flac"></audio>
+    <p class="file">e04_30_events_per_second.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e04_30_events_per_second.png" width="1000" height="660" alt="Plots of the 30 events per second sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-e06" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6477016342592595, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>300 events per second</h3>
+    <div class="desc"><p>Three hundred per second: nine events sounding at once on average. The sum starts resembling
+Gaussian noise with the chirp's spectrum.</p></div>
+    <audio controls preload="metadata" src="audio/e06_300_events_per_second.flac"></audio>
+    <p class="file">e06_300_events_per_second.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e06_300_events_per_second.png" width="1000" height="660" alt="Plots of the 300 events per second sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(300))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="still" id="d-e08">
+  <div class="about">
+    <h3>Envelope sparsity against rate</h3>
+    <div class="desc"><p>Where each rate sits on one of the texture model's statistics: the envelope variance over the
+squared mean (<code>env_var</code>, as in the plots above), averaged over the bands from 2 to 6 kHz where
+the chirp has its energy, measured on 10 s of each rate. The dashed line is Gaussian noise
+filtered to the chirp's spectrum, the limit as the rate grows. This is a one-way view: it
+places each sound on one statistic and says nothing about its rhythm or onsets.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e08_envelope_sparsity_against_rate.png" width="1000" height="340" alt="Envelope sparsity against rate" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rates = [1, 3, 10, 30, 100, 300, 1000]
+
+
+def sparsity(snd):
+    measured = TextureStats.measure(snd)
+    cfs = measured.model.filterbank.cfs
+    return measured.env_var[(cfs &gt;= 2000) &amp; (cfs &lt;= 6000)].mean()
+
+
+noise = so.gaussian_noise(10.0, FS, rng=0).convolve(chirp)[:10.0]
+fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+ax.loglog(rates, [sparsity(chorus(rate, duration=10.0)) for rate in rates], &quot;o-&quot;, lw=1.2, label=&quot;event train&quot;)
+ax.axhline(sparsity(noise), color=&quot;k&quot;, ls=&quot;--&quot;, lw=1, label=&quot;Gaussian noise, chirp spectrum&quot;)
+ax.set(xlabel=&quot;Events per second&quot;, ylabel=&quot;var / mean²&quot;, title=&quot;Envelope sparsity, 2 to 6 kHz&quot;)
+ax.legend(fontsize=8)
+ax.grid(ls=&quot;:&quot;, which=&quot;both&quot;, lw=0.5)</code></pre></details>
+</article>
+<h3 class="sub" id="h-level-pitch-and-timing">Level, pitch and timing</h3>
+<p>Each copy's level and pitch can be drawn from a distribution too, and so can the timing. All
+examples below are at 30 events per second, the rate where events start to run into each
+other. A spread in level leaves a few loud events standing out of the rest, which keeps the
+sound sparse by the measure above for longer as the rate rises; a spread in pitch widens the
+spectrum. Nearly regular timing puts a steady rhythm at the rate into the envelope.</p>
+
+<article class="sound" id="d-e10" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>Level spread, 9 dB</h3>
+    <div class="desc"><p>Levels drawn from a normal distribution in dB, standard deviation 9 dB.</p></div>
+    <audio controls preload="metadata" src="audio/e10_level_spread_9_db.flac"></audio>
+    <p class="file">e10_level_spread_9_db.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e10_level_spread_9_db.png" width="1000" height="660" alt="Plots of the level spread, 9 db sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30, level_db=stats.norm(0, 9)))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-e11" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>Pitch spread, 150 cents</h3>
+    <div class="desc"><p>Pitch shifts drawn from a normal distribution in cents, standard deviation 150 cents. Each copy
+is resampled, so a higher copy is also a shorter one.</p></div>
+    <audio controls preload="metadata" src="audio/e11_pitch_spread_150_cents.flac"></audio>
+    <p class="file">e11_pitch_spread_150_cents.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e11_pitch_spread_150_cents.png" width="1000" height="660" alt="Plots of the pitch spread, 150 cents sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30, pitch_cents=stats.norm(0, 150)))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-e13" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>Level and pitch spread together</h3>
+    <div class="desc"><p>Both spreads at once: levels with a standard deviation of 9 dB and pitch shifts with a standard
+deviation of 150 cents, drawn independently for each copy.</p></div>
+    <audio controls preload="metadata" src="audio/e13_level_and_pitch_spread_together.flac"></audio>
+    <p class="file">e13_level_and_pitch_spread_together.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e13_level_and_pitch_spread_together.png" width="1000" height="660" alt="Plots of the level and pitch spread together sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30, level_db=stats.norm(0, 9), pitch_cents=stats.norm(0, 150)))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-e12" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>Nearly regular timing</h3>
+    <div class="desc"><p>Intervals from a gamma distribution with shape 16: the same mean rate, but intervals vary by
+only a quarter of their mean, so the events come almost evenly.</p></div>
+    <audio controls preload="metadata" src="audio/e12_nearly_regular_timing.flac"></audio>
+    <p class="file">e12_nearly_regular_timing.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e12_nearly_regular_timing.png" width="1000" height="660" alt="Plots of the nearly regular timing sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.event_train(chirp, 5.0, stats.gamma(16, scale=1 / (30 * 16)), lead=0.03, rng=0))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-e14" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6326570740740742, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
+  <div class="about">
+    <h3>Steps of 10, 100 and 1000 events per second</h3>
+    <div class="desc"><p>A rate that changes over time: <code>rate_scale</code> steps from 10 to 100 and 1000 events per second,
+3 s at each. A track is interpolated linearly between its points, so each step is written as
+two points a microsecond apart.</p></div>
+    <audio controls preload="metadata" src="audio/e14_steps_of_10_100_and_1000_events_per_second.flac"></audio>
+    <p class="file">e14_steps_of_10_100_and_1000_events_per_second.flac, 9.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/e14_steps_of_10_100_and_1000_events_per_second.png" width="1000" height="660" alt="Plots of the steps of 10, 100 and 1000 events per second sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">step_rates = [10, 100, 1000]
+step_times = [t for k in range(len(step_rates)) for t in (3 * k, 3 * (k + 1) - 1e-6)]
+steps = (step_times, np.repeat(step_rates, 2))
+sound = finish(so.event_train(chirp, 9.0, stats.expon(scale=1.0), rate_scale=steps, rng=0))
+fig, playhead = events_fig(sound)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-how-big-the-pops-are">
+<h2 id="h-how-big-the-pops-are">How big the pops are</h2>
+<p>A fire's pops come in every size. Write <span class="tex">A</span> for the size of a pop, say the largest envelope value
+in a short bin. A power-law (Pareto) tail means</p>
+<div class="tex display">P(A &gt; x) = (x / x_0)^{-\alpha}, \qquad x \ge x_0,</div>
+<p>so a pop ten times bigger is <span class="tex">10^{\alpha}</span> times rarer. The moments of such a tail are</p>
+<div class="tex display">E[A^n] = \frac{\alpha}{\alpha - n}\, x_0^n \quad \text{for } n &lt; \alpha,</div>
+<p>and infinite for <span class="tex">n \ge \alpha</span>: the variance needs <span class="tex">\alpha &gt; 2</span> and the kurtosis <span class="tex">\alpha &gt; 4</span>.
+Below that, a moment measured on a recording keeps growing with the recording's length, because
+a longer recording catches rarer, bigger pops: over 1 s pieces of the fire recording the
+envelope kurtosis is about 220, over all 20 s about 1900. The texture model describes each band
+by such moments, so for a sound like this it matches numbers that belong to the excerpt more
+than to the sound. The exponent does not drift. From the <span class="tex">k</span> largest values,
+<span class="tex">x_{(1)} \ge x_{(2)} \ge \dots \ge x_{(k+1)}</span>, the Hill estimator is</p>
+<div class="tex display">\hat\alpha = \frac{k}{\sum_{i=1}^{k} \ln\bigl(x_{(i)} / x_{(k+1)}\bigr)},</div>
+<p>with a standard error of about <span class="tex">\hat\alpha / \sqrt{k}</span>. <code>so.envelope_peaks</code> applies it to the
+largest envelope value in each 5 ms bin of the sound high-passed at 300 Hz and at 2 kHz,
+fitting the largest 5%. Below about 2 a sound is made of pops; of the recordings on <a href="textures.html">Sound
+textures</a>, the stream gives about 3, the rain about 5 and the crickets about
+10. The design notes give the measurement, how far to trust it, and a survey of the 168
+recordings of McDermott &amp; Simoncelli (2011):
+<a href="https://github.com/choyun1/sonore/blob/main/docs/design/views/envelope-peaks.md" target="_blank" rel="noopener">envelope-peaks.md</a>.</p>
+
+<article class="still" id="d-tp0">
+  <div class="about">
+    <h3>Envelope peaks of the fire and its synthesis</h3>
+    <div class="desc"><p>The fraction of 5 ms bins whose largest envelope value exceeds each value, on log-log axes,
+for the fire recording (20 s) and its synthesis (5 s). A power law is a straight line here, with
+slope <span class="tex">-\alpha</span>; the dashed lines are the fits. The original is close to a straight line over
+almost two decades. The synthesis gets about the same exponent from its largest 5%, but its
+curve is not straight: a shelf of medium-sized peaks, then a steep drop. Its loud moments come
+in a narrower range of sizes, which the single number misses and the curve shows.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tp0_envelope_peaks_of_the_fire_and_its_synthesis.png" width="1000" height="360" alt="Envelope peaks of the fire and its synthesis" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, (ax_original, ax_synthesis) = plt.subplots(1, 2, figsize=(10, 3.6), layout=&quot;constrained&quot;, sharey=True)
+so.envelope_peaks(original(&quot;fire&quot;)).plot(ax_original)
+so.envelope_peaks(synthesized(&quot;fire&quot;)).plot(ax_synthesis)
+ax_original.set_title(&quot;Fire, original&quot;)
+ax_synthesis.set_title(&quot;Fire, synthesized&quot;)</code></pre></details>
+</article>
+<p>To hear what the exponent means, <code>so.event_train</code> can make pops whose sizes follow a power law
+with a chosen exponent. A pop's level in dB above the smallest, <span class="tex">L = 20 \log_{10}(A / x_0)</span>, has
+<span class="tex">P(L &gt; l) = e^{-l \alpha \ln 10 / 20}</span>: power-law sizes are exponentially distributed levels, with
+scale <span class="tex">20 / (\alpha \ln 10)</span> dB. Below, a 3 ms burst of noise,
+30 times a second on average, with levels capped at 40 dB above the smallest. The exponent
+measured on each comes out close to the one asked for.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">burst = so.gaussian_noise(0.003, FS, rng=0)
+burst = burst * np.hanning(len(burst))[:, None]
+
+
+def pops(exponent, rate=30, duration=7.0, seed=0):
+    &quot;&quot;&quot;Bursts at Poisson onsets, with levels whose amplitudes follow a power law.&quot;&quot;&quot;
+    scale = 20 / (exponent * np.log(10))  # dB
+    levels = stats.truncexpon(b=40 / scale, scale=scale)  # 0 to 40 dB
+    return so.event_train(burst, duration, stats.expon(scale=1 / rate), level_db=levels, lead=0.01, rng=seed)
+
+
+def pops_fig(snd):
+    &quot;&quot;&quot;The waveform, and the envelope peaks as above.&quot;&quot;&quot;
+    fig, (ax_wave, ax_peaks) = plt.subplots(
+        1, 2, figsize=(10, 3.4), layout=&quot;constrained&quot;, gridspec_kw={&quot;width_ratios&quot;: [3, 2]}
+    )
+    snd.plot(ax_wave)
+    so.envelope_peaks(snd).plot(ax_peaks)
+    return fig, [ax_wave]</code></pre></details></div>
+
+<article class="sound" id="d-tp1" data-regions="[{&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.5795805154574654, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+  <div class="about">
+    <h3>Pops, exponent 1</h3>
+    <div class="desc"><p>Exponent 1: most pops are small, and every few seconds one is far louder than the rest.</p></div>
+    <audio controls preload="metadata" src="audio/tp1_pops_exponent_1.flac"></audio>
+    <p class="file">tp1_pops_exponent_1.flac, 7.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tp1_pops_exponent_1.png" width="1000" height="340" alt="Plots of the pops, exponent 1 sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pops(1.0))
+fig, playhead = pops_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tp2" data-regions="[{&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.5791031771200474, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+  <div class="about">
+    <h3>Pops, exponent 2</h3>
+    <div class="desc"><p>Exponent 2: the loudest pops stand out less.</p></div>
+    <audio controls preload="metadata" src="audio/tp2_pops_exponent_2.flac"></audio>
+    <p class="file">tp2_pops_exponent_2.flac, 7.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tp2_pops_exponent_2.png" width="1000" height="340" alt="Plots of the pops, exponent 2 sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pops(2.0))
+fig, playhead = pops_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tp3" data-regions="[{&quot;x0&quot;: 0.06931928949652778, &quot;x1&quot;: 0.5784671862222699, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.0}]">
+  <div class="about">
+    <h3>Pops, exponent 4</h3>
+    <div class="desc"><p>Exponent 4: the pops are all of a similar size.</p></div>
+    <audio controls preload="metadata" src="audio/tp3_pops_exponent_4.flac"></audio>
+    <p class="file">tp3_pops_exponent_4.flac, 7.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tp3_pops_exponent_4.png" width="1000" height="340" alt="Plots of the pops, exponent 4 sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(pops(4.0))
+fig, playhead = pops_fig(sound)</code></pre></details>
+</article>
+<h3 class="sub" id="h-background-plus-pops">Background plus pops</h3>
+<p>The fire's synthesis keeps pops, but too many of them are medium-sized, and the background
+sits too close to the biggest: the median bin is 35 dB below the biggest pops in the
+synthesis, 43 dB in the original. A synthesis as long as the original does no better. What
+sounded closer to the original by ear was to take the pops out, synthesize the rest, and put
+pops back with <code>so.event_train</code>:</p>
+<ul><li><strong>Remove the pops.</strong> Scale each 5 ms bin so that its largest envelope value is at most twice the 80th percentile of those values, with the gain smoothed over 2 ms.</li><li><strong>Synthesize the background.</strong> Without its pops the fire is an ordinary texture, and the model matches it well (39 dB average statistic SNR, against 21 dB for the whole fire).</li><li><strong>Add pops.</strong> The recording's eight biggest pops, 15 ms each, as events at Poisson onsets at the rate pops cross the threshold in the original, with power-law levels at the exponent measured on the original, from the threshold up to the biggest pop. The background goes 3 dB down, which sounds closer to the original than leaving it as it is.</li></ul>
+<p>This recipe is sonore's own, put together for this page from standard parts (texture
+synthesis, and shot noise with power-law sizes); we know of no paper that describes it, and it
+is not a validated method. Its only test is one listener comparing it by ear with the plain
+synthesis on a handful of the paper's recordings. There it sounded closer on two other fires
+and a clapper close to the microphone, pops that are random in time over a steady background,
+and no better on rhythmic or impact sounds (tapping, a bongo loop, a typewriter, castanets),
+which the texture model also synthesizes poorly on its own; McDermott &amp; Simoncelli (2011) list
+rhythm among the model's failures.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def remove_pops(sound):
+    &quot;&quot;&quot;The sound with its pops limited away: each 5 ms bin is scaled so that its largest envelope
+    value above 300 Hz is at most twice the 80th percentile of those values. The gain is
+    smoothed over 2 ms so the cuts do not click. tools/make_texture_synths.py synthesizes the
+    fire&#x27;s background with this same function.&quot;&quot;&quot;
+    peaks = so.envelope_peaks(sound, cutoffs_hz=(300.0,))
+    maxima = peaks.maxima[:, 0]
+    threshold = 2 * np.percentile(maxima, 80)
+    bin_length = int(round(peaks.bin_seconds * sound.fs))
+    gain = np.ones(len(sound))
+    gain[: len(maxima) * bin_length] = np.repeat(np.minimum(1.0, threshold / maxima), bin_length)
+    smoothing = np.hanning(int(0.002 * sound.fs))
+    gain = np.minimum(gain, np.convolve(gain, smoothing / smoothing.sum(), &quot;same&quot;))
+    return sound * gain[:, None]
+
+
+def biggest_pops(sound, count=8, length=0.015):
+    &quot;&quot;&quot;The `count` biggest pops, each `length` long from 2 ms before its peak, at least 0.1 s apart,
+    with softened edges and unit peak.&quot;&quot;&quot;
+    peaks = so.envelope_peaks(sound, cutoffs_hz=(300.0,))
+    maxima = peaks.maxima[:, 0]
+    chosen = []
+    for bin_index in np.argsort(maxima)[::-1]:
+        if all(abs(bin_index - other) * peaks.bin_seconds &gt; 0.1 for other in chosen):
+            chosen.append(bin_index)
+        if len(chosen) == count:
+            break
+    samples, fs = sound.data[:, 0], sound.fs
+    bin_length = int(round(peaks.bin_seconds * fs))
+    n_event = int(length * fs)
+    events = []
+    for bin_index in chosen:
+        in_bin = samples[bin_index * bin_length : (bin_index + 1) * bin_length]
+        start = max(bin_index * bin_length + int(np.argmax(np.abs(in_bin))) - int(0.002 * fs), 0)
+        piece = samples[start : start + n_event] * np.hanning(n_event) ** 0.25
+        events.append(so.Sound(piece / np.abs(piece).max(), fs))
+    return events
+
+
+def background_plus_pops(sound, background, background_db=-3.0, seed=0):
+    &quot;&quot;&quot;`background` (a synthesis of `remove_pops(sound)`) with pops from `sound` added: the rate, the
+    exponent and the range of sizes are measured on `sound`, the smallest pop sits at the
+    threshold `remove_pops` limits to, and the background is `background_db` down.&quot;&quot;&quot;
+    peaks = so.envelope_peaks(sound, cutoffs_hz=(300.0,))
+    maxima = peaks.maxima[:, 0]
+    threshold = 2 * np.percentile(maxima, 80)
+    rate = np.sum((maxima[1:] &gt; threshold) &amp; (maxima[:-1] &lt;= threshold)) / sound.duration
+    range_db = 20 * np.log10(maxima.max() / threshold)
+    scale = 20 / (peaks.exponent[0] * np.log(10))  # dB
+    levels = stats.truncexpon(b=range_db / scale, scale=scale)
+    events = biggest_pops(sound)
+    out = background * 10 ** (background_db / 20)
+    for k, event in enumerate(events):
+        size = so.envelope_peaks(event.pad(0.05, 0.05), cutoffs_hz=(300.0,)).maxima.max()
+        train = so.event_train(event * (threshold / size), background.duration,
+                               stats.expon(scale=len(events) / rate), level_db=levels, rng=seed + k)
+        out = out + train[: background.duration]
+    return out
+
+
+fire = original(&quot;fire&quot;)
+fire_background = synthesized(&quot;fire&quot;, &quot;background&quot;)
+fire_background = fire_background * (remove_pops(fire).rms / fire_background.rms)</code></pre></details></div>
+
+<article class="sound" id="d-tp4" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.5751798921006946, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+  <div class="about">
+    <h3>Fire with its pops removed</h3>
+    <div class="desc"><p>The fire with its pops limited away: the hiss and rumble under the pops.</p></div>
+    <audio controls preload="metadata" src="audio/tp4_fire_with_its_pops_removed.flac"></audio>
+    <p class="file">tp4_fire_with_its_pops_removed.flac, 20.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tp4_fire_with_its_pops_removed.png" width="1000" height="340" alt="Plots of the fire with its pops removed sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(remove_pops(fire))
+fig, playhead = pops_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tp5" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.5792017671006945, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.0}]">
+  <div class="about">
+    <h3>Background synthesized</h3>
+    <div class="desc"><p>The fire's background synthesized from its statistics alone, 10 s. Average statistic SNR 39 dB after 28 iterations.</p></div>
+    <audio controls preload="metadata" src="audio/tp5_background_synthesized.flac"></audio>
+    <p class="file">tp5_background_synthesized.flac, 10.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tp5_background_synthesized.png" width="1000" height="340" alt="Plots of the background synthesized sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(fire_background)
+fig, playhead = pops_fig(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-tp6" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.5792017671006945, &quot;top&quot;: 0.07633880718954245, &quot;bottom&quot;: 0.853841761131536, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.0}]">
+  <div class="about">
+    <h3>Background plus pops</h3>
+    <div class="desc"><p>The synthesized background, 3 dB down, with the recording's own pops added back at power-law
+sizes. Compare with <a href="textures.html#d-t04a">the original and the synthesis</a> on Sound textures.</p></div>
+    <audio controls preload="metadata" src="audio/tp6_background_plus_pops.flac"></audio>
+    <p class="file">tp6_background_plus_pops.flac, 10.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/tp6_background_plus_pops.png" width="1000" height="340" alt="Plots of the background plus pops sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(background_plus_pops(fire, fire_background))
+fig, playhead = pops_fig(sound)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Hill (1975). A simple general approach to inference about the tail of a distribution. <em>Annals of Statistics</em> 3(5), 1163–1174. <a href="https://doi.org/10.1214/aos/1176343247" target="_blank" rel="noopener">doi:10.1214/aos/1176343247</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelope_peaks.py" target="_blank" rel="noopener"><code>envelope_peaks</code></a></li><li>McDermott &amp; Simoncelli (2011). Sound texture perception via statistics of the auditory periphery. <em>Neuron</em> 71(5), 926–940. <a href="https://doi.org/10.1016/j.neuron.2011.06.032" target="_blank" rel="noopener">doi:10.1016/j.neuron.2011.06.032</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py" target="_blank" rel="noopener"><code>texture</code></a></li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/textures/events.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/textures/events.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
+</main>
+</div>
+<script>
+(() => {
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the color bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
