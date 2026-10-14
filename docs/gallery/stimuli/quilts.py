@@ -124,14 +124,17 @@ quilt_bank = so.cosine_filterbank(30, 20, 8000)  # the paper's bank, up to Nyqui
 
 
 def quilt_demo(passage):
-    """The passage's first 6 s and a 6 s quilt at each segment length, with their cochleagrams."""
+    """The passage's first 6 s and a 6 s quilt at each segment length, with their cochleagrams
+    on one color scale."""
     sounds = {"Original": so.Sound(passage.data[: int(QUILT_DUR * passage.fs)], passage.fs)}
     for seg in SEGMENTS:
         sounds[f"{seg * 1000:.0f} ms"] = so.quilt(passage, seg, QUILT_DUR, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 9), sharex=True, layout="constrained")
-    for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
-        quilt_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 5.6), sharex=True, layout="constrained")
+    envelopes = {label: quilt_bank.analyze(snd).envelopes() for label, snd in sounds.items()}
+    top = envelopes["Original"].db[:, 1:-1].max()  # all on the original's color scale
+    for ax, (label, env) in zip(axes, envelopes.items(), strict=True):
+        env.plot(ax, colorbar=False, db_max=top)
         title = label if label == "Original" else f"Quilt, {label} segments"
         ax.set(title=title, xlabel="", xlim=(0, QUILT_DUR))
     axes[-1].set_xlabel("Time [s]")
@@ -213,14 +216,16 @@ texture_bank = so.cosine_filterbank(30, 20, 10000)
 
 def texture_quilt_demo(recording, duration, segments=(0.03, 0.12, 0.96)):
     """The recording's first ``duration`` seconds and a quilt of the whole recording at each
-    segment length, played at one gain, with their cochleagrams."""
+    segment length, played at one gain, with their cochleagrams on one color scale."""
     sounds = {"Original": so.Sound(recording.data[: int(duration * recording.fs)], recording.fs)}
     for seg in segments:
         sounds[f"{seg * 1000:.0f} ms"] = so.quilt(recording, seg, duration, rng=1)
     sounds = finish_together(sounds)
-    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 7.6), sharex=True, layout="constrained")
-    for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
-        texture_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 4.6), sharex=True, layout="constrained")
+    envelopes = {label: texture_bank.analyze(snd).envelopes() for label, snd in sounds.items()}
+    top = envelopes["Original"].db[:, 1:-1].max()  # all on the original's color scale
+    for ax, (label, env) in zip(axes, envelopes.items(), strict=True):
+        env.plot(ax, colorbar=False, db_max=top)
         title = label if label == "Original" else f"Quilt, {label} segments"
         ax.set(title=title, xlabel="", xlim=(0, duration))
     axes[-1].set_xlabel("Time [s]")

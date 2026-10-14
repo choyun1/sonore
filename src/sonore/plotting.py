@@ -134,9 +134,10 @@ def _image(
     return im
 
 
-def _db_limits(db: np.ndarray, db_range: float) -> tuple[float, float]:
-    """Color limits for levels in dB: the top ``db_range`` dB below the maximum."""
-    vmax = np.max(db)
+def _db_limits(db: np.ndarray, db_range: float, db_max: float | None = None) -> tuple[float, float]:
+    """Color limits for levels in dB: the ``db_range`` dB below ``db_max``
+    (default: the maximum of ``db``)."""
+    vmax = float(np.max(db)) if db_max is None else db_max
     return vmax - db_range, vmax
 
 
@@ -518,6 +519,7 @@ def plot_envelopes(
     *,
     channel: int = 0,
     db_range: float = 40.0,
+    db_max: float | None = None,
     cmap: str | Colormap = "magma",
     colorbar: bool = True,
     edges: bool = False,
@@ -525,7 +527,10 @@ def plot_envelopes(
     fscale: Literal["log", "linear"] = "log",
     fmax: float | None = None,
 ) -> Axes:
-    """Envelopes (a cochleagram) as an image: time x band, in dB re the maximum.
+    """Envelopes (a cochleagram) as an image: time x band, in dB, the colors
+    spanning the ``db_range`` dB below ``db_max`` (default: the image's own
+    maximum). Give several cochleagrams the same ``db_max`` to draw them on
+    one scale, so that equal levels get equal colors.
     Edge bands are hidden unless ``edges=True``.
 
     ``align="peak"`` draws each band earlier by its filter's
@@ -547,7 +552,7 @@ def plot_envelopes(
         f = np.broadcast_to(cfs[:, None], t.shape)
     else:
         raise ValueError("align must be None or 'peak'")
-    _image(ax, t, f, db.T, cmap, *_db_limits(db, db_range), colorbar, "dB")
+    _image(ax, t, f, db.T, cmap, *_db_limits(db, db_range, db_max), colorbar, "dB")
     if fscale == "log":
         ax.set_yscale("log")
         ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Envelopes (cochleagram)")
