@@ -479,7 +479,7 @@ fig, playhead = events_fig(sound)
 # ## How big the pops are
 #
 # A fire's pops come in every size, and the sizes follow a power law: the fraction of moments
-# louder than $a$ falls as $a^{-\alpha}$. When the exponent $\alpha$ is small, the envelope's
+# louder than $x$ falls as $x^{-\alpha}$. When the exponent $\alpha$ is small, the envelope's
 # variance and kurtosis, which the texture model measures, have no stable value: over 1 s pieces
 # of the fire recording the envelope kurtosis is about 220, over all 20 s about 1900. The exponent
 # does not drift that way. `so.envelope_peaks` measures it: it high-passes the sound (at 300 Hz

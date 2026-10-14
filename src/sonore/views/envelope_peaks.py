@@ -46,7 +46,7 @@ class EnvelopePeaks(View):
 
     ``maxima`` has shape ``(n_bins, n_cutoffs)``. ``exponent`` and
     ``uncertainty`` have one value per cutoff: ``exponent`` is alpha in
-    ``P(maximum > a) ~ a**-alpha``, fitted by the Hill estimator on the
+    ``P(maximum > x) ~ x**-alpha``, fitted by the Hill estimator on the
     largest ``fraction`` of the maxima, and ``uncertainty`` is its standard
     error, ``exponent / sqrt(n_fitted)``. ``threshold`` is, per cutoff, the
     largest maximum left out of the fit. Below about 2 the sound is made of

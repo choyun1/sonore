@@ -38,7 +38,7 @@ as recommended. D5 and D6 settled as recommended, 2026-10-14.
 
 ## Background [math]
 
-If amplitudes A have a Pareto tail, P(A > a) ~ a^-alpha, then the n-th
+If amplitudes A have a Pareto tail, P(A > x) ~ x^-alpha, then the n-th
 moment of A exists only for n < alpha. The variance needs alpha > 2 and the
 kurtosis alpha > 4. Below that, a sample's kurtosis does not converge: it
 grows with the sample. The level in dB of a Pareto amplitude is
