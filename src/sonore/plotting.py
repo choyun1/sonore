@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from sonore.sources.ripples import Pattern
     from sonore.spatial.binaural import InterauralCues
     from sonore.views.cepstrum import Cepstrum
+    from sonore.views.envelope_peaks import EnvelopePeaks
     from sonore.views.envelopes import Envelope, Envelopes
     from sonore.views.f0 import F0Track
     from sonore.views.lpc import LPC, FormantTrack
@@ -50,6 +51,7 @@ __all__ = [
     "plot_subbands",
     "plot_envelope",
     "plot_envelopes",
+    "plot_envelope_peaks",
     "plot_tf_db",
     "plot_cepstrum",
     "plot_mfcc",
@@ -475,6 +477,34 @@ def plot_envelope(env: Envelope, ax: Axes | None = None, *, db: bool = False, **
         xlim=(0, env.duration),
     )
     ax.grid(ls=":")
+    return ax
+
+
+def plot_envelope_peaks(peaks: EnvelopePeaks, ax: Axes | None = None, **kwargs) -> Axes:
+    """An :class:`~sonore.views.envelope_peaks.EnvelopePeaks`: for each
+    cutoff, the fraction of bins whose maximum exceeds each value, on log-log
+    axes, with the fitted power law as a dashed line over the values it was
+    fitted to. A power law is a straight line here, with slope minus the
+    exponent."""
+    ax = _ax(ax)
+    n_bins = len(peaks.maxima)
+    survival = np.arange(1, n_bins + 1) / n_bins
+    tail_fraction = peaks.n_fitted / n_bins
+    for column, cutoff in enumerate(peaks.cutoffs_hz):
+        ordered = np.sort(peaks.maxima[:, column])[::-1]
+        exponent, uncertainty = peaks.exponent[column], peaks.uncertainty[column]
+        label = f"above {cutoff:g} Hz: {exponent:.2f} ± {uncertainty:.2f}"
+        (line,) = ax.loglog(ordered, survival, label=label, **kwargs)
+        threshold = peaks.threshold[column]
+        fitted = np.geomspace(threshold, ordered[0], 50)
+        ax.loglog(fitted, tail_fraction * (fitted / threshold) ** -exponent, "--", color=line.get_color())
+    ax.set(
+        title="Envelope peaks",
+        xlabel=f"Largest envelope value in a {peaks.bin_seconds * 1000:g} ms bin",
+        ylabel="Fraction of bins above",
+    )
+    ax.legend(loc="lower left")
+    ax.grid(ls=":", which="both")
     return ax
 
 

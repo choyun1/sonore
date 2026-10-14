@@ -26,6 +26,7 @@ VIEW_NAMES = [
     "InterauralCues",
     "TextureStats",
     "PVAnalysis",
+    "EnvelopePeaks",
 ]
 
 
