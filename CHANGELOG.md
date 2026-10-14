@@ -24,7 +24,10 @@ Breaking changes since 0.6.0 (each is described under Changed):
   from single events to a dense texture. The time between onsets, each
   copy's level and each copy's pitch are drawn from distributions given as
   numbers or SciPy distributions, and a rate track speeds the onsets up or
-  slows them down over time (docs/design/sources/event-texture.md).
+  slows them down over time (docs/design/sources/event-texture.md). Each
+  transposed copy is the event read with the windowed sinc `move_sound`
+  uses, so a pitch spread renders in under a second rather than seconds
+  (docs/design/sources/event-train-speed.md).
 - `so.quilt`: the sound quilts of Overath et al. (2015), segments of a
   sound in a new order, each chosen so that its join changes the
   cochleagram as much as the sound itself did there; and `so.splice`, which
