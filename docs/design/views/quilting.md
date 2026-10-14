@@ -12,8 +12,9 @@ structure, up to about 500 ms. This document sets out the method, how it fits
 sonore, and the decisions for Cho.
 
 Status: proposed 2026-10-14. Cho agreed to a clean-room implementation from
-the paper's methods, not a port of the MATLAB toolbox. D3 accepted by Cho
-2026-10-14 (the paper's joining procedure, named aligned overlap-add).
+the paper's methods, not a port of the MATLAB toolbox. All decisions
+accepted by Cho 2026-10-14: D1 as two public names, `so.quilt` and
+`so.splice`, with the order private (see D1); D2-D7 as recommended.
 
 ## How the claims are verified, and what was read
 
@@ -120,9 +121,8 @@ The paper's step 5 reads "repeat steps 1-3"; steps 3-4 are meant.
   from `Envelopes`, so the module goes in `views` (D1).
 - **Synthesis.** Rearranging a sound is not synthesis from a view, so the
   "synthesis lives in `to_sound`" rule does not apply: nothing is
-  discarded and rebuilt. The quilt's order is not an analysis either, so
-  it is not a `View`. The result class joins the tested list of public
-  classes that are not analyses (`NOT_ANALYSES` in `tests/views/test_view.py`).
+  discarded and rebuilt. No new class is needed: the order is an array of
+  segment indices, kept private (D1).
 - **Pieces sonore already has.** `so.cosine_filterbank(30, 20, 10000)` is
   the paper's bank (the texture model uses it), `Filterbank.analyze` with
   padding is the toolbox's zero-padded filtering, and `.envelopes()` is
@@ -132,13 +132,7 @@ The paper's step 5 reads "repeat steps 1-3"; steps 3-4 are meant.
 ## Proposed design
 
     quilt = so.quilt(speech, 0.12, 6.0, rng=1)          # Sound, 6 s
-
-    order = so.quilt_order(speech, 0.12, 6.0, rng=1)    # QuiltOrder
-    order.segments            # source segment indices, in quilt order
-    order.source_changes      # d(k, k + 1) along the source
-    order.quilt_changes       # d between neighbors in the quilt
-    order.plot()              # the two distributions, as the toolbox's example
-    quilt = so.quilt(speech, 0.12, 6.0, order=order)    # the same quilt
+    joined = so.splice(speech, [1.2, 0.36, 4.8], 0.12)  # any order, aligned joins
 
 1. Cochleagram: `bank.analyze(sound, pad=...).envelopes()` raised to 0.3,
    on the default bank `so.cosine_filterbank(30, 20, 10000)` (a
@@ -176,7 +170,13 @@ Rough size, an estimate: 150 to 250 lines in `views/quilting.py` and
   sounds, because the shift reads samples beyond each segment's own
   edges. *Recommended: (d) (revised 2026-10-14 after Cho asked; the first
   draft said (a), keeping the joining private until something else needed
-  it).*
+  it).* **Decided by Cho (2026-10-14): (e), (d) without `quilt_order`.**
+  The public names are `so.quilt` and `so.splice`. The order is not a
+  random permutation (choosing it is the quilting rule), but nothing needs
+  it outside `quilt`: the change histograms can be measured on the quilt
+  itself, since each join sits at a multiple of the segment length (the
+  shift moves where a segment is read from, not where it is written). The
+  same `rng` and source give the same quilt.
 - **D2. Which segments may follow.** (a) The paper's rule: anything not
   used before and not the source's own next segment. Near the ends of the
   source, the ±15 ms shift is limited to what the signal holds. (b) The
