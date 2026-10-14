@@ -335,7 +335,8 @@ Only work still to do is listed here. Finished items are in
   from about 220 over 1 s to about 1900 over 20 s. Neither sonore nor the
   MATLAB toolbox reproduces such recordings well. Open questions: a tail
   exponent as a texture statistic, and whether one `event_train` with
-  power-law levels can give both the hiss and the pops.
+  power-law levels can give both the hiss and the pops. Proposal:
+  `docs/design/texture/pop-tails.md`.
 
 **Other**
 
