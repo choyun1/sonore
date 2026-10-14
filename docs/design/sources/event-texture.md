@@ -245,7 +245,11 @@ identical.
   pitch spread, timing from Poisson to regular (E7), and one sound whose
   rate sweeps from sparse to dense (E8). A live slider fits
   sonore-sketch later. *Accepted by Cho 2026-10-13 (the section); the
-  extra sounds for the new axes are proposed here.*
+  extra sounds for the new axes are proposed here.* Revised by Cho
+  2026-10-14: the audio ladder keeps 3, 30 and 300 per second (the
+  sparsity plot keeps all seven rates); a 9 dB level spread, a 150 cent
+  pitch spread and both together; nearly regular timing only; and a rate
+  in steps of 1, 10, 100 and 1000 per second instead of a smooth rise.
 
 ## As built
 

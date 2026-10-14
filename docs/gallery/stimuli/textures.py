@@ -374,54 +374,26 @@ sound = finish(so.event_train(chirp, 3.0, 1.0, lead=0.5))
 fig, playhead = events_fig(sound)
 
 # %% [about]
-# One event per second on average. With Poisson timing, gaps are irregular, and an event of
-# 30 ms overlaps another only about 6% of the time.
-
-# %% [demo e01] 1 event per second
-sound = finish(chorus(1, seed=1))
-fig, playhead = events_fig(sound)
-
-# %% [about]
-# Three per second.
+# Three per second on average. With Poisson timing the gaps are irregular, and an event of 30 ms
+# overlaps another about 16% of the time.
 
 # %% [demo e02] 3 events per second
 sound = finish(chorus(3))
 fig, playhead = events_fig(sound)
 
 # %% [about]
-# Ten per second: on average 0.3 events sound at once, and about half the events overlap another.
-
-# %% [demo e03] 10 events per second
-sound = finish(chorus(10))
-fig, playhead = events_fig(sound)
-
-# %% [about]
-# Thirty per second: about one event sounding at any moment.
+# Thirty per second: about one event sounding at any moment, and most events overlap another.
 
 # %% [demo e04] 30 events per second
 sound = finish(chorus(30))
 fig, playhead = events_fig(sound)
 
 # %% [about]
-# A hundred per second: three at once on average.
-
-# %% [demo e05] 100 events per second
-sound = finish(chorus(100))
-fig, playhead = events_fig(sound)
-
-# %% [about]
-# Three hundred per second.
+# Three hundred per second: nine events sounding at once on average. The sum starts resembling
+# Gaussian noise with the chirp's spectrum.
 
 # %% [demo e06] 300 events per second
 sound = finish(chorus(300))
-fig, playhead = events_fig(sound)
-
-# %% [about]
-# A thousand per second: thirty at once. The waveform is close to Gaussian noise with the chirp's
-# spectrum.
-
-# %% [demo e07] 1000 events per second
-sound = finish(chorus(1000))
 fig, playhead = events_fig(sound)
 
 # %% [about]
@@ -453,24 +425,32 @@ ax.grid(ls=":", which="both", lw=0.5)
 # ### Level, pitch and timing
 #
 # Each copy's level and pitch can be drawn from a distribution too, and so can the timing. All
-# three below are at 30 events per second, the rate where events start to run into each other.
-# A spread in level leaves a few loud events standing out of the rest, which keeps the sound
-# sparse by the measure above for longer as the rate rises; a spread in pitch widens the
-# spectrum. Regular timing turns the rate into a steady rhythm in the envelope.
+# examples below are at 30 events per second, the rate where events start to run into each
+# other. A spread in level leaves a few loud events standing out of the rest, which keeps the
+# sound sparse by the measure above for longer as the rate rises; a spread in pitch widens the
+# spectrum. Nearly regular timing puts a steady rhythm at the rate into the envelope.
 
 # %% [about]
-# Levels drawn from a normal distribution in dB, standard deviation 6 dB.
+# Levels drawn from a normal distribution in dB, standard deviation 9 dB.
 
-# %% [demo e10] Level spread, 6 dB
-sound = finish(chorus(30, level_db=stats.norm(0, 6)))
+# %% [demo e10] Level spread, 9 dB
+sound = finish(chorus(30, level_db=stats.norm(0, 9)))
 fig, playhead = events_fig(sound)
 
 # %% [about]
-# Pitch shifts drawn from a normal distribution in cents, standard deviation 300 cents (a minor
-# third). Each copy is resampled, so a higher copy is also a shorter one.
+# Pitch shifts drawn from a normal distribution in cents, standard deviation 150 cents. Each copy
+# is resampled, so a higher copy is also a shorter one.
 
-# %% [demo e11] Pitch spread, 300 cents
-sound = finish(chorus(30, pitch_cents=stats.norm(0, 300)))
+# %% [demo e11] Pitch spread, 150 cents
+sound = finish(chorus(30, pitch_cents=stats.norm(0, 150)))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Both spreads at once: levels with a standard deviation of 9 dB and pitch shifts with a standard
+# deviation of 150 cents, drawn independently for each copy.
+
+# %% [demo e13] Level and pitch spread together
+sound = finish(chorus(30, level_db=stats.norm(0, 9), pitch_cents=stats.norm(0, 150)))
 fig, playhead = events_fig(sound)
 
 # %% [about]
@@ -482,21 +462,15 @@ sound = finish(so.event_train(chirp, 5.0, stats.gamma(16, scale=1 / (30 * 16)), 
 fig, playhead = events_fig(sound)
 
 # %% [about]
-# Exactly regular timing, an interval of 1/30 s: a train of identical chirps 30 times a second.
+# A rate that changes over time: `rate_scale` steps from 1 to 10, 100 and 1000 events per second,
+# 5 s at each. A track is interpolated linearly between its points, so each step is written as
+# two points a microsecond apart.
 
-# %% [demo e13] Regular timing
-sound = finish(so.event_train(chirp, 5.0, 1 / 30, lead=0.03))
-fig, playhead = events_fig(sound)
-
-# %% [about]
-# A rate that changes over time: `rate_scale` rises from 1 to 1000 over 20 s, exponentially (the
-# track's points are spaced closely enough that its linear interpolation follows the curve). The
-# sound goes from single events to the dense end of the ladder above in one sweep.
-
-# %% [demo e14] From 1 to 1000 events per second
-track_times = np.linspace(0, 20, 201)
-rising = (track_times, 1000 ** (track_times / 20))
-sound = finish(so.event_train(chirp, 20.0, stats.expon(scale=1.0), rate_scale=rising, rng=0))
+# %% [demo e14] Steps of 1, 10, 100 and 1000 events per second
+step_rates = [1, 10, 100, 1000]
+step_times = [t for k in range(len(step_rates)) for t in (5 * k, 5 * (k + 1) - 1e-6)]
+steps = (step_times, np.repeat(step_rates, 2))
+sound = finish(so.event_train(chirp, 20.0, stats.expon(scale=1.0), rate_scale=steps, rng=0))
 fig, playhead = events_fig(sound)
 
 # %% [markdown]
