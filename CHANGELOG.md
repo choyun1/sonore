@@ -6,6 +6,16 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+
+- `so.envelope_peaks`: how big a sound's pops are. The largest envelope
+  value in each 5 ms bin of the sound high-passed at 300 Hz and at 2 kHz,
+  and the power-law exponent of their upper tail by the Hill estimator,
+  with its uncertainty; it warns when too few values are fitted. Below about
+  2 a sound is made of pops; Gaussian noise gives 20 to 40. A one-way view,
+  for checking whether a texture synthesis keeps the pops of its original
+  (docs/design/views/envelope-peaks.md). Texture synthesis is unchanged.
+
 ## [0.7.0] - 2026-10-14
 
 Sound quilts (`so.quilt`, `so.splice`) and event trains (`so.event_train`),

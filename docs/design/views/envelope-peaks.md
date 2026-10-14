@@ -15,12 +15,12 @@ synthesis output does not change.
 The idea is Cho's (2026-10-14): pops look like events with no stable
 moments, and a power law might describe them where moments cannot. Cho also
 simplified the measurement to the histogram of the envelope's maximum in
-each 5 ms bin. No code yet.
+each 5 ms bin.
 
 Status: D1 to D4 settled by Cho, 2026-10-14. D1: a `View` class under
 `views`. D2: `so.envelope_peaks` returning `EnvelopePeaks`, after Cho
 turned down `pop_tail` ("tail" also means a reverberant decay). D3 and D4
-as recommended. D5 and D6 open.
+as recommended. D5 and D6 settled as recommended, 2026-10-14.
 
 ## How the claims are verified
 
@@ -88,7 +88,10 @@ paper 1.8 and 3.3 [survey]).
   medians over 8 seeds are 1.28 for alpha 1, 1.61 for alpha 1.5 and 2.36
   for alpha 2.5. Overlapping events and the cap blur the range below about
   1.5: 1 and 1.5 cannot be told apart reliably, 1.5 and 2.5 can.
-- **Gaussian noise** (T5 [check]): about 34 (32 to 38 over 8 seeds).
+- **Gaussian noise** (T5 [check]): about 34 (32 to 38 over 8 seeds) at
+  44.1 kHz. It grows with the sample rate, which puts more samples in each
+  bin: about 24 at 16 kHz (measured with `so.envelope_peaks` on one 7 s
+  sample).
 - **Real recordings** [survey], 2 kHz cutoff:
 
   | Recording | 7 s, top 5% | top 10% | top 20% | 2 s pieces | 1 s pieces |
@@ -210,14 +213,14 @@ plots side by side, and `event_train` with power-law levels at a few
 exponents to hear what the number means. The paper's recordings cannot be
 used (licences unknown).
 
-**D5. Imposing it. Open.** Recommend a separate document, decided by ear
+**D5. Imposing it. Settled: a separate document later**, decided by ear
 after D4. The finding above suggests the target is the alignment of
 extremes across channels, not each channel's tail, which neither a tail
 term per channel nor the current correlations would give. Texture
 synthesis of the background plus `event_train` pops is the other route.
 Both change synthesis output.
 
-**D6. Roadmap. Open.** Recommend: the README's "Sparse pops" item points
+**D6. Roadmap. Settled:** the README's "Sparse pops" item points
 here now; once built, the view moves to `docs/roadmap-done.md` and the
 item keeps only D5.
 

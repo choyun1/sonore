@@ -268,6 +268,7 @@ under `so.texture` and `sonore.texture.synth`.
 | [`views.world`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py) | `world_synthesize` (WORLD's synthesis, sample for sample, from an F0 track, envelope and aperiodicity; WORLD's own noise stream by default, or fresh noise from an `rng`; reads any F0 track and any envelope), `DIFFERENCES_FROM_WORLD` |
 | [`views.phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py) | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `to_sound` with `time_scale` and `freq_map`) |
 | [`views.quilting`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/quilting.py) | `quilt` (the sound quilts of Overath et al., 2015: segments of a sound in a new order, each chosen so that its join changes the cochleagram as much as the sound itself did there; written from the paper's methods) |
+| [`views.envelope_peaks`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelope_peaks.py) | `envelope_peaks` → `EnvelopePeaks` (how big a sound's pops are: the largest envelope value in each 5 ms bin above 300 Hz and 2 kHz, and the power-law exponent of their upper tail by the Hill estimator, with its uncertainty; `.plot()`) |
 | [`spatial.binaural`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py) | `apply_itd_ild`, `simple_bir`, `interaural_cues`, `oscor`, `phasewarp` |
 | [`spatial.spatialization`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py) | `HRIRSet` (PKU-IOA, SOFA; onset-aligned interpolation), `spatialize`, `move_sound` (paths as functions of time, continuous ear delays, room tail), `hcc_trajectory` and other trajectories, coordinate conversions, `distance_gain_db` |
 | [`spatial.hrir_data`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/hrir_data.py) | `load_hrirs`: public HRIR databases (PKU-IOA) downloaded on first use, checksum-verified and cached |
@@ -329,14 +330,14 @@ Only work still to do is listed here. Finished items are in
 
 - **All channels at once.** Impose the channels jointly; the per-channel
   objective is overhead-bound (about 2 s per iteration for 5 s of sound).
-- **Sparse pops.** Fire-like recordings have pops whose sizes follow a power
-  law (tail exponent about 1 to 1.6, measured on envelope peaks), so their
-  envelope kurtosis has no stable value: in a 20 s fire recording it grows
-  from about 220 over 1 s to about 1900 over 20 s. Neither sonore nor the
-  MATLAB toolbox reproduces such recordings well. Open questions: a tail
-  exponent as a texture statistic, and whether one `event_train` with
-  power-law levels can give both the hiss and the pops. Proposal:
-  `docs/design/views/envelope-peaks.md`.
+- **Sparse pops.** Some texture syntheses lose the pops of their
+  original: measured on envelope peaks above 2 kHz, a clapper close to the
+  microphone goes from a tail exponent of 1.4 to 3.6 and a typewriter from
+  1.8 to 3.9, and both stop sounding like themselves. The pops seem to be
+  lost across channels, not within them: each band keeps its tail, but the
+  big moments no longer line up. Open: whether and how synthesis should
+  impose that, decided by ear after a gallery section on the Sound textures
+  page (`docs/design/views/envelope-peaks.md`).
 
 **Other**
 

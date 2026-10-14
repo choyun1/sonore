@@ -160,3 +160,12 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   size of its target lifts modulation power further but did not make fire
   sound better, so synthesis output is unchanged. A one-off comparison;
   the scripts are not part of the repository.
+- **Envelope peaks (`so.envelope_peaks`).** How big a sound's pops are: the
+  largest envelope value in each 5 ms bin above 300 Hz and 2 kHz, and the
+  power-law exponent of their upper tail by the Hill estimator, with its
+  uncertainty. On the 168 recordings of McDermott & Simoncelli (2011), 14
+  have an exponent below 2 (tapping, fire, castanets, a typewriter), and
+  the exponent does not drift with the excerpt's length as kurtosis does.
+  The measurement is checked by `tools/check_envelope_peaks_claims.py`;
+  the survey of the recordings is not part of the repository
+  (`docs/design/views/envelope-peaks.md`).

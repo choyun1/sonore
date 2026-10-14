@@ -101,6 +101,7 @@ from sonore.spatial.spatialization import (
 )
 from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
 from sonore.views.cepstrum import Cepstrum
+from sonore.views.envelope_peaks import EnvelopePeaks, envelope_peaks
 from sonore.views.envelopes import Envelope, Envelopes, channel_vocode
 from sonore.views.f0 import F0Track, f0_track, scale_f0
 from sonore.views.lpc import LPC, FormantTrack, formant_track, levinson
@@ -256,6 +257,8 @@ __all__ = [
     "move_sound",
     "channel_vocode",
     "quilt",
+    "envelope_peaks",
+    "EnvelopePeaks",
     "normalize",
     "oscor",
     "overview",
