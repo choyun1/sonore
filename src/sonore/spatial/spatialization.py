@@ -41,11 +41,18 @@ from numpy.typing import ArrayLike
 from scipy.interpolate import CubicSpline
 from scipy.signal import fftconvolve, minimum_phase
 from scipy.spatial import ConvexHull, cKDTree
-from scipy.special import i0
 
 from sonore.core.processing import _track
 from sonore.core.sound import Sound
-from sonore.core.utils import _phase_ramp_delay, _resample_poly, db_to_amp, db_to_power, time_axis
+from sonore.core.utils import (
+    _READ_HALF_WIDTH,
+    _phase_ramp_delay,
+    _read_between_samples,
+    _resample_poly,
+    db_to_amp,
+    db_to_power,
+    time_axis,
+)
 
 __all__ = [
     "rect_to_sph",
@@ -536,48 +543,7 @@ def spatialize(
     return sound.convolve(Sound(hrir.T, sound.fs))
 
 
-_READ_HALF_WIDTH = 16  # the windowed sinc spans 32 samples
-_READ_KAISER_BETA = 8.0
-_READ_PHASES = 512  # fractional positions at which the windowed sinc is tabulated
 _DELAY_STEP = 1e-3  # s; spacing at which ear delays are looked up before smoothing
-
-
-def _windowed_sinc_table() -> np.ndarray:
-    """The 32 taps of the Kaiser-windowed sinc for reading at a fraction
-    k / _READ_PHASES of a sample past a whole sample, k = 0 .. _READ_PHASES,
-    shape (_READ_PHASES + 1, 32)."""
-    fraction = np.arange(_READ_PHASES + 1) / _READ_PHASES
-    distance = fraction[:, None] - np.arange(-_READ_HALF_WIDTH + 1, _READ_HALF_WIDTH + 1)[None, :]
-    window = i0(_READ_KAISER_BETA * np.sqrt(np.clip(1 - (distance / _READ_HALF_WIDTH) ** 2, 0, None)))
-    return np.sinc(distance) * window / i0(_READ_KAISER_BETA)
-
-
-_SINC_TABLE = _windowed_sinc_table()
-
-
-def _read_between_samples(signal: np.ndarray, positions: np.ndarray, chunk: int = 32768) -> np.ndarray:
-    """``signal`` read at fractional sample ``positions`` with a 32-sample
-    Kaiser-windowed sinc; zero outside the signal. The taps are interpolated
-    linearly between 512 tabulated fractions of a sample, which changes the
-    result by -117 dB for white noise. For a tone, the error is about -90 dB re the
-    signal up to a third of the sampling rate and -80 dB at 0.42 of it
-    (20 kHz at 48 kHz); above that the sinc rolls off."""
-    margin = 2 * _READ_HALF_WIDTH
-    padded = np.concatenate([np.zeros(margin), signal, np.zeros(margin)])
-    offsets = np.arange(-_READ_HALF_WIDTH + 1, _READ_HALF_WIDTH + 1)
-    out = np.zeros(len(positions))
-    inside = np.flatnonzero(
-        (positions > -_READ_HALF_WIDTH) & (positions < len(signal) + _READ_HALF_WIDTH - 1)
-    )
-    for start in range(0, len(inside), chunk):
-        rows = inside[start : start + chunk]
-        whole = np.floor(positions[rows]).astype(int)
-        phase = (positions[rows] - whole) * _READ_PHASES
-        below = np.minimum(phase.astype(int), _READ_PHASES - 1)
-        above_share = (phase - below)[:, None]
-        taps = _SINC_TABLE[below] * (1 - above_share) + _SINC_TABLE[below + 1] * above_share
-        out[rows] = np.einsum("ij,ij->i", padded[whole[:, None] + offsets[None, :] + margin], taps)
-    return out
 
 
 def _emission_times(

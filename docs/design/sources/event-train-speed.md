@@ -1,6 +1,6 @@
 # Making event_train fast with a pitch spread
 
-Status: proposal, waiting on Cho's choice. Nothing in `src/` is changed yet.
+Status: Cho chose B1 on 2026-10-14; built (see "As built" at the end).
 
 `so.event_train` (docs/design/sources/event-texture.md) is quick without a
 pitch spread and slow with one. That matters for a sonore-sketch tab with
@@ -109,6 +109,37 @@ as now.
    about −64 dB for the chirp.
 3. **B2**: fast only when asked; every existing output stays identical.
 
+Cho chose B1 on 2026-10-14.
+
 What this note does not claim: no listening test was run, so "inaudible"
 is not claimed for B, only the measured differences above; and the times
 are one run on one machine.
+
+## As built
+
+`_read_between_samples` and its table moved from `spatial/spatialization.py`
+to `core/utils.py` and gained a `stretch` argument; `move_sound` calls it
+unstretched, and its output is bit for bit the same as before (checked on
+150 000 random positions in white noise, an evenly spaced read, and reads
+running off both ends). The stretched read reuses the same table: the sinc
+widened by `stretch` at a distance d is the table's tap for the whole-sample
+offset −floor(d / stretch), read at the fraction of d / stretch past it.
+`event_train` reads a `Sound` event every `ratio` samples with `stretch` at
+the ratio going up and 1 going down; the copy has ceil(n / ratio) samples,
+the same count `Sound.resample` gave.
+
+The checker now measures the built version against the resampling it
+replaced, written out in the checker. Per copy: 1.0 ms against 16.8 ms.
+Whole renders, before and now: 5 s at 300/s with a 100-cent spread, 7.0 s
+to 0.40 s; 5 s at 1000/s with a 300-cent spread, 25 s to 1.4 s; 60 s at
+1000/s with a 100-cent spread, 11.7 s to 1.0 s. The differences from the
+resampled output are the ones measured above for option B (6.4 × 10⁻⁴ RMS
+for the chirp trains, under 0.015 dB in the band spectrum). Renders without
+a pitch spread are unchanged.
+
+A new test compares copies with `Sound.resample` at −400, −7, 100 and 400
+cents: within 0.1% RMS for the chirp and 3% for the noise burst.
+
+The two gallery sounds with a pitch spread (Sound textures page) were not
+re-rendered: they would change by about −64 dB, and the gallery's audio is
+rendered on Cho's machine.
