@@ -29,6 +29,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   complex exponentials on each envelope.
 # - [A modulation rate that glides](#h-a-modulation-rate-that-glides): a pattern a spectrogram
 #   cannot show.
+# - [Modulation that glides in frequency](#h-modulation-that-glides-in-frequency): the same
+#   picture turned on its side, and rate and frequency gliding together.
 # - [Speech, babble and noise](#h-speech-babble-and-noise): the syllable rhythm of each talker,
 #   blurred by more voices and gone in noise with the same spectrum.
 # - [Three textures](#h-three-textures): crickets, applause and rain, each with its own rates.
@@ -211,25 +213,37 @@ def show_pair(sounds, marks, moments):
 # %% [markdown]
 # How much depth does a sound without any rhythm have? 20 s of white noise, through the same
 # analysis. The envelope of a narrow band of noise fluctuates at random, so even steady noise has
-# some depth at every rate. The cell also measures how wide the filters of the 1 s window are.
+# some depth at every rate. On the left, the depth of one band (the line is the median over
+# bands and moments, the shading the middle 68% of moments) and of all bands pooled, for both
+# windows. On the right, the 16 Hz filter of each window.
 
-# %%
+# %% [figure n1] The depth of steady noise
 noise = so.Sound(rng.standard_normal(20 * fs), fs).normalize(rms=0.1)
 _, noise_msg, noise_sharp = analyze(noise)
+fig, (left, right) = plt.subplots(1, 2, figsize=(9, 3.4), layout="constrained", width_ratios=[3, 2])
+rates = np.linspace(4, 28, 2001)
+for msg, label, color in ((noise_msg, "1 s window", "C0"), (noise_sharp, "0.25 s window", "C1")):
+    one_band = np.moveaxis(depth_db(msg), 1, 0).reshape(len(msg.fm), -1)  # rate x (band, moment)
+    low, middle, high = np.nanpercentile(one_band, [16, 50, 84], axis=1)
+    pooled = np.nanmedian(20 * np.log10(msg.pooled_depth()[0]), axis=1)
+    left.fill_between(msg.fm, low, high, color=color, alpha=0.25, lw=0)
+    left.plot(msg.fm, middle, color=color, label=f"{label}, one band")
+    left.plot(msg.fm, pooled, color=color, ls="--", label=f"{label}, pooled")
+    response = msg.bank.response(rates)[:, list(msg.fm).index(16.0)]
+    right.plot(rates, response, color=color, label=label)
+left.set(xscale="log", xlabel="Modulation rate [Hz]", ylabel="Depth [dB]", ylim=(-40, -5))
+rate_ticks(left.xaxis)
+left.legend(fontsize=8, ncols=2, loc="upper center")
+right.set(xlabel="Modulation rate [Hz]", ylabel="Gain", title="The filter at 16 Hz")
+right.legend(fontsize=8)
+
 noise_db = depth_db(noise_msg)
-sharper_by = np.nanmedian(depth_db(noise_sharp)) - np.nanmedian(noise_db)
-print(f"0.25 s window: {sharper_by:.1f} dB deeper than the 1 s window")
-noise_pooled = 20 * np.log10(noise_msg.pooled_depth()[0])
 band_median = np.nanmedian(noise_db, axis=(0, 2))
 band_scatter = np.nanmedian(np.nanstd(noise_db, axis=2), axis=0)
-pooled_scatter = np.nanstd(noise_pooled, axis=1)
-for rate, level, one, pooled in zip(noise_msg.fm, band_median, band_scatter, pooled_scatter, strict=True):
-    print(f"{rate:5.3g} Hz: median {level:5.1f} dB, scatter in a band {one:.1f} dB, pooled {pooled:.1f} dB")
-rates = np.linspace(1, 16, 20001)  # the response of the 8 Hz filter
-response = noise_msg.bank.response(rates)[:, list(noise_msg.fm).index(8.0)]
+pooled_scatter = np.nanstd(20 * np.log10(noise_msg.pooled_depth()[0]), axis=1)
+sharper_by = np.nanmedian(depth_db(noise_sharp)) - np.nanmedian(noise_db)
+response = noise_msg.bank.response(rates)[:, list(noise_msg.fm).index(16.0)]
 half_power = rates[response >= response.max() / np.sqrt(2)]
-quality = 8.0 / (half_power[-1] - half_power[0])
-print(f"8 Hz filter: half-power width {half_power[-1] - half_power[0]:.2f} Hz, Q = {quality:.2f}")
 
 # %% [markdown]
 # Steady noise reads about {{ f"{band_median[0]:.0f}" }} dB at 2 Hz and
@@ -241,7 +255,7 @@ print(f"8 Hz filter: half-power width {half_power[-1] - half_power[0]:.2f} Hz, Q
 # {{ f"{half_power[-1] - half_power[0]:.1f}" }} Hz wide at half power, whatever its rate, as every
 # bin of an STFT is equally wide. The filters of the 0.25 s window are four times wider and take
 # in more of the envelope's random fluctuation, so on steady noise they read about
-# {{ f"{sharper_by:.0f}" }} dB deeper; that is why the lower panels look brighter throughout.
+# {{ f"{sharper_by:.0f}" }} dB deeper; that is why the 0.25 s panels look brighter throughout.
 # The modulation filters of a model of modulation detection (Dau et al., 1997) instead widen
 # with their rate, with a Q of 2 above 10 Hz; sonore's bank can do that too (see
 # [What this page leaves out](#h-what-this-page-leaves-out)).
@@ -272,6 +286,82 @@ phase = 2 * np.pi * r0 * dur / np.log(r1 / r0) * ((r1 / r0) ** (t / dur) - 1)
 glide = (1 + 0.5 * np.sin(phase)) * rng.standard_normal(len(t))
 sound = finish(so.Sound(glide, fs))
 fig, playhead, live = show(sound)
+
+# %% [markdown]
+# ## Modulation that glides in frequency
+#
+# The gliding rate lights a vertical strip in the band x rate image: one rate, every band. Its
+# counterpart on the other axis is a horizontal strip, every rate in one band, and here it glides
+# up in frequency. The sound is a train of 5 ms noise bursts at random times, 12 a second on
+# average. Random timing modulates the envelope at every rate at once. The bursts are confined to
+# a band a third of an octave wide whose center rises from 200 Hz to 5 kHz over 8 s, and a steady
+# noise 30 dB below them fills the other bands. `in_band` does the confining with a mask on an
+# STFT (64 ms windows), whose Gaussian gain on a log-frequency axis follows the band's center.
+
+# %%
+glide_rng = np.random.default_rng(1)  # the glides' own draws, so the examples below stay as they were
+
+
+def log_glide(start, end, duration, t):
+    """A value gliding from ``start`` to ``end`` at a constant rate in octaves, at times ``t`` [s]."""
+    return start * (end / start) ** (t / duration)
+
+
+def in_band(snd, center, width=1 / 3, background_db=-30):
+    """``snd`` kept only in a band ``width`` octaves wide (at half height) around ``center(t)``
+    [Hz], plus steady noise ``background_db`` below it."""
+    stft = so.STFT(snd, win_dur=0.064, hop_dur=0.008)
+    octaves = np.log2(np.maximum(stft.f, 1.0)[:, None] / center(stft.t)[None, :])
+    gains = np.exp(-0.5 * (octaves / (width / 2.355)) ** 2)  # 2.355 SDs make the width at half height
+    band = (stft * so.Mask(gains[None], stft)).to_sound()
+    background = so.Sound(glide_rng.standard_normal(len(snd)), snd.fs)
+    return band + background.normalize(rms=band.rms * 10 ** (background_db / 20))
+
+
+# %% [about]
+# You hear a crackle rise in pitch. In the cochleagram each burst is a short mark, and the marks
+# climb. Next to the player a horizontal strip climbs with them: one or two bands deeply modulated
+# at every rate, the rest at the depth of steady noise. The pooled views are bright at every rate
+# throughout, since some band always carries the bursts.
+
+# %% [demo g2] Bursts in a band that glides up
+dur = 8.0
+t = np.arange(int(dur * fs)) / fs
+burst = np.hanning(int(0.005 * fs))
+train = np.zeros(len(t))
+for start in np.cumsum(glide_rng.exponential(1 / 12, size=200)):
+    i = int(start * fs)
+    if i + len(burst) <= len(t):
+        train[i : i + len(burst)] += burst
+bursts = so.Sound(train * glide_rng.standard_normal(len(t)), fs)
+sound = finish(in_band(bursts, lambda times: log_glide(200, 5000, dur, times)))
+fig, playhead, live = show(sound)
+
+# %% [markdown]
+# Now both at once: noise fully modulated at one rate, confined to a band, with the rate and the
+# band's center each gliding up or down. The four combinations follow one another, 4 s each: rate
+# up and frequency up, rate up and frequency down, rate down and frequency up, and both down. The
+# rate glides between 2 and 32 Hz, the center between 500 Hz and 4 kHz.
+
+# %% [about]
+# Next to the player a single spot moves diagonally: up and to the right, down and to the right,
+# up and to the left, then down and to the left. In the pooled views the rate draws a rising and
+# a falling line in each half. A band also lights up and goes dark as the noise passes through
+# it, which is itself a slow modulation, so the bands the spot has just crossed glow at the
+# slowest rates. The dashed lines mark the joins.
+
+# %% [demo g3] Rate and frequency gliding together
+dur = 4.0
+t = np.arange(int(dur * fs)) / fs
+parts = []
+for r0, r1 in ((2, 32), (32, 2)):  # rate up, then down
+    for f0, f1 in ((500, 4000), (4000, 500)):  # center up, then down
+        phase = 2 * np.pi * r0 * dur / np.log(r1 / r0) * ((r1 / r0) ** (t / dur) - 1)
+        modulated = so.Sound((1 + np.sin(phase)) * glide_rng.standard_normal(len(t)), fs)
+        part = in_band(modulated, lambda times, f0=f0, f1=f1: log_glide(f0, f1, dur, times))
+        parts.append(part.normalize(rms=0.1))
+sound = finish(so.concat(parts))
+fig, playhead, live = show(sound, marks=[4.0, 8.0, 12.0], start=2.0)
 
 # %% [markdown]
 # ## Speech, babble and noise
