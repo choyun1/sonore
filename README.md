@@ -339,6 +339,9 @@ Only work still to do is listed here. Finished items are in
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
   open quotient, spectral tilt, flutter, double pulsing, and its KLGLOTT88 source.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
+- Chroma (energy per pitch class, octaves folded), with Shepard tones and the Risset glide as
+  `harmonic_complex` recipes and a "Pitch class and height" music page; proposed in
+  [docs/design/views/chroma.md](https://github.com/choyun1/sonore/blob/main/docs/design/views/chroma.md).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - Routes back to sound from a sharpened time-frequency picture: a synchrosqueezed STFT (the
   coefficients moved in frequency only, so it stays exactly invertible) and partials tracked on
