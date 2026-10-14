@@ -686,8 +686,7 @@ fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</
 event at onsets whose intervals are drawn from a distribution, here exponential, which makes
 the onsets a Poisson process. Its long-term spectrum is the event's own at every rate; what the
 rate changes is how many events overlap, and with it the statistics beyond the spectrum (the
-design notes measure both: <a href="https://github.com/choyun1/sonore/blob/main/docs/design/sources/event-texture.md" target="_blank" rel="noopener">event-texture.md</a>).
-The event is a synthetic sweep, not a recording or a model of any animal.</p>
+design notes measure both: <a href="https://github.com/choyun1/sonore/blob/main/docs/design/sources/event-texture.md" target="_blank" rel="noopener">event-texture.md</a>).</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">from scipy import stats
 
 chirp = so.exponential_chirp(0.03, FS, 2000, 6000)
@@ -872,23 +871,23 @@ only a quarter of their mean, so the events come almost evenly.</p></div>
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e14" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9826455, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3073280016809964, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9826455, &quot;top&quot;: 0.3906215863370809, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+<article class="sound" id="d-e14" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3073280016809964, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.3906215863370809, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
   <div class="about">
-    <h3>Steps of 1, 10, 100 and 1000 events per second</h3>
-    <div class="desc"><p>A rate that changes over time: <code>rate_scale</code> steps from 1 to 10, 100 and 1000 events per second,
-5 s at each. A track is interpolated linearly between its points, so each step is written as
+    <h3>Steps of 10, 100 and 1000 events per second</h3>
+    <div class="desc"><p>A rate that changes over time: <code>rate_scale</code> steps from 10 to 100 and 1000 events per second,
+3 s at each. A track is interpolated linearly between its points, so each step is written as
 two points a microsecond apart.</p></div>
-    <audio controls preload="metadata" src="audio/e14_steps_of_1_10_100_and_1000_events_per_second.flac"></audio>
-    <p class="file">e14_steps_of_1_10_100_and_1000_events_per_second.flac, 20.0 s, mono</p>
+    <audio controls preload="metadata" src="audio/e14_steps_of_10_100_and_1000_events_per_second.flac"></audio>
+    <p class="file">e14_steps_of_10_100_and_1000_events_per_second.flac, 9.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e14_steps_of_1_10_100_and_1000_events_per_second.png" width="1000" height="420" alt="Plots of the steps of 1, 10, 100 and 1000 events per second sound" loading="lazy">
+    <img src="img/e14_steps_of_10_100_and_1000_events_per_second.png" width="1000" height="420" alt="Plots of the steps of 10, 100 and 1000 events per second sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">step_rates = [1, 10, 100, 1000]
-step_times = [t for k in range(len(step_rates)) for t in (5 * k, 5 * (k + 1) - 1e-6)]
+  <details class="code"><summary>Code</summary><pre><code class="language-python">step_rates = [10, 100, 1000]
+step_times = [t for k in range(len(step_rates)) for t in (3 * k, 3 * (k + 1) - 1e-6)]
 steps = (step_times, np.repeat(step_rates, 2))
-sound = finish(so.event_train(chirp, 20.0, stats.expon(scale=1.0), rate_scale=steps, rng=0))
+sound = finish(so.event_train(chirp, 9.0, stats.expon(scale=1.0), rate_scale=steps, rng=0))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 </section>
