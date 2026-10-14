@@ -20,6 +20,11 @@ Breaking changes since 0.6.0 (each is described under Changed):
 - sonore ships `py.typed`, so type checkers read its annotations, and CI
   checks them with mypy. String options are typed as the values they accept
   (`Literal`), so an editor can offer them and a checker can catch a typo.
+- `so.event_train`: copies of one event (a chirp, say) scattered in time,
+  from single events to a dense texture. The time between onsets, each
+  copy's level and each copy's pitch are drawn from distributions given as
+  numbers or SciPy distributions, and a rate track speeds the onsets up or
+  slows them down over time (docs/design/sources/event-texture.md).
 
 ### Changed
 

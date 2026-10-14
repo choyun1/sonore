@@ -23,6 +23,9 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   synthesis, which shares no waveform with it, only statistics.
 # - [What the statistics do](#h-what-the-statistics-do): the same textures synthesized from only
 #   some of the statistics.
+# - [From single events to a texture](#h-from-single-events-to-a-texture): one chirp copied at
+#   rising rates, from events that stand apart to a dense sum, and what level, pitch and timing
+#   spreads do.
 
 # %% [markdown]
 # ## Code the examples share
@@ -328,6 +331,173 @@ fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
 # %% [demo u21] Fire, marginals and modulation power
 sound = finish(synthesized("fire", "marginals_modpower"))
 fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
+
+# %% [markdown]
+# ## From single events to a texture
+#
+# The definition above, many similar events, can be built directly. `so.event_train` copies one
+# event at onsets whose intervals are drawn from a distribution, here exponential, which makes
+# the onsets a Poisson process. Its long-term spectrum is the event's own at every rate; what the
+# rate changes is how many events overlap, and with it the statistics beyond the spectrum (the
+# design notes measure both: [event-texture.md](https://github.com/choyun1/sonore/blob/main/docs/design/sources/event-texture.md)).
+# The event is a synthetic sweep, not a recording or a model of any animal.
+
+# %%
+from scipy import stats
+
+chirp = so.exponential_chirp(0.03, FS, 2000, 6000)
+chirp = chirp * np.hanning(len(chirp))[:, None]
+
+
+def chorus(rate, duration=5.0, seed=0, **kwargs):
+    """Copies of the chirp at Poisson onsets, `rate` per second on average."""
+    return so.event_train(chirp, duration, stats.expon(scale=1 / rate), lead=0.03, rng=seed, **kwargs)
+
+
+def events_fig(snd):
+    """Waveform over a spectrogram, 1 to 8 kHz."""
+    fig, (ax_w, ax_s) = plt.subplots(2, 1, figsize=(10, 4.2), height_ratios=(1, 2), layout="constrained")
+    ax_w.plot(snd.t, snd.data[:, 0], lw=0.4)
+    ax_w.set(xlim=(0, snd.duration), title="Waveform")
+    ax_w.set_xticklabels([])
+    so.STFT(snd, win_dur=10e-3).plot(ax_s, fmax=8000, db_range=60, colorbar=False)
+    ax_s.set_ylim(1, 8)  # kHz
+    ax_s.set_title("Spectrogram")
+    return fig, [ax_w, ax_s]
+
+# %% [about]
+# The event: a 30 ms sweep from 2 to 6 kHz, exponential in frequency, under a Hann window,
+# repeated once a second here so it can be heard on its own.
+
+# %% [demo e00] The event
+sound = finish(so.event_train(chirp, 3.0, 1.0, lead=0.5))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# One event per second on average. With Poisson timing, gaps are irregular, and an event of
+# 30 ms overlaps another only about 6% of the time.
+
+# %% [demo e01] 1 event per second
+sound = finish(chorus(1, seed=1))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Three per second.
+
+# %% [demo e02] 3 events per second
+sound = finish(chorus(3))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Ten per second: on average 0.3 events sound at once, and about half the events overlap another.
+
+# %% [demo e03] 10 events per second
+sound = finish(chorus(10))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Thirty per second: about one event sounding at any moment.
+
+# %% [demo e04] 30 events per second
+sound = finish(chorus(30))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# A hundred per second: three at once on average.
+
+# %% [demo e05] 100 events per second
+sound = finish(chorus(100))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Three hundred per second.
+
+# %% [demo e06] 300 events per second
+sound = finish(chorus(300))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# A thousand per second: thirty at once. The waveform is close to Gaussian noise with the chirp's
+# spectrum.
+
+# %% [demo e07] 1000 events per second
+sound = finish(chorus(1000))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Where each rate sits on one of the texture model's statistics: the envelope variance over the
+# squared mean (`env_var`, as in the plots above), averaged over the bands from 2 to 6 kHz where
+# the chirp has its energy, measured on 10 s of each rate. The dashed line is Gaussian noise
+# filtered to the chirp's spectrum, the limit as the rate grows. This is a one-way view: it
+# places each sound on one statistic and says nothing about its rhythm or onsets.
+
+# %% [figure e08] Envelope sparsity against rate
+rates = [1, 3, 10, 30, 100, 300, 1000]
+
+
+def sparsity(snd):
+    measured = TextureStats.measure(snd)
+    cfs = measured.model.filterbank.cfs
+    return measured.env_var[(cfs >= 2000) & (cfs <= 6000)].mean()
+
+
+noise = so.gaussian_noise(10.0, FS, rng=0).convolve(chirp)[:10.0]
+fig, ax = plt.subplots(figsize=(10, 3.4), layout="constrained")
+ax.loglog(rates, [sparsity(chorus(rate, duration=10.0)) for rate in rates], "o-", lw=1.2, label="event train")
+ax.axhline(sparsity(noise), color="k", ls="--", lw=1, label="Gaussian noise, chirp spectrum")
+ax.set(xlabel="Events per second", ylabel="var / mean²", title="Envelope sparsity, 2 to 6 kHz")
+ax.legend(fontsize=8)
+ax.grid(ls=":", which="both", lw=0.5)
+
+# %% [markdown]
+# ### Level, pitch and timing
+#
+# Each copy's level and pitch can be drawn from a distribution too, and so can the timing. All
+# three below are at 30 events per second, the rate where events start to run into each other.
+# A spread in level leaves a few loud events standing out of the rest, which keeps the sound
+# sparse by the measure above for longer as the rate rises; a spread in pitch widens the
+# spectrum. Regular timing turns the rate into a steady rhythm in the envelope.
+
+# %% [about]
+# Levels drawn from a normal distribution in dB, standard deviation 6 dB.
+
+# %% [demo e10] Level spread, 6 dB
+sound = finish(chorus(30, level_db=stats.norm(0, 6)))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Pitch shifts drawn from a normal distribution in cents, standard deviation 300 cents (a minor
+# third). Each copy is resampled, so a higher copy is also a shorter one.
+
+# %% [demo e11] Pitch spread, 300 cents
+sound = finish(chorus(30, pitch_cents=stats.norm(0, 300)))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Intervals from a gamma distribution with shape 16: the same mean rate, but intervals vary by
+# only a quarter of their mean, so the events come almost evenly.
+
+# %% [demo e12] Nearly regular timing
+sound = finish(so.event_train(chirp, 5.0, stats.gamma(16, scale=1 / (30 * 16)), lead=0.03, rng=0))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# Exactly regular timing, an interval of 1/30 s: a train of identical chirps 30 times a second.
+
+# %% [demo e13] Regular timing
+sound = finish(so.event_train(chirp, 5.0, 1 / 30, lead=0.03))
+fig, playhead = events_fig(sound)
+
+# %% [about]
+# A rate that changes over time: `rate_scale` rises from 1 to 1000 over 20 s, exponentially (the
+# track's points are spaced closely enough that its linear interpolation follows the curve). The
+# sound goes from single events to the dense end of the ladder above in one sweep.
+
+# %% [demo e14] From 1 to 1000 events per second
+track_times = np.linspace(0, 20, 201)
+rising = (track_times, 1000 ** (track_times / 20))
+sound = finish(so.event_train(chirp, 20.0, stats.expon(scale=1.0), rate_scale=rising, rng=0))
+fig, playhead = events_fig(sound)
 
 # %% [markdown]
 # ## References
