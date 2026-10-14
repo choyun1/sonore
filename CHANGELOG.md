@@ -8,6 +8,16 @@ version (0.x.y) only fixes bugs.
 
 ### Added
 
+- `so.chroma`: the power in each of the 12 pitch classes per time window,
+  from the cosine filterbank on the cents scale with one band per semitone
+  (A1 to A8 by default, A4 at `reference`), the octaves of each pitch class
+  added together. A one-way view (`Chroma`) that drops octave height.
+  `Chroma.to_sound(fs, octaves=...)` plays each pitch class as a Shepard
+  tone, which gives the same chroma back; `octaves` is the spread over
+  octaves the view dropped (a bell with no height by default, a note such
+  as `"C4"`, or a function of frequency). `Chroma.plot` and
+  `plot_chroma`. Design and checks in docs/design/views/chroma.md and
+  `tools/check_chroma_claims.py`.
 - `so.envelope_peaks`: how big a sound's pops are. The largest envelope
   value in each 5 ms bin of the sound high-passed at 300 Hz and at 2 kHz,
   and the power-law exponent of their upper tail by the Hill estimator,

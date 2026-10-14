@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from sonore.sources.ripples import Pattern
     from sonore.spatial.binaural import InterauralCues
     from sonore.views.cepstrum import Cepstrum
+    from sonore.views.chroma import Chroma
     from sonore.views.envelope_peaks import EnvelopePeaks
     from sonore.views.envelopes import Envelope, Envelopes
     from sonore.views.f0 import F0Track
@@ -57,6 +58,7 @@ __all__ = [
     "plot_mfcc",
     "plot_f0_track",
     "plot_descriptor_track",
+    "plot_chroma",
     "plot_interaural_cues",
     "plot_ripple_pattern",
     "plot_lissajous",
@@ -767,6 +769,24 @@ def plot_descriptor_track(
     ax.plot(track.t, track.values[channel], **kwargs)
     ylabel = f"{track.name} [{track.unit}]" if track.unit else track.name
     ax.set(xlabel="Time [s]", ylabel=ylabel)
+    return ax
+
+
+def plot_chroma(
+    view: Chroma, ax: Axes | None = None, *, channel: int = 0, db_range: float = 40.0, cmap: str = "magma"
+) -> Axes:
+    """A :class:`~sonore.views.chroma.Chroma`: the 12 pitch classes, C at the
+    bottom, against time, in dB, the ``db_range`` dB below the loudest cell."""
+    from sonore.core.utils import power_to_db
+    from sonore.views.chroma import PITCH_CLASSES
+
+    ax = _ax(ax)
+    with np.errstate(divide="ignore"):
+        db = power_to_db(view.power[:, :, channel].T)
+    vmin, vmax = _db_limits(db[np.isfinite(db)] if np.isfinite(db).any() else np.zeros(1), db_range)
+    _image(ax, view.t, np.arange(12), db, cmap, vmin, vmax, True, "Power [dB]")
+    ax.set_yticks(np.arange(12), PITCH_CLASSES)
+    ax.set(xlabel="Time [s]", ylabel="Pitch class", title="Chroma")
     return ax
 
 

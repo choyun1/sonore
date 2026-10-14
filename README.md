@@ -266,6 +266,7 @@ under `so.texture` and `sonore.texture.synth`.
 | [`views.lpc`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py) | `LPC` (linear prediction of each time window of a `Sound` or an `STFT`, by the autocorrelation method and `levinson`: the all-pole envelope, as a `GridEnvelope` too, and every resonance from the roots; `.plot()`; not invertible), `formant_track` → `FormantTrack` (F1 to F3 every 5 ms: Praat's recipe for candidates, within a few hertz of Praat's own, and a Viterbi tracker; `.track(n)` gives the `(times, values)` that `klatt_synthesize` takes; `.plot()`) |
 | [`views.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py) | `f0_track` → `F0Track` (F0 every 5 ms with a voiced/unvoiced decision: candidates from YIN's difference function, refinement by the instantaneous frequency of six harmonics, a periodicity score, a Viterbi pass; `.plot()`; checked against laryngograph F0), `scale_f0` (a pitch change on any F0 contour, with a range factor) |
 | [`views.timbre`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/timbre.py) | `log_attack_time` and `attack_segment` (the attack by Peeters et al.'s weakest-effort method), `spectral_centroid` (magnitude spectrum by default, as the paper) and `spectral_flux` → `DescriptorTrack` (one value per 5.8 ms, with `.median` and `.iqr`); timbre descriptors written from Peeters et al. (2011), checked in `tools/check_timbre_claims.py` |
+| [`views.chroma`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/chroma.py) | `chroma` → `Chroma` (the power in each of the 12 pitch classes per 0.05 s time window, from a cosine filterbank with one band per semitone, A1 to A8, the octaves added together); `Chroma.to_sound(fs, octaves=...)` plays each pitch class as a Shepard tone, with `octaves` saying how the power spreads over octaves; checked in `tools/check_chroma_claims.py` |
 | [`views.spectral_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py) | `cheaptrick` → `SpectralEnvelope` (WORLD's CheapTrick, ported exactly: it matches WORLD to floating-point precision), `warp_frequency` (formants moved along frequency on any envelope or aperiodicity, by a ratio, a ratio over time or any frequency map), `GridEnvelope` (any envelope as power on a grid, as `Cepstrum.envelope_view()`, `MFCC.envelope_view()` and `LPC.envelope_view()` give) |
 | [`views.aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py) | `d4c` → `Aperiodicity` (WORLD's D4C, ported exactly), `harmonic_aperiodicity` (the share of noise, by fitting the harmonics) |
 | [`views.world`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py) | `world_synthesize` (WORLD's synthesis, sample for sample, from an F0 track, envelope and aperiodicity; WORLD's own noise stream by default, or fresh noise from an `rng`; reads any F0 track and any envelope), `DIFFERENCES_FROM_WORLD` |
@@ -339,9 +340,9 @@ Only work still to do is listed here. Finished items are in
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
   open quotient, spectral tilt, flutter, double pulsing, and its KLGLOTT88 source.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
-- Chroma (energy per pitch class, octaves folded), with Shepard tones and the Risset glide as
-  `harmonic_complex` recipes and a "Pitch class and height" music page; proposed in
-  [docs/design/views/chroma.md](https://github.com/choyun1/sonore/blob/main/docs/design/views/chroma.md).
+- A "Pitch class and height" music page: the constant-Q filter bank, chroma, Shepard tones and
+  the Risset glide as `harmonic_complex` recipes
+  ([docs/design/views/chroma.md](https://github.com/choyun1/sonore/blob/main/docs/design/views/chroma.md)).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - Routes back to sound from a sharpened time-frequency picture: a synchrosqueezed STFT (the
   coefficients moved in frequency only, so it stays exactly invertible) and partials tracked on
