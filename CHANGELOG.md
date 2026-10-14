@@ -18,8 +18,9 @@ version (0.x.y) only fixes bugs.
 - Gallery: "How big the pops are" on the Sound textures page, the envelope
   peaks of the fire recording and its synthesis, and pops from
   `so.event_train` at power-law exponents 1, 2 and 4.
-- Gallery: "Background plus pops" on the Sound textures page, a recipe for
-  pop-like textures such as fire: synthesize the recording with its pops
+- Gallery: "Background plus pops" on the Sound textures page, a recipe of
+  sonore's own (not from a paper, judged only by ear) for pop-like textures
+  such as fire: synthesize the recording with its pops
   limited away, then add its own pops back with `so.event_train` at the
   exponent and rate it measures. The section opens with the math of heavy
   tails. `tools/make_texture_synths.py` stores the fire's background

@@ -161,6 +161,11 @@ meant to be readable without them.
   toolboxes, texture recordings and design decisions are written down
   (`so.texture.DIFFERENCES_FROM_TOOLBOX`, `docs/textures/SOURCES.md`, this
   folder).
+- **Say when something is sonore's own.** sonore implements published
+  methods and claims no new ones. Where a page combines them in a way no
+  cited source describes (the background plus pops recipe on the Sound
+  textures page), it says so, says what tested it and how (by ear, by
+  whom, on which sounds), and claims nothing beyond that.
 - **Write a design document before a large feature,** and agree on it before
   implementing.
 - **Do not silently change existing output.** *(Inferred from how changes
