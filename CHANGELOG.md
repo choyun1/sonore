@@ -6,6 +6,15 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-14
+
+Sound quilts (`so.quilt`, `so.splice`) and event trains (`so.event_train`),
+from single events to a texture. Options are now keyword-only, sonore ships
+type annotations and needs Python 3.11. `ModulationSpectrum` has public hooks
+for its search, `HRIRSet.at` refuses directions in the hole below PKU-IOA's
+lowest ring, and the gallery adds a Sound quilts page and an "Up and down"
+section on Binaural cues.
+
 Breaking changes since 0.6.0 (each is described under Changed):
 
 - Options are keyword-only. A call passes the arguments that say what is made
@@ -38,7 +47,9 @@ Breaking changes since 0.6.0 (each is described under Changed):
 - `ModulationSpectrum` has public hooks for the search `to_sound(iterations=n)`
   takes: `filterbank`, `modulation_phase(sound)`, `to_envelopes(phase=...,
   quiet=True)` and `iterate(sound)`, one step of the search, which
-  `to_sound` now calls. Every existing call gives the same samples.
+  `to_sound` now calls. Every existing call gives the same samples. Code
+  that called the private `_modulation_phase` or `_rebuild` (sonore-sketch's
+  two modulation tabs) should move to these names.
 - `ModulationSpectrum.to_sound(carrier=sound, rng=seed)` draws the modulation
   phase from `rng` and takes only the fine structure from the Sound, so a
   drawn target (`from_blobs`) can be heard on a harmonic complex, a
@@ -61,6 +72,13 @@ Breaking changes since 0.6.0 (each is described under Changed):
   tests 3.11 and 3.14.
 - CI checks formatting with `ruff format --check` on the package, tests and
   tools.
+- Gallery: Sound quilts is a page of its own under Stimuli, with quilts
+  played at their recording's gain; the event-train demos on Sound textures
+  get the texture page's plots; the sidebar folds its groups per page and
+  carries the logo, API reference and GitHub links. The README's references
+  move to `docs/references.md` and its gallery list is shorter. Links to other
+  sites open in a new tab.
+- `docs/philosophy.md` states the keyword-only and typing rules.
 
 ### Fixed
 
@@ -703,7 +721,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.6.0...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.7.0...main
+[0.7.0]: https://github.com/choyun1/sonore/releases/tag/v0.7.0
 [0.6.0]: https://github.com/choyun1/sonore/releases/tag/v0.6.0
 [0.5.0]: https://github.com/choyun1/sonore/releases/tag/v0.5.0
 [0.4.0]: https://github.com/choyun1/sonore/releases/tag/v0.4.0
