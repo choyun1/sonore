@@ -18,6 +18,11 @@ version (0.x.y) only fixes bugs.
   as `"C4"`, or a function of frequency). `Chroma.plot` and
   `plot_chroma`. Design and checks in docs/design/views/chroma.md and
   `tools/check_chroma_claims.py`.
+- Gallery: "Pitch class and height" in the Music group, after Tuning and
+  temperament: the semitone filter bank as a constant-Q filter bank, one
+  chord in two voicings with one chroma, Shepard tones (a scale that keeps
+  rising, two tones a tritone apart), the Risset glide, and a tune's chroma
+  played back as Shepard tones with no height and near two chosen octaves.
 - `so.envelope_peaks`: how big a sound's pops are. The largest envelope
   value in each 5 ms bin of the sound high-passed at 300 Hz and at 2 kHz,
   and the power-law exponent of their upper tail by the Hill estimator,
