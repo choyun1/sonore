@@ -144,7 +144,7 @@ def show_pair(sounds, targets=None, f_lo=125):
 # The sentence, read by each talker. Its modulation spectrum is brightest at low rates and
 # densities, as for most natural sounds (Singh & Theunissen, 2003); how that modulation changes
 # over the sentence is on [Modulation spectrogram](modspectrogram.html#d-s1). The
-# [speech-shaped noise](classic.html#d-k1) on Synthetic sounds has the long-term spectrum of speech
+# [speech-shaped noise](classic.html#d-k1) on Tones and noises has the long-term spectrum of speech
 # but none of this: its modulation spectrum is a single line at zero rate. In the cochleagrams
 # the lowest harmonics show as separate lines, farther apart for the female talker
 # ([Two talkers](talkers.html#h-harmonics-sample-the-envelope)); at the slow rates shown here the

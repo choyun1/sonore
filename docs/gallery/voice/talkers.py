@@ -219,8 +219,8 @@ ax.legend(loc="upper right", fontsize=8)
 # ## Long-term spectra
 #
 # Averaged over the whole sentence, silences included, the spectrum shows where each reading puts
-# its power (`so.long_term_spectrum`, as for the speech-shaped noise on [Synthetic
-# sounds](classic.html#h-speech-shaped-noise)). Averaged over many talkers, Byrne et al. (1994)
+# its power (`so.long_term_spectrum`, as for the speech-shaped noise on [Tones and
+# noises](classic.html#h-speech-shaped-noise)). Averaged over many talkers, Byrne et al. (1994)
 # found male and female long-term spectra nearly the same from 250 Hz to 5 kHz, with the male ones
 # higher at 160 Hz and below, where their fundamentals lie. One sentence from each of two talkers
 # can differ by more. The cell prints how each sentence's power divides among octave bands.

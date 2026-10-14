@@ -31,7 +31,7 @@ accepted by Cho 2026-10-14: D1 as two public names, `so.quilt` and
   toolbox in GNU Octave 10.3 (conda-forge, with the signal package) beside
   sonore. Dev-time only, since the toolbox cannot be in the repository.
 - **[sound]**: measured with sonore itself by the gallery's Sound quilts
-  page (docs/gallery/stimuli/quilts.py), with the seeds given there.
+  page (docs/gallery/textures/quilts.py), with the seeds given there.
 
 ## The method [source]
 

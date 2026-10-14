@@ -170,34 +170,34 @@ synthesized sounds' subband envelopes (middle), and their measured
 
 More in the gallery:
 
-**Stimuli**
+**Synthetic sounds**
 
-- [Synthetic sounds](https://choyun1.github.io/sonore/gallery/classic.html): speech-shaped noise, beats, tone sequences, aliasing. [▶ speech-shaped noise](https://choyun1.github.io/sonore/gallery/classic.html#d-k1)
+- [Tones and noises](https://choyun1.github.io/sonore/gallery/classic.html): speech-shaped noise, beats, tone sequences, aliasing. [▶ speech-shaped noise](https://choyun1.github.io/sonore/gallery/classic.html#d-k1)
 - [Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html): a pitch made from noise and a delay. [▶ sixteen iterations](https://choyun1.github.io/sonore/gallery/irn.html#d-09)
 - [Spectrotemporal ripples](https://choyun1.github.io/sonore/gallery/ripples.html): moving ripples on different carriers. [▶ dynamic ripple](https://choyun1.github.io/sonore/gallery/ripples.html#d-06)
-- [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): syntheses from statistics (McDermott & Simoncelli, 2011). [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b)
-- [Sound quilts](https://choyun1.github.io/sonore/gallery/quilts.html): recordings cut into segments and reordered (Overath et al., 2015). [▶ fire](https://choyun1.github.io/sonore/gallery/quilts.html#d-sq4)
 
-**Analysis and resynthesis**
+**Seeing and changing sound**
 
+- [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html): time-frequency analysis on one sentence. [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30)
 - [Analysis and resynthesis](https://choyun1.github.io/sonore/gallery/resynthesis.html): perfect reconstruction and the ideal binary mask. [▶ binary mask](https://choyun1.github.io/sonore/gallery/resynthesis.html#d-25)
 - [Phase vocoder](https://choyun1.github.io/sonore/gallery/pv.html): duration, pitch and partials changed independently. [▶ up a fifth](https://choyun1.github.io/sonore/gallery/pv.html#d-13)
+- [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html): cochlear-implant simulation. [▶ sixteen bands](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci16)
+- [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html): how each band's envelope moves, moment by moment. [▶ speech, babble, noise](https://choyun1.github.io/sonore/gallery/modspectrogram.html#d-s1)
+- [Hearing a modulation spectrum](https://choyun1.github.io/sonore/gallery/modtargets.html): sounds made from a measured, edited or drawn modulation spectrum. [▶ rain with a sentence's timing](https://choyun1.github.io/sonore/gallery/modtargets.html#d-mt9)
+
+**Textures**
+
+- [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): syntheses from statistics (McDermott & Simoncelli, 2011). [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b)
+- [Sound quilts](https://choyun1.github.io/sonore/gallery/quilts.html): recordings cut into segments and reordered (Overath et al., 2015). [▶ fire](https://choyun1.github.io/sonore/gallery/quilts.html#d-sq4)
 
 **Voices**
 
 - [Two talkers](https://choyun1.github.io/sonore/gallery/talkers.html): the male and female talker every speech page uses. [▶ both](https://choyun1.github.io/sonore/gallery/talkers.html#d-tk1)
-- [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html): time-frequency analysis on one sentence. [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30)
 - [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html): Klatt's synthesizer taken apart, and a sentence copied from its formants. [▶ copy](https://choyun1.github.io/sonore/gallery/formants.html#d-ft5)
 - [Pitch tracking](https://choyun1.github.io/sonore/gallery/pitch.html): three trackers, where each fails, and how the errors sound. [▶ buzz on the track](https://choyun1.github.io/sonore/gallery/pitch.html#d-hp2)
 - [Spectral envelope](https://choyun1.github.io/sonore/gallery/cepstrum.html): timbre without pitch, and MFCCs. [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3)
 - [Source and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html): how much of a voice is noise. [▶ whispered](https://choyun1.github.io/sonore/gallery/aperiodicity.html#d-ap13)
 - [Rebuilding and changing a voice](https://choyun1.github.io/sonore/gallery/voice.html): pitch and formants moved separately. [▶ one talker toward another](https://choyun1.github.io/sonore/gallery/voice.html#d-vc15)
-
-**Envelopes and modulation**
-
-- [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html): cochlear-implant simulation. [▶ sixteen bands](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci16)
-- [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html): how each band's envelope moves, moment by moment. [▶ speech, babble, noise](https://choyun1.github.io/sonore/gallery/modspectrogram.html#d-s1)
-- [Hearing a modulation spectrum](https://choyun1.github.io/sonore/gallery/modtargets.html): sounds made from a measured, edited or drawn modulation spectrum. [▶ rain with a sentence's timing](https://choyun1.github.io/sonore/gallery/modtargets.html#d-mt9)
 
 **Spatial hearing** (🎧 headphones)
 
