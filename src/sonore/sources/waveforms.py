@@ -271,8 +271,8 @@ def harmonic_complex(
 
     Octave-numbered harmonics (``harmonics=2 ** np.arange(n)``) with a
     bell-shaped level over log frequency make a Shepard tone, and the same
-    with a rising contour a Risset glide; the recipes are in
-    ``docs/design/views/chroma.md``.
+    with a rising contour a Risset glide; the recipes are on the gallery
+    page "Pitch class and height" (``docs/gallery/music/chroma.py``).
     """
     contour = _contour(f0)
     if contour is not None:

@@ -134,6 +134,7 @@ EXAMPLE_PAGES = [
     "vocoder",
     "timbre",
     "temperament",
+    "chroma",
     "organ",
 ]
 ROOT = HERE.parent.parent
@@ -754,6 +755,7 @@ TITLES = {
     "cocktail.html": 'A "cocktail party"',
     "timbre.html": "Timbre",
     "temperament.html": "Tuning and temperament",
+    "chroma.html": "Pitch class and height",
     "organ.html": "The pipe organ",
 }
 
@@ -857,6 +859,7 @@ TOPICS = [
                 "temperament.html",
                 "just intonation, equal temperament and others, heard and drawn as Lissajous figures.",
             ),
+            ("chroma.html", "a constant-Q filter bank, chroma, Shepard tones and the Risset glide."),
             ("organ.html", "organ stops as additive synthesis (a template, sounds to come)."),
         ],
     ),

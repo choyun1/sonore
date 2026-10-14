@@ -181,3 +181,11 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   so it is shown as a recipe on the Sound textures gallery page, not built
   into the library; `synthesize` is unchanged
   (`docs/design/views/envelope-peaks.md`, D5).
+- **Chroma, Shepard tones and the constant-Q filter bank.** `so.chroma`, the
+  power in each of the 12 pitch classes per time window, from the cosine
+  filterbank on the cents scale with one band per semitone (an exact,
+  undecimated constant-Q filter bank, Q 17.3). `Chroma.to_sound` plays each
+  pitch class as a Shepard tone, with `octaves=` for the spread over octaves
+  the view drops. Shepard tones and the Risset glide are recipes for
+  `harmonic_complex`, not new functions, on the "Pitch class and height"
+  gallery page (`docs/design/views/chroma.md`).
