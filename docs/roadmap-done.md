@@ -145,3 +145,18 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   Griffin & Lim style search; see the
   [Hearing a modulation spectrum](https://choyun1.github.io/sonore/gallery/modtargets.html) page.
   Released as 0.5.0 ([10.5281/zenodo.23148920](https://doi.org/10.5281/zenodo.23148920)).
+- **Texture synthesis checked against the MATLAB toolbox.** The toolbox
+  (v1.7, run in GNU Octave) and sonore each synthesized 5 s from the same
+  four recordings (fire, stream and applause excerpts from
+  `docs/textures`, and the paper's Fire1) with the paper's settings, 60
+  iterations. Scored with sonore's statistics (which favors sonore, since it
+  optimizes those definitions), sonore matched or beat the
+  toolbox in every class except modulation power, where the two came within
+  about 2 dB of each other
+  (27 to 30 dB on stream, applause and Fire1). The roadmap's earlier
+  "modulation convergence" item (18 to 23 dB) came from 30-iteration runs,
+  not from a fault in the objective, which is the paper's and the
+  toolbox's unweighted sum of squared errors. Weighting each class by the
+  size of its target lifts modulation power further but did not make fire
+  sound better, so synthesis output is unchanged. A one-off comparison;
+  the scripts are not part of the repository.

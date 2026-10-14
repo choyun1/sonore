@@ -122,6 +122,7 @@ def splice(
     *,
     crossfade: float = 0.03,
     max_shift: float = 0.015,
+    fade: Literal["adaptive", "equal_gain"] = "adaptive",
 ) -> Sound:
     """Segments of ``sound`` joined in a new order, with aligned cross-fades.
 
@@ -144,6 +145,18 @@ def splice(
     samples outside the sound count as silence. ``max_shift=0`` joins at the
     given starts exactly, and segments that follow each other in the sound
     then join back into the sound itself.
+
+    The ramps are raised cosines whose sum is 1 (``fade="equal_gain"``),
+    which keeps the level of two segments that match, but loses power where
+    they do not: two unrelated stretches of noise keep on average 3/4 of
+    their power over the cross-fade, 1.2 dB less. ``fade="adaptive"`` (the
+    default) measures the correlation ``r`` between the two segments over
+    the cross-fade, the outgoing one as it would have continued and the
+    incoming one, unfaded, and divides both ramps by
+    ``sqrt(rise**2 + fall**2 + 2 * r * rise * fall)``, which keeps the
+    expected power constant across the join; ``r`` below 0 counts as 0.
+    Matching segments (``r = 1``) are joined as with equal gain, so
+    contiguous segments still give back the sound.
 
     This is the joining step of sound quilts (:func:`sonore.quilt`).
     Overath et al. (2015) call it pitch-synchronous overlap-add (PSOLA), but
@@ -172,12 +185,22 @@ def splice(
     if start_samples.min() < 0 or start_samples.max() + n_segment > n_source:
         raise ValueError(f"every segment must lie inside the sound ({n_source / fs:g} s)")
 
-    joined, _ = _aligned_overlap_add(sound.data[:, 0], start_samples, n_segment, n_fade, n_shift)
+    if fade not in ("adaptive", "equal_gain"):
+        raise ValueError(f'fade must be "adaptive" or "equal_gain", not {fade!r}')
+    joined, _ = _aligned_overlap_add(
+        sound.data[:, 0], start_samples, n_segment, n_fade, n_shift, adaptive=fade == "adaptive"
+    )
     return Sound(joined, fs)
 
 
 def _aligned_overlap_add(
-    signal: np.ndarray, start_samples: np.ndarray, n_segment: int, n_fade: int, n_shift: int
+    signal: np.ndarray,
+    start_samples: np.ndarray,
+    n_segment: int,
+    n_fade: int,
+    n_shift: int,
+    *,
+    adaptive: bool = False,
 ) -> tuple[np.ndarray, np.ndarray]:
     """:func:`splice` on a 1-D array, in samples; also returns the shift
     chosen for each segment."""
@@ -193,6 +216,7 @@ def _aligned_overlap_add(
     written = np.zeros(before + n_out + after)
     shifts = np.arange(-n_shift, n_shift + 1)
     chosen = np.zeros(len(start_samples), dtype=int)
+    outgoing = np.zeros(n_fade)  # the previous segment's tail over the coming join, unfaded
     for i, start in enumerate(start_samples):
         shift = 0
         if i > 0 and n_fade > 0 and n_shift > 0:
@@ -207,9 +231,18 @@ def _aligned_overlap_add(
         chosen[i] = shift
         read = margin + start + shift
         piece = source[read - before : read + n_segment + after].copy()
-        if i > 0:
+        join = slice(i * n_segment, i * n_segment + n_fade)
+        if i > 0 and adaptive and n_fade > 0:
+            incoming = piece[:n_fade]
+            norm = np.sqrt(np.dot(outgoing, outgoing) * np.dot(incoming, incoming))
+            r = min(max(np.dot(outgoing, incoming) / norm, 0.0), 1.0) if norm > 0 else 1.0
+            gain = 1 / np.sqrt(rise**2 + fall**2 + 2 * r * rise * fall)
+            written[join] *= gain  # only the outgoing segment's fall is written there
+            piece[:n_fade] *= rise * gain
+        elif i > 0:
             piece[:n_fade] *= rise
         if i < len(start_samples) - 1:
+            outgoing = piece[len(piece) - n_fade :].copy()
             piece[len(piece) - n_fade :] *= fall
         written[i * n_segment : i * n_segment + len(piece)] += piece
     return written[before : before + n_out], chosen

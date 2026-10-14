@@ -242,9 +242,20 @@ class TestSplice:
         np.testing.assert_array_equal(y.data[:1600], self.noise.data[4800:6400])
         np.testing.assert_array_equal(y.data[1600:], self.noise.data[1600:3200])
 
+    @pytest.mark.parametrize("fade, expected_db", [("equal_gain", 10 * np.log10(0.75)), ("adaptive", 0.0)])
+    def test_level_of_unrelated_segments(self, fade, expected_db):
+        # 30 ms segments of noise in reverse order, each fully inside a cross-fade: raised-cosine
+        # ramps keep 3/4 of the power of two unrelated signals, the adaptive fade all of it
+        noise = so.gaussian_noise(4.0, self.fs, rng=0)
+        starts = np.arange(133)[::-1] * 0.03
+        y = so.splice(noise, starts, 0.03, max_shift=0, fade=fade)
+        level_db = 10 * np.log10(np.mean(y.data**2) / np.mean(noise.data**2))
+        assert abs(level_db - expected_db) < 0.15
+
     @pytest.mark.parametrize(
         "call, message",
         [
+            (lambda x: so.splice(x, [0.0], 0.1, fade="power"), "fade"),
             (lambda x: so.splice(x.to_channels(2), [0.0], 0.1), "mono"),
             (lambda x: so.splice(x, [0.95], 0.1), "inside the sound"),
             (lambda x: so.splice(x, [0.0], 0.1, crossfade=0.2), "crossfade"),
