@@ -495,9 +495,8 @@ fig, playhead = events_fig(sound)
 
 # %% [demo e14] From 1 to 1000 events per second
 track_times = np.linspace(0, 20, 201)
-sound = finish(
-    so.event_train(chirp, 20.0, stats.expon(scale=1.0), rate_scale=(track_times, 1000 ** (track_times / 20)), rng=0)
-)
+rising = (track_times, 1000 ** (track_times / 20))
+sound = finish(so.event_train(chirp, 20.0, stats.expon(scale=1.0), rate_scale=rising, rng=0))
 fig, playhead = events_fig(sound)
 
 # %% [markdown]
