@@ -354,15 +354,16 @@ def chorus(rate, duration=5.0, seed=0, **kwargs):
 
 
 def events_fig(snd):
-    """Waveform over a spectrogram, 1 to 8 kHz."""
-    fig, (ax_w, ax_s) = plt.subplots(2, 1, figsize=(10, 4.2), height_ratios=(1, 2), layout="constrained")
-    ax_w.plot(snd.t, snd.data[:, 0], lw=0.4)
-    ax_w.set(xlim=(0, snd.duration), title="Waveform")
-    ax_w.set_xticklabels([])
-    so.STFT(snd, win_dur=10e-3).plot(ax_s, fmax=8000, db_range=60, colorbar=False)
-    ax_s.set_ylim(1, 8)  # kHz
-    ax_s.set_title("Spectrogram")
-    return fig, [ax_w, ax_s]
+    """The same plots as the recordings above, measured on this sound alone. The panels by band
+    show only the bands from 2 to 6 kHz, where the chirp has its energy: elsewhere the
+    statistics are those of numerical noise."""
+    fig, playhead = texture_fig(snd, snd)
+    _, _, ax_m, ax_v, _ = fig.axes
+    band_centers, sparsity_by_band = ax_v.lines[0].get_data()
+    in_band = (band_centers >= 2000) & (band_centers <= 6000)
+    ax_v.set(xlim=(1900, 6000), ylim=(0, 1.1 * sparsity_by_band[in_band].max()))
+    ax_m.set_ylim(1900, 6000)
+    return fig, playhead
 
 # %% [about]
 # The event: a 30 ms sweep from 2 to 6 kHz, exponential in frequency, under a Hann window,

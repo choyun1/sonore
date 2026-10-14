@@ -699,17 +699,18 @@ def chorus(rate, duration=5.0, seed=0, **kwargs):
 
 
 def events_fig(snd):
-    &quot;&quot;&quot;Waveform over a spectrogram, 1 to 8 kHz.&quot;&quot;&quot;
-    fig, (ax_w, ax_s) = plt.subplots(2, 1, figsize=(10, 4.2), height_ratios=(1, 2), layout=&quot;constrained&quot;)
-    ax_w.plot(snd.t, snd.data[:, 0], lw=0.4)
-    ax_w.set(xlim=(0, snd.duration), title=&quot;Waveform&quot;)
-    ax_w.set_xticklabels([])
-    so.STFT(snd, win_dur=10e-3).plot(ax_s, fmax=8000, db_range=60, colorbar=False)
-    ax_s.set_ylim(1, 8)  # kHz
-    ax_s.set_title(&quot;Spectrogram&quot;)
-    return fig, [ax_w, ax_s]</code></pre></details></div>
+    &quot;&quot;&quot;The same plots as the recordings above, measured on this sound alone. The panels by band
+    show only the bands from 2 to 6 kHz, where the chirp has its energy: elsewhere the
+    statistics are those of numerical noise.&quot;&quot;&quot;
+    fig, playhead = texture_fig(snd, snd)
+    _, _, ax_m, ax_v, _ = fig.axes
+    band_centers, sparsity_by_band = ax_v.lines[0].get_data()
+    in_band = (band_centers &gt;= 2000) &amp; (band_centers &lt;= 6000)
+    ax_v.set(xlim=(1900, 6000), ylim=(0, 1.1 * sparsity_by_band[in_band].max()))
+    ax_m.set_ylim(1900, 6000)
+    return fig, playhead</code></pre></details></div>
 
-<article class="sound" id="d-e00" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9865283125000001, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.30572611766200664, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9865283125000001, &quot;top&quot;: 0.3938253543750605, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-e00" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6410245509259261, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>The event</h3>
     <div class="desc"><p>The event: a 30 ms sweep from 2 to 6 kHz, exponential in frequency, under a Hann window,
@@ -718,14 +719,14 @@ repeated once a second here so it can be heard on its own.</p></div>
     <p class="file">e00_the_event.flac, 3.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e00_the_event.png" width="1000" height="420" alt="Plots of the the event sound" loading="lazy">
+    <img src="img/e00_the_event.png" width="1000" height="660" alt="Plots of the the event sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.event_train(chirp, 3.0, 1.0, lead=0.5))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e02" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.30477906563287716, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.3957194584333199, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e02" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6450349675925928, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>3 events per second</h3>
     <div class="desc"><p>Three per second on average. With Poisson timing the gaps are irregular, and an event of 30 ms
@@ -734,14 +735,14 @@ overlaps another about 16% of the time.</p></div>
     <p class="file">e02_3_events_per_second.flac, 5.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e02_3_events_per_second.png" width="1000" height="420" alt="Plots of the 3 events per second sound" loading="lazy">
+    <img src="img/e02_3_events_per_second.png" width="1000" height="660" alt="Plots of the 3 events per second sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(3))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e04" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3073280016809964, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.3906215863370809, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e04" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>30 events per second</h3>
     <div class="desc"><p>Thirty per second: about one event sounding at any moment, and most events overlap another.</p></div>
@@ -749,14 +750,14 @@ fig, playhead = events_fig(sound)</code></pre></details>
     <p class="file">e04_30_events_per_second.flac, 5.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e04_30_events_per_second.png" width="1000" height="420" alt="Plots of the 30 events per second sound" loading="lazy">
+    <img src="img/e04_30_events_per_second.png" width="1000" height="660" alt="Plots of the 30 events per second sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e06" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3073280016809964, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.3906215863370809, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e06" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6477016342592595, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>300 events per second</h3>
     <div class="desc"><p>Three hundred per second: nine events sounding at once on average. The sum starts resembling
@@ -765,7 +766,7 @@ Gaussian noise with the chirp's spectrum.</p></div>
     <p class="file">e06_300_events_per_second.flac, 5.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e06_300_events_per_second.png" width="1000" height="420" alt="Plots of the 300 events per second sound" loading="lazy">
+    <img src="img/e06_300_events_per_second.png" width="1000" height="660" alt="Plots of the 300 events per second sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(300))
@@ -808,7 +809,7 @@ other. A spread in level leaves a few loud events standing out of the rest, whic
 sound sparse by the measure above for longer as the rate rises; a spread in pitch widens the
 spectrum. Nearly regular timing puts a steady rhythm at the rate into the envelope.</p>
 
-<article class="sound" id="d-e10" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3051348247121316, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.3950079402748108, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e10" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Level spread, 9 dB</h3>
     <div class="desc"><p>Levels drawn from a normal distribution in dB, standard deviation 9 dB.</p></div>
@@ -816,14 +817,14 @@ spectrum. Nearly regular timing puts a steady rhythm at the rate into the envelo
     <p class="file">e10_level_spread_9_db.flac, 5.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e10_level_spread_9_db.png" width="1000" height="420" alt="Plots of the level spread, 9 db sound" loading="lazy">
+    <img src="img/e10_level_spread_9_db.png" width="1000" height="660" alt="Plots of the level spread, 9 db sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30, level_db=stats.norm(0, 9)))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e11" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3073280016809964, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.3906215863370809, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e11" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Pitch spread, 150 cents</h3>
     <div class="desc"><p>Pitch shifts drawn from a normal distribution in cents, standard deviation 150 cents. Each copy
@@ -832,14 +833,14 @@ is resampled, so a higher copy is also a shorter one.</p></div>
     <p class="file">e11_pitch_spread_150_cents.flac, 5.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e11_pitch_spread_150_cents.png" width="1000" height="420" alt="Plots of the pitch spread, 150 cents sound" loading="lazy">
+    <img src="img/e11_pitch_spread_150_cents.png" width="1000" height="660" alt="Plots of the pitch spread, 150 cents sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30, pitch_cents=stats.norm(0, 150)))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e13" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.30570179376928186, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999998, &quot;top&quot;: 0.39387400216051005, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e13" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Level and pitch spread together</h3>
     <div class="desc"><p>Both spreads at once: levels with a standard deviation of 9 dB and pitch shifts with a standard
@@ -848,14 +849,14 @@ deviation of 150 cents, drawn independently for each copy.</p></div>
     <p class="file">e13_level_and_pitch_spread_together.flac, 5.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e13_level_and_pitch_spread_together.png" width="1000" height="420" alt="Plots of the level and pitch spread together sound" loading="lazy">
+    <img src="img/e13_level_and_pitch_spread_together.png" width="1000" height="660" alt="Plots of the level and pitch spread together sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(chorus(30, level_db=stats.norm(0, 9), pitch_cents=stats.norm(0, 150)))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e12" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3073280016809964, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9920361249999999, &quot;top&quot;: 0.3906215863370809, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+<article class="sound" id="d-e12" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6451755925925929, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
   <div class="about">
     <h3>Nearly regular timing</h3>
     <div class="desc"><p>Intervals from a gamma distribution with shape 16: the same mean rate, but intervals vary by
@@ -864,14 +865,14 @@ only a quarter of their mean, so the events come almost evenly.</p></div>
     <p class="file">e12_nearly_regular_timing.flac, 5.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e12_nearly_regular_timing.png" width="1000" height="420" alt="Plots of the nearly regular timing sound" loading="lazy">
+    <img src="img/e12_nearly_regular_timing.png" width="1000" height="660" alt="Plots of the nearly regular timing sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.event_train(chirp, 5.0, stats.gamma(16, scale=1 / (30 * 16)), lead=0.03, rng=0))
 fig, playhead = events_fig(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-e14" data-regions="[{&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.3073280016809964, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}, {&quot;x0&quot;: 0.04264741449652778, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.3906215863370809, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
+<article class="sound" id="d-e14" data-regions="[{&quot;x0&quot;: 0.07334706727430557, &quot;x1&quot;: 0.6326570740740742, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
   <div class="about">
     <h3>Steps of 10, 100 and 1000 events per second</h3>
     <div class="desc"><p>A rate that changes over time: <code>rate_scale</code> steps from 10 to 100 and 1000 events per second,
@@ -881,7 +882,7 @@ two points a microsecond apart.</p></div>
     <p class="file">e14_steps_of_10_100_and_1000_events_per_second.flac, 9.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/e14_steps_of_10_100_and_1000_events_per_second.png" width="1000" height="420" alt="Plots of the steps of 10, 100 and 1000 events per second sound" loading="lazy">
+    <img src="img/e14_steps_of_10_100_and_1000_events_per_second.png" width="1000" height="660" alt="Plots of the steps of 10, 100 and 1000 events per second sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">step_rates = [10, 100, 1000]
