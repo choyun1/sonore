@@ -336,8 +336,8 @@ Only work still to do is listed here. Finished items are in
   1.8 to 3.9, and both stop sounding like themselves. The pops seem to be
   lost across channels, not within them: each band keeps its tail, but the
   big moments no longer line up. Open: whether and how synthesis should
-  impose that, decided by ear after a gallery section on the Sound textures
-  page (`docs/design/views/envelope-peaks.md`).
+  impose that, to be decided by ear from the "How big the pops are" section
+  of the Sound textures gallery page (`docs/design/views/envelope-peaks.md`).
 
 **Other**
 

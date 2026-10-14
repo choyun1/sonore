@@ -15,6 +15,9 @@ version (0.x.y) only fixes bugs.
   2 a sound is made of pops; Gaussian noise gives 20 to 40. A one-way view,
   for checking whether a texture synthesis keeps the pops of its original
   (docs/design/views/envelope-peaks.md). Texture synthesis is unchanged.
+- Gallery: "How big the pops are" on the Sound textures page, the envelope
+  peaks of the fire recording and its synthesis, and pops from
+  `so.event_train` at power-law exponents 1, 2 and 4.
 
 ## [0.7.0] - 2026-10-14
 

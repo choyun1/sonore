@@ -26,6 +26,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [From single events to a texture](#h-from-single-events-to-a-texture): one chirp copied at
 #   rising rates, from events that stand apart to a dense sum, and what level, pitch and timing
 #   spreads do.
+# - [How big the pops are](#h-how-big-the-pops-are): the sizes of a fire's pops follow a power
+#   law, measured by its exponent, and what a synthesis keeps of it.
 
 # %% [markdown]
 # ## Code the examples share
@@ -474,8 +476,92 @@ sound = finish(so.event_train(chirp, 9.0, stats.expon(scale=1.0), rate_scale=ste
 fig, playhead = events_fig(sound)
 
 # %% [markdown]
+# ## How big the pops are
+#
+# A fire's pops come in every size, and the sizes follow a power law: the fraction of moments
+# louder than $a$ falls as $a^{-\alpha}$. When the exponent $\alpha$ is small, the envelope's
+# variance and kurtosis, which the texture model measures, have no stable value: over 1 s pieces
+# of the fire recording the envelope kurtosis is about 220, over all 20 s about 1900. The exponent
+# does not drift that way. `so.envelope_peaks` measures it: it high-passes the sound (at 300 Hz
+# and 2 kHz), takes the largest envelope value in each 5 ms bin, and fits the upper tail of those
+# maxima (the largest 5%) by the Hill estimator, with an uncertainty of
+# $\alpha / \sqrt{k}$ for $k$ values fitted. Below about 2 a sound is made of pops; on this page
+# the stream gives about 3, the rain about 5 and the crickets about 10. The design notes give
+# the measurement, how far to trust it, and a survey of the 168 recordings of McDermott &
+# Simoncelli (2011):
+# [envelope-peaks.md](https://github.com/choyun1/sonore/blob/main/docs/design/views/envelope-peaks.md).
+
+# %% [about]
+# The fraction of 5 ms bins whose largest envelope value exceeds each value, on log-log axes,
+# for the fire recording (20 s) and its synthesis (5 s). A power law is a straight line here, with
+# slope $-\alpha$; the dashed lines are the fits. The original is close to a straight line over
+# almost two decades. The synthesis gets about the same exponent from its largest 5%, but its
+# curve is not straight: a shelf of medium-sized peaks, then a steep drop. Its loud moments come
+# in a narrower range of sizes, which the single number misses and the curve shows.
+
+# %% [figure tp0] Envelope peaks of the fire and its synthesis
+fig, (ax_original, ax_synthesis) = plt.subplots(1, 2, figsize=(10, 3.6), layout="constrained", sharey=True)
+so.envelope_peaks(original("fire")).plot(ax_original)
+so.envelope_peaks(synthesized("fire")).plot(ax_synthesis)
+ax_original.set_title("Fire, original")
+ax_synthesis.set_title("Fire, synthesized")
+
+# %% [markdown]
+# To hear what the exponent means, `so.event_train` can make pops whose sizes follow a power law
+# with a chosen exponent: if amplitudes follow a power law with exponent $\alpha$, their levels in
+# dB are exponentially distributed with scale $20 / (\alpha \ln 10)$. Below, a 3 ms burst of noise,
+# 30 times a second on average, with levels capped at 40 dB above the smallest. The exponent
+# measured on each comes out close to the one asked for.
+
+# %%
+burst = so.gaussian_noise(0.003, FS, rng=0)
+burst = burst * np.hanning(len(burst))[:, None]
+
+
+def pops(exponent, rate=30, duration=7.0, seed=0):
+    """Bursts at Poisson onsets, with levels whose amplitudes follow a power law."""
+    scale = 20 / (exponent * np.log(10))  # dB
+    levels = stats.truncexpon(b=40 / scale, scale=scale)  # 0 to 40 dB
+    return so.event_train(burst, duration, stats.expon(scale=1 / rate), level_db=levels, lead=0.01, rng=seed)
+
+
+def pops_fig(snd):
+    """The waveform, and the envelope peaks as above."""
+    fig, (ax_wave, ax_peaks) = plt.subplots(
+        1, 2, figsize=(10, 3.4), layout="constrained", gridspec_kw={"width_ratios": [3, 2]}
+    )
+    snd.plot(ax_wave)
+    so.envelope_peaks(snd).plot(ax_peaks)
+    return fig, [ax_wave]
+
+# %% [about]
+# Exponent 1: most pops are small, and every few seconds one is far louder than the rest.
+
+# %% [demo tp1] Pops, exponent 1
+sound = finish(pops(1.0))
+fig, playhead = pops_fig(sound)
+
+# %% [about]
+# Exponent 2: the loudest pops stand out less.
+
+# %% [demo tp2] Pops, exponent 2
+sound = finish(pops(2.0))
+fig, playhead = pops_fig(sound)
+
+# %% [about]
+# Exponent 4: the pops are all of a similar size.
+
+# %% [demo tp3] Pops, exponent 4
+sound = finish(pops(4.0))
+fig, playhead = pops_fig(sound)
+
+# %% [markdown]
 # ## References
 #
+# - Hill (1975). A simple general approach to inference about the tail of a distribution.
+#   *Annals of Statistics* 3(5), 1163–1174.
+#   [doi:10.1214/aos/1176343247](https://doi.org/10.1214/aos/1176343247).
+#   [`envelope_peaks`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelope_peaks.py)
 # - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
