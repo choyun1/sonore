@@ -326,13 +326,15 @@ Only work still to do is listed here. Finished items are in
 
 **Texture synthesis**
 
-- **Modulation convergence.** Rebalance the objective so modulation power
-  converges: it reaches 30 dB SNR when imposed without the correlation
-  classes, but 18-23 dB in full synthesis.
 - **All channels at once.** Impose the channels jointly; the per-channel
   objective is overhead-bound (about 2 s per iteration for 5 s of sound).
-- **Validation.** Run the MATLAB toolbox on the same original recordings
-  and compare with its published examples.
+- **Sparse pops.** Fire-like recordings have pops whose sizes follow a power
+  law (tail exponent about 1 to 1.6, measured on envelope peaks), so their
+  envelope kurtosis has no stable value: in a 20 s fire recording it grows
+  from about 220 over 1 s to about 1900 over 20 s. Neither sonore nor the
+  MATLAB toolbox reproduces such recordings well. Open questions: a tail
+  exponent as a texture statistic, and whether one `event_train` with
+  power-law levels can give both the hiss and the pops.
 
 **Other**
 
