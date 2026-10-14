@@ -94,11 +94,14 @@ def shepard_tone(freq, duration):
 
 def sequence(notes, step):
     """Notes one after another, each ``step`` seconds after the last (they may overlap), after
-    LEAD seconds of silence."""
-    length = int(round((LEAD + step * (len(notes) - 1)) * FS)) + max(note.n_samples for note in notes)
+    LEAD seconds of silence. ``step`` is one number, or one per note for notes of different
+    lengths."""
+    steps = np.broadcast_to(step, len(notes))
+    onsets = LEAD + np.concatenate([[0], np.cumsum(steps[:-1])])
+    length = max(int(round(onset * FS)) + note.n_samples for onset, note in zip(onsets, notes, strict=True))
     data = np.zeros(length)
-    for i, note in enumerate(notes):
-        first = int(round((LEAD + i * step) * FS))
+    for onset, note in zip(onsets, notes, strict=True):
+        first = int(round(onset * FS))
         data[first : first + note.n_samples] += note.data[:, 0]
     return so.Sound(data, FS)
 
@@ -236,6 +239,7 @@ fig, playhead = show(sound)
 # power-weighted mean of log frequency for each. The page makes no claim about how the pairs
 # below sound to any listener.
 
+
 # %%
 def mean_octave(snd):
     """The power-weighted mean of log2 frequency [octaves above 1 Hz], from the spectrum."""
@@ -293,18 +297,39 @@ fig, playhead = show(sound)
 # `octaves`. By default it plays each pitch class as a Shepard tone, with a bell centered
 # between the lowest and highest band (A1 and A8) and one octave wide. A Shepard tone's partials
 # are all octaves of one pitch class, so its chroma comes back unchanged; a harmonic tone could
-# not do that, since its overtones land on other pitch classes. Given a note such as `"C3"`,
+# not do that, since its overtones land on other pitch classes. Given a note such as `"C4"`,
 # the bell is narrow and centered there, and each pitch class sounds in the octave nearest that
 # note. The cell compares the chroma of each sound below with the tune's.
 
 # %%
-TUNE = "C4 C4 G4 G4 A4 A4 G4 F4 F4 E4 E4 D4 D4 C4"  # the first two lines of Twinkle, Twinkle, Little Star
-melody = sequence([harmonic_tone(so.note_to_freq(note), 0.42) for note in TUNE.split()], 0.4)
+# The first two lines of Twinkle, Twinkle, Little Star, as (note, beats); each line ends on a
+# note held for two beats.
+TUNE = [
+    ("C4", 1),
+    ("C4", 1),
+    ("G4", 1),
+    ("G4", 1),
+    ("A4", 1),
+    ("A4", 1),
+    ("G4", 2),
+    ("F4", 1),
+    ("F4", 1),
+    ("E4", 1),
+    ("E4", 1),
+    ("D4", 1),
+    ("D4", 1),
+    ("C4", 2),
+]
+BEAT = 0.4  # [s]
+melody = sequence(
+    [harmonic_tone(so.note_to_freq(note), beats * BEAT + 0.02) for note, beats in TUNE],
+    [beats * BEAT for _, beats in TUNE],
+)
 melody_chroma = so.chroma(melody)
 played = {
     "the tune": melody,
     "its chroma, no height": melody_chroma.to_sound(FS),
-    "its chroma, near C3": melody_chroma.to_sound(FS, octaves="C3"),
+    "its chroma, near C4": melody_chroma.to_sound(FS, octaves="C4"),
     "its chroma, near C6": melody_chroma.to_sound(FS, octaves="C6"),
 }
 for label, snd in played.items():
@@ -316,7 +341,7 @@ for label, snd in played.items():
 
 # %% [about]
 # The tune, then its chroma played three ways: as Shepard tones with no height, and with the
-# bell narrowed to the octaves near C3 and near C6. The three have the tune's chroma; they
+# bell narrowed to the octaves near C4 and near C6. The three have the tune's chroma; they
 # differ in what the chroma dropped. The chroma of the original includes its overtones, so the
 # Shepard tones play those pitch classes too, quietly. The chroma keeps one value per 50 ms
 # time window, so each note of the playback starts and stops over about that long.
@@ -341,9 +366,10 @@ for row, (label, snd) in zip(rows, sounds.items(), strict=True):
 # - Deutsch (1986). A musical paradox. *Music Perception* 3(3), 275–280.
 #   [doi:10.2307/40285337](https://doi.org/10.2307/40285337).
 # - Fujishima (1999). Realtime chord recognition of musical sound: a system using Common Lisp
-#   Music. *Proc. International Computer Music Conference*.
+#   Music. *Proc. International Computer Music Conference*, 464–467.
 #   [CCRMA abstract](https://ccrma.stanford.edu/~jos/mus423h/Real_Time_Chord_Recognition_Musical.html).
 # - Risset (1969). Pitch control and pitch paradoxes demonstrated with computer-synthesized
 #   sounds. *J. Acoust. Soc. Am.* 46, 88 (abstract).
+#   [doi:10.1121/1.1973626](https://doi.org/10.1121/1.1973626).
 # - Shepard (1964). Circularity in judgments of relative pitch. *J. Acoust. Soc. Am.* 36(12),
 #   2346–2353. [doi:10.1121/1.1919362](https://doi.org/10.1121/1.1919362).
