@@ -285,6 +285,11 @@ one on, and the list is short.
   Mud: stretches 13.1 to 16.5 dB, quilts 12.5 to 16.0 dB. One recording each
   and three seeds per length; a quilt matches the recording's statistics
   about as well as the recording's own stretches do.
+  The gallery figure later changed (Cho found it hard to read, and it
+  compared fire and mud while the page plays fire and a stream): it now
+  draws three of the statistics directly for the quilts heard on the page,
+  the mean envelope per band, the modulation power per rate and the
+  envelope kurtosis per band, against the whole recording.
 - **Gallery page.** The section first sat on the Seeing speech page. At
   Cho's request to take it off the crowded Voices pages (2026-10-14), it
   is now a page of its own under Stimuli, since quilting is a way of

@@ -234,7 +234,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 <p>A <em>sound quilt</em> (Overath et al., 2015) cuts a recording into segments of one length and strings
 them together in a new order, keeping the recording's structure inside each segment and
 scrambling everything longer than a segment.</p>
-<ul><li><a href="#h-how-a-quilt-is-made">How a quilt is made</a>: the rule that picks the order, and the joining.</li><li><a href="#h-quilting-speech">Quilting speech</a>: two readers quilted at segment lengths from 30 to 960 ms, and how much the joins change the cochleagram.</li><li><a href="#h-quilting-a-texture">Quilting a texture</a>: fire and a stream quilted the same way, and fire and mud measured with the texture statistics of <a href="textures.html">Sound textures</a>.</li></ul>
+<ul><li><a href="#h-how-a-quilt-is-made">How a quilt is made</a>: the rule that picks the order, and the joining.</li><li><a href="#h-quilting-speech">Quilting speech</a>: two readers quilted at segment lengths from 30 to 960 ms, and how much the joins change the cochleagram.</li><li><a href="#h-quilting-a-texture">Quilting a texture</a>: fire and a stream quilted the same way, and what of the texture a quilt keeps.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/quilts.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/quilts.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
@@ -451,12 +451,12 @@ ax.legend()</code></pre></details>
 </section>
 <section aria-labelledby="h-quilting-a-texture">
 <h2 id="h-quilting-a-texture">Quilting a texture</h2>
-<p>A texture, such as fire or rain, has little structure longer than a few hundred milliseconds,
-so a quilt of one should sound like another stretch of the same texture even with short
-segments, as McDermott's notes to the quilting toolbox observe. The texture statistics of
-<a href="textures.html">Sound textures</a> make that measurable: they are the time-averaged statistics of a
-model of the auditory periphery, and a quilt that is another sample of the texture should match
-them as well as another stretch of the recording does.</p>
+<p>A texture, such as fire or a stream, has little structure longer than a few hundred
+milliseconds, so a quilt of one should sound like more of the same texture even with short
+segments, as McDermott's notes to the quilting toolbox observe. The texture model of
+<a href="textures.html">Sound textures</a> (McDermott &amp; Simoncelli, 2011) summarizes a texture by a few
+time-averaged statistics of its cochlear envelopes, and the last figure uses three of them to
+check this.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">texture_bank = so.cosine_filterbank(30, 20, 10000)
 
 
@@ -539,42 +539,45 @@ measures between the two segments (<code>fade=&quot;adaptive&quot;</code>, the d
 
 <article class="still" id="d-sq5">
   <div class="about">
-    <h3>Texture statistics of quilts</h3>
-    <div class="desc"><p>How closely 5 s of sound matches the texture statistics of the whole 20 s recording of fire, and
-of mud, as the statistic SNR averaged over the paper's statistic classes (higher is closer).
-Gray: the four 5 s stretches of the recording itself. Colored: three quilts at each segment
-length, made from the whole recording.</p></div>
+    <h3>What a texture quilt keeps</h3>
+    <div class="desc"><p>Three of the statistics the texture model of <a href="textures.html">Sound textures</a> measures, for the
+whole recording (black) and for each quilt heard above (colors), with the level set aside.
+Left, the spectrum: the mean envelope of each cochlear band. Middle, how strongly the envelopes
+fluctuate at each rate from 0.5 to 200 Hz, averaged over the bands. Right, how peaky each band's
+envelope is (its kurtosis): high where the sound comes in brief pops, like fire's crackle above
+about 150 Hz, and about 3 for steady noise. The quilts follow the recording closely in
+all three, which is what "more of the same texture" means here. They part most at the slowest
+fluctuations, below a few hertz, where fire's quilts have less power than the recording, and in
+fire's peakiness, which depends on which pops a quilt happens to draw.</p></div>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/sq5_texture_statistics_of_quilts.png" width="1000" height="360" alt="Texture statistics of quilts" loading="lazy">
+    <img src="img/sq5_what_a_texture_quilt_keeps.png" width="1000" height="600" alt="What a texture quilt keeps" loading="lazy">
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">from sonore.texture import TextureStats
+  <details class="code"><summary>Code</summary><pre><code class="language-python">from sonore.texture import TextureModel, TextureStats
 
-fig, axes = plt.subplots(1, 2, figsize=(10, 3.6), sharey=True, layout=&quot;constrained&quot;)
-for ax, name in zip(axes, (&quot;fire&quot;, &quot;mud&quot;), strict=True):
+model = TextureModel()
+band_cfs, rate_cfs = model.filterbank.cfs, model.mod_bank.cfs
+fig, axes = plt.subplots(2, 3, figsize=(10, 6), layout=&quot;constrained&quot;)
+for row, (name, duration) in enumerate(((&quot;fire&quot;, 5.0), (&quot;stream&quot;, 4.0))):
     recording = so.load(fetch(f&quot;docs/textures/{name}.flac&quot;))
-    target = TextureStats.measure(recording)
-
-    def match(snd, target=target):
-        &quot;&quot;&quot;The statistic SNR of snd against the whole recording, averaged over classes.&quot;&quot;&quot;
-        return float(np.mean(list(target.snr(TextureStats.measure(snd)).values())))
-
-    n = int(5 * recording.fs)  # samples in 5 s
-    stretches = [match(so.Sound(recording.data[k * n : (k + 1) * n], recording.fs)) for k in range(4)]
-    ax.axhspan(min(stretches), max(stretches), color=&quot;0.85&quot;, label=&quot;Stretches of the recording&quot;)
-    for k, seg in enumerate(SEGMENTS):
-        scores = [match(so.quilt(recording, seg, 5.0, rng=r)) for r in range(3)]
-        print(f&quot;{name}, {seg * 1000:.0f} ms quilts: &quot; + &quot;, &quot;.join(f&quot;{s:.1f}&quot; for s in scores) + &quot; dB&quot;)
-        ax.plot([k] * 3, scores, &quot;o&quot;, color=&quot;C0&quot;, label=&quot;Quilts&quot; if k == 0 else None)
-    print(f&quot;{name}, 5 s stretches: &quot; + &quot;, &quot;.join(f&quot;{s:.1f}&quot; for s in stretches) + &quot; dB&quot;)
-    ax.set(
-        title=name.capitalize(),
-        xticks=range(len(SEGMENTS)),
-        xticklabels=[f&quot;{s * 1000:.0f} ms&quot; for s in SEGMENTS],
-        xlabel=&quot;Segment length&quot;,
-    )
-axes[0].set_ylabel(&quot;Statistic SNR [dB]&quot;)
-axes[0].legend(loc=&quot;lower left&quot;)</code></pre></details>
+    stats = {&quot;Recording&quot;: TextureStats.measure(recording)}
+    for seg in (0.03, 0.12, 0.96):  # the quilts heard above: same seed
+        stats[f&quot;{seg * 1000:.0f} ms quilt&quot;] = TextureStats.measure(so.quilt(recording, seg, duration, rng=1))
+    for label, st in stats.items():
+        style = {&quot;color&quot;: &quot;k&quot;, &quot;lw&quot;: 2.2} if label == &quot;Recording&quot; else {&quot;lw&quot;: 1.2}
+        audible = st.channel_mask()  # bands within 30 dB of the loudest
+        axes[row, 0].plot(band_cfs, 20 * np.log10(st.env_mean), label=label, **style)
+        axes[row, 1].plot(rate_cfs, np.mean(st.mod_power[audible], axis=0), **style)
+        axes[row, 2].plot(band_cfs, st.env_kurt, **style)
+    axes[row, 0].set(xscale=&quot;log&quot;, ylabel=f&quot;{name.capitalize()}\nMean envelope [dB]&quot;)
+    axes[row, 1].set(xscale=&quot;log&quot;, yscale=&quot;log&quot;, ylabel=&quot;Modulation power (relative)&quot;)
+    axes[row, 2].set(xscale=&quot;log&quot;, yscale=&quot;log&quot;, ylabel=&quot;Envelope kurtosis&quot;)
+axes[0, 0].set_title(&quot;Spectrum&quot;)
+axes[0, 1].set_title(&quot;How fast the envelopes fluctuate&quot;)
+axes[0, 2].set_title(&quot;How peaky the envelopes are&quot;)
+for ax in axes[1]:
+    ax.set_xlabel(&quot;Modulation rate [Hz]&quot; if ax is axes[1, 1] else &quot;Band center frequency [Hz]&quot;)
+axes[0, 0].legend()</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-references">

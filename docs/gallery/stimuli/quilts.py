@@ -20,8 +20,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   joining.
 # - [Quilting speech](#h-quilting-speech): two readers quilted at segment lengths from 30 to
 #   960 ms, and how much the joins change the cochleagram.
-# - [Quilting a texture](#h-quilting-a-texture): fire and a stream quilted the same way, and fire
-#   and mud measured with the texture statistics of [Sound textures](textures.html).
+# - [Quilting a texture](#h-quilting-a-texture): fire and a stream quilted the same way, and
+#   what of the texture a quilt keeps.
 
 # %% [markdown]
 # ## Code the examples share
@@ -200,12 +200,12 @@ ax.legend()
 # %% [markdown]
 # ## Quilting a texture
 #
-# A texture, such as fire or rain, has little structure longer than a few hundred milliseconds,
-# so a quilt of one should sound like another stretch of the same texture even with short
-# segments, as McDermott's notes to the quilting toolbox observe. The texture statistics of
-# [Sound textures](textures.html) make that measurable: they are the time-averaged statistics of a
-# model of the auditory periphery, and a quilt that is another sample of the texture should match
-# them as well as another stretch of the recording does.
+# A texture, such as fire or a stream, has little structure longer than a few hundred
+# milliseconds, so a quilt of one should sound like more of the same texture even with short
+# segments, as McDermott's notes to the quilting toolbox observe. The texture model of
+# [Sound textures](textures.html) (McDermott & Simoncelli, 2011) summarizes a texture by a few
+# time-averaged statistics of its cochlear envelopes, and the last figure uses three of them to
+# check this.
 
 # %%
 texture_bank = so.cosine_filterbank(30, 20, 10000)
@@ -250,39 +250,42 @@ fig, sounds, playhead = texture_quilt_demo(so.load(fetch("docs/textures/fire.fla
 fig, sounds, playhead = texture_quilt_demo(so.load(fetch("docs/textures/stream.flac")), 4.0)
 
 # %% [about]
-# How closely 5 s of sound matches the texture statistics of the whole 20 s recording of fire, and
-# of mud, as the statistic SNR averaged over the paper's statistic classes (higher is closer).
-# Gray: the four 5 s stretches of the recording itself. Colored: three quilts at each segment
-# length, made from the whole recording.
+# Three of the statistics the texture model of [Sound textures](textures.html) measures, for the
+# whole recording (black) and for each quilt heard above (colors), with the level set aside.
+# Left, the spectrum: the mean envelope of each cochlear band. Middle, how strongly the envelopes
+# fluctuate at each rate from 0.5 to 200 Hz, averaged over the bands. Right, how peaky each band's
+# envelope is (its kurtosis): high where the sound comes in brief pops, like fire's crackle above
+# about 150 Hz, and about 3 for steady noise. The quilts follow the recording closely in
+# all three, which is what "more of the same texture" means here. They part most at the slowest
+# fluctuations, below a few hertz, where fire's quilts have less power than the recording, and in
+# fire's peakiness, which depends on which pops a quilt happens to draw.
 
-# %% [figure sq5] Texture statistics of quilts
-from sonore.texture import TextureStats
+# %% [figure sq5] What a texture quilt keeps
+from sonore.texture import TextureModel, TextureStats
 
-fig, axes = plt.subplots(1, 2, figsize=(10, 3.6), sharey=True, layout="constrained")
-for ax, name in zip(axes, ("fire", "mud"), strict=True):
+model = TextureModel()
+band_cfs, rate_cfs = model.filterbank.cfs, model.mod_bank.cfs
+fig, axes = plt.subplots(2, 3, figsize=(10, 6), layout="constrained")
+for row, (name, duration) in enumerate((("fire", 5.0), ("stream", 4.0))):
     recording = so.load(fetch(f"docs/textures/{name}.flac"))
-    target = TextureStats.measure(recording)
-
-    def match(snd, target=target):
-        """The statistic SNR of snd against the whole recording, averaged over classes."""
-        return float(np.mean(list(target.snr(TextureStats.measure(snd)).values())))
-
-    n = int(5 * recording.fs)  # samples in 5 s
-    stretches = [match(so.Sound(recording.data[k * n : (k + 1) * n], recording.fs)) for k in range(4)]
-    ax.axhspan(min(stretches), max(stretches), color="0.85", label="Stretches of the recording")
-    for k, seg in enumerate(SEGMENTS):
-        scores = [match(so.quilt(recording, seg, 5.0, rng=r)) for r in range(3)]
-        print(f"{name}, {seg * 1000:.0f} ms quilts: " + ", ".join(f"{s:.1f}" for s in scores) + " dB")
-        ax.plot([k] * 3, scores, "o", color="C0", label="Quilts" if k == 0 else None)
-    print(f"{name}, 5 s stretches: " + ", ".join(f"{s:.1f}" for s in stretches) + " dB")
-    ax.set(
-        title=name.capitalize(),
-        xticks=range(len(SEGMENTS)),
-        xticklabels=[f"{s * 1000:.0f} ms" for s in SEGMENTS],
-        xlabel="Segment length",
-    )
-axes[0].set_ylabel("Statistic SNR [dB]")
-axes[0].legend(loc="lower left")
+    stats = {"Recording": TextureStats.measure(recording)}
+    for seg in (0.03, 0.12, 0.96):  # the quilts heard above: same seed
+        stats[f"{seg * 1000:.0f} ms quilt"] = TextureStats.measure(so.quilt(recording, seg, duration, rng=1))
+    for label, st in stats.items():
+        style = {"color": "k", "lw": 2.2} if label == "Recording" else {"lw": 1.2}
+        audible = st.channel_mask()  # bands within 30 dB of the loudest
+        axes[row, 0].plot(band_cfs, 20 * np.log10(st.env_mean), label=label, **style)
+        axes[row, 1].plot(rate_cfs, np.mean(st.mod_power[audible], axis=0), **style)
+        axes[row, 2].plot(band_cfs, st.env_kurt, **style)
+    axes[row, 0].set(xscale="log", ylabel=f"{name.capitalize()}\nMean envelope [dB]")
+    axes[row, 1].set(xscale="log", yscale="log", ylabel="Modulation power (relative)")
+    axes[row, 2].set(xscale="log", yscale="log", ylabel="Envelope kurtosis")
+axes[0, 0].set_title("Spectrum")
+axes[0, 1].set_title("How fast the envelopes fluctuate")
+axes[0, 2].set_title("How peaky the envelopes are")
+for ax in axes[1]:
+    ax.set_xlabel("Modulation rate [Hz]" if ax is axes[1, 1] else "Band center frequency [Hz]")
+axes[0, 0].legend()
 
 # %% [markdown]
 # ## References
