@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -391,8 +391,8 @@ every semitone the twelfth root of two, 100 cents, so its fifth is
 13.69 cents wider than 5:4. Near-coinciding partials
 beat at the difference of their frequencies (<a href="classic.html#h-beats-and-roughness">Beats and
 roughness</a> plays this with two pure tones), which the
-cell prints for intervals above A3 = 220 Hz. Two pure tones a just major third apart have no partials to beat and sound
-smooth, as on the <a href="classic.html#d-b3">Tones and noises</a> page.</p>
+cell prints for intervals above A3 = 220 Hz. Two pure tones a just major third apart have no
+partials to beat and sound smooth, as on the <a href="classic.html#d-b3">Tones and noises</a> page.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">A3 = 220.0
 for name, steps, just_ratio, low_n, high_n in [
     (&quot;fifth&quot;, 7, 3 / 2, 3, 2),
@@ -435,7 +435,7 @@ for ax, (name, upper) in zip(axes, pairs, strict=True):
     ax.set(title=name, xlabel=&quot;A3, 220 Hz&quot;, ylabel=f&quot;{upper:.2f} Hz&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt1" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.1}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.1}]">
+<article class="sound" id="d-tt1" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.1}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.1}]">
   <div class="about">
     <h3>Just and tempered intervals over A3</h3>
     <div class="desc"><p>A3 with a fifth above it, just and then equal-tempered, then a major third, just and then
@@ -525,7 +525,7 @@ for low, high in [(&quot;C4&quot;, &quot;G4&quot;), (&quot;G#3&quot;, &quot;Eb4&
     print(f&quot;partial 3 of {low} and partial 2 of {high} beat at {beat:5.2f} Hz&quot;)</code></pre></details><pre class="out">meantone C-G:  696.6 cents, partial 3 of C4 and partial 2 of G4 beat at  2.43 Hz
 meantone G#-Eb:  737.6 cents, partial 3 of G#3 and partial 2 of Eb4 beat at 12.77 Hz</pre></div>
 
-<article class="sound" id="d-tt8" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.1}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.1}]">
+<article class="sound" id="d-tt8" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.1}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.1}]">
   <div class="about">
     <h3>The meantone wolf fifth</h3>
     <div class="desc"><p>Three fifths: C4–G4 in meantone, then G♯3–E♭4 on the same meantone keyboard, the wolf, then
@@ -565,7 +565,7 @@ fourth, wider even than a Pythagorean third. This is why music for meantone keyb
 to keys near C, and why some old organs and harpsichords had split black keys, with separate
 G♯ and A♭ (or D♯ and E♭).</p>
 
-<article class="sound" id="d-tt9" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.3}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.3}]">
+<article class="sound" id="d-tt9" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.3}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.3}]">
   <div class="about">
     <h3>C major and A-flat major in meantone</h3>
     <div class="desc"><p>C major, then A♭ major on the same meantone keyboard, then A♭ major in equal temperament. The
@@ -643,7 +643,7 @@ def twinkle_demo(tuning):
     }
     return sound, fig, playhead, lissajous</code></pre></details></div>
 
-<article class="sound" id="d-tt2" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
+<article class="sound" id="d-tt2" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in equal temperament</h3>
     <div class="desc"><p>Equal temperament. Every note sits on the zero line of the lower panel, by definition. The
@@ -661,7 +661,7 @@ pure.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;equal temperament&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt3" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
+<article class="sound" id="d-tt3" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in just intonation</h3>
     <div class="desc"><p>5-limit just intonation on C. E is 13.7 cents and A 15.6 cents below equal temperament, B
@@ -678,7 +678,7 @@ tune, since each melody note is a just interval above its bass.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;just intonation&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt4" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
+<article class="sound" id="d-tt4" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in Pythagorean tuning</h3>
     <div class="desc"><p>Pythagorean tuning: every fifth pure, so the figure stands still on C over C, G over C and D
@@ -694,7 +694,7 @@ over G; the major thirds are 408 cents, and the chords beat faster than in equal
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound, fig, playhead, lissajous = twinkle_demo(&quot;Pythagorean&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-tt5" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.991833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
+<article class="sound" id="d-tt5" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.9919658125, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.0}]">
   <div class="about">
     <h3>Twinkle in quarter-comma meantone</h3>
     <div class="desc"><p>Quarter-comma meantone: the thirds are just, as in just intonation, and every fifth is
@@ -738,7 +738,7 @@ def progression(tuning):
     events = [(start, duration, f) for start, duration, freqs in chords for f in freqs]
     return events, figure_notes(chords)</code></pre></details></div>
 
-<article class="sound" id="d-tt6" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.5}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.5}]">
+<article class="sound" id="d-tt6" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.5}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.5}]">
   <div class="about">
     <h3>C, D minor, G, C, just then equal</h3>
     <div class="desc"><p>Just intonation, then equal temperament, four chords each. In the just version listen for
@@ -779,7 +779,7 @@ pilot study (Calamassi &amp; Pomponi, 2019: 33 listeners, two 20-minute sessions
 a mean heart rate 4.79 beats per minute lower with the music at 432 Hz (p = 0.05); a word of
 caution, then: that is one pilot result, not evidence that the tuning affects health.</p>
 
-<article class="sound" id="d-tt7" data-regions="[{&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.9}, {&quot;x0&quot;: 0.05894477777777778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.9}]">
+<article class="sound" id="d-tt7" data-regions="[{&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.9}, {&quot;x0&quot;: 0.05792866449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.9}]">
   <div class="about">
     <h3>Twinkle at 440 Hz, then at 432 Hz</h3>
     <div class="desc"><p>The first half of the tune in equal temperament, at A4 = 440 Hz and then at A4 = 432 Hz. In

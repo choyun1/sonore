@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -310,7 +310,7 @@ ax.legend()
 ax.grid(ls=&quot;:&quot;, which=&quot;both&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-k1" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.40905973393446177, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.40905973393446177, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-k1" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.4090653003407114, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.4090653003407114, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>Speech-shaped noise</h3>
     <div class="desc"><p>The noise itself. It has the spectrum of speech but none of its modulation: the spectrogram is
@@ -350,7 +350,7 @@ temperament</a>.</p>
     &quot;&quot;&quot;Tones at f and f + df, equal in amplitude.&quot;&quot;&quot;
     return so.pure_tone(dur, FS, f) + so.pure_tone(dur, FS, f + df)</code></pre></details></div>
 
-<article class="sound" id="d-b1" data-regions="[{&quot;x0&quot;: 0.06952241449652778, &quot;x1&quot;: 0.410878874559462, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06952241449652778, &quot;x1&quot;: 0.410878874559462, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-b1" data-regions="[{&quot;x0&quot;: 0.06951460199652779, &quot;x1&quot;: 0.4108803394032118, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06951460199652779, &quot;x1&quot;: 0.4108803394032118, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>Slow beats, 4 Hz</h3>
     <div class="desc"><p>440 and 444 Hz: one tone whose loudness swells and fades four times a second, as the
@@ -368,7 +368,7 @@ cues</a>.</p></div>
 fig, playhead = show(sound, fmax=2000, win_dur=50e-3)</code></pre></details>
 </article>
 
-<article class="sound" id="d-b2" data-regions="[{&quot;x0&quot;: 0.06952241449652778, &quot;x1&quot;: 0.41064137455946176, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06952241449652778, &quot;x1&quot;: 0.41064137455946176, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-b2" data-regions="[{&quot;x0&quot;: 0.06951460199652779, &quot;x1&quot;: 0.4106428394032119, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06951460199652779, &quot;x1&quot;: 0.4106428394032119, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>Roughness, 40 Hz</h3>
     <div class="desc"><p>440 and 480 Hz: a 40 Hz fluctuation, too fast to follow as loudness, and too fast to see in
@@ -384,7 +384,7 @@ the waveform at this scale. It sounds rough. The spectrum just separates the two
 fig, playhead = show(sound, fmax=2000, win_dur=50e-3)</code></pre></details>
 </article>
 
-<article class="sound" id="d-b3" data-regions="[{&quot;x0&quot;: 0.06952241449652778, &quot;x1&quot;: 0.41064137455946176, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06952241449652778, &quot;x1&quot;: 0.41064137455946176, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-b3" data-regions="[{&quot;x0&quot;: 0.06951460199652779, &quot;x1&quot;: 0.4106428394032119, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.06951460199652779, &quot;x1&quot;: 0.4106428394032119, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>Two tones, 110 Hz apart</h3>
     <div class="desc"><p>440 and 550 Hz, a major third in just intonation (5:4): 110 Hz apart, more than an ERB. Two
@@ -401,7 +401,7 @@ temperament</a> plays just and equal-tempered thirds side by side.</p></div>
 fig, playhead = show(sound, fmax=2000, win_dur=50e-3)</code></pre></details>
 </article>
 
-<article class="sound" id="d-a1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.40673629643446196, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.40673629643446196, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-a1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4067418628407116, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4067418628407116, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>Amplitude modulation, 4 Hz</h3>
     <div class="desc"><p>The same wobble made the other way: a 1 kHz tone, amplitude-modulated at 4 Hz with full depth
@@ -435,7 +435,7 @@ def tone_sequence(freqs, tone_dur, gap_dur):
         parts += [tone, so.silence(gap_dur, FS)]
     return so.concat(parts)</code></pre></details></div>
 
-<article class="sound" id="d-s1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.41082946049696184, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.95}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.41082946049696184, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.95}]">
+<article class="sound" id="d-s1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.41082946049696195, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.95}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.41082946049696195, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.95}]">
   <div class="about">
     <h3>Three random streams</h3>
     <div class="desc"><p>Three concurrent streams of eight 200 ms tones, each stream at its own rhythm, with
@@ -471,7 +471,7 @@ Nyquist folds back as a tone that falls while the pitch rises.</p>
 glide_times = np.linspace(0, glide_dur, 401)
 glide_f0 = 110 * 2 ** (4 * glide_times / glide_dur)  # four octaves, equal steps per second</code></pre></details></div>
 
-<article class="sound" id="d-bw1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.40635778080946183, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.40635778080946183, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
+<article class="sound" id="d-bw1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.40635963627821187, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.40635963627821187, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
   <div class="about">
     <h3>A band-limited glide</h3>
     <div class="desc"><p>Band-limited: <code>so.sawtooth_wave</code> on the F0 contour, given as (times, values).</p></div>
@@ -486,7 +486,7 @@ glide_f0 = 110 * 2 ** (4 * glide_times / glide_dur)  # four octaves, equal steps
 fig, playhead = show(sound, fmax=8000, win_dur=25e-3)</code></pre></details>
 </article>
 
-<article class="sound" id="d-bw2" data-regions="[{&quot;x0&quot;: 0.06917866449652779, &quot;x1&quot;: 0.4154706714344618, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.06917866449652779, &quot;x1&quot;: 0.4154706714344618, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
+<article class="sound" id="d-bw2" data-regions="[{&quot;x0&quot;: 0.06917085199652778, &quot;x1&quot;: 0.4154721362782115, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.06917085199652778, &quot;x1&quot;: 0.4154721362782115, &quot;top&quot;: 0.5418632168458781, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
   <div class="about">
     <h3>A naive glide, aliased</h3>
     <div class="desc"><p>Naive: <code>scipy.signal.sawtooth</code> of the running phase. The aliases are the lines that slope

@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -392,7 +392,7 @@ steps come out right. The paper's own setting for its descriptors smooths with a
 which measures the 5 ms attack as about 80 ms (<code>so.log_attack_time(snd, cutoff=5,
 zero_phase=False)</code>); sonore uses the 20 Hz filter the paper uses to find onsets.</p>
 
-<article class="sound" id="d-tb1" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}]">
+<article class="sound" id="d-tb1" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}, {&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}]">
   <div class="about">
     <h3>Attacks of 5, 20, 80 and 300 ms</h3>
     <div class="desc"><p>Four tones, attacks of 5, 20, 80 and 300 ms. The first starts with a click, the second is
@@ -439,7 +439,7 @@ every frequency bin up to half the sample rate. For the <span class="tex">s = 3<
 upper partials: its magnitude centroid is almost twice the 414 Hz its partials give, and would
 be lower at a lower sample rate (<code>tools/check_timbre_claims.py</code>).</p>
 
-<article class="sound" id="d-tb2" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.7}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.7}]">
+<article class="sound" id="d-tb2" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.7}, {&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.7}]">
   <div class="about">
     <h3>Five tones from dull to bright</h3>
     <div class="desc"><p>Five tones from dull to bright: slopes 3, 2, 1.5, 1 and 0.5. The pitch stays E♭4 while the
@@ -478,7 +478,7 @@ is the least settled of the three: published timbre spaces define it in several 
 correlation with the third dimension (0.54 in McAdams et al., 1995) is weaker than the other
 two (0.94 each).</p>
 
-<article class="sound" id="d-tb3" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}]">
+<article class="sound" id="d-tb3" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}, {&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2}]">
   <div class="about">
     <h3>A steady tone and a brightening one</h3>
     <div class="desc"><p>A steady tone, then one that brightens over its second. The centroid of the second climbs
@@ -576,7 +576,7 @@ for name, snd in zip(onset_labels, onset_tones, strict=True):
 staggered     log attack -1.59, centroid   701 Hz (first 100 ms   530 Hz), flux  240 x 1e-6
 with a burst  log attack -2.72, centroid   701 Hz (first 100 ms   701 Hz), flux  153 x 1e-6</pre></div>
 
-<article class="sound" id="d-tb5" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}]">
+<article class="sound" id="d-tb5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}, {&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}]">
   <div class="about">
     <h3>Three onsets of one tone</h3>
     <div class="desc"><p>The same tone three times: partials starting together, the high partials arriving late, and
@@ -621,7 +621,7 @@ for word, snd in zip(VOWELS, vowel_tones, strict=True):
 hod    centroid  1009 Hz
 who&#x27;d  centroid   349 Hz</pre></div>
 
-<article class="sound" id="d-tb6" data-regions="[{&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.043519135802469244, &quot;bottom&quot;: 0.5554121228304564, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}, {&quot;x0&quot;: 0.07622548524305556, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.6156499829127611, &quot;bottom&quot;: 0.9167635046939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}]">
+<article class="sound" id="d-tb6" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.048065174897119145, &quot;bottom&quot;: 0.548699665935547, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}, {&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6134835651125018, &quot;bottom&quot;: 0.9079744421939301, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.7}]">
   <div class="about">
     <h3>Three vowels on one note</h3>
     <div class="desc"><p>"Heed", "hod" and "who'd" on one note. The harmonics are the same in all three, 311 Hz apart;

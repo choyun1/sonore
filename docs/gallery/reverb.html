@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -455,7 +455,7 @@ whereas a real cochlea rings only afterwards.</p></div>
 fig, playhead = show(sound, None)</code></pre></details>
 </article>
 
-<article class="sound" id="d-17" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
+<article class="sound" id="d-17" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974960937499998, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571405707465275, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>In a natural room</h3>
     <div class="desc"><p>A synthetic room with RT60 = 1 s whose decay follows the statistics of the 271 real rooms:
@@ -601,7 +601,7 @@ inverted     median RT60 0.37 s
 exaggerated  median RT60 0.96 s
 reduced      median RT60 1.00 s</pre></div>
 
-<article class="sound" id="d-18" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
+<article class="sound" id="d-18" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974960937499998, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571405707465275, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>Time-reversed decay</h3>
     <div class="desc"><p>The same decay run backwards: the reverberation swells up to the shot instead of dying away
@@ -643,7 +643,7 @@ swell of itself and the swells pile up across the sentence.</p></div>
 fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-19" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}]">
+<article class="sound" id="d-19" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974960937499997, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}, {&quot;x0&quot;: 0.5571405707465275, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 0.3979591836734694}]">
   <div class="about">
     <h3>Linear decay, matched start</h3>
     <div class="desc"><p>Starts at the natural level but falls linearly (in amplitude) rather than exponentially, with
@@ -684,7 +684,7 @@ is 0.27 s long, where the natural one is
 fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-20" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
+<article class="sound" id="d-20" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974960937499998, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571405707465275, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>Linear decay, matched end</h3>
     <div class="desc"><p>Linear decay that reaches zero where the natural decay is 60 dB down, again with the same
@@ -726,7 +726,7 @@ strength before it falls away.</p></div>
 fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-21" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974921874999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571444769965276, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
+<article class="sound" id="d-21" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4974960937499998, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}, {&quot;x0&quot;: 0.5571405707465275, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.3640362811791382}]">
   <div class="about">
     <h3>Inverted frequency dependence</h3>
     <div class="desc"><p>Exponential, but low and high frequencies ring longest and the middle dies fastest, the
@@ -770,7 +770,7 @@ much less to ring with here.</p></div>
 fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-22" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.494029176206147, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}, {&quot;x0&quot;: 0.5606074882903805, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}]">
+<article class="sound" id="d-22" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.494029176206201, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}, {&quot;x0&quot;: 0.5606074882903265, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.4688662131519274}]">
   <div class="about">
     <h3>Exaggerated frequency dependence</h3>
     <div class="desc"><p>The profile of a room twice as reverberant, scaled down: more sharply peaked than real rooms
@@ -811,7 +811,7 @@ tell from a natural one when they heard it with speech.</p></div>
 fig, playhead = show_pair(sounds, ir, kw)</code></pre></details>
 </article>
 
-<article class="sound" id="d-23" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.4945297787322429, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}, {&quot;x0&quot;: 0.5601068857642849, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}]">
+<article class="sound" id="d-23" data-regions="[{&quot;x0&quot;: 0.05880366449652778, &quot;x1&quot;: 0.49452977873243736, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}, {&quot;x0&quot;: 0.5601068857640901, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.2797732426303854}]">
   <div class="about">
     <h3>Reduced frequency dependence</h3>
     <div class="desc"><p>The profile of a room half as reverberant, scaled up: flatter than real rooms of this size.

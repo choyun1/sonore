@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -448,7 +448,7 @@ same steady 200 Hz buzz. The words survive; the intonation, and much of what tel
 talkers apart, does not.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/c3_envelope_only_on_a_200_hz_pulse_train_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/c3_envelope_only_on_a_200_hz_pulse_train_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">c3_envelope_only_on_a_200_hz_pulse_train_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/c3_envelope_only_on_a_200_hz_pulse_train_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
@@ -472,7 +472,7 @@ a buzzy voice that still carries each talker's intonation. The narrowband spectr
 the harmonics running flat across frequency, farther apart for the female talker.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/c4_harmonics_only_the_envelope_flattened_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/c4_harmonics_only_the_envelope_flattened_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">c4_harmonics_only_the_envelope_flattened_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/c4_harmonics_only_the_envelope_flattened_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
@@ -494,7 +494,7 @@ fig, playhead = show_pair(sounds, &quot;harmonics only&quot;, win_dur=0.0333)</c
 sentence to rounding error.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/c5_both_parts_together_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4859013396942505, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/c5_both_parts_together_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">c5_both_parts_together_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/c5_both_parts_together_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
@@ -667,10 +667,10 @@ the lowest band, centered below the female talker's pitch, is nearly empty; Chea
 envelope, smoothed across the harmonics, fills it in.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/m2_the_sentence_as_mfccs_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06505366449652779, &quot;x1&quot;: 0.48567727741172334, &quot;top&quot;: 0.028839104938271687, &quot;bottom&quot;: 0.22825199784595906, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06505366449652779, &quot;x1&quot;: 0.48567727741172334, &quot;top&quot;: 0.2679638224665404, &quot;bottom&quot;: 0.46737671537422865, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06505366449652779, &quot;x1&quot;: 0.48567727741172334, &quot;top&quot;: 0.5062470548804014, &quot;bottom&quot;: 0.7056599477880894, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06505366449652779, &quot;x1&quot;: 0.48567727741172334, &quot;top&quot;: 0.7453717724086705, &quot;bottom&quot;: 0.9447846653163581, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/m2_the_sentence_as_mfccs_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06503022699652779, &quot;x1&quot;: 0.4856735664740337, &quot;top&quot;: 0.028839104938271687, &quot;bottom&quot;: 0.22825199784595906, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06503022699652779, &quot;x1&quot;: 0.4856735664740337, &quot;top&quot;: 0.2679638224665404, &quot;bottom&quot;: 0.46737671537422865, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06503022699652779, &quot;x1&quot;: 0.4856735664740337, &quot;top&quot;: 0.5062470548804014, &quot;bottom&quot;: 0.7056599477880894, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06503022699652779, &quot;x1&quot;: 0.4856735664740337, &quot;top&quot;: 0.7453717724086705, &quot;bottom&quot;: 0.9447846653163581, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">m2_the_sentence_as_mfccs_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/m2_the_sentence_as_mfccs_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5700536644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.028839104938271687, &quot;bottom&quot;: 0.22825199784595906, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5700536644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.2679638224665404, &quot;bottom&quot;: 0.46737671537422865, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5700536644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5062470548804014, &quot;bottom&quot;: 0.7056599477880894, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5700536644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.7453717724086705, &quot;bottom&quot;: 0.9447846653163581, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/m2_the_sentence_as_mfccs_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5700302269965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.028839104938271687, &quot;bottom&quot;: 0.22825199784595906, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5700302269965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.2679638224665404, &quot;bottom&quot;: 0.46737671537422865, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5700302269965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5062470548804014, &quot;bottom&quot;: 0.7056599477880894, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5700302269965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.7453717724086705, &quot;bottom&quot;: 0.9447846653163581, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">m2_the_sentence_as_mfccs_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
