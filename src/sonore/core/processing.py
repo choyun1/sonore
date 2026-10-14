@@ -172,17 +172,27 @@ def splice(
     if start_samples.min() < 0 or start_samples.max() + n_segment > n_source:
         raise ValueError(f"every segment must lie inside the sound ({n_source / fs:g} s)")
 
+    joined, _ = _aligned_overlap_add(sound.data[:, 0], start_samples, n_segment, n_fade, n_shift)
+    return Sound(joined, fs)
+
+
+def _aligned_overlap_add(
+    signal: np.ndarray, start_samples: np.ndarray, n_segment: int, n_fade: int, n_shift: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """:func:`splice` on a 1-D array, in samples; also returns the shift
+    chosen for each segment."""
     before = n_fade // 2  # the part of a cross-fade before its join
     after = n_fade - before
     rise = 0.5 * (1 - np.cos(np.pi * np.arange(n_fade) / n_fade)) if n_fade else np.zeros(0)
     fall = 1 - rise
     # Zeros around the sound, so that any read the search can ask for exists.
     margin = before + after + n_shift
-    source = np.pad(sound.data[:, 0], margin)
+    source = np.pad(signal, margin)
     n_out = len(start_samples) * n_segment
     # The output with room for the first segment's lead-in and the last one's tail.
     written = np.zeros(before + n_out + after)
     shifts = np.arange(-n_shift, n_shift + 1)
+    chosen = np.zeros(len(start_samples), dtype=int)
     for i, start in enumerate(start_samples):
         shift = 0
         if i > 0 and n_fade > 0 and n_shift > 0:
@@ -190,10 +200,11 @@ def splice(
             target = written[i * n_segment : i * n_segment + n_fade] * rise
             block = source[margin + start - before - n_shift : margin + start - before + n_fade + n_shift]
             score = np.correlate(block, target, mode="valid")
-            inside = (start + shifts - before >= 0) & (start + shifts + n_segment + after <= n_source)
+            inside = (start + shifts - before >= 0) & (start + shifts + n_segment + after <= len(signal))
             if inside.any():
                 score[~inside] = -np.inf
                 shift = int(shifts[np.argmax(score)])
+        chosen[i] = shift
         read = margin + start + shift
         piece = source[read - before : read + n_segment + after].copy()
         if i > 0:
@@ -201,7 +212,7 @@ def splice(
         if i < len(start_samples) - 1:
             piece[len(piece) - n_fade :] *= fall
         written[i * n_segment : i * n_segment + len(piece)] += piece
-    return Sound(written[before : before + n_out], fs)
+    return written[before : before + n_out], chosen
 
 
 def mix(sounds: Sequence[Sound], *, align: Align = "start") -> Sound:

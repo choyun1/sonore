@@ -21,12 +21,17 @@ accepted by Cho 2026-10-14: D1 as two public names, `so.quilt` and
 - **[source]**: from the paper, read in full from the PDF Cho supplied (main
   text and Online Methods, 12 pages).
 - **[toolbox]**: from reading the Sound Quilting Toolbox v1.3 (Josh
-  McDermott; `reorder_segs.m` by Dan Ellis), which Cho supplied. Read, not
-  yet run. The toolbox has no license, so no code is copied or translated;
-  it is consulted for behavior only, as was done for texture statistics.
+  McDermott; `reorder_segs.m` by Dan Ellis), which Cho supplied. The
+  toolbox has no license, so no code is copied or translated; it is
+  consulted for behavior only, as was done for texture statistics.
 - **[check]**: printed by `tools/check_quilting_claims.py`. It uses NumPy
   only, shares no code with sonore, and runs in about 20 s.
 - **[math]**: follows in one line from the formulas shown.
+- **[cross]**: printed by `tools/crosscheck_quilting.py`, which runs the
+  toolbox in GNU Octave 10.3 (conda-forge, with the signal package) beside
+  sonore. Dev-time only, since the toolbox cannot be in the repository.
+- **[sound]**: measured with sonore itself by the gallery's quilting
+  section (docs/gallery/voice/speech.py), with the seeds given there.
 
 ## The method [source]
 
@@ -77,12 +82,16 @@ The paper's step 5 reads "repeat steps 1-3"; steps 3-4 are meant.
 - **Level.** The source is scaled to RMS 0.03 first.
 - **Length.** The quilt is a whole number of segments; no trim or fade.
 - **Bugs, none of which affect the published stimuli** (mono sources, the
-  regular filterbank, long sources): a two-channel source is reduced to two
-  samples; the 4x overcomplete filterbank option refers to an undefined
-  variable; and when no segment is left, every candidate gets the same
-  placeholder distance, the tie returns several indices and the loop fails.
-  These are from reading and will be confirmed when the cross-check runs
-  the toolbox in Octave.
+  regular filterbank, long sources), each confirmed in Octave [cross]: a
+  two-channel source is reduced to two samples and the run fails ("'dist'
+  undefined"); the 4x overcomplete filterbank option refers to an
+  undefined variable ("'s' undefined"); and when no segment is left, every
+  candidate gets the same placeholder distance, the tie returns several
+  indices and the loop fails ("nonconformant arguments").
+- **Alignment one sample off** [cross]. `reorder_segs` correlates the
+  overlap with the source one sample later than the stretch it then reads,
+  so each chosen shift is one sample short of the best alignment. Found by
+  the cross-check, not by reading.
 
 ## Claims
 
@@ -228,6 +237,55 @@ Rough size, an estimate: 150 to 250 lines in `views/quilting.py` and
   shown will be measured when the page is built. *Recommended: the speech
   page, which is about the structure of speech.*
 
+## As built
+
+`so.splice` in `core/processing.py` and `so.quilt` in `views/quilting.py`,
+as decided. The differences from the toolbox are listed in this document,
+under "What the toolbox does differently" and below, rather than in a
+`DIFFERENCES_FROM_TOOLBOX` constant: quilting has no settings object to hang
+one on, and the list is short.
+
+- **Cross-check against the toolbox [cross]**, on the toolbox's example
+  speech at 20 kHz, 60 ms segments, a 6 s quilt (100 segments):
+  - The filters: sonore's `cosine_filterbank(30, 20, 10000)` and the
+    toolbox's `make_erb_cos_filters` on the same 400,001-point grid differ
+    by at most 1.7e-12.
+  - Envelopes made as the toolbox makes them (the Hilbert transform after
+    removing the padding) from sonore's subbands differ by at most 7.8e-16,
+    the border changes the toolbox records by 6e-15 of the largest, and the
+    toolbox's exclusion rule run on sonore's changes reproduces the
+    toolbox's order, 100 segments of 100.
+  - sonore's own envelopes take the Hilbert transform of the padded
+    subbands. They differ from the toolbox's by up to 2.1e-2 within 30 ms of
+    the ends and by at most 1.5e-5 elsewhere (the largest envelope is
+    0.20), and the border changes by 7e-4 of the largest. That is enough to
+    flip one near tie, after which the orders part: 30 of 100 segments
+    agree. sonore keeps its own envelopes.
+  - Joining without shifts: `so.splice` and `reorder_segs` agree to 1.4e-17
+    away from the outer ends (the toolbox fades the first and last half
+    cross-fade; sonore starts and ends at full level).
+  - Joining with shifts: at the toolbox's 99 joins, sonore's search picks
+    the toolbox's shift plus one sample at 95, the same at 3 and a different
+    peak at 1. Run one sample later, as the toolbox indexes it, the same
+    search gives the toolbox's shift at all 99: the one-sample offset above.
+- **Pauses.** The first build of the gallery quilted LibriSpeech passages
+  with their pauses, and a 6 s quilt of 30 ms segments held 4 s of silence:
+  one silent segment changes little into another, and the passage changes
+  little across a silence. The gallery now cuts pauses first with the
+  toolbox's thresholds (runs of at least eight 30 ms windows more than 35 dB
+  below the loudest), and the cutting is `so.splice` of the kept windows
+  with 10 ms cross-fades and no shifts. D5 stands: no helper in the API.
+- **Short segments chain.** At 30 ms, quilts of speech show long, steady
+  stretches: the rule keeps picking segments with similar spectra. The
+  toolbox's rule does the same, since sonore's order matches it.
+- **Texture quilts (D7) [sound]**, measured by the gallery: the statistic
+  SNR averaged over the paper's classes, against the whole 20 s recording.
+  Fire: the four 5 s stretches of the recording score 9.6 to 14.7 dB, and
+  three 5 s quilts at each of 30, 120, 480 and 960 ms score 10.6 to 17.0 dB.
+  Mud: stretches 13.1 to 16.5 dB, quilts 12.5 to 16.0 dB. One recording each
+  and three seeds per length; a quilt matches the recording's statistics
+  about as well as the recording's own stretches do.
+
 ## References
 
 - Overath, T., McDermott, J. H., Zarate, J. M., & Poeppel, D. (2015). The
@@ -240,5 +298,6 @@ Rough size, an estimate: 150 to 250 lines in `views/quilting.py` and
   waveform similarity (WSOLA) for high quality time-scale modification of
   speech. *Proc. IEEE ICASSP*, 2, 554-557.
 - McDermott, J. H., & Simoncelli, E. P. (2011). Sound texture perception
-  via statistics recovered from natural sounds. *Neuron*, 71, 926-940.
+  via statistics of the auditory periphery: evidence from sound synthesis.
+  *Neuron*, 71, 926-940.
   doi:10.1016/j.neuron.2011.06.032

@@ -80,19 +80,36 @@ def quilt(
         )
 
     bank = filterbank if filterbank is not None else cosine_filterbank(30, 20, min(10000, fs / 2))
-    cochleagram = bank.analyze(sound).envelopes().data[: n_segments * n_segment, :, 0] ** 0.3
+    change = _border_changes(bank.analyze(sound).envelopes().data[:, :, 0], n_segment, n_border)
+    order = _choose_order(change, n_needed, as_rng(rng))
+    starts = np.array(order) * n_segment / fs
+    joined = splice(sound, starts, n_segment / fs, crossfade=crossfade, max_shift=max_shift)
+    return Sound(joined.data[:n_out], fs)
+
+
+def _border_changes(envelopes: np.ndarray, n_segment: int, n_border: int) -> np.ndarray:
+    """``change[k, n]``: the mean squared difference, in the compressed
+    cochleagram, between the last ``n_border`` samples of segment ``k`` and
+    the first ``n_border`` of segment ``n``. ``envelopes`` is
+    ``(n_samples, n_bands)``; every pair comes from one matrix product."""
+    n_segments = len(envelopes) // n_segment
+    cochleagram = envelopes[: n_segments * n_segment] ** 0.3
     by_segment = cochleagram.reshape(n_segments, n_segment, -1)
     heads = by_segment[:, :n_border].reshape(n_segments, -1)
     tails = by_segment[:, -n_border:].reshape(n_segments, -1)
-    # change[k, n]: from the end of segment k into the start of segment n,
-    # for every pair at once from one matrix product
-    change = (
+    return (
         np.sum(tails**2, axis=1)[:, None] + np.sum(heads**2, axis=1)[None, :] - 2 * tails @ heads.T
     ) / heads.shape[1]
 
-    generator = as_rng(rng)
+
+def _choose_order(change: np.ndarray, n_needed: int, rng: np.random.Generator) -> list[int]:
+    """The paper's rule on a matrix of border changes: a random first
+    segment, then each time the unused segment whose change from the current
+    one is closest to the change the sound made after it, never the sound's
+    own next segment; the last segment only ends the order."""
+    n_segments = len(change)
     last = n_segments - 1
-    current = int(generator.integers(n_segments if n_needed == 1 else last))
+    current = int(rng.integers(n_segments if n_needed == 1 else last))
     order = [current]
     used = np.zeros(n_segments, dtype=bool)
     used[current] = True
@@ -111,7 +128,4 @@ def quilt(
         current = int(np.argmin(mismatch))
         order.append(current)
         used[current] = True
-
-    starts = np.array(order) * n_segment / fs
-    joined = splice(sound, starts, n_segment / fs, crossfade=crossfade, max_shift=max_shift)
-    return Sound(joined.data[:n_out], fs)
+    return order

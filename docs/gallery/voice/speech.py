@@ -30,6 +30,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [The same plane, tiled four ways](#h-the-same-plane-tiled-four-ways): how each analysis
 #   divides time and frequency.
 # - [Reassignment](#h-reassignment): moving energy to where it actually is.
+# - [Sound quilts](#h-sound-quilts): speech cut into segments and put back in a new order, and
+#   a texture quilted the same way.
 
 # %% [markdown]
 # ## Motivation
@@ -563,6 +565,197 @@ sounds = talkers
 # each of these frames.
 
 # %% [markdown]
+# ## Sound quilts
+#
+# A *sound quilt* (Overath et al., 2015) cuts a recording into segments of one length and strings
+# them together in a new order. Each next segment is the one whose join with the current segment
+# changes the cochleagram by about as much as the recording itself changed at that point, and a
+# join the recording already had is never used. The quilt keeps the recording's structure inside
+# each segment and across each join, and scrambles everything longer than a segment. Overath et
+# al. quilted German speech for listeners who knew no German, at segment lengths from 30 to
+# 960 ms, and found a region of the superior temporal sulcus whose response grew with segment
+# length up to about 500 ms. `so.quilt` follows the paper's methods; `so.splice` is its joining
+# step, which moves each segment by up to 15 ms so that its waveform lines up with what came
+# before, then cross-fades over 30 ms.
+#
+# The passages here are about 30 s of English read speech from LibriSpeech (Panayotov et al.,
+# 2015). For a listener who knows English, words in the long-segment quilts carry meaning, which
+# the paper avoided by using a language its listeners did not know. As in the paper, pauses are
+# removed first. Without that, short-segment quilts string silences together: one silent segment
+# changes little into another, and little is what the passage itself changes across a silence (a
+# first build of this page gave a 6 s quilt of 30 ms segments with 4 s of silence). The cut uses
+# the thresholds of McDermott's toolbox, and `so.splice` does the cutting: the kept 30 ms windows,
+# joined with 10 ms cross-fades and no shifts, give back the passage exactly except at the cuts.
+# The paper also band-limited its sources and faded out each quilt; that is not done here.
+
+# %%
+# A male and a female LibriSpeech reader (docs/speech/SOURCES.md), at 16 kHz.
+READERS = {"Male reader": "3000_15664", "Female reader": "1462_170142"}
+
+
+def without_pauses(snd, window=0.03, below_db=35, min_windows=8):
+    """``snd`` with every run of at least ``min_windows`` windows more than ``below_db`` below the
+    loudest window cut out, the rest joined by ``so.splice`` with 10 ms cross-fades."""
+    n = int(round(window * snd.fs))
+    frames = snd.data[: len(snd) // n * n, 0].reshape(-1, n)
+    level = 10 * np.log10(np.mean(frames**2, axis=1) + 1e-20)  # dB per window
+    quiet = np.concatenate([[False], level < level.max() - below_db, [False]])
+    edges = np.flatnonzero(np.diff(quiet.astype(int)))  # starts and ends of quiet runs
+    keep = np.ones(len(frames), dtype=bool)
+    for start, end in zip(edges[::2], edges[1::2], strict=True):
+        if end - start >= min_windows:
+            keep[start:end] = False
+    return so.splice(snd, np.flatnonzero(keep) * n / snd.fs, n / snd.fs, crossfade=0.01, max_shift=0)
+
+
+passages = {
+    label: without_pauses(so.load(fetch(f"docs/speech/librispeech_{reader}.flac")))
+    for label, reader in READERS.items()
+}
+for label, passage in passages.items():
+    print(f"{label}: {passage.duration:.1f} s without pauses")
+SEGMENTS = [0.03, 0.12, 0.48, 0.96]  # s
+QUILT_DUR = 6.0  # s
+quilt_bank = so.cosine_filterbank(30, 20, 8000)  # the paper's bank, up to Nyquist at 16 kHz
+
+
+def quilt_demo(passage):
+    """The passage's first 6 s and a 6 s quilt at each segment length, with their cochleagrams."""
+    sounds = {"Original": finish(so.Sound(passage.data[: int(QUILT_DUR * passage.fs)], passage.fs))}
+    for seg in SEGMENTS:
+        sounds[f"{seg * 1000:.0f} ms"] = finish(so.quilt(passage, seg, QUILT_DUR, rng=1))
+    fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 9), sharex=True, layout="constrained")
+    for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
+        quilt_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
+        title = label if label == "Original" else f"Quilt, {label} segments"
+        ax.set(title=title, xlabel="", xlim=(0, QUILT_DUR))
+    axes[-1].set_xlabel("Time [s]")
+    return fig, sounds, {label: [ax] for label, ax in zip(sounds, axes, strict=True)}
+
+
+# %% [about]
+# The first 6 s of the passage without its pauses, then quilts of the whole passage made of 30,
+# 120, 480 and 960 ms segments. A 30 ms segment is shorter than most speech sounds, a 120 ms one
+# about a syllable, and a 960 ms one a few words. At 30 ms the rule tends to chain segments with
+# similar spectra, and the cochleagram shows long, steady stretches that the passage does not
+# have.
+
+# %% [demo sq1] Quilts of a male reader
+fig, sounds, playhead = quilt_demo(passages["Male reader"])
+
+# %% [about]
+# The same for the female reader.
+
+# %% [demo sq2] Quilts of a female reader
+fig, sounds, playhead = quilt_demo(passages["Female reader"])
+
+# %% [markdown]
+# The rule that picks the order is what keeps the joins from standing out. The change across a
+# join is measured as the paper does: the mean squared difference between the last 30 ms before
+# it and the first 30 ms after it, in the cochleagram compressed by the power 0.3. Every join of a
+# quilt falls at a whole number of segments, since the alignment moves where a segment is read
+# from, not where it is written, so the changes can be measured on the quilt itself.
+
+# %% [about]
+# The changes across 120 ms joins: between neighboring segments of the male reader's passage, at
+# the joins of 30 s of quilts made from it, and at the joins of 30 s of the same segments put in a
+# random order with `so.splice`. The quilts' joins change about as much as the passage's own
+# boundaries (medians in the legend); the random joins change between two and three times as
+# much.
+
+# %% [figure sq3] Change across the joins
+
+
+def join_changes(snd, segment, border=0.03):
+    """The cochleagram change across every boundary at a multiple of ``segment`` [s]."""
+    n, nb = int(round(segment * snd.fs)), int(round(border * snd.fs))
+    env = quilt_bank.analyze(snd).envelopes().data[:, :, 0] ** 0.3
+    joins = np.arange(n, len(env) - nb + 1, n)
+    return np.array([np.mean((env[j - nb : j] - env[j : j + nb]) ** 2) for j in joins])
+
+
+passage, seg = passages["Male reader"], 0.12
+n_segments = len(passage) // int(seg * passage.fs)
+rng = np.random.default_rng(0)
+quilts = [so.quilt(passage, seg, QUILT_DUR, rng=k) for k in range(5)]
+shuffled = [so.splice(passage, rng.permutation(n_segments)[:50] * seg, seg) for _ in range(5)]
+changes = {
+    "Passage": join_changes(passage, seg),
+    "Quilts": np.concatenate([join_changes(q, seg) for q in quilts]),
+    "Random order": np.concatenate([join_changes(s, seg) for s in shuffled]),
+}
+fig, ax = plt.subplots(figsize=(7, 3.4), layout="constrained")
+bins = np.linspace(0, np.percentile(np.concatenate(list(changes.values())), 99), 40)
+for label, values in changes.items():
+    legend = f"{label} (median {np.median(values):.4f})"
+    ax.hist(values, bins, density=True, histtype="step", lw=1.8, label=legend)
+ax.set(xlabel="Change across a 120 ms join (mean squared, compressed cochleagram)", ylabel="Density")
+ax.legend()
+
+# %% [markdown]
+# ### Quilting a texture
+#
+# A texture, such as fire or rain, has little structure longer than a few hundred milliseconds,
+# so a quilt of one should sound like another stretch of the same texture even with short
+# segments, as McDermott's notes to the quilting toolbox observe. The texture statistics of
+# [Sound textures](textures.html) make that measurable: they are the time-averaged statistics of a
+# model of the auditory periphery, and a quilt that is another sample of the texture should match
+# them as well as another stretch of the recording does.
+
+# %% [about]
+# The first 5 s of a 20 s recording of fire, then 5 s quilts of the whole recording made of 30,
+# 120 and 960 ms segments.
+
+# %% [demo sq4] Quilts of a fire
+fire = so.load(fetch("docs/textures/fire.flac"))
+sounds = {"Original": finish(so.Sound(fire.data[: int(5 * fire.fs)], fire.fs))}
+for seg in (0.03, 0.12, 0.96):
+    sounds[f"{seg * 1000:.0f} ms"] = finish(so.quilt(fire, seg, 5.0, rng=1))
+fig, axes = plt.subplots(len(sounds), 1, figsize=(10, 7.6), sharex=True, layout="constrained")
+fire_bank = so.cosine_filterbank(30, 20, 10000)
+for ax, (label, snd) in zip(axes, sounds.items(), strict=True):
+    fire_bank.analyze(snd).envelopes().plot(ax, colorbar=False)
+    title = label if label == "Original" else f"Quilt, {label} segments"
+    ax.set(title=title, xlabel="", xlim=(0, 5))
+axes[-1].set_xlabel("Time [s]")
+playhead = {label: [ax] for label, ax in zip(sounds, axes, strict=True)}
+
+# %% [about]
+# How closely 5 s of sound matches the texture statistics of the whole 20 s recording of fire, and
+# of mud, as the statistic SNR averaged over the paper's statistic classes (higher is closer).
+# Gray: the four 5 s stretches of the recording itself. Colored: three quilts at each segment
+# length, made from the whole recording.
+
+# %% [figure sq5] Texture statistics of quilts
+from sonore.texture import TextureStats
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.6), sharey=True, layout="constrained")
+for ax, name in zip(axes, ("fire", "mud"), strict=True):
+    recording = so.load(fetch(f"docs/textures/{name}.flac"))
+    target = TextureStats.measure(recording)
+
+    def match(snd, target=target):
+        """The statistic SNR of snd against the whole recording, averaged over classes."""
+        return float(np.mean(list(target.snr(TextureStats.measure(snd)).values())))
+
+    n = int(5 * recording.fs)  # samples in 5 s
+    stretches = [match(so.Sound(recording.data[k * n : (k + 1) * n], recording.fs)) for k in range(4)]
+    ax.axhspan(min(stretches), max(stretches), color="0.85", label="Stretches of the recording")
+    for k, seg in enumerate(SEGMENTS):
+        scores = [match(so.quilt(recording, seg, 5.0, rng=r)) for r in range(3)]
+        print(f"{name}, {seg * 1000:.0f} ms quilts: " + ", ".join(f"{s:.1f}" for s in scores) + " dB")
+        ax.plot([k] * 3, scores, "o", color="C0", label="Quilts" if k == 0 else None)
+    print(f"{name}, 5 s stretches: " + ", ".join(f"{s:.1f}" for s in stretches) + " dB")
+    ax.set(
+        title=name.capitalize(),
+        xticks=range(len(SEGMENTS)),
+        xticklabels=[f"{s * 1000:.0f} ms" for s in SEGMENTS],
+        xlabel="Segment length",
+    )
+axes[0].set_ylabel("Statistic SNR [dB]")
+axes[0].legend(loc="lower left")
+
+# %% [markdown]
 # ## References
 #
 # - Auger & Flandrin (1995). Improving the readability of time-frequency and time-scale
@@ -592,6 +785,10 @@ sounds = talkers
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
+# - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
+#   periphery: evidence from sound synthesis. *Neuron* 71(5), 926–940.
+#   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
+#   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
@@ -599,3 +796,12 @@ sounds = talkers
 #   signals. *Proc. Interspeech 2017*.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68).
 #   The pitch tracks drawn on this page.
+# - Overath, McDermott, Zarate & Poeppel (2015). The cortical analysis of speech-specific temporal
+#   structure revealed by responses to sound quilts. *Nature Neuroscience* 18, 903–911.
+#   [doi:10.1038/nn.4021](https://doi.org/10.1038/nn.4021).
+#   [`quilting.quilt`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/quilting.py#L25)
+#   [`processing.splice`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L118)
+# - Panayotov, Chen, Povey & Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain
+#   audio books. *Proc. ICASSP 2015*, 5206–5210.
+#   [doi:10.1109/ICASSP.2015.7178964](https://doi.org/10.1109/ICASSP.2015.7178964). The two
+#   quilted passages (CC BY 4.0; sources in docs/speech/SOURCES.md).
