@@ -240,10 +240,11 @@ fig, sounds, playhead = texture_quilt_demo(so.load(fetch("docs/textures/fire.fla
 # %% [about]
 # The same for 7 s of a stream (the recording on [Sound textures](textures.html)), with 4 s
 # quilts. The recording is short: a quilt of 960 ms segments uses 5 of its 7 segments, so the
-# rule has few to choose from, and a quilt of 30 ms segments uses 134 of 233. The 30 ms quilts
-# play about 1 dB quieter (median level of 100 ms windows, five seeds): with 30 ms cross-fades on
-# 30 ms segments every sample lies in a cross-fade, and two unrelated stretches of noise
-# cross-faded with raised-cosine ramps keep on average 3/4 of their power, 1.2 dB less.
+# rule has few to choose from, and a quilt of 30 ms segments uses 134 of 233. With 30 ms
+# cross-fades on 30 ms segments every sample lies in a cross-fade, and the paper's raised-cosine
+# ramps keep only 3/4 of the power of two unrelated stretches of noise, so its 30 ms quilts of a
+# stream play about 1 dB quieter. `so.quilt` scales each cross-fade by the correlation it
+# measures between the two segments (`fade="adaptive"`, the default), which keeps the level.
 
 # %% [demo sq6] Quilts of a stream
 fig, sounds, playhead = texture_quilt_demo(so.load(fetch("docs/textures/stream.flac")), 4.0)
@@ -293,7 +294,7 @@ axes[0].legend(loc="lower left")
 # - Overath, McDermott, Zarate & Poeppel (2015). The cortical analysis of speech-specific temporal
 #   structure revealed by responses to sound quilts. *Nature Neuroscience* 18, 903–911.
 #   [doi:10.1038/nn.4021](https://doi.org/10.1038/nn.4021).
-#   [`quilting.quilt`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/quilting.py#L25)
+#   [`quilting.quilt`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/quilting.py#L26)
 #   [`processing.splice`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py#L118)
 # - Panayotov, Chen, Povey & Khudanpur (2015). LibriSpeech: an ASR corpus based on public domain
 #   audio books. *Proc. ICASSP 2015*, 5206–5210.

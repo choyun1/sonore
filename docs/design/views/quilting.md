@@ -307,6 +307,20 @@ one on, and the list is short.
   1.2 dB less; the alignment correlates them a little, so the loss is
   smaller. The paper's settings (30 ms segments, 30 ms cross-fades) do the
   same.
+- **Adaptive fade [sound][check].** Cho asked whether the cross-fades
+  could keep the level (2026-10-14). Three fades were measured on 30 and
+  120 ms quilts (three seeds, median level of 100 ms windows against the
+  recording). Equal gain (the paper's): stream 30 ms -1.1 to -0.7 dB, fire
+  -0.9 to -0.7 dB. Equal power (sine and cosine ramps): stream +0.1 to
+  +0.9 dB, fire +1.0 to +1.1 dB, and a 200 Hz tone spliced at 30 ms rises
+  2.1 dB with a 3 dB swing at each join, since aligned joins are partly
+  correlated. Adaptive (the correlation `r` of the two segments over the
+  cross-fade, both ramps divided by `sqrt(rise² + fall² + 2 r rise fall)`):
+  stream +0.1 to +0.4 dB, fire -0.2 to -0.1 dB, the tone unchanged.
+  `so.splice` and `so.quilt` take `fade="adaptive"` (default) or
+  `fade="equal_gain"`; the cross-check uses the latter. A test checks the
+  level of noise spliced in 30 ms segments: -1.25 dB with equal gain, 0 dB
+  adaptive.
 
 ## References
 

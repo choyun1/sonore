@@ -11,6 +11,7 @@ the paper (docs/design/views/quilting.md lists the differences).
 from __future__ import annotations
 
 import math
+from typing import Literal
 
 import numpy as np
 
@@ -32,6 +33,7 @@ def quilt(
     border_dur: float = 0.03,
     crossfade: float = 0.03,
     max_shift: float = 0.015,
+    fade: Literal["adaptive", "equal_gain"] = "adaptive",
 ) -> Sound:
     """A sound quilt of ``sound``, ``duration`` [s] long, made of segments
     ``segment_dur`` [s] long (Overath et al., 2015).
@@ -52,7 +54,10 @@ def quilt(
     filters from 20 Hz to 10 kHz, capped at Nyquist, with their edge
     filters). The segments are joined by :func:`splice`, with raised-cosine
     cross-fades ``crossfade`` long, each new segment moved by up to
-    ``max_shift`` to align its waveform with what precedes it.
+    ``max_shift`` to align its waveform with what precedes it. The paper's
+    raised-cosine ramps (``fade="equal_gain"``) lose about 1 dB of a
+    noise-like sound when the cross-fade is as long as the segment; the
+    default ``"adaptive"`` fade keeps the level (see :func:`splice`).
 
     The quilt keeps the sound's level and is trimmed to ``duration``; the
     paper's band-limiting, pause removal and final fade are left to the
@@ -83,7 +88,7 @@ def quilt(
     change = _border_changes(bank.analyze(sound).envelopes().data[:, :, 0], n_segment, n_border)
     order = _choose_order(change, n_needed, as_rng(rng))
     starts = np.array(order) * n_segment / fs
-    joined = splice(sound, starts, n_segment / fs, crossfade=crossfade, max_shift=max_shift)
+    joined = splice(sound, starts, n_segment / fs, crossfade=crossfade, max_shift=max_shift, fade=fade)
     return Sound(joined.data[:n_out], fs)
 
 
