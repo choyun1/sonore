@@ -5,6 +5,7 @@ import pytest
 from scipy import stats
 
 import sonore as so
+from sonore.sources.events import _transposed as transposed
 
 FS = 1000
 CLICK = so.Sound([1.0], FS)  # a one-sample event: the output is the impulse train itself
@@ -90,11 +91,27 @@ def test_convolution_and_one_by_one_agree():
     np.testing.assert_allclose(one_by_one.data, by_convolution.data, atol=1e-9)
 
 
-def test_resampled_copy_is_higher_and_shorter():
+def test_transposed_copy_is_higher_and_shorter():
     event = so.Sound(np.hanning(202)[1:-1], FS)  # 200 nonzero samples
     octave_up = _onsets(so.event_train(event, 1.0, 0.5, pitch_cents=1200))
     assert octave_up[0] == 500
     assert octave_up[-1] - octave_up[0] + 1 == pytest.approx(100, abs=3)
+
+
+@pytest.mark.parametrize("cents", [-400, -7, 100, 400])
+def test_transposed_copies_match_resampling(cents):
+    """The shared windowed sinc and SciPy's polyphase resampling agree, below the top
+    of the spectrum; a noise burst also checks that going up nothing folds back
+    (docs/design/sources/event-train-speed.md)."""
+    fs = 44100
+    ratio = 2 ** (cents / 1200)
+    noise = so.gaussian_noise(0.03, fs, rng=0)
+    for event, tolerance in ((_chirp(fs), 1e-3), (noise * np.hanning(noise.n_samples)[:, None], 0.03)):
+        copy = transposed(event, ratio, fs)[:, 0]
+        resampled = event.resample(fs / ratio).data[:, 0]
+        n = min(len(copy), len(resampled))
+        assert abs(len(copy) - len(resampled)) <= 1
+        assert so.rms(copy[:n] - resampled[:n]) < tolerance * so.rms(resampled)
 
 
 def test_lead_brings_in_events_already_under_way():

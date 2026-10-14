@@ -17,6 +17,7 @@ import numpy as np
 from scipy.special import i0
 
 import sonore as so
+from sonore.core import utils
 from sonore.spatial import spatialization as sp
 
 warnings.simplefilter("ignore")  # the one empty PKU-IOA file
@@ -26,7 +27,7 @@ rng = np.random.default_rng(1)
 
 def direct_read(signal, positions):
     """The windowed sinc computed afresh for every position, as before the table."""
-    half, beta, margin = sp._READ_HALF_WIDTH, sp._READ_KAISER_BETA, 2 * sp._READ_HALF_WIDTH
+    half, beta, margin = utils._READ_HALF_WIDTH, utils._READ_KAISER_BETA, 2 * utils._READ_HALF_WIDTH
     padded = np.concatenate([np.zeros(margin), signal, np.zeros(margin)])
     offsets = np.arange(-half + 1, half + 1)
     out = np.zeros(len(positions))

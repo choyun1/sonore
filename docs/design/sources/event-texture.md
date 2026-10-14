@@ -268,12 +268,20 @@ spread of 100 cents took 7.5 s on the build machine (one run), most of it
 resampling about 600 distinct shifts; without a pitch spread, 4 s took
 0.02 s.
 
+Since 2026-10-14 (Cho chose option B1 of
+docs/design/sources/event-train-speed.md) a `Sound` event is no longer
+transposed with `Sound.resample`: it is read every `ratio` samples with
+the windowed sinc `move_sound` uses, widened by the ratio going up. The
+same minute now takes about 1 s, and pitch-spread outputs differ from the
+resampled ones by about −64 dB for the chirp; renders without a pitch
+spread are unchanged.
+
 Tests are in `tests/sources/test_events.py`: Poisson counts (mean and
 variance over 400 draws), regular onsets from a constant interval,
 reproducibility, counts under a rising rate track against its integral,
 the kurtosis of E2 and its level-spread factor of E6, the two rendering
-paths agreeing, a resampled copy an octave up lasting half as long, the
-lead-in, and the argument checks.
+paths agreeing, a transposed copy an octave up lasting half as long,
+copies agreeing with resampling, the lead-in, and the argument checks.
 
 ## What this document does not claim
 

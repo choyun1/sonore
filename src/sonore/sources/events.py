@@ -18,7 +18,7 @@ import numpy as np
 
 from sonore.core.processing import Track, _track
 from sonore.core.sound import Sound
-from sonore.core.utils import RNG, as_rng, db_to_amp, n_samples, time_axis
+from sonore.core.utils import RNG, _read_between_samples, as_rng, db_to_amp, n_samples, time_axis
 
 __all__ = ["event_train"]
 
@@ -60,16 +60,21 @@ def _warped_onsets(intervals: Draw, span: float, rng: np.random.Generator) -> np
 
 
 def _transposed(event: Sound | Callable[[float], Sound], ratio: float, fs: float) -> np.ndarray:
-    """The event ``ratio`` times higher, as (samples, channels). A sound is resampled,
-    so it is also ``ratio`` times shorter, as a tape played faster is; a function of
-    the ratio makes its own transposed copy."""
+    """The event ``ratio`` times higher, as (samples, channels). A sound is read every
+    ``ratio`` samples, so it is also ``ratio`` times shorter, as a tape played faster
+    is; a function of the ratio makes its own transposed copy."""
     if callable(event):
         copy = event(ratio)
         if copy.fs != fs:
             raise ValueError("the event function must return sounds at one sampling rate")
-    else:
-        copy = event if ratio == 1 else Sound(event.resample(fs / ratio).data, fs)
-    return copy.data
+        return copy.data
+    if ratio == 1:
+        return event.data
+    positions = np.arange(int(np.ceil(event.n_samples / ratio))) * ratio
+    return np.stack(
+        [_read_between_samples(channel, positions, stretch=max(ratio, 1.0)) for channel in event.data.T],
+        axis=1,
+    )
 
 
 def event_train(
@@ -104,8 +109,10 @@ def event_train(
     train of impulses, one per onset with the copy's amplitude (shot noise,
     for Poisson timing); otherwise the copies are added one by one. Pitch
     shifts are rounded to the nearest cent, and each distinct one is made
-    once: a ``Sound`` event is resampled (so a higher copy is also shorter),
-    while an event given as a function ``event(ratio) -> Sound`` makes its
+    once: a ``Sound`` event is read every ``ratio`` samples with the
+    windowed sinc that :func:`move_sound` reads between samples with,
+    widened by the ratio going up so nothing folds back (so a higher copy
+    is also shorter), while an event given as a function ``event(ratio) -> Sound`` makes its
     own copy at that pitch ratio, so a synthetic event can keep its length.
 
     Onsets are also drawn over ``lead`` seconds before the start, so that

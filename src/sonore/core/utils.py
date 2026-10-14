@@ -12,6 +12,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import resample_poly
+from scipy.special import i0
 
 __all__ = [
     "rms",
@@ -308,3 +309,70 @@ def _phase_ramp_delay(data: np.ndarray, shift: ArrayLike, n_fft: int, n_out: int
     freqs = np.fft.rfftfreq(n_fft)
     spectrum *= np.exp(-2j * np.pi * freqs * np.asarray(shift)[..., None])
     return np.fft.irfft(spectrum, n=n_fft, axis=-1)[..., :n_out]
+
+
+_READ_HALF_WIDTH = 16  # the windowed sinc spans 32 samples
+_READ_KAISER_BETA = 8.0
+_READ_PHASES = 512  # fractional positions at which the windowed sinc is tabulated
+
+
+def _windowed_sinc_table() -> np.ndarray:
+    """The 32 taps of the Kaiser-windowed sinc for reading at a fraction
+    k / _READ_PHASES of a sample past a whole sample, k = 0 .. _READ_PHASES,
+    shape (_READ_PHASES + 1, 32)."""
+    fraction = np.arange(_READ_PHASES + 1) / _READ_PHASES
+    distance = fraction[:, None] - np.arange(-_READ_HALF_WIDTH + 1, _READ_HALF_WIDTH + 1)[None, :]
+    window = i0(_READ_KAISER_BETA * np.sqrt(np.clip(1 - (distance / _READ_HALF_WIDTH) ** 2, 0, None)))
+    return np.sinc(distance) * window / i0(_READ_KAISER_BETA)
+
+
+_SINC_TABLE = _windowed_sinc_table()
+
+
+def _read_between_samples(
+    signal: np.ndarray, positions: np.ndarray, *, stretch: float = 1.0, chunk: int = 32768
+) -> np.ndarray:
+    """``signal`` read at fractional sample ``positions`` with a 32-sample
+    Kaiser-windowed sinc; zero outside the signal. The taps are interpolated
+    linearly between 512 tabulated fractions of a sample, which changes the
+    result by -117 dB for white noise. For a tone, the error is about -90 dB re the
+    signal up to a third of the sampling rate and -80 dB at 0.42 of it
+    (20 kHz at 48 kHz); above that the sinc rolls off.
+
+    ``stretch`` above 1 widens the sinc that many times and scales it down by
+    as much, which lowers its cutoff to fs / (2 * stretch): reading every
+    ``stretch`` samples then filters out what would otherwise fold back below
+    the new Nyquist frequency."""
+    if stretch < 1:
+        raise ValueError("stretch must be at least 1")
+    reach = int(np.ceil(_READ_HALF_WIDTH * stretch))
+    margin = 2 * reach
+    padded = np.concatenate([np.zeros(margin), signal, np.zeros(margin)])
+    offsets = np.arange(-reach + 1, reach + 1)
+    out = np.zeros(len(positions))
+    inside = np.flatnonzero((positions > -reach) & (positions < len(signal) + reach - 1))
+    for start in range(0, len(inside), chunk):
+        rows = inside[start : start + chunk]
+        whole = np.floor(positions[rows]).astype(int)
+        samples = padded[whole[:, None] + offsets[None, :] + margin]
+        if stretch == 1:
+            phase = (positions[rows] - whole) * _READ_PHASES
+            below = np.minimum(phase.astype(int), _READ_PHASES - 1)
+            above_share = (phase - below)[:, None]
+            taps = _SINC_TABLE[below] * (1 - above_share) + _SINC_TABLE[below + 1] * above_share
+        else:
+            # The stretched sinc at u = distance / stretch is the table's tap for the
+            # whole-sample offset -floor(u), read at the fraction u - floor(u).
+            distance = (positions[rows, None] - (whole[:, None] + offsets[None, :])) / stretch
+            column = _READ_HALF_WIDTH - 1 - np.floor(distance).astype(int)
+            phase = (distance - np.floor(distance)) * _READ_PHASES
+            below = np.minimum(phase.astype(int), _READ_PHASES - 1)
+            within = (column >= 0) & (column < 2 * _READ_HALF_WIDTH)
+            column = np.clip(column, 0, 2 * _READ_HALF_WIDTH - 1)
+            above_share = phase - below
+            taps = (
+                _SINC_TABLE[below, column] * (1 - above_share) + _SINC_TABLE[below + 1, column] * above_share
+            )
+            taps = np.where(within, taps, 0.0) / stretch
+        out[rows] = np.einsum("ij,ij->i", samples, taps)
+    return out
