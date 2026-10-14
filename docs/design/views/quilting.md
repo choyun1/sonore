@@ -184,7 +184,10 @@ Rough size, an estimate: 150 to 250 lines in `views/quilting.py` and
   because the paper is the reference and (b) wastes four segments, which
   matters at 960 ms (16 of 20 left, Q1). If the source runs out, raise an
   error that says how many segments the quilt needs and how many the
-  source has.*
+  source has.* One case the paper leaves open: the source's last segment
+  has no next segment, so no source change to match after it. The
+  toolbox never picks the last two segments. *Default: the last segment
+  may only end the quilt.*
 - **D3. Joining.** Cross-correlation alignment within ±`max_shift` (15 ms)
   and raised-cosine cross-fades of `crossfade` (30 ms), as the paper says.
   (a) Raw cross-correlation, as the toolbox. (b) Normalized
