@@ -105,7 +105,7 @@ def test_with_gain_removes_fast_modulations_on_tones():
     assert np.all(slow.level <= spectrum.level + 1e-9)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        y = slow.to_sound(carrier="tones", fs=FAST, rng=2)
+        y = slow.to_sound(carrier="tone", fs=FAST, rng=2)
     _, again = _octave_spectrum(y)
     assert _share_above(again, 12) < 0.25 * _share_above(spectrum, 12)
 
@@ -121,25 +121,45 @@ def test_with_gain_is_symmetric():
 def test_to_sound_needs_envelopes_and_a_rate():
     stft_spectrum = so.ModulationSpectrum(so.STFT(_speech_like(), win_dur=20e-3))
     with pytest.raises(TypeError, match="made from Envelopes"):
-        stft_spectrum.to_sound(carrier="tones", fs=FAST)
+        stft_spectrum.to_sound(carrier="tone", fs=FAST)
     _, spectrum = _octave_spectrum(_speech_like())
     with pytest.raises(TypeError, match="fs is needed"):
-        spectrum.to_sound(carrier="tones")
+        spectrum.to_sound(carrier="tone")
     with pytest.raises(ValueError, match="carrier must be"):
         spectrum.to_sound(carrier="pink", fs=FAST)
+    with pytest.raises(ValueError, match="carrier must be 'tone' or a Sound, not 'noise'"):
+        spectrum.to_sound(carrier="noise", fs=FAST)  # bands of noise would add modulation; pass a noise
+    with pytest.raises(TypeError, match="carrier"):
+        spectrum.to_sound(fs=FAST)  # the carrier is always named
+    with pytest.raises(ValueError, match="differs"):
+        spectrum.to_sound(carrier=_speech_like(), fs=FS)
     with pytest.raises(ValueError, match="shorter"):
         spectrum.to_sound(carrier=so.gaussian_noise(1, FAST, rng=0))
 
 
-@pytest.mark.parametrize("carrier", ["tones", "noise"])
-def test_random_carriers_are_seeded(carrier):
+@pytest.mark.parametrize(
+    "kwargs", [dict(carrier="tone", fs=FAST), dict(carrier=so.gaussian_noise(2, FAST, rng=9))]
+)
+def test_random_carriers_are_seeded(kwargs):
     _, spectrum = _octave_spectrum(_speech_like())
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        a = spectrum.to_sound(carrier=carrier, fs=FAST, rng=3)
-        b = spectrum.to_sound(carrier=carrier, fs=FAST, rng=3)
+        a = spectrum.to_sound(rng=3, **kwargs)
+        b = spectrum.to_sound(rng=3, **kwargs)
+        c = spectrum.to_sound(rng=4, **kwargs)
     assert a.duration == pytest.approx(2) and a.rms == pytest.approx(1)
     np.testing.assert_array_equal(a.data, b.data)
+    assert not np.array_equal(a.data, c.data)
+
+
+def test_tone_carrier_is_the_envelopes_on_tones():
+    # to_sound is a recipe: the drawn envelopes, put on tones by Envelopes.to_sound (re-filtered).
+    _, spectrum = _octave_spectrum(_speech_like())
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        y = spectrum.to_sound(carrier="tone", fs=FAST, rng=3)
+        expected = spectrum.to_envelopes(rng=3).to_sound(carrier="tone", fs=FAST)
+    np.testing.assert_array_equal(y.data, expected.normalize().data)
 
 
 # -- targets drawn in code -------------------------------------------------
@@ -182,7 +202,7 @@ def test_blob_target_refuses_to_clip_and_names_the_depth_that_fits():
 
 def test_blob_target_is_found_again_in_the_sound():
     target = _blob_target()
-    y = target.to_sound(carrier="tones", fs=FAST, rng=0)
+    y = target.to_sound(carrier="tone", fs=FAST, rng=0)
     _, measured = _octave_spectrum(y)
     drawn = target._magnitude > 0.1 * target._magnitude.max()
     correlation = np.corrcoef(np.log(measured._magnitude[drawn]), np.log(target._magnitude[drawn]))[0, 1]
@@ -211,7 +231,7 @@ def test_db_blob_target_has_the_asked_spread_and_goes_deeper_than_linear():
 
 def test_db_blob_target_is_found_again_in_the_sound():
     target = _db_blob_target(sd_db=6.0)
-    y = target.to_sound(carrier="tones", fs=FAST, rng=0)
+    y = target.to_sound(carrier="tone", fs=FAST, rng=0)
     _, measured = _octave_spectrum(y, scale="db")
     drawn = target._magnitude > 0.1 * target._magnitude.max()
     correlation = np.corrcoef(np.log(measured._magnitude[drawn]), np.log(target._magnitude[drawn]))[0, 1]
@@ -248,8 +268,8 @@ def test_iterations_bring_the_sound_closer_to_an_edit():
 # -- one step of the search, and drawn timing on a chosen carrier ------------
 def _carriers():
     return [
-        dict(carrier="tones", fs=FAST, rng=7),
-        dict(carrier="noise", fs=FAST, rng=7),
+        dict(carrier="tone", fs=FAST, rng=7),
+        dict(carrier=so.gaussian_noise(2, FAST, rng=8), rng=7),
         dict(carrier=_speech_like(5)),
     ]
 
@@ -347,3 +367,205 @@ def test_sound_carrier_with_rng_draws_the_timing():
         start = target.iterate(start)
     # A harmonic complex leaves some bands nearly empty, whose fine structure is less exact.
     np.testing.assert_allclose(searched.data, start.normalize().data, rtol=0, atol=1e-9)
+
+
+# -- the circular banks ------------------------------------------------------
+def _circular_banks():
+    # fs 32: the top constant-Q band (16 Hz) sits on Nyquist, and so does the octave bank's
+    return [
+        so.ConstantQModulationFilterbank(n_bands=4, f_lo=2.0, f_hi=16.0, Q=2.0),
+        so.OctaveModulationFilterbank(n_bands=4, f_hi=16.0),
+    ]
+
+
+@pytest.mark.parametrize("n", [256, 255])
+@pytest.mark.parametrize("bank", _circular_banks(), ids=["constant-Q", "octave"])
+def test_analytic_output_is_the_real_output_plus_its_quadrature(bank, n):
+    x = np.random.default_rng(0).standard_normal(n)
+    real = bank.filter(x, 32.0)
+    analytic = bank.filter(x, 32.0, analytic=True)
+    np.testing.assert_allclose(analytic.real, real, rtol=0, atol=1e-12)  # Nyquist included
+
+
+@pytest.mark.parametrize("bank", _circular_banks(), ids=["constant-Q", "octave"])
+def test_analytic_output_turns_with_positive_frequency(bank):
+    # cos(2 pi f t) at a band's center comes out as exp(+i 2 pi f t), scaled by the band's gain
+    fs, n = 128.0, 512
+    t = np.arange(n) / fs
+    for k, cf in enumerate(bank.cfs):
+        out = bank.filter(np.cos(2 * np.pi * cf * t), fs, analytic=True)[:, k]
+        gain = bank.response([cf])[0, k]
+        np.testing.assert_allclose(out, gain * np.exp(2j * np.pi * cf * t), rtol=0, atol=1e-9)
+
+
+@pytest.mark.parametrize("bank", _circular_banks(), ids=["constant-Q", "octave"])
+def test_filter_along_another_axis(bank):
+    x = np.random.default_rng(1).standard_normal((3, 200, 2))
+    along_time = bank.filter(x, 64.0, axis=1)
+    assert along_time.shape == (3, 200, 2, bank.n_bands)
+    np.testing.assert_array_equal(along_time, np.moveaxis(bank.filter(np.moveaxis(x, 1, 0), 64.0), 0, 1))
+
+
+def test_constant_q_filters_are_half_cycle_cosines():
+    bank = so.ConstantQModulationFilterbank(n_bands=6, f_lo=2.0, f_hi=64.0, Q=2.0)
+    cf = bank.cfs[2]
+    # the support is cf +/- cf/Q, so a quarter of it from the center reads cos(pi/4)
+    edge_to_center = bank.response([cf, cf * (1 + 1 / (2 * bank.Q)), cf * (1 + 1 / bank.Q)])[:, 2]
+    np.testing.assert_allclose(edge_to_center / edge_to_center[0], [1, np.cos(np.pi / 4), 0], atol=1e-12)
+
+
+# -- the Hann bank's kernels and checks --------------------------------------
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        dict(f_lo=0.0),
+        dict(f_lo=10.0, f_hi=5.0),
+        dict(window=-1.0),
+        dict(window=0.1, f_hi=10.0),  # a 0.1 s window holds 2 cycles only from 20 Hz
+    ],
+)
+def test_hann_bank_refuses_impossible_layouts(kwargs):
+    with pytest.raises(ValueError):
+        so.HannModulationFilterbank(**kwargs)
+
+
+def test_hann_kernels_are_centered_and_symmetric():
+    bank = so.HannModulationFilterbank(f_lo=2.0, f_hi=32.0)
+    for kernel, window in bank.kernels(1000.0):
+        np.testing.assert_allclose(window, window[::-1], rtol=0, atol=1e-15)  # sampled on half samples
+        assert window.sum() == pytest.approx(1)
+        np.testing.assert_allclose(
+            kernel[::-1], np.conj(kernel), rtol=0, atol=1e-15
+        )  # zero phase at its middle
+
+
+def test_hann_windows_have_at_least_three_samples():
+    bank = so.HannModulationFilterbank(f_lo=1000.0, f_hi=1000.0, window=0.002)
+    assert list(bank.lengths(1000.0)) == [3]
+
+
+def test_hann_filter_refuses_an_unknown_alignment():
+    with pytest.raises(ValueError, match="align"):
+        so.HannModulationFilterbank().filter(np.zeros(4000), 1000.0, align="left")
+
+
+def test_hann_transform_is_continuous_where_its_formula_divides_by_zero():
+    from sonore.views.modulation import _hann_ft
+
+    assert _hann_ft(np.array([1.0, -1.0])) == pytest.approx([0.5, 0.5])
+    assert _hann_ft(np.array([1 - 1e-4, 1 + 1e-4])) == pytest.approx([0.5, 0.5], abs=1e-3)
+
+
+def test_hann_analytic_output_turns_with_positive_frequency():
+    # the kernel is conjugated: a cosine at a band's rate comes out turning forward, at its amplitude
+    bank, fs = so.HannModulationFilterbank(f_lo=4.0, f_hi=16.0), 1000.0
+    t = np.arange(4000) / fs
+    for k, rate in enumerate(bank.cfs):
+        out = bank.filter(np.cos(2 * np.pi * rate * t), fs, analytic=True)[1000:3000, k]
+        np.testing.assert_allclose(np.abs(out), 1, atol=0.01)
+        step = np.angle(out[1:] / out[:-1])  # forward, by one sample's worth of the rate
+        np.testing.assert_allclose(step, 2 * np.pi * rate / fs, atol=1e-3)
+
+
+# -- blobs and the spectrum's own checks -------------------------------------
+@pytest.mark.parametrize("widths", [dict(rate_width=0), dict(density_width=-0.1)])
+def test_blob_widths_must_be_positive(widths):
+    with pytest.raises(ValueError, match="positive"):
+        so.ModulationBlob(4, 0.5, **widths)
+
+
+def test_blob_density_width_is_a_standard_deviation():
+    blob = so.ModulationBlob(4, 1.0, density_width=0.5)
+    ratio = blob.power(np.array([[4.0]]), np.array([[1.5]])) / blob.power(
+        np.array([[4.0]]), np.array([[1.0]])
+    )
+    assert ratio[0, 0] == pytest.approx(np.exp(-0.5))
+
+
+@pytest.mark.parametrize(
+    "blobs, kwargs, match",
+    [
+        (so.ModulationBlob(4, 0.5), dict(rms_depth=0), "positive"),
+        ([], {}, "at least one"),
+        (so.ModulationBlob(4, 40.0, density_width=0.01), {}, "outside"),
+    ],
+)
+def test_blob_target_checks(blobs, kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        so.ModulationSpectrum.from_blobs(blobs, 1, **kwargs)
+
+
+def test_stft_spectrum_reads_the_asked_channel():
+    left = so.amplitude_modulate(so.gaussian_noise(2, FAST, rng=0), 4, depth=1)
+    right = so.amplitude_modulate(so.gaussian_noise(2, FAST, rng=1), 16, depth=1)
+    stereo = so.Sound(np.column_stack([left.data[:, 0], right.data[:, 0]]), FAST)
+    stft = so.STFT(stereo, win_dur=20e-3)
+    assert so.ModulationSpectrum(stft, channel=1).peak()[0] == pytest.approx(16, abs=1)
+    np.testing.assert_array_equal(
+        so.ModulationSpectrum(stft, channel=1).level,
+        so.ModulationSpectrum(so.STFT(right, win_dur=20e-3)).level,
+    )
+
+
+def test_a_modulation_of_fractional_cycles_peaks_in_place():
+    # 7.25 Hz over 2 s is 14.5 cycles: without the time taper, the jump between the ends leaks
+    x = so.amplitude_modulate(so.gaussian_noise(2, FS, rng=0), 7.25, depth=1)
+    rate, _ = so.ModulationSpectrum(so.STFT(x, win_dur=20e-3)).peak()
+    assert rate == pytest.approx(7.25, abs=0.3)
+
+
+def test_spectrum_keeps_non_negative_densities_and_a_floored_level():
+    from sonore.frames.gabor import _FLOOR_DB
+
+    ramp = np.linspace(0, 1, 64)[None, :] * np.ones((8, 1))
+    spectrum = so.ModulationSpectrum.from_array(ramp, 0.01, 0.1, "cyc/oct")
+    assert np.all(spectrum.w_f >= 0) and spectrum.level.shape == (len(spectrum.w_f), 64)
+    silent = so.ModulationSpectrum.from_array(np.zeros((8, 64)), 0.01, 0.1, "cyc/oct")
+    assert np.all(silent.level == _FLOOR_DB)
+
+
+def test_octave_spectrum_stops_at_nyquist():
+    x = so.gaussian_noise(1, 8000, rng=0)
+    spectrum = so.ModulationSpectrum.octave(x)  # f_hi 8000 is above this sound's 4000 Hz Nyquist
+    assert spectrum.filterbank.cfs.max() <= 4000
+
+
+def test_peak_skips_the_mean_only_when_asked():
+    # a curved envelope leaves a large zero-rate, zero-density cell after the taper
+    curved = (np.linspace(-1, 1, 200) ** 2)[None, :] * np.ones((8, 1))
+    spectrum = so.ModulationSpectrum.from_array(
+        curved + 0.01 * np.random.default_rng(0).random((8, 200)), 0.01, 0.1, "cyc/oct"
+    )
+    assert spectrum.peak(exclude_dc=False) == (0.0, 0.0)
+    assert spectrum.peak() != (0.0, 0.0)
+
+
+def test_with_gain_checks_and_shows_its_gain():
+    from sonore.frames.gabor import _FLOOR_DB
+
+    _, spectrum = _octave_spectrum(_speech_like())
+    with pytest.raises(ValueError, match="non-negative"):
+        spectrum.with_gain(-1)
+    np.testing.assert_allclose(
+        spectrum.with_gain(0.5).level, np.maximum(spectrum.level - 20 * np.log10(2), _FLOOR_DB)
+    )
+    assert np.all(spectrum.with_gain(0).level == _FLOOR_DB)
+
+
+def test_carrier_and_rng_are_not_combined_in_to_envelopes():
+    x = _speech_like()
+    _, spectrum = _octave_spectrum(x)
+    with pytest.raises(TypeError, match="rng"):
+        spectrum.to_envelopes(carrier=x, rng=0)
+
+
+def test_modulation_phase_reads_every_channel_on_the_analyzed_grid():
+    x = _speech_like()
+    _, spectrum = _octave_spectrum(x)
+    stereo = so.Sound(np.column_stack([x.data[:, 0], _speech_like(3).data[:, 0]]), FAST)
+    subbands = spectrum.filterbank.analyze(stereo)
+    both = spectrum.modulation_phase(subbands)
+    first = spectrum.modulation_phase(spectrum.filterbank.analyze(x))
+    assert not np.allclose(both, first)  # the second channel counts
+    with pytest.raises(ValueError, match="analyzed grid"):
+        spectrum.modulation_phase(spectrum.filterbank.analyze(so.gaussian_noise(1.5, FAST, rng=0)))
