@@ -176,6 +176,7 @@ More in the gallery:
 - [Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html): a pitch made from noise and a delay (Yost, 1996), from [▶ one iteration](https://choyun1.github.io/sonore/gallery/irn.html#d-i1) to [▶ sixteen](https://choyun1.github.io/sonore/gallery/irn.html#d-09).
 - [Spectrotemporal ripples](https://choyun1.github.io/sonore/gallery/ripples.html): moving ripples on different carriers, and a [▶ dynamic moving ripple](https://choyun1.github.io/sonore/gallery/ripples.html#d-06).
 - [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): recordings and their syntheses from statistics (McDermott & Simoncelli, 2011), such as a [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b).
+- [Sound quilts](https://choyun1.github.io/sonore/gallery/quilts.html): recordings cut into segments and put back in a new order (Overath et al., 2015), from [▶ a reader quilted at 30 to 960 ms](https://choyun1.github.io/sonore/gallery/quilts.html#d-sq1) to [▶ quilts of a fire](https://choyun1.github.io/sonore/gallery/quilts.html#d-sq4).
 
 **Analysis and resynthesis**
 
