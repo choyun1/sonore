@@ -116,6 +116,7 @@ EXAMPLE_PAGES = [
     "binaural",
     "classic",
     "textures",
+    "quilts",
     "moving",
     "reverb",
     "vocoder",
@@ -721,6 +722,7 @@ TITLES = {
     "ripples.html": "Spectrotemporal ripples",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
+    "quilts.html": "Sound quilts",
     "speech.html": "Seeing speech",
     "resynthesis.html": "Analysis and resynthesis",
     "cepstrum.html": "Spectral envelope",
@@ -758,6 +760,7 @@ TOPICS = [
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
             ("textures.html", "recordings and their syntheses from statistics."),
+            ("quilts.html", "recordings cut into segments and put back in a new order: speech, and a texture."),
         ],
     ),
     (

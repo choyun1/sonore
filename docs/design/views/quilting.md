@@ -30,8 +30,8 @@ accepted by Cho 2026-10-14: D1 as two public names, `so.quilt` and
 - **[cross]**: printed by `tools/crosscheck_quilting.py`, which runs the
   toolbox in GNU Octave 10.3 (conda-forge, with the signal package) beside
   sonore. Dev-time only, since the toolbox cannot be in the repository.
-- **[sound]**: measured with sonore itself by the gallery's quilting
-  section (docs/gallery/voice/speech.py), with the seeds given there.
+- **[sound]**: measured with sonore itself by the gallery's Sound quilts
+  page (docs/gallery/stimuli/quilts.py), with the seeds given there.
 
 ## The method [source]
 
@@ -285,6 +285,42 @@ one on, and the list is short.
   Mud: stretches 13.1 to 16.5 dB, quilts 12.5 to 16.0 dB. One recording each
   and three seeds per length; a quilt matches the recording's statistics
   about as well as the recording's own stretches do.
+- **Gallery page.** The section first sat on the Seeing speech page. At
+  Cho's request to take it off the crowded Voices pages (2026-10-14), it
+  is now a page of its own under Stimuli, since quilting is a way of
+  making stimuli.
+- **Level [sound].** Quilting keeps the level: over five seeds at each of
+  30, 60, 120, 240, 480 and 960 ms, the median level of 100 ms windows of
+  a 5 s fire quilt is within 0.7 dB of the whole recording's. The first
+  page played each sound on its own (RMS 0.1, then scaled down if its peak
+  passed 0.95), and the fire recording has one crackle at 9.98 s peaking
+  at 0.90, five times its first 5 s's peak of 0.18. The quilts, which drew
+  that crackle or another large pop, were turned down 16 to 17 dB and the
+  original 6 dB, so the quilts played about 10 dB quieter. The page now
+  plays a recording and its quilts at one gain.
+- **Short segments lose a little level [sound][math].** On a 7 s stream
+  recording, 4 s quilts of 30 ms segments have a median level (100 ms
+  windows) 0.7 to 1.2 dB below the recording's over five seeds; 120 and
+  960 ms quilts are within 0.3 dB. With the cross-fade as long as the
+  segment, every sample lies in a cross-fade, and raised-cosine ramps keep
+  on average (1 + 1/2) / 2 = 3/4 of the power of two uncorrelated signals,
+  1.2 dB less; the alignment correlates them a little, so the loss is
+  smaller. The paper's settings (30 ms segments, 30 ms cross-fades) do the
+  same.
+- **Adaptive fade [sound][check].** Cho asked whether the cross-fades
+  could keep the level (2026-10-14). Three fades were measured on 30 and
+  120 ms quilts (three seeds, median level of 100 ms windows against the
+  recording). Equal gain (the paper's): stream 30 ms -1.1 to -0.7 dB, fire
+  -0.9 to -0.7 dB. Equal power (sine and cosine ramps): stream +0.1 to
+  +0.9 dB, fire +1.0 to +1.1 dB, and a 200 Hz tone spliced at 30 ms rises
+  2.1 dB with a 3 dB swing at each join, since aligned joins are partly
+  correlated. Adaptive (the correlation `r` of the two segments over the
+  cross-fade, both ramps divided by `sqrt(rise² + fall² + 2 r rise fall)`):
+  stream +0.1 to +0.4 dB, fire -0.2 to -0.1 dB, the tone unchanged.
+  `so.splice` and `so.quilt` take `fade="adaptive"` (default) or
+  `fade="equal_gain"`; the cross-check uses the latter. A test checks the
+  level of noise spliced in 30 ms segments: -1.25 dB with equal gain, 0 dB
+  adaptive.
 
 ## References
 
