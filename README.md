@@ -336,7 +336,7 @@ Only work still to do is listed here. Finished items are in
   MATLAB toolbox reproduces such recordings well. Open questions: a tail
   exponent as a texture statistic, and whether one `event_train` with
   power-law levels can give both the hiss and the pops. Proposal:
-  `docs/design/texture/pop-tails.md`.
+  `docs/design/views/envelope-peaks.md`.
 
 **Other**
 

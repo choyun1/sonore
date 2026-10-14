@@ -1,23 +1,25 @@
-"""Numbers in docs/design/texture/pop-tails.md, from NumPy and SciPy alone.
+"""Numbers in docs/design/views/envelope-peaks.md, from NumPy and SciPy alone.
 
 Shares no code with sonore. Prints each claim's number with its tag.
 
   T1  levels drawn from an exponential distribution in dB, with scale
       20 / (alpha ln 10), give amplitudes with a Pareto tail of exponent alpha
-  T2  the Hill estimator on the top 5% of 1000 Pareto samples (about the
-      number of envelope peaks in 7 s of a texture): its spread over trials
+  T2  the Hill estimator on the largest k of n Pareto samples: its spread over
+      trials against the stated uncertainty alpha / sqrt(k), for the k that
+      1, 2, 5 and 7 s of 5 ms bins give at the top 5%
   T3  sample kurtosis of Pareto samples as the sample grows: it keeps growing
       for alpha below 4 and settles above
-  T4  the whole measurement (high-pass, envelope, peaks at least 5 ms apart,
+  T4  the whole measurement (high-pass, envelope, maximum in each 5 ms bin,
       Hill on the top 5%) on 7 s of shot noise with Pareto amplitudes over a
       faint noise floor: how close it gets to the alpha that made it
   T5  the same measurement on Gaussian noise
 """
 
 import numpy as np
-from scipy.signal import butter, find_peaks, hilbert, sosfiltfilt
+from scipy.signal import butter, hilbert, sosfiltfilt
 
 FS = 44100
+BIN = 0.005  # seconds
 rng = np.random.default_rng(0)
 
 
@@ -28,13 +30,14 @@ def hill(values, fraction=0.05, min_count=10):
     return count / np.sum(np.log(ordered[:count] / ordered[count]))
 
 
-def envelope_peaks(x, cutoff):
-    """Peaks, at least 5 ms apart, of the 500 Hz smoothed Hilbert envelope
-    of ``x`` high-passed at ``cutoff`` Hz."""
+def bin_maxima(x, cutoff):
+    """Maximum in each 5 ms bin of the 500 Hz smoothed Hilbert envelope of
+    ``x`` high-passed at ``cutoff`` Hz."""
     high = sosfiltfilt(butter(4, cutoff, "highpass", fs=FS, output="sos"), x)
     envelope = sosfiltfilt(butter(2, 500, "lowpass", fs=FS, output="sos"), np.abs(hilbert(high)))
-    index, _ = find_peaks(envelope, distance=int(0.005 * FS))
-    return envelope[index]
+    bin_length = int(BIN * FS)
+    n_bins = len(envelope) // bin_length
+    return envelope[: n_bins * bin_length].reshape(n_bins, bin_length).max(axis=1)
 
 
 def pareto_levels_db(alpha, size):
@@ -49,11 +52,16 @@ for alpha in (1.0, 1.5, 2.5):
     slope = -np.log(survival[1] / survival[0]) / np.log(10)
     print(f"    alpha {alpha}: survival slope {slope:.3f}")
 
-print("T2  Hill on the top 5% of 1000 samples, 400 trials [check]")
-for alpha in (1.0, 1.5, 2.5, 4.0):
-    estimates = np.array([hill(10 ** (pareto_levels_db(alpha, 1000) / 20)) for _ in range(400)])
-    spread = np.std(estimates) / alpha
-    print(f"    alpha {alpha}: median {np.median(estimates):.2f}, relative spread {100 * spread:.0f}%")
+print("T2  Hill on the top 5% of n Pareto samples, 400 trials: spread vs alpha / sqrt(k) [check]")
+for seconds in (1, 2, 5, 7):
+    n = int(seconds / BIN)
+    k = int(0.05 * n)
+    row = []
+    for alpha in (1.5, 4.0):
+        estimates = np.array([hill(10 ** (pareto_levels_db(alpha, n) / 20), min_count=1) for _ in range(400)])
+        spread = 100 * np.std(estimates) / alpha
+        row.append(f"alpha {alpha}: median {np.median(estimates):.2f}, spread {spread:3.0f}%")
+    print(f"    {seconds} s (n={n}, k={k}, 1/sqrt(k) = {100 / np.sqrt(k):3.0f}%): " + "; ".join(row))
 
 print("T3  median sample kurtosis of Pareto samples by sample size, 200 trials [check]")
 for alpha in (1.5, 3.0, 6.0):
@@ -78,10 +86,10 @@ for alpha in (1.0, 1.5, 2.5):
         x = 1e-3 * rng.standard_normal(n)
         for onset, amplitude in zip(onsets, amplitudes, strict=True):
             x[onset : onset + burst_length] += amplitude * burst_shape * rng.standard_normal(burst_length)
-        estimates.append(hill(envelope_peaks(x, 2000)))
+        estimates.append(hill(bin_maxima(x, 2000)))
     low, high = min(estimates), max(estimates)
     print(f"    alpha {alpha}: median estimate {np.median(estimates):.2f} (range {low:.2f}-{high:.2f})")
 
 print("T5  whole measurement on 7 s of Gaussian noise, 8 seeds [check]")
-estimates = [hill(envelope_peaks(rng.standard_normal(n), 2000)) for _ in range(8)]
+estimates = [hill(bin_maxima(rng.standard_normal(n), 2000)) for _ in range(8)]
 print(f"    median {np.median(estimates):.1f} (range {min(estimates):.1f}-{max(estimates):.1f})")
