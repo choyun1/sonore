@@ -353,6 +353,22 @@ class HRIRSet:
             shells.append((float(radii[members].mean()), triangles, np.linalg.inv(unit.transpose(0, 2, 1))))
         return shells
 
+    @cached_property
+    def _wide_triangles(self) -> list[np.ndarray]:
+        """For each shell, which triangles span a gap in the measurements rather
+        than the grid: those whose longest side is more than twice the median
+        longest side. The convex hull closes a hole, such as PKU-IOA's below -40
+        degrees, with triangles whose corners are far apart, and blending those
+        corners would mix directions from opposite sides of the head."""
+        wide = []
+        for _, triangles, _ in self._shells:
+            unit = self.positions[triangles]
+            unit /= np.linalg.norm(unit, axis=-1, keepdims=True)  # (T, 3 corners, 3)
+            cosines = [np.sum(unit[:, a] * unit[:, b], axis=-1) for a, b in ((0, 1), (1, 2), (2, 0))]
+            longest = np.arccos(np.clip(np.min(cosines, axis=0), -1, 1))
+            wide.append(longest > 2 * np.median(longest))
+        return wide
+
     @property
     def _single_distance(self) -> bool:
         return len(self._shells) == 1
@@ -395,15 +411,21 @@ class HRIRSet:
         # the lowest-numbered triangle holding the direction, as the search over all picks
         triangle = np.full(len(directions), len(triangles))
         np.minimum.at(triangle, point, np.where(inside, candidate, len(triangles)))
-        missed = triangle == len(triangles)
+        # a direction on the edge of a wide triangle is also in a narrow one, and is kept
+        covered = np.zeros(len(directions), bool)
+        np.logical_or.at(covered, point, inside & ~self._wide_triangles[shell][candidate])
+        missed = ~covered
         if missed.any():
             triangle[missed] = self._search_all_triangles(shell, directions[missed])
         found = np.einsum("nij,nj->ni", inverse[triangle], directions)
         return triangles[triangle], found / found.sum(axis=1, keepdims=True)
 
     def _search_all_triangles(self, shell: int, directions: np.ndarray, chunk: int = 256) -> np.ndarray:
-        """The lowest-numbered triangle of the shell holding each direction, shape (N,)."""
+        """The lowest-numbered triangle of the shell holding each direction, shape (N,).
+        Raises if a direction is in no triangle but those that span a gap in the
+        measurements."""
         _, _, inverse = self._shells[shell]
+        wide = self._wide_triangles[shell]
         triangle = np.empty(len(directions), int)
         for start in range(0, len(directions), chunk):
             block = slice(start, start + chunk)
@@ -411,6 +433,11 @@ class HRIRSet:
             inside = np.all(candidate >= -1e-9, axis=-1)
             if not inside.any(axis=1).all():
                 raise ValueError("some directions are outside the measured sphere")
+            if not (inside & ~wide).any(axis=1).all():
+                raise ValueError(
+                    "some directions fall in a gap in the measured directions, such as below "
+                    "the lowest measured elevation; cannot interpolate there"
+                )
             triangle[block] = np.argmax(inside, axis=1)
         return triangle
 
