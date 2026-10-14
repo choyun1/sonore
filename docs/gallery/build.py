@@ -114,6 +114,7 @@ EXAMPLE_PAGES = [
     "cepstrum",
     "pitch",
     "formants",
+    "lpc",
     "aperiodicity",
     "voice",
     "modspectrogram",
@@ -125,8 +126,10 @@ EXAMPLE_PAGES = [
     "binaural",
     "classic",
     "textures",
+    "events",
     "quilts",
     "moving",
+    "cocktail",
     "reverb",
     "vocoder",
     "timbre",
@@ -731,6 +734,7 @@ TITLES = {
     "ripples.html": "Spectrotemporal ripples",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
+    "events.html": "Events and pops",
     "quilts.html": "Sound quilts",
     "speech.html": "Seeing speech",
     "resynthesis.html": "Analysis and resynthesis",
@@ -741,11 +745,13 @@ TITLES = {
     "pitch.html": "Pitch tracking",
     "talkers.html": "Two talkers",
     "formants.html": "Formant synthesis",
+    "lpc.html": "Finding formants",
     "aperiodicity.html": "Source and aperiodicity",
     "voice.html": "Rebuilding and changing a voice",
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Rooms",
     "moving.html": "Moving talkers",
+    "cocktail.html": 'A "cocktail party"',
     "timbre.html": "Timbre",
     "temperament.html": "Tuning and temperament",
     "organ.html": "The pipe organ",
@@ -795,6 +801,7 @@ TOPICS = [
         "Textures",
         [
             ("textures.html", "recordings and their syntheses from statistics."),
+            ("events.html", "one event copied into a texture, and the power law of a fire's pops."),
             (
                 "quilts.html",
                 "recordings cut into segments and put back in a new order: speech, and a texture.",
@@ -806,6 +813,7 @@ TOPICS = [
         [
             ("talkers.html", "the male and the female talker every speech page uses, measured once."),
             ("formants.html", "vowels and consonants written as a source, formants and a few numbers."),
+            ("lpc.html", "linear prediction reads the formants back out of a sound, and drives a copy."),
             (
                 "pitch.html",
                 "three ways to track a voice's pitch, where each fails, and how the errors sound.",
@@ -838,6 +846,7 @@ TOPICS = [
                 "moving.html",
                 "talkers rendered through measured HRIRs: moving, among maskers of either sex, walking in.",
             ),
+            ("cocktail.html", "two to six talkers walking around the listener for 20 to 30 s."),
         ],
     ),
     (
@@ -1428,17 +1437,30 @@ MOVED = {
                  "h-pitch-from-the-cepstrum": "pitch.html", "h-a-tracker-beside-the-cepstrum": "pitch.html"},
     "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": "talkers.html#h-spectral-envelopes"},
     "formants": {"d-fw4": "formants.html#d-fw1", "d-fw5": "formants.html#d-fw2",
-                 "h-female-vowels": "formants.html#d-fw1"},
+                 "h-female-vowels": "formants.html#d-fw1",
+                 **{f"d-ft{i}": f"lpc.html#d-ft{i}" for i in range(1, 7)},
+                 "h-finding-the-formants-again": "lpc.html#h-linear-prediction",
+                 "h-a-recording": "lpc.html#h-a-recording", "h-copy-synthesis": "lpc.html#h-copy-synthesis"},
     "aperiodicity": {"h-a-higher-voice": "talkers.html"},
     "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
     "vocoder": {"d-cf0": "vocoder.html#d-ci0", "d-cf8": "vocoder.html#d-ci8", "d-cf8p": "vocoder.html#d-cp8",
                 "h-a-higher-voice": "vocoder.html#h-pitch-from-the-envelope"},
     "classic": {"d-k2": "talkers.html#d-tk4", "d-b4": "binaural.html#d-b4", "h-binaural-beats": "binaural.html#d-b4"},
     "reverb": {"d-r3": "reverb.html#d-r1"},
-    "moving": {"d-m8": "moving.html#d-m2", "d-m9": "moving.html#d-m3", "h-a-different-voice": "moving.html#h-three-talkers"},
+    "moving": {"d-m8": "moving.html#d-m2", "d-m9": "moving.html#d-m3", "h-a-different-voice": "moving.html#h-three-talkers",
+               **{f"d-cp{i}": f"cocktail.html#d-cp{i}" for i in range(1, 6)},
+               "h-a-cocktail-party": "cocktail.html"},
     "modspectrogram": {"d-sv1": "modspectrogram.html#d-s1",
                        "h-a-higher-voice": "modspectrogram.html#h-speech-babble-and-noise"},
     "irn": {"h-rippled-noise-and-moving-ripples": "ripples.html#h-ripples-and-rippled-noise"},
+    "textures": {
+        **{f"d-{key}": f"events.html#d-{key}" for key in
+           ("e00", "e02", "e04", "e06", "e08", "e10", "e11", "e12", "e13", "e14")},
+        **{f"d-tp{i}": f"events.html#d-tp{i}" for i in range(7)},
+        **{f"h-{slug}": f"events.html#h-{slug}" for slug in (
+            "from-single-events-to-a-texture", "level-pitch-and-timing", "how-big-the-pops-are",
+            "background-plus-pops")},
+    },
 }
 
 

@@ -39,6 +39,16 @@ version (0.x.y) only fixes bugs.
   "Tones and noises". Page URLs are unchanged; the scripts of Seeing speech, Sound
   textures and Sound quilts moved to docs/gallery/seeing and
   docs/gallery/textures.
+- Gallery: "Events and pops", a page of its own in the Textures group, takes
+  the event-train and fire-pop sections ("From single events to a texture",
+  "How big the pops are") off Sound textures. Old links to them on Sound
+  textures forward to the new page.
+- Gallery: "Finding formants", a page of its own in Voices after Formant
+  synthesis, takes linear prediction, the two talkers' formant tracks and
+  the copy synthesis off Formant synthesis. Old links forward to it.
+- Gallery: 'A "cocktail party"', a page of its own in Spatial hearing after
+  Moving talkers, takes the five walking-talker scenes off Moving talkers.
+  Old links forward to it.
 
 ## [0.7.0] - 2026-10-14
 

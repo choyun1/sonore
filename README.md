@@ -188,12 +188,14 @@ More in the gallery:
 **Textures**
 
 - [Sound textures](https://choyun1.github.io/sonore/gallery/textures.html): syntheses from statistics (McDermott & Simoncelli, 2011). [▶ stream](https://choyun1.github.io/sonore/gallery/textures.html#d-t01b)
+- [Events and pops](https://choyun1.github.io/sonore/gallery/events.html): one event copied into a texture, and the power law of a fire's pops. [▶ 30 events per second](https://choyun1.github.io/sonore/gallery/events.html#d-e04)
 - [Sound quilts](https://choyun1.github.io/sonore/gallery/quilts.html): recordings cut into segments and reordered (Overath et al., 2015). [▶ fire](https://choyun1.github.io/sonore/gallery/quilts.html#d-sq4)
 
 **Voices**
 
 - [Two talkers](https://choyun1.github.io/sonore/gallery/talkers.html): the male and female talker every speech page uses. [▶ both](https://choyun1.github.io/sonore/gallery/talkers.html#d-tk1)
-- [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html): Klatt's synthesizer taken apart, and a sentence copied from its formants. [▶ copy](https://choyun1.github.io/sonore/gallery/formants.html#d-ft5)
+- [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html): Klatt's synthesizer taken apart. [▶ ga](https://choyun1.github.io/sonore/gallery/formants.html#d-fc3)
+- [Finding formants](https://choyun1.github.io/sonore/gallery/lpc.html): linear prediction, and a sentence copied from its formants. [▶ copy](https://choyun1.github.io/sonore/gallery/lpc.html#d-ft5)
 - [Pitch tracking](https://choyun1.github.io/sonore/gallery/pitch.html): three trackers, where each fails, and how the errors sound. [▶ buzz on the track](https://choyun1.github.io/sonore/gallery/pitch.html#d-hp2)
 - [Spectral envelope](https://choyun1.github.io/sonore/gallery/cepstrum.html): timbre without pitch, and MFCCs. [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3)
 - [Source and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html): how much of a voice is noise. [▶ whispered](https://choyun1.github.io/sonore/gallery/aperiodicity.html#d-ap13)
@@ -204,6 +206,7 @@ More in the gallery:
 - [Binaural cues](https://choyun1.github.io/sonore/gallery/binaural.html): timing and correlation between the ears, and height. [▶ over the head](https://choyun1.github.io/sonore/gallery/binaural.html#d-u2)
 - [Rooms](https://choyun1.github.io/sonore/gallery/reverb.html): distance, and rooms built from the statistics of real ones. [▶ time-reversed decay](https://choyun1.github.io/sonore/gallery/reverb.html#d-18)
 - [Moving talkers](https://choyun1.github.io/sonore/gallery/moving.html): talkers rendered through measured HRIRs. [▶ pass-by](https://choyun1.github.io/sonore/gallery/moving.html#d-m7)
+- [A "cocktail party"](https://choyun1.github.io/sonore/gallery/cocktail.html): two to six talkers walking around the listener. [▶ six talkers](https://choyun1.github.io/sonore/gallery/cocktail.html#d-cp5)
 
 **Music**
 
