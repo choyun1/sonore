@@ -500,7 +500,7 @@ def plot_envelope_peaks(peaks: EnvelopePeaks, ax: Axes | None = None, **kwargs) 
         ax.loglog(fitted, tail_fraction * (fitted / threshold) ** -exponent, "--", color=line.get_color())
     ax.set(
         title="Envelope peaks",
-        xlabel=f"Largest envelope value in a {peaks.bin_seconds * 1000:g} ms bin",
+        xlabel=f"Largest envelope value in a {round(peaks.bin_seconds * 1000, 1):g} ms bin",
         ylabel="Fraction of bins above",
     )
     ax.legend(loc="lower left")
