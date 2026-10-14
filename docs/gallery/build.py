@@ -6,6 +6,10 @@
 Everything is generated from sonore itself with fixed seeds, so the gallery is
 reproducible. Audio is FLAC (lossless: lossy codecs would alter the interaural
 phase and correlation that the binaural examples are about).
+
+Commit only the pages whose code or sound changed. Every FLAC and PNG that is
+committed stays in the repository's history, and git cannot shrink a new
+version of one against the old, so re-rendering unchanged pages only adds weight.
 """
 
 from __future__ import annotations
@@ -116,6 +120,7 @@ EXAMPLE_PAGES = [
     "binaural",
     "classic",
     "textures",
+    "quilts",
     "moving",
     "reverb",
     "vocoder",
@@ -721,6 +726,7 @@ TITLES = {
     "ripples.html": "Spectrotemporal ripples",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
+    "quilts.html": "Sound quilts",
     "speech.html": "Seeing speech",
     "resynthesis.html": "Analysis and resynthesis",
     "cepstrum.html": "Spectral envelope",
@@ -758,6 +764,7 @@ TOPICS = [
             ("irn.html", "a pitch made from noise and a delay."),
             ("ripples.html", "sounds defined by a moving pattern of modulation."),
             ("textures.html", "recordings and their syntheses from statistics."),
+            ("quilts.html", "recordings cut into segments and put back in a new order: speech, and a texture."),
         ],
     ),
     (
@@ -804,7 +811,7 @@ TOPICS = [
         "Spatial hearing",
         "spatial",
         [
-            ("binaural.html", "differences between the ears: timing, binaural beats, and correlation that changes."),
+            ("binaural.html", "differences between the ears (timing, binaural beats, correlation that changes), and up and down, where they hardly change."),
             ("reverb.html", "distance, rooms built from the statistics of real ones, and rooms that break them."),
             ("moving.html", "talkers rendered through measured HRIRs: moving, among maskers of either sex, walking in."),
         ],

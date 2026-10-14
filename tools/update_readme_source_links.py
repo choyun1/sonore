@@ -1,8 +1,8 @@
-"""Keep the source links in the README and the gallery pointing at the right lines.
+"""Keep the source links in the README, the references and the gallery pointing at the right lines.
 
-Each module tag in the README's References section links to its file on
+Each module tag in docs/references.md links to its file on
 GitHub, and a tag that names a function or class, like
-`representations.reassigned_spectrogram`, links to the line of its
+`spectra.reassigned_spectrogram`, links to the line of its
 definition. A tag names the file's module, or the package that re-exports
 it: `texture.TextureStats` links into texture/stats.py. The module table in
 What's in it uses the full dotted path, like `frames.gabor`, which links
@@ -72,8 +72,13 @@ def fixed(text: str) -> str:
 
 
 def linked_files() -> list[Path]:
-    """The README and every gallery page script and built page."""
-    return [ROOT / "README.md", *sorted(GALLERY.glob("*/*.py")), *sorted(GALLERY.glob("*.html"))]
+    """The README, the references, and every gallery page script and built page."""
+    return [
+        ROOT / "README.md",
+        ROOT / "docs" / "references.md",
+        *sorted(GALLERY.glob("*/*.py")),
+        *sorted(GALLERY.glob("*.html")),
+    ]
 
 
 if __name__ == "__main__":

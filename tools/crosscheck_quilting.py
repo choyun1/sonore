@@ -132,7 +132,7 @@ win = round({WIN_MS} / 1000 * {FS});
 save('-v7', 'plain.mat', 'plain');
 """)
 plain = loadmat(work / "plain.mat")["plain"].ravel()
-joined = so.splice(source, order * n_segment / FS, n_segment / FS, max_shift=0).data[:, 0]
+joined = so.splice(source, order * n_segment / FS, n_segment / FS, max_shift=0, fade="equal_gain").data[:, 0]
 inner = slice(n_window // 2, len(plain) - n_window // 2)
 print(
     f"X4 overlap-add without shifts:"

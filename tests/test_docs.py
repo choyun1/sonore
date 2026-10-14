@@ -86,7 +86,7 @@ def test_gallery_playhead_regions_do_not_overlap():
 
 
 def test_readme_source_links_point_at_definitions():
-    """Reference tags in the README and the gallery link to src/ files and, for
+    """Reference tags in the README, the references and the gallery link to src/ files and, for
     named functions or classes, to the line that defines them. Fix drifted lines with
     ``python tools/update_readme_source_links.py``."""
     import importlib.util
@@ -94,10 +94,10 @@ def test_readme_source_links_point_at_definitions():
     spec = importlib.util.spec_from_file_location("links", ROOT / "tools" / "update_readme_source_links.py")
     links = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(links)
-    readme = (ROOT / "README.md").read_text()
-    found = links.LINK.findall(readme)
+    text = (ROOT / "README.md").read_text() + (ROOT / "docs" / "references.md").read_text()
+    found = links.LINK.findall(text)
     assert len(found) >= 30
-    assert readme.count(links.BLOB + "src/") == len(found), (
+    assert text.count(links.BLOB + "src/") == len(found), (
         "a source link does not match the `module.name` form"
     )
     drifted = "source links have drifted; run python tools/update_readme_source_links.py"
@@ -106,11 +106,10 @@ def test_readme_source_links_point_at_definitions():
         assert links.fixed(text) == text, f"{path.name}: {drifted}"
 
 
-def test_gallery_reference_lists_are_in_the_readme():
-    """Every work in a gallery page's References is also in the README's, and
-    every source tag a gallery page links is the same form the README uses."""
-    readme = (ROOT / "README.md").read_text()
-    listed = readme[readme.index("## References") : readme.index("### Reference implementations")]
+def test_gallery_reference_lists_are_in_the_references():
+    """Every work in a gallery page's References is also in docs/references.md."""
+    references = (ROOT / "docs" / "references.md").read_text()
+    listed = references[: references.index("## Reference implementations")]
     for page in sorted(GALLERY.rglob("*.py")):
         text = page.read_text()
         if "# ## References" not in text:
@@ -119,7 +118,7 @@ def test_gallery_reference_lists_are_in_the_readme():
         for entry in re.findall(r"(?m)^# - (.+)", refs):
             first, year = entry.split()[0].strip(","), re.search(r"\((\d{4})\)", entry)
             key = rf"(?m)^- {re.escape(first)}\b[^(\n]*" + (rf"\({year[1]}\)" if year else "")
-            missing = f"{page.name} cites {entry[:40]}..., missing from README References"
+            missing = f"{page.name} cites {entry[:40]}..., missing from docs/references.md"
             assert re.search(key, listed), missing
 
 
