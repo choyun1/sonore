@@ -42,6 +42,7 @@ from sonore.views.view import View
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
+    from sonore.frames.filterbank import Filterbank, Subbands
     from sonore.views.envelopes import Envelopes, _EnvelopeAnalysis
 
 __all__ = [
@@ -280,6 +281,15 @@ class HannModulationFilterbank(ModulationFilterbank):
         return np.moveaxis(filtered, 0, axis) if axis != 0 else filtered
 
 
+def _cut_to(analysis: _EnvelopeAnalysis, sound: Sound, name: str) -> Sound:
+    """``sound`` in mono, cut to the analyzed envelopes' duration at its own
+    rate; ``name`` names it in the error when it is shorter."""
+    n_audio = int(round(analysis.n_samples * sound.fs / analysis.fs))
+    if sound.n_samples < n_audio:
+        raise ValueError(f"the {name} is shorter than the analyzed {analysis.n_samples / analysis.fs:g} s")
+    return Sound(sound.mono().data[:n_audio], sound.fs)
+
+
 def _hann_ft(u: np.ndarray) -> np.ndarray:
     """Fourier transform of a unit-area Hann window of length 1, at ``u``
     cycles per window length: sinc(u) / (1 - u^2), with its limit at |u| = 1."""
@@ -373,7 +383,8 @@ class ModulationSpectrum(View):
     )
     back_to_sound = (
         "ModulationSpectrum.to_sound(carrier=...) takes both from a carrier: a Sound lends its own "
-        "modulation phase and fine structure, 'tones' and 'noise' draw a random modulation phase."
+        "modulation phase (unless rng is given) and fine structure, 'tones' and 'noise' draw a random "
+        "modulation phase."
     )
     _analysis: _EnvelopeAnalysis | None = None  # set when made from Envelopes or blobs
     _rms_depth: float | None = None  # set by from_blobs, which refuses to clip
@@ -545,6 +556,11 @@ class ModulationSpectrum(View):
             )
         return self._analysis
 
+    @property
+    def filterbank(self) -> Filterbank:
+        """The filterbank whose envelopes this spectrum describes."""
+        return self._envelope_analysis("filterbank").filterbank
+
     def with_gain(self, gain: float | Callable[[np.ndarray, np.ndarray], ArrayLike]) -> ModulationSpectrum:
         """A copy with every cell's amplitude multiplied by ``gain``.
 
@@ -572,7 +588,14 @@ class ModulationSpectrum(View):
         new.level = np.maximum(self.level + amp_to_db(shown, floor_db=-400.0), _FLOOR_DB)
         return new
 
-    def to_envelopes(self, *, carrier: Sound | None = None, rng: RNG = None) -> Envelopes:
+    def to_envelopes(
+        self,
+        *,
+        carrier: Sound | None = None,
+        rng: RNG = None,
+        phase: np.ndarray | None = None,
+        quiet: bool = False,
+    ) -> Envelopes:
         """The envelopes this spectrum describes, given a modulation phase.
 
         The stored magnitudes and mean fix everything but the phase of the
@@ -586,32 +609,51 @@ class ModulationSpectrum(View):
         linear-scale spectrum can go below zero; they are clipped, with a
         warning saying how much, which changes their spectrum. Edge bands
         that the spectrum dropped are zero.
+
+        ``phase`` gives the modulation phase directly, in the shape
+        :meth:`modulation_phase` returns, in place of a carrier or a draw.
+        ``quiet`` clips negative values without a warning, and without the
+        refusal of a :meth:`from_blobs` target, as inside a search.
         """
         analysis = self._envelope_analysis("to_envelopes")
-        if carrier is None:
+        if phase is not None:
+            if carrier is not None or rng is not None:
+                raise TypeError("phase gives the modulation phase; it cannot be combined with carrier or rng")
+            phase = np.asarray(phase)
+            if phase.shape != self._magnitude.shape:
+                raise ValueError(
+                    f"phase has shape {phase.shape}; the stored magnitudes have shape {self._magnitude.shape}"
+                )
+        elif carrier is None:
             phase = np.angle(np.fft.fft2(as_rng(rng).standard_normal(self._magnitude.shape)))
             if self._long_term_phase is not None:
                 phase[:, 0] = self._long_term_phase
         else:
             if rng is not None:
                 raise TypeError("rng applies only when no carrier is given")
-            n_audio = int(round(analysis.n_samples * carrier.fs / analysis.fs))
-            if carrier.n_samples < n_audio:
-                raise ValueError(
-                    f"the carrier is shorter than the analyzed {analysis.n_samples / analysis.fs:g} s"
-                )
-            own_sound = Sound(carrier.mono().data[:n_audio], carrier.fs)
-            phase = self._modulation_phase(analysis.filterbank.analyze(own_sound))
-        return self._rebuild(phase)
+            phase = self.modulation_phase(analysis.filterbank.analyze(_cut_to(analysis, carrier, "carrier")))
+        return self._rebuild(phase, quiet)
 
-    def _modulation_phase(self, subbands) -> np.ndarray:
-        """Phase of the 2-D transform of these subbands' envelopes, analyzed
-        as this spectrum's were."""
-        analysis = self._envelope_analysis("to_envelopes")
+    def modulation_phase(self, sound: Sound | Subbands) -> np.ndarray:
+        """Phase of the 2-D transform of the envelopes of ``sound``, analyzed
+        as this spectrum's were, in the shape of the stored magnitudes.
+
+        A :class:`~sonore.Sound` is analyzed by :attr:`filterbank` (in mono,
+        cut to the analyzed duration); :class:`~sonore.frames.filterbank.Subbands`
+        must come from that filterbank and span the analyzed duration.
+        """
+        analysis = self._envelope_analysis("modulation_phase")
+        match sound:
+            case Sound():
+                subbands = analysis.filterbank.analyze(_cut_to(analysis, sound, "sound"))
+            case _:
+                subbands = sound
         kept = slice(1, -1) if analysis.drop_edges else slice(None)
         own = subbands.envelopes(fs=analysis.fs).data.mean(axis=2)[:, kept]
         if own.shape[0] != analysis.n_samples:
-            raise ValueError("the carrier's envelopes do not fit the analyzed grid")
+            raise ValueError(
+                f"the envelopes have {own.shape[0]} samples; the analyzed grid has {analysis.n_samples}"
+            )
         if analysis.scale == "db":
             own = amp_to_db(own + 1e-12 * (own.max() or 1.0))
         return np.angle(np.fft.fft2(own.T - own.mean()))
@@ -646,6 +688,20 @@ class ModulationSpectrum(View):
         bands[:, kept] = values.T
         return Envelopes(bands, analysis.fs, bank)
 
+    def iterate(self, sound: Sound) -> Sound:
+        """One step of the search ``to_sound(iterations=n)`` takes: analyze
+        ``sound``, keep its fine structure and modulation phase, impose the
+        stored magnitudes, and resynthesize.
+
+        ``sound`` (mono, at any rate) must be at least as long as the
+        analyzed envelopes and is cut to their duration; so is the result,
+        which is not normalized.
+        """
+        analysis = self._envelope_analysis("iterate")
+        subbands = analysis.filterbank.analyze(_cut_to(analysis, sound, "sound"))
+        envelopes = self.to_envelopes(phase=self.modulation_phase(subbands), quiet=True)
+        return _cut_to(analysis, (envelopes * subbands.tfs()).to_sound(), "sound")
+
     def to_sound(
         self,
         *,
@@ -661,7 +717,8 @@ class ModulationSpectrum(View):
 
         * the **modulation phase** (when each event happens, how the bands
           line up; see :meth:`to_envelopes`): a :class:`~sonore.Sound` lends
-          its own, ``"tones"`` and ``"noise"`` draw a random one from ``rng``
+          its own, unless ``rng`` is given, which draws one as for tones and
+          noise; ``"tones"`` and ``"noise"`` draw a random one from ``rng``
           that keeps each band's long-term level;
         * the **fine structure** under each band's envelope: a Sound's own
           (``(envelopes * subbands.tfs()).to_sound()``, the vocoder's route),
@@ -687,18 +744,25 @@ class ModulationSpectrum(View):
         modulation phase, impose the stored magnitudes again, and go back.
         On the same sentence edit, 20 iterations from the sentence's own
         fine structure leave 16.5 dB less power at 6-40 Hz (C7 of the design
-        note); each iteration costs one analysis and one synthesis.
+        note); each iteration costs one analysis and one synthesis. One
+        iteration is public as :meth:`iterate`.
+
+        A drawn target (:meth:`from_blobs`) has no timing of its own, so a
+        Sound carrier with ``rng`` pairs a drawn timing with a chosen fine
+        structure, such as a harmonic complex's: ``to_sound(carrier=tone,
+        rng=seed)``.
         """
         from sonore.frames.filterbank import Subbands
         from sonore.sources.waveforms import gaussian_noise
 
         match carrier:
             case Sound():
-                if rng is not None:
-                    raise TypeError("rng applies only to carrier='tones' or 'noise'")
                 if fs is not None and fs != carrier.fs:
                     raise ValueError(f"fs {fs} differs from the carrier's {carrier.fs}")
-                envelopes = self.to_envelopes(carrier=carrier)
+                if rng is None:
+                    envelopes = self.to_envelopes(carrier=carrier)
+                else:
+                    envelopes = self.to_envelopes(rng=as_rng(rng))
                 fs = carrier.fs
             case "tones" | "noise":
                 if fs is None:
@@ -713,7 +777,7 @@ class ModulationSpectrum(View):
 
         match carrier:
             case Sound():
-                fine = bank.analyze(Sound(carrier.mono().data[:n_audio], fs)).tfs()
+                fine = bank.analyze(_cut_to(analysis, carrier, "carrier")).tfs()
                 sound = (envelopes * fine).to_sound()
             case "noise":
                 fine = bank.analyze(gaussian_noise(n_audio / fs, fs, rng=rng)).tfs()
@@ -726,10 +790,7 @@ class ModulationSpectrum(View):
                 sound = (envelopes * Subbands(tones[:, :, None], fs, bank)).sum()
         sound = Sound(sound.data[:n_audio], fs)
         for _ in range(int(iterations)):
-            subbands = bank.analyze(sound)
-            envelopes = self._rebuild(self._modulation_phase(subbands), quiet=True)
-            sound = (envelopes * subbands.tfs()).to_sound()
-            sound = Sound(sound.data[:n_audio], fs)
+            sound = self.iterate(sound)
         return sound.normalize() if sound.rms > 0 else sound
 
     def peak(self, *, exclude_dc: bool = True) -> tuple[float, float]:

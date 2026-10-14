@@ -1,5 +1,6 @@
 """Modulation spectra."""
 
+import re
 import warnings
 
 import numpy as np
@@ -242,3 +243,107 @@ def test_iterations_bring_the_sound_closer_to_an_edit():
             y = slow.to_sound(carrier=x, iterations=iterations)
         shares.append(_share_above(_octave_spectrum(y)[1], 12))
     assert shares[1] < 0.5 * shares[0]
+
+
+# -- one step of the search, and drawn timing on a chosen carrier ------------
+def _carriers():
+    return [
+        dict(carrier="tones", fs=FAST, rng=7),
+        dict(carrier="noise", fs=FAST, rng=7),
+        dict(carrier=_speech_like(5)),
+    ]
+
+
+@pytest.mark.parametrize("n", [1, 3])
+@pytest.mark.parametrize("which", [0, 1, 2])
+def test_to_sound_iterations_are_calls_of_iterate(n, which):
+    _, spectrum = _octave_spectrum(_speech_like())
+    slow = spectrum.with_gain(lambda rate, density: np.abs(rate) <= 8)
+    kwargs = _carriers()[which]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        y = slow.to_sound(iterations=n, **kwargs)
+        start = slow.to_sound(**kwargs)
+    for _ in range(n):
+        start = slow.iterate(start)
+    # Equal to rounding only: to_sound's own search starts from the unnormalized sound.
+    np.testing.assert_allclose(y.data, start.normalize().data, rtol=0, atol=1e-12)
+
+
+def test_iterate_is_the_search_step_written_out():
+    _, spectrum = _octave_spectrum(_speech_like())
+    slow = spectrum.with_gain(lambda rate, density: np.abs(rate) <= 8)
+    x = _speech_like(5)
+    subbands = slow.filterbank.analyze(x)
+    envelopes = slow.to_envelopes(phase=slow.modulation_phase(subbands), quiet=True)
+    expected = (envelopes * subbands.tfs()).to_sound()
+    np.testing.assert_array_equal(slow.iterate(x).data, expected.data[: x.n_samples])
+    with pytest.raises(ValueError, match="shorter"):
+        slow.iterate(so.gaussian_noise(1, FAST, rng=0))
+
+
+@pytest.mark.parametrize("scale", ["linear", "db"])
+def test_phase_of_a_sound_gives_its_envelopes_back(scale):
+    x = _speech_like()
+    _, spectrum = _octave_spectrum(x, scale)
+    phase = spectrum.modulation_phase(x)
+    assert phase.shape == spectrum._magnitude.shape
+    np.testing.assert_array_equal(phase, spectrum.modulation_phase(spectrum.filterbank.analyze(x)))
+    np.testing.assert_allclose(
+        spectrum.to_envelopes(phase=phase).data, spectrum.to_envelopes(carrier=x).data, rtol=0, atol=1e-12
+    )
+
+
+def test_phase_is_given_alone_and_in_shape():
+    x = _speech_like()
+    _, spectrum = _octave_spectrum(x)
+    phase = spectrum.modulation_phase(x)
+    with pytest.raises(TypeError, match="phase"):
+        spectrum.to_envelopes(phase=phase, rng=0)
+    with pytest.raises(TypeError, match="phase"):
+        spectrum.to_envelopes(phase=phase, carrier=x)
+    named = re.escape(f"(3, 4); the stored magnitudes have shape {phase.shape}")
+    with pytest.raises(ValueError, match=named):
+        spectrum.to_envelopes(phase=np.zeros((3, 4)))
+
+
+def test_hooks_need_a_spectrum_made_from_envelopes():
+    x = _speech_like()
+    from_array = so.ModulationSpectrum.from_array(np.ones((8, 64)), 0.01, 0.1, "cyc/oct")
+    with pytest.raises(TypeError, match="made from Envelopes"):
+        _ = from_array.filterbank
+    with pytest.raises(TypeError, match="made from Envelopes"):
+        from_array.modulation_phase(x)
+    with pytest.raises(TypeError, match="made from Envelopes"):
+        from_array.to_envelopes(phase=np.zeros((8, 64)))
+    with pytest.raises(TypeError, match="made from Envelopes"):
+        from_array.iterate(x)
+
+
+def test_quiet_clips_a_deep_blob_draw_without_a_word():
+    target = _blob_target(rms_depth=0.5)
+    with pytest.raises(ValueError, match="rms_depth"):
+        target.to_envelopes(rng=0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        envelopes = target.to_envelopes(rng=0, quiet=True)
+        target.to_envelopes(phase=np.angle(np.fft.fft2(np.ones(target._magnitude.shape))), quiet=True)
+    assert np.all(envelopes.data >= 0)
+
+
+def test_sound_carrier_with_rng_draws_the_timing():
+    target = _blob_target()
+    x = so.harmonic_complex(2, FAST, 150, harmonics=range(1, 30))
+    y = target.to_sound(carrier=x, rng=3)
+    expected = (target.to_envelopes(rng=3) * target.filterbank.analyze(x).tfs()).to_sound()
+    np.testing.assert_array_equal(y.data, so.Sound(expected.data[: x.n_samples], FAST).normalize().data)
+    np.testing.assert_array_equal(y.data, target.to_sound(carrier=x, rng=3).data)
+    assert not np.array_equal(y.data, target.to_sound(carrier=x, rng=4).data)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        searched = target.to_sound(carrier=x, rng=3, iterations=2)
+    start = target.to_sound(carrier=x, rng=3)
+    for _ in range(2):
+        start = target.iterate(start)
+    # A harmonic complex leaves some bands nearly empty, whose fine structure is less exact.
+    np.testing.assert_allclose(searched.data, start.normalize().data, rtol=0, atol=1e-9)

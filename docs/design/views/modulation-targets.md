@@ -257,6 +257,10 @@ Each iteration is one analysis and one synthesis (about 0.7 s for this
 2.5 s sentence in this container, an estimate elsewhere). As for the
 STFT (C5), the mismatch falls more and more slowly and does not reach zero.
 
+One step of this search is public as `ModulationSpectrum.iterate`, which
+`to_sound(iterations=n)` calls `n` times, so a front end can show progress
+between steps (added 2026-10-14, at sonore-sketch's request).
+
 ## Ways to specify a target
 
 Each way, what it fixes, what it leaves free, and how it gets to a sound.

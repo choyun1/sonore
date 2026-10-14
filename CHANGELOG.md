@@ -25,6 +25,14 @@ Breaking changes since 0.6.0 (each is described under Changed):
   copy's level and each copy's pitch are drawn from distributions given as
   numbers or SciPy distributions, and a rate track speeds the onsets up or
   slows them down over time (docs/design/sources/event-texture.md).
+- `ModulationSpectrum` has public hooks for the search `to_sound(iterations=n)`
+  takes: `filterbank`, `modulation_phase(sound)`, `to_envelopes(phase=...,
+  quiet=True)` and `iterate(sound)`, one step of the search, which
+  `to_sound` now calls. Every existing call gives the same samples.
+- `ModulationSpectrum.to_sound(carrier=sound, rng=seed)` draws the modulation
+  phase from `rng` and takes only the fine structure from the Sound, so a
+  drawn target (`from_blobs`) can be heard on a harmonic complex, a
+  recording or a vowel. This call used to raise a `TypeError`.
 
 ### Changed
 
