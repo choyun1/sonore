@@ -74,6 +74,12 @@ version (0.x.y) only fixes bugs.
 - `so.cents_scale` returns the same scale for the same reference, so
   `cents_scale(440) == cents_scale()` and both equal the named `"cents"`
   scale; before, two calls gave scales that compared unequal.
+- `so.klatt_synthesize` no longer opens a voiced sound with a click. The
+  radiation difference started from 0, so the voice's first sample was the
+  whole glottal value, 21 times any later one; it also made the voice
+  quieter than its dB (3.7 dB for a 0.1 s sound, 1.0 dB for 0.5 s). Every
+  Klatt sound changes slightly. The docstring says that `AB` needs `AF` on
+  and where in each period the noise is at full level.
 
 - Gallery regrouped: Synthetic sounds (was Stimuli), Seeing and changing
   sound (Seeing speech, Analysis and resynthesis, Phase vocoder and the

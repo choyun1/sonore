@@ -134,7 +134,9 @@ def klatt_synthesize(
       the harmonics are switched off. Aspiration
       (``AH``) and frication (``AF``, ``AB``): white Gaussian noise. While
       voicing is on, both noises are amplitude modulated by a square wave at
-      ``F0``, 50% deep, as in Klatt's synthesizer.
+      ``F0``, 50% deep, as in Klatt's synthesizer: full level in the half
+      period that starts at each impulse of ``SS = 1`` (periods counted from
+      t = 0 with the harmonics' own phase), half level in the other.
     - **Cascade branch.** Voicing and aspiration pass through the nasal pole
       and zero (``FNP``, ``BNP``, ``FNZ``, ``BNZ``) and formants 1-5
       (``F1``-``F5``, bandwidths ``B1``-``B5``) in series: formant levels
@@ -144,7 +146,8 @@ def klatt_synthesize(
       side, each at its own level ``A1``-``A6`` (dB at the formant's peak),
       added with alternating signs so that they sum like the cascade between
       peaks; formants 2-6 get a differenced input, as in Klatt's, to keep
-      low frequencies out. ``AB`` adds the frication with no formants.
+      low frequencies out. ``AB`` adds the frication (at level ``AF``) with
+      no formants, so it is silent unless ``AF`` is on.
     - **Radiation.** The voiced source is differenced (+6 dB per octave), the
       radiation from the lips; the noises are white as they leave the lips.
 
