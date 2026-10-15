@@ -46,6 +46,16 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- `so.note_to_freq` accepts only a whole-number octave (digits with an
+  optional minus): names such as `"A 4"`, `"A+4"` or `"A4.0"` now raise
+  ValueError. Its docstring lists the spellings it reads (letters in either
+  case, `#`/`♯` and `b`/`♭`, outer spaces ignored) and says it is equal
+  temperament with A4 at 440 Hz (ISO 16) by default, as do `so.cents_scale`
+  and `so.chroma`.
+- `so.cents_scale` returns the same scale for the same reference, so
+  `cents_scale(440) == cents_scale()` and both equal the named `"cents"`
+  scale; before, two calls gave scales that compared unequal.
+
 - Gallery regrouped: Synthetic sounds (was Stimuli), Seeing and changing
   sound (Seeing speech, Analysis and resynthesis, Phase vocoder and the
   envelope and modulation pages, in one group), Textures (Sound textures and

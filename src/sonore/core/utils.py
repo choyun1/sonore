@@ -4,6 +4,8 @@ internal array helpers used across sonore."""
 
 from __future__ import annotations
 
+import functools
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from fractions import Fraction
@@ -151,10 +153,14 @@ _ACCIDENTALS = {"#": 1, "\u266f": 1, "b": -1, "\u266d": -1}
 
 
 def note_to_freq(note: str, *, a4: float = 440.0) -> float:
-    """The equal-tempered frequency [Hz] of a note name such as ``"A4"``,
-    ``"C#3"`` or ``"Bb2"`` (scientific pitch notation: octave 4 starts at
-    middle C; ``#`` or ``b``, or ♯ and ♭, for sharp and flat, repeatable), with A4 at
-    ``a4`` Hz."""
+    """The frequency [Hz] of a note name such as ``"A4"``, ``"C#3"`` or
+    ``"Bb2"`` in equal temperament, with A4 at ``a4`` Hz (by default 440 Hz,
+    the standard pitch of ISO 16).
+
+    Scientific pitch notation: a letter A-G (either case), then any number
+    of sharps (``#`` or ♯) and flats (``b`` or ♭), then the octave as a whole
+    number, which may be negative; octave 4 starts at middle C. Spaces
+    around the name are ignored; nothing else is accepted."""
     if not a4 > 0:
         raise ValueError(f"a4 must be a frequency above 0 Hz, not {a4!r}")
     name = note.strip()
@@ -165,10 +171,9 @@ def note_to_freq(note: str, *, a4: float = 440.0) -> float:
     while rest[:1] in _ACCIDENTALS:
         step += _ACCIDENTALS[rest[:1]]
         rest = rest[1:]
-    try:
-        octave = int(rest)
-    except ValueError:
-        raise ValueError(f"note must end with an octave number, as in 'A4' or 'C#3', not {note!r}") from None
+    if not re.fullmatch(r"-?[0-9]+", rest):
+        raise ValueError(f"note must end with an octave number, as in 'A4' or 'C#3', not {note!r}")
+    octave = int(rest)
     semitones_from_a4 = step - 9 + 12 * (octave - 4)
     return float(a4 * cents_to_ratio(100 * semitones_from_a4))
 
@@ -203,13 +208,21 @@ class FrequencyScale:
 
 
 def cents_scale(reference: float = 440.0) -> FrequencyScale:
-    """Cents from ``reference`` [Hz] (A4 by default): ``1200 log2(f / reference)``.
+    """Cents from ``reference`` [Hz]: ``1200 log2(f / reference)``. By
+    default the reference is A4 at 440 Hz, the standard pitch of ISO 16, so
+    whole hundreds of cents are the notes of equal temperament.
     A factor of 2 is 1200 cents and an equal-tempered semitone 100, so a
     filterbank on this scale with ``spacing=100`` has one band per semitone.
     The reference only shifts the positions: the bank is the one built on
-    octaves with ``spacing=1/12``."""
+    octaves with ``spacing=1/12``. The same reference gives the same scale,
+    so ``cents_scale(440) == cents_scale()``."""
     if not reference > 0:
         raise ValueError(f"reference must be a frequency above 0 Hz, not {reference!r}")
+    return _cents_scale(float(reference))
+
+
+@functools.cache  # one scale per reference: scales hold functions, which compare equal only to themselves
+def _cents_scale(reference: float) -> FrequencyScale:
     return FrequencyScale(
         "cents",
         "cent",
@@ -224,7 +237,7 @@ ScaleName = Literal["erb", "octave", "cents", "mel", "linear"]
 Align = Literal["start", "center", "end"]
 
 #: The scales a filterbank can be built on by name: the ERB-number scale
-#: (Glasberg & Moore, 1990), octaves (log2 frequency), cents from A4 at 440 Hz,
+#: (Glasberg & Moore, 1990), octaves (log2 frequency), cents from A4 at 440 Hz (ISO 16),
 #: the HTK mel scale, and Hz.
 FREQUENCY_SCALES = {
     "erb": FrequencyScale("erb", "ERB", freq_to_erb, erb_to_freq),

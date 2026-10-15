@@ -171,8 +171,9 @@ def chroma(
     """The power in each pitch class in each time window (Fujishima, 1999,
     who called it a pitch class profile).
 
-    The sound goes through a cosine filterbank on the cents scale (A4 at
-    ``reference`` Hz), one band per semitone, centered from ``f_lo`` to
+    The sound goes through a cosine filterbank on the cents scale, one band
+    per equal-tempered semitone with A4 at ``reference`` Hz (by default
+    440 Hz, the standard pitch of ISO 16), centered from ``f_lo`` to
     ``f_hi`` (A1 to A8 by default; both are moved to the nearest semitone).
     Each band's power is averaged over time windows ``window`` seconds long
     (a last, shorter stretch is dropped), and the bands of each pitch class
