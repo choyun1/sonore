@@ -134,3 +134,102 @@ def test_source_switch_is_checked():
         so.klatt_continuum({"SS": 1}, {"SS": 3}, 3)
     steps = so.klatt_continuum({"SS": 3, "RD": 0.5}, {"SS": 3, "RD": 1.5}, 3)
     assert [step["RD"] for step in steps] == [0.5, 1.0, 1.5] and all(step["SS"] == 3 for step in steps)
+
+
+def _band_levels(y, n=1000):
+    """Mean power spectrum (dB) of `y` over Hann-windowed blocks of `n` samples."""
+    blocks = y[: len(y) // n * n].reshape(-1, n) * np.hanning(n)
+    power = np.mean(np.abs(np.fft.rfft(blocks, axis=1)) ** 2, axis=0)
+    return np.fft.rfftfreq(n, 1 / FS), 10 * np.log10(power)
+
+
+def test_voice_level_does_not_depend_on_where_or_how_long_it_is_voiced():
+    # Breath after voice, the voice switched off by F0 = 0 or by AV = 0. The
+    # voice is scaled over its voiced samples, and the breath is modulated
+    # only where both F0 and AV are on, so the two give the same balance. No
+    # click at the start: the balance is the same for a short sound.
+    def breath_over_voice(duration, **voicing):
+        half, end = duration / 2, int(duration * FS)
+        y = so.klatt_synthesize(
+            duration, FS, AH=([0, half, half + 1 / FS], [0, 0, 60]), F1=730, F2=1090, rng=0, **voicing
+        ).data[:, 0]
+        voice, breath = y[end // 10 : end // 2 - end // 20], y[end // 2 + end // 10 : end - end // 20]
+        return 10 * np.log10(np.mean(breath**2) / np.mean(voice**2))
+
+    for duration in (0.1, 0.5):
+        step = ([0, duration / 2, duration / 2 + 1 / FS], [1, 1, 0])
+        f0_off = breath_over_voice(duration, F0=(step[0], 100 * np.array(step[1])))
+        av_off = breath_over_voice(duration, AV=(step[0], 60 * np.array(step[1])))
+        assert f0_off == pytest.approx(av_off, abs=0.5)
+        assert abs(av_off) < 1
+
+
+def test_noise_is_halved_in_the_second_half_of_each_period():
+    # Frication straight through the bypass, with a voice too quiet to matter:
+    # the second half of each 50 Hz period has a quarter of the first's power.
+    y = so.klatt_synthesize(2.0, FS, F0=50, AV=1, AF=60, AB=60, rng=0).data[:, 0]
+    power = y.reshape(-1, FS // 50) ** 2
+    halves = 10 * np.log10(power[:, FS // 100 :].mean() / power[:, : FS // 100].mean())
+    assert halves == pytest.approx(-6.02, abs=0.3)
+
+
+def test_bypass_is_flat():
+    f, level = _band_levels(so.klatt_synthesize(4.0, FS, AV=0, AF=60, AB=60, rng=0).data[:, 0])
+    low, high = level[(f > 200) & (f < 1000)].mean(), level[(f > 5000) & (f < 7000)].mean()
+    assert low == pytest.approx(high, abs=0.5)
+
+
+def test_nasal_pole_and_zero():
+    y = so.klatt_synthesize(1.0, FS, F0=100, FNP=270, BNP=100, FNZ=450, BNZ=100)
+    f = np.arange(1, 61) * 100.0
+    got = _line_spectrum(y, 100, 60)
+    radiation = np.abs(1 - np.exp(-2j * np.pi * f / FS))
+    formants = [(500, 60), (1500, 90), (2500, 150), (3500, 200), (4500, 250)]
+    nasal = _gain(270, 100, f) / _gain(450, 100, f)
+    want = _gain(0, 100, f) * radiation * nasal * np.prod([_gain(*fb, f) for fb in formants], axis=0)
+    np.testing.assert_allclose(20 * np.log10(got / got[0]), 20 * np.log10(want / want[0]), atol=1e-6)
+
+
+def test_parallel_formants_alternate_in_sign():
+    # With alternating signs, two neighbors add between their peaks, as the
+    # cascade does; with equal signs they would cancel there.
+    y = so.klatt_synthesize(4.0, FS, AV=0, AF=60, A2=60, A3=60, F2=1500, F3=2500, rng=0).data[:, 0]
+    f, level = _band_levels(y)
+    at = lambda fc: level[np.argmin(np.abs(f - fc))]  # noqa: E731
+    assert at(1500) - at(2000) < 15
+
+
+def test_first_parallel_formant_input_is_not_differenced():
+    y = so.klatt_synthesize(4.0, FS, AV=0, AF=60, A1=60, F1=500, B1=60, rng=0).data[:, 0]
+    f, level = _band_levels(y)
+    at = lambda fc: level[np.argmin(np.abs(f - fc))]  # noqa: E731
+    want = 20 * np.log10(_gain(500, 60, 112) / _gain(500, 60, 500))
+    assert at(112) - at(500) == pytest.approx(want, abs=1)
+
+
+def test_parallel_formants_at_a_low_rate():
+    # A formant that is off may lie above Nyquist; one that is on may not.
+    assert so.klatt_synthesize(0.1, 8000, AV=0, AF=60, A2=60, rng=0).rms == pytest.approx(1)
+    with pytest.raises(ValueError, match="A6 is on"):
+        so.klatt_synthesize(0.1, 8000, AV=0, AF=60, A6=60, rng=0)
+
+
+def test_negative_f0_is_refused():
+    with pytest.raises(ValueError, match="F0 must be"):
+        so.klatt_synthesize(0.1, FS, F0=([0, 0.1], [100, -10]))
+
+
+def test_continuum_mixes_numbers_and_tracks():
+    steps = so.klatt_continuum({"F1": 300}, {"F1": ([0, 0.1], [500, 700])}, 3)
+    np.testing.assert_allclose(steps[1]["F1"][0], [0, 0.1])
+    np.testing.assert_allclose(steps[1]["F1"][1], [400, 500])
+
+
+def test_continuum_refusals():
+    with pytest.raises(ValueError, match="at least 2"):
+        so.klatt_continuum({}, {}, 1)
+    with pytest.raises(ValueError, match="unknown"):
+        so.klatt_continuum({"f1": 300}, {}, 3)
+    for bad in ("ab", ([0, 1], [1, 2, 3]), ([[0, 1]], [[1, 2]])):
+        with pytest.raises(ValueError, match="number or a"):
+            so.klatt_continuum({"F1": bad}, {}, 3)

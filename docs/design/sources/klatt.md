@@ -239,7 +239,9 @@ What changed from the proposal above while writing the code:
   drift.
 - Levels: at 60 dB every source has RMS 1 as it leaves the lips, before
   the formants, so equal values mean equal source levels (aspiration and
-  voicing at 60 dB come out within 3 dB of each other through an /a/).
+  voicing at 60 dB come out within 0.5 dB of each other through an /a/
+  with the impulse source; a lax LF source comes out quieter, because its
+  energy sits at F0, where the cascade passes little).
   Each parallel formant is scaled to unit gain at its own frequency, so
   `A1`–`A6` are peak levels. The output is normalized to RMS 1, like the
   generators.
