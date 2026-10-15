@@ -87,3 +87,32 @@ def test_sd_zero_is_flat_in_time():
 def test_rejects_bad_parameters(kwargs):
     with pytest.raises(ValueError):
         so.gaussian_spectrogram(0.1, FS, **kwargs)
+
+
+def test_correlation_lengths_are_not_swapped():
+    # the defaults give lag-1 correlations 0.928 and 0.937, too close to tell apart
+    lengths = {"band_correlation_erb": 20.0, "time_correlation": 0.02}
+    cells = np.array([_cells_db(so.gaussian_spectrogram(0.4, FS, **lengths, rng=seed)) for seed in range(30)])
+    cells = cells - cells.mean(axis=(0, 2))[None, :, None]
+    spacing = so.cosine_filterbank(39, 20, 4000).spacing
+    band_lag1 = np.corrcoef(cells[:, :-1].ravel(), cells[:, 1:].ravel())[0, 1]
+    time_lag1 = np.corrcoef(cells[:, :, :-1].ravel(), cells[:, :, 1:].ravel())[0, 1]
+    assert band_lag1 == pytest.approx(np.exp(-spacing / 20.0), abs=0.03)  # 0.97
+    assert time_lag1 == pytest.approx(np.exp(-0.010 / 0.02), abs=0.03)  # 0.61
+
+
+def test_mean_levels_follow_the_bandwidths():
+    # with no spread every cell sits at its band's mean: 10 log10 of the band's width in Hz
+    # (half the distance between its neighbors) over the mean width
+    env = so.gaussian_spectrogram(0.1, FS, sd_db=0, rng=0)
+    levels = 20 * np.log10(env.data[0, 1:-1, 0])
+    cfs = env.filterbank.cfs  # edge bands included, so every band has two neighbors
+    widths = (cfs[2:] - cfs[:-2]) / 2
+    np.testing.assert_allclose(levels, 10 * np.log10(widths / widths.mean()), atol=0.2)
+
+
+def test_filterbank_options_are_used():
+    env = so.gaussian_spectrogram(0.1, FS, n_bands=20, f_lo=100, f_hi=6000, rng=0)
+    assert env.data.shape == (1600, 22, 1)
+    assert env.filterbank.band_cfs[0] > 100 and env.filterbank.band_cfs[-1] < 6000
+    assert env.filterbank == so.cosine_filterbank(20, 100, 6000)
