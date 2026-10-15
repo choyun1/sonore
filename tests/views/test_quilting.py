@@ -62,6 +62,36 @@ class TestQuilt:
         with pytest.raises(ValueError, match="needs 34 segments, but the sound"):
             so.quilt(self.source, 0.12, 4.0, rng=0)
 
+    @pytest.mark.parametrize("fade, expected_db", [("equal_gain", -1.0), ("adaptive", 0.1)])
+    def test_the_fade_reaches_splice(self, fade, expected_db):
+        # 30 ms segments of noise, every sample in a cross-fade: equal gain loses about
+        # 1 dB, the adaptive fade keeps the level (measured: -1.0 and +0.1 dB over 5 seeds)
+        noise = so.gaussian_noise(20.0, FS, rng=0)
+        q = so.quilt(noise, 0.03, 6.0, rng=0, fade=fade)
+        assert abs(20 * np.log10(q.rms / noise.rms) - expected_db) < 0.1
+
+    def test_the_first_segment_is_never_the_last(self):
+        # a short sound of 5 segments; the last one may only end a quilt
+        source = speechlike(0.3, 1)
+        n = int(0.06 * FS)
+        segments = source.data[:, 0].reshape(-1, n)
+        for seed in range(40):
+            first = so.quilt(source, 0.06, 0.12, rng=seed, crossfade=0, max_shift=0).data[:n, 0]
+            assert not np.array_equal(first, segments[-1])
+
+    @pytest.mark.parametrize(
+        "options, message",
+        [
+            ({"segment_dur": 1e-5}, "segment_dur"),
+            ({"border_dur": 0.2}, "border_dur"),
+            ({"duration": 1e-5}, "duration"),
+        ],
+    )
+    def test_refuses(self, options, message):
+        args = {"segment_dur": 0.12, "duration": 1.0} | options
+        with pytest.raises(ValueError, match=message):
+            so.quilt(self.source, args.pop("segment_dur"), args.pop("duration"), **args)
+
     def test_mono_only(self):
-        with pytest.raises(ValueError, match="mono"):
+        with pytest.raises(ValueError, match="quilt needs a mono sound"):
             so.quilt(self.source.to_channels(2), 0.12, 1.0)
