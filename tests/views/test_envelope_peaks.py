@@ -85,3 +85,59 @@ def test_plot_draws_one_survival_curve_and_one_fit_per_cutoff():
     assert len(ax.get_lines()) == 4
     assert ax.get_xscale() == "log" and ax.get_yscale() == "log"
     matplotlib.pyplot.close(ax.figure)
+
+
+def test_maxima_follow_the_four_steps():
+    # The docstring's steps written out with SciPy, on a sound whose length
+    # is not a whole number of bins (the remainder at the end is dropped).
+    # The Hilbert transform is taken zero-padded to a fast FFT length.
+    from scipy.fft import next_fast_len
+    from scipy.signal import butter, hilbert, sosfiltfilt
+
+    sound = clicks(1.5, seconds=7.003)
+    peaks = so.envelope_peaks(sound, cutoffs_hz=(300.0, 2000.0))
+    samples = sound.data[:, 0]
+    for column, cutoff in enumerate((300.0, 2000.0)):
+        high = sosfiltfilt(butter(4, cutoff, "highpass", fs=FS, output="sos"), samples)
+        envelope = sosfiltfilt(
+            butter(2, 500, fs=FS, output="sos"),
+            np.abs(hilbert(high, N=next_fast_len(len(high)))[: len(high)]),
+        )
+        want = envelope[: len(samples) // 80 * 80].reshape(-1, 80).max(axis=1)
+        np.testing.assert_allclose(peaks.maxima[:, column], want, rtol=1e-6, atol=1e-6 * want.max())
+
+
+def test_low_rumble_is_filtered_out():
+    noise = so.gaussian_noise(7.0, fs=FS, rng=2)
+    rumble = so.Sound(noise.data[:, 0] + 30 * np.sin(2 * np.pi * 40 * np.arange(len(noise)) / FS), FS)
+    np.testing.assert_allclose(
+        so.envelope_peaks(rumble).exponent[1], so.envelope_peaks(noise).exponent[1], rtol=0.05
+    )
+
+
+def test_bins_are_a_whole_number_of_samples():
+    peaks = so.envelope_peaks(so.gaussian_noise(4.0, fs=44100, rng=0), bin_seconds=0.0051, fraction=0.1)
+    assert peaks.bin_seconds == 225 / 44100  # 224.91 samples, rounded
+    assert peaks.maxima.shape[0] == 4 * 44100 // 225
+
+
+def test_short_sounds_fit_at_least_ten_values():
+    with pytest.warns(UserWarning) as caught:
+        peaks = so.envelope_peaks(so.gaussian_noise(0.5, fs=FS, rng=0))
+    assert peaks.n_fitted == 10
+    assert caught[0].filename == __file__  # the warning points at the caller
+    assert "±" in repr(peaks)
+
+
+def test_more_refusals():
+    noise = so.gaussian_noise(2.0, fs=FS, rng=0)
+    with pytest.raises(ValueError, match="fraction"):
+        so.envelope_peaks(noise, fraction=1.0)
+    with pytest.raises(ValueError, match="cutoff"):
+        so.envelope_peaks(noise, cutoffs_hz=())
+    with pytest.raises(ValueError, match="one sample"):
+        so.envelope_peaks(noise, bin_seconds=1e-5)
+    with pytest.raises(ValueError, match="too few"):
+        so.envelope_peaks(so.gaussian_noise(10 * 0.005, fs=FS, rng=0))  # 10 bins, 10 to fit
+    with pytest.raises(ValueError, match="silent"):
+        so.envelope_peaks(so.Sound(np.zeros(16000), FS))

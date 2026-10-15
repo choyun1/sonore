@@ -89,6 +89,12 @@ version (0.x.y) only fixes bugs.
   quieter than its dB (3.7 dB for a 0.1 s sound, 1.0 dB for 0.5 s). Every
   Klatt sound changes slightly. The docstring says that `AB` needs `AF` on
   and where in each period the noise is at full level.
+- `so.envelope_peaks` docstrings say the exponent describes pops only when
+  they fill more bins than the fraction fitted (more than about 10 per
+  second with the defaults); sparser pops read below 1 whatever their
+  sizes, and a smaller `fraction` fits them. They give Gaussian noise's
+  exponent at 8, 16 and 44.1 kHz instead of "20 to 40". The design note
+  adds the measurements and marks the survey's tapping as probably sparse.
 
 - Gallery regrouped: Synthetic sounds (was Stimuli), Seeing and changing
   sound (Seeing speech, Analysis and resynthesis, Phase vocoder and the
