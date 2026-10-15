@@ -268,6 +268,21 @@ one on, and the list is short.
     the toolbox's shift plus one sample at 95, the same at 3 and a different
     peak at 1. Run one sample later, as the toolbox indexes it, the same
     search gives the toolbox's shift at all 99: the one-sample offset above.
+- **Shifts past the ends (2026-10-15).** The first build only allowed a
+  shift whose read, lead-in and tail included, lay inside the sound. With
+  the defaults that left one allowed shift, the full 15 ms, for a segment
+  at the sound's very start placed anywhere but first, and for the sound's
+  last segment ending a quilt: those joins were not aligned at all (a
+  re-audit of sitting 3b measured it on 40 seeds; every such join took the
+  full shift). The search now runs over every shift, and a read past
+  either end counts as silence, which the zero padding already held. The
+  silence lowers the raw correlation, so the search leans away from it.
+  The cross-check is unaffected: the toolbox never picks the end segments.
+- **The search weights the overlap by the ramps.** The paper says the
+  cross-correlation is taken "over the 30-ms region"; the toolbox weights
+  what is already written (the outgoing segment, faded out) by the rise
+  ramp, so the middle of the cross-fade counts most, and sonore does the
+  same. A difference from the paper's wording, not from the toolbox.
 - **Pauses.** The first build of the gallery quilted LibriSpeech passages
   with their pauses, and a 6 s quilt of 30 ms segments held 4 s of silence:
   one silent segment changes little into another, and the passage changes

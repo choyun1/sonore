@@ -59,6 +59,14 @@ version (0.x.y) only fixes bugs.
 - `so.splice` and `so.quilt` docstrings say that a silent side of a join is
   joined as with equal gain, that `splice` reads the first segment where
   asked, and that a quilt never starts on the sound's last segment.
+- `so.splice` searches every shift up to `max_shift` at every join, reading
+  past either end of the sound as silence. Before, a shift had to keep its
+  read inside the sound, which left a segment at the sound's very start or
+  end one allowed shift, the full `max_shift`, and no alignment; in a quilt
+  that was the sound's first segment placed anywhere but first, and its
+  last segment ending the quilt. Quilts that drew either segment change.
+  Contiguous segments of noise now rebuild the sound with the default
+  `max_shift` too. Found by a re-audit of sitting 3b.
 - `so.cents_scale` returns the same scale for the same reference, so
   `cents_scale(440) == cents_scale()` and both equal the named `"cents"`
   scale; before, two calls gave scales that compared unequal.
