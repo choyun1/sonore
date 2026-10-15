@@ -92,6 +92,16 @@ paper 1.8 and 3.3 [survey]).
   44.1 kHz. It grows with the sample rate, which puts more samples in each
   bin: about 24 at 16 kHz (measured with `so.envelope_peaks` on one 7 s
   sample).
+- **Sparse pops** (measured with `so.envelope_peaks`, 20 s of clicks
+  over a faint floor, 2 kHz cutoff, four seeds): the fit uses the largest
+  5% of bins, 10 per second. At 10 to 50 clicks per second the exponent
+  is right (Pareto 1: 0.95 to 1.20; Pareto 2.5: 2.23 to 2.97). At 1, 2 or
+  5 per second Pareto trains read 0.44 to 0.76 whatever their exponent,
+  and equal clicks read 0.47 (2 per second) and 0.26 (5 per second), as if
+  they were heavy pops: the fitted values straddle the clicks
+  and the floor, so the number says how far the clicks stand above the
+  floor. A smaller `fraction` fits them (equal clicks at 2/s with
+  `fraction=0.005`: 49).
 - **Real recordings** [survey], 2 kHz cutoff:
 
   | Recording | 7 s, top 5% | top 10% | top 20% | 2 s pieces | 1 s pieces |
@@ -114,7 +124,10 @@ paper 1.8 and 3.3 [survey]).
 On the first 7 s of each of the 168 recordings, taking the smaller exponent
 of the two cutoffs:
 
-- **14 have an exponent below 2**: tapping (about 0.5), fire in a chimney
+- **14 have an exponent below 2**: tapping (about 0.5, probably sparse
+  taps over a quiet floor rather than a heavy tail: fitting 2% or 1% instead
+  of 5% gives 2.5 and 4.7, where the fire in a chimney moves only from
+  1.3 to 1.7 and 2.1), fire in a chimney
   (1.2), a bongo loop, a clapper close to the microphone, Fire1, writing
   with a pen, castanets, a typewriter. Rustling paper, hammering, a snare
   drum, gravel and gargling follow, between 2 and 2.5. 78 are below 4.

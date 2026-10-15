@@ -50,8 +50,11 @@ class EnvelopePeaks(View):
     largest ``fraction`` of the maxima, and ``uncertainty`` is its standard
     error, ``exponent / sqrt(n_fitted)``. ``threshold`` is, per cutoff, the
     largest maximum left out of the fit. Below about 2 the sound is made of
-    pops, with no smooth background under them; Gaussian noise gives 20 to
-    40, more at a higher sample rate, which puts more samples in each bin.
+    pops, with no smooth background under them. Gaussian noise gives about
+    15 at 8 kHz, 20 to 30 at 16 kHz and 30 to 40 at 44.1 kHz: more at a
+    higher sample rate, which puts more samples in each bin. Pops sparser
+    than the fraction fitted read below 1 whatever their sizes (see
+    :func:`envelope_peaks`).
     """
 
     discards = (
@@ -115,6 +118,14 @@ def envelope_peaks(
     sound fits 20 values (about 25%) and 7 s fits 70 (about 12%), and a
     short excerpt can miss the big events altogether; fewer than 50 fitted
     values raise a warning. Mono only.
+
+    The exponent describes the pops only when they fill more bins than the
+    fraction fitted: with the defaults, more than about 10 pops per second
+    (5% of 200 bins a second). Sparser pops leave the fit straddling them
+    and the floor beneath, so it measures how far they stand above the
+    floor, not how their sizes spread: such trains read below 1 whatever
+    their sizes, and equal clicks twice a second read 0.47. A smaller
+    ``fraction`` fits sparse pops.
     """
     if sound.n_channels != 1:
         raise ValueError(
