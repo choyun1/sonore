@@ -52,6 +52,10 @@ version (0.x.y) only fixes bugs.
   case, `#`/`♯` and `b`/`♭`, outer spaces ignored) and says it is equal
   temperament with A4 at 440 Hz (ISO 16) by default, as do `so.cents_scale`
   and `so.chroma`.
+- `so.event_train` refuses a timing distribution that gives only zero
+  intervals, which used to loop forever while using more and more memory.
+  Its docstring says onsets fall on the nearest sample and that the expected
+  power grows with the rate only for an event with no steady (DC) part.
 - `so.quilt` needs a sound with at least one segment more than the quilt
   uses. A quilt of every segment could be left with only a forbidden
   segment for its last place, so it failed on some seeds and not others;

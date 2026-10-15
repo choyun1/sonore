@@ -131,3 +131,59 @@ def test_rejects_bad_arguments():
         so.event_train(CLICK, 1.0, 0.0)
     with pytest.raises(ValueError, match="not negative"):
         so.event_train(CLICK, 1.0, stats.norm(0, 1), rng=0)
+
+
+def test_each_copy_carries_its_own_pitch_ratio():
+    # a one-sample event whose value is the pitch ratio it was asked for: every copy shows
+    # its ratio, a whole number of cents, spread as the cents were drawn (uniform 0-1200)
+    sound = so.event_train(
+        lambda ratio: so.Sound([ratio], FS), 20.0, 0.01, pitch_cents=stats.uniform(0, 1200), rng=0
+    )
+    cents = 1200 * np.log2(sound.data[_onsets(sound), 0])
+    np.testing.assert_allclose(cents, np.round(cents), atol=1e-9)
+    assert cents.min() >= 0 and cents.max() <= 1200
+    assert np.std(cents) == pytest.approx(1200 / np.sqrt(12), rel=0.05)
+
+
+def test_pitch_is_rounded_to_the_nearest_cent():
+    chirp = _chirp(16000)
+    exact = so.event_train(chirp, 0.3, 0.05, pitch_cents=100)
+    np.testing.assert_array_equal(so.event_train(chirp, 0.3, 0.05, pitch_cents=99.6).data, exact.data)
+
+
+def test_lead_works_with_a_pitch_spread():
+    # the copies added one by one start before time 0 too
+    event = so.Sound(np.ones(300), FS)
+    sound = so.event_train(lambda ratio: event, 1.0, 0.25, lead=0.3, pitch_cents=stats.norm(0, 100), rng=0)
+    assert sound.data[0, 0] == pytest.approx(1)
+    assert sound.duration == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("ratio", [2 ** (100 / 1200), 1.5, 2.0, 0.5, 2 ** (-7 / 1200)])
+def test_transposed_copy_lasts_the_event_over_the_ratio(ratio):
+    event = so.Sound(np.hanning(301), FS)
+    assert len(transposed(event, ratio, FS)) == int(np.ceil(301 / ratio))
+
+
+class _NotANumber:
+    def rvs(self, size=None, random_state=None):
+        return np.full(size, np.nan)
+
+
+def test_rejects_more_bad_arguments():
+    with pytest.raises(ValueError, match="duration must be positive"):
+        so.event_train(CLICK, 0.0, 0.1)
+    with pytest.raises(ValueError, match="lead not negative"):
+        so.event_train(CLICK, 1.0, 0.1, lead=-0.1)
+    with pytest.raises(ValueError, match="finite"):
+        so.event_train(CLICK, 1.0, _NotANumber())
+    with pytest.raises(ValueError, match="all zero"):
+        so.event_train(CLICK, 1.0, stats.randint(0, 1), rng=0)
+    with pytest.raises(ValueError, match="one sampling rate"):
+        so.event_train(
+            lambda ratio: so.Sound([1.0], FS if ratio == 1 else 2 * FS),
+            1.0,
+            0.1,
+            pitch_cents=stats.norm(0, 50),
+            rng=0,
+        )
