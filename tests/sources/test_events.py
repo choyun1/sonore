@@ -177,7 +177,13 @@ def test_rejects_more_bad_arguments():
         so.event_train(CLICK, 1.0, 0.1, lead=-0.1)
     with pytest.raises(ValueError, match="finite"):
         so.event_train(CLICK, 1.0, _NotANumber())
+    with pytest.raises(ValueError, match="all zero"):
+        so.event_train(CLICK, 1.0, stats.randint(0, 1), rng=0)
     with pytest.raises(ValueError, match="one sampling rate"):
         so.event_train(
-            lambda ratio: so.Sound([1.0], FS if ratio == 1 else 2 * FS), 1.0, 0.1, pitch_cents=stats.norm(0, 50), rng=0
+            lambda ratio: so.Sound([1.0], FS if ratio == 1 else 2 * FS),
+            1.0,
+            0.1,
+            pitch_cents=stats.norm(0, 50),
+            rng=0,
         )

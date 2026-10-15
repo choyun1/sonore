@@ -22,6 +22,10 @@ from sonore.core.utils import RNG, _read_between_samples, as_rng, db_to_amp, n_s
 
 __all__ = ["event_train"]
 
+# A batch of drawn intervals this large that is all zero means they never move the
+# onsets forward; the batch size doubles, so this is about 14 batches in.
+ALL_ZERO_BATCH = 2**20
+
 
 class Distribution(Protocol):
     """Anything with SciPy's ``rvs``, such as a frozen ``scipy.stats`` distribution."""
@@ -52,6 +56,8 @@ def _warped_onsets(intervals: Draw, span: float, rng: np.random.Generator) -> np
         drawn = _draw(intervals, batch, rng, "intervals")
         if np.any(drawn < 0) or not np.all(np.isfinite(drawn)):
             raise ValueError("intervals must be finite and not negative")
+        if batch >= ALL_ZERO_BATCH and not np.any(drawn):
+            raise ValueError(f"the last {batch} intervals drawn are all zero, so the onsets never move on")
         times = last + np.cumsum(drawn)
         batches.append(times)
         last, batch = times[-1], 2 * batch
@@ -112,14 +118,20 @@ def event_train(
     once: a ``Sound`` event is read every ``ratio`` samples with the
     windowed sinc that :func:`move_sound` reads between samples with,
     widened by the ratio going up so nothing folds back (so a higher copy
-    is also shorter), while an event given as a function ``event(ratio) -> Sound`` makes its
-    own copy at that pitch ratio, so a synthetic event can keep its length.
+    is also shorter), while an event given as a function
+    ``event(ratio) -> Sound`` makes its own copy at that pitch ratio, so a
+    synthetic event can keep its length.
 
     Onsets are also drawn over ``lead`` seconds before the start, so that
     with ``lead`` at the event's length an event already under way at time
     0 is heard; the result is ``duration`` long and copies running past the
-    end are cut. The overall level is left to the caller: the expected power
-    grows in proportion to the rate.
+    end are cut. Each onset falls on the nearest sample. The overall level is
+    left to the caller: for an event with no steady (DC) part, the expected
+    power grows in proportion to the rate (a steady part adds a constant
+    that grows with the square of the rate).
+
+    Intervals of zero are allowed (events at one onset), but a distribution
+    that gives nothing else is refused, since the onsets would never move on.
 
     docs/design/sources/event-texture.md measures what each distribution
     does to the sound's statistics (``tools/check_event_texture_claims.py``).
