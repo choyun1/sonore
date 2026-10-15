@@ -123,7 +123,7 @@ numerically; "consulted" means the code was read for behavior but not copied.
   is a clean-room implementation from the paper, and every deliberate
   difference is listed in `so.texture.DIFFERENCES_FROM_TOOLBOX`. [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) [`filterbank.Cosine`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L148) [`modulation`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py)
 - [wil-j-wil/texture_stats](https://github.com/wil-j-wil/texture_stats) (Python, MIT): a port of the toolbox's
-  statistics. Cross-checked by `tools/crosscheck_texture_stats.py`. [`texture.TextureStats`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py#L199)
+  statistics. Cross-checked by `tools/crosscheck_texture_stats.py`. [`texture.TextureStats`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py#L204)
 - [mcdermottLab/pycochleagram](https://github.com/mcdermottLab/pycochleagram) (Python): the lab's port of the
   toolbox's cochleagram code, including the cosine filterbank. Not yet
   cross-checked. [`filterbank.Cosine`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L148)

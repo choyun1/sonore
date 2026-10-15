@@ -41,6 +41,42 @@ def test_analytic_modulation_filtering_matches_real():
     assert np.allclose(b.filter(x, 400, analytic=True).real, b.filter(x, 400))
 
 
+def test_measure_applies_the_window():
+    """``measure(window=...)`` reaches the statistics: the ramped window
+    downweights the ends, so a sound that is loud only in its first quarter
+    has a smaller envelope mean under it than under the uniform window."""
+    rng = np.random.default_rng(0)
+    noise = rng.standard_normal(2 * FS)
+    noise[FS // 2 :] *= 0.1
+    sound = so.Sound(noise, FS)
+    ramped = TextureStats.measure(sound)
+    uniform = TextureStats.measure(sound, window="uniform")
+    assert np.all(ramped.env_mean[3:29] < 0.95 * uniform.env_mean[3:29])
+
+
+def test_envelope_is_the_analytic_magnitude():
+    """A 60 Hz tone's subband envelope is flat: the Hilbert magnitude, not
+    the rectified waveform, whose ripple at 120 Hz would survive the
+    downsampling to 400 Hz."""
+    t = np.arange(FS) / FS
+    env = M.envelopes(M.subbands(M.prepare(so.Sound(np.cos(2 * np.pi * 60 * t), FS))))
+    loudest = int(np.argmax(env.mean(0)))
+    assert env[:, loudest].std() < 1e-3 * env[:, loudest].mean()
+
+
+def test_c2_phase_convention():
+    """C2 of an envelope with components at f and 2f is exp(i phi), phi the
+    phase of the upper component relative to the lower one doubled: the
+    imaginary part is positive when the upper band leads by a quarter cycle
+    (the toolbox's convention)."""
+    t = np.arange(2000) / M.env_fs
+    f = M.oct_bank.cfs[2]  # 6.25 Hz; band 3 is centered at 12.5 Hz
+    for phi in (0.0, np.pi / 2, np.pi, -np.pi / 2):
+        env = 1 + 0.3 * np.cos(2 * np.pi * f * t) + 0.3 * np.cos(2 * np.pi * 2 * f * t + phi)
+        st = TextureStats.from_envelopes(env[:, None], np.ones(1), M, window="uniform")
+        assert abs(st.c2[0, 2] - np.exp(1j * phi)) < 0.05, phi
+
+
 def test_measurement_window():
     w = measurement_window(2000, 5)
     assert np.isclose(w.sum(), 1)

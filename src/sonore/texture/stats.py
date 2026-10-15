@@ -73,7 +73,12 @@ Deliberate differences from the MATLAB Sound Texture Synthesis Toolbox v1.7:
 6. Subband variance is weighted by the measurement window (toolbox: unweighted).
 7. The sound is truncated to a whole number of envelope samples, so that
    downsampling to the envelope rate is exact.
-8. Synthesis: after the conjugate-gradient steps for each channel, the
+8. The whole sound is measured. The toolbox cuts the original to its first
+   7 s (``max_orig_dur_s``) and pads an odd length with one zero sample.
+9. Envelopes are downsampled by circular FFT resampling, like every other
+   step here; the toolbox uses MATLAB's polyphase ``resample``, which is
+   not circular. Measured statistics differ only at the ends of the sound.
+10. Synthesis: after the conjugate-gradient steps for each channel, the
    envelope's mean and variance are set exactly by an affine map (see
    :func:`sonore.texture.synth.impose_channel`). All other statistics are
    invariant to it, and without it those two directions, nearly flat in the
