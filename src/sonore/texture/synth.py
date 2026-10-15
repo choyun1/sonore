@@ -13,7 +13,10 @@ the statistics that depend on ``k``:
   pass (``adjusted``), at the model's offsets in both directions.
 
 It is minimized by nonlinear conjugate gradient (SciPy's Polak-Ribiere CG)
-with a fixed number of iterations, then the envelope is clipped at 0.
+with a fixed number of iterations per call, then the envelope is clipped at
+0. :func:`synthesize` gives each channel 5 iterations on its first pass and
+one more for every 5 outer iterations after that (the toolbox's rule), so
+later passes polish more.
 
 The loss is nearly flat along two directions: a uniform shift of the envelope
 and a scaling of its deviations from the mean. Only the mean and variance
@@ -271,7 +274,10 @@ def synthesize(
 ) -> tuple[Sound, dict]:
     """Synthesize a sound whose statistics match ``target``.
 
-    Starts from Gaussian noise (or ``init``) and iterates: decompose into
+    Starts from ``duration`` seconds of Gaussian noise, cut to a whole
+    number of envelope samples (a multiple of ``fs / env_fs``, 50 samples by
+    default), or from ``init``, whose own length is used and ``duration``
+    ignored. Then iterates: decompose into
     subbands; take compressed envelopes (downsampled, plus the high-rate
     residual the downsampling removes) and fine structure; impose the
     statistics channel by channel (:func:`impose_channel`, in

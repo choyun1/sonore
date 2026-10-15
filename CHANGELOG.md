@@ -46,6 +46,15 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- Texture synthesis, from an independent re-audit of `sonore.texture`
+  (no change to any output): the full-loop test now checks the result's
+  subband levels and long-term spectrum against the target's, and new
+  tests pin `measure(window=...)`, the Hilbert envelope and C2's phase
+  convention; `synthesize` says its length is a whole number of envelope
+  samples and that `init` sets the length; the growing per-channel
+  conjugate-gradient budget is documented; `DIFFERENCES_FROM_TOOLBOX`
+  lists the toolbox's 7 s cap and non-circular envelope resampling.
+
 - `so.note_to_freq` accepts only a whole-number octave (digits with an
   optional minus): names such as `"A 4"`, `"A+4"` or `"A4.0"` now raise
   ValueError. Its docstring lists the spellings it reads (letters in either

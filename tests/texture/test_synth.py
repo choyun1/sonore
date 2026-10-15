@@ -109,6 +109,16 @@ def test_synthesis_converges_on_am_noise():
     assert snd.fs == M.fs and len(snd) == FS and snd.rms == pytest.approx(M.rms)
     # the result is a new sound, not the original
     assert abs(np.corrcoef(snd.data[:, 0], M.prepare(tex))[0, 1]) < 0.1
+    # the subband levels and the long-term spectrum are the target's too
+    # (the class SNRs above never look at them)
+    result = TextureStats.measure(snd, window="uniform")
+    loud = target.channel_mask()
+    level_error_db = 10 * np.log10(result.subband_var[loud] / target.subband_var[loud])
+    assert np.abs(level_error_db).max() < 1.0
+    result_spectrum = so.long_term_spectrum(snd, win_dur=0.01)  # 100 Hz bins: less sampling noise
+    target_spectrum = so.long_term_spectrum(so.Sound(M.prepare(tex), FS), win_dur=0.01)
+    in_band = (result_spectrum.f > 100) & (result_spectrum.f < 8000)
+    assert np.abs(result_spectrum.level - target_spectrum.level)[in_band].mean() < 1.0
 
 
 def test_synthesis_restricted_classes():
