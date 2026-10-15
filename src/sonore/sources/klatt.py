@@ -197,8 +197,9 @@ def klatt_synthesize(
             glottal = harmonic_complex(duration, fs, contour, amplitudes=lambda _, f: _rgp(f, fs)).data[:, 0]
         else:  # the LF flow, so that the lips' difference makes its derivative
             glottal = glottal_source(duration, fs, contour, settings["RD"], flow=True).data[:, 0]
-        # Radiation from the lips, a first difference; then RMS 1 where voiced.
-        lips = np.diff(glottal, prepend=0.0)
+        # Radiation from the lips, a first difference taken from the first
+        # value, so the sound does not open with a click; then RMS 1 where voiced.
+        lips = np.diff(glottal, prepend=glottal[:1])
         voice = av * lips / np.sqrt(np.mean(lips[glottal != 0] ** 2))
     # Noise modulated at F0 while voiced: full level in the first half of
     # each period, half in the second.
