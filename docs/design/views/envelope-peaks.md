@@ -224,7 +224,10 @@ says so and claims no more. Making the plain synthesis longer (20 s) or iteratin
 not help. It does not help rhythmic or impact sounds (tapping, a bongo
 loop, a typewriter, castanets), which the paper itself lists among the
 model's failures (rhythm). Imposing the alignment of extremes across
-channels stays an idea, not a plan.
+channels stays an idea, not a plan. Later (2026-10-15): a synthesis started
+from noise that already has pops keeps them, with no change to the
+synthesis; see `texture/pop-start.md`. The recipe stays for a background
+that needs turning down.
 
 **D6. Roadmap. Settled:** the README's "Sparse pops" item points
 here now; once built, the view moves to `docs/roadmap-done.md`. With D5

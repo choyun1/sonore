@@ -9,7 +9,8 @@ SNR history). Ablations (``ABLATIONS``) impose only some statistic classes
 and are written as ``<name>__<ablation>.flac``. For the recordings in
 ``BACKGROUNDS``, the recording with its pops limited away (``remove_pops``) is
 synthesized too, 10 s long, as ``<name>__background.flac``: the gallery adds
-pops back with ``so.event_train``. Synthesis takes about 2 s per
+pops back with ``so.event_train``. For those in ``POP_STARTS``, a synthesis
+from ``pop_start`` instead of noise is written as ``<name>__popstart.flac``. Synthesis takes about 2 s per
 iteration for 5 s of sound (about a minute per texture at 30 iterations), so
 results are cached here and the gallery build only reads them.
 """
@@ -23,7 +24,7 @@ import numpy as np
 
 import sonore as so
 from sonore.texture import PAPER_CLASSES, TextureStats
-from sonore.texture.synth import synthesize
+from sonore.texture.synth import pop_start, synthesize
 
 HERE = Path(__file__).parent.parent / "docs" / "textures"
 OUT = HERE / "synth"
@@ -36,6 +37,8 @@ ABLATIONS = {
 }
 ABLATED = ["applause", "stream", "fire"]
 BACKGROUNDS = ["fire"]
+POP_STARTS = ["fire"]
+START_SEED = 5
 BACKGROUND_SECONDS = 10.0
 SEED = 1
 
@@ -56,14 +59,16 @@ def remove_pops(sound):
     return sound * gain[:, None]
 
 
-def run(name, classes, tag, iters, dur, sound=None):
+def run(name, classes, tag, iters, dur, sound=None, start=None):
     target = TextureStats.measure(sound if sound is not None else so.load(HERE / f"{name}.flac"))
     t0 = time.time()
-    snd, rep = synthesize(target, duration=dur, classes=classes, rng=SEED, max_iter=iters)
+    snd, rep = synthesize(target, duration=dur, classes=classes, rng=SEED, max_iter=iters, init=start)
     # score every synthesis on all classes, including those it didn't impose
     full = target.snr(TextureStats.measure(snd, window="uniform"))
     out = f"{name}__{tag}" if tag else name
-    (snd * (0.05 / snd.rms)).save(OUT / f"{out}.flac")
+    # RMS 0.05, unless the peaks would clip the 16-bit file (a synthesis with pops can have a crest
+    # factor near 40 dB); the gallery sets the playback level itself
+    (snd * min(0.05 / snd.rms, 0.9 / snd.peak)).save(OUT / f"{out}.flac")
     info = {
         "classes": list(classes),
         "best_iteration": rep["best_iteration"],
@@ -89,17 +94,23 @@ def main():
     ap.add_argument("--dur", type=float, default=5.0)
     ap.add_argument("--no-ablations", action="store_true")
     ap.add_argument("--backgrounds-only", action="store_true", help="only the pop-free backgrounds")
+    ap.add_argument("--pop-starts-only", action="store_true", help="only the syntheses from pop_start")
     args = ap.parse_args()
     OUT.mkdir(exist_ok=True)
+    only = args.backgrounds_only or args.pop_starts_only
     for name in args.names:
-        if not args.backgrounds_only:
+        if not only:
             run(name, PAPER_CLASSES, "", args.iter, args.dur)
-        if name in ABLATED and not args.no_ablations and not args.backgrounds_only:
+        if name in ABLATED and not args.no_ablations and not only:
             for tag, classes in ABLATIONS.items():
                 run(name, classes, tag, args.iter, args.dur)
-        if name in BACKGROUNDS:
+        if name in BACKGROUNDS and not args.pop_starts_only:
             background = remove_pops(so.load(HERE / f"{name}.flac"))
             run(name, PAPER_CLASSES, "background", args.iter, BACKGROUND_SECONDS, sound=background)
+        if name in POP_STARTS and not args.backgrounds_only:
+            recording = so.load(HERE / f"{name}.flac")
+            start = pop_start(recording, args.dur, rng=START_SEED)
+            run(name, PAPER_CLASSES, "popstart", args.iter, args.dur, start=start)
 
 
 if __name__ == "__main__":

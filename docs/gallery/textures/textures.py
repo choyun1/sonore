@@ -248,6 +248,27 @@ fig, playhead = texture_fig(sound, original("fire"))
 sound = finish(synthesized("fire"))
 fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
 
+# %% [markdown]
+# The fire is the hard one. Its statistics come out matched, but its pops do not: from a noise
+# start they are wider than the recording's, there are more of them, and a pop is often a pop in
+# only half of the cochlear channels where in the recording it is in most of them. The
+# iterations never grow sharp, aligned events out of noise. Started instead from noise that
+# already has them, Gaussian noise times a sparse train of 4 ms bumps at power-law sizes
+# (`pop_start`, at the pop rate and exponent measured on the recording), the same iterations keep
+# the bumps and shape them, and the statistics match better too. This start is sonore's own; the
+# paper starts from noise. Its test is the measurements in
+# [`tools/check_pop_start_claims.py`](https://github.com/choyun1/sonore/blob/main/tools/check_pop_start_claims.py)
+# and one listener comparing the two by ear on this fire and two of the paper's. The start's rate
+# carries through to the result, which the statistics do not pin, and on recordings without heavy
+# pops it leaves a few behind, so it is for recordings whose pops measure heavy.
+
+# %% [about]
+# The same iterations started from noise with pops (`pop_start`). {{ report("fire__popstart") }}
+
+# %% [demo t04c] Fire, synthesized from a pop start
+sound = finish(synthesized("fire", "popstart"))
+fig, playhead = texture_fig(sound, original("fire"), synthetic=True)
+
 # %% [about]
 # Gas venting through a Yellowstone mud pot (NPS / Jennifer Jerrett, public domain).
 

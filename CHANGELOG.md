@@ -8,6 +8,16 @@ version (0.x.y) only fixes bugs.
 
 ### Added
 
+- `sonore.texture.synth.pop_start`: a starting sound for `synthesize` that
+  already has pops, Gaussian noise times a sparse train of 4 ms bumps at
+  power-law sizes, at the recording's own pop rate (`pop_rate`) and
+  exponent. Started from it instead of from noise, the synthesis of a
+  recording with heavy pops (a crackling fire) keeps the pops' width and
+  their alignment across channels and matches the statistics better (our
+  fire: 30 to 40 dB average SNR). `synthesize` is unchanged; it is passed
+  as `init=`. The start is sonore's own, where the paper starts from noise;
+  design and measurements in docs/design/texture/pop-start.md and
+  `tools/check_pop_start_claims.py`.
 - `so.chroma`: the power in each of the 12 pitch classes per time window,
   from the cosine filterbank on the cents scale with one band per semitone
   (A1 to A8 by default, A4 at `reference`), the octaves of each pitch class

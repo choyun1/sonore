@@ -521,6 +521,33 @@ fig, playhead = texture_fig(sound, original(&quot;fire&quot;))</code></pre></det
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;))
 fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</code></pre></details>
 </article>
+<p>The fire is the hard one. Its statistics come out matched, but its pops do not: from a noise
+start they are wider than the recording's, there are more of them, and a pop is often a pop in
+only half of the cochlear channels where in the recording it is in most of them. The
+iterations never grow sharp, aligned events out of noise. Started instead from noise that
+already has them, Gaussian noise times a sparse train of 4 ms bumps at power-law sizes
+(<code>pop_start</code>, at the pop rate and exponent measured on the recording), the same iterations keep
+the bumps and shape them, and the statistics match better too. This start is sonore's own; the
+paper starts from noise. Its test is the measurements in
+<a href="https://github.com/choyun1/sonore/blob/main/tools/check_pop_start_claims.py" target="_blank" rel="noopener"><code>tools/check_pop_start_claims.py</code></a>
+and one listener comparing the two by ear on this fire and two of the paper's. The start's rate
+carries through to the result, which the statistics do not pin, and on recordings without heavy
+pops it leaves a few behind, so it is for recordings whose pops measure heavy.</p>
+
+<article class="sound" id="d-t04c" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6520673750000003, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.0}]">
+  <div class="about">
+    <h3>Fire, synthesized from a pop start</h3>
+    <div class="desc"><p>The same iterations started from noise with pops (<code>pop_start</code>). Average statistic SNR 37 dB after 30 iterations.</p></div>
+    <audio controls preload="metadata" src="audio/t04c_fire_synthesized_from_a_pop_start.flac"></audio>
+    <p class="file">t04c_fire_synthesized_from_a_pop_start.flac, 5.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/t04c_fire_synthesized_from_a_pop_start.png" width="1000" height="660" alt="Plots of the fire, synthesized from a pop start sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(synthesized(&quot;fire&quot;, &quot;popstart&quot;))
+fig, playhead = texture_fig(sound, original(&quot;fire&quot;), synthetic=True)</code></pre></details>
+</article>
 
 <article class="sound" id="d-t05a" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.6332988564814815, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.4247063617950335, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
   <div class="about">
