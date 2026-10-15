@@ -294,27 +294,45 @@ class TestSplice:
         rise = 0.5 * (1 - np.cos(np.pi * np.arange(480) / 480))
         np.testing.assert_allclose(y[1360:1840], rise * x[16000 - 240 : 16000 + 240], atol=1e-15)
 
-    def test_shifts_keep_every_read_inside_the_sound(self):
+    def test_the_shift_maximizes_the_weighted_correlation(self):
+        # each shift's score is the cross-correlation over the cross-fade between the
+        # outgoing segment (faded out) and the incoming one, weighted by the rise; reads
+        # past either end of the sound count as silence, so a segment at the very start
+        # or end is searched like any other
         from sonore.core.processing import _aligned_overlap_add
 
         x = self.noise.data[:, 0]
         n_segment, n_fade, n_shift = 1600, 480, 240
+        before = n_fade // 2
+        rise = 0.5 * (1 - np.cos(np.pi * np.arange(n_fade) / n_fade))
+        fall = 1 - rise
+        padded = np.pad(x, n_shift + n_fade)
         rng = np.random.default_rng(0)
-        for _ in range(20):
-            # segments at both ends of the sound, where the search could reach outside
-            starts = rng.permutation([0, 1, 16000 - n_segment, 16000 - n_segment - 1, 4000, 9000])
+        for _ in range(10):
+            starts = rng.permutation([0, 16000 - n_segment, 4000, 9000])
             _, shifts = _aligned_overlap_add(x, starts, n_segment, n_fade, n_shift)
-            reads = (starts + shifts)[1:]  # the first segment is read where asked, with no search
-            assert np.all(reads - n_fade // 2 >= 0)
-            assert np.all(reads + n_segment + n_fade - n_fade // 2 <= len(x))
+            assert shifts[0] == 0
+            for i in range(1, len(starts)):
+                read = starts[i - 1] + shifts[i - 1]  # where the previous segment was read from
+                outgoing = padded[n_shift + n_fade + read + n_segment - before :][:n_fade] * fall
+                start, shift = starts[i], shifts[i]
+                scores = [
+                    np.dot(outgoing * rise, padded[n_shift + n_fade + start + s - before :][:n_fade])
+                    for s in range(-n_shift, n_shift + 1)
+                ]
+                assert shift == np.argmax(scores) - n_shift
 
-    def test_with_no_shift_inside_a_segment_is_read_at_its_start(self):
-        # a segment at 0 needs a shift of half a cross-fade to have its lead-in inside;
-        # with max_shift shorter than that, it is read where asked, with silence before it
+    def test_contiguous_segments_rebuild_the_sound_with_a_shift_allowed(self):
+        # noise: each segment's own continuation is the best match, at the sound's end too
+        starts = np.arange(10) * 0.1
+        y = so.splice(self.noise, starts, 0.1)
+        np.testing.assert_allclose(y.data, self.noise.data, atol=1e-12)
+
+    def test_without_crossfade_no_shift_is_made(self):
         from sonore.core.processing import _aligned_overlap_add
 
-        _, shifts = _aligned_overlap_add(self.noise.data[:, 0], np.array([8000, 0]), 1600, 480, 100)
-        assert shifts[1] == 0
+        _, shifts = _aligned_overlap_add(self.noise.data[:, 0], np.array([8000, 0, 3000]), 1600, 0, 240)
+        assert np.all(shifts == 0)
 
     @pytest.mark.parametrize(
         "call, message",

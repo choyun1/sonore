@@ -70,14 +70,17 @@ class TestQuilt:
         q = so.quilt(noise, 0.03, 6.0, rng=0, fade=fade)
         assert abs(20 * np.log10(q.rms / noise.rms) - expected_db) < 0.1
 
-    def test_the_first_segment_is_never_the_last(self):
-        # a short sound of 5 segments; the last one may only end a quilt
+    def test_the_first_segment_is_drawn_from_all_but_the_last(self):
+        # a short sound of 5 segments; the last one may only end a quilt, and every
+        # other one starts a quilt on some seed
         source = speechlike(0.3, 1)
         n = int(0.06 * FS)
         segments = source.data[:, 0].reshape(-1, n)
-        for seed in range(40):
+        firsts = set()
+        for seed in range(200):
             first = so.quilt(source, 0.06, 0.12, rng=seed, crossfade=0, max_shift=0).data[:n, 0]
-            assert not np.array_equal(first, segments[-1])
+            firsts.add(int(np.flatnonzero((segments == first).all(axis=1))[0]))
+        assert firsts == {0, 1, 2, 3}
 
     def test_one_spare_segment_is_enough(self):
         # a sound of 5 segments: a quilt of all 5 could be left with only the sound's own
@@ -87,6 +90,21 @@ class TestQuilt:
             so.quilt(source, 0.06, 0.3, rng=0)
         for seed in range(40):
             assert len(so.quilt(source, 0.06, 0.24, rng=seed, crossfade=0, max_shift=0)) == int(0.24 * FS)
+
+    @pytest.mark.parametrize("n_segments", [5, 10, 20])
+    def test_the_order_is_always_legal_with_one_spare_segment(self, n_segments):
+        # on random border changes, a quilt of all but one segment never repeats one, never
+        # takes the sound's own next segment, and ends on the last at most; holding the last
+        # segment back at the final step too would leave no choice on about a tenth of runs
+        from sonore.views.quilting import _choose_order
+
+        last = n_segments - 1
+        for seed in range(200):
+            change = np.random.default_rng(seed).random((n_segments, n_segments))
+            order = _choose_order(change, n_segments - 1, np.random.default_rng(seed))
+            assert len(set(order)) == len(order) == n_segments - 1
+            assert all(b != a + 1 for a, b in pairwise(order))
+            assert last not in order[:-1]
 
     @pytest.mark.parametrize(
         "options, message",

@@ -139,14 +139,18 @@ def splice(
     already written: the shift that maximizes the cross-correlation over the
     cross-fade, weighted by both ramps so that the middle of the cross-fade
     counts most. The correlation is not normalized, so a shift where the new
-    segment is louder can win. Shifts are limited to reads inside the sound;
-    when none is (a segment at the very start with ``max_shift`` shorter
-    than half the cross-fade), the segment is read at its start and the
-    samples outside the sound count as silence. ``max_shift=0`` joins at the
-    given starts exactly, and segments that follow each other in the sound
-    then join back into the sound itself. The first segment, with nothing
-    before it to match, is always read where asked; one that ends at the very
-    end of the sound fades out into silence at the first join.
+    segment is louder can win. A shift may take a read past either end of
+    the sound, where the samples count as silence, so a segment at the very
+    start or end of the sound is aligned like any other (the silence lowers
+    the score, so the search leans away from it). ``max_shift=0`` joins at
+    the given starts exactly, and segments that follow each other in the
+    sound then join back into the sound itself; with a shift allowed they
+    do too when their own continuation is the best match, as for noise, but
+    not always for a tone, where a louder stretch some periods away can win.
+    With ``crossfade=0`` there is nothing to align over, and the segments
+    are copied as they are. The first segment, with nothing before it to
+    match, is always read where asked; one that ends at the very end of the
+    sound fades out into silence at the first join.
 
     The ramps are raised cosines whose sum is 1 (``fade="equal_gain"``),
     which keeps the level of two segments that match, but loses power where
@@ -156,7 +160,9 @@ def splice(
     the cross-fade, the outgoing one as it would have continued and the
     incoming one, unfaded, and divides both ramps by
     ``sqrt(rise**2 + fall**2 + 2 * r * rise * fall)``, which keeps the
-    expected power constant across the join; ``r`` below 0 counts as 0, and
+    expected power constant across a join between two sides of one level
+    (between levels it moves from one to the other); ``r`` below 0 counts
+    as 0, and
     a join where either side is silent is made as with equal gain.
     Matching segments (``r = 1``) are joined as with equal gain, so
     contiguous segments still give back the sound.
@@ -211,7 +217,8 @@ def _aligned_overlap_add(
     after = n_fade - before
     rise = 0.5 * (1 - np.cos(np.pi * np.arange(n_fade) / n_fade)) if n_fade else np.zeros(0)
     fall = 1 - rise
-    # Zeros around the sound, so that any read the search can ask for exists.
+    # Silence around the sound: a read may run past either end by up to a
+    # shift and half a cross-fade.
     margin = before + after + n_shift
     source = np.pad(signal, margin)
     n_out = len(start_samples) * n_segment
@@ -227,10 +234,7 @@ def _aligned_overlap_add(
             target = written[i * n_segment : i * n_segment + n_fade] * rise
             block = source[margin + start - before - n_shift : margin + start - before + n_fade + n_shift]
             score = np.correlate(block, target, mode="valid")
-            inside = (start + shifts - before >= 0) & (start + shifts + n_segment + after <= len(signal))
-            if inside.any():
-                score[~inside] = -np.inf
-                shift = int(shifts[np.argmax(score)])
+            shift = int(shifts[np.argmax(score)])
         chosen[i] = shift
         read = margin + start + shift
         piece = source[read - before : read + n_segment + after].copy()
