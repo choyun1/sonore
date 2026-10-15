@@ -52,6 +52,13 @@ version (0.x.y) only fixes bugs.
   case, `#`/`♯` and `b`/`♭`, outer spaces ignored) and says it is equal
   temperament with A4 at 440 Hz (ISO 16) by default, as do `so.cents_scale`
   and `so.chroma`.
+- `so.quilt` needs a sound with at least one segment more than the quilt
+  uses. A quilt of every segment could be left with only a forbidden
+  segment for its last place, so it failed on some seeds and not others;
+  it is now refused for every seed.
+- `so.splice` and `so.quilt` docstrings say that a silent side of a join is
+  joined as with equal gain, that `splice` reads the first segment where
+  asked, and that a quilt never starts on the sound's last segment.
 - `so.cents_scale` returns the same scale for the same reference, so
   `cents_scale(440) == cents_scale()` and both equal the named `"cents"`
   scale; before, two calls gave scales that compared unequal.

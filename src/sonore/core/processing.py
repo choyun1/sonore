@@ -144,7 +144,9 @@ def splice(
     than half the cross-fade), the segment is read at its start and the
     samples outside the sound count as silence. ``max_shift=0`` joins at the
     given starts exactly, and segments that follow each other in the sound
-    then join back into the sound itself.
+    then join back into the sound itself. The first segment, with nothing
+    before it to match, is always read where asked; one that ends at the very
+    end of the sound fades out into silence at the first join.
 
     The ramps are raised cosines whose sum is 1 (``fade="equal_gain"``),
     which keeps the level of two segments that match, but loses power where
@@ -154,7 +156,8 @@ def splice(
     the cross-fade, the outgoing one as it would have continued and the
     incoming one, unfaded, and divides both ramps by
     ``sqrt(rise**2 + fall**2 + 2 * r * rise * fall)``, which keeps the
-    expected power constant across the join; ``r`` below 0 counts as 0.
+    expected power constant across the join; ``r`` below 0 counts as 0, and
+    a join where either side is silent is made as with equal gain.
     Matching segments (``r = 1``) are joined as with equal gain, so
     contiguous segments still give back the sound.
 

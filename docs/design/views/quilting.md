@@ -326,6 +326,13 @@ one on, and the list is short.
   `fade="equal_gain"`; the cross-check uses the latter. A test checks the
   level of noise spliced in 30 ms segments: -1.25 dB with equal gain, 0 dB
   adaptive.
+- **A spare segment (audit, 2026-10-15).** A quilt that needs every
+  segment of the source could be left, at its last place, with only the
+  current segment's own next one, which the rule forbids. On random
+  border-change matrices this happened on 36% of seeds with 5 segments and
+  2.5% with 40, and never with one segment to spare. Cho chose to refuse a
+  quilt unless the source has at least one segment more than it needs, so
+  the answer no longer depends on the seed.
 
 ## References
 

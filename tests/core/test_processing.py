@@ -252,10 +252,77 @@ class TestSplice:
         level_db = 10 * np.log10(np.mean(y.data**2) / np.mean(noise.data**2))
         assert abs(level_db - expected_db) < 0.15
 
+    @pytest.mark.parametrize("fade", ["equal_gain", "adaptive"])
+    def test_the_join_is_centered_and_follows_its_formula(self, fade):
+        # two unrelated stretches of noise, joined without shifts: around the join the
+        # output is the outgoing segment's continuation faded out plus the incoming one
+        # faded in, both divided by the adaptive gain (or not, with equal gain)
+        n_segment, n_fade = 1600, 480
+        a_start, b_start = 0, 8000
+        starts = [a_start / self.fs, b_start / self.fs]
+        y = so.splice(self.noise, starts, 0.1, max_shift=0, fade=fade).data[:, 0]
+        x = self.noise.data[:, 0]
+        rise = 0.5 * (1 - np.cos(np.pi * np.arange(n_fade) / n_fade))
+        fall = 1 - rise
+        join = np.arange(n_segment - n_fade // 2, n_segment + n_fade // 2)
+        outgoing = x[a_start + join]
+        incoming = x[b_start + join - n_segment]
+        norms = np.sqrt(np.dot(outgoing, outgoing) * np.dot(incoming, incoming))
+        r = max(np.dot(outgoing, incoming) / norms, 0)
+        gain = 1 / np.sqrt(rise**2 + fall**2 + 2 * r * rise * fall) if fade == "adaptive" else 1
+        np.testing.assert_allclose(y[join], (fall * outgoing + rise * incoming) * gain, atol=1e-12)
+        np.testing.assert_array_equal(y[: join[0]], x[a_start : a_start + join[0]])
+        after = join[-1] + 1
+        np.testing.assert_array_equal(y[after:], x[b_start + after - n_segment : b_start + n_segment])
+
+    def test_a_negative_correlation_counts_as_none(self):
+        # the incoming segment is the outgoing one's continuation negated (r = -1): the two
+        # cancel in the middle of the join, and the gain stays that of unrelated segments
+        # instead of growing without bound there
+        x = self.noise.data[:, 0]
+        flipped = so.Sound(np.concatenate([x, -x]), self.fs)
+        y = so.splice(flipped, [0.0, 1.1], 0.1, max_shift=0).data[:, 0]
+        join = np.arange(1600 - 240, 1600 + 240)
+        rise = 0.5 * (1 - np.cos(np.pi * np.arange(480) / 480))
+        fall = 1 - rise
+        np.testing.assert_allclose(y[join], (fall - rise) * x[join] / np.sqrt(rise**2 + fall**2), atol=1e-12)
+
+    def test_a_silent_side_is_joined_with_equal_gain(self):
+        # silence then noise: nothing to correlate, so the incoming noise only fades in
+        x = np.concatenate([np.zeros(16000), self.noise.data[:, 0]])
+        y = so.splice(so.Sound(x, self.fs), [0.0, 1.0], 0.1, max_shift=0).data[:, 0]
+        rise = 0.5 * (1 - np.cos(np.pi * np.arange(480) / 480))
+        np.testing.assert_allclose(y[1360:1840], rise * x[16000 - 240 : 16000 + 240], atol=1e-15)
+
+    def test_shifts_keep_every_read_inside_the_sound(self):
+        from sonore.core.processing import _aligned_overlap_add
+
+        x = self.noise.data[:, 0]
+        n_segment, n_fade, n_shift = 1600, 480, 240
+        rng = np.random.default_rng(0)
+        for _ in range(20):
+            # segments at both ends of the sound, where the search could reach outside
+            starts = rng.permutation([0, 1, 16000 - n_segment, 16000 - n_segment - 1, 4000, 9000])
+            _, shifts = _aligned_overlap_add(x, starts, n_segment, n_fade, n_shift)
+            reads = (starts + shifts)[1:]  # the first segment is read where asked, with no search
+            assert np.all(reads - n_fade // 2 >= 0)
+            assert np.all(reads + n_segment + n_fade - n_fade // 2 <= len(x))
+
+    def test_with_no_shift_inside_a_segment_is_read_at_its_start(self):
+        # a segment at 0 needs a shift of half a cross-fade to have its lead-in inside;
+        # with max_shift shorter than that, it is read where asked, with silence before it
+        from sonore.core.processing import _aligned_overlap_add
+
+        _, shifts = _aligned_overlap_add(self.noise.data[:, 0], np.array([8000, 0]), 1600, 480, 100)
+        assert shifts[1] == 0
+
     @pytest.mark.parametrize(
         "call, message",
         [
             (lambda x: so.splice(x, [0.0], 0.1, fade="power"), "fade"),
+            (lambda x: so.splice(x, [0.0], 1e-5, crossfade=0), "shorter than one sample"),
+            (lambda x: so.splice(x, [0.0], 0.1, max_shift=-0.01), "max_shift"),
+            (lambda x: so.splice(x, [], 0.1), "non-empty"),
             (lambda x: so.splice(x.to_channels(2), [0.0], 0.1), "mono"),
             (lambda x: so.splice(x, [0.95], 0.1), "inside the sound"),
             (lambda x: so.splice(x, [0.0], 0.1, crossfade=0.2), "crossfade"),
