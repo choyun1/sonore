@@ -259,18 +259,21 @@ class TestSplice:
         # faded in, both divided by the adaptive gain (or not, with equal gain)
         n_segment, n_fade = 1600, 480
         a_start, b_start = 0, 8000
-        y = so.splice(self.noise, [a_start / self.fs, b_start / self.fs], 0.1, max_shift=0, fade=fade).data[:, 0]
+        starts = [a_start / self.fs, b_start / self.fs]
+        y = so.splice(self.noise, starts, 0.1, max_shift=0, fade=fade).data[:, 0]
         x = self.noise.data[:, 0]
         rise = 0.5 * (1 - np.cos(np.pi * np.arange(n_fade) / n_fade))
         fall = 1 - rise
         join = np.arange(n_segment - n_fade // 2, n_segment + n_fade // 2)
         outgoing = x[a_start + join]
         incoming = x[b_start + join - n_segment]
-        r = max(np.dot(outgoing, incoming) / np.sqrt(np.dot(outgoing, outgoing) * np.dot(incoming, incoming)), 0)
+        norms = np.sqrt(np.dot(outgoing, outgoing) * np.dot(incoming, incoming))
+        r = max(np.dot(outgoing, incoming) / norms, 0)
         gain = 1 / np.sqrt(rise**2 + fall**2 + 2 * r * rise * fall) if fade == "adaptive" else 1
         np.testing.assert_allclose(y[join], (fall * outgoing + rise * incoming) * gain, atol=1e-12)
         np.testing.assert_array_equal(y[: join[0]], x[a_start : a_start + join[0]])
-        np.testing.assert_array_equal(y[join[-1] + 1 :], x[b_start + join[-1] + 1 - n_segment : b_start + n_segment])
+        after = join[-1] + 1
+        np.testing.assert_array_equal(y[after:], x[b_start + after - n_segment : b_start + n_segment])
 
     def test_a_negative_correlation_counts_as_none(self):
         # the incoming segment is the outgoing one's continuation negated (r = -1): the two
@@ -289,7 +292,7 @@ class TestSplice:
         x = np.concatenate([np.zeros(16000), self.noise.data[:, 0]])
         y = so.splice(so.Sound(x, self.fs), [0.0, 1.0], 0.1, max_shift=0).data[:, 0]
         rise = 0.5 * (1 - np.cos(np.pi * np.arange(480) / 480))
-        np.testing.assert_allclose(y[1600 - 240 : 1600 + 240], rise * x[16000 - 240 : 16000 + 240], atol=1e-15)
+        np.testing.assert_allclose(y[1360:1840], rise * x[16000 - 240 : 16000 + 240], atol=1e-15)
 
     def test_shifts_keep_every_read_inside_the_sound(self):
         from sonore.core.processing import _aligned_overlap_add

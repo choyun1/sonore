@@ -325,14 +325,9 @@ Only work still to do is listed here. Finished items are in
 [docs/roadmap-done.md](https://github.com/choyun1/sonore/blob/main/docs/roadmap-done.md), and changes by release in
 [CHANGELOG.md](https://github.com/choyun1/sonore/blob/main/CHANGELOG.md).
 
-**Next**
-
 - **Code audit.** A line-by-line human read of `src/sonore`, one module per
   sitting, each closing the gaps in its tests; progress in
   [issue #48](https://github.com/choyun1/sonore/issues/48).
-
-**Other**
-
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
   open quotient, spectral tilt, flutter, double pulsing, and its KLGLOTT88 source.
 - A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
@@ -343,6 +338,10 @@ Only work still to do is listed here. Finished items are in
 - On-demand download of other public HRIR databases.
 - A block-by-block (streaming) modulation spectrogram, as the reference for a
   live version on a phone: the modulation spectrum of everyday sounds as they happen.
+- Quilts longer than their source, which would reuse segments. The paper's rule picks
+  the best match every time, so a reused segment would start a loop that repeats; it
+  would need a random pick among the best few and a minimum gap before a segment
+  returns. That would be sonore's own variant, to be checked by ear for repeats.
 
 
 ## References

@@ -39,7 +39,8 @@ def quilt(
     ``segment_dur`` [s] long (Overath et al., 2015).
 
     The sound is cut into whole segments, and the quilt uses each one at
-    most once. The first segment is drawn at random from ``rng``. After
+    most once. The first segment is drawn at random from ``rng``, from all
+    but the sound's last segment unless the quilt is that one segment long. After
     segment ``k``, the next is the one whose join with ``k`` changes the
     cochleagram by as much as the sound itself changed after ``k``: the
     ``n`` that minimizes ``|d(k, n) - d(k, k + 1)|``, where ``d`` is the
@@ -61,8 +62,10 @@ def quilt(
 
     The quilt keeps the sound's level and is trimmed to ``duration``; the
     paper's band-limiting, pause removal and final fade are left to the
-    caller. The same ``rng`` seed and sound give the same quilt. Raises if
-    the sound has too few segments for the quilt. Mono only.
+    caller. The same ``rng`` seed and sound give the same quilt. The sound
+    must have at least one segment more than the quilt needs: with none to
+    spare, the rule can be left with only the sound's own next segment for
+    the last place, on some seeds and not others. Mono only.
     """
     if sound.n_channels != 1:
         raise ValueError(f"quilt needs a mono sound, not {sound.n_channels} channels")
@@ -78,10 +81,10 @@ def quilt(
     n_needed = math.ceil(n_out / n_segment)
     if n_out < 1:
         raise ValueError("duration is shorter than one sample")
-    if n_needed > n_segments:
+    if n_needed >= n_segments:
         raise ValueError(
             f"a {duration:g} s quilt of {segment_dur:g} s segments needs {n_needed} segments, "
-            f"but the sound ({len(sound) / fs:g} s) has {n_segments}"
+            f"so the sound must have at least {n_needed + 1}, but it ({len(sound) / fs:g} s) has {n_segments}"
         )
 
     bank = filterbank if filterbank is not None else cosine_filterbank(30, 20, min(10000, fs / 2))
@@ -111,7 +114,12 @@ def _choose_order(change: np.ndarray, n_needed: int, rng: np.random.Generator) -
     """The paper's rule on a matrix of border changes: a random first
     segment, then each time the unused segment whose change from the current
     one is closest to the change the sound made after it, never the sound's
-    own next segment; the last segment only ends the order."""
+    own next segment; the last segment only ends the order.
+
+    With at least one segment more than the order needs, a choice is always
+    left: before the last step at most two unused segments are blocked (the
+    next one and the last one) and at least three are unused, and at the last
+    step only the next one is blocked and at least two are unused."""
     n_segments = len(change)
     last = n_segments - 1
     current = int(rng.integers(n_segments if n_needed == 1 else last))
@@ -124,11 +132,6 @@ def _choose_order(change: np.ndarray, n_needed: int, rng: np.random.Generator) -
         blocked[current + 1] = True
         if position < n_needed - 1:
             blocked[last] = True
-        if blocked.all():
-            raise ValueError(
-                f"the sound's {n_segments} segments ran out after {position} of the {n_needed} "
-                "the quilt needs; use a longer sound or a shorter quilt"
-            )
         mismatch[blocked] = np.inf
         current = int(np.argmin(mismatch))
         order.append(current)

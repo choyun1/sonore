@@ -59,7 +59,7 @@ class TestQuilt:
         assert 0.7 < q.rms / self.source.rms < 1.4
 
     def test_too_short_a_sound_is_refused(self):
-        with pytest.raises(ValueError, match="needs 34 segments, but the sound"):
+        with pytest.raises(ValueError, match="needs 34 segments, so the sound must have at least 35"):
             so.quilt(self.source, 0.12, 4.0, rng=0)
 
     @pytest.mark.parametrize("fade, expected_db", [("equal_gain", -1.0), ("adaptive", 0.1)])
@@ -78,6 +78,15 @@ class TestQuilt:
         for seed in range(40):
             first = so.quilt(source, 0.06, 0.12, rng=seed, crossfade=0, max_shift=0).data[:n, 0]
             assert not np.array_equal(first, segments[-1])
+
+    def test_one_spare_segment_is_enough(self):
+        # a sound of 5 segments: a quilt of all 5 could be left with only the sound's own
+        # next segment for its last place, on some seeds, so it is refused; 4 always work
+        source = speechlike(0.3, 1)
+        with pytest.raises(ValueError, match="at least 6, but it"):
+            so.quilt(source, 0.06, 0.3, rng=0)
+        for seed in range(40):
+            assert len(so.quilt(source, 0.06, 0.24, rng=seed, crossfade=0, max_shift=0)) == int(0.24 * FS)
 
     @pytest.mark.parametrize(
         "options, message",
