@@ -180,10 +180,17 @@ def _lock_phases(
 def time_stretch(sound: Sound, factor: float, *, win_dur: float = 46e-3, phase_lock: bool = True) -> Sound:
     """Change duration by ``factor`` (2 = twice as long) without changing pitch.
 
-    The synthesis hop is fixed at a quarter window; the analysis hop is
-    ``synthesis_hop / factor`` (rounded), so the achieved factor can differ
-    slightly from the requested one for extreme values. The output length is
-    ``round(len(sound) * factor)``.
+    The standard phase vocoder: the synthesis hop is fixed at a quarter
+    window and the analysis hop is ``synthesis_hop / factor`` rounded to
+    whole samples, so the content is stretched by ``synthesis_hop /
+    analysis_hop``. The output length is ``round(len(sound) * factor)``
+    whatever that ratio, so where the two differ the end is cut off or
+    followed by silence. With the default 46 ms window the gap is at most
+    1.1% for factors 1 to 4 and 2.8% for 4 to 10 at 16 kHz (0.4% and 1.0% at
+    44.1 kHz), and grows beyond. A longer window means longer hops and a
+    smaller gap: twice the ``win_dur`` halves it, at the cost of time
+    resolution (transients smear over a longer window). Measured by
+    tools/measure_docstring_numbers.py.
     """
     if factor <= 0:
         raise ValueError("factor must be positive")

@@ -17,6 +17,7 @@ import scipy.fft as sp_fft
 import sonore as so
 from sonore.core.fft import fast_padding
 from sonore.sources.ripples import _evaluate
+from sonore.views.phasevocoder import _win_len
 
 FS = 16000
 
@@ -42,6 +43,23 @@ def phase_vocoder_resynthesis():
         x = so.gaussian_noise(1.0, FS, rng=seed).ramp(20e-3)
         r, level = correlation_and_level(x, so.pv_analyze(x).to_sound(), FS)
         print(f"  Gaussian noise, seed {seed}: r = {r:.3f}, level {level:+.2f} dB")
+
+
+def time_stretch_factor_error():
+    """time_stretch: the content is stretched by synthesis_hop / analysis_hop,
+    with the analysis hop rounded to whole samples; the worst gap to the
+    requested factor over each range of factors."""
+    print("time_stretch (views/phasevocoder.py), achieved against requested factor:")
+    for fs in (16000, 44100):
+        for win_dur in (0.046, 0.093):
+            synthesis_hop = _win_len(win_dur, fs) // 4
+            worst = []
+            for low, high in ((1, 4), (4, 10), (10, 30)):
+                factors = np.linspace(low, high, 5000)
+                analysis_hop = np.maximum(1, np.round(synthesis_hop / factors))
+                error = np.abs(synthesis_hop / analysis_hop / factors - 1).max()
+                worst.append(f"{low}-{high}: {100 * error:.2f}%")
+            print(f"  {fs} Hz, win_dur {win_dur:g} s (synthesis hop {synthesis_hop}): " + ", ".join(worst))
 
 
 def ripple_energy_outside_rate_range():
@@ -112,6 +130,7 @@ def filterbank_padding():
 
 if __name__ == "__main__":
     phase_vocoder_resynthesis()
+    time_stretch_factor_error()
     ripple_energy_outside_rate_range()
     fft_padding()
     filterbank_padding()

@@ -95,6 +95,10 @@ version (0.x.y) only fixes bugs.
   sizes, and a smaller `fraction` fits them. They give Gaussian noise's
   exponent at 8, 16 and 44.1 kHz instead of "20 to 40". The design note
   adds the measurements and marks the survey's tapping as probably sparse.
+- `so.time_stretch` docstring says how far the achieved stretch can be from
+  the requested factor (at most 1.1% for factors 1 to 4 at 16 kHz with the
+  default window, measured by tools/measure_docstring_numbers.py), that the
+  end is then cut or silent, and that a longer `win_dur` narrows the gap.
 
 - Gallery regrouped: Synthetic sounds (was Stimuli), Seeing and changing
   sound (Seeing speech, Analysis and resynthesis, Phase vocoder and the
