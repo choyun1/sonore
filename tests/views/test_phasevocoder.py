@@ -81,3 +81,76 @@ class TestPhaseVocoder:
         stretched = a.to_sound(time_scale=2.0)
         assert len(stretched) == 2 * len(x)
         assert abs(cents(dominant_freq(stretched[0.4:1.6]), 500)) < 2
+
+
+def _onsets(sound, threshold=0.5):
+    """Times where the envelope rises through `threshold` of its peak after
+    being below it for at least 0.1 s."""
+    envelope = np.abs(sound.data[:, 0])
+    width = int(0.01 * sound.fs)
+    envelope = np.convolve(envelope, np.ones(width) / width, "same")
+    above = envelope > threshold * envelope.max()
+    rises = np.flatnonzero(above[1:] & ~above[:-1]) + 1
+    quiet_before = [not above[max(0, rise - int(0.1 * sound.fs)) : rise].any() for rise in rises]
+    return rises[quiet_before] / sound.fs
+
+
+def _two_bursts():
+    """A 440 Hz tone on from 0.2 to 0.4 s and from 0.7 to 0.9 s, with 10 ms ramps."""
+    t = np.arange(FS) / FS
+    ramp = 0.01
+    gate = sum(np.clip(np.minimum(t - on, off - t) / ramp, 0, 1) for on, off in ((0.2, 0.4), (0.7, 0.9)))
+    return so.Sound(np.sin(2 * np.pi * 440 * t) * gate, FS)
+
+
+class TestStretchTiming:
+    @pytest.mark.parametrize("factor", [0.6, 3.0, 7.7])
+    def test_events_land_at_factor_times_their_time(self, factor):
+        # 7.7 is where rounding the analysis hop (to 7.68) and truncating it
+        # (to 7.80) differ by 1.5%.
+        onsets = _onsets(so.time_stretch(_two_bursts(), factor))
+        assert len(onsets) == 2
+        assert onsets[1] - onsets[0] == pytest.approx(0.5 * factor, rel=0.005)
+        assert onsets[0] == pytest.approx(0.2 * factor, abs=0.01 * factor + 0.005)
+
+    def test_length_rounds(self):
+        x = so.Sound(so.pure_tone(1.1, FS, 440.0).data[:44101], FS)  # 44101 * 1.5 = 66151.5
+        assert len(so.time_stretch(x, 1.5)) == 66152
+        assert len(so.pv_analyze(x).to_sound(time_scale=1.5)) == 66152
+
+    def test_factor_must_be_positive_and_silence_stays_silent(self):
+        with pytest.raises(ValueError, match="positive"):
+            so.time_stretch(so.pure_tone(0.1, FS, 440.0), 0)
+        silence = so.time_stretch(so.Sound(np.zeros(4410), FS), 2.0)
+        assert len(silence) == 8820 and not silence.data.any()
+
+
+class TestAnalysisOptions:
+    def test_window_is_even_and_hop_is_as_asked(self):
+        x = so.pure_tone(0.5, FS, 1234.5)
+        a = so.pv_analyze(x, win_dur=0.023, hop_dur=0.002)  # 1014.3 samples: rounds to 1014
+        assert a.n_win % 2 == 0 and a.hop == round(0.002 * FS)
+        assert so.pv_analyze(x, win_dur=0.0231).n_win % 2 == 0  # 1018.7 samples, odd once rounded
+        k = np.argmax(a.magnitude[0].mean(axis=1))
+        assert np.median(a.freq[0, k, 3:-3]) == pytest.approx(1234.5, abs=0.1)
+
+    def test_oscillator_bank_time_scale_moves_events(self):
+        stretched = so.pv_analyze(_two_bursts()).to_sound(time_scale=2.0)
+        onsets = _onsets(stretched)
+        assert len(onsets) == 2
+        assert onsets[1] - onsets[0] == pytest.approx(1.0, rel=0.01)
+
+    def test_oscillator_bank_drops_partials_above_nyquist_and_quiet_bins(self):
+        t = np.arange(FS) / FS
+        x = so.Sound(np.sin(2 * np.pi * 15000 * t) + 1e-3 * np.sin(2 * np.pi * 1000 * t), FS).ramp(20e-3)
+        a = so.pv_analyze(x)
+        # 15 kHz doubled is 30 kHz, above Nyquist: only the quiet 2 kHz partial is left
+        doubled = a.to_sound(freq_map=2.0)[0.2:0.8]
+        assert so.rms(doubled.data) < 2e-3
+        assert abs(cents(dominant_freq(doubled), 2000)) < 5
+        # a floor of -40 dB skips the 1 kHz partial, 60 dB down
+        quiet = a.to_sound(floor_db=-40.0)[0.2:0.8]
+        assert abs(cents(dominant_freq(quiet), 15000)) < 2
+        spectrum = np.abs(np.fft.rfft(quiet.data[:, 0]))
+        frequencies = np.fft.rfftfreq(len(quiet), 1 / FS)
+        assert spectrum[np.abs(frequencies - 1000) < 20].max() < 1e-5 * spectrum.max()
