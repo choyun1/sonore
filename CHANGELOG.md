@@ -99,6 +99,11 @@ version (0.x.y) only fixes bugs.
   the requested factor (at most 1.1% for factors 1 to 4 at 16 kHz with the
   default window, measured by tools/measure_docstring_numbers.py), that the
   end is then cut or silent, and that a longer `win_dur` narrows the gap.
+- `so.gaussian_spectrogram` docstring: the example passes `carrier=` (it
+  raised a TypeError since `to_sound` options became keyword-only) and
+  normalizes the sound, and a paragraph gives the sound's level (RMS 29 dB
+  above 1 at the median, 21 to 43 dB for 90% of draws, measured by
+  tools/measure_docstring_numbers.py). Output unchanged.
 
 - Gallery regrouped: Synthetic sounds (was Stimuli), Seeing and changing
   sound (Seeing speech, Analysis and resynthesis, Phase vocoder and the

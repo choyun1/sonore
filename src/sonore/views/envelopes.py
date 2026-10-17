@@ -21,7 +21,7 @@ Envelopes resampled to a lower rate are upsampled automatically (band-limited:
 polyphase, or the FFT for unusual rate ratios; clipped at zero) when applied
 to a sound.
 
-``to_sound(carrier)`` is the route back: the envelopes imposed on a carrier.
+``to_sound(carrier=...)`` is the route back: the envelopes imposed on a carrier.
 :func:`channel_vocode` is a channel vocoder: a sound's own band envelopes imposed
 on a carrier. With bands of noise as the carrier (the default) it is the
 noise vocoder of Shannon et al. (1995), as in simulations of cochlear-implant
