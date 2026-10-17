@@ -71,6 +71,17 @@ version (0.x.y) only fixes bugs.
   Any class of your own with that method already worked; now its type says
   so. `docs/design/philosophy.md` states when sonore uses a class's
   constructor and when a factory function.
+- `DynamicRipple`'s rate and density patterns now depend only on `seed`.
+  Before, the same seed gave a different pattern for each duration (seed 3's
+  rate at 0.5 s was 121, 169 and 226 Hz for sounds of 1, 2 and 4 s); now a
+  shorter sound gets the start of a longer one's pattern. Each trajectory has
+  its own generator, and the filtered noise is mapped to uniform with its
+  exact spread, so the values are uniform over the range across draws. Every
+  `DynamicRipple` pattern changes, and the gallery's dynamic moving ripple is
+  rebuilt. The docstring also gives the top octave's share of modulation
+  power outside `rate_range` (about 12%; the 7% is over all 5 octaves),
+  measured by `tools/measure_docstring_numbers.py`, and new tests cover the
+  ripple checks, carriers and plot that had none.
 - Texture synthesis, from an independent re-audit of `sonore.texture`
   (no change to any output): the full-loop test now checks the result's
   subband levels and long-term spectrum against the target's, and new

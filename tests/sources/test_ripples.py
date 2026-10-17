@@ -218,3 +218,19 @@ class TestDynamicRippleGaps:
 
     def test_a_new_seed_each_time(self):
         assert so.DynamicRipple().seed != so.DynamicRipple().seed
+
+    def test_a_shorter_pattern_is_the_start_of_a_longer_one(self):
+        pattern = so.DynamicRipple(seed=3)
+        short_t, long_t = np.arange(0, 1, 1e-3), np.arange(0, 4, 1e-3)
+        for short, long in zip(pattern.trajectories(short_t), pattern.trajectories(long_t), strict=True):
+            # the filters settle within the extra second at each end: 0.06 Hz at most, at the very end
+            np.testing.assert_allclose(short[:500], long[:500], atol=1e-2 * np.ptp(long))
+            np.testing.assert_allclose(short, long[:1000], atol=1e-3 * 700)
+
+    def test_trajectories_are_uniform_across_draws(self):
+        # each trajectory is Gaussian noise of known spread mapped through its distribution function
+        rates = np.concatenate(
+            [so.DynamicRipple(seed=seed).trajectories(np.arange(0, 1, 1e-3))[0] for seed in range(200)]
+        )
+        counts, _ = np.histogram(rates, bins=7, range=(-350, 350))
+        assert counts.min() > 0.85 * counts.max()  # 0.86; standardizing each draw gave 0.72
