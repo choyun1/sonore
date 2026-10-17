@@ -480,14 +480,17 @@ def exponential_chirp(duration: float, fs: float, f0: float, f1: float, *, phase
 
 # ------------------------------------------------------------------- noises
 @runtime_checkable
-class _MeasuredSpectrum(Protocol):
-    """A sonore :class:`~sonore.views.spectra.Spectrum` (named by what it does,
-    since sources sit below views)."""
+class MeasuredSpectrum(Protocol):
+    """Anything with ``level_in_range(freqs)``, levels [dB] that fall to a
+    floor outside the frequencies it was measured at, such as a
+    :class:`~sonore.views.spectra.Spectrum` (named by what it does, since
+    sources sit below views)."""
 
-    def _level_in_range(self, freqs: np.ndarray) -> np.ndarray: ...
+    def level_in_range(self, freqs: np.ndarray) -> np.ndarray: ...
 
 
-SpectrumLike = Callable[[np.ndarray], np.ndarray] | tuple[ArrayLike, ArrayLike] | _MeasuredSpectrum
+#: A target spectrum: a function ``f -> dB``, a ``(freqs, dB)`` pair, or a :class:`MeasuredSpectrum`.
+SpectrumLike = Callable[[np.ndarray], np.ndarray] | tuple[ArrayLike, ArrayLike] | MeasuredSpectrum
 
 
 def _spectral_gain(
@@ -505,8 +508,8 @@ def _spectral_gain(
             # any reference frequency would do, since the output is scaled to RMS 1
             gain *= np.where(freqs > 0, (freqs / 1000.0) ** (tilt / (20 * np.log10(2))), 0.0)
     if spectrum is not None:
-        if isinstance(spectrum, _MeasuredSpectrum):  # a sonore Spectrum: silent outside its frequencies
-            level_db = spectrum._level_in_range(freqs)
+        if isinstance(spectrum, MeasuredSpectrum):  # e.g. a sonore Spectrum: silent outside its frequencies
+            level_db = spectrum.level_in_range(freqs)
         elif callable(spectrum):
             level_db = spectrum(freqs)
         else:

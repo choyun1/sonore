@@ -28,7 +28,7 @@ from sonore.core.processing import (
 )
 from sonore.core.sound import Sound
 from sonore.core.utils import as_rng, db_to_amp, n_samples, time_axis
-from sonore.sources.waveforms import RNG, _finish, glottal_source, harmonic_complex
+from sonore.sources.waveforms import RNG, F0Contour, _finish, glottal_source, harmonic_complex
 
 __all__ = ["KLATT_DEFAULTS", "klatt_synthesize", "klatt_continuum"]
 
@@ -104,10 +104,10 @@ def _rgp(f, fs: float):
 def klatt_synthesize(
     duration: float,
     fs: float,
-    params: Mapping[str, Track] | None = None,
+    params: Mapping[str, Track | F0Contour] | None = None,
     *,
     rng: RNG = None,
-    **kwargs: Track,
+    **kwargs: Track | F0Contour,
 ) -> Sound:
     """Speech from Klatt's (1980) parameters, as a cascade/parallel formant synthesizer.
 
@@ -166,14 +166,17 @@ def klatt_synthesize(
     unknown = sorted(set(given) - set(settings))
     if unknown:
         raise ValueError(f"unknown Klatt parameter(s) {unknown}; the names are {sorted(settings)}")
-    settings.update(given)
+    for name, value in given.items():
+        match value:
+            case object(t=times, f0=values) if name == "F0":  # an F0Track or any F0 contour object
+                settings[name] = (np.asarray(times, float), np.ravel(values))
+            case _:
+                settings[name] = cast(Track, value)
     source_switch = settings["SS"]
     if not isinstance(source_switch, numbers.Real) or source_switch not in (1, 2, 3):
         raise ValueError(f"SS must be 1 (impulses) or 3 (LF pulses), got {source_switch!r}")
     if source_switch == 2:
         raise ValueError("SS = 2 (the KLGLOTT88 source) is not implemented; use 1 or 3")
-    if hasattr(settings["F0"], "f0"):  # an F0Track or any F0 contour object
-        settings["F0"] = (np.asarray(settings["F0"].t, float), np.ravel(settings["F0"].f0))
     length = n_samples(duration, fs)
     t = time_axis(length, fs)
     rng = as_rng(rng)

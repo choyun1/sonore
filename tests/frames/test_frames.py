@@ -269,7 +269,7 @@ def test_constant_schedule_is_the_gabor_frame(name):
 def test_tv_gabor_reconstructs_exactly(name, n_channels):
     frame, x = TVS[name], _noise(n_channels, 15)
     C = frame.analyze(x)
-    assert C.data.shape == (n_channels, frame.layout(FS).n_fft // 2 + 1, len(frame.times))
+    assert C.data.shape == (n_channels, frame._layout(FS).n_fft // 2 + 1, len(frame.times))
     assert np.allclose(C.to_sound().data, x.data, rtol=0, atol=1e-12)
     lo, hi = frame.frame_bounds(N, FS)
     assert 0 < lo < 0.9 * hi
@@ -279,7 +279,7 @@ def test_tv_gabor_reconstructs_exactly(name, n_channels):
 def test_tv_gabor_frame_power_formula(name):
     """s(t) = M sum_q |w_q(t - a_q)|^2, written out window by window."""
     frame = TVS[name]
-    lay, s = frame.layout(FS), np.zeros(N)
+    lay, s = frame._layout(FS), np.zeros(N)
     for c, L in zip(lay.centers, lay.lengths, strict=True):
         t = c - L // 2 + np.arange(L)
         ok = (t >= 0) & (t < N)
@@ -316,7 +316,7 @@ def test_tv_gabor_gap_analyzes_but_refuses_to_synthesize():
 def test_tvstft_container():
     frame = TVS["tv hann"]
     C = frame.analyze(_noise(1, 16))
-    assert np.array_equal(C.t, frame.layout(FS).centers / FS) and np.all(np.diff(C.t) > 0)
+    assert np.array_equal(C.t, frame._layout(FS).centers / FS) and np.all(np.diff(C.t) > 0)
     assert C.f[-1] == FS / 2 and C.magnitude.shape == C.data.shape and C.db.shape == C.data.shape
     half = 0.5 * C
     assert isinstance(half, so.TVSTFT) and np.allclose(half.to_sound().data, 0.5 * C.to_sound().data)

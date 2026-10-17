@@ -360,6 +360,17 @@ class TestAuditSitting4:
         same = so.gaussian_noise(1, FS, spectrum=lambda f: np.interp(f, *table), rng=1)
         np.testing.assert_allclose(same.data, so.gaussian_noise(1, FS, spectrum=table, rng=1).data)
 
+    def test_any_measured_spectrum_is_read_by_level_in_range(self):
+        # an object of your own with level_in_range shapes the noise as a Spectrum does
+        measured = so.long_term_spectrum(so.gaussian_noise(2, FS, tilt=-3, rng=0))
+
+        class OwnSpectrum:
+            def level_in_range(self, freqs):
+                return measured.level_in_range(freqs)
+
+        own = so.gaussian_noise(1, FS, spectrum=OwnSpectrum(), rng=1)
+        np.testing.assert_array_equal(own.data, so.gaussian_noise(1, FS, spectrum=measured, rng=1).data)
+
     @staticmethod
     def irn_by_iteration(x, delay_samples, gain, iterations, network):
         """Iterated rippled noise in the time domain, delaying circularly as an FFT does."""
