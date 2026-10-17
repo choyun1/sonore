@@ -15,6 +15,10 @@ Patterns
 :class:`DynamicRipple`
     A dynamic moving ripple (Escabí & Schreiner, 2002) whose rate and density
     wander slowly and randomly within given ranges, for STRF estimation.
+Any object with an ``envelope(t, x)`` method
+    An :class:`EnvelopePattern`: it returns the envelope with shape
+    ``(len(x), len(t))``. The patterns above are such objects; a class of
+    your own works without inheriting anything.
 Any callable ``f(t, x)``
     Evaluated with ``t`` as a row and ``x`` as a column, so ordinary numpy
     broadcasting works, e.g. ``lambda t, x: 1 + 0.5 * np.sin(2*np.pi*(3*t + x**2))``.
@@ -36,7 +40,7 @@ from __future__ import annotations
 import warnings
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Protocol
 
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
@@ -245,7 +249,16 @@ class DynamicRipple(_Pattern):
         return db_to_amp(level_db)
 
 
-Pattern = _Pattern | Callable[[np.ndarray, np.ndarray], np.ndarray]
+class EnvelopePattern(Protocol):
+    """Anything with an ``envelope(t, x)`` method returning the envelope at
+    times ``t`` [s] and ``x`` octaves above ``f_lo``, with shape
+    ``(len(x), len(t))``, such as a :class:`Ripple` or :class:`DynamicRipple`."""
+
+    def envelope(self, t: np.ndarray, x: np.ndarray) -> np.ndarray: ...
+
+
+#: A pattern: an :class:`EnvelopePattern`, or a callable ``f(t, x)`` that broadcasts.
+Pattern = EnvelopePattern | Callable[[np.ndarray, np.ndarray], np.ndarray]
 
 
 def _evaluate(pattern: Pattern, t: np.ndarray, x: np.ndarray) -> np.ndarray:

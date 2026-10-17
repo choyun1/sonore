@@ -79,6 +79,18 @@ class TestRipples:
         rate, density = so.ModulationSpectrum.octave(s, f_lo=250, f_hi=FAST_HI).peak()
         assert rate == pytest.approx(6, abs=1) and density == pytest.approx(1, abs=0.15)
 
+    def test_own_pattern_class(self):
+        # any object with envelope(t, x) is a pattern, without inheriting from sonore's classes
+        ripple = so.Ripple(4, 1)
+
+        class OwnPattern:
+            def envelope(self, t, x):
+                return ripple.envelope(t, x)
+
+        own = so.ripple_sound(OwnPattern(), 0.5, FAST, f_hi=FAST_HI, rng=0)
+        reference = so.ripple_sound(ripple, 0.5, FAST, f_hi=FAST_HI, rng=0)
+        np.testing.assert_array_equal(own.data, reference.data)
+
     def test_sound_carrier(self):
         speechlike = so.harmonic_complex(1.0, FAST, 120, harmonics=np.arange(1, 50), phases="random", rng=0)
         s = so.ripple_sound(so.Ripple(-4, 1), 1.0, FAST, f_hi=FAST_HI, carrier=speechlike, rng=0)
