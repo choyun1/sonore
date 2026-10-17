@@ -126,3 +126,111 @@ class TestDynamicRipple:
         d = so.DynamicRipple(depth=45, seed=0)
         env = d.envelope(np.arange(0, 0.2, 1e-3), np.linspace(0, 5, 200))
         assert 20 * np.log10(env.max() / env.min()) == pytest.approx(45, abs=0.5)
+
+
+class TestRippleGaps:
+    def test_phase_and_scale_check(self):
+        crest = so.Ripple(0, 0, depth=0.5, phase=np.pi / 2).envelope(np.array([0.0]), np.array([0.0]))
+        assert crest[0, 0] == pytest.approx(1.5)
+        with pytest.raises(ValueError, match="scale"):
+            so.Ripple(4, 1, scale="log")
+
+    def test_negative_patterns_are_refused(self):
+        with pytest.raises(ValueError, match="non-negative"):
+            so.ripple_sound(lambda t, x: np.sin(2 * np.pi * 4 * t) + 0 * x, 0.5, FS, rng=0)
+
+    def test_every_component_and_dynamic_density_is_checked(self):
+        with pytest.warns(UserWarning, match="Nyquist"):
+            so.ripple_sound(so.Ripple(4, 1, depth=0.4) + so.Ripple(8, 12, depth=0.4), 0.1, FS, rng=0)
+        with pytest.warns(UserWarning, match="Nyquist"):
+            so.ripple_sound(so.DynamicRipple(density_range=(0, 12), seed=0), 0.1, FS, rng=0)
+
+    def test_refusals(self):
+        with pytest.raises(ValueError, match="Nyquist"):
+            so.ripple_sound(so.Ripple(4, 1), 0.1, 16000, f_hi=8000)
+        with pytest.raises(ValueError, match="no harmonics"):
+            so.ripple_sound(so.Ripple(4, 1), 0.1, FS, carrier="harmonic", f0=9000)
+        with pytest.raises(ValueError, match="same fs"):
+            so.ripple_sound(so.Ripple(4, 1), 0.1, FS, carrier=so.gaussian_noise(0.05, FS, rng=0))
+        with pytest.raises(ValueError, match="carrier must be"):
+            so.ripple_sound(so.Ripple(4, 1), 0.1, FS, carrier="pink")
+
+    @pytest.mark.parametrize("carrier", ["noise", "low-noise"])
+    def test_channel_carriers_have_rms_1(self, carrier):
+        sound = so.ripple_sound(so.Ripple(4, 1), 0.2, FAST, f_hi=FAST_HI, carrier=carrier, rng=0)
+        assert sound.rms == pytest.approx(1)
+
+    def test_carriers_span_f_lo_to_f_hi(self):
+        def spectrum(sound):
+            power = np.abs(np.fft.rfft(sound.data[:, 0])) ** 2
+            return np.fft.rfftfreq(len(sound), 1 / sound.fs), power / power.sum()
+
+        flat = so.Ripple(0, 0, depth=0)
+        # tones from f_lo up to and including f_hi (250 Hz to 8 kHz is 100 steps of 1/20 octave)
+        freqs, power = spectrum(so.ripple_sound(flat, 1.0, FS, rng=0))
+        assert power[np.abs(freqs - 8000) < 2].sum() > 0.2 / 101
+        # harmonics of 40 Hz from the first at or above 250 Hz (280 Hz), none below
+        freqs, power = spectrum(
+            so.ripple_sound(flat, 1.0, FAST, f_hi=FAST_HI, carrier="harmonic", f0=40, rng=0)
+        )
+        assert power[freqs < 260].sum() < 1e-6
+
+    def test_noise_bands_add_up_flat(self):
+        # an impulse through the noise carrier's bands: squared responses sum to a flat spectrum
+        from sonore.sources.ripples import _flat_noise_bands
+
+        bank = so.cosine_filterbank(f_lo=250, f_hi=6000, spacing=1 / 24, scale="octave")
+        impulse = so.Sound(np.r_[1.0, np.zeros(FAST - 1)], FAST)
+        total = _flat_noise_bands(impulse, bank).data[:, 1:-1, 0].sum(axis=1)
+        level = 20 * np.log10(np.abs(np.fft.rfft(total)))
+        freqs = np.fft.rfftfreq(FAST, 1 / FAST)
+        inside = (freqs > 300) & (freqs < 5000)
+        trend = np.polyval(np.polyfit(np.log2(freqs[inside]), level[inside], 3), np.log2(freqs[inside]))
+        assert np.ptp(level[inside] - trend) < 0.2  # 0.03 dB; unsquared responses give 3 dB
+
+    def test_plot_resolves_the_fastest_ripple(self):
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+
+        ax = so.Ripple(100, 1).plot(duration=1.0)  # 8 points per cycle: 800 time points
+        assert ax.collections[0].get_array().size == 200 * 800
+        plt.close(ax.figure)
+
+
+class TestDynamicRippleGaps:
+    def test_fixed_rate_and_density_make_a_moving_ripple(self):
+        # equal ends pin rate(t) and density(t); the phase integral starts one step in
+        t, octaves = np.arange(0, 0.2, 1 / 8000), np.linspace(0, 5, 41)
+        pinned = so.DynamicRipple(rate_range=(10, 10), density_range=(2, 2), seed=0)
+        ripple = so.Ripple(10, 2, depth=45, scale="db", phase=2 * np.pi * 10 / 8000)
+        np.testing.assert_allclose(pinned.envelope(t, octaves), ripple.envelope(t, octaves), rtol=1e-9)
+
+    def test_rate_and_density_change_at_their_own_speeds(self):
+        t = np.arange(0, 20, 1e-3)
+        freqs = np.fft.rfftfreq(len(t), 1e-3)
+        rate, density = so.DynamicRipple(seed=0, rate_change=3, density_change=6).trajectories(t)
+        rate_power = np.abs(np.fft.rfft(rate - rate.mean())) ** 2
+        density_power = np.abs(np.fft.rfft(density - density.mean())) ** 2
+        assert rate_power[freqs > 6].sum() < 0.015 * rate_power.sum()  # 0.2-0.5%
+        assert density_power[freqs > 3].sum() > 0.2 * density_power.sum()  # 42-51%
+
+    def test_a_new_seed_each_time(self):
+        assert so.DynamicRipple().seed != so.DynamicRipple().seed
+
+    def test_a_shorter_pattern_is_the_start_of_a_longer_one(self):
+        pattern = so.DynamicRipple(seed=3)
+        short_t, long_t = np.arange(0, 1, 1e-3), np.arange(0, 4, 1e-3)
+        for short, long in zip(pattern.trajectories(short_t), pattern.trajectories(long_t), strict=True):
+            # the filters settle within the extra second at each end: 0.06 Hz at most, at the very end
+            np.testing.assert_allclose(short[:500], long[:500], atol=1e-2 * np.ptp(long))
+            np.testing.assert_allclose(short, long[:1000], atol=1e-3 * 700)
+
+    def test_trajectories_are_uniform_across_draws(self):
+        # each trajectory is Gaussian noise of known spread mapped through its distribution function
+        rates = np.concatenate(
+            [so.DynamicRipple(seed=seed).trajectories(np.arange(0, 1, 1e-3))[0] for seed in range(200)]
+        )
+        counts, _ = np.histogram(rates, bins=7, range=(-350, 350))
+        assert counts.min() > 0.85 * counts.max()  # 0.86; standardizing each draw gave 0.72

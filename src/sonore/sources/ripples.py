@@ -193,8 +193,10 @@ class DynamicRipple(_Pattern):
     Elsewhere the local rate is ``rate(t) + x * d(density)/dt``, because a
     changing density fans the ripple out across frequency, so some of the
     modulation power lies outside ``rate_range``: about 7% for the defaults
-    over 5 octaves (14% in the top octave), under 1% with
-    ``density_change=0.25`` (measured by tools/measure_docstring_numbers.py).
+    over 5 octaves (about 12% in the top octave), and about 1% with
+    ``density_change=0.25``. These are averages over 20 draws of 4 s; single
+    draws range from 3 to 10% and from 0 to 6% (measured by
+    tools/measure_docstring_numbers.py).
     Analyze with
     ``ModulationSpectrum.octave(..., scale="db")``, since the pattern is
     defined in dB.
@@ -203,7 +205,8 @@ class DynamicRipple(_Pattern):
     (2002); check them against the study you are matching.
 
     The pattern is fully determined by ``seed`` (drawn at random if not
-    given, and stored), and it doesn't depend on the sampling rate.
+    given, and stored). It depends on neither the sampling rate nor the
+    duration: a shorter sound gets the start of a longer one's pattern.
     """
 
     rate_range: tuple[float, float] = (-350.0, 350.0)
@@ -227,16 +230,21 @@ class DynamicRipple(_Pattern):
         t = np.asarray(t, float)
         n_grid = int(np.ceil(t[-1] * self.grid_fs)) + 2
         grid = time_axis(n_grid, self.grid_fs)
-        rng = as_rng(self.seed)
+        seed = self.seed
+        assert seed is not None  # set in __post_init__
+        settle = int(self.grid_fs)  # extra samples at each end avoid the filter's edge effects
         out = []
-        for (lo, hi), cutoff in (
-            (self.rate_range, self.rate_change),
-            (self.density_range, self.density_change),
+        for stream, ((lo, hi), cutoff) in enumerate(
+            ((self.rate_range, self.rate_change), (self.density_range, self.density_change))
         ):
-            noise = rng.standard_normal(n_grid + 2 * int(self.grid_fs))  # extra samples avoid edge effects
+            # each trajectory has its own generator, so neither depends on the duration
+            rng = np.random.default_rng([seed, stream])
             sos = butter(4, cutoff, fs=self.grid_fs, output="sos")
-            noise = sosfiltfilt(sos, noise)[int(self.grid_fs) : int(self.grid_fs) + n_grid]
-            uniform = ndtr((noise - noise.mean()) / noise.std())  # Gaussian -> uniform on (0, 1)
+            impulse = np.zeros(8 * settle + 1)
+            impulse[4 * settle] = 1.0
+            spread = np.sqrt(np.sum(sosfiltfilt(sos, impulse) ** 2))  # sd of the filtered unit noise
+            noise = sosfiltfilt(sos, rng.standard_normal(n_grid + 2 * settle))[settle : settle + n_grid]
+            uniform = ndtr(noise / spread)  # Gaussian -> uniform on (0, 1)
             out.append(np.interp(t, grid, lo + (hi - lo) * uniform))
         return out[0], out[1]
 

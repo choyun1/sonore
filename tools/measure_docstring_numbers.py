@@ -65,23 +65,26 @@ def time_stretch_factor_error():
 def ripple_energy_outside_rate_range():
     """DynamicRipple: share of the dB pattern's temporal-modulation power above
     the largest |rate| in rate_range, over 5 octaves."""
-    print("DynamicRipple (sources/ripples.py), 5 octaves, 4 s, seeds 0-4:")
+    print("DynamicRipple (sources/ripples.py), 5 octaves, 4 s, seeds 0-19:")
     grid_rate = 4000.0  # Hz, well above the 350 Hz rate limit and any fanned-out rate
     t = np.arange(int(4.0 * grid_rate)) / grid_rate
     octaves = np.linspace(0, 5, 101)
     for density_change in (6.0, 0.25):
-        shares = []
-        for seed in range(5):
+        shares, top_shares = [], []
+        top_octave = octaves >= 4
+        for seed in range(20):
             pattern = so.DynamicRipple(density_change=density_change, seed=seed)
             db = 20 * np.log10(_evaluate(pattern, t, octaves))  # (octaves, times)
             power = np.abs(np.fft.rfft(db - db.mean(axis=1, keepdims=True), axis=1)) ** 2
             rates = np.fft.rfftfreq(len(t), 1 / grid_rate)
             limit = max(abs(bound) for bound in pattern.rate_range)
             shares.append(power[:, rates > limit].sum() / power.sum())
-        print(
-            f"  density_change {density_change:g} Hz: {100 * np.mean(shares):.1f}% of the power above "
-            f"{limit:g} Hz (seeds range {100 * min(shares):.1f}-{100 * max(shares):.1f}%)"
-        )
+            top_shares.append(power[top_octave][:, rates > limit].sum() / power[top_octave].sum())
+        for where, values in (("", shares), (" in the top octave", top_shares)):
+            print(
+                f"  density_change {density_change:g} Hz: {100 * np.mean(values):.1f}% of the power above "
+                f"{limit:g} Hz{where} (seeds range {100 * min(values):.1f}-{100 * max(values):.1f}%)"
+            )
 
 
 def fft_padding():
