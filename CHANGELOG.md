@@ -56,6 +56,12 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- `ripple_sound` and `render` type their `pattern` argument with a public
+  Protocol, `sonore.sources.ripples.EnvelopePattern` (anything with an
+  `envelope(t, x)` method), instead of the private base class `_Pattern`.
+  Any class of your own with that method already worked; now its type says
+  so. `docs/design/philosophy.md` states when sonore uses a class's
+  constructor and when a factory function.
 - Texture synthesis, from an independent re-audit of `sonore.texture`
   (no change to any output): the full-loop test now checks the result's
   subband levels and long-term spectrum against the target's, and new

@@ -125,6 +125,21 @@ meant to be readable without them.
   model's `rd`, an LPC's `order`. A new exception is argued in its design
   document, and the same kind of parameter gets the same treatment
   everywhere.
+- **Build a thing with its class; a factory only picks arguments or names
+  a result.** Values and analyses that have their own class are built by
+  calling it: `so.Ripple(4, 1)`, `so.STFT(snd, win_dur=0.025)`,
+  `so.MFCC(snd)`, `so.Sound(data, fs)` for an existing array. A function
+  stands in for the constructor only in three cases: it chooses the
+  arguments of one general class (`so.gammatone_filterbank` returns a
+  `Filterbank`, as `so.pure_tone` returns a `Sound`); the class is just
+  what an analysis returns (`so.f0_track` gives an `F0Track`); or the
+  input is of another kind, which takes a classmethod (`Sound.load`,
+  `ModulationSpectrum.from_blobs`). No subclass per variant, and no
+  private class in a public signature: an argument that accepts "anything
+  with this method" is typed by a public `Protocol` (`F0Contour`,
+  `Distribution`, `EnvelopePattern`), so a user's own class works without
+  inheriting anything. A private base class may share code, but it never
+  appears in a signature.
 - **Type every public signature, and type an option by the values it
   accepts.** A string option is a `Literal` (`Literal["linear", "db"]`), not
   `str`, so an editor offers its values and a checker catches a typo. The
