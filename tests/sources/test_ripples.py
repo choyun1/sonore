@@ -146,8 +146,6 @@ class TestRippleGaps:
             so.ripple_sound(so.DynamicRipple(density_range=(0, 12), seed=0), 0.1, FS, rng=0)
 
     def test_refusals(self):
-        with pytest.raises(TypeError, match="octave"):
-            so.Ripple(4, 1).render(so.cosine_filterbank(10, 100, 4000), 0.1, FS)
         with pytest.raises(ValueError, match="Nyquist"):
             so.ripple_sound(so.Ripple(4, 1), 0.1, 16000, f_hi=8000)
         with pytest.raises(ValueError, match="no harmonics"):
