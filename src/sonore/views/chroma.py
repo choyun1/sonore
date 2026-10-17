@@ -175,8 +175,9 @@ def chroma(
     per equal-tempered semitone with A4 at ``reference`` Hz (by default
     440 Hz, the standard pitch of ISO 16), centered from ``f_lo`` to
     ``f_hi`` (A1 to A8 by default; both are moved to the nearest semitone).
-    Each band's power is averaged over time windows ``window`` seconds long
-    (a last, shorter stretch is dropped), and the bands of each pitch class
+    Each band's power is averaged over time windows ``window`` seconds long,
+    rounded to a whole number of samples (``Chroma.window`` is the length
+    used; a last, shorter stretch is dropped), and the bands of each pitch class
     are added together. Power is kept as measured: a window is not scaled to
     its own maximum. Overtones land on other pitch classes (the third
     harmonic of C is a G), so chroma summarizes partials, not notes."""

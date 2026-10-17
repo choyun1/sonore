@@ -105,8 +105,12 @@ all of its power folds into that one row. Through the semitone bank, a
 steady Shepard tone on C puts all of its chroma in C (share 1 to six
 digits), and a harmonic tone C4 puts 86% there, the rest leaking through its
 overtones [check K8]. So the chroma of the sound that `to_sound` makes is the
-chroma it was given, up to the smoothing of the time windows, which is not
-checked yet.
+chroma it was given, up to the smoothing of the time windows. Measured
+when audited (sitting 16b): with a switch from A to C at 0.5 s, the chroma of
+the sound made back puts the switch (where the A row falls by half) within
+0.7 ms of the original's, and spreads it into the windows on either side;
+right after the switch the A row reads 0.13 against the original's 0.03
+[sonore; `tests/views/test_chroma.py` holds the switch to 5 ms].
 
 ## 3. Shepard tones and the Risset glide, as recipes
 
@@ -247,8 +251,8 @@ later page, not part of this one.
 
 ## References
 
-DOIs and page ranges are from memory and have not been checked against the
-papers. They will be checked before the page is built.
+The gallery page "Pitch class and height" (docs/gallery/music/chroma.py) lists
+these with their DOIs.
 
 - Brown, J. C. (1991). Calculation of a constant Q spectral transform.
   *J. Acoust. Soc. Am.* 89(1), 425–434.
