@@ -131,6 +131,17 @@ def f0_track(
        third of its F0. No
        smoothing follows.
 
+    Where each stage comes from: the candidates are YIN's (de Cheveigné &
+    Kawahara, 2002); the refinement is WORLD's StoneMask (Morise et al.,
+    2009); the score is the normalized correlation one period apart, as in
+    RAPT (Talkin, 1995) and Praat (Boersma, 1993); the tracking is the
+    dynamic programming of RAPT and Praat, with an unvoiced state and costs
+    for octave jumps and voicing changes. The rule against whole multiples
+    is sonore's own. The combination is no single published tracker; pYIN
+    (Mauch & Dixon, 2014), YIN candidates followed by a Viterbi pass over
+    pitch and voicing, is the closest. Design and measurements in
+    ``docs/design/views/f0.md``.
+
     On synthetic vowels the refined F0 is within 0.12% of the truth on a one
     octave per second glide and a 5.5 Hz vibrato. Against laryngograph
     reference F0 (a male and a female speaker), it gets the voicing of 5.6%
