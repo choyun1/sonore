@@ -44,8 +44,9 @@ from sonore.core.utils import RNG, as_rng, n_samples
 from sonore.frames.filterbank import Subbands
 from sonore.texture import grad as tg
 from sonore.texture.stats import PAPER_CLASSES, TextureStats
+from sonore.views.envelope_peaks import envelope_peaks
 
-__all__ = ["ChannelObjective", "impose_channel", "synthesize", "channel_order"]
+__all__ = ["ChannelObjective", "impose_channel", "synthesize", "channel_order", "pop_start"]
 
 MOMENTS = ("env_mean", "env_var", "env_skew", "env_kurt")
 
@@ -377,3 +378,74 @@ def synthesize(
         "converged": best[0] >= converged_db,
     }
     return Sound(best[1], model.fs), report
+
+
+POP_START_CUTOFF_HZ = 300.0  # pops are counted and sized on the sound high-passed here
+POP_START_ABOVE_DB = 10.0  # a bin counts as a pop when its envelope maximum is this far above the median
+POP_START_LENGTH = 0.004  # each bump lasts this long (s) ...
+POP_START_DECAY = 0.001  # ... and decays with this time constant (s)
+POP_START_CAP = 100.0  # the biggest bump is at most this many times the noise (40 dB)
+
+
+def pop_rate(sound: Sound, *, cutoff_hz: float = POP_START_CUTOFF_HZ) -> float:
+    """How many pops a second a sound has: the bins of :func:`~sonore.views.envelope_peaks`
+    (5 ms, high-passed at ``cutoff_hz``) whose envelope maximum first rises more than
+    10 dB above the median maximum, per second. A crossing counts once, so a pop that spans
+    two bins is one pop."""
+    maxima = envelope_peaks(sound, cutoffs_hz=(cutoff_hz,)).maxima[:, 0]
+    above = maxima > np.median(maxima) * 10 ** (POP_START_ABOVE_DB / 20)
+    crossings = np.count_nonzero(above[1:] & ~above[:-1]) + int(above[0])
+    return crossings / sound.duration
+
+
+def pop_start(
+    recording: Sound,
+    duration: float,
+    *,
+    rate: float | None = None,
+    exponent: float | None = None,
+    fs: float | None = None,
+    rng: RNG = None,
+) -> Sound:
+    """A starting sound for :func:`synthesize` that already has pops: Gaussian noise times a
+    sparse train of short bumps whose sizes follow a power law.
+
+    Started from plain noise, the synthesis of a recording with heavy pops (a crackling fire)
+    matches the statistics but comes out with wider, less aligned pops than the recording, and
+    stays there. Started from noise that already has sharp bumps, the same iterations keep them
+    and shape them, and the statistics match better. This start is sonore's own, not from
+    McDermott & Simoncelli (2011), who start from noise; see
+    ``docs/design/texture/pop-start.md`` for the measurements.
+
+    The bumps are placed uniformly at random, ``rate`` per second (by default the recording's
+    own pop rate, :func:`pop_rate`); each lasts 4 ms and decays with a 1 ms time constant; its
+    height is ``1 + p`` with ``p`` Pareto-distributed with ``exponent`` (by default the
+    recording's, from :func:`~sonore.views.envelope_peaks` at 300 Hz), capped at 40 dB above the
+    noise. Where bumps overlap the larger one wins. The sound is at ``fs`` (by default the
+    recording's rate; :func:`synthesize` resamples it to the model's). The start's rate carries
+    through to the synthesis, which the statistics do not pin; its exponent barely matters, the
+    statistics pull the tail to the target's. On a recording without heavy pops (exponent above
+    about 2) a pop start leaves a few pops the statistics do not remove, so it is for
+    recordings whose pops measure heavy.
+    """
+    if rate is None:
+        rate = pop_rate(recording)
+    if exponent is None:
+        exponent = float(envelope_peaks(recording, cutoffs_hz=(POP_START_CUTOFF_HZ,)).exponent[0])
+    if rate <= 0 or exponent <= 0:
+        raise ValueError("rate and exponent must be positive")
+    if fs is None:
+        fs = recording.fs
+    rng = as_rng(rng)
+    n = n_samples(duration, fs)
+    noise = rng.standard_normal(n)
+    gain = np.ones(n)
+    bump_length = max(1, n_samples(POP_START_LENGTH, fs))
+    bump = np.exp(-np.arange(bump_length) / (POP_START_DECAY * fs))
+    n_bumps = int(round(rate * duration))
+    onsets = rng.integers(0, n, n_bumps)
+    heights = np.minimum(1 + rng.pareto(exponent, n_bumps), POP_START_CAP)
+    for onset, height in zip(onsets, heights, strict=True):
+        stop = min(n, onset + bump_length)
+        gain[onset:stop] = np.maximum(gain[onset:stop], height * bump[: stop - onset])
+    return Sound(noise * gain, fs)

@@ -368,9 +368,11 @@ fig, playhead = pops_fig(sound)
 #
 # The fire's synthesis keeps pops, but too many of them are medium-sized, and the background
 # sits too close to the biggest: the median bin is 35 dB below the biggest pops in the
-# synthesis, 43 dB in the original. A synthesis as long as the original does no better. What
-# sounded closer to the original by ear was to take the pops out, synthesize the rest, and put
-# pops back with `so.event_train`:
+# synthesis, 43 dB in the original. A synthesis as long as the original does no better, though
+# one started from noise that already has pops does ([Fire, synthesized from a pop
+# start](textures.html#d-t04c) on Sound textures). Before that start existed, what sounded closer
+# to the original by ear was to take the pops out, synthesize the rest, and put pops back with
+# `so.event_train`:
 #
 # - **Remove the pops.** Scale each 5 ms bin so that its largest envelope value is at most twice
 #   the 80th percentile of those values, with the gain smoothed over 2 ms.
@@ -388,7 +390,10 @@ fig, playhead = pops_fig(sound)
 # and a clapper close to the microphone, pops that are random in time over a steady background,
 # and no better on rhythmic or impact sounds (tapping, a bongo loop, a typewriter, castanets),
 # which the texture model also synthesizes poorly on its own; McDermott & Simoncelli (2011) list
-# rhythm among the model's failures.
+# rhythm among the model's failures. Against the pop start, the same listener heard the recipe as
+# a little better on the chimney fire, whose background sits lower than any synthesis puts it,
+# and the pop start as better on our fire and Fire1. The recipe keeps its place for a background
+# that needs turning down; neither helps the rhythmic sounds.
 
 # %%
 def remove_pops(sound):
