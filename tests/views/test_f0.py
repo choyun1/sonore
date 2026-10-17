@@ -163,3 +163,137 @@ def test_plot():
     ax = trk.plot(candidates=True)
     assert ax.get_ylabel() == "F0 [Hz]"
     assert "voiced" in repr(trk)
+
+
+# ---------------------------------------------------------------- audit gaps
+HEED = [(436, 60), (2761, 100), (3372, 120), (4100, 175)]  # female heed (Hillenbrand et al. 1995)
+
+
+def heed(f0, snr_db, seed=0):
+    """A steady female /i/ at f0 in white noise snr_db below it."""
+    phase = 2 * np.pi * f0 * TT
+    y = np.zeros(N)
+    for k in range(1, int(0.95 * FS / 2 / f0) + 1):
+        z = np.exp(-2j * np.pi * k * f0 / FS)
+        h = 1.0
+        for f, bw in HEED:
+            r = np.exp(-np.pi * bw / FS)
+            h = h / (1 - 2 * r * np.cos(2 * np.pi * f / FS) * z + r * r * z * z)
+        y += np.abs(h) * np.cos(k * phase)
+    noise = np.random.default_rng(seed).standard_normal(N)
+    return so.Sound(y / np.std(y) + noise * 10 ** (-snr_db / 20), FS)
+
+
+@pytest.mark.parametrize("f0", [250.0, 300.0, 350.0])
+def test_noisy_high_vowels_are_not_tracked_at_a_third(f0):
+    # In noise the candidates at F0/2 and F0/3 score about as well as F0; the
+    # rule must look at every whole multiple above a candidate, not only the
+    # octave (which leaves F0/3 standing), and is needed at all here.
+    err, unvoiced = errors(so.f0_track(heed(f0, 20)), np.full(N, f0))
+    assert unvoiced == 0
+    assert err < 2
+    err_off, _ = errors(so.f0_track(heed(f0, 20), subharmonic_margin=None), np.full(N, f0))
+    assert err_off > 40
+
+
+def test_unvoiced_cost_is_one_minus_threshold():
+    # A vowel at 0 dB SNR scores about 0.5: voiced at the default threshold,
+    # unvoiced at 0.95, voiced again at 0.05.
+    x = so.Sound(vowel(np.full(N, 150.0)) + np.random.default_rng(1).standard_normal(N), FS)
+    inner = slice(10, -10)
+    assert np.mean(so.f0_track(x, threshold=0.95).voiced[0][inner]) == 0
+    assert np.mean(so.f0_track(x, threshold=0.05).voiced[0][inner]) == 1
+
+
+def test_chosen_score_is_the_chosen_candidates():
+    trk = so.f0_track(so.Sound(vowel(150 * 2**TT), FS))
+    for i in np.flatnonzero(trk.voiced[0]):
+        j = np.nanargmin(np.abs(trk.candidates[0, i] - trk.f0[0, i]))
+        assert trk.candidates[0, i, j] == trk.f0[0, i]
+        assert trk.score[0, i] == trk.candidate_scores[0, i, j]
+
+
+def test_subharmonic_rule_reaches_a_near_multiple():
+    # 224 Hz is 1.8% from twice 110 Hz, within the rule's 5%: 110 is ruled out.
+    from sonore.views.f0 import _viterbi
+
+    cand = np.tile([110.0, 224.0, np.nan, np.nan], (20, 1))
+    score = np.tile([0.92, 0.9, np.nan, np.nan], (20, 1))
+    on, _ = _viterbi(cand, score, 0.5, 2.0, 0.5, 0.05)
+    assert np.all(on == 224)
+
+
+@pytest.mark.parametrize(
+    "f0, kwargs",
+    [(61.0, {}), (490.0, {}), (35.0, {"f_lo": 30.0, "subharmonic_margin": None})],
+    ids=["f_lo", "f_hi", "f_lo 30"],
+)
+def test_f0_near_the_ends_of_the_range(f0, kwargs):
+    err, unvoiced = errors(so.f0_track(so.Sound(vowel(np.full(N, f0)), FS), **kwargs), np.full(N, f0))
+    assert unvoiced == 0
+    assert err < 0.2
+
+
+def test_candidates_stay_near_the_range():
+    # A vowel below f_lo: refined candidates that leave [0.9 f_lo, 1.1 f_hi]
+    # are dropped.
+    trk = so.f0_track(so.Sound(vowel(np.full(N, 50.0)), FS))
+    assert np.nanmin(trk.candidates) >= 0.9 * 60
+    assert np.nanmax(trk.candidates) <= 1.1 * 500
+
+
+def test_raw_candidates_are_refined_by_a_parabola():
+    from sonore.views.f0 import _candidates
+
+    x = vowel(np.full(N, 123.4))  # a period of 129.66 samples
+    t = np.arange(0.05, 0.25, 0.01)
+    cand = _candidates(x, t, FS, 60.0, 500.0)
+    assert np.nanmin(np.abs(cand / 123.4 - 1), axis=1).max() < 1e-4
+
+
+def test_weak_periodicity_still_offers_its_period():
+    # At -3 dB SNR the difference function's dip at the period is shallow
+    # (above 0.5), yet it is offered, so the score decides.
+    from sonore.views.f0 import _candidates
+
+    x = vowel(np.full(N, 150.0)) + np.random.default_rng(3).standard_normal(N) * 10 ** (3 / 20)
+    t = np.arange(0.05, 0.25, 0.005)
+    cand = _candidates(x, t, FS, 60.0, 500.0)
+    assert np.mean(np.any(np.abs(cand / 150 - 1) < 0.02, axis=1)) > 0.9
+
+
+def test_score_is_exact_at_a_fractional_period():
+    from sonore.views.f0 import _periodicity
+
+    for f0 in (123.4, 333.3):
+        x = vowel(np.full(N, f0))
+        t = np.arange(0.05, 0.25, 0.01)
+        assert _periodicity(x, t, np.full(len(t), f0), FS).min() > 1 - 1e-6
+
+
+def test_harmonics_above_nyquist_are_left_out_of_refinement():
+    from sonore.views.f0 import _refine
+
+    # 1400 Hz: harmonics 6 (8400 Hz) lies above Nyquist and would alias.
+    x = so.harmonic_complex(0.3, FS, 1400.0, harmonics=np.arange(1, 6)).data[:, 0]
+    t = np.arange(0.05, 0.25, 0.01)
+    refined = _refine(x, t, np.full(len(t), 1400.0), FS)
+    assert np.max(np.abs(refined / 1400 - 1)) < 0.005
+
+
+def test_many_time_windows():
+    # More time windows than the candidate stage handles at once.
+    n = int(2.2 * FS)
+    trk = so.f0_track(so.Sound(vowel(np.full(n, 150.0)), FS), hop=0.001)
+    assert len(trk.t) > 2048
+    assert trk.voiced[0][50:-50].all()
+
+
+@pytest.mark.parametrize("f0", [600.0, 800.0, 1000.0])
+def test_singing_range(f0):
+    # With f_hi raised, a high voice has more period multiples in the search
+    # range than there are candidates; its period must still be offered.
+    for sound in (so.Sound(vowel(np.full(N, f0)), FS), heed(f0, 40)):
+        err, unvoiced = errors(so.f0_track(sound, f_hi=1200.0), np.full(N, f0))
+        assert unvoiced == 0
+        assert err < 0.2
