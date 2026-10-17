@@ -219,13 +219,14 @@ def test_subharmonic_rule_reaches_a_near_multiple():
 
     cand = np.tile([110.0, 224.0, np.nan, np.nan], (20, 1))
     score = np.tile([0.92, 0.9, np.nan, np.nan], (20, 1))
-    on, _ = _viterbi(cand, score, 0.5, 2.0, 0.5, 0.05)
+    on, chosen_score = _viterbi(cand, score, 0.5, 2.0, 0.5, 0.05)
     assert np.all(on == 224)
+    assert np.all(chosen_score == 0.9)  # the score of the candidate chosen, not of the first
 
 
 @pytest.mark.parametrize(
     "f0, kwargs",
-    [(61.0, {}), (490.0, {}), (35.0, {"f_lo": 30.0, "subharmonic_margin": None})],
+    [(60.1, {}), (490.0, {}), (35.0, {"f_lo": 30.0, "subharmonic_margin": None})],
     ids=["f_lo", "f_hi", "f_lo 30"],
 )
 def test_f0_near_the_ends_of_the_range(f0, kwargs):
@@ -235,9 +236,9 @@ def test_f0_near_the_ends_of_the_range(f0, kwargs):
 
 
 def test_candidates_stay_near_the_range():
-    # A vowel below f_lo: refined candidates that leave [0.9 f_lo, 1.1 f_hi]
+    # A sound below f_lo: refined candidates that leave [0.9 f_lo, 1.1 f_hi]
     # are dropped.
-    trk = so.f0_track(so.Sound(vowel(np.full(N, 50.0)), FS))
+    trk = so.f0_track(so.harmonic_complex(0.3, FS, 45.0, harmonics=np.arange(1, 40)))
     assert np.nanmin(trk.candidates) >= 0.9 * 60
     assert np.nanmax(trk.candidates) <= 1.1 * 500
 
@@ -265,8 +266,8 @@ def test_weak_periodicity_still_offers_its_period():
 def test_score_is_exact_at_a_fractional_period():
     from sonore.views.f0 import _periodicity
 
-    for f0 in (123.4, 333.3):
-        x = vowel(np.full(N, f0))
+    for f0 in (123.4, 333.3):  # flat harmonics up to 7 kHz
+        x = so.harmonic_complex(0.3, FS, f0, harmonics=np.arange(1, int(7000 / f0))).data[:, 0]
         t = np.arange(0.05, 0.25, 0.01)
         assert _periodicity(x, t, np.full(len(t), f0), FS).min() > 1 - 1e-6
 
