@@ -128,9 +128,25 @@ def filterbank_padding():
     )
 
 
+def gaussian_spectrogram_level():
+    """The level of a sound made from so.gaussian_spectrogram with the defaults."""
+    print("gaussian_spectrogram (sources/gaussian_spectrogram.py), 1 s at 16 kHz, a noise's fine structure:")
+    levels = []
+    for seed in range(100):
+        env = so.gaussian_spectrogram(1.0, FS, rng=seed)
+        sound = env.to_sound(carrier=so.gaussian_noise(1.0, FS, rng=1000 + seed))
+        levels.append(20 * np.log10(sound.rms))
+    low, median, high = np.percentile(levels, [5, 50, 95])
+    print(
+        f"  RMS in dB re 1: median {median:.1f}, 5th to 95th percentile {low:.1f} to {high:.1f} "
+        f"({len(levels)} draws)"
+    )
+
+
 if __name__ == "__main__":
     phase_vocoder_resynthesis()
     time_stretch_factor_error()
     ripple_energy_outside_rate_range()
     fft_padding()
     filterbank_padding()
+    gaussian_spectrogram_level()

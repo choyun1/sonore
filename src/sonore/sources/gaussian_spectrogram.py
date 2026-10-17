@@ -78,11 +78,18 @@ def gaussian_spectrogram(
     structure alone adds no envelope of its own::
 
         env = so.gaussian_spectrogram(0.4, fs, rng=1)
-        sound = env.to_sound(so.gaussian_noise(0.4, fs, rng=2)).ramp(0.01)
+        sound = env.to_sound(carrier=so.gaussian_noise(0.4, fs, rng=2)).normalize().ramp(0.01)
 
     (the paper used 10 ms ramps). Re-filtering through overlapping bands and
     windows makes the sound's own spectrogram differ somewhat from the one
     drawn, as the paper notes.
+
+    The levels are in dB relative to the band of mean width, so the sound
+    comes out loud, and its level varies from draw to draw with the spread
+    of the cells. With the defaults, 1 s on a noise's fine structure has an
+    RMS 29 dB above 1 at the median, and 21 to 43 dB above it for 90% of
+    draws (measured by tools/measure_docstring_numbers.py). Set the level
+    afterwards, as ``normalize`` does above.
     """
     if band_correlation_erb <= 0 or time_correlation <= 0:
         raise ValueError("correlation lengths must be positive")

@@ -113,7 +113,7 @@ A sampler builds the view, and the view's existing `to_sound` makes the
 sound. That follows the philosophy's "synthesis lives in `to_sound`":
 
     env = so.gaussian_spectrogram(0.4, fs, rng=1)     # Envelopes
-    sound = env.to_sound(so.gaussian_noise(0.4, fs, rng=2))
+    sound = env.to_sound(carrier=so.gaussian_noise(0.4, fs, rng=2))
 
 1. Build the filterbank (default `so.cosine_filterbank(39, 20, 4000)`) and
    the window centers (default 20 ms windows, 10 ms hop).
@@ -162,7 +162,7 @@ Hearing a modulation spectrum page (D7).
   (equal power per Hz). Should "on average" mean in expected power (which
   corrects for the lognormal) or in mean log level? *Recommended: `sd_db`
   with a default Cho confirms or replaces, and flat in expected power.*
-- **D5. Carrier.** (a) `to_sound(noise_sound)`, which keeps only the
+- **D5. Carrier.** (a) `to_sound(carrier=noise_sound)`, which keeps only the
   noise's fine structure, so the noise adds no envelope fluctuations of its
   own. (b) `to_sound("noise")`, whose bands keep their own random
   fluctuations within each window. (c) The paper's exact step: divide each
