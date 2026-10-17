@@ -56,6 +56,15 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- No private class appears in a public signature any more (no change to
+  any output). `TVGaborFrame.layout` is now private, since it returned a
+  private type that only sonore's own code reads. `gaussian_noise`'s
+  `spectrum` accepts any `sonore.sources.waveforms.MeasuredSpectrum`
+  (anything with `level_in_range(freqs)`), and `Spectrum.level_in_range`
+  is now public; the type used to name a private Protocol with a private
+  method, which no user class could satisfy. `klatt_synthesize`'s types
+  now say that `F0` may be an F0 contour object such as an `F0Track`,
+  which it already accepted.
 - `ripple_sound` and `render` type their `pattern` argument with a public
   Protocol, `sonore.sources.ripples.EnvelopePattern` (anything with an
   `envelope(t, x)` method), instead of the private base class `_Pattern`.

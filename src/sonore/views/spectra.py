@@ -73,7 +73,7 @@ class Spectrum(View):
         values outside the spectrum's frequencies."""
         return np.interp(freqs, self.f, self.level)
 
-    def _level_in_range(self, freqs: np.ndarray) -> np.ndarray:
+    def level_in_range(self, freqs: np.ndarray) -> np.ndarray:
         """``level_at`` inside the spectrum's frequencies and the floor
         outside them: a spectrum says nothing about the frequencies it was
         not measured at, so a sound made from it is silent there."""
@@ -122,7 +122,7 @@ class Spectrum(View):
         sound: the spectrum keeps no phase to give back.
         """
         length = n_samples(duration, fs)
-        density = db_to_power(self._level_in_range(np.fft.rfftfreq(length, 1 / fs)))
+        density = db_to_power(self.level_in_range(np.fft.rfftfreq(length, 1 / fs)))
         magnitude = np.sqrt(density / _one_sided(length))
         match carrier:  # str("...") so that an array is not compared elementwise
             case str("noise"):
@@ -261,7 +261,7 @@ def tandem_power(
     )
     t, durs = np.asarray(base.times), np.asarray(base.win_durs)
     quarter = durs / periods / 4
-    n_fft = int(base.layout(sound.fs).n_fft)
+    n_fft = int(base._layout(sound.fs).n_fft)
     early = TVGaborFrame(t - quarter, durs, n_fft=n_fft, window=window).analyze(sound)
     late = TVGaborFrame(t + quarter, durs, n_fft=n_fft, window=window).analyze(sound)
     power = (np.abs(early.data) ** 2 + np.abs(late.data) ** 2) / 2

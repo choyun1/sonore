@@ -41,4 +41,4 @@ def test_default_hop_is_a_quarter_window():
 def test_time_varying_window_centers_round_to_the_nearest_sample():
     """At 1 kHz, 2.6 ms is 2.6 samples, which rounds to 3; 2.4 ms rounds to 2."""
     frame = so.TVGaborFrame([0.0026, 0.0054], [0.004, 0.004])
-    assert frame.layout(1000).centers.tolist() == [3, 5]
+    assert frame._layout(1000).centers.tolist() == [3, 5]

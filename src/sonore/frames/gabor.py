@@ -329,14 +329,14 @@ class TVGaborFrame(_ShortTimeFourierFrame):
             lambda t: periods / f0_of_t(t), t_end, overlap=overlap, t_start=t_start, **kwargs
         )
 
-    def layout(self, fs: float) -> _TVLayout:
+    def _layout(self, fs: float) -> _TVLayout:
         """Window lengths, centers and FFT length in samples at ``fs`` (cached)."""
         return _tv_layout(self, float(fs))
 
     def frame_power(self, n_samples: int, fs: float) -> np.ndarray:
         """``s(t) = M sum_q |w_q(t - a_q)|**2`` for ``t`` in ``0..n_samples-1``:
         the diagonal of the frame operator."""
-        frame_layout, n_samples = self.layout(fs), int(n_samples)
+        frame_layout, n_samples = self._layout(fs), int(n_samples)
         signal_index, valid = frame_layout.positions(n_samples)
         return frame_layout.n_fft * np.bincount(
             signal_index[valid], weights=np.abs(frame_layout.windows[valid]) ** 2, minlength=n_samples
@@ -344,12 +344,12 @@ class TVGaborFrame(_ShortTimeFourierFrame):
 
     def bin_weights(self, fs: float) -> np.ndarray:
         """Weight of each stored frequency bin, as for :class:`GaborFrame`."""
-        return _bin_weights(self.layout(fs).n_fft)
+        return _bin_weights(self._layout(fs).n_fft)
 
     def analyze(self, sound: Sound) -> TVSTFT:
         """The time-varying STFT of ``sound``, data shape ``(n_channels, n_freqs, n_windows)``."""
 
-        frame_layout, n_samples = self.layout(sound.fs), len(sound)
+        frame_layout, n_samples = self._layout(sound.fs), len(sound)
         signal_index, valid = frame_layout.positions(n_samples)
         segments = np.where(valid, frame_layout.windows, 0.0) * sound.data[
             np.clip(signal_index, 0, n_samples - 1)
@@ -358,7 +358,7 @@ class TVGaborFrame(_ShortTimeFourierFrame):
         return TVSTFT(data, sound.fs, n_samples, self)
 
     def _check(self, coefs: TVSTFT) -> _TVLayout:
-        frame_layout = self.layout(coefs.fs)
+        frame_layout = self._layout(coefs.fs)
         expected = (frame_layout.n_fft // 2 + 1, len(self.times))
         if coefs.data.shape[1:] != expected:
             raise ValueError(f"expected (n_freqs, n_windows) = {expected}, got {coefs.data.shape[1:]}")
@@ -609,30 +609,30 @@ class TVSTFT(_ShortTimeCoefficients):
 
     def __repr__(self) -> str:
         n_channels, n_freqs, n_windows = self.data.shape
-        win_ms = self.frame.layout(self.fs).lengths / self.fs * 1e3
+        win_ms = self.frame._layout(self.fs).lengths / self.fs * 1e3
         return (
             f"TVSTFT({n_freqs} freqs x {n_windows} time windows, {n_channels} ch, "
-            f"win {win_ms.min():.1f}-{win_ms.max():.1f} ms, n_fft {self.frame.layout(self.fs).n_fft})"
+            f"win {win_ms.min():.1f}-{win_ms.max():.1f} ms, n_fft {self.frame._layout(self.fs).n_fft})"
         )
 
     @property
     def f(self) -> np.ndarray:
-        return np.fft.rfftfreq(self.frame.layout(self.fs).n_fft, 1 / self.fs)
+        return np.fft.rfftfreq(self.frame._layout(self.fs).n_fft, 1 / self.fs)
 
     @property
     def t(self) -> np.ndarray:
         """Window center times [s], rounded to samples."""
-        return self.frame.layout(self.fs).centers / self.fs
+        return self.frame._layout(self.fs).centers / self.fs
 
     @property
     def n_fft(self) -> int:
         """FFT length [samples], shared by every window."""
-        return int(self.frame.layout(self.fs).n_fft)
+        return int(self.frame._layout(self.fs).n_fft)
 
     @property
     def shortest_window(self) -> int:
         """Length of the shortest window [samples]."""
-        return int(self.frame.layout(self.fs).lengths.min())
+        return int(self.frame._layout(self.fs).lengths.min())
 
     def __mul__(self, other):
         from sonore.views.mask import Mask  # views.mask imports TVSTFT from here

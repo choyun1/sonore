@@ -67,7 +67,7 @@ def _roots(predictors: np.ndarray) -> np.ndarray:
 
 def _longest_window(coefs: STFT | TVSTFT) -> int:
     if isinstance(coefs, TVSTFT):
-        return int(coefs.frame.layout(coefs.fs).lengths.max())
+        return int(coefs.frame._layout(coefs.fs).lengths.max())
     return coefs.shortest_window  # every window of an STFT has the same length
 
 
