@@ -31,6 +31,9 @@ N_HARMONICS = 6
 PERIODS = 3.0  # window length for refinement and scoring, in periods of the candidate
 
 
+NEAR_DEEPEST = 0.1  # a dip this close to the deepest one counts as nearly as deep
+
+
 SINC_HALF = 32  # half-length of the fractional-delay kernel [samples]
 
 
@@ -108,7 +111,10 @@ def f0_track(
        or filtered out. Every minimum below 1 is offered, so that the score
        alone decides voicing. A very regular voice has a minimum at every
        multiple of its period, so eight leave room for the period itself
-       (with four, a steady 300 Hz vowel could lose it).
+       (with four, a steady 300 Hz vowel could lose it), and, as in YIN,
+       the shortest-lag minimum within 0.1 of the deepest is always among
+       them (with ``f_hi`` raised, a sung 800 Hz vowel has more multiples in
+       range than there are candidates).
     2. **Refinement.** For a candidate f, a Blackman window three periods long;
        the instantaneous frequency of each of the first six harmonics is its
        phase advance over one sample, and the new F0 is the power-weighted
@@ -159,6 +165,11 @@ def f0_track(
         The search range [Hz]. The defaults cover speaking voices; raise
         ``f_hi`` for singing. Refined candidates are kept from 0.9 ``f_lo``
         to 1.1 ``f_hi``, so the F0 can come out up to 10% outside the range.
+        Lowering ``f_lo`` below the default is not reliable: below about
+        55 Hz a voice with strong formants can be tracked near its first
+        formant's ringing, which over three of its own short periods looks
+        periodic, and the multiple rule then counts the true F0 as a
+        subharmonic of it.
     hop
         Spacing between time windows [s].
     threshold
@@ -249,6 +260,15 @@ def _candidates(x, t, fs, f_lo, f_hi):
         cmnd_before, cmnd_at_lag, cmnd_after = cmnd[:, lags - 1], cmnd[:, lags], cmnd[:, lags + 1]
         is_min = (cmnd_at_lag < cmnd_before) & (cmnd_at_lag <= cmnd_after) & (cmnd_at_lag < 1)
         ranked_pos = np.argsort(np.where(is_min, cmnd_at_lag, np.inf), axis=1)[:, :MAX_CANDIDATES]
+        # A steady high voice has a dip at every multiple of its period, all
+        # about equally deep, and there can be more of them than candidates.
+        # As in YIN, the shortest-lag dip nearly as deep as the deepest is
+        # always offered (in place of the last), so the period itself is.
+        deepest = np.min(np.where(is_min, cmnd_at_lag, np.inf), axis=1, keepdims=True)
+        near_deepest = is_min & (cmnd_at_lag <= deepest + NEAR_DEEPEST)
+        first_near = np.argmax(near_deepest, axis=1)
+        left_out = near_deepest.any(axis=1) & ~np.any(ranked_pos == first_near[:, None], axis=1)
+        ranked_pos[left_out, -1] = first_near[left_out]
         rows = np.arange(len(segments))[:, None]
         is_valid = is_min[rows, ranked_pos]
         min_before, min_value, min_after = (
