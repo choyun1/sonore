@@ -129,12 +129,14 @@ def _envelope_grid(envelope, fs):
             " SpectralEnvelope and GridEnvelope are); pass an aperiodicity to read any other envelope"
         )
     own_fs = getattr(envelope, "fs", None)
-    if fs is None and own_fs is None:
-        raise TypeError("the envelope has no .fs, so pass fs")
-    if fs is not None and own_fs is not None and fs != own_fs:
+    if fs is None:
+        if own_fs is None:
+            raise TypeError("the envelope has no .fs, so pass fs")
+        fs = own_fs
+    elif own_fs is not None and fs != own_fs:
         raise ValueError(f"fs is {fs:g} Hz but the envelope's is {own_fs:g} Hz")
     times, freqs = np.asarray(envelope.t, dtype=float), np.asarray(envelope.f, dtype=float)
-    return float(own_fs if fs is None else fs), times, freqs, np.shape(envelope.data)[0]
+    return float(fs), times, freqs, np.shape(envelope.data)[0]
 
 
 def _all_or_nothing(track_times, track_values, times, n_freqs):
@@ -189,8 +191,10 @@ def _on_grid_of(envelope, times, freqs, shape) -> np.ndarray:
     if (
         held is not None
         and np.shape(held) == shape
-        and np.array_equal(getattr(envelope, "t", None), times)
-        and np.array_equal(getattr(envelope, "f", None), freqs)
+        and hasattr(envelope, "t")
+        and hasattr(envelope, "f")
+        and np.array_equal(envelope.t, times)
+        and np.array_equal(envelope.f, freqs)
     ):
         return np.asarray(held, dtype=float)
     if not callable(envelope):
