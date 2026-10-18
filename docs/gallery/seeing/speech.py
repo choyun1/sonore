@@ -13,7 +13,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # # Seeing speech
 #
 # One sentence, "Providence had delivered him through the maelstrom," read by the male and the
-# female talker of [Two talkers](talkers.html) (CMU ARCTIC speakers bdl and slt, 16 kHz; Kominek
+# female talker of [What is a voice](whatisavoice.html) (CMU ARCTIC speakers bdl and slt, 16 kHz; Kominek
 # & Black, 2004), drawn by each time-frequency analysis in sonore. Every picture is made for both
 # talkers, side by side: the female talker's higher pitch changes which picture works. The
 # pictures differ a great deal, and this page explains why:
@@ -61,7 +61,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   sharply, and the higher the pitch, the closer together the pulses and the shorter the window
 #   has to be.
 # - **Change.** Each talker's pitch moves throughout the sentence (the ranges are printed below
-#   and compared on [Two talkers](talkers.html#h-pitch)), and the formants sweep at every boundary
+#   and compared on [What is a voice](whatisavoice.html#h-pitch)), and the formants sweep at every boundary
 #   between consonant and vowel. A fixed window long enough to resolve the harmonics at the lowest
 #   pitch smears them wherever the pitch moves, and a window that suits one talker does not suit
 #   the other as well.

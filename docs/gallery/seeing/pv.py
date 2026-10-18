@@ -192,9 +192,9 @@ sound = finish(so.time_stretch(sung, 2))
 fig, playhead = show(sound)
 
 # %% [about]
-# The sentence from [Seeing speech](speech.html), read by each of the [Two talkers](talkers.html),
-# twice as long, with phase locking. The harmonics keep their frequencies; every syllable and every
-# pitch movement takes twice the time.
+# The sentence from [Seeing speech](speech.html), read by each of the [two
+# talkers](whatisavoice.html#h-the-two-talkers), twice as long, with phase locking. The harmonics
+# keep their frequencies; every syllable and every pitch movement takes twice the time.
 
 # %% [demo p1] The sentence, twice as long
 sounds = {label: finish(so.time_stretch(snd, 2)) for label, snd in talkers.items()}
@@ -244,7 +244,7 @@ for label in talkers:
 # Each talker shifted by the interval between the two median pitches, {{ f"{interval:.1f}" }}
 # semitones: the male talker up, the female talker down, so the two trade pitches, as the printout
 # above shows. The formants moved by the same ratio, which is larger than the gap between the two
-# talkers' formants measured on [Two talkers](talkers.html#h-spectral-envelopes). So the male
+# talkers' formants measured on [What is a voice](whatisavoice.html#h-spectral-envelopes). So the male
 # talker's formants now sit above the female talker's, and the female talker's below the male
 # talker's: each voice has the other talker's pitch, with formants beyond the other talker's.
 # [Higher pitch](voice.html#d-vc3) on Rebuilding and changing a voice moves the pitch alone and
@@ -296,5 +296,6 @@ fig, playhead = show(sound)
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
 # - Laroche & Dolson (1999). Improved phase vocoder time-scale modification of audio. *IEEE Trans.
-#   Speech Audio Process.* 7(3), 323–332. [IEEE Xplore](https://ieeexplore.ieee.org/document/759041/).
+#   Speech Audio Process.* 7(3), 323–332. [IEEE
+#   Xplore](https://ieeexplore.ieee.org/document/759041/).
 #   [`phasevocoder.time_stretch`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py#L180)

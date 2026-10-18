@@ -109,7 +109,7 @@ def file_name(key: str, title: str) -> str:
 # `code`, **bold**, *italic*, [links](url), "- " lists, and {{ expression }}, which is evaluated
 # where the cell stands. The scripts run from the repository root.
 EXAMPLE_PAGES = [
-    "talkers",
+    "whatisavoice",
     "speech",
     "sourcefilter",
     "richer",
@@ -739,7 +739,7 @@ TITLES = {
     "modspectrogram.html": "Modulation spectrogram",
     "modtargets.html": "Hearing a modulation spectrum",
     "pv.html": "Phase vocoder",
-    "talkers.html": "Two talkers",
+    "whatisavoice.html": "What is a voice",
     "sourcefilter.html": "The source-filter model",
     "richer.html": "A richer source-filter model",
     "voice.html": "Rebuilding and changing a voice",
@@ -807,7 +807,11 @@ TOPICS = [
     (
         "Voices",
         [
-            ("talkers.html", "the male and the female talker every speech page uses, measured once."),
+            (
+                "whatisavoice.html",
+                "what a voice is made of, how voices differ, and the male and the female talker every speech"
+                " page uses, measured once.",
+            ),
             (
                 "sourcefilter.html",
                 "a voice built from a source and a filter by rule, each measured back from a recording"
@@ -1413,6 +1417,7 @@ RETIRED = {"15": "vocoder.html"}
 # with no anchor it knows.
 SF = "sourcefilter.html"  # where the four pages merged into The source-filter model went
 RICHER = "richer.html"  # where Source and aperiodicity and the voice page's phases went
+WHAT = "whatisavoice.html"  # where Two talkers went
 
 
 def _merged(anchors: str, others: dict[str, str], default: str) -> dict[str, str]:
@@ -1443,10 +1448,14 @@ MOVED = {
         **{f"h-{slug}": f"voice.html#h-{slug}" for slug in ("what-this-page-leaves-out", "references")},
     },
     "speech": {"d-f1": f"{SF}#d-f1", "h-nothing-is-lost": "resynthesis.html#h-nothing-is-lost",
-               "h-a-higher-voice": "talkers.html"},
-    "talkers": {"d-tk4": f"{SF}#d-tk4", "d-tk5": f"{SF}#d-tk5", "h-long-term-spectra": f"{SF}#d-tk4",
+               "h-a-higher-voice": WHAT},
+    "talkers": {"": WHAT, **{a: f"{WHAT}#{a}" for a in ("d-tk1", "d-tk2", "d-tk3", "h-pitch", "h-references")},
+                "h-the-sentence-read-twice": f"{WHAT}#h-the-two-talkers",
+                "h-spectral-envelopes": f"{WHAT}#h-size-the-spectral-envelopes",
+                "d-tk4": f"{SF}#d-tk4", "d-tk5": f"{SF}#d-tk5", "h-long-term-spectra": f"{SF}#d-tk4",
                 "h-harmonics-sample-the-envelope": f"{SF}#h-harmonics-sample-the-envelope"},
-    "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": "talkers.html#h-spectral-envelopes",
+    "sourcefilter": {"d-fq3": f"{WHAT}#d-fq3"},
+    "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": f"{WHAT}#h-size-the-spectral-envelopes",
               "d-he1": f"{SF}#d-he1", "d-hu1": f"{SF}#d-he1", "d-hu2": f"{SF}#d-hu2",
               "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply", "h-unvoiced-gaps": f"{SF}#d-hu2",
               **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
@@ -1454,14 +1463,14 @@ MOVED = {
     "formants": _merged(
         "h-a-vowel-piece-by-piece h-source-times-filter h-six-vowels h-consonants-from-transitions h-noise"
         " h-voice-quality h-sonore-says-its-name d-fv1 d-fv2 d-fv3 d-fv4 d-fv5 d-fs1 d-fw1 d-fw2 d-fc1 d-fc2"
-        " d-fc3 d-fn1 d-fn2 d-fn3 d-fq1 d-fq2 d-fq3 d-fl1 d-ft1 d-ft4 d-ft5 d-ft6 h-a-recording"
+        " d-fc3 d-fn1 d-fn2 d-fn3 d-fq1 d-fq2 d-fl1 d-ft1 d-ft4 d-ft5 d-ft6 h-a-recording"
         " h-copy-synthesis",
         {"d-fw3": "d-fw1", "d-fw4": "d-fw1", "d-fw5": "d-fw2", "h-female-vowels": "d-fw1",
-         "d-fp1": "h-synthesis-by-rule", "h-cascade-and-parallel": "h-synthesis-by-rule", "d-fq4": "d-fq3",
-         "d-fq5": "d-fq3", "d-ft2": "d-ft1", "d-ft3": "d-ft1", "h-finding-the-formants-again": "h-linear-prediction",
+         "d-fp1": "h-synthesis-by-rule", "h-cascade-and-parallel": "h-synthesis-by-rule",
+         "d-ft2": "d-ft1", "d-ft3": "d-ft1", "h-finding-the-formants-again": "h-linear-prediction",
          "h-code-the-examples-share": "h-the-sentence-and-code-the-examples-share"},
         "h-synthesis-by-rule",
-    ),
+    ) | {f"d-fq{i}": f"{WHAT}#d-fq3" for i in (3, 4, 5)},
     "pitch": _merged(
         "h-pitch-from-the-cepstrum h-a-tracker-beside-the-cepstrum h-octave-and-voicing-errors d-c2 d-f1 d-pt1"
         " d-hp0 d-hp2",
@@ -1489,7 +1498,7 @@ MOVED = {
         "h-what-world-reports": f"{RICHER}#h-what-d4c-reports",
         "h-listening": f"{RICHER}#h-putting-it-back",
         "h-the-vowel-and-code-the-examples-share": f"{RICHER}#h-the-sentence-the-vowel-and-code-the-examples-share",
-        "h-a-higher-voice": "talkers.html",
+        "h-a-higher-voice": WHAT,
     },
     "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
     "vocoder": {"d-cf0": "vocoder.html#d-ci0", "d-cf8": "vocoder.html#d-ci8", "d-cf8p": "vocoder.html#d-cp8",

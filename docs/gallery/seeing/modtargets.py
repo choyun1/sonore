@@ -24,8 +24,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # structure, while `carrier="tone"` draws a random modulation phase and puts the envelopes on
 # steady tones.
 #
-# The sentence is read by the [two talkers](talkers.html) every speech page uses, and every demo
-# on it plays both.
+# The sentence is read by the [two talkers](whatisavoice.html#h-the-two-talkers) every speech page
+# uses, and every demo on it plays both.
 #
 # - [Same spectrum, different sound](#h-same-spectrum-different-sound): the sentence, and a sound
 #   with its modulation spectrum and a random modulation phase.

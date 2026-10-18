@@ -46,7 +46,7 @@ time it runs.
 # ## The talkers and the trajectories
 #
 # The target is the sentence from [Seeing speech](speech.html), read by the male talker and by
-# the female talker of [Two talkers](talkers.html). There are two sets of maskers. The male
+# the female talker of [What is a voice](whatisavoice.html). There are two sets of maskers. The male
 # maskers are two sentences by a third talker in the CMU ARCTIC corpus, also male (Kominek &
 # Black, 2004). The corpus files here hold no other female sentences, so the female maskers are
 # the opening seconds of two audiobook passages read by female readers in LibriSpeech
@@ -263,7 +263,7 @@ sound = finish(rendered[0])
 # the other way round. Listeners ignore a masker of the other sex far more easily than one of the
 # same sex (Brungart, 2001, with two talkers at once), so the target should be easier to follow
 # in the right column of the first demo and in the left column of the second. How the two voices
-# differ is measured on [Two talkers](talkers.html).
+# differ is measured on [What is a voice](whatisavoice.html).
 #
 # Then the target moves, among the male maskers. Listen for whether motion sets the male target
 # apart from the two male maskers, how far it has to move before it does, and whether it adds

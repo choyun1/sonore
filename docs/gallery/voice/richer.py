@@ -38,7 +38,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # ## The sentence, the vowel, and code the examples share
 #
-# The sentence both talkers read ([Two talkers](talkers.html)), with `so.f0_track`'s pitch track
+# The sentence both talkers read ([What is a voice](whatisavoice.html)), with `so.f0_track`'s pitch track
 # and the track WORLD's Harvest (Morise, 2017) measured on each recording, stored with it.
 #
 # Beside it, a synthetic vowel whose every part is known: the vowel of "hod", made from Klatt's

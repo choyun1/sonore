@@ -23,7 +23,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # $$s(t) = (e * h)(t), \qquad S(f) = E(f)\,H(f).$$
 #
 # This page builds voices from the two parts, then runs the other way: it measures each part
-# back from the two recorded talkers of [Two talkers](talkers.html), and puts a voice back
+# back from the two recorded talkers of [What is a voice](whatisavoice.html), and puts a voice back
 # together from what it measured.
 #
 # Running the model backward is the hard direction. Finding both factors from their product
@@ -354,8 +354,8 @@ fig, playhead = show(sound, "so.klatt_synthesize", [730, 1090, 2440, 3500, 4500]
 # too, falling from 230 to 200 Hz where the male one falls from 125 to 105 Hz, and F4 and F5,
 # which Peterson and Barney did not measure, are raised from 3500 and 4500 Hz to 4100 and 4900 Hz
 # to stay above the female F3. These are averages over many talkers. The two recorded talkers
-# are one man and one woman, and how their formants differ is measured on [Two
-# talkers](talkers.html#h-spectral-envelopes).
+# are one man and one woman, and how their formants differ is measured on [What is a
+# voice](whatisavoice.html#h-size-the-spectral-envelopes).
 
 # %%
 VOWELS = {  # male averages, F1 F2 F3 (Hz)
@@ -607,7 +607,8 @@ ax0.legend(fontsize=8)
 # between the first two harmonics, H1-H2, is the usual measure of this in recordings; Fant's
 # (1995) fit to it, $-7.6 + 11.1\,R_d$ dB, agrees with these spectra to within half a decibel
 # up to $R_d$ 1.4. Klatt's 1980 source has the H1-H2 of a modal voice, but around 3 kHz its harmonics
-# are stronger than even the tense pulse's.
+# are stronger than even the tense pulse's. The three pulses heard in one vowel, at the male and
+# the female talker's pitch, are on [What is a voice](whatisavoice.html#d-fq3).
 
 # %% [figure fq2] The spectra of the three pulses, and of the 1980 source
 k = np.arange(1, 41)
@@ -629,28 +630,6 @@ for (rd, label), color in zip(RDS.items(), ["C3", "k", "C0"], strict=True):
 ax.set(xlabel="Frequency at F0 = 100 Hz (Hz)", ylabel="Level re first harmonic (dB)", xlim=(0, 4100))
 ax.set_title("Harmonics of the excitation (the flow derivative), relative to the first")
 ax.legend(fontsize=8)
-
-# %% [about]
-# The vowel of "hod" three times, with everything the same except the pulse: tense (Rd 0.5),
-# modal (Rd 1) and lax (Rd 2.5), with the male averages and pitch and with the female ones. The
-# vowel stays the same; the voice goes from pressed and bright to soft and muffled. Since the
-# pulse sets the level of each harmonic by its number, the same Rd at the higher pitch spreads the
-# same levels over a wider range of frequencies: relative to its first harmonic, the female voice
-# falls off more slowly with frequency. A lax pulse alone sounds soft rather than breathy: Klatt
-# & Klatt (1990) found aspiration noise the most important cue to breathiness, which is why the
-# breathy vowel above adds it.
-
-# %% [demo fq3] One vowel, three voices
-PITCHES = {"Male formants and pitch": F0, "Female formants and pitch": ([0, DUR], [230, 200])}
-sounds = {}
-for label, (vowel_set, rest) in SETS.items():
-    formants = dict(zip(("F1", "F2", "F3"), vowel_set["hod"], strict=True), F4=rest["F4"], F5=rest["F5"])
-    parts = []
-    for rd in RDS:
-        snd = so.klatt_synthesize(DUR, FS, F0=PITCHES[label], AV=onoff(DUR), SS=3, RD=rd, **formants)
-        parts += [snd, so.silence(0.2, FS)]
-    sounds[label] = finish(so.concat(parts[:-1]))
-fig, playhead = show_vowels(sounds, "Rd 0.5, 1, 2.5", {label: SETS[label][0]["hod"] for label in SETS})
 
 # %% [markdown]
 # ### sonore says its name

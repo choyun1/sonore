@@ -366,7 +366,7 @@ fig, playhead, live = show(sound, marks=[4.0, 8.0, 12.0], start=2.0)
 # %% [markdown]
 # ## Speech, babble and noise
 #
-# For each talker ([Two talkers](talkers.html)): the sentence from the CMU ARCTIC corpus
+# For each talker ([What is a voice](whatisavoice.html)): the sentence from the CMU ARCTIC corpus
 # (Kominek & Black, 2004), then 4 s of babble, then 4 s of noise with the sentence's long-term
 # spectrum. The collection has one sentence by the female talker, so each talker's babble is that
 # talker's own sentence six times over, each copy repeated end to end and started at a random
