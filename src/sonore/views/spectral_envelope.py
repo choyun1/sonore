@@ -124,9 +124,12 @@ def _smooth_rectangular(values, half_width_bins):
         return cumulative[left] + extended[left] * fraction + 0.5 * slope * fraction**2
 
     centers = np.arange(n_half, dtype=float)
-    return (integral_up_to(centers + half_width_bins) - integral_up_to(centers - half_width_bins)) / (
+    average = (integral_up_to(centers + half_width_bins) - integral_up_to(centers - half_width_bins)) / (
         2.0 * half_width_bins
     )
+    # An average of powers is never negative, but the difference of two large cumulative sums can
+    # come out just below zero where the spectrum is empty, and its logarithm would be NaN.
+    return np.maximum(average, 0.0)
 
 
 # ------------------------------------------------------------ reading a grid

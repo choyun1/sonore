@@ -90,3 +90,14 @@ def test_bad_tracks_are_refused(reference):
         so.pitch_adaptive_envelope(sound, (times, -f0))
     with pytest.raises(ValueError, match="channels"):
         so.pitch_adaptive_envelope(sound, (times, np.vstack([f0, f0])))
+
+
+def test_an_empty_band_does_not_make_the_envelope_nan():
+    """Harmonics that stop below Nyquist leave the top of the spectrum empty; the smoothing's
+    roundoff there must not reach the logarithm as a negative power."""
+    fs, f0 = 16000, 200.0
+    t = np.arange(round(0.4 * fs)) / fs
+    harmonics = f0 * np.arange(1, int(0.45 * fs / f0) + 1)
+    sound = so.Sound(np.cos(2 * np.pi * harmonics[:, None] * t).sum(0), fs)
+    envelope = so.pitch_adaptive_envelope(sound, ([0.2], [f0]))
+    assert np.all(np.isfinite(envelope.data)) and np.all(envelope.data > 0)
