@@ -298,3 +298,10 @@ def test_singing_range(f0):
         err, unvoiced = errors(so.f0_track(sound, f_hi=1200.0), np.full(N, f0))
         assert unvoiced == 0
         assert err < 0.2
+
+
+def test_an_empty_sound_gives_an_empty_track():
+    trk = so.f0_track(so.Sound(np.zeros(0), FS))
+    assert trk.f0.shape == trk.score.shape == (1, 0)
+    assert trk.candidates.shape == (1, 0, 8)
+    assert "0 time windows" in repr(trk)

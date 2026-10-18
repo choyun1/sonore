@@ -82,6 +82,19 @@ class TestScaleF0:
         expected = median * 1.5 * (track.candidates / median) ** 2.0
         np.testing.assert_allclose(scaled.candidates, expected)
 
+    def test_candidates_of_an_unvoiced_channel_follow_the_ratio(self, vowel):
+        sound = vowel[0]
+        both = so.Sound(
+            np.column_stack(
+                [sound.data[:, 0], 0.01 * np.random.default_rng(0).standard_normal(sound.n_samples)]
+            ),
+            sound.fs,
+        )
+        track = so.f0_track(both)
+        assert not track.voiced[1].any()
+        scaled = so.scale_f0(track, 1.5, range=2.0)
+        np.testing.assert_array_equal(scaled.candidates[1], track.candidates[1] * 1.5)
+
     def test_identity_is_the_contour_itself(self):
         contour = (np.arange(3) * HOP, np.array([0.0, 100.0, 110.0]))
         assert so.scale_f0(contour, 1.0) is contour

@@ -45,7 +45,7 @@ class F0Track(View):
     ``f0`` and ``score`` have shape ``(n_channels, n_windows)``; ``f0`` is 0
     where the time window is unvoiced, and ``score`` is the periodicity score of
     the chosen candidate (0 where unvoiced). ``candidates`` and
-    ``candidate_scores`` have shape ``(n_channels, n_windows, 4)`` and hold
+    ``candidate_scores`` have shape ``(n_channels, n_windows, 8)`` and hold
     every refined candidate the tracker weighed, NaN where a time window had fewer.
     ``t`` and a row of ``f0`` go straight into
     :meth:`~sonore.frames.gabor.TVGaborFrame.pitch_adaptive` and
@@ -74,8 +74,9 @@ class F0Track(View):
     def __repr__(self) -> str:
         n_channels, n_windows = self.f0.shape
         voiced = self.voiced
+        share = f"{voiced.mean():.0%}" if voiced.size else "0%"
         f0_range = f", F0 {self.f0[voiced].min():.0f}-{self.f0[voiced].max():.0f} Hz" if voiced.any() else ""
-        return f"F0Track({n_windows} time windows, {n_channels} ch, {voiced.mean():.0%} voiced{f0_range})"
+        return f"F0Track({n_windows} time windows, {n_channels} ch, {share} voiced{f0_range})"
 
     def plot(self, ax: Axes | None = None, *, channel: int = 0, candidates: bool = False, **kwargs) -> Axes:
         """F0 against time (see :func:`~sonore.plotting.plot_f0_track`)."""
@@ -126,10 +127,10 @@ def f0_track(
        another one at a whole multiple of its frequency (an octave, a
        twelfth, ...) scores at least as well, less ``subharmonic_margin``:
        anything periodic with period T is also periodic with period 2T, 3T,
-       ..., and without this rule a female voice is tracked an octave low on
-       about 1% of time windows, and a steady synthetic vowel at 300 Hz at a
-       third of its F0. No
-       smoothing follows.
+       ..., and without this rule a female voice is tracked low on about
+       1.4% of the time windows where it and the reference both say voiced
+       (measured on the FDA database), and a steady synthetic vowel at
+       300 Hz at a half or a third of its F0. No smoothing follows.
 
     Where each stage comes from: the candidates are YIN's (de Cheveigné &
     Kawahara, 2002); the refinement is WORLD's StoneMask (Morise et al.,
@@ -156,7 +157,8 @@ def f0_track(
         The sound; each channel is tracked separately.
     f_lo, f_hi
         The search range [Hz]. The defaults cover speaking voices; raise
-        ``f_hi`` for singing.
+        ``f_hi`` for singing. Refined candidates are kept from 0.9 ``f_lo``
+        to 1.1 ``f_hi``, so the F0 can come out up to 10% outside the range.
     hop
         Spacing between time windows [s].
     threshold
@@ -354,6 +356,8 @@ def _periodicity(samples, candidate_times, candidate_f0s, fs):
 def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margin):
     """Cheapest path through (unvoiced, candidates...) per time window."""
     n_windows = len(cand)
+    if not n_windows:  # an empty sound
+        return np.zeros(0), np.zeros(0)
     f_states = np.concatenate([np.zeros((n_windows, 1)), np.nan_to_num(cand, nan=-1.0)], axis=1)
     local_cost = np.concatenate(
         [np.full((n_windows, 1), 1 - threshold), 1 - np.nan_to_num(score, nan=0.0)], axis=1
@@ -386,10 +390,9 @@ def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margi
         backpointer[i] = np.argmin(path_cost, axis=1)
         cost = path_cost[np.arange(path_cost.shape[0]), backpointer[i]] + local_cost[i]
     path = np.zeros(n_windows, int)
-    if n_windows:
-        path[-1] = int(np.argmin(cost))
-        for i in range(n_windows - 1, 0, -1):
-            path[i - 1] = backpointer[i][path[i]]
+    path[-1] = int(np.argmin(cost))
+    for i in range(n_windows - 1, 0, -1):
+        path[i - 1] = backpointer[i][path[i]]
     rows = np.arange(n_windows)
     f0 = np.where(path > 0, f_states[rows, path], 0.0)
     chosen_score = np.where(path > 0, np.nan_to_num(score, nan=0.0)[rows, np.maximum(path - 1, 0)], 0.0)
@@ -460,10 +463,11 @@ def scale_f0(contour: ContourLike, ratio: float, *, range: float = 1.0) -> Conto
 
 def _scaled_candidates(track: F0Track, ratio: float, spread: float) -> np.ndarray:
     """The candidates moved by the same map as the chosen F0 (each channel's
-    median of voiced F0 as the center)."""
+    median of voiced F0 as the center). A channel with no voiced time window
+    has no center, so its candidates are only multiplied by ``ratio``."""
+    out = track.candidates * ratio
     if spread == 1:
-        return track.candidates * ratio
-    out = track.candidates.copy()
+        return out
     for channel, f0_row in enumerate(track.f0):
         voiced = f0_row > 0
         if voiced.any():
