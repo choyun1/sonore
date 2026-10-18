@@ -20,17 +20,11 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # without the formants, or the formants without the pitch. This page does both, on the sentence
 # read by the [two talkers](whatisavoice.html#h-the-two-talkers), shown side by side throughout.
 #
-# The first part starts from the simple rebuild of [Putting it back,
-# simply](sourcefilter.html#h-putting-it-back-simply), harmonics from `so.harmonic_complex` shaped
-# by a liftered envelope:
-#
-# - [Envelopes on harmonics and on noise](#h-envelopes-on-harmonics-and-on-noise): a channel
-#   vocoder on a harmonic carrier, and a whisper.
-#
-# The second part changes the voice with a vocoder built from WORLD's analyses (Morise, Yokomori &
-# Ozawa, 2016), which add a third measurement, the aperiodicity (see [A richer source-filter
-# model](richer.html)).
-# Two changes are basic: `so.scale_f0(track, ratio)` multiplies every F0 by a ratio and leaves the
+# The voice is rebuilt by `so.source_filter_synthesize` from the three measurements of [A richer
+# source-filter model](richer.html): a pitch track (`so.f0_track`), the envelope measured to the
+# pitch period (`so.pitch_adaptive_envelope`, CheapTrick) and the aperiodicity
+# (`so.band_aperiodicity`, D4C), the two analyses of WORLD (Morise, Yokomori & Ozawa, 2016) that
+# sonore has. Two changes are basic: `so.scale_f0(track, ratio)` multiplies every F0 by a ratio and leaves the
 # envelope alone; `so.warp_frequency(envelope, ratio)` reads the envelope at $f / \text{ratio}$, so
 # a peak at 1000 Hz moves to $1000 \times \text{ratio}$ Hz, and leaves the pitch alone.
 #
@@ -41,7 +35,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [The phase vocoder moves both](#h-the-phase-vocoder-moves-both): the same pitch change by time
 #   stretch and resampling, for contrast.
 # - [Pitch range](#h-pitch-range): a monotone, a doubled range and a flipped contour.
-# - [The aperiodicity](#h-the-aperiodicity): kept in place or moved with the formants.
+# - [The aperiodicity](#h-the-aperiodicity): kept in place or moved with the formants, and a
+#   whisper, which is all noise.
 # - [Toward another talker](#h-toward-another-talker): each talker moved toward the other.
 # - [Any pitch track, any envelope](#h-any-pitch-track-any-envelope): three trackers and four
 #   envelopes mixed, scored on resynthesis.
@@ -135,17 +130,11 @@ for label, median in medians.items():
 sounds = talkers
 fig, playhead = show_pair(sounds, "the sentence", tracks)
 
-# %% [markdown]
-# ## Envelopes on harmonics and on noise
-#
-# The simplest rebuild, harmonics on the pitch track shaped by a liftered cepstral envelope with
-# envelope-shaped noise where the track says unvoiced, is on [Putting it back,
-# simply](sourcefilter.html#h-putting-it-back-simply). This section keeps that envelope, which the
-# last section uses again, and hears two relatives of the rebuild: a channel vocoder and a
-# whisper.
-
-
 # %%
+# The liftered cepstral envelope of [Putting it back, simply](sourcefilter.html#h-putting-it-back-simply),
+# measured here too: the last section scores it beside CheapTrick's, and the whisper is noise shaped to it.
+
+
 def cepstral_envelope(snd, track):
     """The cepstrum of 40 ms Hann time windows every 5 ms, liftered below half the pitch period
     of each window (the track's voiced F0, interpolated on a log scale across unvoiced gaps)."""
@@ -166,56 +155,13 @@ cepstral = {label: cepstral_envelope(snd, tracks[label]) for label, snd in talke
 breaths = {label: shaped_noise(snd, cepstral[label], seed=2) for label, snd in talkers.items()}
 
 # %% [markdown]
-# A channel vocoder ([Hearing through a vocoder](vocoder.html)) does the same job with band
-# envelopes in place of a cepstral one. On noise it puts back the envelopes and not the pitch; on
-# a harmonic carrier that follows the pitch track it puts the pitch back too. The carrier below is
-# `so.harmonic_complex` with `unvoiced="noise"`, which fills the unvoiced stretches with white
-# noise of the harmonics' power, so the consonants have something to modulate.
-
-# %% [about]
-# The sentence through a 16-band noise vocoder (Shannon et al., 1995): the band envelopes are
-# there, the harmonics are not.
-
-# %% [demo he2] Sixteen noise bands
-sounds = {label: finish(so.channel_vocode(snd, 16, 80, 7600, rng=1)) for label, snd in talkers.items()}
-fig, playhead = show_pair(sounds, "16-band noise vocoder")
-
-# %% [about]
-# The same 16 bands on a harmonic carrier that follows each talker's `so.f0_track`, with noise
-# where it says unvoiced. The harmonics within a band share one envelope, so the formants are
-# blurrier than with the cepstral envelope.
-
-# %% [demo he3] Sixteen bands on harmonics
-sounds = {
-    label: finish(
-        so.channel_vocode(
-            snd,
-            16,
-            80,
-            7600,
-            carrier=so.harmonic_complex(snd.duration, fs, tracks[label], unvoiced="noise", rng=1),
-        )
-    )
-    for label, snd in talkers.items()
-}
-fig, playhead = show_pair(sounds, "16 bands, harmonic carrier", tracks)
-
-# %% [about]
-# A whisper: no harmonics at all, the shaped noise everywhere. This is close to the [noise
-# vocoder](#d-he2), with the cepstral envelope in place of 16 band envelopes.
-
-# %% [demo hm4] Whispered
-sounds = {label: finish(so.Sound(breath, fs)) for label, breath in breaths.items()}
-fig, playhead = show_pair(sounds, "shaped noise only")
-
-# %% [markdown]
 # ## Resynthesis
 #
-# WORLD measures the envelope with CheapTrick (Morise, 2015), which [Against the lifter, on a
-# recording](richer.html#h-against-the-lifter-on-a-recording) compares with the liftered cepstrum, and the
-# aperiodicity with D4C (Morise, 2016): how much of the voice is noise, frequency by frequency, so
-# that every time window can mix harmonics and noise rather than being one or the other as in
-# [Putting it back, simply](sourcefilter.html#h-putting-it-back-simply).
+# The envelope is measured to the pitch period by CheapTrick (Morise, 2015), which [Against the
+# lifter, on a recording](richer.html#h-against-the-lifter-on-a-recording) compares with the
+# liftered cepstrum, and the aperiodicity by D4C (Morise, 2016): how much of the voice is noise,
+# frequency by frequency, so that every time window can mix harmonics and noise rather than being
+# one or the other as in [Putting it back, simply](sourcefilter.html#h-putting-it-back-simply).
 # `so.source_filter_synthesize` puts the three back together: harmonics on the pitch track carrying
 # the periodic part of the envelope, plus white noise shaped to the rest. The envelope and the
 # aperiodicity are measured here on the `so.f0_track` tracks.
@@ -518,6 +464,16 @@ sounds = {
 }
 fig, playhead = show_pair(sounds, "formants and aperiodicity × 1.2", tracks)
 
+# %% [about]
+# A whisper: no harmonics at all. Instead of an aperiodicity set to all noise, this is the simple
+# rebuild's noise everywhere, white noise shaped to the liftered cepstral envelope, voiced
+# stretches included. The [16-band noise vocoder](vocoder.html#d-ci16) is its relative with band
+# envelopes in place of the cepstral one.
+
+# %% [demo hm4] Whispered
+sounds = {label: finish(so.Sound(breath, fs)) for label, breath in breaths.items()}
+fig, playhead = show_pair(sounds, "shaped noise only")
+
 # %% [markdown]
 # ## Toward another talker
 #
@@ -657,8 +613,8 @@ for label, average in original_db.items():
 # envelope from another. Three pitch tracks, those of [Measuring the source:
 # pitch](sourcefilter.html#h-measuring-the-source-pitch): `so.f0_track`, Harvest (Morise, 2017)
 # stored with each recording, and the cepstral peak in each 40 ms window (Noll, 1967). Four
-# envelopes: CheapTrick's, the liftered cepstrum of [the first
-# part](#h-envelopes-on-harmonics-and-on-noise), and the envelope kept by 13 MFCCs (26 mel bands,
+# envelopes: CheapTrick's, the liftered cepstrum of [Putting it back,
+# simply](sourcefilter.html#h-putting-it-back-simply), and the envelope kept by 13 MFCCs (26 mel bands,
 # Davis & Mermelstein, 1980; see [MFCCs: a cepstrum on the mel
 # scale](sourcefilter.html#h-mfccs-a-cepstrum-on-the-mel-scale)) with each band's triangle of height
 # 1 (the default) or of area 1. Triangles of height 1 sum more power the wider they are, so that
@@ -736,8 +692,8 @@ for label in talkers:
 # own times.
 
 # %% [about]
-# The pitch from the cepstrum and the envelope from the MFCCs (area 1); the only WORLD analysis is
-# D4C's aperiodicity.
+# The pitch from the cepstrum and the envelope from the MFCCs (area 1); only the aperiodicity is
+# D4C's.
 
 # %% [demo vc17] Cepstral pitch, MFCC envelope
 sounds = {
@@ -826,7 +782,3 @@ report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
 #   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185)
-# - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
-#   cues. *Science* 270(5234), 303–304.
-#   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
-#   [`envelopes.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497)

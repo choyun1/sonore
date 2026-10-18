@@ -199,3 +199,14 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   loop on stream and applause and was about 4 dB worse on fire, mostly in
   the correlations between channels. `synthesize` is unchanged. A one-off
   comparison; the scripts are not part of the repository.
+- **Voices gallery, four pages.** The seven Voices pages became four, in the
+  order `docs/design/layout/voices-gallery.md` sets out: What is a voice (what
+  makes one, how voices differ and how each difference is measured, the two
+  talkers, a table of the indicators sonore computes), The source-filter model
+  (formant synthesis, pitch tracking, finding formants and the spectral
+  envelope on one page, opening on why the problem is solvable at all), A
+  richer source-filter model (an envelope measured to the pitch period, a
+  source that is partly noise, the phases, and the voice rebuilt by
+  `so.source_filter_synthesize`) and Rebuilding and changing a voice
+  (condensed). Every example that moved kept its key, so old links forward.
+  Done 2026-10-18.

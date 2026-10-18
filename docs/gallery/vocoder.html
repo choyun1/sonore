@@ -506,6 +506,47 @@ the sentence's fine structure and gives it new envelopes.</p>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = vocode_both(8, carrier=&quot;tone&quot;)
 fig, playhead = show_pair(sounds, 8, title=&quot;eight tones&quot;)</code></pre></details>
 </article>
+<h3 class="sub" id="h-a-harmonic-carrier-that-follows-the-pitch">A harmonic carrier that follows the pitch</h3>
+<p>A third carrier: harmonics on each talker's own <code>so.f0_track</code> pitch track, with white noise of
+the harmonics' power where the track says unvoiced (<code>so.harmonic_complex</code> with
+<code>unvoiced=&quot;noise&quot;</code>), so the consonants have something to modulate. Where noise gives a whisper
+and fixed tones a buzz at the bands' centers, this gives a voice at the talker's own pitch. The
+band envelopes put the formants back only as coarsely as the bands allow, since the harmonics
+within one band share one envelope; <a href="voice.html">Rebuilding and changing a voice</a> does the same
+job with a smooth spectral envelope in place of band envelopes.</p>
+
+<article class="sound pair" id="d-he3">
+  <div class="about">
+    <h3>Sixteen bands on harmonics</h3>
+    <div class="desc"><p>The sentence through sixteen bands on a harmonic carrier that follows each talker's pitch
+track, with noise where it says unvoiced.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/he3_sixteen_bands_on_harmonics_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4857909101101411, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.20432939068639588, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4857909101101411, &quot;top&quot;: 0.2667995791784592, &quot;bottom&quot;: 0.5540374504120226, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4857909101101411, &quot;top&quot;: 0.6240231980248696, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">he3_sixteen_bands_on_harmonics_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/he3_sixteen_bands_on_harmonics_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.046348561507936425, &quot;bottom&quot;: 0.20432939068639588, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.2667995791784592, &quot;bottom&quot;: 0.5540374504120226, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.6240231980248695, &quot;bottom&quot;: 0.9112610692584325, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">he3_sixteen_bands_on_harmonics_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/he3_sixteen_bands_on_harmonics.png" width="1000" height="560" alt="Plots of the sixteen bands on harmonics sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.channel_vocode(
+            snd,
+            16,
+            F_LO,
+            F_HI,
+            carrier=so.harmonic_complex(snd.duration, fs, tracks[label], unvoiced=&quot;noise&quot;, rng=1),
+        )
+    )
+    for label, snd in talkers.items()
+}
+fig, playhead = show_pair(sounds, 16, title=&quot;16 bands, harmonic carrier&quot;)</code></pre></details>
+</article>
 </section>
 <section aria-labelledby="h-pitch-from-the-envelope">
 <h2 id="h-pitch-from-the-envelope">Pitch from the envelope</h2>

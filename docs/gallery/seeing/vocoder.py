@@ -235,6 +235,36 @@ sounds = vocode_both(8, carrier="tone")
 fig, playhead = show_pair(sounds, 8, title="eight tones")
 
 # %% [markdown]
+# ### A harmonic carrier that follows the pitch
+#
+# A third carrier: harmonics on each talker's own `so.f0_track` pitch track, with white noise of
+# the harmonics' power where the track says unvoiced (`so.harmonic_complex` with
+# `unvoiced="noise"`), so the consonants have something to modulate. Where noise gives a whisper
+# and fixed tones a buzz at the bands' centers, this gives a voice at the talker's own pitch. The
+# band envelopes put the formants back only as coarsely as the bands allow, since the harmonics
+# within one band share one envelope; [Rebuilding and changing a voice](voice.html) does the same
+# job with a smooth spectral envelope in place of band envelopes.
+
+# %% [about]
+# The sentence through sixteen bands on a harmonic carrier that follows each talker's pitch
+# track, with noise where it says unvoiced.
+
+# %% [demo he3] Sixteen bands on harmonics
+sounds = {
+    label: finish(
+        so.channel_vocode(
+            snd,
+            16,
+            F_LO,
+            F_HI,
+            carrier=so.harmonic_complex(snd.duration, fs, tracks[label], unvoiced="noise", rng=1),
+        )
+    )
+    for label, snd in talkers.items()
+}
+fig, playhead = show_pair(sounds, 16, title="16 bands, harmonic carrier")
+
+# %% [markdown]
 # ## Pitch from the envelope
 #
 # The vocoder's envelope lowpass decides how fast an envelope may change. At 50 Hz it keeps the

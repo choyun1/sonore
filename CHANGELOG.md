@@ -68,6 +68,14 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- Gallery: "Rebuilding and changing a voice" is condensed to the fourth page of
+  the Voices arc. Its opening section "Envelopes on harmonics and on noise" is
+  gone: the 16-band noise vocoder was the Vocoder page's own example, and the
+  16 bands on a harmonic carrier that follows the pitch track move to that
+  page as a new section, "A harmonic carrier that follows the pitch". The
+  whisper stays, at the end of "The aperiodicity". The page now introduces
+  itself by the three measurements `so.source_filter_synthesize` reads
+  rather than as a WORLD vocoder. Old links forward.
 - Gallery: "Two talkers" becomes "What is a voice" (`whatisavoice.html`), the
   first page of the Voices group: what a voice is made of (one source-filter
   diagram), the two talkers every speech page uses, how voices differ (pitch,
