@@ -1,14 +1,13 @@
-# The WORLD ports in this file are derived from WORLD (https://github.com/mmorise/World),
-# Copyright (c) 2010 M. Morise, and are used under its BSD 3-clause license (LICENSE-WORLD).
 """Spectral envelopes, and moving them along frequency.
 
-:func:`pitch_adaptive_envelope` is WORLD's CheapTrick (Morise, 2015), ported exactly: every
-step reproduces WORLD's C++ code (github.com/mmorise/World, commit d625e76) to
-floating-point precision, including the tiny noise WORLD adds to keep
-logarithms and divisions finite, drawn from WORLD's own generator in WORLD's
-order (:mod:`sonore.views.world`, where :data:`DIFFERENCES_FROM_WORLD
-<sonore.views.world.DIFFERENCES_FROM_WORLD>` lists every option that departs
-from WORLD).
+:func:`pitch_adaptive_envelope` is CheapTrick (Morise, 2015), written from the paper:
+a window three periods long, its power spectrum smoothed over 2 F0 / 3, and a
+cepstral lifter that removes the harmonic ripple and restores the level the
+smoothing took from the harmonic peaks. Where the paper leaves a choice open
+(the window's gain, what happens below 0 Hz, unvoiced time windows, the FFT
+size), the choice is stated in the function's docstring. It is not WORLD's
+code: with the same ``q1`` its envelopes are within 0.01 dB of WORLD's
+(median over voiced time windows of two recorded sentences), not equal.
 
 An envelope here is anything read as ``env(t, f)``, giving power at times
 ``t`` and frequencies ``f`` with shape ``(n_channels, len(f), len(t))``:
@@ -34,17 +33,7 @@ from numpy.typing import ArrayLike
 
 from sonore.core.sound import Sound
 from sonore.views.view import View
-from sonore.views.world import (
-    _DEFAULT_F0,
-    _EPS,
-    _FLOOR_F0,
-    _SAFEGUARD,
-    _integer_fs,
-    _matlab_round,
-    _Stream,
-    _time_windows,
-    world_fft_size,
-)
+from sonore.views.world import _time_windows
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -54,61 +43,90 @@ if TYPE_CHECKING:
 __all__ = ["SpectralEnvelope", "pitch_adaptive_envelope", "GridEnvelope", "warp_frequency"]
 
 
-def _interp1q(x_start: float, x_step: float, values: np.ndarray, x_query: np.ndarray) -> np.ndarray:
-    """WORLD's interp1Q: ``values`` sampled at ``x_start + k x_step``, read
-    linearly at ``x_query`` (index truncated toward zero, last step flat)."""
-    position = (np.asarray(x_query, float) - x_start) / x_step
-    index = position.astype(int)
-    steps = np.append(np.diff(values), 0.0)
-    return values[index] + steps[index] * (position - index)
+_FLOOR_F0 = 71.0  # the lowest F0 analyzed; it sets the FFT size
 
 
-def _linear_smoothing(spectrum: np.ndarray, width: float, fs: int, n_fft: int) -> np.ndarray:
-    """WORLD's LinearSmoothing: the mean over ``width`` Hz of a half
-    spectrum, piecewise constant per bin, mirrored at 0 Hz and Nyquist."""
-    n_half = n_fft // 2
-    bin_width = fs / n_fft
-    boundary = int(width * n_fft / fs) + 1
-    mirrored = np.concatenate(
-        [spectrum[boundary:0:-1], spectrum[:n_half], spectrum[n_half::-1][: boundary + 1]]
+_UNVOICED_F0 = 500.0  # unvoiced time windows are analyzed as if F0 were this
+
+
+# Added to a power spectrum before a logarithm or a division. The windows have unit
+# energy, so white noise of variance s**2 has power s**2 in every bin; 16-bit quantization
+# noise on a +-1 scale is about (2**-15)**2 / 12 = 8e-11, so 1e-12 lies about 19 dB below
+# the quietest noise a 16-bit recording holds and only changes bins that are numerically 0
+# (digital silence, or the zeros beyond the ends of the sound).
+_POWER_FLOOR = 1e-12
+
+
+def _power_of_two_above(value: float) -> int:
+    size = 1
+    while size <= value:
+        size *= 2
+    return size
+
+
+def _envelope_fft_size(fs: float, f0_floor: float) -> int:
+    """The smallest power of two above ``3 fs / f0_floor``, so that a window three
+    periods of ``f0_floor`` long fits."""
+    return _power_of_two_above(3.0 * fs / f0_floor)
+
+
+def _windowed_segment(samples, center, window_function, half_length):
+    """The samples around a (possibly fractional) ``center`` under a window.
+
+    ``window_function(offset)`` gives the window at an offset in samples from the
+    center. Every whole sample with ``|offset| < half_length`` is used, and samples
+    beyond either end of the sound are zeros. Returns the offsets, the window and
+    the windowed segment."""
+    first = int(np.floor(center - half_length)) + 1
+    last = int(np.ceil(center + half_length)) - 1
+    indices = np.arange(first, last + 1)
+    offsets = indices - center
+    window = window_function(offsets)
+    segment = np.zeros(len(indices))
+    inside = (indices >= 0) & (indices < len(samples))
+    segment[inside] = samples[indices[inside]]
+    return offsets, window, window * segment
+
+
+def _hann(length):
+    """A Hann window ``length`` samples long (may be fractional), as a function of the
+    offset from its center."""
+    return lambda offset: 0.5 + 0.5 * np.cos(2.0 * np.pi * offset / length)
+
+
+def _unit_energy_power(samples, center, window_function, half_length, n_fft):
+    """The power spectrum of the samples under a window scaled to unit energy, so that
+    its level does not change with the window's length."""
+    _, window, segment = _windowed_segment(samples, center, window_function, half_length)
+    return np.abs(np.fft.rfft(segment / np.sqrt(np.sum(window**2)), n_fft)) ** 2
+
+
+def _smooth_rectangular(values, half_width_bins):
+    """A moving average over ``+-half_width_bins`` of a one-sided spectrum.
+
+    The average is the exact integral of the linearly interpolated spectrum over the
+    width, from a cumulative sum. Values below 0 Hz and above Nyquist come from
+    mirroring the spectrum about both, which for a real signal is its periodic
+    two-sided spectrum."""
+    n_half = len(values)
+    n_fft = 2 * (n_half - 1)
+    two_sided = np.concatenate([values, values[-2:0:-1]])
+    margin = int(np.ceil(half_width_bins)) + 2
+    extended = two_sided[np.mod(np.arange(-margin, n_half + margin), n_fft)]
+    # the integral from the first extended bin up to each bin, by trapezoids
+    cumulative = np.concatenate([[0.0], np.cumsum(0.5 * (extended[1:] + extended[:-1]))])
+
+    def integral_up_to(position):
+        shifted = position + margin
+        left = np.floor(shifted).astype(int)
+        fraction = shifted - left
+        slope = extended[left + 1] - extended[left]
+        return cumulative[left] + extended[left] * fraction + 0.5 * slope * fraction**2
+
+    centers = np.arange(n_half, dtype=float)
+    return (integral_up_to(centers + half_width_bins) - integral_up_to(centers - half_width_bins)) / (
+        2.0 * half_width_bins
     )
-    integral = np.cumsum(mirrored * bin_width)
-    lower_edges = np.arange(n_half + 1) * bin_width - width / 2
-    origin = -(boundary - 0.5) * bin_width
-    upper = _interp1q(origin, bin_width, integral, lower_edges + width)
-    lower = _interp1q(origin, bin_width, integral, lower_edges)
-    return (upper - lower) / width
-
-
-def _dc_correction(spectrum: np.ndarray, f0: float, fs: int, n_fft: int) -> np.ndarray:
-    """WORLD's DCCorrection: the spectrum below F0 folded back about F0 / 2."""
-    bin_width = fs / n_fft
-    upper_index = 2 + int(f0 * n_fft / fs)
-    below_f0 = np.arange(upper_index - 1) * bin_width
-    corrected = spectrum.copy()
-    corrected[: upper_index - 1] += _interp1q(f0, -bin_width, spectrum[: upper_index + 1], below_f0)
-    return corrected
-
-
-def _windowed_waveform(samples, fs, f0, time, window, periods, noise, noise_scale):
-    """An F0-adaptive Hann or Blackman window ``periods`` long, centered at
-    ``time`` (WORLD's rounding), samples beyond the ends repeated; plus
-    WORLD's safety noise; less the window times the weighted mean."""
-    half_length = _matlab_round(periods / 2 * fs / f0)
-    offsets = np.arange(-half_length, half_length + 1)
-    if window == "cheaptrick":  # Hann, scaled to unit energy
-        shape = 0.5 * np.cos(np.pi * (offsets / 1.5 / fs) * f0) + 0.5
-        shape = shape / np.sqrt(np.sum(shape * shape))
-    else:
-        position = 2.0 * offsets / periods / fs
-        if window == "hann":
-            shape = 0.5 * np.cos(np.pi * position * f0) + 0.5
-        else:  # Blackman
-            shape = 0.42 + 0.5 * np.cos(np.pi * position * f0) + 0.08 * np.cos(2 * np.pi * position * f0)
-    origin = _matlab_round(time * fs + 0.001)
-    indices = np.clip(origin + offsets, 0, len(samples) - 1)
-    segment = samples[indices] * shape + noise.draw(len(offsets)) * noise_scale
-    return segment - shape * (segment.sum() / shape.sum())
 
 
 # ------------------------------------------------------------ reading a grid
@@ -136,7 +154,7 @@ def _pointwise(log_values: np.ndarray, grid_t: np.ndarray, grid_f: np.ndarray, t
 # ------------------------------------------------------------ the views
 class _FrequencyView(View):
     """Shared by the envelope and the aperiodicity: data of shape
-    ``(n_channels, n_freqs, n_windows)`` on WORLD's grid."""
+    ``(n_channels, n_freqs, n_windows)`` on ``n_fft // 2 + 1`` frequencies from 0 to ``fs / 2``."""
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float):
         self.data = data
@@ -226,63 +244,81 @@ class SpectralEnvelope(_FrequencyView):
 
 # ------------------------------------------------------------ CheapTrick
 def pitch_adaptive_envelope(
-    sound: Sound, f0: ContourLike, *, q1: float = -0.15, f0_floor: float = _FLOOR_F0
+    sound: Sound,
+    f0: ContourLike,
+    *,
+    q1: float = -0.09,
+    f0_floor: float = _FLOOR_F0,
+    unvoiced_f0: float = _UNVOICED_F0,
 ) -> SpectralEnvelope:
-    """WORLD's CheapTrick spectral envelope (Morise, 2015), ported exactly.
+    """The CheapTrick spectral envelope (Morise, 2015), written from the paper.
 
-    At each time window of the F0 track: the sound under a Hann window three
-    periods long, scaled to unit energy, less its weighted mean; its power
-    spectrum on :func:`world_fft_size` bins; the power below F0 folded back
-    about F0 / 2; a moving average over 2 F0 / 3; then the log, liftered by
-    ``sinc(F0 q)`` (smoothing over F0) times the recovery lifter
-    ``(1 - 2 q1) + 2 q1 cos(2 pi F0 q)``, and back. The result follows the
-    shape of the harmonic peaks a few dB below them and, because of the
-    smoothing over 2 F0 / 3, barely changes with the time window's position
-    within a period. Time windows with F0 at or below the floor
-    ``3 fs / (n_fft - 3)`` (unvoiced ones included) are analyzed at 500 Hz.
+    At each time window of the F0 track:
+
+    1. The sound under a Hann window three periods long, centered on the sample
+       nearest the window's time and scaled to unit energy (so the level does not
+       change with the window's length); its power spectrum.
+    2. That power smoothed by a moving average 2 F0 / 3 wide (the paper's Eq. 4),
+       which fills the dips between harmonics so the logarithm can be taken.
+    3. The cepstrum of its logarithm, multiplied by ``sinc(F0 q)``, which removes
+       the ripple at the harmonic spacing (Eq. 7), and by the recovery lifter
+       ``(1 - 2 q1) + 2 q1 cos(2 pi F0 q)``, which gives back the level the
+       smoothing took from the harmonic peaks (Eq. 8); then back to a spectrum.
+
+    The result follows the harmonic peaks and barely changes with the window's
+    position within a period.
+
+    Choices the paper leaves open: where the smoothing reaches below 0 Hz or above
+    Nyquist the spectrum is mirrored there; samples beyond the ends of the sound are
+    zeros; ``1e-12`` is added to the power before the logarithm; unvoiced time
+    windows are analyzed at ``unvoiced_f0`` (a short window and wide smoothing,
+    which suits noise); F0 below ``f0_floor`` is raised to it; the FFT size is the
+    smallest power of two above ``3 fs / f0_floor``.
 
     Parameters
     ----------
     sound
-        The sound. Its sampling rate must be a whole number of Hz.
+        The sound, at any sampling rate.
     f0
         An :class:`~sonore.views.f0.F0Track` (one row per channel) or a
         ``(times, f0)`` pair; 0 marks unvoiced time windows. The envelope is
         computed at these times.
     q1
-        The recovery lifter's parameter. ``-0.15`` is WORLD's code; the
-        paper gives ``-0.09``; ``0`` is no recovery.
+        The recovery lifter's parameter. ``-0.09`` is the paper's value
+        (WORLD's code later used ``-0.15``, which sharpens the peaks a little
+        more); ``0`` is no recovery.
     f0_floor
-        The lowest F0 the FFT size must hold (WORLD's 71 Hz).
+        The lowest F0 analyzed; it sets the FFT size.
+    unvoiced_f0
+        The F0 at which unvoiced time windows are analyzed.
     """
-    fs = _integer_fs(sound)
+    fs = float(sound.fs)
     times, f0_values = _time_windows(sound, f0)
-    n_fft = world_fft_size(fs, f0_floor=f0_floor)
-    analysis_floor = 3.0 * fs / (n_fft - 3.0)
-    quefrencies = np.arange(n_fft // 2 + 1) / fs
+    n_fft = _envelope_fft_size(fs, f0_floor)
     data = np.empty((sound.n_channels, n_fft // 2 + 1, len(times)))
     for channel in range(sound.n_channels):
-        samples = sound.data[:, channel]
-        noise = _Stream()
+        samples = sound.data[:, channel].astype(float)
         for window_index, (time, window_f0) in enumerate(zip(times, f0_values[channel], strict=True)):
-            current_f0 = _DEFAULT_F0 if window_f0 <= analysis_floor else window_f0
-            segment = _windowed_waveform(samples, fs, current_f0, time, "cheaptrick", 3.0, noise, _SAFEGUARD)
-            power = np.abs(np.fft.rfft(segment, n_fft)) ** 2
-            power = _dc_correction(power, current_f0, fs, n_fft)
-            power = _linear_smoothing(power, current_f0 * 2.0 / 3.0, fs, n_fft)
-            power = power + np.abs(noise.draw(n_fft // 2 + 1)) * _EPS
-            data[channel, :, window_index] = _smooth_with_recovery(power, current_f0, q1, quefrencies, n_fft)
+            analyzed_f0 = max(unvoiced_f0 if window_f0 == 0 else window_f0, f0_floor)
+            data[channel, :, window_index] = _cheaptrick_window(
+                samples, fs, int(np.round(time * fs)), analyzed_f0, n_fft, q1
+            )
     return SpectralEnvelope(data, times, fs, q1)
 
 
-def _smooth_with_recovery(power, f0, q1, quefrencies, n_fft):
-    with np.errstate(invalid="ignore", divide="ignore"):
-        smoothing = np.sin(np.pi * f0 * quefrencies) / (np.pi * f0 * quefrencies)
-    smoothing[0] = 1.0
-    recovery = (1.0 - 2.0 * q1) + 2.0 * q1 * np.cos(2.0 * np.pi * quefrencies * f0)
-    log_power = np.log(power)
-    cepstrum = np.fft.rfft(np.concatenate([log_power, log_power[-2:0:-1]])).real
-    return np.exp(np.fft.irfft(cepstrum * smoothing * recovery, n_fft)[: n_fft // 2 + 1])
+def _cheaptrick_window(samples, fs, center, f0, n_fft, q1):
+    """Steps 1 to 3 of :func:`pitch_adaptive_envelope` at one time window."""
+    window_length = 3.0 * fs / f0
+    power = _unit_energy_power(samples, center, _hann(window_length), window_length / 2.0, n_fft)
+    # the moving average over 2 F0 / 3 (Eq. 4)
+    smoothed = _smooth_rectangular(power, (f0 / 3.0) / (fs / n_fft))
+    # the cepstrum of the log power (Eq. 9), at quefrencies tau in seconds
+    cepstrum = np.fft.irfft(np.log(smoothed + _POWER_FLOOR), n_fft)
+    bins = np.arange(n_fft)
+    tau = np.minimum(bins, n_fft - bins) / fs
+    smoothing_lifter = np.sinc(f0 * tau)  # Eq. 7
+    recovery_lifter = (1.0 - 2.0 * q1) + 2.0 * q1 * np.cos(2.0 * np.pi * tau * f0)  # Eq. 8
+    return np.exp(np.fft.rfft(smoothing_lifter * recovery_lifter * cepstrum, n_fft).real)  # Eq. 6
 
 
 class GridEnvelope(View):

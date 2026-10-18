@@ -1,6 +1,7 @@
-"""The WORLD ports against WORLD's own output, stored by
-tools/make_world_fixtures.py (pyworld is not needed here), and the
-harmonic-residual aperiodicity against vowels whose noise share is known."""
+"""The synthesis port against WORLD's own output and the envelope written from
+the CheapTrick paper against WORLD's envelope, both stored by
+tools/make_world_fixtures.py (pyworld is not needed here); the aperiodicities
+against vowels whose noise share is known."""
 
 from pathlib import Path
 from types import SimpleNamespace
@@ -9,7 +10,7 @@ import numpy as np
 import pytest
 
 import sonore as so
-from sonore.views.world import _GaussianNoise, world_fft_size, world_randn
+from sonore.views.world import _GaussianNoise, world_randn
 
 REFERENCE = Path(__file__).resolve().parents[1] / "data" / "world_reference.npz"
 FS = 16000
@@ -49,36 +50,26 @@ def test_world_randn_matches_the_step_by_step_generator():
     assert abs(long_stream.mean()) < 0.01 and abs(long_stream.std() - 1) < 0.01
 
 
-def test_fft_size_rounds_up_past_the_window():
-    # the "+ 1" in the docstring's formula: a window 1023.5 samples long
-    # needs 2048 points, not 1024
-    assert world_fft_size(16000, f0_floor=3 * 16000 / 1023.5) == 2048
-    assert world_fft_size(16000, f0_floor=3 * 16000 / 1022.5) == 1024
-
-
 def test_fft_size():
-    assert world_fft_size(16000) == 1024
-    assert world_fft_size(44100) == 2048
+    sound = so.Sound(np.zeros(4410), 44100)
+    assert so.pitch_adaptive_envelope(sound, ([0.05], [100.0])).n_fft == 2048
+    assert so.band_aperiodicity(sound, ([0.05], [100.0])).n_fft == 2048
+    assert so.pitch_adaptive_envelope(so.Sound(np.zeros(1600), FS), ([0.05], [100.0])).n_fft == 1024
 
 
 @pytest.mark.parametrize("name", ["vowel", "sentence"])
-def test_cheaptrick_is_worlds(reference, name):
+def test_envelope_is_close_to_worlds(reference, name):
+    # written from the paper, so close to WORLD's at the paper's q1, not equal;
+    # the first and last time windows (zeros beyond the ends where WORLD repeats
+    # the end samples) and 0 Hz (mirrored where WORLD folds about F0 / 2) differ more
     sound, track = case(reference, name)
     step = int(reference["bin_step"])
     envelope = so.pitch_adaptive_envelope(sound, track)
     assert envelope.data.shape == (1, 513, len(track[0]))
     ours = envelope.to_world()[:, ::step]
-    assert np.max(np.abs(10 * np.log10(ours / reference[f"{name}_envelope"]))) < 1e-6
-    paper = so.pitch_adaptive_envelope(sound, track, q1=-0.09).to_world()[:, ::step]
-    assert np.max(np.abs(10 * np.log10(paper / reference[f"{name}_envelope_paper_q1"]))) < 1e-6
-
-
-@pytest.mark.parametrize("name", ["vowel", "sentence"])
-def test_d4c_is_worlds(reference, name):
-    sound, track = case(reference, name)
-    step = int(reference["bin_step"])
-    ours = so.band_aperiodicity(sound, track).to_world()[:, ::step]
-    assert np.max(np.abs(20 * np.log10(ours / reference[f"{name}_aperiodicity"]))) < 1e-8
+    difference = np.abs(10 * np.log10(ours / reference[f"{name}_envelope_paper_q1"]))[3:-3, 1:]
+    assert np.median(difference) < 0.05
+    assert np.percentile(difference, 95) < 0.5
 
 
 @pytest.mark.parametrize("name", ["vowel", "sentence"])
@@ -232,8 +223,10 @@ def test_bad_tracks_are_refused(reference):
         so.source_filter_synthesize(
             late, so.pitch_adaptive_envelope(sound, late), so.band_aperiodicity(sound, late)
         )
-    with pytest.raises(ValueError, match="whole-number"):
-        so.pitch_adaptive_envelope(so.Sound(sound.data, 16000.5), (times, f0))
+    # any sampling rate is analyzed
+    assert np.all(np.isfinite(so.pitch_adaptive_envelope(so.Sound(sound.data, 16000.5), (times, f0)).data))
+    with pytest.raises(ValueError, match="12 kHz"):
+        so.band_aperiodicity(so.Sound(sound.data, 8000), (times, f0))
     with pytest.raises(ValueError, match="0 \\(unvoiced\\) or positive"):
         so.pitch_adaptive_envelope(sound, (times, -f0))
     with pytest.raises(ValueError, match="channels"):
@@ -318,4 +311,26 @@ def test_unvoiced_windows_are_noise():
     f0[:20] = 0
     aperiodicity = so.harmonic_aperiodicity(sound, (times, f0))
     assert np.all(aperiodicity.data[0, :, :20] == 1)
-    assert np.all(so.band_aperiodicity(sound, (times, f0)).data[0, :, :20] == 1 - 1e-12)
+    assert np.all(so.band_aperiodicity(sound, (times, f0)).data[0, :, :20] == 1)
+
+
+@pytest.mark.parametrize("noise_db", [-20.0, -10.0])
+def test_band_aperiodicity_reads_a_known_noise_share_at_3_khz(noise_db):
+    # with its 8 dB correction; at 16 kHz the 3 kHz band is the only one
+    sound, track = vowel(noise_db)
+    aperiodicity = so.band_aperiodicity(sound, track)
+    assert aperiodicity.method == "D4C"
+    inside = (track[0] > 0.05) & (track[0] < 0.45)
+    at_3k = np.searchsorted(aperiodicity.f, 3000)
+    expected = 10 * np.log10(10 ** (noise_db / 10) / (1 + 10 ** (noise_db / 10)))
+    assert abs(np.median(aperiodicity.db[0][at_3k, inside]) - expected) < 1.5
+    # the paper's values, uncorrected, read 8 dB more periodic
+    paper = so.band_aperiodicity(sound, track, correction_db=0.0)
+    assert np.allclose(paper.db[0][at_3k, inside], aperiodicity.db[0][at_3k, inside] - 8.0)
+
+
+def test_band_aperiodicity_of_a_periodic_sound_is_low():
+    sound, track = vowel(-300.0)
+    aperiodicity = so.band_aperiodicity(sound, track)
+    inside = (track[0] > 0.05) & (track[0] < 0.45)
+    assert aperiodicity.db[0][:, inside].max() < -40

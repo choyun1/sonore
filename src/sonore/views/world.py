@@ -4,15 +4,15 @@
 sound from an F0 track, a spectral envelope and an aperiodicity, as made by
 :func:`~sonore.views.spectral_envelope.pitch_adaptive_envelope` and
 :func:`~sonore.views.aperiodicity.band_aperiodicity` (or
-:func:`~sonore.views.aperiodicity.harmonic_aperiodicity`).
+:func:`~sonore.views.aperiodicity.harmonic_aperiodicity`). Those two analyses
+are written from their papers, not ported, so only the synthesis here is
+WORLD's code.
 
-Also here are the pieces WORLD's analysis shares with its synthesis: WORLD's
-own noise generator (:func:`world_randn`), its FFT size, MATLAB's rounding,
-the reading of an F0 track onto time windows, and
-:data:`DIFFERENCES_FROM_WORLD`. The synthesis reads its inputs by what they
-provide, not by their type: an F0 track as ``.t`` and ``.f0`` or a ``(times,
-f0)`` pair, an envelope as ``env(t, f)``, and an aperiodicity as its grid
-``.t``, ``.f`` and ``.data``.
+Also here are WORLD's own noise generator (:func:`world_randn`), the reading
+of an F0 track onto time windows, and :data:`DIFFERENCES_FROM_WORLD`. The
+synthesis reads its inputs by what they provide, not by their type: an F0
+track as ``.t`` and ``.f0`` or a ``(times, f0)`` pair, an envelope as
+``env(t, f)``, and an aperiodicity as its grid ``.t``, ``.f`` and ``.data``.
 """
 
 from __future__ import annotations
@@ -28,24 +28,35 @@ from sonore.core.utils import RNG, as_rng, time_axis
 if TYPE_CHECKING:
     from sonore.sources.waveforms import ContourLike
 
-__all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "world_fft_size", "source_filter_synthesize"]
+__all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "source_filter_synthesize"]
 
 
 DIFFERENCES_FROM_WORLD = """\
 Differences from WORLD (C++ code at commit d625e76, as run by pyworld 0.3.5).
-With every option at its default, sonore's output is WORLD's to
-floating-point precision.
 
 1. F0 is not estimated: Harvest and DIO are not ported, so every function
    takes an F0 track. so.f0_track is sonore's own tracker, not Harvest, so
    WORLD's numbers need WORLD's track.
-2. pitch_adaptive_envelope(q1=...) accepts any value. WORLD's code uses -0.15 (the
-   default here); its paper (Morise, 2015) gives -0.09.
+2. pitch_adaptive_envelope and band_aperiodicity are written from the
+   CheapTrick (2015) and D4C (2016) papers, not ported from WORLD's code.
+   Where the papers leave a choice open their docstrings state it. Measured
+   by tools/check_paper_vocoder_claims.py: with q1 = -0.09 the envelope is
+   within 0.01 dB of WORLD's (median, voiced time windows of two sentences);
+   the aperiodicity follows the paper and reads differently from WORLD's.
+   - pitch_adaptive_envelope's q1 defaults to the paper's -0.09; WORLD's
+     code uses -0.15.
+   - band_aperiodicity has no voicing test of its own (WORLD's "LoveTrain"):
+     every time window with F0 > 0 is analyzed. It adds a measured 8 dB
+     (correction_db) where WORLD's code adds (F0 - 100) / 50 dB, and holds
+     the last band's value up to Nyquist where WORLD rises to 0 dB.
+   - Both draw no random numbers, accept any sampling rate, and read zeros
+     beyond the ends of the sound.
 3. source_filter_synthesize(rng=...) accepts a seed or Generator, which replaces
    WORLD's noise stream with fresh Gaussian noise. The default, rng=None,
-   is WORLD's stream, restarted at every call as WORLD does.
+   is WORLD's stream, restarted at every call as WORLD does. Given the same
+   inputs, its output is WORLD's to floating-point precision.
 4. harmonic_aperiodicity is not part of WORLD. It measures the share of
-   noise by fitting the harmonics; D4C is WORLD's measure.
+   noise by fitting the harmonics.
 5. Multichannel sounds are analyzed one channel at a time; WORLD takes one
    channel.
 6. source_filter_synthesize refuses pulses further apart than its FFT is long,
@@ -60,13 +71,7 @@ _WORLD_SEED = (123456789, 362436069, 521288629, 88675123)
 _SAFEGUARD = 1e-12  # WORLD's kMySafeGuardMinimum
 
 
-_EPS = 2.2204460492503131e-16  # WORLD's kEps
-
-
-_DEFAULT_F0 = 500.0  # WORLD's kDefaultF0: unvoiced time windows are analyzed at this F0
-
-
-_FLOOR_F0 = 71.0  # WORLD's kFloorF0, which sets CheapTrick's FFT size
+_DEFAULT_F0 = 500.0  # WORLD's kDefaultF0: the F0 of unvoiced stretches in the synthesis
 
 
 # --------------------------------------------------------- WORLD's generator
@@ -147,7 +152,7 @@ def world_randn(n: int) -> np.ndarray:
 
 
 class _Stream:
-    """Reads WORLD's generator in order, as one analysis or synthesis call does."""
+    """Reads WORLD's generator in order, as one synthesis call does."""
 
     def __init__(self):
         self.position = 0
@@ -158,28 +163,7 @@ class _Stream:
         return values
 
 
-# ------------------------------------------------------ WORLD's helpers
-def _matlab_round(value: float) -> int:
-    """MATLAB's round (halves away from zero), as WORLD's matlab_round."""
-    return int(value + 0.5) if value > 0 else int(value - 0.5)
-
-
-def world_fft_size(fs: float, *, f0_floor: float = _FLOOR_F0) -> int:
-    """CheapTrick's FFT size: ``2 ** (1 + floor(log2(3 fs / f0_floor + 1)))``,
-    long enough for a window three periods of ``f0_floor`` long. 1024 at
-    16 kHz and 2048 at 44.1 or 48 kHz with WORLD's floor of 71 Hz."""
-    return _periods_fft_size(int(fs), 3.0, f0_floor)
-
-
-def _periods_fft_size(fs: float, n_periods: float, f0_floor: float) -> int:
-    """WORLD's FFT size for a window ``n_periods`` periods of ``f0_floor`` long:
-    the power of two above twice that many samples. CheapTrick passes ``int(fs)``
-    and D4C passes ``fs`` as is, as WORLD does, so the two agree only for whole
-    sample rates."""
-    return int(2.0 ** (1 + int(np.log(n_periods * fs / f0_floor + 1) / np.log(2))))
-
-
-# ------------------------------------------------------------- F0 tracks
+# ------------------------------------------------------ reading an F0 track
 def _time_windows(sound: Sound, f0) -> tuple[np.ndarray, np.ndarray]:
     """Window times ``(n_windows,)`` and F0 values ``(n_channels, n_windows)``
     from anything with window times ``.t`` and values ``.f0`` (an
@@ -204,12 +188,6 @@ def _time_windows(sound: Sound, f0) -> tuple[np.ndarray, np.ndarray]:
     if np.any(values < 0):
         raise ValueError("f0 must be 0 (unvoiced) or positive")
     return times, values
-
-
-def _integer_fs(sound: Sound) -> int:
-    if sound.fs != int(sound.fs):
-        raise ValueError(f"WORLD works at whole-number sampling rates, not {sound.fs}")
-    return int(sound.fs)
 
 
 # ------------------------------------------------------------ a contour on a grid

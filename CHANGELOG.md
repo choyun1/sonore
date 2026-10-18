@@ -67,6 +67,24 @@ version (0.x.y) only fixes bugs.
   with a notice at the top of each file holding a port, and the package
   license is `MIT AND BSD-3-Clause`. The ports have needed the notice since
   they were added in 0.4.0.
+- `so.pitch_adaptive_envelope` (CheapTrick) and `so.band_aperiodicity` (D4C)
+  are rewritten from their papers (Morise, 2015 and 2016) instead of ported
+  from WORLD's code, so the WORLD license notice no longer covers them; it
+  still covers `so.source_filter_synthesize`. Their output changes:
+  - `pitch_adaptive_envelope`'s `q1` defaults to the paper's -0.09 instead
+    of WORLD's -0.15. At the same `q1` its envelopes are within 0.01 dB of
+    WORLD's (median over voiced time windows of two sentences); the first and
+    last time windows and 0 Hz differ more. It takes `unvoiced_f0=500.0`.
+  - `band_aperiodicity` follows the paper. On harmonics plus white noise its
+    values track the true noise share with a slope of 1; the paper's values
+    read about 8 dB too periodic (as the paper finds, about 6 dB there), and
+    `correction_db=8.0` adds that back. WORLD's code reads about half as
+    steeply. The `threshold` voicing test is gone: every time window with
+    F0 > 0 is analyzed, and unvoiced ones are all noise (a share of exactly 1).
+    The sampling rate must be at least 12 kHz, so that one 6 kHz band fits.
+  - Both accept any sampling rate, draw no random numbers, and read zeros
+    beyond the ends of the sound. `sonore.views.world.world_fft_size` is gone.
+  Measured in `tools/check_paper_vocoder_claims.py`.
 - `so.f0_track` for low voices (60 to 90 Hz, inside the default range):
   the refinement uses every harmonic up to 1.5 kHz (at least six, at most
   24) instead of the first six, which below 100 Hz hold a few percent of a

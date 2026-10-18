@@ -47,7 +47,6 @@ from scipy.signal import freqz
 import sonore as so
 from sonore.views.aperiodicity import Aperiodicity
 from sonore.views.spectral_envelope import SpectralEnvelope
-from sonore.views.world import world_fft_size
 
 try:
     import pyworld
@@ -228,7 +227,7 @@ def envelope_sources(sound, track, formants=None):
 
 def synthesize(synth, sound, track, envelope, aperiodicity, grid):
     if synth == "source_filter_synthesize":
-        n_fft = world_fft_size(FS)
+        n_fft = aperiodicity.n_fft
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
         world_envelope = SpectralEnvelope(envelope(grid, freqs), grid, FS, np.nan)
         return so.source_filter_synthesize(track, world_envelope, aperiodicity)
@@ -362,7 +361,7 @@ def part3():
     grid = np.arange(int(sound.duration / HOP)) * HOP
     track = (grid, np.full(len(grid), 150.0))
     truth = TrueEnvelope(formants)
-    for n_fft in (world_fft_size(FS), 4096, 16384):
+    for n_fft in (1024, 4096, 16384):  # 1024 is pitch_adaptive_envelope's FFT size at 16 kHz
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
         envelope = SpectralEnvelope(truth(grid, freqs), grid, FS, np.nan)
         quiet = Aperiodicity(np.full_like(envelope.data, 1e-3), grid, FS, "none")

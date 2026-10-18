@@ -1,13 +1,13 @@
-# The WORLD ports in this file are derived from WORLD (https://github.com/mmorise/World),
-# Copyright (c) 2010 M. Morise, and are used under its BSD 3-clause license (LICENSE-WORLD).
-"""Aperiodicity, the share of noise in a voice at each frequency: WORLD's D4C
-(Morise, 2016), ported exactly, and a harmonic-residual aperiodicity that
-measures the share of noise directly.
+"""Aperiodicity, the share of noise in a voice at each frequency: D4C
+(Morise, 2016), written from the paper, and a harmonic-residual aperiodicity
+that measures the share of noise directly.
 
-Every step named after WORLD reproduces WORLD's C++ code
-(github.com/mmorise/World, commit d625e76) to floating-point precision, with
-WORLD's own noise in WORLD's order; options that depart from WORLD are listed
-in :data:`~sonore.views.world.DIFFERENCES_FROM_WORLD`.
+:func:`band_aperiodicity` follows the D4C paper's steps; where the paper leaves
+a choice open, the choice is stated in its docstring. It is not WORLD's code,
+and it reads differently from WORLD's: on harmonics plus white noise it
+follows the true noise share with a slope of 1 but about 8 dB low, close to
+the bias the paper reports for itself, while WORLD's code moves about half as
+much as the true share does.
 """
 
 from __future__ import annotations
@@ -20,22 +20,18 @@ import numpy as np
 from sonore.core.sound import Sound
 from sonore.core.utils import db_to_amp, time_axis
 from sonore.views.spectral_envelope import (
-    SpectralEnvelope,
-    _dc_correction,
-    _FrequencyView,
-    _linear_smoothing,
-    _windowed_waveform,
-)
-from sonore.views.world import (
     _FLOOR_F0,
-    _SAFEGUARD,
-    _integer_fs,
-    _matlab_round,
-    _periods_fft_size,
-    _Stream,
-    _time_windows,
-    world_fft_size,
+    _POWER_FLOOR,
+    SpectralEnvelope,
+    _envelope_fft_size,
+    _FrequencyView,
+    _hann,
+    _power_of_two_above,
+    _smooth_rectangular,
+    _unit_energy_power,
+    _windowed_segment,
 )
+from sonore.views.world import _time_windows
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -45,16 +41,23 @@ if TYPE_CHECKING:
 __all__ = ["Aperiodicity", "band_aperiodicity", "harmonic_aperiodicity"]
 
 
-_FLOOR_F0_D4C = 47.0
+_BAND_SPACING = 3000.0  # band centers every 3 kHz, as in the paper's evaluation
 
 
-_D4C_BAND_SPACING = 3000.0
+_HIGHEST_BAND = 15000.0
 
 
-_D4C_UPPER_LIMIT = 15000.0
+_BAND_WIDTH = 6000.0  # the length of the Nuttall window over frequency
 
 
-_D4C_SAFEGUARD = 1e-6
+_ZERO_HZ_DB = -60.0  # the paper's anchor at 0 Hz
+
+
+_CORRECTION_DB = 8.0  # the bias measured by tools/check_paper_vocoder_claims.py
+
+
+# the 4-term Nuttall window (Nuttall, 1981), side lobes about 98 dB down
+_NUTTALL = (0.3635819, 0.4891775, 0.1365995, 0.0106411)
 
 
 class Aperiodicity(_FrequencyView):
@@ -127,121 +130,185 @@ class Aperiodicity(_FrequencyView):
 
 # ------------------------------------------------------------------- D4C
 def band_aperiodicity(
-    sound: Sound, f0: ContourLike, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F0
+    sound: Sound, f0: ContourLike, *, f0_floor: float = _FLOOR_F0, correction_db: float = _CORRECTION_DB
 ) -> Aperiodicity:
-    """WORLD's D4C aperiodicity (Morise, 2016), ported exactly.
+    """The D4C aperiodicity (Morise, 2016), written from the paper.
 
-    At each voiced time window: a "static group delay" from two Blackman-windowed
-    spectra four periods long, a quarter period either side of the window center,
-    divided by a smoothed power spectrum, smoothed over F0 / 2, less itself
-    smoothed over F0. Around each multiple of 3 kHz up to
-    ``min(15 kHz, fs / 2 - 3 kHz)``, a Nuttall window over 3 kHz of that
-    group delay is transformed, its power sorted, and the band's
-    aperiodicity is the share outside the largest bins, in dB, plus
-    ``(F0 - 100) / 50`` dB, capped at 0. The curve is then linear in dB
-    from -60 dB at 0 Hz through those values to 0 dB at Nyquist. At
-    16 kHz that is one measured value per time window, at 3 kHz.
+    At each voiced time window:
 
-    A time window is left fully aperiodic (amplitude ratio ``1 - 1e-12``) where
-    F0 is 0, or where less than ``threshold`` of its power between 100 Hz
-    and 7.9 kHz lies below 4 kHz (WORLD's "LoveTrain" test; ``threshold=0``
-    keeps every voiced time window voiced).
+    1. **A group delay that does not move with the window.** The group delay of
+       the sound under a Blackman window four periods long, taken a quarter
+       period before and a quarter period after the window's time: their sum
+       cancels the terms that change with the window's position (the paper's
+       Eqs. 7, 8 and 19). It is divided by the power spectrum under a Hann window
+       four periods long, smoothed over F0 (Eqs. 21 and 22).
+    2. **Shaped into a sinusoid.** That group delay smoothed over F0 / 2, less
+       its own trend smoothed over F0 (Eqs. 23 to 25). For a periodic sound what
+       is left is close to a sinusoid along frequency with period F0; noise adds
+       everything else.
+    3. **The share that is not the sinusoid.** For each band, centered every
+       3 kHz from 3 to 15 kHz where its 6 kHz window fits below Nyquist, the
+       shaped group delay under a Nuttall window is transformed back (Eq. 26),
+       the power of the result sorted, and the share of the energy outside its
+       strongest ``2 w_bw`` (``w_bw`` the width of the window's main lobe) is the
+       band's noise share (Eqs. 27 and 28).
+    4. **Across frequency.** Linear in dB from -60 dB at 0 Hz through the band
+       values, held at the last band's value up to Nyquist.
 
-    D4C was tuned so that WORLD's resynthesis sounds natural; it is robust
-    to F0 errors but does not report the share of noise below 3 kHz, which
-    the -60 dB anchor sets. :func:`harmonic_aperiodicity` measures that
-    share directly.
+    Unvoiced time windows (F0 of 0) are all noise; voicing is the F0 track's
+    decision.
+
+    As the paper's own evaluation finds, the band values read too periodic by a
+    steady amount: on harmonics plus white noise from 5 to 40 dB SNR they follow
+    the true noise share with a slope of 1 but about 8 dB low (7 dB at an F0 of
+    125 Hz, 9 dB at 250 Hz; tools/check_paper_vocoder_claims.py). The paper
+    reports about 6 dB and suggests subtracting it; ``correction_db`` adds the
+    8 dB measured here to every band value, capped at 0 dB (all noise).
+
+    Choices the paper leaves open: F0 below ``f0_floor`` is raised to it; the FFT
+    size is the smallest power of two above ``4 fs / f0_floor``; samples beyond
+    the ends of the sound are zeros; spectra are mirrored about 0 Hz and Nyquist
+    where a smoothing reaches past them; ``1e-12`` guards the division; only the
+    positive half of each band's transform is kept (it holds the lobe at one
+    period once); ``w_bw`` is the first zero of the Nuttall window's transform.
 
     Parameters
     ----------
     sound, f0
-        As :func:`pitch_adaptive_envelope`.
-    threshold
-        The LoveTrain voicing threshold.
+        As :func:`~sonore.views.spectral_envelope.pitch_adaptive_envelope`. The
+        sampling rate must be at least 12 kHz, so that one band fits.
     f0_floor
-        Sets the output's frequency grid, which must match the envelope's
-        for synthesis (WORLD's 71 Hz, as :func:`pitch_adaptive_envelope`).
+        The lowest F0 analyzed. It also sets the output's frequency grid, which
+        must match the envelope's for synthesis.
+    correction_db
+        Added to every band value [dB]; ``0`` gives the paper's values as they are.
     """
-    fs = _integer_fs(sound)
+    fs = float(sound.fs)
     times, f0_values = _time_windows(sound, f0)
-    n_fft_out = world_fft_size(fs, f0_floor=f0_floor)
-    n_fft = _periods_fft_size(fs, 4.0, _FLOOR_F0_D4C)
-    n_bands = int(min(_D4C_UPPER_LIMIT, fs / 2.0 - _D4C_BAND_SPACING) / _D4C_BAND_SPACING)
-    window_length = int(_D4C_BAND_SPACING * n_fft / fs) * 2 + 1
-    position = np.arange(window_length) / (window_length - 1.0)
-    nuttall = (
-        0.355768
-        - 0.487396 * np.cos(2 * np.pi * position)
-        + 0.144232 * np.cos(4 * np.pi * position)
-        - 0.012604 * np.cos(6 * np.pi * position)
-    )
-    coarse_freqs = np.append(np.arange(n_bands + 1) * _D4C_BAND_SPACING, fs / 2.0)
-    freqs = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
-    data = np.full((sound.n_channels, n_fft_out // 2 + 1, len(times)), 1.0 - _SAFEGUARD)
-    for channel in range(sound.n_channels):
-        samples = sound.data[:, channel]
-        noise = _Stream()
-        voiced = [
-            window_f0 != 0 and _love_train(samples, fs, time, window_f0, noise) > threshold
-            for time, window_f0 in zip(times, f0_values[channel], strict=True)
+    n_fft = _power_of_two_above(4.0 * fs / f0_floor)
+    bin_width = fs / n_fft
+    band_centers = np.array(
+        [
+            center
+            for center in np.arange(_BAND_SPACING, _HIGHEST_BAND + 1.0, _BAND_SPACING)
+            if center + _BAND_WIDTH / 2.0 <= fs / 2.0
         ]
+    )
+    if len(band_centers) == 0:
+        raise ValueError(f"band_aperiodicity needs a sampling rate of at least 12 kHz, not {fs:g}")
+    band_window = _nuttall(int(np.round(_BAND_WIDTH / bin_width)))
+    main_lobe = _first_zero_of_transform(band_window, bin_width)
+    n_fft_out = _envelope_fft_size(fs, f0_floor)
+    freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
+    anchors = np.concatenate([[0.0], band_centers])
+    data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))
+    for channel in range(sound.n_channels):
+        samples = sound.data[:, channel].astype(float)
         for window_index, (time, window_f0) in enumerate(zip(times, f0_values[channel], strict=True)):
-            if not voiced[window_index]:
+            if window_f0 == 0:
                 continue
-            bands = _d4c_bands(
-                samples, fs, time, max(_FLOOR_F0_D4C, window_f0), n_fft, n_bands, nuttall, noise
-            )
-            coarse = np.concatenate([[-60.0], bands, [-_SAFEGUARD]])
-            data[channel, :, window_index] = db_to_amp(np.interp(freqs, coarse_freqs, coarse))
+            center_sample = int(np.round(time * fs))
+            shaped = _shaped_group_delay(samples, fs, center_sample, max(window_f0, f0_floor), n_fft)
+            shares = [
+                _band_noise_share(shaped, bin_width, center, band_window, main_lobe)
+                for center in band_centers
+            ]
+            bands_db = np.minimum(10 * np.log10(np.maximum(shares, 1e-12)) + correction_db, 0.0)
+            share_db = np.interp(freqs_out, anchors, np.concatenate([[_ZERO_HZ_DB], bands_db]))
+            data[channel, :, window_index] = np.minimum(db_to_amp(share_db), 1.0)
     return Aperiodicity(data, times, fs, "D4C")
 
 
-def _love_train(samples, fs, time, f0, noise):
-    """The share of power (100 Hz to 7.9 kHz) below 4 kHz."""
-    f0 = max(f0, 40.0)
-    n_fft = _periods_fft_size(fs, 3.0, 40.0)
-    segment = _windowed_waveform(samples, fs, f0, time, "blackman", 3.0, noise, _D4C_SAFEGUARD)
-    power = np.abs(np.fft.rfft(segment, n_fft)) ** 2
-    lowest, middle, highest = (int(np.ceil(edge * n_fft / fs)) for edge in (100.0, 4000.0, 7900.0))
-    power[: lowest + 1] = 0
-    cumulative = np.cumsum(power)
-    return cumulative[middle] / cumulative[highest]
+def _blackman(length):
+    """A Blackman window ``length`` samples long, as a function of the offset from its center."""
+    return lambda offset: (
+        0.42 + 0.5 * np.cos(2.0 * np.pi * offset / length) + 0.08 * np.cos(4.0 * np.pi * offset / length)
+    )
 
 
-def _centroid(samples, fs, time, f0, n_fft, noise):
-    segment = _windowed_waveform(samples, fs, f0, time, "blackman", 4.0, noise, _D4C_SAFEGUARD)
-    buffer = np.zeros(n_fft)
-    buffer[: len(segment)] = segment
-    n_normalized = _matlab_round(2.0 * fs / f0) * 2 + 1
-    buffer /= np.sqrt(np.sum(buffer[:n_normalized] ** 2))
-    spectrum = np.fft.rfft(buffer)
-    weighted = np.fft.rfft(buffer * (np.arange(n_fft) + 1.0))
-    return weighted.real * spectrum.real + spectrum.imag * weighted.imag
+def _group_delay_numerator(samples, fs, center, f0, n_fft):
+    """``E_cs`` of the paper's Eq. 8 under a unit-energy Blackman window four periods
+    long: ``Re(conj(X) X_t)``, with ``X`` the spectrum and ``X_t`` the spectrum of
+    the time-weighted sound. Time is measured from the window's start (``tau0`` of
+    Eq. 18 is half the window); measured from its center, the periodic part
+    would vanish."""
+    window_length = 4.0 * fs / f0
+    half_length = window_length / 2.0
+    offsets, window, segment = _windowed_segment(samples, center, _blackman(window_length), half_length)
+    segment = segment / np.sqrt(np.sum(window**2))
+    time = offsets / fs + 0.5 * window_length / fs
+    spectrum = np.fft.rfft(segment, n_fft)
+    return np.real(np.conj(spectrum) * np.fft.rfft(time * segment, n_fft))
 
 
-def _d4c_bands(samples, fs, time, f0, n_fft, n_bands, nuttall, noise):
-    """D4C's coarse aperiodicities [dB], one per multiple of 3 kHz."""
-    centroid = _centroid(samples, fs, time - 0.25 / f0, f0, n_fft, noise)
-    centroid = centroid + _centroid(samples, fs, time + 0.25 / f0, f0, n_fft, noise)
-    centroid = _dc_correction(centroid, f0, fs, n_fft)
-    segment = _windowed_waveform(samples, fs, f0, time, "hann", 4.0, noise, _D4C_SAFEGUARD)
-    power = np.abs(np.fft.rfft(segment, n_fft)) ** 2
-    power = _linear_smoothing(_dc_correction(power, f0, fs, n_fft), f0, fs, n_fft)
-    # WORLD divides without a guard; where the power is 0 the C code gets inf or NaN as here
-    with np.errstate(divide="ignore", invalid="ignore"):
-        group_delay = _linear_smoothing(centroid / power, f0 / 2.0, fs, n_fft)
-        group_delay = group_delay - _linear_smoothing(group_delay, f0, fs, n_fft)
-    window_length = len(nuttall)
-    boundary = _matlab_round(n_fft * 8.0 / window_length)
-    bands = np.empty(n_bands)
-    for band in range(n_bands):
-        center = int(_D4C_BAND_SPACING * (band + 1) * n_fft / fs)
-        start = center - window_length // 2
-        buffer = np.zeros(n_fft)
-        buffer[:window_length] = group_delay[start : start + window_length] * nuttall
-        cumulative = np.cumsum(np.sort(np.abs(np.fft.rfft(buffer)) ** 2))
-        bands[band] = 10 * np.log10(cumulative[n_fft // 2 - boundary - 1] / cumulative[n_fft // 2])
-    return np.minimum(0.0, bands + (f0 - 100) / 50)
+def _shaped_group_delay(samples, fs, center, f0, n_fft):
+    """Steps 1 and 2 of :func:`band_aperiodicity` at one time window: ``tau_D`` of Eq. 24."""
+    bin_width = fs / n_fft
+    quarter_period = fs / (4.0 * f0)
+    # Eq. 19: two windows half a period apart, around the window's center
+    before = _group_delay_numerator(samples, fs, center - quarter_period, f0, n_fft)
+    after = _group_delay_numerator(samples, fs, center + quarter_period, f0, n_fft)
+    numerator = before + after
+    window_length = 4.0 * fs / f0
+    power = _unit_energy_power(samples, center, _hann(window_length), window_length / 2.0, n_fft)
+    smoothed_power = _smooth_rectangular(power, (f0 / 2.0) / bin_width)  # Eq. 21
+    group_delay = numerator / (smoothed_power + _POWER_FLOOR)  # Eq. 22
+    smoothed = _smooth_rectangular(group_delay, (f0 / 4.0) / bin_width)  # Eq. 23
+    trend = _smooth_rectangular(smoothed, (f0 / 2.0) / bin_width)  # Eq. 25
+    return smoothed - trend  # Eq. 24
+
+
+def _nuttall(length):
+    """The symmetric 4-term Nuttall window, ``length`` points."""
+    if length == 1:
+        return np.ones(1)
+    phase = 2.0 * np.pi * np.arange(length) / (length - 1)
+    a0, a1, a2, a3 = _NUTTALL
+    return a0 - a1 * np.cos(phase) + a2 * np.cos(2 * phase) - a3 * np.cos(3 * phase)
+
+
+def _first_zero_of_transform(window, step):
+    """``w_bw`` of Eq. 28: where the transform of ``window`` (sampled every ``step``
+    Hz) first reaches zero, in seconds. Found on a fine grid, then refined by
+    golden-section search."""
+    positions = np.arange(len(window))
+
+    def magnitude(reciprocal):
+        return np.abs(np.sum(window * np.exp(-2j * np.pi * positions * step * reciprocal)))
+
+    padding = 64
+    fine = np.abs(np.fft.rfft(window, padding * len(window)))
+    first_minimum = np.argmax((fine[1:-1] <= fine[:-2]) & (fine[1:-1] <= fine[2:])) + 1
+    grid_step = 1.0 / (padding * len(window) * step)
+    low, high = (first_minimum - 1) * grid_step, (first_minimum + 1) * grid_step
+    golden = (np.sqrt(5.0) - 1.0) / 2.0
+    for _ in range(100):
+        lower_probe = high - golden * (high - low)
+        upper_probe = low + golden * (high - low)
+        if magnitude(lower_probe) < magnitude(upper_probe):
+            high = upper_probe
+        else:
+            low = lower_probe
+    return 0.5 * (low + high)
+
+
+def _band_noise_share(shaped, bin_width, center, band_window, main_lobe):
+    """Step 3 of :func:`band_aperiodicity` for one band: ``p_c(2 w_bw)`` of Eqs. 26 to 28."""
+    first_bin = int(np.round((center - _BAND_WIDTH / 2.0) / bin_width))
+    waveform = np.fft.ifft(band_window * shaped[first_bin : first_bin + len(band_window)])  # Eq. 26
+    # the shaped group delay is real, so |p(t)|^2 is the same at t and -t: the
+    # positive half holds the lobe at one period once (Eq. 27 integrates from 0)
+    power = np.abs(waveform[: len(waveform) // 2 + 1]) ** 2
+    power = power / (np.sum(power) + _POWER_FLOOR)
+    sorted_power = np.sort(power)[::-1]
+    # Eq. 27 at t = 2 w_bw, counting the last sample by the part of it inside
+    time_step = 1.0 / (len(band_window) * bin_width)
+    covered = 2.0 * main_lobe / time_step
+    whole = int(np.floor(covered))
+    captured = np.sum(sorted_power[:whole])
+    if whole < len(sorted_power):
+        captured += (covered - whole) * sorted_power[whole]
+    return max(1.0 - captured, 0.0)
 
 
 # ------------------------------------------------- harmonic residual
@@ -254,7 +321,7 @@ def harmonic_aperiodicity(
     cell_harmonics: float = 2.0,
 ) -> Aperiodicity:
     """The share of noise, measured by fitting the harmonics and keeping
-    what is left. Not part of WORLD; :func:`band_aperiodicity` is WORLD's measure.
+    what is left. Not part of D4C or WORLD; it is sonore's own.
 
     The F0 track is interpolated to every sample and integrated to a
     running phase ``Phi(t)``. At each voiced time window, under a Hann window
@@ -285,9 +352,9 @@ def harmonic_aperiodicity(
     cell_harmonics
         The width of the cells, in harmonics.
     """
-    fs = _integer_fs(sound)
+    fs = float(sound.fs)
     times, f0_values = _time_windows(sound, f0)
-    n_fft_out = world_fft_size(fs, f0_floor=f0_floor)
+    n_fft_out = _envelope_fft_size(fs, f0_floor)
     freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
     data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))
     sample_times = time_axis(sound.n_samples, fs)
