@@ -150,9 +150,11 @@ def test_sentence_agrees_with_harvest_where_both_voice():
     hv = np.interp(trk.t, ref[:, 0], (ref[:, 1] > 0).astype(float)) > 0.5
     v = trk.voiced[0]
     both = v & hv
-    assert np.mean(np.abs(trk.f0[0][both] / h[both] - 1) < 0.05) >= 0.99
+    # 98.6% with the two-period score (99.7% with three periods), which voices
+    # 83% of Harvest's time windows instead of 79%.
+    assert np.mean(np.abs(trk.f0[0][both] / h[both] - 1) < 0.05) >= 0.98
     assert not np.any(v & ~hv)
-    assert np.mean(v[hv]) > 0.75
+    assert np.mean(v[hv]) > 0.8
 
 
 def test_plot():
@@ -305,3 +307,32 @@ def test_an_empty_sound_gives_an_empty_track():
     assert trk.f0.shape == trk.score.shape == (1, 0)
     assert trk.candidates.shape == (1, 0, 8)
     assert "0 time windows" in repr(trk)
+
+
+@pytest.mark.parametrize(
+    "contour",
+    [70 * (1 + 0.03 * np.sin(2 * np.pi * 5.5 * TT)), 60 * 2**TT],
+    ids=["vibrato 70 Hz", "glide 60-74 Hz"],
+)
+def test_moving_low_voices_keep_their_period(contour):
+    # Below 100 Hz the power of the /a/ is in the harmonics near F1, the 10th
+    # and up, which drift out of line with their copy one period later when
+    # F0 moves within the score's stretch. With three periods the vibrato
+    # was unvoiced or at a sixth of the period on 62% of time windows.
+    err, unvoiced = errors(so.f0_track(so.Sound(vowel(contour), FS)), contour)
+    assert unvoiced == 0
+    assert err < 0.5
+
+
+def test_low_voice_in_noise_is_refined_from_its_strong_harmonics():
+    # At 60 Hz the first six harmonics hold 0.6% of the /a/'s power; refined
+    # from them alone in 10 dB noise, the F0 came out a percent off and the
+    # true period scored below 0.5 (81% of time windows wrong).
+    from sonore.views.f0 import _refine
+
+    x = vowel(np.full(N, 60.0)) + np.random.default_rng(4).standard_normal(N) * 10 ** (-10 / 20)
+    t = np.arange(0.06, 0.24, 0.005)
+    assert np.max(np.abs(_refine(x, t, np.full(len(t), 60.0), FS) / 60 - 1)) < 0.001
+    err, unvoiced = errors(so.f0_track(so.Sound(x, FS)), np.full(N, 60.0))
+    assert unvoiced == 0
+    assert err < 1

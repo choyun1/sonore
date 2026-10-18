@@ -25,10 +25,22 @@ __all__ = ["F0Track", "f0_track", "scale_f0"]
 MAX_CANDIDATES = 8
 
 
-N_HARMONICS = 6
+N_HARMONICS = 6  # the refinement uses at least this many harmonics ...
 
 
-PERIODS = 3.0  # window length for refinement and scoring, in periods of the candidate
+HARMONIC_CEILING = 1500.0  # ... and every harmonic up to here [Hz] ...
+
+
+MAX_HARMONICS = 24  # ... but no more than this many
+
+
+PERIODS = 3.0  # window length for refinement, in periods of the candidate
+
+
+SCORE_PERIODS = 2.0  # stretch length for the score, in periods of the candidate ...
+
+
+SCORE_MIN_WINDOW = 1 / 60.0  # ... and at least this long [s]: one period of the default f_lo
 
 
 NEAR_DEEPEST = 0.1  # a dip this close to the deepest one counts as nearly as deep
@@ -116,15 +128,24 @@ def f0_track(
        them (with ``f_hi`` raised, a sung 800 Hz vowel has more multiples in
        range than there are candidates).
     2. **Refinement.** For a candidate f, a Blackman window three periods long;
-       the instantaneous frequency of each of the first six harmonics is its
-       phase advance over one sample, and the new F0 is the power-weighted
-       mean of each harmonic's frequency divided by its number. Done twice.
-       This is the idea of WORLD's StoneMask, written from its description.
-    3. **Score.** The normalized correlation between a stretch three periods
-       long and the same stretch one period later, the fractional part of the
-       period done with a windowed sinc. For a periodic sound in independent
-       noise it is about ``s / (1 + s)``, ``s`` the ratio of periodic to noise
-       power, so 0.5 means the two are equally strong.
+       the instantaneous frequency of each harmonic is its phase advance over
+       one sample, and the new F0 is the power-weighted mean of each
+       harmonic's frequency divided by its number, over the harmonics up to
+       1.5 kHz (at least six, at most 24). Done twice. This is the idea of
+       WORLD's StoneMask, written from its description; StoneMask uses the
+       first six harmonics, which below 100 Hz hold a few percent of a
+       vowel's power and in noise put the refined F0 a percent off, enough
+       for the score of a low voice to collapse.
+    3. **Score.** The normalized correlation between a stretch two periods
+       long, and at least 17 ms (one period of 60 Hz), and the same stretch
+       one period later, the fractional part of the period done with a
+       windowed sinc. For a periodic sound in independent noise it is about
+       ``s / (1 + s)``, ``s`` the ratio of periodic to noise power, so 0.5
+       means the two are equally strong. Two periods rather than three so
+       that a low voice whose F0 moves (a vibrato at 70 Hz) still lines up
+       with its copy one period later; the floor so that a short-period
+       candidate is judged across a whole glottal cycle of the lowest voice
+       searched, where a formant's ringing no longer passes for a period.
     4. **Tracking.** A Viterbi pass over (unvoiced, candidates) per time window. A
        candidate costs ``1 - score`` and the unvoiced state ``1 - threshold``,
        so a time window leans voiced when its best score exceeds ``threshold``;
@@ -149,10 +170,10 @@ def f0_track(
     pitch and voicing, is the closest. Design and measurements in
     ``docs/design/views/f0.md``.
 
-    On synthetic vowels the refined F0 is within 0.12% of the truth on a one
+    On synthetic vowels the refined F0 is within 0.1% of the truth on a one
     octave per second glide and a 5.5 Hz vibrato. Against laryngograph
-    reference F0 (a male and a female speaker), it gets the voicing of 5.6%
-    and 1.5% of time windows wrong, where WORLD's Harvest, which leans toward
+    reference F0 (a male and a female speaker), it gets the voicing of 4.0%
+    and 1.6% of time windows wrong, where WORLD's Harvest, which leans toward
     calling time windows voiced, gets about 21% wrong; where both it and the
     reference say voiced, 98% and 95% of time windows are within 5%. Lower ``threshold`` to voice
     more weak or creaky stretches, for example before resynthesis.
@@ -163,13 +184,15 @@ def f0_track(
         The sound; each channel is tracked separately.
     f_lo, f_hi
         The search range [Hz]. The defaults cover speaking voices; raise
-        ``f_hi`` for singing. Refined candidates are kept from 0.9 ``f_lo``
-        to 1.1 ``f_hi``, so the F0 can come out up to 10% outside the range.
-        Lowering ``f_lo`` below the default is not reliable: below about
-        55 Hz a voice with strong formants can be tracked near its first
-        formant's ringing, which over three of its own short periods looks
-        periodic, and the multiple rule then counts the true F0 as a
-        subharmonic of it.
+        ``f_hi`` for singing (on speech that costs about 0.3 points of
+        voicing error, mostly false voicings). Refined candidates are kept
+        from 0.9 ``f_lo`` to 1.1 ``f_hi``, so the F0 can come out up to 10%
+        outside the range. The lowest voices are the least reliable: below
+        about 70 Hz a vowel whose F0 moves by more than a few percent within
+        the score's stretch (a wide vibrato) can come out unvoiced or near a
+        formant's frequency, and lowering ``f_lo`` below the default voices
+        period-doubled stretches, which the default leaves unvoiced, an
+        octave low.
     hop
         Spacing between time windows [s].
     threshold
@@ -300,7 +323,7 @@ def _refine(samples, candidate_times, candidate_f0s, fs, iters=2):
     # Refinement can lower an F0 a little, so leave room for a longer window.
     pad = int(round(PERIODS * fs / (0.8 * candidate_f0s.min()))) + 2
     padded = np.concatenate([np.zeros(pad), samples, np.zeros(pad)])
-    harmonic_numbers = np.arange(1, N_HARMONICS + 1)
+    harmonic_numbers = np.arange(1, MAX_HARMONICS + 1)
     order = np.argsort(candidate_f0s)  # similar window lengths in each chunk
     for chunk_start in range(0, len(candidate_f0s), CHUNK):
         chunk = order[chunk_start : chunk_start + CHUNK]
@@ -315,13 +338,22 @@ def _refine(samples, candidate_times, candidate_f0s, fs, iters=2):
             windowed, windowed_next = segment * window, segment_next * window
             rotation = np.exp(-2j * np.pi * chunk_f0[:, None] * offsets[None, :] / fs)
             harmonic_rotation = rotation.copy()
-            spectrum = np.empty((len(chunk_f0), N_HARMONICS), complex)
-            spectrum_next = np.empty_like(spectrum)
-            for i in range(N_HARMONICS):  # harmonic_rotation = rotation ** (i + 1)
+            # Every harmonic up to the ceiling, at least N_HARMONICS, below Nyquist. Harmonic k's
+            # frequency divided by k is as exact an F0 as the fundamental's and has k times
+            # less jitter for the same power, and below 100 Hz the first six hold little.
+            up_to_ceiling = np.ceil(HARMONIC_CEILING / chunk_f0.min())
+            n_harmonics = int(min(MAX_HARMONICS, max(N_HARMONICS, up_to_ceiling)))
+            spectrum = np.zeros((len(chunk_f0), MAX_HARMONICS), complex)
+            spectrum_next = np.zeros_like(spectrum)
+            for i in range(n_harmonics):  # harmonic_rotation = rotation ** (i + 1)
                 spectrum[:, i] = np.sum(windowed * harmonic_rotation, axis=1)
                 spectrum_next[:, i] = np.sum(windowed_next * harmonic_rotation, axis=1)
                 harmonic_rotation *= rotation
-            power = np.abs(spectrum) ** 2 * (harmonic_numbers[None, :] * chunk_f0[:, None] < fs / 2)
+            harmonic_freq = harmonic_numbers[None, :] * chunk_f0[:, None]
+            used = (harmonic_freq < fs / 2) & (
+                (harmonic_numbers[None, :] <= N_HARMONICS) | (harmonic_freq <= HARMONIC_CEILING)
+            )
+            power = np.abs(spectrum) ** 2 * used
             inst_freq = (
                 np.angle(spectrum_next * np.conj(spectrum)) * fs / (2 * np.pi) / harmonic_numbers[None, :]
             )
@@ -335,13 +367,15 @@ def _refine(samples, candidate_times, candidate_f0s, fs, iters=2):
 
 
 def _periodicity(samples, candidate_times, candidate_f0s, fs):
-    """Normalized correlation between a stretch PERIODS periods long, centered
-    half a period before the candidate time, and the same stretch one period later. The
-    fractional part of the period is done with a Kaiser-windowed sinc."""
+    """Normalized correlation between a stretch SCORE_PERIODS periods long (at
+    least SCORE_MIN_WINDOW), centered half a period before the candidate time,
+    and the same stretch one period later. The fractional part of the period
+    is done with a Kaiser-windowed sinc."""
     out = np.zeros(len(candidate_f0s))
     if not len(candidate_f0s):
         return out
-    max_length = int(np.ceil(PERIODS * fs / candidate_f0s.min())) + 1
+    min_length = SCORE_MIN_WINDOW * fs
+    max_length = int(np.ceil(max(SCORE_PERIODS * fs / candidate_f0s.min(), min_length))) + 1
     max_period = int(np.ceil(fs / candidate_f0s.min())) + 1
     pad = max_length + max_period + 2 * SINC_HALF + 2
     padded = np.concatenate([np.zeros(pad), samples, np.zeros(pad)])
@@ -351,9 +385,9 @@ def _periodicity(samples, candidate_times, candidate_f0s, fs):
     for chunk_start in range(0, len(candidate_f0s), CHUNK):
         chunk = order[chunk_start : chunk_start + CHUNK]
         chunk_f0 = candidate_f0s[chunk]
-        offsets = np.arange(int(np.ceil(PERIODS * fs / chunk_f0.min())) + 1)
         period = fs / chunk_f0
-        length = np.round(PERIODS * period).astype(int)
+        length = np.round(np.maximum(SCORE_PERIODS * period, min_length)).astype(int)
+        offsets = np.arange(length.max() + 1)
         start = np.round(candidate_times[chunk] * fs - length / 2 - period / 2).astype(int) + pad
         in_window = offsets[None, :] < length[:, None]
         stretch = padded[start[:, None] + offsets[None, :]] * in_window

@@ -414,8 +414,8 @@ beyond the 13.3 ms the search reaches in every voiced time window, so it cannot 
 <h2 id="h-a-tracker-beside-the-cepstrum">A tracker beside the cepstrum</h2>
 <p><code>so.f0_track</code> works the other way round. It looks for the period in the waveform rather than
 the log spectrum, with YIN's difference function (de Cheveigné &amp; Kawahara, 2002): up to eight
-candidate periods per time window, each sharpened from the instantaneous frequencies of the
-first six harmonics, as WORLD's StoneMask does (Morise et al., 2016). Each candidate is scored
+candidate periods per time window, each sharpened from the instantaneous frequencies of its
+harmonics up to 1.5 kHz, after WORLD's StoneMask (Morise et al., 2016). Each candidate is scored
 by how well the waveform repeats one period later, and a single pass picks the cheapest path
 through the candidates, so that the pitch rarely jumps and a time window is voiced only when
 some candidate repeats well (a score above 0.5).</p>
