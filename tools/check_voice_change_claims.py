@@ -28,7 +28,6 @@ from scipy.signal import find_peaks, freqz
 import sonore as so
 from sonore.views.aperiodicity import Aperiodicity
 from sonore.views.spectral_envelope import SpectralEnvelope
-from sonore.views.world import world_fft_size
 
 FS = 16000.0
 HOP = 0.005
@@ -444,7 +443,7 @@ def c7_any_source(sentence, tracked):
     lifted = cepstrum.lifter(0.5 / voiced_median)
     stft_freqs = np.fft.rfftfreq(2 * (lifted.envelope().shape[1] - 1), 1 / fs)
     cepstral = GridEnvelope(lifted.envelope() ** 2, cep_times, stft_freqs)
-    n_fft = world_fft_size(fs)
+    n_fft = so.pitch_adaptive_envelope(sentence, tracks[next(iter(tracks))]).n_fft
     print("  F0 source    envelope    synthesizer        | F0 out/unchanged  within 5% | fitted warp")
     for f0_name, track in tracks.items():
         aperiodicity = so.band_aperiodicity(sentence, track)

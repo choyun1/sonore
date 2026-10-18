@@ -1,11 +1,13 @@
 """Stores WORLD's own output for the vocoder tests (tests/data/world_reference.npz).
 
-Runs pyworld (WORLD's C++ code, version 0.3.5, the version the ports were
-checked against) on two short sounds: a synthetic vowel with vibrato and breath noise,
-and 0.3 s of the gallery sentence (0.6 to 0.9 s) with its stored Harvest track. It
-stores every 8th frequency bin of CheapTrick's envelope (with WORLD's q1 and
-the paper's), D4C's aperiodicity, and WORLD's synthesis from WORLD's own
-envelope and aperiodicity.
+Runs pyworld (WORLD's C++ code, version 0.3.5, the version the synthesis port
+was checked against) on two short sounds: a synthetic vowel with vibrato and
+breath noise, and 0.3 s of the gallery sentence (0.6 to 0.9 s) with its stored
+Harvest track. It stores every 8th frequency bin of WORLD's CheapTrick envelope
+at the paper's q1 (so.pitch_adaptive_envelope is written from the paper and is
+compared with it as a distance, not a match), and WORLD's synthesis from
+sonore's own envelope and aperiodicity (so.source_filter_synthesize is a port
+and must match it).
 
 Both of those are voiced throughout, so it also stores WORLD's synthesis of a
 third sound, 0.2 s of the sentence (1.45 to 1.65 s) that goes from voiced to
@@ -17,8 +19,9 @@ WORLD extends the track by one step), and with the same time windows read at
 a hop of 10/3 ms.
 
 The tests compare sonore against these numbers, so they need no pyworld.
-pyworld is used only here. Rerunning the script gives the stored arrays bit
-for bit (checked with pyworld 0.3.5 on 2026-10-18).
+pyworld is used only here. Rerun the script whenever pitch_adaptive_envelope
+or band_aperiodicity changes, since the synthesis references are built from
+them.
 
     pip install pyworld            # development only
     python tools/make_world_fixtures.py
@@ -29,6 +32,8 @@ from pathlib import Path
 import numpy as np
 import pyworld
 import soundfile as sf
+
+import sonore as so
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "tests" / "data" / "world_reference.npz"
@@ -68,13 +73,19 @@ def sentence_excerpt(start=0.6, stop=0.9):
     return excerpt, track[rows, 0] - start, track[rows, 1]
 
 
+def sonore_analyses(sound, window_times, window_f0):
+    """sonore's envelope and aperiodicity, in WORLD's layout."""
+    track = (window_times, window_f0)
+    snd = so.Sound(sound, FS)
+    return so.pitch_adaptive_envelope(snd, track).to_world(), so.band_aperiodicity(snd, track).to_world()
+
+
 def synthesis_variants(sound, window_times, window_f0):
     """WORLD's synthesis of one sound under the variants the module docstring lists."""
     sound, window_times, window_f0 = (
         np.ascontiguousarray(values, dtype=float) for values in (sound, window_times, window_f0)
     )
-    envelope = pyworld.cheaptrick(sound, window_f0, window_times, FS)
-    aperiodicity = pyworld.d4c(sound, window_f0, window_times, FS)
+    envelope, aperiodicity = sonore_analyses(sound, window_times, window_f0)
     return {
         "sound": sound,
         "t": window_times,
@@ -97,18 +108,14 @@ def world_outputs(sound, window_times, window_f0):
     sound, window_times, window_f0 = (
         np.ascontiguousarray(values, dtype=float) for values in (sound, window_times, window_f0)
     )
-    envelope = pyworld.cheaptrick(sound, window_f0, window_times, FS)
     envelope_paper = pyworld.cheaptrick(sound, window_f0, window_times, FS, q1=-0.09)
-    aperiodicity = pyworld.d4c(sound, window_f0, window_times, FS)
-    synthesized = pyworld.synthesize(window_f0, envelope, aperiodicity, FS, HOP_MS)
+    envelope, aperiodicity = sonore_analyses(sound, window_times, window_f0)
     return {
         "sound": sound,
         "t": window_times,
         "f0": window_f0,
-        "envelope": envelope[:, ::BIN_STEP],
         "envelope_paper_q1": envelope_paper[:, ::BIN_STEP],
-        "aperiodicity": aperiodicity[:, ::BIN_STEP],
-        "synthesized": synthesized,
+        "synthesized": pyworld.synthesize(window_f0, envelope, aperiodicity, FS, HOP_MS),
     }
 
 
