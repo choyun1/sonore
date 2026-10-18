@@ -12,7 +12,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # # Source and aperiodicity
 #
-# In the first-order source-filter picture ([Formant synthesis](formants.html)) a voice has a
+# In the first-order source-filter picture ([The source-filter model](sourcefilter.html)) a voice has a
 # source that is either a buzz (voiced) or a hiss (unvoiced), and everything else is the filter:
 # the vocal tract's formants. A vocoder such as WORLD (Morise, Yokomori & Ozawa, 2016) keeps three
 # things instead of two: the pitch, a smooth spectral envelope, and an **aperiodicity**. The
@@ -43,7 +43,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # ## The vowel, and code the examples share
 #
 # The vowel of "hod", made from Klatt's (1980) glottal source, the radiation from the lips and
-# five formants, as [Formant synthesis](formants.html#h-a-vowel-piece-by-piece) explains; the code
+# five formants, as [A vowel, piece by piece](sourcefilter.html#h-a-vowel-piece-by-piece) explains; the code
 # is repeated here so that the page runs on its own. Here the source is a sum of harmonics at a
 # steady pitch plus white noise, both put through the same formants. The source's harmonics fall
 # about 6 dB per octave and the noise is flat, so the share of noise rises about 6 dB per octave.
@@ -53,7 +53,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # The vowel is made at two pitches: the median pitch of each talker's recording, measured with
 # `so.f0_track` as on [Two talkers](talkers.html#h-pitch). At the male talker's pitch it has
 # Peterson and Barney's (1952) male formants for "hod", and at the female talker's pitch their
-# female ones ([Formant synthesis](formants.html#h-six-vowels)).
+# female ones ([Six vowels](sourcefilter.html#h-six-vowels)).
 
 # %% [setup]
 import os
@@ -97,7 +97,7 @@ for label, f0 in medians.items():
 FS = 16000
 DUR = 1.0
 # "Hod" for each talker's pitch, (frequency, bandwidth) in Hz: Peterson and Barney's male and
-# female F1 to F3, and F4 and F5 as on the Formant synthesis page.
+# female F1 to F3, and F4 and F5 as on the source-filter page.
 HOD = {
     "Male talker": [(730, 60), (1090, 90), (2440, 150), (3500, 200), (4500, 250)],
     "Female talker": [(850, 60), (1220, 90), (2810, 150), (4100, 200), (4900, 250)],
@@ -201,12 +201,13 @@ sound = finish(formants(hiss, HOD["Male talker"]))
 fig, playhead = show(sound, "noise through the formants (A = 1)")
 
 # %% [about]
-# Both together, at each talker's pitch. Below about 1 kHz the harmonics stand well above the
-# noise; above 3 kHz the noise fills in between them and then covers them. This is what makes a
-# voice breathy: neither switch setting, but a mixture whose proportion changes with frequency.
-# At the female talker's pitch the harmonics are farther apart, and the noise shows in wider gaps
-# between them (see [Two talkers](talkers.html#h-harmonics-sample-the-envelope)). [Formant
-# synthesis](formants.html#d-fn3) makes a breathy vowel with Klatt's aspiration noise.
+# Both together, at each talker's pitch. Below about 1 kHz the harmonics stand well above the noise;
+# above 3 kHz the noise fills in between them and then covers them. This is what makes a voice
+# breathy: neither switch setting, but a mixture whose proportion changes with frequency. At the
+# female talker's pitch the harmonics are farther apart, and the noise shows in wider gaps between
+# them (see [Harmonics sample the envelope](sourcefilter.html#h-harmonics-sample-the-envelope)).
+# [The source-filter model](sourcefilter.html#d-fn3) makes a breathy vowel with Klatt's aspiration
+# noise.
 
 # %% [demo ap3] A breathy vowel
 sounds = {label: finish(vowel) for label, vowel in vowels.items()}
@@ -526,7 +527,8 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 # ## What this page leaves out
 #
 # - **WORLD's pitch tracker.** Harvest is not part of sonore; its tracks are stored with the
-#   recordings. `so.f0_track` gives tracks of its own ([Pitch tracking](pitch.html)).
+#   recordings. `so.f0_track` gives tracks of its own ([Measuring the source:
+#   pitch](sourcefilter.html#h-measuring-the-source-pitch)).
 # - **Phase.** `so.source_filter_synthesize` starts every harmonic in cosine phase, so each period's
 #   waveform is a pulse, peakier than the original's; the views keep no phase to rebuild it from.
 # - **Jitter and shimmer.** A pitch track smoothed over 5 ms time windows cannot follow
@@ -546,7 +548,8 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
 #   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L249)
 # - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
-#   Communication* 84, 57–65. [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
+#   Communication* 84, 57–65.
+#   [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
 #   [`aperiodicity.band_aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
@@ -556,5 +559,6 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
-#   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
+#   24(2), 175–184.
+#   [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The formants of "hod".

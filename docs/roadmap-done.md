@@ -69,7 +69,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   sample. `so.resonator` and `so.antiresonator` are its formants. A vowel's
   harmonics equal source x formants x radiation to 1e-6 dB; see
   `docs/design/sources/klatt.md` and the
-  [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html) gallery page.
+  [Formant synthesis](https://choyun1.github.io/sonore/gallery/sourcefilter.html#h-synthesis-by-rule) gallery page.
 - **WORLD vocoder.** `so.cheaptrick` (spectral envelope; Morise, 2015),
   `so.d4c` (aperiodicity; Morise, 2016) and `so.world_synthesize` reproduce
   WORLD (Morise et al., 2016, the successor of STRAIGHT, Kawahara et al.,
@@ -107,7 +107,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   and a DCT, deltas, the mel spectrogram and the smoothed envelope the
   coefficients keep. Tests compare it with Kaldi's and librosa's stored output; see
   `docs/design/views/mfcc.md`. The
-  [Spectral envelope](https://choyun1.github.io/sonore/gallery/cepstrum.html#h-mfccs-a-cepstrum-on-the-mel-scale)
+  [Spectral envelope](https://choyun1.github.io/sonore/gallery/sourcefilter.html#h-mfccs-a-cepstrum-on-the-mel-scale)
   page shows how much a vowel's MFCCs move with its pitch.
 - **Voice changes, any method.** `so.scale_f0` changes the pitch and
   `so.warp_frequency` moves the formants, on any F0 contour (`f0_track`,

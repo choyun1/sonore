@@ -14,24 +14,18 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # # Rebuilding and changing a voice
 #
 # A voiced sound is a set of harmonics, multiples of a pitch $F_0$ that moves over time, whose
-# levels follow a smooth spectral envelope, the formants (see
-# [Formant synthesis](formants.html)). Measure the two, a pitch track
-# ([Pitch tracking](pitch.html)) and an envelope ([Spectral envelope](cepstrum.html)), and a voice
+# levels follow a smooth spectral envelope, the formants (see [The source-filter
+# model](sourcefilter.html)). Measure the two, a pitch track and an envelope, and a voice
 # can be put back together from them. Change one before putting it back, and the pitch moves
 # without the formants, or the formants without the pitch. This page does both, on the sentence
 # read by the [two talkers](talkers.html), shown side by side throughout.
 #
-# The first part rebuilds the voice with `so.harmonic_complex`, which accepts an F0 contour as well
-# as a fixed F0: every harmonic follows $n$ times the contour, with phase
+# The first part starts from the simple rebuild of [Putting it back,
+# simply](sourcefilter.html#h-putting-it-back-simply), harmonics from `so.harmonic_complex` shaped
+# by a liftered envelope:
 #
-# $$x(t) = \sum_n a_n \cos\big(n\,\Phi(t) + \phi_n\big), \qquad \Phi(t) = 2\pi \int_0^t F_0(\tau)\,d\tau,$$
-#
-# and the amplitudes $a_n$ may be a spectral envelope, read at every harmonic's frequency at every
-# instant.
-#
-# - [Putting the envelope back](#h-putting-the-envelope-back): harmonics shaped by the envelope,
-#   and a channel vocoder on a harmonic carrier.
-# - [Unvoiced gaps](#h-unvoiced-gaps): silence or shaped noise where the voice is not voiced.
+# - [Envelopes on harmonics and on noise](#h-envelopes-on-harmonics-and-on-noise): a channel
+#   vocoder on a harmonic carrier, and a whisper.
 # - [Phases on a moving pitch](#h-phases-on-a-moving-pitch): cosine, Schroeder and random phase.
 #
 # The second part changes the voice with a vocoder built from WORLD's analyses (Morise, Yokomori &
@@ -143,15 +137,13 @@ sounds = talkers
 fig, playhead = show_pair(sounds, "the sentence", tracks)
 
 # %% [markdown]
-# ## Putting the envelope back
+# ## Envelopes on harmonics and on noise
 #
-# A buzz that follows the pitch track keeps the intonation and nothing else; [Three pitch tracks,
-# heard](pitch.html#h-three-pitch-tracks-heard) plays one on each of three trackers. The timbre
-# is in the spectral envelope. Here it is the cepstral envelope, liftered in each 40 ms time window
-# below half the pitch period there, as on [Spectral envelope](cepstrum.html), which explains it.
-# `envelope_view()` holds it as power on its grid of time windows and frequencies, and
-# `so.harmonic_complex` takes it as `amplitudes`, reading it at each harmonic's frequency and time:
-# harmonics that follow the track, with heights that follow the formants.
+# The simplest rebuild, harmonics on the pitch track shaped by a liftered cepstral envelope with
+# envelope-shaped noise where the track says unvoiced, is on [Putting it back,
+# simply](sourcefilter.html#h-putting-it-back-simply). This section keeps that envelope, which the
+# last section uses again, and hears two relatives of the rebuild: a channel vocoder and a
+# whisper.
 
 
 # %%
@@ -164,22 +156,15 @@ def cepstral_envelope(snd, track):
     return cepstrum.lifter(0.5 * periods).envelope_view()
 
 
+def shaped_noise(snd, envelope, seed):
+    """White noise with the envelope as its STFT magnitude, on the envelope's time windows."""
+    noise = so.STFT(so.gaussian_noise(snd.duration, fs, rng=seed), win_dur=0.040, hop_dur=0.005)
+    noise.data = np.sqrt(envelope.data) * np.exp(1j * np.angle(noise.data))
+    return noise.to_sound().data[: len(snd), 0]
+
+
 cepstral = {label: cepstral_envelope(snd, tracks[label]) for label, snd in talkers.items()}
-voices = {
-    label: so.harmonic_complex(snd.duration, fs, tracks[label], amplitudes=cepstral[label])
-    for label, snd in talkers.items()
-}
-
-# %% [about]
-# Harmonics on each talker's `so.f0_track` with the cepstral envelope as their amplitudes, silent
-# where the track says unvoiced. The voiced sounds are there, in each talker's intonation; the
-# consonants that are noise are missing until [the next section](#h-unvoiced-gaps). The female
-# talker's harmonics are farther apart, so each formant is drawn by fewer of them (see
-# [Harmonics sample the envelope](talkers.html#h-harmonics-sample-the-envelope)).
-
-# %% [demo he1] Harmonics shaped by the envelope
-sounds = {label: finish(voice) for label, voice in voices.items()}
-fig, playhead = show_pair(sounds, "harmonics, cepstral envelope", tracks)
+breaths = {label: shaped_noise(snd, cepstral[label], seed=2) for label, snd in talkers.items()}
 
 # %% [markdown]
 # A channel vocoder ([Hearing through a vocoder](vocoder.html)) does the same job with band
@@ -215,67 +200,6 @@ sounds = {
     for label, snd in talkers.items()
 }
 fig, playhead = show_pair(sounds, "16 bands, harmonic carrier", tracks)
-
-# %% [markdown]
-# ## Unvoiced gaps
-#
-# Where the track says unvoiced, the sound is noise: fricatives, bursts and breath. Noise shaped
-# by the same envelope fills the gaps: white noise whose STFT magnitude is replaced, in every time
-# window, by the envelope. It is faded in where the track's voicing turns off, and set as loud,
-# relative to the harmonics, as the unvoiced parts of each recording are relative to its voiced
-# parts.
-
-
-# %%
-def rms(x):
-    return np.sqrt(np.mean(x**2))
-
-
-def shaped_noise(snd, envelope, seed):
-    """White noise with the envelope as its STFT magnitude, on the envelope's time windows."""
-    noise = so.STFT(so.gaussian_noise(snd.duration, fs, rng=seed), win_dur=0.040, hop_dur=0.005)
-    noise.data = np.sqrt(envelope.data) * np.exp(1j * np.angle(noise.data))
-    return noise.to_sound().data[: len(snd), 0]
-
-
-breaths = {label: shaped_noise(snd, cepstral[label], seed=2) for label, snd in talkers.items()}
-# The track's voicing at every sample, 1 where voiced; the harmonics are switched at the same times.
-voicings = {
-    label: np.interp(np.arange(len(snd)) / fs, tracks[label].t, tracks[label].voiced[0].astype(float))
-    for label, snd in talkers.items()
-}
-balances = {}
-for label, snd in talkers.items():
-    x, voicing = snd.data[:, 0], voicings[label]
-    balances[label] = rms((1 - voicing) * x) / rms(voicing * x)
-    print(f"{label}: unvoiced stretches {20 * np.log10(balances[label]):.1f} dB relative to the voiced ones")
-
-
-def with_breath(voice, label):
-    """The voiced sound, plus the talker's envelope-shaped noise where unvoiced, at the balance of
-    that talker's recording."""
-    gap = (1 - voicings[label]) * breaths[label]
-    voiced = voice.data[:, 0]
-    return so.Sound(voiced + gap * balances[label] * rms(voiced) / rms(gap), fs)
-
-
-# %% [about]
-# The harmonics shaped by the envelope, as in [the last section](#d-he1), with silence where
-# unvoiced.
-
-# %% [demo hu1] Silence in the gaps
-sounds = {label: finish(voice) for label, voice in voices.items()}
-fig, playhead = show_pair(sounds, "harmonics, silence where unvoiced", tracks)
-
-# %% [about]
-# The same harmonics with envelope-shaped noise in the gaps. The *s*, *t* and *h* sounds come
-# back: each sentence is rebuilt from two measurements, a pitch track and a spectral envelope
-# every 5 ms.
-
-# %% [demo hu2] Shaped noise in the gaps
-rebuilt = {label: finish(with_breath(voice, label)) for label, voice in voices.items()}
-sounds = rebuilt
-fig, playhead = show_pair(sounds, "harmonics, shaped noise where unvoiced", tracks)
 
 # %% [about]
 # A whisper: no harmonics at all, the shaped noise everywhere. This is close to the [noise
@@ -355,12 +279,13 @@ fig, playhead = show_pair(sounds, "equal harmonics, random phase", tracks)
 # %% [markdown]
 # ## Resynthesis
 #
-# WORLD measures the envelope with CheapTrick (Morise, 2015), which [Spectral
-# envelope](cepstrum.html) compares with the liftered cepstrum, and the aperiodicity with D4C
-# (Morise, 2016): how much of the voice is noise, frequency by frequency, so that every time
-# window can mix harmonics and noise rather than being one or the other as above.
-# `so.source_filter_synthesize` puts the three back together: harmonics on the pitch track carrying the
-# periodic part of the envelope, plus white noise shaped to the rest. The envelope and the
+# WORLD measures the envelope with CheapTrick (Morise, 2015), which [One time
+# window](sourcefilter.html#h-one-time-window) compares with the liftered cepstrum, and the
+# aperiodicity with D4C (Morise, 2016): how much of the voice is noise, frequency by frequency, so
+# that every time window can mix harmonics and noise rather than being one or the other as in
+# [Putting it back, simply](sourcefilter.html#h-putting-it-back-simply).
+# `so.source_filter_synthesize` puts the three back together: harmonics on the pitch track carrying
+# the periodic part of the envelope, plus white noise shaped to the rest. The envelope and the
 # aperiodicity are measured here on the `so.f0_track` tracks.
 #
 # Each change below is checked by measurement on the output. The pitch: `so.f0_track` on the
@@ -795,16 +720,17 @@ for label, average in original_db.items():
 # %% [markdown]
 # ## Any pitch track, any envelope
 #
-# `so.source_filter_synthesize` reads any envelope at the aperiodicity's time windows and frequencies,
-# and any pitch track at its own times, so the pitch can come from one analysis and the envelope
-# from another.
-# Three pitch tracks, those of [Pitch tracking](pitch.html): `so.f0_track`, Harvest (Morise, 2017)
+# `so.source_filter_synthesize` reads any envelope at the aperiodicity's time windows and
+# frequencies, and any pitch track at its own times, so the pitch can come from one analysis and the
+# envelope from another. Three pitch tracks, those of [Measuring the source:
+# pitch](sourcefilter.html#h-measuring-the-source-pitch): `so.f0_track`, Harvest (Morise, 2017)
 # stored with each recording, and the cepstral peak in each 40 ms window (Noll, 1967). Four
-# envelopes: CheapTrick's, the liftered cepstrum of [the first part](#h-putting-the-envelope-back),
-# and the envelope kept by 13 MFCCs (26 mel bands, Davis & Mermelstein, 1980; see [Spectral
-# envelope](cepstrum.html)) with each band's triangle of height 1 (the default) or of area 1.
-# Triangles of height 1 sum more power the wider they are, so that envelope rises with frequency;
-# area 1 removes most of the rise.
+# envelopes: CheapTrick's, the liftered cepstrum of [the first
+# part](#h-envelopes-on-harmonics-and-on-noise), and the envelope kept by 13 MFCCs (26 mel bands,
+# Davis & Mermelstein, 1980; see [MFCCs: a cepstrum on the mel
+# scale](sourcefilter.html#h-mfccs-a-cepstrum-on-the-mel-scale)) with each band's triangle of height
+# 1 (the default) or of area 1. Triangles of height 1 sum more power the wider they are, so that
+# envelope rises with frequency; area 1 removes most of the rise.
 #
 # A recording has no true envelope to score against, so the score is a distance between the
 # original's and the resynthesis's 40-band log mel spectrograms: the RMS of their difference in
@@ -871,7 +797,7 @@ for label in talkers:
 # %% [markdown]
 # CheapTrick's envelope scores best for both talkers, whichever track drives it. The liftered
 # cepstrum scores worse for the female talker than for the male talker: with the harmonics farther
-# apart, the lifter has to cut lower (see [Spectral envelope](cepstrum.html)).
+# apart, the lifter has to cut lower (see [One time window](sourcefilter.html#h-one-time-window)).
 #
 # The cepstral track's time windows start before 0 s, so its resynthesis uses the aperiodicity
 # measured on `so.f0_track`'s time windows; `so.source_filter_synthesize` reads the cepstral track at its
@@ -920,10 +846,10 @@ changed["cepstral F0 × 1.5, MFCC × 1.2"] = (sounds, higher)
 report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 1.2"]})
 
 # %% [markdown]
-# `so.source_filter_synthesize` builds its harmonics with `so.harmonic_complex`, as in
-# [the first part](#h-putting-the-envelope-back): it reads the envelope at each harmonic's
-# frequency and time, on the aperiodicity's grid (15.6 Hz apart at 16 kHz), so an envelope with
-# deep, narrow valleys comes through nearly as it is.
+# `so.source_filter_synthesize` builds its harmonics with `so.harmonic_complex`, as in [Putting it
+# back, simply](sourcefilter.html#h-putting-it-back-simply): it reads the envelope at each
+# harmonic's frequency and time, on the aperiodicity's grid (15.6 Hz apart at 16 kHz), so an
+# envelope with deep, narrow valleys comes through nearly as it is.
 
 # %% [markdown]
 # ## What this page leaves out
@@ -932,7 +858,7 @@ report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 
 #   sound, nor who they sound like.
 # - **The glottal pulse.** The harmonics' phases are fixed numbers (cosine phase in
 #   `so.source_filter_synthesize`). A voice's phases come from the shape of each glottal pulse
-#   and the vocal tract's phase response (see [Formant synthesis](formants.html)).
+#   and the vocal tract's phase response (see [The source-filter model](sourcefilter.html#h-voice-quality)).
 # - **One talker into another.** A pitch ratio, a formant ratio and a tilt leave the voice
 #   quality, the aperiodicity, the timing and the accent as they were.
 # - **Ratios that change across frequency.** Formants do not all move by the same ratio between
@@ -955,7 +881,8 @@ report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
 #   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L249)
 # - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
-#   Communication* 84, 57–65. [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
+#   Communication* 84, 57–65.
+#   [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
 #   [`aperiodicity.band_aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.

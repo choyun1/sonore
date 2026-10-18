@@ -68,6 +68,18 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- Gallery: the Formant synthesis, Finding formants, Pitch and Cepstrum pages
+  are one page, "The source-filter model": a voice built from a source and a
+  filter by rule, each measured back from a recording (pitch, formants, the
+  envelope), and put back together. Repeated examples were cut (seven steps
+  from heed to hod, cascade against parallel formants, two of the voice
+  quality changes, two of the four sawtooth tracks, two LPC checks, the MFCC
+  pair of spectra, silence in the gaps); old links forward to the new
+  sections. "Long-term spectra" and "Harmonics sample the envelope" moved
+  there from Two talkers; the long-term spectra now compare each recording
+  with its rebuilt copy. The rebuilt voice uses `so.source_filter_synthesize`
+  with the liftered cepstral envelope, and the page says where it falls
+  short: the noise comes out 5 and 9 dB too loud against the voiced stretches.
 - WORLD's two analyses are renamed for what they do: `so.cheaptrick` is now
   `so.pitch_adaptive_envelope` and `so.d4c` is `so.band_aperiodicity`. The
   old names are gone. sonore has these two parts of WORLD and not its F0

@@ -114,9 +114,9 @@ sound = finish(ssn)
 fig, playhead = show(sound, fmax=8000, win_dur=20e-3)
 
 # %% [markdown]
-# Those sentences are all by male talkers. How the long-term spectra of the gallery's male and
-# female talker differ, reading the same sentence, is measured on [Two
-# talkers](talkers.html#h-long-term-spectra).
+# Those sentences are all by male talkers. The long-term spectra of the gallery's male and female
+# talker, reading the same sentence, are drawn on [The source-filter model](sourcefilter.html#d-tk4),
+# each beside a copy of the sentence rebuilt from its pitch and envelope.
 
 # %% [markdown]
 # ## Beats and roughness

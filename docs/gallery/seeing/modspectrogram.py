@@ -424,7 +424,7 @@ print("lowest F0:", ", ".join(f"{label} {f0:.0f} Hz" for label, f0 in lowest_f0.
 # show at all: the fastest rate here, 64 Hz, is below either talker's lowest F0 (printed above),
 # so the beating of harmonics within a band, at the rate of F0, is beyond the top of the plots.
 # The difference between the voices is in a spectrogram
-# ([Two talkers](talkers.html#h-harmonics-sample-the-envelope)), not here.
+# ([Harmonics sample the envelope](sourcefilter.html#h-harmonics-sample-the-envelope)), not here.
 
 # %% [demo s1] Speech, babble and noise
 sounds = mixes
