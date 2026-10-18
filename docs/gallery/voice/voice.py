@@ -952,7 +952,7 @@ report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
-#   [`world.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L239)
+#   [`world.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L242)
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
 #   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185)

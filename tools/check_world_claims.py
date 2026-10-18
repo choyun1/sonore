@@ -327,7 +327,7 @@ def world_synthesize(f0, sp, ap, hop_ms, n_out):
     n_fft = 2 * (sp.shape[1] - 1)
     rng = WorldRandn()
     fp = hop_ms / 1000.0
-    lowest = FS / n_fft + 1.0
+    lowest = FS // n_fft + 1.0  # integer division, as in WORLD
     n_windows = len(f0)
     coarse_t = np.arange(n_windows + 1) * fp
     cf0 = np.where(f0 < lowest, 0.0, f0)

@@ -40,12 +40,15 @@ floating-point precision.
 2. cheaptrick(q1=...) accepts any value. WORLD's code uses -0.15 (the
    default here); its paper (Morise, 2015) gives -0.09.
 3. world_synthesize(rng=...) accepts a seed or Generator, which replaces
-   WORLD's noise stream with fresh Gaussian noise. The default, rng: RNG = None,
+   WORLD's noise stream with fresh Gaussian noise. The default, rng=None,
    is WORLD's stream, restarted at every call as WORLD does.
 4. harmonic_aperiodicity is not part of WORLD. It measures the share of
    noise by fitting the harmonics; D4C is WORLD's measure.
 5. Multichannel sounds are analyzed one channel at a time; WORLD takes one
    channel.
+6. world_synthesize refuses pulses further apart than its FFT is long,
+   which only a very low F0 beside an unvoiced stretch on a long hop gives;
+   WORLD writes past its buffer there.
 """
 
 
@@ -266,8 +269,11 @@ def world_synthesize(
         measured with, from any tracker. It is used as it is when its time
         windows are the aperiodicity's; otherwise it is read onto them
         (voiced where the nearest time window is voiced, linear between
-        voiced values). Those time windows must be evenly spaced from time
-        0, as WORLD assumes; the spacing is the hop (WORLD's frame period).
+        voiced values; halfway between two, the earlier). Those time windows
+        must be evenly spaced from time 0, as WORLD assumes; the spacing is
+        the hop (WORLD's frame period). A very low F0 beside an unvoiced
+        stretch on a long hop (17 Hz on a 200 ms hop, say) puts pulses
+        further apart than WORLD's FFT is long, and is refused.
         F0 can be changed before synthesis
         (:func:`~sonore.views.f0.scale_f0`, a pitch change); the
         envelope stays, so the formants stay.
@@ -283,8 +289,10 @@ def world_synthesize(
         which is read at the aperiodicity's time windows and frequencies
         first. WORLD's synthesis computes a minimum-phase response on its
         own FFT length, which suits a smooth envelope like CheapTrick's; an
-        envelope with deep, narrow valleys (tens of dB) comes out a few dB
-        off at the harmonics, so smooth such an envelope first, or give it
+        envelope with deep, narrow valleys comes out off at the harmonics
+        (by 2 dB at the median harmonic and 7 dB at the worst, for a vowel
+        whose envelope spans 95 dB; ``docs/design/views/voice-change.md``),
+        so smooth such an envelope first, or give it
         to :func:`~sonore.sources.waveforms.harmonic_complex` as its
         ``amplitudes``, which reads the envelope at each harmonic exactly.
     aperiodicity
@@ -313,10 +321,14 @@ def world_synthesize(
         times = grid
     if len(times) < 2:
         raise ValueError("WORLD's synthesis needs at least two time windows")
-    hop_ms = round((times[1] - times[0]) * 1000, 9)
+    # WORLD takes the hop (its frame period) in ms, as pyworld does. A hop
+    # written in decimals (5 ms) can arrive a rounding error away from it,
+    # so a hop that close to a whole number of nanoseconds is snapped there;
+    # any other hop (10/3 ms) is kept as it is
+    step_ms = (times[1] - times[0]) * 1000
+    hop_ms = round(step_ms, 9) if abs(round(step_ms, 9) - step_ms) < 1e-12 * step_ms else step_ms
     if times[0] != 0 or not np.allclose(np.diff(times), hop_ms / 1000, rtol=0, atol=1e-9):
         raise ValueError("f0 time windows must be evenly spaced from time 0")
-    # WORLD takes the hop (its frame period) in ms, as pyworld does
     hop = hop_ms / 1000.0
     n_samples = int(len(times) * hop_ms * fs / 1000)
     channels = [
@@ -400,6 +412,14 @@ def _synthesize_channel(f0, spectrogram, ratio_windows, hop, fs, n_samples, nois
     pulses = np.flatnonzero(np.abs(np.diff(wrapped)) > np.pi)
     before = wrapped[pulses] - 2 * np.pi
     time_shifts = -before / (wrapped[pulses + 1] - before) / fs
+    # each pulse's noise fills the interval to the next pulse within one FFT
+    # length; WORLD writes past its buffer when it does not fit, which only a
+    # very low F0 beside an unvoiced stretch on a long hop gives
+    if len(pulses) > 1 and np.diff(pulses).max() > n_fft:
+        raise ValueError(
+            f"pulses {np.diff(pulses).max()} samples apart do not fit WORLD's {n_fft}-point FFT; "
+            "use a shorter hop or a higher F0"
+        )
     # WORLD's DC remover: a Hann-shaped correction summing to one half
     half_index = np.arange(n_fft // 2)
     dc_remover = 0.5 - 0.5 * np.cos(2 * np.pi * (half_index + 1.0) / (1.0 + n_fft))
