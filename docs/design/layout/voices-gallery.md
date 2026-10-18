@@ -124,6 +124,13 @@ three shortfalls, each pointing to page 3:
 The page Cho first asked for ("higher quality voice synthesizer"), in prose and math, ordered by
 the shortfalls page 2 ends on.
 
+Cho (2026-10-18): the math and the technique are explained plainly, because the original papers
+and the old STRAIGHT code were hard to follow (many unexplained variable names). Each method is
+built up step by step: what goes wrong without the step, the step in one sentence, then its
+equation with every symbol named in words, and a figure of what the step does to one real time
+window. The page uses the names in sonore's code, not the papers' symbols, except where an
+equation needs a symbol, and then the symbol is defined next to it.
+
 **a. An envelope measured to the pitch period.**
 
 - **The problem.** A periodic signal under a fixed window leaves a ripple at F0, either in
