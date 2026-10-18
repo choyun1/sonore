@@ -1,8 +1,8 @@
 # The Voices group as one arc: from what a voice is to a richer source-filter model
 
-Status: proposed, not built. Cho asked for this on 2026-10-18 and wants to see the design before
-anything is implemented. This is the second draft. The first proposed nine pages, and Cho replaced
-it with the arc below. The decisions at the end need Cho's answer.
+Status: accepted by Cho (2026-10-18), all decisions as recommended; the library steps are done
+(PRs #240 to #242) and the pages are being built in the order below. This is the second draft.
+The first proposed nine pages, and Cho replaced it with the arc below.
 
 ## The arc
 
@@ -249,11 +249,12 @@ anything the papers leave out is listed for Cho (D8).
 
 ## What leaves the library
 
-`so.source_filter_synthesize` and its tests go, along with the synthesized arrays in
+The port of WORLD's synthesis (named `so.source_filter_synthesize` by #238, a name the recipe
+now reuses) and its tests went (PR #241), along with the synthesized arrays in
 `tests/data/world_reference.npz`, the synthesis parts of `tools/crosscheck_world_vocoder.py` and
 `tools/check_world_claims.py`, and the two DIFFERENCES_FROM_WORLD items about synthesis. The
 `back_to_sound` lines of the envelope, aperiodicity, F0, LPC, cepstrum and MFCC views point to
-`so.harmonic_complex` and page 3's recipe instead. `views/world.md` and `views/voice-change.md` get
+the recipe, `so.source_filter_synthesize`, instead. `views/world.md` and `views/voice-change.md` get
 a dated note.
 
 The rest of `views/world.py` goes too (Cho, 2026-10-18): the analyses are rewritten from the
@@ -286,39 +287,39 @@ Cho's order (2026-10-18): the rewrite from the papers comes before any gallery c
      or WORLD's source.
    - **The comparison.** Each function is then measured against pyworld, as a development-time
      comparison, and the distance is reported.
-3. The recipe and its checker, with the numbers added here, on the rewritten analyses (done in
-   this PR).
-4. Remove `so.source_filter_synthesize` and `views/world.py`, with `LICENSE-WORLD` and the
-   notices, and move the pages that used it to the recipe.
+3. The recipe and its checker, with the numbers added here, on the rewritten analyses, PR #241,
+   merged 2026-10-18.
+4. Remove WORLD's synthesis and `views/world.py`, with `LICENSE-WORLD` and the notices, and
+   move the pages that used it to the recipe (also PR #241).
 5. Page 2 (the merge). It is the largest step and one PR.
 6. Page 3, then page 1, then page 4's trim and the move to the Vocoder page.
 7. README rows, the Voices entries in `TOPICS`, the CHANGELOG (removing the synthesizer and
    replacing the ports are breaking changes for 0.8.0), and `docs/roadmap-done.md`.
-8. Rename the files named for WORLD (see What leaves the library).
+8. Rename the files named for WORLD (see What leaves the library), PR #242, merged 2026-10-18.
 
 The audit's sitting on WORLD's synthesis is no longer needed. Its CheapTrick and D4C sitting
 reviews the rewrite instead of the port.
 
 ## Decisions
 
-- **D1. Four pages in the order of "The arc".** (Recommended.)
+- **D1. Four pages in the order of "The arc".** Accepted (2026-10-18).
 - **D2. The recipe is a library function, `so.source_filter_synthesize`, in `sources`.** Accepted by
   Cho (2026-10-18), in place of the first recommendation (keeping it in the gallery), so that the
   gallery and the tools share one copy.
 - **D3. Page 1 measures only what sonore already computes**, in one small table: F0, H1–H2, CPP,
   noise share, formant scaling. Jitter, shimmer and HNR are defined but not computed.
-  (Recommended.) The alternative is adding period marking for jitter and shimmer, which is new
-  library work.
-- **D4. STRAIGHT in prose and math only, no code.** (Recommended.)
+  Accepted (2026-10-18). The alternative was adding period marking for jitter and shimmer, which
+  is new library work.
+- **D4. STRAIGHT in prose and math only, no code.** Accepted (2026-10-18).
 - **D5. `views/world.py` goes whole** (Cho, 2026-10-18), since the analyses are no longer ports;
   see What leaves the library.
 - **D6. Exactness of the analyses follows D8.** They stay exact if they stay ports. If rewritten,
   they report their distance to WORLD.
-- **D7. The noise-band examples he2 and he3 move to the Vocoder page.** (Recommended.)
+- **D7. The noise-band examples he2 and he3 move to the Vocoder page.** Accepted (2026-10-18).
 - **D8. Rewrite CheapTrick and D4C from the papers**, retiring `LICENSE-WORLD`. Accepted by Cho
   (2026-10-18), to be done before the gallery changes.
 - **D9. The cuts on page 2** as listed in its sections: fw3, fp1, fq4, fq5, hp1, hp3, ft2, ft3
-  and m3. (Recommended.) Any of them can be kept instead.
+  and m3. Accepted (2026-10-18).
 
 ## References
 
