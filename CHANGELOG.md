@@ -68,6 +68,15 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- Gallery: "Two talkers" becomes "What is a voice" (`whatisavoice.html`), the
+  first page of the Voices group: what a voice is made of (one source-filter
+  diagram), the two talkers every speech page uses, how voices differ (pitch,
+  cycle-to-cycle irregularity, noise, phonation type, vocal effort, size), each
+  as source or filter and with how it is measured, and a small table of the
+  indicators sonore computes on the two recordings (F0, H1-H2, CPP, noise share
+  by band, formant scaling). Jitter, shimmer and HNR are defined, not computed;
+  GRBAS and CAPE-V are named. "One vowel, three voices" moved here from The
+  source-filter model. Old links forward.
 - Gallery: "Source and aperiodicity" becomes "A richer source-filter model"
   (`richer.html`), ordered by the three shortfalls the source-filter page ends
   on. A new first section builds the envelope measured to the pitch period:

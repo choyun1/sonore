@@ -21,7 +21,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # standard way to let a listener with normal hearing hear roughly what an implant passes on.
 #
 # Everything on this page is one function, `so.channel_vocode`, applied to the sentence read by
-# the [two talkers](talkers.html) and to a short melody:
+# the [two talkers](whatisavoice.html#h-the-two-talkers) and to a short melody:
 #
 # - [How many bands](#h-how-many-bands): from a coarse picture of the spectrum to a fine one.
 # - [Noise or tones](#h-noise-or-tones): what carries the envelopes.
@@ -207,7 +207,7 @@ fig, playhead = show_pair(sounds, 8, title="eight bands")
 # Sixteen bands. The words are clearer still, but both voices are still whispers: no band of
 # noise has a pitch, so the intonation is gone. What is left to tell the two talkers apart is
 # mostly where their energy sits across the bands, which follows their
-# [spectral envelopes](talkers.html#h-spectral-envelopes), and how fast each reads.
+# [spectral envelopes](whatisavoice.html#h-size-the-spectral-envelopes), and how fast each reads.
 
 # %% [demo ci16] Sixteen bands
 sounds = vocode_both(16, rng=16)
@@ -246,7 +246,7 @@ fig, playhead = show_pair(sounds, 8, title="eight tones")
 # Whether a talker's pulses get through depends on where the pitch sits against the cutoff. The
 # gain of the envelope lowpass (a fourth-order Butterworth run forward and backward, so
 # $1 / (1 + (f/f_c)^8)$ in amplitude) at the median and at the 95th percentile of each talker's
-# pitch track (see [Two talkers](talkers.html#h-pitch)):
+# pitch track (see [What is a voice](whatisavoice.html#h-pitch)):
 
 
 # %%

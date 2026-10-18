@@ -18,7 +18,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # model](sourcefilter.html)). Measure the two, a pitch track and an envelope, and a voice
 # can be put back together from them. Change one before putting it back, and the pitch moves
 # without the formants, or the formants without the pitch. This page does both, on the sentence
-# read by the [two talkers](talkers.html), shown side by side throughout.
+# read by the [two talkers](whatisavoice.html#h-the-two-talkers), shown side by side throughout.
 #
 # The first part starts from the simple rebuild of [Putting it back,
 # simply](sourcefilter.html#h-putting-it-back-simply), harmonics from `so.harmonic_complex` shaped
@@ -52,7 +52,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # %% [markdown]
 # ## The sentence, and code the examples share
 #
-# The two recordings and their `so.f0_track` pitch tracks, as on [Two talkers](talkers.html).
+# The two recordings and their `so.f0_track` pitch tracks, as on [What is a voice](whatisavoice.html#d-tk1).
 # Every rebuild and change on this page follows those tracks, except where the last section swaps
 # in other trackers.
 
@@ -522,7 +522,7 @@ fig, playhead = show_pair(sounds, "formants and aperiodicity × 1.2", tracks)
 # ## Toward another talker
 #
 # The two talkers differ in pitch and in their spectral envelopes, which [Two
-# talkers](talkers.html#h-spectral-envelopes) measures: averaged over voiced time windows, the
+# talkers](whatisavoice.html#h-size-the-spectral-envelopes) measures: averaged over voiced time windows, the
 # female talker's envelope is close to the male talker's read at $f / r$ for one ratio $r$, once a
 # tilt (a straight line in dB over log frequency) is left free as well. The cell fits that ratio
 # and tilt as that page does, and takes the pitch ratio as the ratio of the median F0s. The male

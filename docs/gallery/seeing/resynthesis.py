@@ -118,9 +118,10 @@ fig, playhead = show_bands(sweep)
 # cosine filterbank above it is 1. The time-varying windows of a pitch-adaptive frame work the
 # same way, each with its own $w_q$.
 #
-# [Seeing speech](speech.html) draws one sentence through many analyses, with pictures that differ
-# a great deal. The cells below load that sentence, read by each of the [Two talkers](talkers.html),
-# and take each recording through each of those analyses and back.
+# [Seeing speech](speech.html) draws one sentence through many analyses, with pictures that differ a
+# great deal. The cells below load that sentence, read by each of the [two
+# talkers](whatisavoice.html#h-the-two-talkers), and take each recording through each of those
+# analyses and back.
 
 # %%
 # The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.

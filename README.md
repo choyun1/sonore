@@ -193,7 +193,7 @@ More in the gallery:
 
 **Voices**
 
-- [Two talkers](https://choyun1.github.io/sonore/gallery/talkers.html): the male and female talker every speech page uses. [▶ both](https://choyun1.github.io/sonore/gallery/talkers.html#d-tk1)
+- [What is a voice](https://choyun1.github.io/sonore/gallery/whatisavoice.html): what a voice is made of, how voices differ, and the male and female talker every speech page uses. [▶ both](https://choyun1.github.io/sonore/gallery/whatisavoice.html#d-tk1)
 - [The source-filter model](https://choyun1.github.io/sonore/gallery/sourcefilter.html): a voice built from a source and a filter, each measured back (pitch, formants, envelope), and put back together. [▶ ga](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-fc3) [▶ formant copy](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-ft5) [▶ buzz on the pitch track](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-hp2) [▶ envelope only](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-c3)
 - [A richer source-filter model](https://choyun1.github.io/sonore/gallery/richer.html): an envelope measured to the pitch period, a source that is partly noise, and the phases. [▶ whispered](https://choyun1.github.io/sonore/gallery/richer.html#d-ap13)
 - [Rebuilding and changing a voice](https://choyun1.github.io/sonore/gallery/voice.html): pitch and formants moved separately. [▶ one talker toward another](https://choyun1.github.io/sonore/gallery/voice.html#d-vc15)

@@ -259,10 +259,11 @@ sound = finish(pistol.convolve(ir))
 fig, playhead = show(sound, ir)
 
 # %% [about]
-# The sentence from [Seeing speech](speech.html), read by each of the [Two talkers](talkers.html),
-# in the same room. The reverberation fills the gaps between words and smears each syllable into
-# the next. The impulse response belongs to the room, not to the talker, so the panels at the
-# bottom are the same for both voices: the room does the same thing to each.
+# The sentence from [Seeing speech](speech.html), read by each of the [two
+# talkers](whatisavoice.html#h-the-two-talkers), in the same room. The reverberation fills the gaps
+# between words and smears each syllable into the next. The impulse response belongs to the room,
+# not to the talker, so the panels at the bottom are the same for both voices: the room does the
+# same thing to each.
 
 # %% [demo r1] A sentence in the same room
 sounds = {label: finish(snd.convolve(ir)) for label, snd in sentences.items()}
