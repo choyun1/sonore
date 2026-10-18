@@ -444,7 +444,7 @@ def c7_any_source(sentence, tracked):
     stft_freqs = np.fft.rfftfreq(2 * (lifted.envelope().shape[1] - 1), 1 / fs)
     cepstral = GridEnvelope(lifted.envelope() ** 2, cep_times, stft_freqs)
     n_fft = so.pitch_adaptive_envelope(sentence, tracks[next(iter(tracks))]).n_fft
-    print("  F0 source    envelope    synthesizer        | F0 out/unchanged  within 5% | fitted warp")
+    print("  F0 source    envelope    synthesizer              | F0 out/unchanged  within 5% | fitted warp")
     for f0_name, track in tracks.items():
         aperiodicity = so.band_aperiodicity(sentence, track)
         envelopes = {"CheapTrick": so.pitch_adaptive_envelope(sentence, track), "cepstral": cepstral}
@@ -476,7 +476,7 @@ def c7_any_source(sentence, tracked):
                 moved_db = mean_db(so.pitch_adaptive_envelope(moved, change_pitch(track, 1.5)), both_voiced)
                 warp, residual = fitted_warp(plain_db, moved_db, np.arange(n_fft // 2 + 1) * fs / n_fft)
                 print(
-                    f"  {f0_name:12s} {env_name:11s} {synth_name:18s} | {median:8.3f} {within:16.0%} |"
+                    f"  {f0_name:12s} {env_name:11s} {synth_name:24s} | {median:8.3f} {within:16.0%} |"
                     f" {warp:.3f} ({residual:.2f} dB)"
                 )
 

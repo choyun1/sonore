@@ -276,13 +276,13 @@ def part1():
                                 f"{voice} {vowel_name} {f0:.0f} Hz"
                             )
     print(
-        f"  {'F0 from':12s} {'envelope':11s} {'synthesizer':17s} | {'F0 error':>8s} | "
+        f"  {'F0 from':12s} {'envelope':11s} {'synthesizer':24s} | {'F0 error':>8s} | "
         f"{'resynthesis':>11s} {'worst':>6s} | {'x1.5, x1.2':>10s} {'worst':>6s}"
     )
     for (f0_name, env_name, synth), rows in results.items():
         rows = np.array(rows)
         print(
-            f"  {f0_name:12s} {env_name:11s} {synth:17s} | {np.nanmedian(rows[:, 2]):8.2%} | "
+            f"  {f0_name:12s} {env_name:11s} {synth:24s} | {np.nanmedian(rows[:, 2]):8.2%} | "
             f"{np.median(rows[:, 0]):8.2f} dB {rows[:, 0].max():6.2f} | "
             f"{np.median(rows[:, 1]):7.2f} dB {rows[:, 1].max():6.2f} | worst: "
             f"{labels[(f0_name, env_name, synth)][int(np.argmax(rows[:, 0]))]},"
