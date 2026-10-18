@@ -10,7 +10,7 @@
 <script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
   { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script><script>(() => { const moved = {"d-vc13": "voice.html#d-vc1", "d-vc16": "whatisavoice.html#h-size-the-spectral-envelopes", "d-he1": "sourcefilter.html#d-he1", "d-hu1": "sourcefilter.html#d-he1", "d-hu2": "sourcefilter.html#d-hu2", "h-putting-the-envelope-back": "sourcefilter.html#h-putting-it-back-simply", "h-unvoiced-gaps": "sourcefilter.html#d-hu2", "d-hf0": "richer.html#d-hf0", "d-hf1": "richer.html#d-hf1", "d-hf2": "richer.html#d-hf2", "d-hf3": "richer.html#d-hf3", "h-phases-on-a-moving-pitch": "richer.html#h-phases-on-a-moving-pitch"}; const target = moved[location.hash.slice(1)]; if (target) location.replace(target); })();</script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script><script>(() => { const moved = {"d-vc13": "voice.html#d-vc1", "d-vc16": "whatisavoice.html#h-size-the-spectral-envelopes", "d-he2": "vocoder.html#d-ci16", "d-he3": "vocoder.html#d-he3", "h-envelopes-on-harmonics-and-on-noise": "vocoder.html#h-a-harmonic-carrier-that-follows-the-pitch", "d-he1": "sourcefilter.html#d-he1", "d-hu1": "sourcefilter.html#d-he1", "d-hu2": "sourcefilter.html#d-hu2", "h-putting-the-envelope-back": "sourcefilter.html#h-putting-it-back-simply", "h-unvoiced-gaps": "sourcefilter.html#d-hu2", "d-hf0": "richer.html#d-hf0", "d-hf1": "richer.html#d-hf1", "d-hf2": "richer.html#d-hf2", "d-hf3": "richer.html#d-hf3", "h-phases-on-a-moving-pitch": "richer.html#h-phases-on-a-moving-pitch"}; const target = moved[location.hash.slice(1)]; if (target) location.replace(target); })();</script>
 <script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
 <style>
 :root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
@@ -178,7 +178,7 @@ footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: 
 </head>
 <body>
 <div class="layout">
-<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-label="Listening gallery"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="home-title">Listening gallery</span></a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group"><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="group"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group"><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="group here" open><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li class="has-sections"><a href="voice.html" aria-current="page">Rebuilding and changing a voice</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-envelopes-on-harmonics-and-on-noise">Envelopes on harmonics and on noise</a></li><li><a href="#h-resynthesis">Resynthesis</a></li><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a></li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a></li><li><a href="#h-pitch-range">Pitch range</a></li><li><a href="#h-the-aperiodicity">The aperiodicity</a></li><li><a href="#h-toward-another-talker">Toward another talker</a></li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details class="group"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><div class="side-foot"><div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></div></div><a class="side-repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-label="Listening gallery"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="home-title">Listening gallery</span></a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group"><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="group"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group"><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="group here" open><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li class="has-sections"><a href="voice.html" aria-current="page">Rebuilding and changing a voice</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-sentence-and-code-the-examples-share">The sentence, and code the examples share</a></li><li><a href="#h-resynthesis">Resynthesis</a></li><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a></li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a></li><li><a href="#h-pitch-range">Pitch range</a></li><li><a href="#h-the-aperiodicity">The aperiodicity</a></li><li><a href="#h-toward-another-talker">Toward another talker</a></li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details class="group"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><div class="side-foot"><div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></div></div><a class="side-repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
   const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
   const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
   const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
@@ -237,17 +237,14 @@ model</a>). Measure the two, a pitch track and an envelope, and a voice
 can be put back together from them. Change one before putting it back, and the pitch moves
 without the formants, or the formants without the pitch. This page does both, on the sentence
 read by the <a href="whatisavoice.html#h-the-two-talkers">two talkers</a>, shown side by side throughout.</p>
-<p>The first part starts from the simple rebuild of <a href="sourcefilter.html#h-putting-it-back-simply">Putting it back,
-simply</a>, harmonics from <code>so.harmonic_complex</code> shaped
-by a liftered envelope:</p>
-<ul><li><a href="#h-envelopes-on-harmonics-and-on-noise">Envelopes on harmonics and on noise</a>: a channel vocoder on a harmonic carrier, and a whisper.</li></ul>
-<p>The second part changes the voice with a vocoder built from WORLD's analyses (Morise, Yokomori &amp;
-Ozawa, 2016), which add a third measurement, the aperiodicity (see <a href="richer.html">A richer source-filter
-model</a>).
-Two changes are basic: <code>so.scale_f0(track, ratio)</code> multiplies every F0 by a ratio and leaves the
+<p>The voice is rebuilt by <code>so.source_filter_synthesize</code> from the three measurements of <a href="richer.html">A richer
+source-filter model</a>: a pitch track (<code>so.f0_track</code>), the envelope measured to the
+pitch period (<code>so.pitch_adaptive_envelope</code>, CheapTrick) and the aperiodicity
+(<code>so.band_aperiodicity</code>, D4C), the two analyses of WORLD (Morise, Yokomori &amp; Ozawa, 2016) that
+sonore has. Two changes are basic: <code>so.scale_f0(track, ratio)</code> multiplies every F0 by a ratio and leaves the
 envelope alone; <code>so.warp_frequency(envelope, ratio)</code> reads the envelope at <span class="tex">f / \text{ratio}</span>, so
 a peak at 1000 Hz moves to <span class="tex">1000 \times \text{ratio}</span> Hz, and leaves the pitch alone.</p>
-<ul><li><a href="#h-resynthesis">Resynthesis</a>: nothing changed, and how each change is measured.</li><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a>: each changed alone, and both together.</li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a>: the same pitch change by time stretch and resampling, for contrast.</li><li><a href="#h-pitch-range">Pitch range</a>: a monotone, a doubled range and a flipped contour.</li><li><a href="#h-the-aperiodicity">The aperiodicity</a>: kept in place or moved with the formants.</li><li><a href="#h-toward-another-talker">Toward another talker</a>: each talker moved toward the other.</li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a>: three trackers and four envelopes mixed, scored on resynthesis.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
+<ul><li><a href="#h-resynthesis">Resynthesis</a>: nothing changed, and how each change is measured.</li><li><a href="#h-pitch-and-formants-one-at-a-time">Pitch and formants, one at a time</a>: each changed alone, and both together.</li><li><a href="#h-the-phase-vocoder-moves-both">The phase vocoder moves both</a>: the same pitch change by time stretch and resampling, for contrast.</li><li><a href="#h-pitch-range">Pitch range</a>: a monotone, a doubled range and a flipped contour.</li><li><a href="#h-the-aperiodicity">The aperiodicity</a>: kept in place or moved with the formants, and a whisper, which is all noise.</li><li><a href="#h-toward-another-talker">Toward another talker</a>: each talker moved toward the other.</li><li><a href="#h-any-pitch-track-any-envelope">Any pitch track, any envelope</a>: three trackers and four envelopes mixed, scored on resynthesis.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
 <p>The page measures what each change did; it does not say how the results sound.</p>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
@@ -347,15 +344,11 @@ Female talker: median voiced F0 183 Hz</pre></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = talkers
 fig, playhead = show_pair(sounds, &quot;the sentence&quot;, tracks)</code></pre></details>
 </article>
-</section>
-<section aria-labelledby="h-envelopes-on-harmonics-and-on-noise">
-<h2 id="h-envelopes-on-harmonics-and-on-noise">Envelopes on harmonics and on noise</h2>
-<p>The simplest rebuild, harmonics on the pitch track shaped by a liftered cepstral envelope with
-envelope-shaped noise where the track says unvoiced, is on <a href="sourcefilter.html#h-putting-it-back-simply">Putting it back,
-simply</a>. This section keeps that envelope, which the
-last section uses again, and hears two relatives of the rebuild: a channel vocoder and a
-whisper.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def cepstral_envelope(snd, track):
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The liftered cepstral envelope of [Putting it back, simply](sourcefilter.html#h-putting-it-back-simply),
+# measured here too: the last section scores it beside CheapTrick&#x27;s, and the whisper is noise shaped to it.
+
+
+def cepstral_envelope(snd, track):
     &quot;&quot;&quot;The cepstrum of 40 ms Hann time windows every 5 ms, liftered below half the pitch period
     of each window (the track&#x27;s voiced F0, interpolated on a log scale across unvoiced gaps).&quot;&quot;&quot;
     cepstrum = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005))
@@ -373,97 +366,14 @@ def shaped_noise(snd, envelope, seed):
 
 cepstral = {label: cepstral_envelope(snd, tracks[label]) for label, snd in talkers.items()}
 breaths = {label: shaped_noise(snd, cepstral[label], seed=2) for label, snd in talkers.items()}</code></pre></details></div>
-<p>A channel vocoder (<a href="vocoder.html">Hearing through a vocoder</a>) does the same job with band
-envelopes in place of a cepstral one. On noise it puts back the envelopes and not the pitch; on
-a harmonic carrier that follows the pitch track it puts the pitch back too. The carrier below is
-<code>so.harmonic_complex</code> with <code>unvoiced=&quot;noise&quot;</code>, which fills the unvoiced stretches with white
-noise of the harmonics' power, so the consonants have something to modulate.</p>
-
-<article class="sound pair" id="d-he2">
-  <div class="about">
-    <h3>Sixteen noise bands</h3>
-    <div class="desc"><p>The sentence through a 16-band noise vocoder (Shannon et al., 1995): the band envelopes are
-there, the harmonics are not.</p></div>
-    <div class="players">
-    <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/he2_sixteen_noise_bands_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
-    <p class="file">he2_sixteen_noise_bands_male_talker.flac, 2.5 s, mono</p></div>
-    <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/he2_sixteen_noise_bands_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
-    <p class="file">he2_sixteen_noise_bands_female_talker.flac, 2.6 s, mono</p></div>
-    </div>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/he2_sixteen_noise_bands.png" width="1000" height="440" alt="Plots of the sixteen noise bands sounds" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(so.channel_vocode(snd, 16, 80, 7600, rng=1)) for label, snd in talkers.items()}
-fig, playhead = show_pair(sounds, &quot;16-band noise vocoder&quot;)</code></pre></details>
-</article>
-
-<article class="sound pair" id="d-he3">
-  <div class="about">
-    <h3>Sixteen bands on harmonics</h3>
-    <div class="desc"><p>The same 16 bands on a harmonic carrier that follows each talker's <code>so.f0_track</code>, with noise
-where it says unvoiced. The harmonics within a band share one envelope, so the formants are
-blurrier than with the cepstral envelope.</p></div>
-    <div class="players">
-    <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/he3_sixteen_bands_on_harmonics_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
-    <p class="file">he3_sixteen_bands_on_harmonics_male_talker.flac, 2.5 s, mono</p></div>
-    <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/he3_sixteen_bands_on_harmonics_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
-    <p class="file">he3_sixteen_bands_on_harmonics_female_talker.flac, 2.6 s, mono</p></div>
-    </div>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/he3_sixteen_bands_on_harmonics.png" width="1000" height="440" alt="Plots of the sixteen bands on harmonics sounds" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
-    label: finish(
-        so.channel_vocode(
-            snd,
-            16,
-            80,
-            7600,
-            carrier=so.harmonic_complex(snd.duration, fs, tracks[label], unvoiced=&quot;noise&quot;, rng=1),
-        )
-    )
-    for label, snd in talkers.items()
-}
-fig, playhead = show_pair(sounds, &quot;16 bands, harmonic carrier&quot;, tracks)</code></pre></details>
-</article>
-
-<article class="sound pair" id="d-hm4">
-  <div class="about">
-    <h3>Whispered</h3>
-    <div class="desc"><p>A whisper: no harmonics at all, the shaped noise everywhere. This is close to the <a href="#d-he2">noise
-vocoder</a>, with the cepstral envelope in place of 16 band envelopes.</p></div>
-    <div class="players">
-    <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/hm4_whispered_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.27136744171493055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.3561136341122946, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
-    <p class="file">hm4_whispered_male_talker.flac, 2.5 s, mono</p></div>
-    <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/hm4_whispered_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.27084125721483443, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35742909536253487, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
-    <p class="file">hm4_whispered_female_talker.flac, 2.6 s, mono</p></div>
-    </div>
-  </div>
-  <figure class="plot"><div class="plate">
-    <img src="img/hm4_whispered.png" width="1000" height="440" alt="Plots of the whispered sounds" loading="lazy">
-    <div class="heads" aria-hidden="true"></div>
-  </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(so.Sound(breath, fs)) for label, breath in breaths.items()}
-fig, playhead = show_pair(sounds, &quot;shaped noise only&quot;)</code></pre></details>
-</article>
 </section>
 <section aria-labelledby="h-resynthesis">
 <h2 id="h-resynthesis">Resynthesis</h2>
-<p>WORLD measures the envelope with CheapTrick (Morise, 2015), which <a href="richer.html#h-against-the-lifter-on-a-recording">Against the lifter, on a
-recording</a> compares with the liftered cepstrum, and the
-aperiodicity with D4C (Morise, 2016): how much of the voice is noise, frequency by frequency, so
-that every time window can mix harmonics and noise rather than being one or the other as in
-<a href="sourcefilter.html#h-putting-it-back-simply">Putting it back, simply</a>.
+<p>The envelope is measured to the pitch period by CheapTrick (Morise, 2015), which <a href="richer.html#h-against-the-lifter-on-a-recording">Against the
+lifter, on a recording</a> compares with the
+liftered cepstrum, and the aperiodicity by D4C (Morise, 2016): how much of the voice is noise,
+frequency by frequency, so that every time window can mix harmonics and noise rather than being
+one or the other as in <a href="sourcefilter.html#h-putting-it-back-simply">Putting it back, simply</a>.
 <code>so.source_filter_synthesize</code> puts the three back together: harmonics on the pitch track carrying
 the periodic part of the envelope, plus white noise shaped to the rest. The envelope and the
 aperiodicity are measured here on the <code>so.f0_track</code> tracks.</p>
@@ -903,6 +813,30 @@ keep it; compare <a href="#d-vc4">Higher formants</a>.</p></div>
 }
 fig, playhead = show_pair(sounds, &quot;formants and aperiodicity × 1.2&quot;, tracks)</code></pre></details>
 </article>
+
+<article class="sound pair" id="d-hm4">
+  <div class="about">
+    <h3>Whispered</h3>
+    <div class="desc"><p>A whisper: no harmonics at all. Instead of an aperiodicity set to all noise, this is the simple
+rebuild's noise everywhere, white noise shaped to the liftered cepstral envelope, voiced
+stretches included. The <a href="vocoder.html#d-ci16">16-band noise vocoder</a> is its relative with band
+envelopes in place of the cepstral one.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hm4_whispered_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.27136744171493055, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.3561136341122946, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hm4_whispered_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hm4_whispered_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.27084125721483443, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.35742909536253487, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hm4_whispered_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hm4_whispered.png" width="1000" height="440" alt="Plots of the whispered sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(so.Sound(breath, fs)) for label, breath in breaths.items()}
+fig, playhead = show_pair(sounds, &quot;shaped noise only&quot;)</code></pre></details>
+</article>
 </section>
 <section aria-labelledby="h-toward-another-talker">
 <h2 id="h-toward-another-talker">Toward another talker</h2>
@@ -1092,8 +1026,8 @@ frequencies, and any pitch track at its own times, so the pitch can come from on
 envelope from another. Three pitch tracks, those of <a href="sourcefilter.html#h-measuring-the-source-pitch">Measuring the source:
 pitch</a>: <code>so.f0_track</code>, Harvest (Morise, 2017)
 stored with each recording, and the cepstral peak in each 40 ms window (Noll, 1967). Four
-envelopes: CheapTrick's, the liftered cepstrum of <a href="#h-envelopes-on-harmonics-and-on-noise">the first
-part</a>, and the envelope kept by 13 MFCCs (26 mel bands,
+envelopes: CheapTrick's, the liftered cepstrum of <a href="sourcefilter.html#h-putting-it-back-simply">Putting it back,
+simply</a>, and the envelope kept by 13 MFCCs (26 mel bands,
 Davis &amp; Mermelstein, 1980; see <a href="sourcefilter.html#h-mfccs-a-cepstrum-on-the-mel-scale">MFCCs: a cepstrum on the mel
 scale</a>) with each band's triangle of height
 1 (the default) or of area 1. Triangles of height 1 sum more power the wider they are, so that
@@ -1176,8 +1110,8 @@ own times.</p>
 <article class="sound pair" id="d-vc17">
   <div class="about">
     <h3>Cepstral pitch, MFCC envelope</h3>
-    <div class="desc"><p>The pitch from the cepstrum and the envelope from the MFCCs (area 1); the only WORLD analysis is
-D4C's aperiodicity.</p></div>
+    <div class="desc"><p>The pitch from the cepstrum and the envelope from the MFCCs (area 1); only the aperiodicity is
+D4C's.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
     <audio controls preload="metadata" src="audio/vc17_cepstral_pitch_mfcc_envelope_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
@@ -1253,7 +1187,7 @@ envelope with deep, narrow valleys comes through nearly as it is.</p>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Davis &amp; Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 28(4), 357–366. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L106" target="_blank" rel="noopener"><code>mfcc.MFCC</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L249" target="_blank" rel="noopener"><code>spectral_envelope.pitch_adaptive_envelope</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132" target="_blank" rel="noopener"><code>aperiodicity.band_aperiodicity</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>.</li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/" target="_blank" rel="noopener">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185" target="_blank" rel="noopener"><code>cepstrum.Cepstrum.f0</code></a></li><li>Shannon, Zeng, Kamath, Wygonski &amp; Ekelid (1995). Speech recognition with primarily temporal cues. <em>Science</em> 270(5234), 303–304. <a href="https://doi.org/10.1126/science.270.5234.303" target="_blank" rel="noopener">doi:10.1126/science.270.5234.303</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497" target="_blank" rel="noopener"><code>envelopes.channel_vocode</code></a></li></ul>
+<ul><li>Davis &amp; Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 28(4), 357–366. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L106" target="_blank" rel="noopener"><code>mfcc.MFCC</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L249" target="_blank" rel="noopener"><code>spectral_envelope.pitch_adaptive_envelope</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132" target="_blank" rel="noopener"><code>aperiodicity.band_aperiodicity</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>.</li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/" target="_blank" rel="noopener">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185" target="_blank" rel="noopener"><code>cepstrum.Cepstrum.f0</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/voice/voice.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/voice/voice.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
 </main>
