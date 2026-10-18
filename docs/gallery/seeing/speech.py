@@ -42,8 +42,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   pulses, so it needs one or the other resolved. Its errors grow with harmonic number: if $F_0$ is
 #   off by 2%, the $k$-th harmonic is off by $2k$% of $F_0$, so the 20th harmonic is off by 40% of
 #   the gap to its neighbor, whatever the pitch. A vocoder that splits the voice into harmonics and
-#   noise on that grid counts the misplaced harmonic energy as noise ([Source and
-#   aperiodicity](aperiodicity.html)). An *octave error* is an estimate half or twice the true
+#   noise on that grid counts the misplaced harmonic energy as noise ([A richer
+#   source-filter model](richer.html)). An *octave error* is an estimate half or twice the true
 #   $F_0$, as when a tracker takes two periods for one or the second harmonic for the first;
 #   [Measuring the source: pitch](sourcefilter.html#h-measuring-the-source-pitch) compares trackers
 #   and the errors they make.

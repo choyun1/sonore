@@ -68,6 +68,16 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- Gallery: "Source and aperiodicity" becomes "A richer source-filter model"
+  (`richer.html`), ordered by the three shortfalls the source-filter page ends
+  on. A new first section builds the envelope measured to the pitch period:
+  why a fixed window ripples, STRAIGHT and TANDEM-STRAIGHT in prose and
+  equations, and CheapTrick's three steps written out and checked against
+  `so.pitch_adaptive_envelope`, with the effect of `q1`. The lifter against
+  CheapTrick moved here from the source-filter page, and the phase examples
+  from the voice page. A comparison with the simple rebuild finds that
+  CheapTrick's envelope is what brings the unvoiced stretches back to the
+  recordings' level. A paragraph places learned vocoders. Old links forward.
 - Gallery: the Formant synthesis, Finding formants, Pitch and Cepstrum pages
   are one page, "The source-filter model": a voice built from a source and a
   filter by rule, each measured back from a recording (pitch, formants, the

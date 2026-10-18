@@ -552,7 +552,7 @@ fig, playhead = show(sound, "/ha/: aspiration, then voicing", [730, 1090, 2440])
 # %% [about]
 # A breathy "hod": voicing with aspiration 6 dB below it throughout, and a wider first formant.
 # The noise fills in between the harmonics, most at high frequencies where the harmonics are
-# weak. [Source and aperiodicity](aperiodicity.html#d-ap3) makes a breathy vowel whose share of
+# weak. [A richer source-filter model](richer.html#d-ap3) makes a breathy vowel whose share of
 # noise at each frequency is known, and measures it.
 
 # %% [demo fn3] A breathy vowel
@@ -1040,8 +1040,9 @@ def peaks(freqs, level_db):
 # The vowel of "hod" at 100 Hz from `so.klatt_synthesize`, one time window in its middle. The
 # dots are its harmonics; the dashed lines are the formants it was given. Four envelopes are
 # drawn over them, each moved up or down to sit on the harmonics: LPC (order 18), and three that
-# [the next section](#h-measuring-the-filter-the-envelope) explains: CheapTrick, the cepstrum
-# liftered at half a period, and thirteen MFCCs, all from the same pre-emphasized sound. LPC
+# [the next section](#h-measuring-the-filter-the-envelope) explains, the cepstrum liftered at half
+# a period and thirteen MFCCs, and CheapTrick's, which [A richer source-filter
+# model](richer.html#h-cheaptrick-step-by-step) builds, all from the same pre-emphasized sound. LPC
 # follows the peaks closely. Its roots are not all formants: with 18 poles at 16 kHz some fit
 # the slope of the source or the harmonics instead, which is why `so.formant_track` fits ten
 # poles below a 5000 Hz ceiling and then picks among them. The triangles are its F1 to F3,
@@ -1255,21 +1256,15 @@ for label, cep in cepstra.items():
 
 # %% [markdown]
 # The lifter's envelope runs under the harmonic peaks, since it averages the peaks with the dips
-# between them, and the farther apart the harmonics, the more dip there is to average in.
-# *CheapTrick* (Morise, 2015) is built to avoid that. It analyzes each time window with a window
-# three periods long, so that it adapts to the pitch; smooths the power spectrum over $2F_0/3$,
-# which fills the dips between harmonics; and then lifters the log spectrum with a lifter matched
-# to $F_0$, one that both smooths over one harmonic spacing and lifts the peaks back up
-# (`so.pitch_adaptive_envelope`). The cell measures how far below each harmonic peak, up to
-# 4 kHz, each envelope runs: the median, and how much that varies from harmonic to harmonic.
-# CheapTrick normalizes its window to unit energy, so its level is not comparable with the
-# STFT's; only its spread is.
+# between them, and the farther apart the harmonics, the more dip there is to average in. The cell
+# measures how far above the envelope each harmonic peak up to 4 kHz rises: the median, and how
+# much that varies from harmonic to harmonic. An envelope built to follow the peaks instead,
+# CheapTrick's, is the subject of [An envelope measured to the pitch
+# period](richer.html#h-an-envelope-measured-to-the-pitch-period).
+
 
 # %%
-envelopes = {label: so.pitch_adaptive_envelope(snd, tracks[label]) for label, snd in talkers.items()}
-
-
-def below_peaks(label, envelope_db):
+def above_envelope(label, envelope_db):
     """How far each harmonic peak up to 4 kHz rises above an envelope (dB), in one time window."""
     stft, w = stfts[label], window[label]
     spectrum_db = 20 * np.log10(np.abs(stft.data[0, :, w["i"]]))
@@ -1281,20 +1276,19 @@ def below_peaks(label, envelope_db):
     return np.array(gaps)
 
 
-lifted, cheaptrick_db = {}, {}
+lifted = {}
 for label, cep in cepstra.items():
     w = window[label]
     lifted[label] = 20 * np.log10(cep.lifter(w["cutoff"]).envelope()[0, :, w["i"]])
-    cheaptrick_db[label] = 10 * np.log10(envelopes[label](np.array([w["t"]]), stfts[label].f)[0, :, 0])
-    for name, envelope_db in (("lifter", lifted[label]), ("CheapTrick", cheaptrick_db[label])):
-        gaps = below_peaks(label, envelope_db)
-        level = f"median {np.median(gaps):5.1f} dB below, " if name == "lifter" else " " * 21
-        print(f"{label:14} {name:11}: {level}spread (SD) {np.std(gaps):.1f} dB")
+    gaps = above_envelope(label, lifted[label])
+    print(
+        f"{label}: harmonic peaks a median {np.median(gaps):.1f} dB above the envelope, "
+        f"spread (SD) {np.std(gaps):.1f} dB"
+    )
 
 # %% [about]
-# One time window of each talker's sentence. Top: the log spectrum, the envelope liftered below
-# half a period, and CheapTrick's envelope, its level matched to the harmonic peaks (by the
-# median above). Bottom: the cepstrum, with the peak at one period and the lifter's cutoff. The
+# One time window of each talker's sentence. Top: the log spectrum and the envelope liftered
+# below half a period. Bottom: the cepstrum, with the peak at one period and the lifter's cutoff. The
 # female talker's peak is at a shorter quefrency and the cutoff is lower; the female talker's
 # liftered envelope runs farther below the harmonic peaks.
 
@@ -1304,10 +1298,8 @@ for column, (label, cep) in zip(fig.subfigures(1, 2), cepstra.items(), strict=Tr
     top, bottom = column.subplots(2, 1)
     stft, w = stfts[label], window[label]
     spectrum_db = 20 * np.log10(np.abs(stft.data[0, :, w["i"]]))
-    matched = cheaptrick_db[label] + np.median(below_peaks(label, cheaptrick_db[label]))
     top.plot(stft.f, spectrum_db, color="0.55", lw=0.8, label="spectrum")
     top.plot(stft.f, lifted[label], color="tab:red", lw=1.6, label="liftered below half a period")
-    top.plot(stft.f, matched, color="tab:blue", lw=1.2, label="CheapTrick, level matched")
     top.set(xlim=(0, 5000), ylim=(spectrum_db.max() - 75, spectrum_db.max() + 8), xlabel="Frequency [Hz]")
     top.set(ylabel="Level [dB]", title=f"{label}: time window at {w['t']:.3f} s")
     top.legend(loc="upper right", fontsize=7)
@@ -1325,11 +1317,10 @@ for column, (label, cep) in zip(fig.subfigures(1, 2), cepstra.items(), strict=Tr
         ax.grid(ls=":")
 
 # %% [markdown]
-# For both talkers CheapTrick's envelope follows the harmonic peaks more evenly than the lifter's
-# does, and the lifter's falls farther behind for the higher voice. CheapTrick is the envelope
-# the richer voice pages use: [Two talkers](talkers.html#h-spectral-envelopes) averages it over
-# each sentence, and [Source and aperiodicity](aperiodicity.html) and [Rebuilding and changing a
-# voice](voice.html) synthesize from it. This page keeps to the lifter, the simpler of the two.
+# For both talkers the peaks rise well above the liftered envelope, and farther for the higher
+# voice, unevenly from harmonic to harmonic. This page keeps to the lifter, the simpler envelope;
+# [A richer source-filter model](richer.html) builds CheapTrick's, which follows the peaks, and
+# [Rebuilding and changing a voice](voice.html) synthesizes from it.
 #
 # ### Splitting the voice in two
 #
@@ -1478,15 +1469,16 @@ def on_plot_axis(log_power):
 
 
 # %% [about]
-# The vowel /a/ at three pitches, each analyzed in one 25 ms time window. Left: the 13 MFCCs of
-# its power spectrum, drawn back as an envelope (as `mfcc.envelope(f)` does). Right: the same 13
-# coefficients taken from CheapTrick's envelope instead, summed into the same mel bands. Dashed:
-# the vocal tract the harmonics were weighted by. Levels are matched to it, since only the
-# shape matters here (the level is `c0`). From the power spectrum, the lowest bands, below the
-# first harmonic of the 200 and 300 Hz voices, drop far below the vocal tract, and the first
-# formant changes shape with the pitch. CheapTrick has already smoothed over one harmonic
-# spacing, so the three curves nearly coincide. The 13 coefficients cannot follow the formant
-# peaks at any of the pitches: that is the lifter, and it is the same for all three.
+# The vowel /a/ at three pitches, each analyzed in one 25 ms time window. Left: the 13 MFCCs of its
+# power spectrum, drawn back as an envelope (as `mfcc.envelope(f)` does). Right: the same 13
+# coefficients taken from CheapTrick's envelope instead, summed into the same mel bands. Dashed: the
+# vocal tract the harmonics were weighted by. Levels are matched to it, since only the shape matters
+# here (the level is `c0`). From the power spectrum, the lowest bands, below the first harmonic of
+# the 200 and 300 Hz voices, drop far below the vocal tract, and the first formant changes shape
+# with the pitch. CheapTrick's envelope ([CheapTrick, step by
+# step](richer.html#h-cheaptrick-step-by-step)) has already smoothed over one harmonic spacing, so
+# the three curves nearly coincide. The 13 coefficients cannot follow the formant peaks at any of
+# the pitches: that is the lifter, and it is the same for all three.
 
 # %% [figure m1] One vowel at three pitches
 fig, axes = plt.subplots(1, 2, figsize=(10, 3.8), sharey=True, layout="constrained")
@@ -1548,6 +1540,7 @@ for source_name in ("power spectrum", "CheapTrick envelope"):
 
 # %% [demo m2] The sentence as MFCCs
 mfccs = {label: so.MFCC(snd) for label, snd in talkers.items()}
+envelopes = {label: so.pitch_adaptive_envelope(snd, tracks[label]) for label, snd in talkers.items()}
 
 
 def band_image(ax, mfcc, times, band_db, title):
@@ -1761,8 +1754,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 # ### Where it falls short
 #
 # The model is all here, and the rebuilt voice falls short of the recording in three ways that
-# this page can point to, each the subject of [Source and aperiodicity](aperiodicity.html) and
-# the richer model built there:
+# this page can point to, each taken up by [A richer source-filter model](richer.html):
 #
 # - **The envelope.** The lifter averages the harmonic peaks with the dips between them, so in a
 #   voiced time window its envelope runs under the peaks, the farther the higher the voice, and
@@ -1773,7 +1765,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   or the other. A measured share of noise at each frequency, the aperiodicity, mixes the two.
 # - **The phases are chosen, not measured.** `so.harmonic_complex` starts every harmonic in cosine
 #   phase, so each period is one sharp pulse, whatever the recording's waveform was. [Phases on a
-#   moving pitch](voice.html#h-phases-on-a-moving-pitch) hears what other choices do.
+#   moving pitch](richer.html#h-phases-on-a-moving-pitch) hears what other choices do.
 
 # %% [markdown]
 # ## What this page leaves out
@@ -1814,7 +1806,8 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   [`lpc.formant_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L387)
 # - Bogert, Healy & Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum,
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
-#   Analysis*. Wiley. [Semantic Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
+#   Analysis*. Wiley. [Semantic
+#   Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
 #   [`cepstrum.Cepstrum`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L39)
 # - Davis & Mermelstein (1980). Comparison of parametric representations for monosyllabic word
 #   recognition in continuously spoken sentences. *IEEE Trans. Acoust., Speech, Signal Process.*
@@ -1823,11 +1816,11 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 # - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
 #   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
 #   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L103)
-# - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis.
-#   *STL-QPSR* 36(2–3), 119–156. The Rd parameter.
+# - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis. *STL-QPSR*
+#   36(2–3), 119–156. The Rd parameter.
 #   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L886)
-# - Fant, Liljencrants & Lin (1985). A four-parameter model of glottal flow. *STL-QPSR* 26(4),
-#   1–13. [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L807)
+# - Fant, Liljencrants & Lin (1985). A four-parameter model of glottal flow. *STL-QPSR* 26(4), 1–13.
+#   [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L807)
 # - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
 #   [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py#L104)
@@ -1856,5 +1849,6 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
 #   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185)
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
-#   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
+#   24(2), 175–184.
+#   [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The vowels' formant frequencies.

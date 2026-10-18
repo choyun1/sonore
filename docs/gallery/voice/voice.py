@@ -26,11 +26,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #
 # - [Envelopes on harmonics and on noise](#h-envelopes-on-harmonics-and-on-noise): a channel
 #   vocoder on a harmonic carrier, and a whisper.
-# - [Phases on a moving pitch](#h-phases-on-a-moving-pitch): cosine, Schroeder and random phase.
 #
 # The second part changes the voice with a vocoder built from WORLD's analyses (Morise, Yokomori &
-# Ozawa, 2016), which add a third measurement, the aperiodicity (see [Source and
-# aperiodicity](aperiodicity.html)).
+# Ozawa, 2016), which add a third measurement, the aperiodicity (see [A richer source-filter
+# model](richer.html)).
 # Two changes are basic: `so.scale_f0(track, ratio)` multiplies every F0 by a ratio and leaves the
 # envelope alone; `so.warp_frequency(envelope, ratio)` reads the envelope at $f / \text{ratio}$, so
 # a peak at 1000 Hz moves to $1000 \times \text{ratio}$ Hz, and leaves the pitch alone.
@@ -210,77 +209,10 @@ sounds = {label: finish(so.Sound(breath, fs)) for label, breath in breaths.items
 fig, playhead = show_pair(sounds, "shaped noise only")
 
 # %% [markdown]
-# ## Phases on a moving pitch
-#
-# The amplitudes fix the spectrum, but the starting phases decide the waveform. In cosine phase
-# all the harmonics peak together once a period, giving a sharp pulse; Schroeder's phases spread
-# the energy across the period for a nearly flat envelope (Schroeder, 1970); random phases fall in
-# between. With a contour the phases set only where each harmonic starts. After that every
-# harmonic runs at exactly $n$ times the same instantaneous frequency, so the waveform keeps its
-# shape as the pitch moves. The examples use harmonics of equal amplitude, to show the phases
-# alone.
-
-# %%
-PHASES = {"cosine": "cosine", "Schroeder": "schroeder+", "random": "random"}
-buzzes = {
-    name: {
-        label: so.harmonic_complex(snd.duration, fs, tracks[label], phases=phases, rng=3)
-        for label, snd in talkers.items()
-    }
-    for name, phases in PHASES.items()
-}
-for name, pair in buzzes.items():
-    print(
-        f"{name:9}: crest factor "
-        + ", ".join(f"{snd.peak / snd.rms:.1f} ({label})" for label, snd in pair.items())
-    )
-
-# %% [about]
-# Thirty milliseconds of each, from 0.50 s, where both talkers are voiced. In each column the three
-# have the same spectrum; only the waveform differs. The crest factor is the peak over the RMS of
-# the whole sentence.
-
-# %% [figure hf0] Three phase choices, one spectrum
-fig = plt.figure(figsize=(10, 4.8), layout="constrained")
-columns = fig.subfigures(1, 2)
-for column, label in zip(columns, talkers, strict=True):
-    axes = column.subplots(3, 1, sharex=True, sharey=True)
-    start = 0.50
-    segment = slice(int(start * fs), int((start + 0.03) * fs))
-    milliseconds = np.arange(segment.start, segment.stop) / fs * 1e3
-    for ax, (name, pair) in zip(axes, buzzes.items(), strict=True):
-        snd = pair[label]
-        ax.plot(milliseconds, snd.data[segment, 0] / snd.rms, color="k", lw=0.7)
-        ax.set(title=f"{label}: {name} phase, crest factor {snd.peak / snd.rms:.1f}", ylabel="re RMS")
-        ax.grid(ls=":")
-    axes[-1].set_xlabel("Time (ms)")
-
-# %% [about]
-# Cosine phase: a pulse train that follows each talker's intonation.
-
-# %% [demo hf1] Cosine phase
-sounds = {label: finish(snd) for label, snd in buzzes["cosine"].items()}
-fig, playhead = show_pair(sounds, "equal harmonics, cosine phase", tracks)
-
-# %% [about]
-# Schroeder phase: the same harmonics, with no instant in the period carrying all the energy.
-
-# %% [demo hf2] Schroeder phase
-sounds = {label: finish(snd) for label, snd in buzzes["Schroeder"].items()}
-fig, playhead = show_pair(sounds, "equal harmonics, Schroeder phase", tracks)
-
-# %% [about]
-# Random phase, one draw: a crest factor between the two.
-
-# %% [demo hf3] Random phase
-sounds = {label: finish(snd) for label, snd in buzzes["random"].items()}
-fig, playhead = show_pair(sounds, "equal harmonics, random phase", tracks)
-
-# %% [markdown]
 # ## Resynthesis
 #
-# WORLD measures the envelope with CheapTrick (Morise, 2015), which [One time
-# window](sourcefilter.html#h-one-time-window) compares with the liftered cepstrum, and the
+# WORLD measures the envelope with CheapTrick (Morise, 2015), which [Against the lifter, on a
+# recording](richer.html#h-against-the-lifter-on-a-recording) compares with the liftered cepstrum, and the
 # aperiodicity with D4C (Morise, 2016): how much of the voice is noise, frequency by frequency, so
 # that every time window can mix harmonics and noise rather than being one or the other as in
 # [Putting it back, simply](sourcefilter.html#h-putting-it-back-simply).
@@ -556,7 +488,7 @@ fig, playhead = show_pair(sounds, "contour flipped around the median", ranges["f
 # `so.warp_frequency(aperiodicity, ratio)` is the second.
 #
 # At 16 kHz, D4C's aperiodicity has one bend, at 3 kHz (see
-# [What WORLD reports](aperiodicity.html#h-what-world-reports)), and a warp by 1.2 moves the bend to
+# [What D4C reports](richer.html#h-what-d4c-reports)), and a warp by 1.2 moves the bend to
 # 3.6 kHz. Averaged in dB over voiced time windows, kept and warped:
 
 # %% [figure vc11] The aperiodicity, kept and warped
@@ -894,10 +826,6 @@ report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
 #   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185)
-# - Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low
-#   autocorrelation. *IEEE Trans. Inf. Theory* 16(1), 85–89.
-#   [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411).
-#   [`waveforms.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L372)
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).

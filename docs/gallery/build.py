@@ -112,7 +112,7 @@ EXAMPLE_PAGES = [
     "talkers",
     "speech",
     "sourcefilter",
-    "aperiodicity",
+    "richer",
     "voice",
     "modspectrogram",
     "modtargets",
@@ -741,7 +741,7 @@ TITLES = {
     "pv.html": "Phase vocoder",
     "talkers.html": "Two talkers",
     "sourcefilter.html": "The source-filter model",
-    "aperiodicity.html": "Source and aperiodicity",
+    "richer.html": "A richer source-filter model",
     "voice.html": "Rebuilding and changing a voice",
     "vocoder.html": "Hearing through a vocoder",
     "reverb.html": "Rooms",
@@ -814,8 +814,9 @@ TOPICS = [
                 " (pitch, formants, envelope), and the voice put back together.",
             ),
             (
-                "aperiodicity.html",
-                "how much of a voice is noise, frequency by frequency, and WORLD's resynthesis.",
+                "richer.html",
+                "an envelope measured to the pitch period, a source that is partly noise, the phases,"
+                " and the voice put back together from all three.",
             ),
             (
                 "voice.html",
@@ -1411,6 +1412,7 @@ RETIRED = {"15": "vocoder.html"}
 # longer exists is written as a stub that forwards; "" is where it forwards a link
 # with no anchor it knows.
 SF = "sourcefilter.html"  # where the four pages merged into The source-filter model went
+RICHER = "richer.html"  # where Source and aperiodicity and the voice page's phases went
 
 
 def _merged(anchors: str, others: dict[str, str], default: str) -> dict[str, str]:
@@ -1423,8 +1425,8 @@ def _merged(anchors: str, others: dict[str, str], default: str) -> dict[str, str
 MOVED = {
     "harmonics": {
         "": "voice.html",
-        **{f"d-{key}": f"voice.html#d-{key}" for key in
-           ("he2", "he3", "hm3", "hm4", "hf0", "hf1", "hf2", "hf3")},
+        **{f"d-{key}": f"voice.html#d-{key}" for key in ("he2", "he3", "hm3", "hm4")},
+        **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
         "d-he1": f"{SF}#d-he1",
         "d-hu1": f"{SF}#d-he1",
         "d-hu2": f"{SF}#d-hu2",
@@ -1437,8 +1439,8 @@ MOVED = {
         "h-pitch-and-timbre-apart": "voice.html#h-pitch-range",
         "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply",
         "h-unvoiced-gaps": f"{SF}#d-hu2",
-        **{f"h-{slug}": f"voice.html#h-{slug}" for slug in (
-            "phases-on-a-moving-pitch", "what-this-page-leaves-out", "references")},
+        "h-phases-on-a-moving-pitch": f"{RICHER}#h-phases-on-a-moving-pitch",
+        **{f"h-{slug}": f"voice.html#h-{slug}" for slug in ("what-this-page-leaves-out", "references")},
     },
     "speech": {"d-f1": f"{SF}#d-f1", "h-nothing-is-lost": "resynthesis.html#h-nothing-is-lost",
                "h-a-higher-voice": "talkers.html"},
@@ -1446,7 +1448,9 @@ MOVED = {
                 "h-harmonics-sample-the-envelope": f"{SF}#h-harmonics-sample-the-envelope"},
     "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": "talkers.html#h-spectral-envelopes",
               "d-he1": f"{SF}#d-he1", "d-hu1": f"{SF}#d-he1", "d-hu2": f"{SF}#d-hu2",
-              "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply", "h-unvoiced-gaps": f"{SF}#d-hu2"},
+              "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply", "h-unvoiced-gaps": f"{SF}#d-hu2",
+              **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
+              "h-phases-on-a-moving-pitch": f"{RICHER}#h-phases-on-a-moving-pitch"},
     "formants": _merged(
         "h-a-vowel-piece-by-piece h-source-times-filter h-six-vowels h-consonants-from-transitions h-noise"
         " h-voice-quality h-sonore-says-its-name d-fv1 d-fv2 d-fv3 d-fv4 d-fv5 d-fs1 d-fw1 d-fw2 d-fc1 d-fc2"
@@ -1476,7 +1480,17 @@ MOVED = {
         {"d-m3": "d-m2", "h-a-higher-voice": "h-harmonics-sample-the-envelope"},
         "h-measuring-the-filter-the-envelope",
     ),
-    "aperiodicity": {"h-a-higher-voice": "talkers.html"},
+    "aperiodicity": {
+        "": RICHER,
+        **{anchor: f"{RICHER}#{anchor}" for anchor in (
+            [f"d-ap{i}" for i in range(1, 14)]
+            + ["h-buzz-hiss-and-both", "h-fit-the-harmonics-keep-the-rest", "h-a-sentence",
+               "h-what-this-page-leaves-out", "h-references"])},
+        "h-what-world-reports": f"{RICHER}#h-what-d4c-reports",
+        "h-listening": f"{RICHER}#h-putting-it-back",
+        "h-the-vowel-and-code-the-examples-share": f"{RICHER}#h-the-sentence-the-vowel-and-code-the-examples-share",
+        "h-a-higher-voice": "talkers.html",
+    },
     "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
     "vocoder": {"d-cf0": "vocoder.html#d-ci0", "d-cf8": "vocoder.html#d-ci8", "d-cf8p": "vocoder.html#d-cp8",
                 "h-a-higher-voice": "vocoder.html#h-pitch-from-the-envelope"},
