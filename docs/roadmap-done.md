@@ -79,7 +79,7 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   dependency. Options that depart from WORLD are listed in
   `so.DIFFERENCES_FROM_WORLD`. `so.harmonic_aperiodicity` measures the
   share of noise directly, beside D4C. See `docs/design/views/world.md` and the
-  [Source and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html) gallery page.
+  [A richer source-filter model](https://choyun1.github.io/sonore/gallery/richer.html) gallery page.
 - **LF glottal source.** `so.glottal_source` makes Liljencrants-Fant pulses
   (Fant, Liljencrants & Lin, 1985) from their exact harmonics, whose
   coefficients have a closed form that depends only on the harmonic number,

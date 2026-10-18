@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A richer source-filter model</title>
+<link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { width: 100%; max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.home { display: inline-flex; align-items: center; gap: 0.3rem; }
+nav.pages .home .logo { width: 2.1rem; height: 2.1rem; margin: -0.5rem 0 -0.5rem -0.4rem; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+.links { display: flex; align-items: center; gap: 0.5rem 1.25rem; font-family: var(--sans); }
+.links a { display: inline-flex; align-items: center; gap: 0.45rem; }
+.links svg { width: 1.15rem; height: 1.15rem; }
+footer .links { margin-top: 1rem; font-size: 0.95rem; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h3.sub { font-weight: 500; font-size: 1.45rem; margin: 2.5rem 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
+  footer .links { display: none; }
+  .side-repo { display: none; }
+  .side-closed .side-repo { display: flex; justify-content: center; margin-top: auto; color: var(--muted); }
+  .side-closed .side-repo:hover { color: var(--ink); }
+  .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
+  .side-foot { margin-top: auto; padding-top: 2rem; }
+  .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
+    border-top: 1px solid var(--rule); }
+  .side-closed .layout { grid-template-columns: 4.25rem minmax(0, 1fr); }
+  .side { scrollbar-gutter: stable; }  /* room for a scrollbar always, so opening a list never rewraps the menu */
+  .side-closed .side { padding: 2.5rem 0 1.5rem; overflow: hidden; scrollbar-gutter: auto; }
+  .side-closed .side .home-title, .side-closed .side-body { display: none; }
+  .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
+  .side-closed .side .home { padding: 0; border: 0; }
+  .side-closed .side .home .logo { width: 2.8rem; height: 2.8rem; margin: 0; }
+  .side-toggle { margin-top: 3.8rem; }  /* level with where it sits under the logo in the folded strip */
+  .side-closed .side-toggle { margin-top: 0; }
+  /* With the sidebar folded, the top menu stays in view while the page scrolls. */
+  .side-closed nav.pages { position: sticky; top: 0; z-index: 20; background: var(--paper);
+    padding: 0.9rem 0; margin-top: -0.9rem; border-bottom: 1px solid var(--rule); }
+  html.side-closed { scroll-padding-top: 4rem; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home-title, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home-title, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home-title, .side-opening .side-body, .side-closing .side .home-title, .side-closing .side-body { animation: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home-title { display: block; }
+.side .home .logo { display: block; width: 2.6rem; height: 2.6rem; margin: -0.4rem 0 0.1rem -0.35rem; }
+.logo .logo-ink { stroke: var(--ink); } .logo .logo-accent { stroke: var(--accent); }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-label="Listening gallery"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="home-title">Listening gallery</span></a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group"><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="group"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group"><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="group here" open><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li class="has-sections"><a href="richer.html" aria-current="page">A richer source-filter model</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-the-sentence-the-vowel-and-code-the-examples-share">The sentence, the vowel, and code the examples share</a></li><li><a href="#h-an-envelope-measured-to-the-pitch-period">An envelope measured to the pitch period</a></li><li><a href="#h-a-source-that-is-partly-noise">A source that is partly noise</a></li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a></li><li><a href="#h-putting-it-back">Putting it back</a></li><li><a href="#h-what-learned-vocoders-do">What learned vocoders do</a></li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a></li><li><a href="#h-references">References</a></li></ul></div></div></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details class="group"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><div class="side-foot"><div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></div></div><a class="side-repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded on every page load.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    showSections(false);
+    // Going back to a page can restore it as it was left; fold its sections then too.
+    addEventListener("pageshow", (event) => { if (event.persisted) showSections(false); });
+    sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
+  // Only the group of the page being read starts open; groups opened on another page do not stay open.
+  addEventListener("pageshow", (event) => { if (event.persisted)
+    groups.forEach((group) => { group.open = group.classList.contains("here"); }); });
+  groups.forEach((group) => {
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><details><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="here"><summary>Voices</summary><ul><li><a href="talkers.html">Two talkers</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html" aria-current="page">A richer source-filter model</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>A richer source-filter model</h1>
+<p><a href="sourcefilter.html">The source-filter model</a> rebuilt each sentence from a pitch track and a
+liftered cepstral envelope, and ended on <a href="sourcefilter.html#h-where-it-falls-short">three ways the copy falls
+short</a>: the envelope runs under the harmonic peaks,
+voicing is all or nothing, and the phases are chosen rather than measured. This page takes them
+in that order, and then puts a voice back together from all three.</p>
+<p>Each method is built up the same way: what goes wrong without the step, the step in one
+sentence, its equation with every symbol named, and what it does to one time window. The names
+are those of sonore's code; a symbol is used only where an equation needs one, and is defined
+beside it.</p>
+<ul><li><a href="#h-an-envelope-measured-to-the-pitch-period">An envelope measured to the pitch period</a>: why a fixed window ripples, STRAIGHT, TANDEM-STRAIGHT, and CheapTrick (<code>so.pitch_adaptive_envelope</code>) step by step.</li><li><a href="#h-a-source-that-is-partly-noise">A source that is partly noise</a>: the aperiodicity, measured two ways.</li><li><a href="#h-phases-on-a-moving-pitch">Phases on a moving pitch</a>: three choices of phase, one spectrum.</li><li><a href="#h-putting-it-back">Putting it back</a>: <code>so.source_filter_synthesize</code> with all three views, and against the simple rebuild.</li><li><a href="#h-what-learned-vocoders-do">What learned vocoders do</a>.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/richer.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/richer.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
+</header>
+<section aria-labelledby="h-the-sentence-the-vowel-and-code-the-examples-share">
+<h2 id="h-the-sentence-the-vowel-and-code-the-examples-share">The sentence, the vowel, and code the examples share</h2>
+<p>The sentence both talkers read (<a href="talkers.html">Two talkers</a>), with <code>so.f0_track</code>'s pitch track
+and the track WORLD's Harvest (Morise, 2017) measured on each recording, stored with it.</p>
+<p>Beside it, a synthetic vowel whose every part is known: the vowel of "hod", made from Klatt's
+(1980) glottal source, the radiation from the lips and five formants, as <a href="sourcefilter.html#h-a-vowel-piece-by-piece">A vowel, piece by
+piece</a> explains; the code is repeated here so that
+the page runs on its own. The source is a sum of harmonics at a steady pitch, the median pitch of
+each talker's recording, plus, for the second section, white noise. At the male talker's pitch
+the vowel has Peterson and Barney's (1952) male formants for "hod", and at the female talker's
+pitch their female ones (<a href="sourcefilter.html#h-six-vowels">Six vowels</a>). Since the source and
+the filter are known, so are the vowel's true envelope and its true aperiodicity.</p>
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># The two talkers, by the CMU ARCTIC speaker names. Sources: docs/speech/SOURCES.md.
+SPEAKERS = {&quot;Male talker&quot;: &quot;bdl&quot;, &quot;Female talker&quot;: &quot;slt&quot;}
+talkers = {
+    label: finish(so.load(fetch(f&quot;docs/speech/{speaker}_arctic_a0131.flac&quot;)))
+    for label, speaker in SPEAKERS.items()
+}
+tracks = {label: so.f0_track(snd) for label, snd in talkers.items()}
+medians = {label: float(np.median(track.f0[0][track.voiced[0]])) for label, track in tracks.items()}
+harvest = {}
+for label, speaker in SPEAKERS.items():
+    harvest_times, harvest_f0 = np.loadtxt(
+        fetch(f&quot;docs/speech/{speaker}_arctic_a0131_f0.csv&quot;), delimiter=&quot;,&quot;, skiprows=2
+    ).T
+    harvest[label] = (harvest_times, harvest_f0)
+for label, f0 in medians.items():
+    print(f&quot;{label}: median F0 {f0:.1f} Hz&quot;)
+
+FS = 16000
+DUR = 1.0
+# &quot;Hod&quot; for each talker&#x27;s pitch, (frequency, bandwidth) in Hz: Peterson and Barney&#x27;s male and
+# female F1 to F3, and F4 and F5 as on the source-filter page.
+HOD = {
+    &quot;Male talker&quot;: [(730, 60), (1090, 90), (2440, 150), (3500, 200), (4500, 250)],
+    &quot;Female talker&quot;: [(850, 60), (1220, 90), (2810, 150), (4100, 200), (4900, 250)],
+}
+
+
+def contour_of(track):
+    &quot;&quot;&quot;The times and F0 values of a track (an F0Track or a (times, values) pair), NaN where
+    unvoiced, for drawing.&quot;&quot;&quot;
+    times, values = (track.t, track.f0[0]) if hasattr(track, &quot;f0&quot;) else track
+    return times, np.where(np.asarray(values) &gt; 0, values, np.nan)
+
+
+def draw(container, snd, title, fmax, contour=None):
+    &quot;&quot;&quot;Waveform and narrowband spectrogram (Hann 33 ms, harmonics resolved), on one time axis, in
+    a figure or subfigure, with an F0 contour over the spectrogram if one is given. Returns the two
+    panels, for the playhead.&quot;&quot;&quot;
+    ax0, ax1 = container.subplots(2, 1, sharex=True, height_ratios=[0.45, 1])
+    snd.plot(ax0, color=&quot;k&quot;, lw=0.4)
+    ax0.set(title=title, xlabel=&quot;&quot;)
+    so.STFT(snd, win_dur=0.0333, hop_dur=0.002).plot(ax1, db_range=70, colorbar=False, fmax=fmax)
+    ax1.set_title(&quot;Spectrogram (Hann 33 ms)&quot;)
+    if contour is not None:
+        times, values = contour_of(contour)
+        ax1.plot(times, values / 1000, color=&quot;c&quot;, lw=1.2)  # the spectrogram&#x27;s axis is in kHz
+    for ax in (ax0, ax1):
+        ax.set_xlim(0, snd.duration)
+    return [ax0, ax1]
+
+
+def show(snd, title, fmax=5000):
+    fig = plt.figure(figsize=(10, 4.2), layout=&quot;constrained&quot;)
+    return fig, draw(fig, snd, f&quot;Waveform: {title}&quot;, fmax)
+
+
+def show_pair(sounds, titles, fmax=5000, contours=None):
+    &quot;&quot;&quot;One column per sound; `titles` maps each sound&#x27;s label to its column&#x27;s title, and
+    `contours`, if given, to an F0 track drawn over its spectrogram.&quot;&quot;&quot;
+    fig = plt.figure(figsize=(10, 4.4), layout=&quot;constrained&quot;)
+    columns = fig.subfigures(1, 2)
+    playhead = {
+        label: draw(column, snd, titles[label], fmax, None if contours is None else contours[label])
+        for column, (label, snd) in zip(columns, sounds.items(), strict=True)
+    }
+    return fig, playhead
+
+
+def titled(what):
+    return {label: f&quot;{label}: {what}&quot; for label in talkers}
+
+
+def formants(snd, table):
+    for freq, bandwidth in table:
+        snd = so.resonator(snd, freq, bandwidth)
+    return snd
+
+
+# Klatt&#x27;s glottal source and the radiation from the lips, and the formants, as gains at any
+# frequency: the spectra of their impulse responses.
+impulse = so.Sound(np.r_[1.0, np.zeros(2**14 - 1)], FS)
+glottal_gain = np.abs(np.fft.rfft(so.resonator(impulse, 0, 100).data[:, 0]))
+gain_freqs = np.fft.rfftfreq(2**14, 1 / FS)
+tract_gains = {
+    label: np.abs(np.fft.rfft(formants(impulse, table).data[:, 0])) for label, table in HOD.items()
+}
+
+
+def source_gain(f):
+    return np.interp(f, gain_freqs, glottal_gain) * np.abs(2 * np.sin(np.pi * np.asarray(f) / FS))
+
+
+def true_envelope_db(f, label):
+    &quot;&quot;&quot;The vowel&#x27;s envelope in dB, up to a constant: source times radiation times formants.&quot;&quot;&quot;
+    return 20 * np.log10(source_gain(f) * np.interp(f, gain_freqs, tract_gains[label]) + 1e-12)
+
+
+def breathy_source(f0):
+    &quot;&quot;&quot;Harmonics of f0 with Klatt&#x27;s source spectrum, up to 7.2 kHz, and white noise with the
+    harmonics&#x27; power per hertz at 4 kHz.&quot;&quot;&quot;
+    harmonic_numbers = np.arange(1, int(0.45 * FS / f0) + 1)
+    buzz = so.harmonic_complex(
+        DUR, FS, f0, harmonics=harmonic_numbers, amplitudes=lambda t, f: source_gain(f)
+    )
+    # harmonic_complex scales its output to RMS 1; the harmonics&#x27; power per hertz near f is then
+    # (scale * gain(f))^2 / 2 per harmonic, one harmonic every f0 hertz
+    scale = 1 / np.sqrt(np.sum(source_gain(harmonic_numbers * f0) ** 2) / 2)
+    noise_density = (scale * source_gain(4000.0)) ** 2 / 2 / f0
+    hiss = so.gaussian_noise(DUR, FS, rng=1) * np.sqrt(noise_density * FS / 2)  # white: flat density
+    return buzz, hiss
+
+
+def true_aperiodicity(f):
+    &quot;&quot;&quot;The share of noise at f, from the source alone. With the noise as strong as the harmonics
+    at 4 kHz it is the same at any pitch.&quot;&quot;&quot;
+    return 1 / (1 + (source_gain(f) / source_gain(4000.0)) ** 2)
+
+
+sources = {label: breathy_source(f0) for label, f0 in medians.items()}
+buzz_vowels = {label: formants(buzz, HOD[label]) for label, (buzz, _) in sources.items()}
+vowels = {label: formants(buzz + hiss, HOD[label]) for label, (buzz, hiss) in sources.items()}
+window_times = np.arange(0, DUR, 0.005)
+exact = {label: (window_times, np.full(len(window_times), f0)) for label, f0 in medians.items()}  # every 5 ms
+inside = (window_times &gt; 0.1) &amp; (window_times &lt; 0.9)  # time windows away from the ends
+pitch_names = {label: f&quot;the {label.lower()}&#x27;s pitch, {f0:.0f} Hz&quot; for label, f0 in medians.items()}</code></pre></details><pre class="out">Male talker: median F0 119.4 Hz
+Female talker: median F0 182.7 Hz</pre></div>
+</section>
+<section aria-labelledby="h-an-envelope-measured-to-the-pitch-period">
+<h2 id="h-an-envelope-measured-to-the-pitch-period">An envelope measured to the pitch period</h2>
+<p>The spectral envelope is the smooth curve the vocal tract lays over the harmonics. Measured from
+one time window, it has to come from a spectrum that is not smooth: the harmonics of a voiced
+sound sample the envelope only every <span class="tex">F_0</span> hertz. Every method below starts from the power
+spectrum of the sound under a window <span class="tex">w</span>, centered at time <span class="tex">t</span> and scaled to unit energy so that
+its level does not depend on the window's length,</p>
+<div class="tex display">P(t, f) = \frac{\bigl|\sum_n w(n - t f_s)\, x(n)\, e^{-2\pi i f n / f_s}\bigr|^2}{\sum_n w(n)^2},</div>
+<p>with <span class="tex">x(n)</span> the sound's samples and <span class="tex">f_s</span> the sampling rate.</p>
+<h3 class="sub" id="h-a-fixed-window-ripples">A fixed window ripples</h3>
+<p>For a periodic sound no window length gives a smooth envelope. A window shorter than a period
+smears the harmonics together, so the spectrum is smooth across frequency; but the window then
+holds a different part of the period at each position, and the power at every frequency rises
+and falls with period <span class="tex">1/F_0</span> as the window slides. A window several periods long holds the same
+amount of the sound wherever it is, so the power is steady over time; but it resolves the
+harmonics, and the spectrum ripples across frequency, high at each harmonic and low between.
+The cell measures both on the vowel's buzz alone (harmonics, no noise) at each talker's pitch,
+for Hann windows of one to six periods: across frequency, the standard deviation of the
+spectrum's distance from the true envelope from 200 Hz to 4 kHz; over time, the standard deviation
+of each frequency's level as the window slides over one period, the median over frequencies.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">N_FFT = 1024
+spectrum_freqs = np.fft.rfftfreq(N_FFT, 1 / FS)
+band = (spectrum_freqs &gt; 200) &amp; (spectrum_freqs &lt; 4000)
+
+
+def hann_power(samples, center, length, shape=&quot;hann&quot;):
+    &quot;&quot;&quot;P(t, f) at sample `center` under a window `length` samples long (may be fractional): Hann,
+    or Blackman, scaled to unit energy.&quot;&quot;&quot;
+    offsets = np.arange(-int(np.ceil(length / 2)), int(np.ceil(length / 2)) + 1)
+    phase = 2 * np.pi * offsets / length
+    weights = (
+        0.5 + 0.5 * np.cos(phase)
+        if shape == &quot;hann&quot;
+        else 0.42 + 0.5 * np.cos(phase) + 0.08 * np.cos(2 * phase)
+    )
+    weights[np.abs(offsets) &gt;= length / 2] = 0
+    segment = samples[int(round(center)) + offsets] * weights
+    return np.abs(np.fft.rfft(segment / np.sqrt(np.sum(weights**2)), N_FFT)) ** 2
+
+
+def ripples(label, periods, shape=&quot;hann&quot;, pair=False):
+    &quot;&quot;&quot;The ripple across frequency and over time (dB) of windows `periods` long, over 16
+    positions within one period at 0.5 s; with `pair`, each position&#x27;s power is TANDEM&#x27;s
+    average of two windows a quarter period before and after it.&quot;&quot;&quot;
+    samples, period = buzz_vowels[label].data[:, 0], FS / medians[label]
+    levels = []
+    for step in range(16):
+        center = 0.5 * FS + step / 16 * period
+        if pair:
+            power = (
+                hann_power(samples, center - period / 4, periods * period, shape)
+                + hann_power(samples, center + period / 4, periods * period, shape)
+            ) / 2
+        else:
+            power = hann_power(samples, center, periods * period, shape)
+        levels.append(10 * np.log10(power + 1e-12))
+    levels = np.array(levels)
+    truth = true_envelope_db(spectrum_freqs, label)
+    across = np.median([np.std((level - truth)[band]) for level in levels])
+    over_time = np.median(np.std(levels[:, band], axis=0))
+    return levels, across, over_time
+
+
+print(f&quot;{&#x27;[dB]&#x27;:&lt;34}{&#x27;off the envelope&#x27;:&gt;18}{&#x27;flicker&#x27;:&gt;12}&quot;)
+ripple = {}
+for label in talkers:
+    for periods in (1, 2, 3, 6):
+        ripple[label, periods] = ripples(label, periods)
+        _, across, over_time = ripple[label, periods]
+        print(
+            f&quot;{label + f&#x27;, Hann {periods} period&#x27; + &#x27;s&#x27; * (periods &gt; 1):&lt;34}{across:&gt;18.1f}{over_time:&gt;12.2f}&quot;
+        )</code></pre></details><pre class="out">[dB]                                off the envelope     flicker
+Male talker, Hann 1 period                       3.5        7.73
+Male talker, Hann 2 periods                      1.9        1.01
+Male talker, Hann 3 periods                      4.2        0.15
+Male talker, Hann 6 periods                     16.2        0.09
+Female talker, Hann 1 period                     4.7        6.00
+Female talker, Hann 2 periods                    3.2        1.07
+Female talker, Hann 3 periods                    4.9        0.17
+Female talker, Hann 6 periods                   16.7        0.11</pre></div>
+
+<article class="still" id="d-ev1">
+  <div class="about">
+    <h3>The ripple trade, across frequency and over time</h3>
+    <div class="desc"><p>The vowel's buzz at the female talker's pitch, where the harmonics are farther apart. Left: one
+window position, for windows one, three and six periods long, against the true envelope (each
+shifted to it). Right: the level at the harmonic nearest F1 as the window slides over two
+periods.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ev1_the_ripple_trade_across_frequency_and_over_time.png" width="1000" height="360" alt="The ripple trade, across frequency and over time" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">label = &quot;Female talker&quot;
+period, truth = FS / medians[label], true_envelope_db(spectrum_freqs, label)
+probe = int(np.argmin(np.abs(spectrum_freqs - round(850 / medians[label]) * medians[label])))
+fig, (left, right) = plt.subplots(1, 2, figsize=(10, 3.6), layout=&quot;constrained&quot;, width_ratios=[1.6, 1])
+for periods, color in zip((1, 3, 6), (&quot;C0&quot;, &quot;C2&quot;, &quot;C3&quot;), strict=True):
+    levels = ripple[label, periods][0]
+    offset = np.median((levels[0] - truth)[band])
+    left.plot(
+        spectrum_freqs,
+        levels[0] - offset,
+        color=color,
+        lw=0.8,
+        label=f&quot;Hann, {periods} period&quot; + &quot;s&quot; * (periods &gt; 1),
+    )
+    positions = np.arange(32) / 16
+    slid = [
+        10
+        * np.log10(hann_power(buzz_vowels[label].data[:, 0], 0.5 * FS + p * period, periods * period)[probe])
+        for p in positions
+    ]
+    right.plot(positions, np.array(slid) - np.mean(slid), color=color, marker=&quot;.&quot;, lw=0.8)
+left.plot(spectrum_freqs, truth, color=&quot;k&quot;, lw=2.5, alpha=0.35, label=&quot;true envelope&quot;)
+left.set(
+    xlim=(0, 4000),
+    ylim=(truth[band].max() - 55, truth[band].max() + 15),
+    xlabel=&quot;Frequency [Hz]&quot;,
+    ylabel=&quot;Level [dB]&quot;,
+    title=f&quot;One window position, {pitch_names[label]}&quot;,
+)
+left.legend(loc=&quot;upper right&quot;, fontsize=7)
+right.set(
+    xlabel=&quot;Window position [periods]&quot;,
+    ylabel=&quot;Level re its mean [dB]&quot;,
+    title=f&quot;Level at {spectrum_freqs[probe]:.0f} Hz as the window slides&quot;,
+)
+for ax in (left, right):
+    ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+<p>No length does well on both. The flicker over time falls from several decibels at one period
+to a tenth of a decibel at three, while the spectrum departs from the envelope across frequency
+as the harmonics are resolved, by about 16 dB at six periods. The one-period window departs from
+it as well, because it smears the formants. The pitch-adaptive methods do not look for a
+compromise length; each one removes one of the two ripples by construction and then smooths the
+other away.</p>
+<h3 class="sub" id="h-straight">STRAIGHT</h3>
+<p>STRAIGHT (Kawahara, Masuda-Katsuse &amp; de Cheveigné, 1999) was the first to tie the analysis to the
+pitch. Its window is a Gaussian whose width is a fixed multiple of the period <span class="tex">T_0 = 1/F_0</span>,
+so that the harmonics are separated equally well at every pitch. The ripple across frequency is
+then smoothed in frequency, with a triangular kernel as wide as the harmonic spacing <span class="tex">F_0</span>,
+which interpolates between the harmonic peaks rather than averaging them with the dips. The
+ripple over time is filled by a second, complementary window, the first one multiplied by
+<span class="tex">\sin(\pi t / T_0)</span>, whose power peaks where the first one's dips; the two powers <span class="tex">P</span> and <span class="tex">P_c</span>
+are combined as</p>
+<div class="tex display">P_{\text{STRAIGHT}}(t, f) = \sqrt{P(t, f)^2 + \xi\, P_c(t, f)^2},</div>
+<p>with <span class="tex">\xi</span> a constant the paper chose to leave the least fluctuation. sonore has no STRAIGHT
+code; this section only describes it.</p>
+<h3 class="sub" id="h-tandem-straight">TANDEM-STRAIGHT</h3>
+<p>TANDEM-STRAIGHT (Kawahara et al., 2011) removes the ripple over time more simply. The flicker of
+a window's power repeats once a period, so at two positions half a period apart its
+fundamental is in opposite phase, and their average cancels it:</p>
+<div class="tex display">P_{\text{TANDEM}}(t, f) = \tfrac12\bigl(P(t - T_0/4, f) + P(t + T_0/4, f)\bigr),</div>
+<p>with Blackman windows 2.5 periods long. <a href="speech.html#h-following-the-pitch">Seeing speech</a> draws
+this power spectrogram, as <code>so.tandem_power</code>. The cell measures the flicker of one Blackman
+window and of TANDEM's pair, on the same buzz.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">print(f&quot;{&#x27;Ripple over time [dB]&#x27;:&lt;34}{&#x27;one window&#x27;:&gt;12}{&#x27;TANDEM pair&#x27;:&gt;13}&quot;)
+for label in talkers:
+    single, pair = ripples(label, 2.5, &quot;blackman&quot;)[2], ripples(label, 2.5, &quot;blackman&quot;, pair=True)[2]
+    print(f&quot;{label + &#x27;, Blackman 2.5 periods&#x27;:&lt;34}{single:&gt;12.2f}{pair:&gt;13.2f}&quot;)</code></pre></details><pre class="out">Ripple over time [dB]               one window  TANDEM pair
+Male talker, Blackman 2.5 periods         0.96         0.01
+Female talker, Blackman 2.5 periods        1.03         0.02</pre></div>
+<h3 class="sub" id="h-cheaptrick-step-by-step">CheapTrick, step by step</h3>
+<p>CheapTrick (Morise, 2015), <code>so.pitch_adaptive_envelope</code> in sonore, keeps TANDEM's idea of a
+window steady over time, in its simplest form, and replaces STRAIGHT's smoothing by three short
+steps.</p>
+<p>1. <strong>The window.</strong> A Hann window three periods long: as the table above shows, its power hardly
+   changes with its position in the period, so no second window is needed.
+2. <strong>The smoothing.</strong> A moving average across frequency over <span class="tex">2F_0/3</span>,</p>
+<p>   <span class="tex display">P_s(f) = \frac{3}{2F_0} \int_{-F_0/3}^{F_0/3} P(f + \nu)\, d\nu,</span></p>
+<p>   which fills the dips between harmonics, so that the logarithm can be taken, without yet
+   removing the ripple.
+3. <strong>The lifter.</strong> The cepstrum <span class="tex">c(\tau)</span> of <span class="tex">\log P_s</span>, at quefrencies <span class="tex">\tau</span> in seconds, is
+   multiplied by two lifters and transformed back:</p>
+<p>   <span class="tex display">E(f) = \exp\Bigl(\mathcal{F}\bigl[\,l_s(\tau)\, l_r(\tau)\, c(\tau)\,\bigr]\Bigr), \qquad
+   l_s(\tau) = \frac{\sin(\pi F_0 \tau)}{\pi F_0 \tau}, \qquad
+   l_r(\tau) = (1 - 2q_1) + 2q_1 \cos(2\pi F_0 \tau).</span></p>
+<p>   The smoothing lifter <span class="tex">l_s</span> is a moving average over one harmonic spacing, which removes the
+   ripple at <span class="tex">F_0</span>. The recovery lifter <span class="tex">l_r</span> gives back the sharpness that the two moving
+   averages took from the envelope's peaks; <code>q1</code> sets how much, and the paper's value is
+   <span class="tex">-0.09</span>.</p>
+<p>The cell writes the three steps out with NumPy at one time window of the female talker's buzz,
+and compares the result with <code>so.pitch_adaptive_envelope</code>.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">label = &quot;Female talker&quot;
+F0, samples = medians[label], buzz_vowels[label].data[:, 0]
+power = hann_power(samples, 0.5 * FS, 3 * FS / F0)  # step 1
+
+# step 2: the moving average over 2 F0 / 3, on a grid eight times finer than the FFT&#x27;s, with the
+# spectrum mirrored about 0 Hz and Nyquist, as a real signal&#x27;s spectrum continues there
+mirrored = np.concatenate([power[:0:-1], power, power[-2::-1]])
+fine = np.interp(np.arange(0, len(mirrored) - 1, 1 / 8), np.arange(len(mirrored)), mirrored)
+half_width = int(round(F0 / 3 / (FS / N_FFT) * 8))
+fine_smoothed = np.convolve(fine, np.ones(2 * half_width + 1) / (2 * half_width + 1), mode=&quot;same&quot;)
+smoothed = fine_smoothed[::8][len(power) - 1 : 2 * len(power) - 1]
+
+# step 3: the cepstrum of the log power, the two lifters, and back
+cepstrum = np.fft.irfft(np.log(smoothed), N_FFT)
+quefrency = np.minimum(np.arange(N_FFT), N_FFT - np.arange(N_FFT)) / FS
+
+
+def liftered(q1):
+    lifters = np.sinc(F0 * quefrency) * ((1 - 2 * q1) + 2 * q1 * np.cos(2 * np.pi * F0 * quefrency))
+    return np.exp(np.fft.rfft(lifters * cepstrum, N_FFT).real)
+
+
+steps = {
+    &quot;1. Hann, three periods&quot;: power,
+    &quot;2. smoothed over 2 F0 / 3&quot;: smoothed,
+    &quot;3. liftered, q1 = −0.09&quot;: liftered(-0.09),
+}
+library = so.pitch_adaptive_envelope(buzz_vowels[label], exact[label])
+library_db = 10 * np.log10(library(np.array([0.5]), spectrum_freqs)[0, :, 0])
+below_7k = spectrum_freqs &lt; 7000
+print(
+    f&quot;largest difference from so.pitch_adaptive_envelope below 7 kHz: &quot;
+    f&quot;{np.max(np.abs(10 * np.log10(steps[&#x27;3. liftered, q1 = −0.09&#x27;]) - library_db)[below_7k]):.2f} dB&quot;
+)
+truth = true_envelope_db(spectrum_freqs, label)
+for name, step in steps.items():
+    print(
+        f&quot;{name:&lt;28} distance from the true envelope (SD, 200 Hz to 4 kHz): &quot;
+        f&quot;{np.std((10 * np.log10(step + 1e-12) - truth)[band]):.1f} dB&quot;
+    )</code></pre></details><pre class="out">largest difference from so.pitch_adaptive_envelope below 7 kHz: 0.14 dB
+1. Hann, three periods       distance from the true envelope (SD, 200 Hz to 4 kHz): 5.0 dB
+2. smoothed over 2 F0 / 3    distance from the true envelope (SD, 200 Hz to 4 kHz): 2.1 dB
+3. liftered, q1 = −0.09      distance from the true envelope (SD, 200 Hz to 4 kHz): 1.6 dB</pre></div>
+<p>The steps as written here differ from the library's by a fraction of a decibel, because the
+library takes the moving average as an exact integral rather than on a finer grid. Each step
+brings the curve closer to the true envelope.</p>
+
+<article class="still" id="d-ev2">
+  <div class="about">
+    <h3>The three steps of CheapTrick on one time window</h3>
+    <div class="desc"><p>The three steps at one time window of the female talker's buzz, each shifted onto the true
+envelope. The window's power has a peak at every harmonic; the moving average fills the dips;
+the lifters remove the ripple that is left.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ev2_the_three_steps_of_cheaptrick_on_one_time_window.png" width="1000" height="660" alt="The three steps of CheapTrick on one time window" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, axes = plt.subplots(3, 1, figsize=(10, 6.6), sharex=True, sharey=True, layout=&quot;constrained&quot;)
+for ax, (name, step) in zip(axes, steps.items(), strict=True):
+    step_db = 10 * np.log10(step + 1e-12)
+    ax.plot(spectrum_freqs, truth, color=&quot;k&quot;, lw=2.5, alpha=0.35, label=&quot;true envelope&quot;)
+    ax.plot(spectrum_freqs, step_db - np.median((step_db - truth)[band]), color=&quot;C0&quot;, lw=0.9, label=name)
+    ax.set(ylabel=&quot;Level [dB]&quot;, ylim=(truth[band].max() - 55, truth[band].max() + 12))
+    ax.legend(loc=&quot;upper right&quot;, fontsize=8)
+    ax.grid(ls=&quot;:&quot;)
+axes[0].set_title(f&quot;The vowel&#x27;s buzz at {pitch_names[label]}&quot;)
+axes[-1].set(xlim=(0, 5000), xlabel=&quot;Frequency [Hz]&quot;)</code></pre></details>
+</article>
+<h3 class="sub" id="h-the-recovery-lifter-s-q1">The recovery lifter's <code>q1</code></h3>
+<p>With <code>q1</code> = 0 the recovery lifter is 1 and the envelope's peaks come out lower than the true
+ones, flattened by the two moving averages; more negative values sharpen them again. The cell
+measures how far each formant's peak lies from the true one's, after the curve is shifted onto
+the true envelope, at each talker's pitch. (WORLD's code later used <span class="tex">-0.15</span> in place of the
+paper's value.)</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">Q1 = (0.0, -0.09, -0.15)
+envelope_freqs = None
+q1_envelopes = {}
+for label in talkers:
+    for q1 in Q1:
+        envelope = so.pitch_adaptive_envelope(buzz_vowels[label], exact[label], q1=q1)
+        envelope_freqs = envelope.f
+        q1_envelopes[label, q1] = 10 * np.log10(envelope.data[0][:, inside].mean(axis=1))
+print(f&quot;{&#x27;Peak re the true peak [dB]&#x27;:&lt;38}{&#x27;F1&#x27;:&gt;7}{&#x27;F2&#x27;:&gt;7}{&#x27;F3&#x27;:&gt;7}&quot;)
+for label in talkers:
+    truth = true_envelope_db(envelope_freqs, label)
+    in_band = (envelope_freqs &gt; 200) &amp; (envelope_freqs &lt; 4000)
+    for q1 in Q1:
+        envelope_db = q1_envelopes[label, q1]
+        shifted = envelope_db - np.median((envelope_db - truth)[in_band])
+        heights = []
+        for formant, _ in HOD[label][:3]:
+            near = np.abs(envelope_freqs - formant) &lt; 0.15 * formant
+            heights.append(shifted[near].max() - truth[near].max())
+        print(f&quot;{label + f&#x27;, q1 = {q1:g}&#x27;:&lt;38}&quot; + &quot;&quot;.join(f&quot;{height:&gt;7.1f}&quot; for height in heights))</code></pre></details><pre class="out">Peak re the true peak [dB]                 F1     F2     F3
+Male talker, q1 = 0                      -1.5   -0.7   -1.6
+Male talker, q1 = -0.09                   0.3    0.7   -0.9
+Male talker, q1 = -0.15                   1.5    1.6   -0.5
+Female talker, q1 = 0                    -7.1   -3.4   -2.8
+Female talker, q1 = -0.09                -5.9   -3.1   -1.8
+Female talker, q1 = -0.15                -5.2   -2.9   -1.1</pre></div>
+<p>At the male talker's pitch <code>q1</code> = 0 leaves the peaks a decibel or so low, the paper's <span class="tex">-0.09</span>
+puts them within about a decibel of the truth, and <span class="tex">-0.15</span> overshoots F1 and F2. At the female
+talker's pitch every peak comes out low, by a few decibels, whatever <code>q1</code> is. The formants'
+bandwidths, 60 to 150 Hz, are narrower than that voice's harmonic spacing, so a true peak can
+fall between two harmonics, where no time window has any power to measure. <code>q1</code> sharpens what
+the harmonics sampled, but no envelope estimator can recover what they did not.</p>
+
+<article class="still" id="d-ev3">
+  <div class="about">
+    <h3>The recovery lifter, three ways</h3>
+    <div class="desc"><p>The envelope from F1 to F3 at the male talker's pitch, for three values of <code>q1</code>, against the
+true envelope, each shifted onto it.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ev3_the_recovery_lifter_three_ways.png" width="1000" height="340" alt="The recovery lifter, three ways" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">label = &quot;Male talker&quot;
+truth = true_envelope_db(envelope_freqs, label)
+in_band = (envelope_freqs &gt; 200) &amp; (envelope_freqs &lt; 4000)
+fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+ax.plot(envelope_freqs, truth, color=&quot;k&quot;, lw=2.5, alpha=0.35, label=&quot;true envelope&quot;)
+for q1, color in zip(Q1, (&quot;C0&quot;, &quot;C2&quot;, &quot;C3&quot;), strict=True):
+    envelope_db = q1_envelopes[label, q1]
+    ax.plot(
+        envelope_freqs,
+        envelope_db - np.median((envelope_db - truth)[in_band]),
+        color=color,
+        lw=1,
+        label=f&quot;q1 = {q1:g}&quot;,
+    )
+near = (envelope_freqs &gt; 400) &amp; (envelope_freqs &lt; 3000)
+ax.set(
+    xlim=(400, 3000),
+    ylim=(truth[near].min() - 5, truth[near].max() + 5),
+    xlabel=&quot;Frequency [Hz]&quot;,
+    ylabel=&quot;Level [dB]&quot;,
+    title=f&quot;so.pitch_adaptive_envelope at {pitch_names[label]}, mean over time windows&quot;,
+)
+ax.legend(loc=&quot;upper right&quot;, fontsize=8)
+ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+<h3 class="sub" id="h-against-the-lifter-on-a-recording">Against the lifter, on a recording</h3>
+<p>On the recordings there is no true envelope, but CheapTrick can be set beside the cepstral
+lifter of <a href="sourcefilter.html#h-one-time-window">One time window</a>. The lifter keeps the
+quefrencies below half a period of the log spectrum itself, so it averages the harmonic peaks
+with the dips between them, and its envelope runs under the peaks. The cell measures how far
+above each envelope the harmonic peaks up to 4 kHz rise, in one time window of a vowel of each
+sentence: the median, and how much that varies from harmonic to harmonic. CheapTrick's window
+has unit energy, so its level is not comparable with the STFT's; only its spread is.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">stfts = {label: so.STFT(snd, win_dur=0.040, hop_dur=0.005) for label, snd in talkers.items()}
+cepstra = {label: so.Cepstrum(stft) for label, stft in stfts.items()}
+envelopes = {label: so.pitch_adaptive_envelope(snd, tracks[label]) for label, snd in talkers.items()}
+TIMES = {&quot;Male talker&quot;: 0.50, &quot;Female talker&quot;: 0.60}  # one time window in a vowel of each sentence
+window = {}
+for label, cep in cepstra.items():
+    t, f0, peak = cep.f0()
+    i = int(np.argmin(np.abs(t - TIMES[label])))
+    window[label] = {&quot;i&quot;: i, &quot;t&quot;: t[i], &quot;f0&quot;: f0[0, i], &quot;cutoff&quot;: 0.5 / f0[0, i]}
+
+
+def above_envelope(label, envelope_db):
+    &quot;&quot;&quot;How far each harmonic peak up to 4 kHz rises above an envelope (dB), in one time window.&quot;&quot;&quot;
+    stft, w = stfts[label], window[label]
+    spectrum_db = 20 * np.log10(np.abs(stft.data[0, :, w[&quot;i&quot;]]))
+    gaps = []
+    for harmonic in range(1, int(4000 / w[&quot;f0&quot;]) + 1):
+        near = np.nonzero(np.abs(stft.f - harmonic * w[&quot;f0&quot;]) &lt; w[&quot;f0&quot;] / 2)[0]
+        top = near[np.argmax(spectrum_db[near])]
+        gaps.append(spectrum_db[top] - envelope_db[top])
+    return np.array(gaps)
+
+
+lifted, cheaptrick_db = {}, {}
+for label, cep in cepstra.items():
+    w = window[label]
+    lifted[label] = 20 * np.log10(cep.lifter(w[&quot;cutoff&quot;]).envelope()[0, :, w[&quot;i&quot;]])
+    cheaptrick_db[label] = 10 * np.log10(envelopes[label](np.array([w[&quot;t&quot;]]), stfts[label].f)[0, :, 0])
+    for name, envelope_db in ((&quot;lifter&quot;, lifted[label]), (&quot;CheapTrick&quot;, cheaptrick_db[label])):
+        gaps = above_envelope(label, envelope_db)
+        level = f&quot;median {np.median(gaps):5.1f} dB above, &quot; if name == &quot;lifter&quot; else &quot; &quot; * 21
+        print(f&quot;{label:14} {name:11}: {level}spread (SD) {np.std(gaps):.1f} dB&quot;)</code></pre></details><pre class="out">Male talker    lifter     : median   7.4 dB above, spread (SD) 3.7 dB
+Male talker    CheapTrick :                      spread (SD) 1.8 dB
+Female talker  lifter     : median  15.6 dB above, spread (SD) 5.1 dB
+Female talker  CheapTrick :                      spread (SD) 1.5 dB</pre></div>
+
+<article class="still" id="d-ev4">
+  <div class="about">
+    <h3>The lifter and CheapTrick on one time window</h3>
+    <div class="desc"><p>One time window of each talker's sentence: the log spectrum, the envelope liftered below half a
+period, and CheapTrick's envelope, its level matched to the harmonic peaks (by the median above).
+The female talker's liftered envelope runs farther below the harmonic peaks.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ev4_the_lifter_and_cheaptrick_on_one_time_window.png" width="1000" height="360" alt="The lifter and CheapTrick on one time window" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig = plt.figure(figsize=(10, 3.6), layout=&quot;constrained&quot;)
+for ax, label in zip(fig.subplots(1, 2), talkers, strict=True):
+    stft, w = stfts[label], window[label]
+    spectrum_db = 20 * np.log10(np.abs(stft.data[0, :, w[&quot;i&quot;]]))
+    matched = cheaptrick_db[label] + np.median(above_envelope(label, cheaptrick_db[label]))
+    ax.plot(stft.f, spectrum_db, color=&quot;0.55&quot;, lw=0.8, label=&quot;spectrum&quot;)
+    ax.plot(stft.f, lifted[label], color=&quot;tab:red&quot;, lw=1.6, label=&quot;liftered below half a period&quot;)
+    ax.plot(stft.f, matched, color=&quot;tab:blue&quot;, lw=1.2, label=&quot;CheapTrick, level matched&quot;)
+    ax.set(xlim=(0, 5000), ylim=(spectrum_db.max() - 75, spectrum_db.max() + 8), xlabel=&quot;Frequency [Hz]&quot;)
+    ax.set(ylabel=&quot;Level [dB]&quot;, title=f&quot;{label}: time window at {w[&#x27;t&#x27;]:.3f} s&quot;)
+    ax.legend(loc=&quot;upper right&quot;, fontsize=7)
+    ax.grid(ls=&quot;:&quot;)</code></pre></details>
+</article>
+<p>For both talkers CheapTrick's envelope follows the harmonic peaks more evenly than the lifter's
+does, and the lifter's falls farther behind for the higher voice. CheapTrick's is the envelope
+the rest of this page uses.</p>
+</section>
+<section aria-labelledby="h-a-source-that-is-partly-noise">
+<h2 id="h-a-source-that-is-partly-noise">A source that is partly noise</h2>
+<p>In the first-order source-filter picture a voice's source is either a buzz (voiced) or a hiss
+(unvoiced). A vocoder such as WORLD (Morise, Yokomori &amp; Ozawa, 2016) keeps three things instead
+of two: the pitch, a smooth spectral envelope, and an <strong>aperiodicity</strong>. The aperiodicity replaces
+the voicing switch. At every frequency it says what share of the power is noise rather than
+harmonics,</p>
+<div class="tex display">A(f) = \frac{N(f)}{N(f) + P(f)},</div>
+<p>with <span class="tex">N</span> the power of the noise and <span class="tex">P</span> that of the harmonics at <span class="tex">f</span>. The buzz is <span class="tex">A = 0</span>
+everywhere and the hiss is <span class="tex">A = 1</span>; a voice is in between, and usually more so at high
+frequencies, so it can be clearly periodic at 500 Hz and mostly noise at 5 kHz. The vowel's
+harmonics fall about 6 dB per octave and its noise is flat, so its share of noise rises about
+6 dB per octave; the noise is set as strong as the harmonics at 4 kHz.</p>
+<h3 class="sub" id="h-buzz-hiss-and-both">Buzz, hiss, and both</h3>
+<p>The first-order picture has two settings of the source, and the voice in between. The first
+two sounds are at the male talker's pitch.</p>
+
+<article class="sound" id="d-ap1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+  <div class="about">
+    <h3>The buzz alone</h3>
+    <div class="desc"><p>The buzz alone: harmonics through the formants, <span class="tex">A = 0</span> everywhere. Every frequency is
+periodic: the spectrogram shows harmonics all the way up, with nothing between them.</p></div>
+    <audio controls preload="metadata" src="audio/ap1_the_buzz_alone.flac"></audio>
+    <p class="file">ap1_the_buzz_alone.flac, 1.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap1_the_buzz_alone.png" width="1000" height="420" alt="Plots of the the buzz alone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(buzz_vowels[&quot;Male talker&quot;])
+fig, playhead = show(sound, &quot;harmonics through the formants (A = 0)&quot;)</code></pre></details>
+</article>
+
+<article class="sound" id="d-ap2" data-regions="[{&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+  <div class="about">
+    <h3>The hiss alone</h3>
+    <div class="desc"><p>The hiss alone: white noise through the same formants, <span class="tex">A = 1</span> everywhere. The vowel is still
+there, whispered, because the formants are.</p></div>
+    <audio controls preload="metadata" src="audio/ap2_the_hiss_alone.flac"></audio>
+    <p class="file">ap2_the_hiss_alone.flac, 1.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap2_the_hiss_alone.png" width="1000" height="420" alt="Plots of the the hiss alone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(formants(sources[&quot;Male talker&quot;][1], HOD[&quot;Male talker&quot;]))
+fig, playhead = show(sound, &quot;noise through the formants (A = 1)&quot;)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-ap3">
+  <div class="about">
+    <h3>A breathy vowel</h3>
+    <div class="desc"><p>Both together, at each talker's pitch. Below about 1 kHz the harmonics stand well above the noise;
+above 3 kHz the noise fills in between them and then covers them. This is what makes a voice
+breathy: neither switch setting, but a mixture whose proportion changes with frequency. At the
+female talker's pitch the harmonics are farther apart, and the noise shows in wider gaps between
+them (see <a href="sourcefilter.html#h-harmonics-sample-the-envelope">Harmonics sample the envelope</a>).
+<a href="sourcefilter.html#d-fn3">The source-filter model</a> makes a breathy vowel with Klatt's aspiration
+noise.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap3_a_breathy_vowel_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4827080000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4827080000000001, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]"></audio>
+    <p class="file">ap3_a_breathy_vowel_male_talker.flac, 1.0 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap3_a_breathy_vowel_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.9877080000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.9877080000000001, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]"></audio>
+    <p class="file">ap3_a_breathy_vowel_female_talker.flac, 1.0 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap3_a_breathy_vowel.png" width="1000" height="440" alt="Plots of the a breathy vowel sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(vowel) for label, vowel in vowels.items()}
+fig, playhead = show_pair(sounds, {label: f&quot;Harmonics and noise, {pitch_names[label]}&quot; for label in sounds})</code></pre></details>
+</article>
+<p>Its aperiodicity is the noise's share of the source at each frequency. The harmonics and the
+noise both pass through the same filter <span class="tex">H</span>, so the share after it is</p>
+<div class="tex display">\frac{|H(f)|^2 N(f)}{|H(f)|^2 N(f) + |H(f)|^2 P(f)} = \frac{N(f)}{N(f) + P(f)}:</div>
+<p>the filter cancels. The aperiodicity is a property of the source, measured on the output,
+and it can be changed without touching the formants, and the formants without touching it.
+Here it is also the same at both pitches, since the noise is set against the harmonics at
+4 kHz in both.</p>
+
+<article class="still" id="d-ap4">
+  <div class="about">
+    <h3>Aperiodicity of the vowel, from its source</h3>
+    <div class="desc"></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap4_aperiodicity_of_the_vowel_from_its_source.png" width="1000" height="320" alt="Aperiodicity of the vowel, from its source" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">freqs = np.linspace(50, 7200, 1000)
+fig, ax = plt.subplots(figsize=(10, 3.2), layout=&quot;constrained&quot;)
+ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color=&quot;k&quot;, label=&quot;the breathy vowel, at either pitch&quot;)
+ax.axhline(0, color=&quot;C3&quot;, ls=&quot;--&quot;, lw=1, label=&quot;the hiss (A = 1)&quot;)
+ax.axhline(-40, color=&quot;C0&quot;, ls=&quot;--&quot;, lw=1, label=&quot;the buzz (A = 0, at the bottom of the plot)&quot;)
+ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Share of noise (dB)&quot;, xlim=(0, 7200), ylim=(-40, 3))
+ax.set_title(&quot;Aperiodicity: noise power over total power at each frequency&quot;)
+ax.legend(loc=&quot;lower right&quot;, fontsize=8)</code></pre></details>
+</article>
+<h3 class="sub" id="h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the rest</h3>
+<p>The definition suggests the measurement: find the best periodic sound, take it away, and see
+how much is left. If the pitch is known, the periodic part of a short stretch is a sum of
+harmonics whose phases follow the running phase <span class="tex">\Phi(t) = 2\pi \int F_0</span>, each with an amplitude
+and a phase to be found. That is a linear least-squares fit. Here is one time window of the vowel
+at the male talker's pitch, under a Hann window four periods long, with each harmonic also allowed
+an amplitude that changes linearly across the window.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">vowel, F0 = vowels[&quot;Male talker&quot;], medians[&quot;Male talker&quot;]
+center = int(0.5 * FS)  # the time window at 0.5 s
+half = int(round(2 * FS / F0))  # half of four periods
+offsets = np.arange(-half, half + 1)
+fit_window = 0.5 + 0.5 * np.cos(np.pi * offsets / (half + 1))
+phase = 2 * np.pi * F0 * offsets / FS  # the running phase over the time window
+harmonic_phases = np.outer(phase, np.arange(1, int(FS / 2 / F0) + 1))
+ramp = (offsets / half)[:, None]
+columns = np.column_stack(
+    [np.ones(len(offsets)), np.cos(harmonic_phases), np.sin(harmonic_phases)]
+    + [ramp * np.cos(harmonic_phases), ramp * np.sin(harmonic_phases)]
+)
+segment = vowel.data[center + offsets, 0]
+root_window = np.sqrt(fit_window)  # weighted least squares: minimize the windowed residual
+weights, *_ = np.linalg.lstsq(columns * root_window[:, None], segment * root_window, rcond=None)
+residual = segment - columns @ weights
+print(f&quot;{columns.shape[1]} columns fitted to {len(offsets)} samples&quot;)
+residual_power, signal_power = np.sum((fit_window * residual) ** 2), np.sum((fit_window * segment) ** 2)
+print(f&quot;windowed residual power over windowed signal power: {residual_power / signal_power:.3f}&quot;)</code></pre></details><pre class="out">265 columns fitted to 537 samples
+windowed residual power over windowed signal power: 0.013</pre></div>
+
+<article class="still" id="d-ap5">
+  <div class="about">
+    <h3>One time window, before and after the harmonics are taken away</h3>
+    <div class="desc"><p>The time window's spectrum, and the spectrum of what is left after the fit. The harmonic peaks
+are gone from the residual, and what remains is the noise between and under them. Where the
+noise was below the harmonics (low frequencies) the residual lies far below the time window's
+spectrum; above 4 kHz the two are close. Their ratio, read across frequency, is the
+aperiodicity.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap5_one_time_window_before_and_after_the_harmonics_are_taken_away.png" width="1000" height="340" alt="One time window, before and after the harmonics are taken away" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fit_fft = 4096
+segment_freqs = np.fft.rfftfreq(fit_fft, 1 / FS)
+segment_db = 20 * np.log10(np.abs(np.fft.rfft(fit_window * segment, fit_fft)) + 1e-12)
+residual_db = 20 * np.log10(np.abs(np.fft.rfft(fit_window * residual, fit_fft)) + 1e-12)
+fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+ax.plot(segment_freqs, segment_db, color=&quot;0.6&quot;, lw=0.7, label=&quot;the time window&quot;)
+ax.plot(segment_freqs, residual_db, color=&quot;C3&quot;, lw=0.7, label=&quot;the time window less the fitted harmonics&quot;)
+top = segment_db.max() + 5
+ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Level (dB)&quot;, xlim=(0, 6000), ylim=(top - 95, top))
+ax.set_title(f&quot;One time window of the breathy vowel at {F0:.0f} Hz (Hann, four periods)&quot;)
+ax.legend(loc=&quot;upper right&quot;, fontsize=8)</code></pre></details>
+</article>
+<p><code>so.harmonic_aperiodicity</code> does this at every time window. It adds one correction: the fit also
+absorbs a little of the noise, the part that happens to look like the harmonics near each
+harmonic frequency, so the residual is a little too small there. How much is known exactly from
+the fit itself (it is what the fit would do to white noise), and is divided out. The shares are
+then summed over cells two harmonics wide and put on the frequency grid of the envelope.</p>
+<p>At the female talker's pitch the same window, four periods long, is shorter, and the vowel has
+fewer harmonics to fit:</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">residual_shares = {label: so.harmonic_aperiodicity(vowels[label], exact[label]) for label in vowels}
+for label, f0 in medians.items():
+    share = residual_shares[label]
+    error_db = 10 * np.log10(share.share[0][:, inside].mean(axis=1) / true_aperiodicity(share.f))
+    low, high = np.percentile(error_db[(share.f &gt;= 300) &amp; (share.f &lt;= 7000)], [0, 100])
+    print(f&quot;{pitch_names[label]}: {int(0.45 * FS / f0)} harmonics below 7.2 kHz, window {4000 / f0:.1f} ms&quot;)
+    print(f&quot;  measured minus truth, 300 to 7000 Hz: {low:+.1f} to {high:+.1f} dB&quot;)</code></pre></details><pre class="out">the male talker&#x27;s pitch, 119 Hz: 60 harmonics below 7.2 kHz, window 33.5 ms
+  measured minus truth, 300 to 7000 Hz: -3.1 to +1.0 dB
+the female talker&#x27;s pitch, 183 Hz: 39 harmonics below 7.2 kHz, window 21.9 ms
+  measured minus truth, 300 to 7000 Hz: -2.0 to +3.4 dB</pre></div>
+
+<article class="still" id="d-ap6">
+  <div class="about">
+    <h3>The measured share of noise against the truth</h3>
+    <div class="desc"><p>The share of noise measured at each talker's pitch, averaged over the time windows, against the
+truth, which is the same at both.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap6_the_measured_share_of_noise_against_the_truth.png" width="1000" height="320" alt="The measured share of noise against the truth" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig, ax = plt.subplots(figsize=(10, 3.2), layout=&quot;constrained&quot;)
+ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color=&quot;k&quot;, lw=2.5, alpha=0.35, label=&quot;truth&quot;)
+for (label, share), ls in zip(residual_shares.items(), [&quot;-&quot;, &quot;--&quot;], strict=True):
+    mean_share = share.share[0][:, inside].mean(axis=1)
+    ax.plot(
+        share.f,
+        10 * np.log10(mean_share),
+        color=&quot;C3&quot;,
+        ls=ls,
+        label=f&quot;so.harmonic_aperiodicity, {pitch_names[label]}&quot;,
+    )
+ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Share of noise (dB)&quot;, xlim=(0, 7200), ylim=(-40, 3))
+ax.set_title(&quot;The harmonic residual reads the vowel&#x27;s aperiodicity (mean over time windows)&quot;)
+ax.legend(loc=&quot;lower right&quot;, fontsize=8)</code></pre></details>
+</article>
+<p>At both pitches the measure follows the truth to within a few decibels above 300 Hz (the
+printout gives the range). At the female talker's pitch the cells, two harmonics wide, are
+wider in hertz, so the curve is coarser: it reads too much noise around 1.2 kHz, where at the
+male talker's pitch it reads too little.</p>
+<p>The measure is the definition, which makes it easy to explain and to check. It has one
+weakness: it needs the pitch to about a tenth of a percent. A harmonic whose frequency is
+slightly wrong drifts out of phase with the fit over the window, and what the fit misses reads
+as noise, more so the higher the harmonic. For the same reason it reads cycle-to-cycle
+irregularity (jitter and shimmer) as noise.</p>
+<h3 class="sub" id="h-what-d4c-reports">What D4C reports</h3>
+<p>WORLD's own measure is D4C (Morise, 2016); <code>so.band_aperiodicity</code> is written from its paper. It
+works from a "group delay" of the time window, smoothed over the harmonics, whose spectrum is
+sorted to see how much of its power lies outside the strongest components, in bands 6 kHz wide
+around each multiple of 3 kHz. The curve is drawn as straight lines (in dB) from −60 dB at 0 Hz
+through the bands' values, held flat above the last band. At 16 kHz there is only one band, at
+3 kHz. D4C's paper says it was tuned with listening tests so that WORLD's resynthesis
+sounds natural; the −60 dB at 0 Hz says "the lowest frequencies are periodic", which is usually
+true of speech.</p>
+
+<article class="still" id="d-ap7">
+  <div class="about">
+    <h3>What D4C reports, against the harmonic residual and the truth</h3>
+    <div class="desc"><p>Both measures at both pitches, against the truth: solid lines at the male talker's pitch, dashed
+at the female talker's.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap7_what_d4c_reports_against_the_harmonic_residual_and_the_truth.png" width="1000" height="340" alt="What D4C reports, against the harmonic residual and the truth" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">d4c_shares = {label: so.band_aperiodicity(vowels[label], exact[label]) for label in vowels}
+fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
+ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color=&quot;k&quot;, lw=2.5, alpha=0.35, label=&quot;truth&quot;)
+for name, shares, color in [
+    (&quot;so.harmonic_aperiodicity&quot;, residual_shares, &quot;C3&quot;),
+    (&quot;so.band_aperiodicity (D4C)&quot;, d4c_shares, &quot;C0&quot;),
+]:
+    for (label, share), ls in zip(shares.items(), [&quot;-&quot;, &quot;--&quot;], strict=True):
+        mean_share = share.share[0][:, inside].mean(axis=1)
+        ax.plot(
+            share.f, 10 * np.log10(mean_share), color=color, ls=ls, label=f&quot;{name}, {medians[label]:.0f} Hz&quot;
+        )
+ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Share of noise (dB)&quot;, xlim=(0, 7200), ylim=(-62, 3))
+ax.set_title(&quot;D4C at 16 kHz: one measured value at 3 kHz, joined to −60 dB at 0 Hz&quot;)
+ax.legend(loc=&quot;lower right&quot;, fontsize=8, ncol=2)</code></pre></details>
+</article>
+<p>So the two answer different questions. The harmonic residual reports the share of noise. D4C
+reports a value tuned so that WORLD's synthesis sounds natural, and below 3 kHz it is far from
+the share of noise on this vowel, at both pitches, and its curve hardly changes with the pitch.
+In exchange, D4C hardly cares whether the pitch is exact.
+Averaged over bands and time windows, at each talker's pitch, with the exact pitch track and
+with one 1% too high:</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">band_edges = [0, 1000, 2000, 4000, 7000]
+bands = &quot;&quot;.join(f&quot;{f&#x27;{low}-{high}&#x27;:&gt;11}&quot; for low, high in zip(band_edges[:-1], band_edges[1:], strict=True))
+print(f&quot;{&#x27;Share of noise [dB], band [Hz]&#x27;:&lt;34}{bands}&quot;)
+for label, vowel in vowels.items():
+    track = exact[label]
+    envelope = so.pitch_adaptive_envelope(vowel, track)
+    # the truth in each band: noise power over total power, the envelope weighting each frequency
+    # as .bands() weights it
+    weights = envelope.data[0][:, inside].mean(axis=1)
+    truth_db = []
+    for low, high in zip(band_edges[:-1], band_edges[1:], strict=True):
+        in_band = (envelope.f &gt;= low) &amp; (envelope.f &lt; high)
+        share = np.sum(true_aperiodicity(envelope.f[in_band]) * weights[in_band]) / np.sum(weights[in_band])
+        truth_db.append(10 * np.log10(share))
+    print(f&quot;{label.lower()}&#x27;s pitch, {medians[label]:.0f} Hz&quot;)
+    print(f&quot;{&#x27;  truth&#x27;:&lt;34}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in truth_db))
+    wrong_track = (window_times, track[1] * 1.01)
+    for name, measure in [(&quot;harmonic residual&quot;, so.harmonic_aperiodicity), (&quot;D4C&quot;, so.band_aperiodicity)]:
+        for f0_name, f0 in [(&quot;exact F0&quot;, track), (&quot;F0 1% high&quot;, wrong_track)]:
+            shares = measure(vowel, f0).bands(band_edges, envelope=envelope)[0][:, inside].mean(axis=1)
+            row = f&quot;  {name}, {f0_name}&quot;
+            print(f&quot;{row:&lt;34}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in 10 * np.log10(shares)))</code></pre></details><pre class="out">Share of noise [dB], band [Hz]         0-1000  1000-2000  2000-4000  4000-7000
+male talker&#x27;s pitch, 119 Hz
+  truth                                 -14.2      -10.8       -5.2       -2.8
+  harmonic residual, exact F0           -17.0      -12.6       -4.9       -3.3
+  harmonic residual, F0 1% high         -16.4      -11.5       -2.6       -0.3
+  D4C, exact F0                         -45.5      -38.2       -8.6       -0.6
+  D4C, F0 1% high                       -45.5      -38.2       -8.6       -0.6
+female talker&#x27;s pitch, 183 Hz
+  truth                                 -13.1      -10.3       -4.6       -2.8
+  harmonic residual, exact F0           -11.1       -7.8       -4.8       -2.9
+  harmonic residual, F0 1% high         -10.7       -7.3       -3.9       -1.7
+  D4C, exact F0                         -43.4      -36.8       -5.1       -1.3
+  D4C, F0 1% high                       -43.4      -36.8       -5.1       -1.3</pre></div>
+<p>With the wrong pitch, the harmonic residual's upper bands move toward 0 dB (all noise), as the
+high harmonics drift out of phase with the fit; D4C's numbers do not change. At the female
+talker's pitch the same error matters less. Over a window four periods long, a harmonic drifts
+out of phase in proportion to its number, and at a higher pitch a given frequency belongs to a
+lower harmonic.</p>
+<h3 class="sub" id="h-a-sentence">A sentence</h3>
+<p>On the recorded sentences, with Harvest's tracks, there is no truth to compare with, but the two
+maps can be set side by side. Both are 1 (0 dB, all noise) where the track says unvoiced. The
+cell prints, for each talker, the median share of noise over the voiced time windows in each
+band.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">harvest_envelopes = {label: so.pitch_adaptive_envelope(talkers[label], harvest[label]) for label in talkers}
+d4c_maps = {label: so.band_aperiodicity(talkers[label], harvest[label]) for label in talkers}
+residual_maps = {label: so.harmonic_aperiodicity(talkers[label], harvest[label]) for label in talkers}
+
+print(f&quot;{&#x27;Median share of noise [dB], band [Hz]&#x27;:&lt;44}{bands}&quot;)
+for label in talkers:
+    voiced = np.interp(d4c_maps[label].t, *harvest[label]) &gt; 0
+    for name, maps in [(&quot;D4C&quot;, d4c_maps), (&quot;harmonic residual&quot;, residual_maps)]:
+        shares = maps[label].bands(band_edges, envelope=harvest_envelopes[label])[0][:, voiced]
+        row = f&quot;{label}, {name}&quot;
+        print(f&quot;{row:&lt;44}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in 10 * np.log10(np.median(shares, axis=1))))</code></pre></details><pre class="out">Median share of noise [dB], band [Hz]            0-1000  1000-2000  2000-4000  4000-7000
+Male talker, D4C                                  -53.3      -30.5       -2.8        0.0
+Male talker, harmonic residual                    -17.6       -5.1       -1.9       -1.2
+Female talker, D4C                                -53.1      -29.0       -2.8        0.0
+Female talker, harmonic residual                  -24.6       -7.3       -2.1       -1.1</pre></div>
+<p>For both talkers, in voiced time windows the harmonic residual is lowest below 1 kHz, where the
+harmonics are strong, and within a few decibels of 0 dB (all noise) above 2 kHz. D4C has the same
+shape in every voiced time window, a single bend at 3 kHz, and reads far less noise below it.</p>
+
+<article class="still" id="d-ap8">
+  <div class="about">
+    <h3>Envelope and aperiodicities of the sentence</h3>
+    <div class="desc"></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap8_envelope_and_aperiodicities_of_the_sentence.png" width="1000" height="720" alt="Envelope and aperiodicities of the sentence" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig = plt.figure(figsize=(10, 7.2), layout=&quot;constrained&quot;)
+for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
+    axes = column.subplots(3, 1, sharex=True)
+    harvest_envelopes[label].plot(axes[0], db_range=70)
+    axes[0].set_title(f&quot;{label}: spectral envelope (CheapTrick)&quot;)
+    for ax, aperiodicity, title in [
+        (axes[1], d4c_maps[label], &quot;Aperiodicity: so.band_aperiodicity (D4C)&quot;),
+        (axes[2], residual_maps[label], &quot;Aperiodicity: so.harmonic_aperiodicity&quot;),
+    ]:
+        aperiodicity.plot(ax, db_range=40)
+        ax.set_title(title)
+    for ax in axes:
+        ax.set_xlim(0, talkers[label].duration)
+        ax.set_xlabel(&quot;&quot;)
+    axes[2].set_xlabel(&quot;Time (s)&quot;)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-phases-on-a-moving-pitch">
+<h2 id="h-phases-on-a-moving-pitch">Phases on a moving pitch</h2>
+<p>The envelope and the aperiodicity fix the spectrum, but the starting phases decide the waveform,
+and no view on this page keeps them. In cosine phase all the harmonics peak together once a
+period, giving a sharp pulse; Schroeder's phases spread the energy across the period for a
+nearly flat envelope (Schroeder, 1970); random phases fall in between. With a contour the phases
+set only where each harmonic starts. After that every harmonic runs at exactly <span class="tex">n</span> times the same
+instantaneous frequency, so the waveform keeps its shape as the pitch moves. The examples use
+harmonics of equal amplitude on each talker's <code>so.f0_track</code>, to show the phases alone.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">PHASES = {&quot;cosine&quot;: &quot;cosine&quot;, &quot;Schroeder&quot;: &quot;schroeder+&quot;, &quot;random&quot;: &quot;random&quot;}
+buzzes = {
+    name: {
+        label: so.harmonic_complex(snd.duration, FS, tracks[label], phases=phases, rng=3)
+        for label, snd in talkers.items()
+    }
+    for name, phases in PHASES.items()
+}
+for name, pair in buzzes.items():
+    print(
+        f&quot;{name:9}: crest factor &quot;
+        + &quot;, &quot;.join(f&quot;{snd.peak / snd.rms:.1f} ({label})&quot; for label, snd in pair.items())
+    )</code></pre></details><pre class="out">cosine   : crest factor 17.0 (Male talker), 12.4 (Female talker)
+Schroeder: crest factor 2.4 (Male talker), 2.4 (Female talker)
+random   : crest factor 3.9 (Male talker), 3.9 (Female talker)</pre></div>
+
+<article class="still" id="d-hf0">
+  <div class="about">
+    <h3>Three phase choices, one spectrum</h3>
+    <div class="desc"><p>Thirty milliseconds of each, from 0.50 s, where both talkers are voiced. In each column the three
+have the same spectrum; only the waveform differs. The crest factor is the peak over the RMS of
+the whole sentence.</p></div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf0_three_phase_choices_one_spectrum.png" width="1000" height="480" alt="Three phase choices, one spectrum" loading="lazy">
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">fig = plt.figure(figsize=(10, 4.8), layout=&quot;constrained&quot;)
+columns = fig.subfigures(1, 2)
+for column, label in zip(columns, talkers, strict=True):
+    axes = column.subplots(3, 1, sharex=True, sharey=True)
+    start = 0.50
+    segment = slice(int(start * FS), int((start + 0.03) * FS))
+    milliseconds = np.arange(segment.start, segment.stop) / FS * 1e3
+    for ax, (name, pair) in zip(axes, buzzes.items(), strict=True):
+        snd = pair[label]
+        ax.plot(milliseconds, snd.data[segment, 0] / snd.rms, color=&quot;k&quot;, lw=0.7)
+        ax.set(title=f&quot;{label}: {name} phase, crest factor {snd.peak / snd.rms:.1f}&quot;, ylabel=&quot;re RMS&quot;)
+        ax.grid(ls=&quot;:&quot;)
+    axes[-1].set_xlabel(&quot;Time (ms)&quot;)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hf1">
+  <div class="about">
+    <h3>Cosine phase</h3>
+    <div class="desc"><p>Cosine phase: a pulse train that follows each talker's intonation.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hf1_cosine_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4857909101101411, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4857909101101411, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hf1_cosine_phase_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hf1_cosine_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hf1_cosine_phase_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf1_cosine_phase.png" width="1000" height="440" alt="Plots of the cosine phase sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd) for label, snd in buzzes[&quot;cosine&quot;].items()}
+fig, playhead = show_pair(sounds, titled(&quot;equal harmonics, cosine phase&quot;), contours=tracks)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hf2">
+  <div class="about">
+    <h3>Schroeder phase</h3>
+    <div class="desc"><p>Schroeder phase: the same harmonics, with no instant in the period carrying all the energy.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.48570755081604894, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.48570755081604894, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hf2_schroeder_phase_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hf2_schroeder_phase_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf2_schroeder_phase.png" width="1000" height="440" alt="Plots of the schroeder phase sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd) for label, snd in buzzes[&quot;Schroeder&quot;].items()}
+fig, playhead = show_pair(sounds, titled(&quot;equal harmonics, Schroeder phase&quot;), contours=tracks)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-hf3">
+  <div class="about">
+    <h3>Random phase</h3>
+    <div class="desc"><p>Random phase, one draw: a crest factor between the two.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/hf3_random_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.48563153526482883, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06923335199652779, &quot;x1&quot;: 0.48563153526482883, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">hf3_random_phase_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/hf3_random_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5742333519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5742333519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">hf3_random_phase_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/hf3_random_phase.png" width="1000" height="440" alt="Plots of the random phase sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(snd) for label, snd in buzzes[&quot;random&quot;].items()}
+fig, playhead = show_pair(sounds, titled(&quot;equal harmonics, random phase&quot;), contours=tracks)</code></pre></details>
+</article>
+<p><code>so.source_filter_synthesize</code> uses cosine phase, so each period it makes is a pulse, peakier
+than a voice's. Which choice sounds closest to a recorded voice is a question for listening;
+the phase a voice really has is set by the shape of its glottal pulse and its vocal tract,
+which none of the views here keeps.</p>
+</section>
+<section aria-labelledby="h-putting-it-back">
+<h2 id="h-putting-it-back">Putting it back</h2>
+<p><code>so.source_filter_synthesize</code> puts a voice back together from the three views as two parts
+added. With the envelope <span class="tex">S(t, f)</span> (power per hertz), the aperiodicity <span class="tex">A(t, f)</span> and the pitch
+track <span class="tex">F_0(t)</span>:</p>
+<ul><li><strong>Harmonics</strong> on the pitch track, <span class="tex">\sum_n a_n \cos\bigl(n\,\Phi(t)\bigr)</span>, carrying the harmonics' share of the envelope, <span class="tex">S(1 - A)</span>. Harmonic <span class="tex">n</span> stands for one harmonic spacing, <span class="tex">F_0</span> hertz, of that power, so its amplitude is</li></ul>
+<p>  <span class="tex display">\frac{a_n^2}{2} = \frac{2 F_0}{f_s} S(1 - A) \text{ at } f = n F_0,</span></p>
+<p>  with <span class="tex">f_s</span> the sampling rate (the <span class="tex">2/f_s</span> converts the envelope's one-sided power per FFT bin
+  to power per hertz).
+- <strong>Noise</strong>: white noise whose STFT magnitude is multiplied by <span class="tex">\sqrt{S A}</span>, and by <span class="tex">\sqrt{S}</span>
+  where the track says unvoiced, then inverted.</p>
+<p>Below, each talker's Harvest track and CheapTrick envelope, with four aperiodicities. (Time
+windows the track calls unvoiced are always noise.)</p>
+
+<article class="sound pair" id="d-ap9">
+  <div class="about">
+    <h3>The sentence</h3>
+    <div class="desc"><p>The sentence, for reference.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap9_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857095820640773, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857095820640773, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">ap9_the_sentence_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap9_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">ap9_the_sentence_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap9_the_sentence.png" width="1000" height="440" alt="Plots of the the sentence sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = talkers
+fig, playhead = show_pair(sounds, titled(&quot;the sentence&quot;), fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-ap10">
+  <div class="about">
+    <h3>Resynthesis with D4C</h3>
+    <div class="desc"><p>The resynthesis with D4C's aperiodicity.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <p class="file">ap10_resynthesis_with_d4c_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">ap10_resynthesis_with_d4c_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap10_resynthesis_with_d4c.png" width="1000" height="440" alt="Plots of the resynthesis with d4c sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.source_filter_synthesize(harvest[label], harvest_envelopes[label], d4c_maps[label], rng=1)
+    )
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, titled(&quot;with so.band_aperiodicity&quot;), fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-ap11">
+  <div class="about">
+    <h3>With the harmonic residual</h3>
+    <div class="desc"><p>The same with the harmonic residual's aperiodicity, which puts more of each voice into noise,
+mostly at high frequencies.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.289573953657408, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.3746487085268173, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <p class="file">ap11_with_the_harmonic_residual_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">ap11_with_the_harmonic_residual_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap11_with_the_harmonic_residual.png" width="1000" height="440" alt="Plots of the with the harmonic residual sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
+    label: finish(
+        so.source_filter_synthesize(harvest[label], harvest_envelopes[label], residual_maps[label], rng=1)
+    )
+    for label in talkers
+}
+fig, playhead = show_pair(sounds, titled(&quot;with so.harmonic_aperiodicity&quot;), fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-ap12">
+  <div class="about">
+    <h3>No noise in the voice</h3>
+    <div class="desc"><p>With <span class="tex">A = 0</span> in every voiced time window: harmonics only, the voicing switch of the first-order
+picture. The voiced parts are harmonics all the way up.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <p class="file">ap12_no_noise_in_the_voice_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">ap12_no_noise_in_the_voice_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap12_no_noise_in_the_voice.png" width="1000" height="440" alt="Plots of the no noise in the voice sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
+for label in talkers:
+    periodic = so.Aperiodicity(np.zeros_like(d4c_maps[label].data), d4c_maps[label].t, FS, &quot;none&quot;)
+    sounds[label] = finish(
+        so.source_filter_synthesize(harvest[label], harvest_envelopes[label], periodic, rng=1)
+    )
+fig, playhead = show_pair(sounds, titled(&quot;with A = 0&quot;), fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-ap13">
+  <div class="about">
+    <h3>Nothing but noise</h3>
+    <div class="desc"><p>With <span class="tex">A = 1</span> everywhere: noise only, through the same envelope. The pitch is gone and the
+sentence is whispered; it is still intelligible, because the envelope carries the words.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <p class="file">ap13_nothing_but_noise_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">ap13_nothing_but_noise_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap13_nothing_but_noise.png" width="1000" height="440" alt="Plots of the nothing but noise sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
+for label in talkers:
+    noise_only = so.Aperiodicity(np.ones_like(d4c_maps[label].data), d4c_maps[label].t, FS, &quot;all noise&quot;)
+    sounds[label] = finish(
+        so.source_filter_synthesize(harvest[label], harvest_envelopes[label], noise_only, rng=1)
+    )
+fig, playhead = show_pair(sounds, titled(&quot;with A = 1&quot;), fmax=8000)</code></pre></details>
+</article>
+<h3 class="sub" id="h-against-the-simple-rebuild">Against the simple rebuild</h3>
+<p><a href="sourcefilter.html#h-putting-it-back-simply">Putting it back, simply</a> rebuilt each sentence from
+<code>so.f0_track</code>'s track and the liftered cepstral envelope, with no aperiodicity, and its noise
+came out too loud against its voiced stretches. The cell rebuilds each sentence from the same
+track four ways: that simple rebuild, CheapTrick's envelope with no aperiodicity, and CheapTrick's
+envelope with each aperiodicity. It prints, for each, the unvoiced stretches' level relative to
+the voiced ones, against the recording's, and the distance from the recording: the level-free
+RMS difference in dB between their 40-band log mel spectrograms, the median over the voiced
+time windows and over the unvoiced ones.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def liftered_envelope(snd, track):
+    &quot;&quot;&quot;The cepstrum of 40 ms Hann time windows every 5 ms, liftered below half the pitch period
+    of each window (the track&#x27;s voiced F0, interpolated on a log scale across unvoiced gaps).&quot;&quot;&quot;
+    cepstrum = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005))
+    is_voiced = track.voiced[0]
+    periods = 1 / np.exp(np.interp(cepstrum.t, track.t[is_voiced], np.log(track.f0[0][is_voiced])))
+    return cepstrum.lifter(0.5 * periods).envelope_view()
+
+
+def unvoiced_re_voiced(snd, track):
+    &quot;&quot;&quot;The RMS of a sound&#x27;s unvoiced stretches over that of its voiced ones, in dB.&quot;&quot;&quot;
+    samples = snd.data[:, 0]
+    voiced = np.interp(np.arange(len(samples)) / snd.fs, track.t, track.voiced[0].astype(float))
+    return 20 * np.log10(np.sqrt(np.mean(((1 - voiced) * samples) ** 2) / np.mean((voiced * samples) ** 2)))
+
+
+def distances(snd, label):
+    &quot;&quot;&quot;The level-free RMS dB between the log mel spectrograms of snd and the talker&#x27;s recording,
+    the median over the recording&#x27;s voiced and over its unvoiced time windows.&quot;&quot;&quot;
+    original, rebuilt = so.MFCC(talkers[label], n_mels=40), so.MFCC(snd, n_mels=40)
+    count = min(original.mel_db.shape[2], rebuilt.mel_db.shape[2])
+    difference = rebuilt.mel_db[0][:, :count] - original.mel_db[0][:, :count]
+    per_window = np.sqrt(np.mean((difference - difference.mean(axis=0)) ** 2, axis=0))
+    voiced = np.interp(original.t[:count], tracks[label].t, tracks[label].voiced[0].astype(float)) &gt; 0.5
+    return np.median(per_window[voiced]), np.median(per_window[~voiced])
+
+
+rebuilds = {}
+for label, snd in talkers.items():
+    track = tracks[label]
+    rebuilds[label] = {
+        &quot;simple (page 2)&quot;: so.source_filter_synthesize(
+            track, liftered_envelope(snd, track), fs=FS, duration=snd.duration, rng=2
+        ),
+        &quot;CheapTrick, no aperiodicity&quot;: so.source_filter_synthesize(track, envelopes[label], rng=2),
+        &quot;CheapTrick and D4C&quot;: so.source_filter_synthesize(
+            track, envelopes[label], so.band_aperiodicity(snd, track), rng=2
+        ),
+        &quot;CheapTrick and harmonic residual&quot;: so.source_filter_synthesize(
+            track, envelopes[label], so.harmonic_aperiodicity(snd, track), rng=2
+        ),
+    }
+comparison = {}
+print(f&quot;{&#x27;&#x27;:&lt;50}{&#x27;unvoiced re voiced&#x27;:&gt;19}{&#x27;distance, voiced&#x27;:&gt;18}{&#x27;unvoiced&#x27;:&gt;10}&quot;)
+for label, snd in talkers.items():
+    print(f&quot;{label + &#x27;, the recording&#x27;:&lt;50}{unvoiced_re_voiced(snd, tracks[label]):&gt;16.1f} dB&quot;)
+    for name, rebuilt in rebuilds[label].items():
+        balance = unvoiced_re_voiced(rebuilt, tracks[label])
+        comparison[label, name] = (balance, *distances(rebuilt, label))
+        print(
+            f&quot;{&#x27;  &#x27; + name:&lt;50}{balance:&gt;16.1f} dB&quot;
+            + &quot;&quot;.join(f&quot;{d:&gt;15.2f} dB&quot; for d in comparison[label, name][1:])
+        )</code></pre></details><pre class="out">                                                   unvoiced re voiced  distance, voiced  unvoiced
+Male talker, the recording                                   -14.9 dB
+  simple (page 2)                                            -10.3 dB           3.72 dB           3.57 dB
+  CheapTrick, no aperiodicity                                -15.5 dB           2.51 dB           4.23 dB
+  CheapTrick and D4C                                         -15.5 dB           1.74 dB           4.23 dB
+  CheapTrick and harmonic residual                           -15.3 dB           1.88 dB           4.22 dB
+Female talker, the recording                                 -17.0 dB
+  simple (page 2)                                             -8.1 dB           5.40 dB           3.40 dB
+  CheapTrick, no aperiodicity                                -19.0 dB           1.79 dB           4.27 dB
+  CheapTrick and D4C                                         -19.0 dB           1.83 dB           4.27 dB
+  CheapTrick and harmonic residual                           -18.9 dB           1.97 dB           4.27 dB</pre></div>
+<p>CheapTrick's envelope is what fixes the balance: with it the unvoiced stretches sit within a
+couple of decibels of the recording's level relative to the voiced ones, where the simple rebuild
+had them 5 and 9 dB too loud, and the voiced distance falls from
+3.7 to
+2.5 dB for the male
+talker and from 5.4 to
+1.8 dB for the female
+one. An aperiodicity then helps the male talker's voiced stretches a little more and the female
+talker's not at all. In the unvoiced stretches the simple rebuild is the closer: there CheapTrick
+analyzes the noise as if <span class="tex">F_0</span> were 500 Hz, with a short window and wide smoothing, which
+probably smooths away detail the 40 ms liftered spectrum keeps (an inference, not measured
+here). These are distances between spectrograms,
+not judgments of how natural the voices sound.</p>
+
+<article class="sound pair" id="d-ap14">
+  <div class="about">
+    <h3>The simple rebuild, for comparison</h3>
+    <div class="desc"><p>The simple rebuild of <a href="sourcefilter.html#d-hu2">Putting it back, simply</a>, to set beside the
+rebuilds above.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap14_the_simple_rebuild_for_comparison_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857096002929735, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.28843532514393433, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857096002929735, &quot;top&quot;: 0.37717899411231437, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">ap14_the_simple_rebuild_for_comparison_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap14_the_simple_rebuild_for_comparison_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <p class="file">ap14_the_simple_rebuild_for_comparison_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap14_the_simple_rebuild_for_comparison.png" width="1000" height="440" alt="Plots of the the simple rebuild, for comparison sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(pair[&quot;simple (page 2)&quot;]) for label, pair in rebuilds.items()}
+fig, playhead = show_pair(sounds, titled(&quot;liftered envelope, no aperiodicity&quot;), fmax=8000, contours=tracks)</code></pre></details>
+</article>
+
+<article class="sound pair" id="d-ap15">
+  <div class="about">
+    <h3>CheapTrick and D4C on the same tracks</h3>
+    <div class="desc"><p>CheapTrick's envelope and D4C's aperiodicity on the same tracks.</p></div>
+    <div class="players">
+    <div><p class="track">Male talker</p>
+    <audio controls preload="metadata" src="audio/ap15_cheaptrick_and_d4c_on_the_same_tracks_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.48579092044540967, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.48579092044540967, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <p class="file">ap15_cheaptrick_and_d4c_on_the_same_tracks_male_talker.flac, 2.5 s, mono</p></div>
+    <div><p class="track">Female talker</p>
+    <audio controls preload="metadata" src="audio/ap15_cheaptrick_and_d4c_on_the_same_tracks_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <p class="file">ap15_cheaptrick_and_d4c_on_the_same_tracks_female_talker.flac, 2.6 s, mono</p></div>
+    </div>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/ap15_cheaptrick_and_d4c_on_the_same_tracks.png" width="1000" height="440" alt="Plots of the cheaptrick and d4c on the same tracks sounds" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {label: finish(pair[&quot;CheapTrick and D4C&quot;]) for label, pair in rebuilds.items()}
+fig, playhead = show_pair(sounds, titled(&quot;CheapTrick and D4C&quot;), fmax=8000, contours=tracks)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-what-learned-vocoders-do">
+<h2 id="h-what-learned-vocoders-do">What learned vocoders do</h2>
+<p>Most neural vocoders, WaveNet (van den Oord et al., 2016) and HiFi-GAN (Kong, Kim &amp; Bae, 2020)
+among them, do not split source from filter at all: they map a mel spectrogram to a waveform,
+judged by how it sounds, so they make up plausible phase and fine detail rather than recover
+them. Those that do split keep this page's structure and learn the rest. LPCNet (Valin &amp;
+Skoglund, 2019) keeps linear prediction for the filter; neural source-filter models (Wang, Takaki
+&amp; Yamagishi, 2020) start from a sine source at <span class="tex">F_0</span>; DDSP (Engel et al., 2020) is harmonics plus
+filtered noise, close to the recipe above, with a network choosing the amplitudes and filters.
+What settles the ambiguity of splitting a sound into a source and a filter (<a href="sourcefilter.html">The source-filter
+model</a>) is, for them, a prior learned from many hours of speech, where the
+methods on this page have a few fixed constants (<code>q1</code>, the window of three periods, D4C's
+tuning). The methods on this page show the parts that the learned ones hide.</p>
+</section>
+<section aria-labelledby="h-what-this-page-leaves-out">
+<h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
+<ul><li><strong>STRAIGHT's code.</strong> STRAIGHT and TANDEM-STRAIGHT's own smoothing and aperiodicity are described, not implemented; <code>so.tandem_power</code> is only TANDEM's averaged power spectrum.</li><li><strong>WORLD's pitch tracker.</strong> Harvest is not part of sonore; its tracks are stored with the recordings. <code>so.f0_track</code> gives tracks of its own (<a href="sourcefilter.html#h-measuring-the-source-pitch">Measuring the source: pitch</a>).</li><li><strong>Measured phase.</strong> The views keep no phase, so the rebuilt voice's waveform is not the recording's; a minimum-phase or measured pulse shape is not provided.</li><li><strong>Jitter and shimmer.</strong> A pitch track smoothed over 5 ms time windows cannot follow cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis can only carry it as noise.</li></ul>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Engel, Hantrakul, Gu &amp; Roberts (2020). DDSP: differentiable digital signal processing. <em>Proc. ICLR 2020</em>. <a href="https://arxiv.org/abs/2001.04643" target="_blank" rel="noopener">arXiv:2001.04643</a>.</li><li>Kawahara, Masuda-Katsuse &amp; de Cheveigné (1999). Restructuring speech representations using a pitch-adaptive time-frequency smoothing and an instantaneous-frequency-based F0 extraction. <em>Speech Communication</em> 27(3–4), 187–207. <a href="https://doi.org/10.1016/S0167-6393(98)00085-5" target="_blank" rel="noopener">doi:10.1016/S0167-6393(98)00085-5</a>. STRAIGHT.</li><li>Kawahara et al. (2011). Technical foundations of TANDEM-STRAIGHT, a speech analysis, modification and synthesis framework. <em>Sādhanā</em> 36(5), 713–727. <a href="https://doi.org/10.1007/s12046-011-0043-3" target="_blank" rel="noopener">doi:10.1007/s12046-011-0043-3</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectra.py#L230" target="_blank" rel="noopener"><code>spectra.tandem_power</code></a></li><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940" target="_blank" rel="noopener">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Kong, Kim &amp; Bae (2020). HiFi-GAN: generative adversarial networks for efficient and high fidelity speech synthesis. <em>Advances in Neural Information Processing Systems</em> 33. <a href="https://arxiv.org/abs/2010.05646" target="_blank" rel="noopener">arXiv:2010.05646</a>.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L249" target="_blank" rel="noopener"><code>spectral_envelope.pitch_adaptive_envelope</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132" target="_blank" rel="noopener"><code>aperiodicity.band_aperiodicity</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels" target="_blank" rel="noopener">ASA</a>. The formants of "hod".</li><li>Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. <em>IEEE Trans. Inf. Theory</em> 16(1), 85–89. <a href="https://doi.org/10.1109/TIT.1970.1054411" target="_blank" rel="noopener">doi:10.1109/TIT.1970.1054411</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L372" target="_blank" rel="noopener"><code>waveforms.schroeder_complex</code></a></li><li>Valin &amp; Skoglund (2019). LPCNet: improving neural speech synthesis through linear prediction. <em>Proc. ICASSP 2019</em>, 5891–5895. <a href="https://arxiv.org/abs/1810.11846" target="_blank" rel="noopener">arXiv:1810.11846</a>.</li><li>van den Oord et al. (2016). WaveNet: a generative model for raw audio. <a href="https://arxiv.org/abs/1609.03499" target="_blank" rel="noopener">arXiv:1609.03499</a>.</li><li>Wang, Takaki &amp; Yamagishi (2020). Neural source-filter waveform models for statistical parametric speech synthesis. <em>IEEE/ACM Trans. Audio, Speech, Lang. Process.</em> 28, 402–415. <a href="https://arxiv.org/abs/1904.12088" target="_blank" rel="noopener">arXiv:1904.12088</a>.</li></ul>
+</section>
+<footer>This page is the script <code>docs/gallery/voice/richer.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/voice/richer.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
+</main>
+</div>
+<script>
+(() => {
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the color bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

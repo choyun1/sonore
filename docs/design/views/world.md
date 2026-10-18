@@ -14,7 +14,7 @@ pieces; Cho asked how to square that with reproducibility and decided:
 reproduce WORLD, with no pyworld dependency ("Reproducing WORLD" below).
 Steps 1–5 of "Order" are built (`sonore.views.spectral_envelope`, `sonore.views.aperiodicity`
 and `sonore.views.world` since the reorganization), and the gallery page explains aperiodicity
-(`docs/gallery/voice/aperiodicity.py`).
+(`docs/gallery/voice/richer.py`).
 
 Renamed on 2026-10-18 (Cho): the ports now carry names that say what they
 do, so that sonore does not read as a copy of all of WORLD when it ports
