@@ -189,7 +189,7 @@ recovered noise share against the truth on the synthetic vowels, and the level-f
 distance on both recordings, as in C11. If the noise half measures badly, the plan comes back to
 Cho.
 
-## Writing CheapTrick and D4C from the papers (open)
+## Writing CheapTrick and D4C from the papers (accepted)
 
 Cho asked on 2026-10-18 whether BSD-3 can be avoided. It can. Copyright covers WORLD's code, not
 the methods, and the current ports are under BSD-3 only because they were written from WORLD's
@@ -217,18 +217,30 @@ need moves next to them, and `views/world.py` goes.
 
 ## Order
 
-1. PR #238 (renames and WORLD's license) merges as it is.
-2. The recipe and its checker, with the numbers added here.
-3. Remove `so.source_filter_synthesize`, and move the pages that used it to the recipe.
-4. Page 2 (the merge). It is the largest step and one PR.
-5. Page 3, then page 1, then page 4's trim and the move to the Vocoder page.
-6. README rows, the Voices entries in `TOPICS`, the CHANGELOG (removing the synthesizer is a
-   breaking change for 0.8.0), and `docs/roadmap-done.md`.
-7. If D8 is accepted, the rewrite from the papers, which can run alongside steps 4 and 5.
+Cho's order (2026-10-18): the rewrite from the papers comes before any gallery change.
 
-The audit's sitting on CheapTrick and D4C rebases after step 1. Its sitting on WORLD's synthesis
-is no longer needed. If D8 is accepted, the CheapTrick and D4C sitting would audit the rewrite
-instead of the port.
+1. PR #238 (renames and WORLD's license), merged 2026-10-18.
+2. **The rewrite of CheapTrick and D4C from the papers** (D8, accepted by Cho's ordering). It is
+   done clean-room:
+   - **The gap list.** One session compares each paper with what the port does, and lists every
+     choice the paper leaves open as a question for Cho, not as code.
+   - **The writing.** A fresh worker writes the new functions, given only the papers, the
+     answered questions and the public signatures. It does not open the port's code, its checker,
+     or WORLD's source.
+   - **The comparison.** Each function is then measured against pyworld, as a development-time
+     comparison, and the distance is reported. When the rewrite replaces the ports,
+     `LICENSE-WORLD` and the file headers go.
+
+   The papers have to be uploaded first (CheapTrick 2015, D4C 2016, and the WORLD overview 2016).
+3. The recipe and its checker, with the numbers added here, on the rewritten analyses.
+4. Remove `so.source_filter_synthesize`, and move the pages that used it to the recipe.
+5. Page 2 (the merge). It is the largest step and one PR.
+6. Page 3, then page 1, then page 4's trim and the move to the Vocoder page.
+7. README rows, the Voices entries in `TOPICS`, the CHANGELOG (removing the synthesizer and
+   replacing the ports are breaking changes for 0.8.0), and `docs/roadmap-done.md`.
+
+The audit's sitting on WORLD's synthesis is no longer needed. Its CheapTrick and D4C sitting
+reviews the rewrite instead of the port.
 
 ## Decisions
 
@@ -245,8 +257,8 @@ instead of the port.
 - **D6. Exactness of the analyses follows D8.** They stay exact if they stay ports. If rewritten,
   they report their distance to WORLD.
 - **D7. The noise-band examples he2 and he3 move to the Vocoder page.** (Recommended.)
-- **D8. Rewrite CheapTrick and D4C from the papers**, retiring `LICENSE-WORLD`. (Recommended.)
-  The alternative is to keep the exact ports and the BSD-3 notice.
+- **D8. Rewrite CheapTrick and D4C from the papers**, retiring `LICENSE-WORLD`. Accepted by Cho
+  (2026-10-18), to be done before the gallery changes.
 - **D9. The cuts on page 2** as listed in its sections: fw3, fp1, fq4, fq5, hp1, hp3, ft2, ft3
   and m3. (Recommended.) Any of them can be kept instead.
 
