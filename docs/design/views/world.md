@@ -382,7 +382,7 @@ WORLD computes it, not a view of a sonore frame (D2).
 **Tests.** `tools/make_world_fixtures.py` (pyworld, development only)
 stores WORLD's envelope (with both q̃₁), aperiodicity and synthesis for a
 breathy vowel with vibrato and 0.3 s of the gallery sentence, every 8th
-frequency bin, in `tests/data/world_reference.npz` (289 kB, sounds included, since the sdist carries no docs).
+frequency bin, in `tests/data/world_reference.npz` (401 kB since the 2026-10-18 amendment, sounds included, since the sdist carries no docs).
 `tests/views/test_world.py` holds sonore to within 1e-6 dB (envelope),
 1e-8 dB (aperiodicity) and 1e-9 of the peak (synthesis); the measured
 differences are about 4e-9 dB, 7e-12 dB and 1e-13.
@@ -568,6 +568,30 @@ is a requirement (above). As a new gallery page, "Source, filter and
 aperiodicity" (recommended), with the vocoder's other demos (pitch
 change, formant shift, breathiness), or as a section of the Formant
 synthesis page, which already has the breathy vowel (C9) but no analysis.
+
+## Amendment, 2026-10-18 (audit sitting 13)
+
+pyworld 0.3.5 now installs in the cloud environment, so the crosscheck was
+rerun: every number in C1, C6, C10 and C11 came out as stated. Both sounds in
+the stored WORLD output were voiced throughout, so the synthesis port's
+unvoiced pulses and noise, its voicing edges and the last hop were never
+compared with WORLD. `tools/make_world_fixtures.py` now also stores WORLD's
+synthesis of 0.2 s of the sentence (1.45 to 1.65 s) that goes from voiced
+to unvoiced and back, as analyzed and with four changes (an aperiodicity
+of 0.8 everywhere, an F0 of 16.3 Hz everywhere, an F0 rising from 100 to
+200 Hz, a hop of 10/3 ms). Rerunning the script gives the earlier arrays
+bit for bit; the file grew from 289 kB to 401 kB. The port matches WORLD
+on all of them to within 2e-15 of the peak, except the 10/3 ms hop: the
+port rounded the hop to a whole number of nanoseconds, which flipped the
+voicing of the two samples that fall exactly halfway between a voiced and
+an unvoiced time window, and so differed by 0.8% of the peak. It
+now keeps such a hop as given. A very low F0 beside an unvoiced stretch on
+a long hop (17 Hz on a 200 ms hop) puts pulses further apart than the FFT
+is long; WORLD writes past its buffer there (pyworld aborted with a memory
+error), and sonore refuses it. The checker's synthesis took WORLD's lowest
+voiced F0 as `fs / n_fft + 1` (16.6 Hz at 16 kHz); WORLD divides whole
+numbers, `fs // n_fft + 1` (16 Hz), as the library did, which a 16.3 Hz
+track confirms against pyworld; the checker now does too.
 
 ## References
 

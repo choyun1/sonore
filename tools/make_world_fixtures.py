@@ -5,8 +5,20 @@ checked against) on two short sounds: a synthetic vowel with vibrato and breath 
 and 0.3 s of the gallery sentence (0.6 to 0.9 s) with its stored Harvest track. It
 stores every 8th frequency bin of CheapTrick's envelope (with WORLD's q1 and
 the paper's), D4C's aperiodicity, and WORLD's synthesis from WORLD's own
-envelope and aperiodicity. The tests compare sonore against these numbers, so
-they need no pyworld. pyworld is used only here.
+envelope and aperiodicity.
+
+Both of those are voiced throughout, so it also stores WORLD's synthesis of a
+third sound, 0.2 s of the sentence (1.45 to 1.65 s) that goes from voiced to
+unvoiced and back: as analyzed, with an aperiodicity of 0.8 everywhere (high
+enough at 0 Hz to change how the periodic part is built), with the F0 set to
+16.3 Hz everywhere (just above the lowest F0 WORLD's synthesis voices), with
+the F0 rising from 100 to 200 Hz (so that pulses fall in the last hop, where
+WORLD extends the track by one step), and with the same time windows read at
+a hop of 10/3 ms.
+
+The tests compare sonore against these numbers, so they need no pyworld.
+pyworld is used only here. Rerunning the script gives the stored arrays bit
+for bit (checked with pyworld 0.3.5 on 2026-10-18).
 
     pip install pyworld            # development only
     python tools/make_world_fixtures.py
@@ -56,6 +68,31 @@ def sentence_excerpt(start=0.6, stop=0.9):
     return excerpt, track[rows, 0] - start, track[rows, 1]
 
 
+def synthesis_variants(sound, window_times, window_f0):
+    """WORLD's synthesis of one sound under the variants the module docstring lists."""
+    sound, window_times, window_f0 = (
+        np.ascontiguousarray(values, dtype=float) for values in (sound, window_times, window_f0)
+    )
+    envelope = pyworld.cheaptrick(sound, window_f0, window_times, FS)
+    aperiodicity = pyworld.d4c(sound, window_f0, window_times, FS)
+    return {
+        "sound": sound,
+        "t": window_times,
+        "f0": window_f0,
+        "synthesized": pyworld.synthesize(window_f0, envelope, aperiodicity, FS, HOP_MS),
+        "synthesized_ap_0_8": pyworld.synthesize(
+            window_f0, envelope, np.full_like(aperiodicity, 0.8), FS, HOP_MS
+        ),
+        "synthesized_f0_16_3": pyworld.synthesize(
+            np.full_like(window_f0, 16.3), envelope, aperiodicity, FS, HOP_MS
+        ),
+        "synthesized_hop_10_3": pyworld.synthesize(window_f0, envelope, aperiodicity, FS, 10 / 3),
+        "synthesized_f0_rising": pyworld.synthesize(
+            np.linspace(100.0, 200.0, len(window_f0)), envelope, aperiodicity, FS, HOP_MS
+        ),
+    }
+
+
 def world_outputs(sound, window_times, window_f0):
     sound, window_times, window_f0 = (
         np.ascontiguousarray(values, dtype=float) for values in (sound, window_times, window_f0)
@@ -83,6 +120,8 @@ def main():
     }.items():
         for key, value in world_outputs(sound, window_times, window_f0).items():
             arrays[f"{name}_{key}"] = value
+    for key, value in synthesis_variants(*sentence_excerpt(1.45, 1.65)).items():
+        arrays[f"edges_{key}"] = value
     OUT.parent.mkdir(exist_ok=True)
     np.savez_compressed(OUT, **arrays)
     print(f"wrote {OUT.relative_to(ROOT)}, {OUT.stat().st_size / 1024:.0f} kB, pyworld {pyworld.__version__}")

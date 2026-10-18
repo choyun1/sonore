@@ -3,12 +3,13 @@ tools/make_world_fixtures.py (pyworld is not needed here), and the
 harmonic-residual aperiodicity against vowels whose noise share is known."""
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 
 import sonore as so
-from sonore.views.world import world_fft_size, world_randn
+from sonore.views.world import _GaussianNoise, world_fft_size, world_randn
 
 REFERENCE = Path(__file__).resolve().parents[1] / "data" / "world_reference.npz"
 FS = 16000
@@ -48,6 +49,13 @@ def test_world_randn_matches_the_step_by_step_generator():
     assert abs(long_stream.mean()) < 0.01 and abs(long_stream.std() - 1) < 0.01
 
 
+def test_fft_size_rounds_up_past_the_window():
+    # the "+ 1" in the docstring's formula: a window 1023.5 samples long
+    # needs 2048 points, not 1024
+    assert world_fft_size(16000, f0_floor=3 * 16000 / 1023.5) == 2048
+    assert world_fft_size(16000, f0_floor=3 * 16000 / 1022.5) == 1024
+
+
 def test_fft_size():
     assert world_fft_size(16000) == 1024
     assert world_fft_size(44100) == 2048
@@ -80,6 +88,71 @@ def test_synthesis_is_worlds(reference, name):
     expected = reference[f"{name}_synthesized"]
     assert y.n_samples == len(expected) and y.fs == FS
     assert np.max(np.abs(y.data[:, 0] - expected)) < 1e-9 * np.max(np.abs(expected))
+
+
+@pytest.mark.parametrize("variant", ["", "_ap_0_8", "_f0_16_3", "_f0_rising", "_hop_10_3"])
+def test_synthesis_is_worlds_across_voicing_edges(reference, variant):
+    # a stretch that goes from voiced to unvoiced and back, so that the
+    # unvoiced pulses and noise, the voicing edges and the last time window
+    # are held to WORLD as well; then with a noise share high enough at 0 Hz
+    # that the periodic part is dropped, an F0 just above the lowest WORLD
+    # voices (16 Hz at 16 kHz), a rising F0 (pulses in the last hop, where
+    # WORLD extends the track by a step), and a hop that is not a whole
+    # number of nanoseconds
+    sound, (times, f0) = case(reference, "edges")
+    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+    if variant == "_ap_0_8":
+        aperiodicity = so.Aperiodicity(np.full_like(aperiodicity.data, 0.8), times, FS, "constant")
+    if variant == "_f0_16_3":
+        f0 = np.full_like(f0, 16.3)
+    if variant == "_f0_rising":
+        f0 = np.linspace(100.0, 200.0, len(f0))
+    if variant == "_hop_10_3":
+        times = np.arange(len(times)) * (10 / 3) / 1000
+        envelope = so.SpectralEnvelope(envelope.data, times, FS, envelope.q1)
+        aperiodicity = so.Aperiodicity(aperiodicity.data, times, FS, aperiodicity.method)
+    y = so.world_synthesize((times, f0), envelope, aperiodicity)
+    expected = reference[f"edges_synthesized{variant}"]
+    assert y.n_samples == len(expected)
+    assert np.max(np.abs(y.data[:, 0] - expected)) < 1e-9 * np.max(np.abs(expected))
+
+
+def test_an_f0_track_object_and_a_one_channel_envelope_function(reference):
+    sound, (times, f0) = case(reference, "vowel")
+    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+    expected = so.world_synthesize((times, f0), envelope, aperiodicity)
+
+    track = SimpleNamespace(t=times, f0=f0[None, :])  # anything with .t and .f0 is a track
+    assert np.array_equal(so.world_synthesize(track, envelope, aperiodicity).data, expected.data)
+    # an envelope function giving one channel is used for every channel of
+    # the aperiodicity
+    stereo = so.Aperiodicity(np.repeat(aperiodicity.data, 2, axis=0), times, FS, "d4c")
+    y = so.world_synthesize((times, f0), lambda t, f: envelope(t, f)[:1], stereo)
+    assert y.n_channels == 2
+    assert np.allclose(y.data[:, 1], expected.data[:, 0], rtol=0, atol=1e-9 * np.abs(expected.data).max())
+
+
+def test_a_track_off_the_grid_is_voiced_where_its_nearest_window_is(reference):
+    sound, (times, f0) = case(reference, "vowel")
+    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+    # a track at half the windows' spacing, offset by a quarter: every grid
+    # time is a quarter of a hop from one given time and three quarters from
+    # the other, so the nearest is never the one below
+    half = np.arange(2 * len(times)) * 0.0025 + 0.00125 - 0.0025
+    coarse = np.where(np.arange(len(half)) % 4 < 2, 150.0, 0.0)
+    y = so.world_synthesize((half, coarse), envelope, aperiodicity)
+    nearest = coarse[np.round((times - half[0]) / 0.0025).astype(int)]
+    on_grid = np.where(nearest > 0, 150.0, 0.0)
+    assert np.array_equal(y.data, so.world_synthesize((times, on_grid), envelope, aperiodicity).data)
+    # halfway between a voiced and an unvoiced given time, the earlier one wins
+    tie = so.world_synthesize(([0.0, 0.01, 0.02], [150.0, 0.0, 0.0]), envelope, aperiodicity)
+    on_grid = np.zeros(len(times))
+    on_grid[:2] = 150.0
+    assert np.array_equal(tie.data, so.world_synthesize((times, on_grid), envelope, aperiodicity).data)
+
+
+def test_fresh_noise_is_standard_normal():
+    assert np.array_equal(_GaussianNoise(5).draw(1000), np.random.default_rng(5).standard_normal(1000))
 
 
 def test_fresh_noise_changes_only_the_noise(reference):
@@ -144,6 +217,28 @@ def test_bad_tracks_are_refused(reference):
         so.world_synthesize(late, so.cheaptrick(sound, late), so.d4c(sound, late))
     with pytest.raises(ValueError, match="whole-number"):
         so.cheaptrick(so.Sound(sound.data, 16000.5), (times, f0))
+    with pytest.raises(ValueError, match="0 \\(unvoiced\\) or positive"):
+        so.cheaptrick(sound, (times, -f0))
+    with pytest.raises(ValueError, match="channels"):
+        so.cheaptrick(sound, (times, np.vstack([f0, f0])))
+    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+    one = so.Aperiodicity(aperiodicity.data[:, :, :1], times[:1], FS, "d4c")
+    with pytest.raises(ValueError, match="at least two time windows"):
+        so.world_synthesize((times[:1], f0[:1]), lambda t, f: envelope(t, f), one)
+    # a 17 Hz voice beside an unvoiced stretch on a 200 ms hop puts pulses
+    # further apart than the FFT is long (WORLD itself writes past its buffer)
+    slow = np.arange(12) * 0.2
+    flat = so.SpectralEnvelope(np.ones((1, 513, 12)), slow, FS, -0.15)
+    with pytest.raises(ValueError, match="do not fit"):
+        so.world_synthesize(
+            (slow, np.array([0, 0, 0, 17, 17, 17, 17, 0, 0, 17, 17, 0.0])),
+            flat,
+            so.Aperiodicity(np.full((1, 513, 12), 0.1), slow, FS, "constant"),
+        )
+    with pytest.raises(TypeError, match="envelope"):
+        so.world_synthesize((times, f0), envelope.data, aperiodicity)
+    with pytest.raises(ValueError, match="gave shape"):
+        so.world_synthesize((times, f0), lambda t, f: envelope(t, f)[0], aperiodicity)
 
 
 # ------------------------------------------------- harmonic residual
