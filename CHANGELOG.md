@@ -211,6 +211,18 @@ version (0.x.y) only fixes bugs.
   and that lowering `f_lo` below 60 Hz is not reliable. From audit sitting
   12, with tests for every surviving deliberate break that changes the
   output.
+- `so.world_synthesize` with a hop that is not a whole number of
+  nanoseconds (10/3 ms, say) rounded it to one, which differed from WORLD
+  by up to 0.8% of the peak on the gallery sentence; it now keeps the hop as
+  given and snaps only a rounding error away from a whole number of
+  nanoseconds (so 5 ms is still exactly 5 ms). A very low F0 beside an
+  unvoiced stretch on a long hop, which put pulses further apart than the
+  FFT is long, now gives a clear `ValueError` instead of a NumPy broadcast
+  error (WORLD writes past its buffer there; `DIFFERENCES_FROM_WORLD` item
+  6). Unvoiced stretches, voicing edges, a noise share near 1 at 0 Hz, an F0
+  just above the lowest WORLD voices, the last hop and a non-decimal hop are
+  now held to WORLD's own output (`tools/make_world_fixtures.py`), where the
+  stored output was voiced throughout. From audit sitting 13.
 
 ## [0.7.0] - 2026-10-14
 
