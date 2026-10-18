@@ -1,261 +1,271 @@
-# The Voices group, rebuilt around the source-filter model
+# The Voices group as one arc: from what a voice is to a richer source-filter model
 
-Status: proposed, not built. Cho asked for this on 2026-10-18, while the WORLD ports were being
-renamed (PR #238), and asked to see the design before anything is implemented. The decisions at
-the end need Cho's answer first.
+Status: proposed, not built. Cho asked for this on 2026-10-18 and wants to see the design before
+anything is implemented. This is the second draft. The first proposed nine pages, and Cho replaced
+it with the arc below. The decisions at the end need Cho's answer.
 
-Cho's asks, in order:
+## The arc
 
-- Drop WORLD's synthesis. Matching WORLD sample for sample doesn't matter, because sonore doesn't
-  do WORLD's whole analysis and synthesis, so it shouldn't keep a separate WORLD-style synthesizer.
-  The voice is rebuilt by a recipe made from the analyses (an F0 track, a pitch-adaptive envelope
-  and an aperiodicity) and the synthesizers sonore already has.
-- Add a page that explains pitch-adaptive envelopes in prose and with the math, as STRAIGHT and
-  WORLD compute them.
-- Start the group with a page that explains the source-filter model.
-- Cover how voices differ: male and female talkers, and the other indicators of voice quality.
-- Move, condense or merge the examples this affects.
+Four pages, each one building on the last:
 
-The rules from the gallery rewrite (`gallery-rewrite.md`) still hold. Each repeated topic has one
-owner page and the other pages link to it, and the two talkers are paired rather than the female
-talker coming last. An example that moves keeps its key, so old links still land on it (the
-`moved` redirect in `docs/gallery/build.py`).
+1. **What is a voice.** A general introduction, light on examples. It covers what produces a voice
+   and the many ways voices differ, including the ones measured clinically.
+2. **The source-filter model.** One page that implements the model and takes it apart. It
+   synthesizes a voice by rule, measures each part back (the source's pitch, the filter as
+   resonances, the filter as a smooth envelope), rebuilds a voice simply from those parts, and
+   ends on where that falls short.
+3. **A richer source-filter model.** Each shortfall gets the fix that higher-quality voice
+   synthesis adds: an envelope measured to the pitch period (STRAIGHT, CheapTrick), a source that
+   is partly noise (aperiodicity), and a resynthesis that uses both.
+4. **Rebuilding and changing a voice.** The richer model at work: pitch, formants, range, and
+   moving toward another talker.
+
+Cho's reasons, from the thread: pitch tracking, finding formants, the spectral envelope and formant
+synthesis are all about implementing the source-filter model, so they belong on one page.
+Higher-quality synthesis is that same model with more put into it. How voices differ belongs with
+the introduction, as the list of what a model could capture.
+
+The rules from the gallery rewrite (`gallery-rewrite.md`) still hold. Each topic has one owner
+page, and the two talkers are paired rather than the female talker coming last. An example that
+moves keeps its key, so old links still land on it (the `moved` redirect in
+`docs/gallery/build.py`). Pages that go away become "Moved" stubs (`write_moved_stubs`).
 
 ## What is there now
 
-Seven pages, in this menu order: Two talkers, Formant synthesis, Finding formants, Pitch tracking,
-Spectral envelope, Source and aperiodicity, Rebuilding and changing a voice. Most pages explain
-the source and the filter in passing, each in its own words:
+Seven pages in the Voices group. Their gallery sources come to about 3,700 lines: Two talkers
+(326), Formant synthesis (712), Finding formants (430), Pitch tracking (448), Spectral envelope
+(590), Source and aperiodicity (565) and Rebuilding and changing a voice (972). Several pages
+explain the source and the filter in passing, each in its own words (fv1 to fv4, fs1, tk5, c3 to
+c5, ap1 to ap3, he1). WORLD's synthesis is used on two pages, ap10 and vc2 to vc19.
 
-- Formant synthesis builds a vowel "piece by piece" (fv1 to fv4) and draws source times filter
-  (fs1).
-- Two talkers ends with "Harmonics sample the envelope" (tk5).
-- Spectral envelope splits a recording into envelope and harmonics (c3 to c5).
-- Source and aperiodicity opens with buzz, hiss and both (ap1 to ap3).
-- Rebuilding and changing a voice opens by putting the envelope back on harmonics (he1 to he3),
-  then fills the unvoiced gaps (hu1, hu2, hm4).
+## 1. What is a voice (new; replaces Two talkers)
 
-Voice quality, the LF pulse at three values of Rd and breathy voice (fq1 to fq5, fn3), sits at the
-end of Formant synthesis. The ways the two talkers differ are spread across Two talkers (pitch,
-envelopes, long-term spectra), the female-voice findings in `views/female-voices.md`, and "Toward
-another talker" (vc14, vc15, vc19) at the end of the voice-change page.
+Mostly prose, with a few figures and sounds. It sets up the vocabulary the other three pages use.
 
-WORLD appears in two places. Source and aperiodicity has a section "What WORLD reports" and ends
-with a WORLD resynthesis (ap10). Rebuilding and changing a voice has a section "Resynthesis with
-WORLD" (vc2), and every change after it (vc3 to vc19) is synthesized by
-`so.source_filter_synthesize`.
+**What makes a voice.** Air from the lungs, the vocal folds as a source (a buzz at the fundamental
+frequency, or turbulence that hisses), and the vocal tract from larynx to lips as a filter that
+shapes it. This is a paragraph and one diagram. The model itself is page 2's.
 
-## Proposed pages
+**How voices differ**, each item stated as what it is in the source or the filter, and how it is
+measured:
 
-Nine pages, two of them new. The order runs from the idea, to synthesis by rule, to measuring each
-part, to rebuilding a voice:
+- **Pitch:** F0 level, range and variability, as mean, SD and range of an F0 track.
+- **Cycle-to-cycle irregularity:** jitter (period perturbation) and shimmer (amplitude
+  perturbation), as clinical voice reports give them.
+- **Noise in the voice:** breathiness and hoarseness, measured as the harmonics-to-noise ratio and
+  cepstral peak prominence (CPP, the height of the cepstrum's pitch peak above its trend).
+- **Phonation type:** pressed (strained), modal and breathy voice, read from the source spectrum's
+  tilt, H1–H2 and H1–A3. In the LF model this is Rd.
+- **Vocal effort:** louder voices have a flatter spectrum and higher F0, not only more level.
+- **Size:** vocal-tract length, which scales every formant. It is a large part of why the male and
+  female talkers differ, and of why children sound different again.
 
-| # | Page | New or changed |
-|---|---|---|
-| 1 | The source-filter model | new |
-| 2 | Formant synthesis | slimmer |
-| 3 | How voices differ (was Two talkers) | renamed and grown |
-| 4 | Pitch tracking | unchanged |
-| 5 | Finding formants | unchanged |
-| 6 | Spectral envelope | slimmer |
-| 7 | Pitch-adaptive envelopes | new |
-| 8 | Source and aperiodicity | WORLD section reworded, resynthesis by the recipe |
-| 9 | Rebuilding and changing a voice | condensed, resynthesis by the recipe |
+Each item is defined in a sentence or a formula. It's linked to the page that implements it, or
+marked as not in sonore (jitter and shimmer need period-by-period marks, which sonore doesn't
+compute). Clinical rating scales such as GRBAS and CAPE-V are named as how voices are judged by
+ear, with no listening claims made.
 
-### 1. The source-filter model (new)
+**Examples**, few on purpose:
 
-The page every other Voices page leans on. In prose and math:
+- the sentence read by both talkers (tk1)
+- their pitch tracks and average envelopes (tk2, tk3)
+- one vowel in three voices, pressed to breathy (fq3, moved from Formant synthesis)
+- a small table of the indicators sonore can already compute, measured on both talkers: F0 level
+  and range, H1–H2, CPP, the noise share from `so.band_aperiodicity` in a few bands, and a
+  formant-scaling ratio from `so.formant_track`
 
-- A voice is a source through a filter, `s = e * h`, or `S(f) = E(f) H(f)` in spectra. The source
-  is the larynx or a constriction, and the filter is the vocal tract from there to the lips.
-- A voiced source is a train of pulses one period `T0 = 1/F0` apart, so its spectrum has lines at
-  the harmonics `k F0`. The output's harmonics sample the filter: you hear `|H|` only at multiples
-  of F0.
-- A noise source has a continuous spectrum, so it shows the whole filter. Real voices mix the two,
-  and the share of noise at each frequency is the aperiodicity.
-- Changing the source changes the pitch and voice quality. Changing the filter changes the vowel
-  and the talker's size. Analysis tries to undo the product: an F0 track for the source's
-  spacing, an envelope for `|H|`, an aperiodicity for the mix.
+None of the table's numbers are measured yet. They are computed when the page is built, and the
+page says what each one leaves out. The long-term spectra (tk4) and "harmonics sample the
+envelope" (tk5) move to page 2.
 
-Examples moved in, with their keys kept: fv1 to fv4 (a vowel piece by piece), fs1 (source plus
-filter), tk5 (harmonics sample the envelope), and ap1 to ap3 (buzz, hiss, both). One new figure
-draws `|E|`, `|H|` and their product for a pulse train and for noise. The page ends with a map of
-the group: which page measures which part, and which page puts the parts back together.
+## 2. The source-filter model (merges four pages)
 
-### 2. Formant synthesis (slimmer)
+This merges Formant synthesis, Pitch tracking, Finding formants and Spectral envelope, about 2,180
+lines of gallery source, so it has to be cut down, not stacked. The rule for cutting: one or two
+examples per idea, both talkers where the talker matters, and no example that repeats another
+page's point.
 
-It keeps the Klatt vowel (fv5), six vowels, consonants from transitions, noise (fn1, fn2),
-cascade and parallel, and "sonore says its name". The opening "A vowel, piece by piece" and
-"Source times filter" move to page 1, so the page starts from `so.klatt_synthesize`. "Voice
-quality" (fq1 to fq5) and the breathy vowel (fn3) move to page 3.
+**a. Source times filter.** The model in prose and math: `s = e * h`, `S(f) = E(f) H(f)`.
+Harmonics at `k F0` sample `|H|`, and noise shows all of it. Keep fv1 to fv4 (a vowel built piece
+by piece), fs1 (source plus filter) and tk5 (harmonics sample the envelope).
 
-### 3. How voices differ (renamed from Two talkers, grown)
+**b. Synthesis by rule.** Keep fv5 (the same vowel from `so.klatt_synthesize`), fw1 and fw2 (six
+vowels and their chart), fc1 to fc3 (ba, da, ga), fn1 and fn2 (sa, ha), fq1 and fq2 (the LF pulse
+and its spectra at three Rd values), and fl1 (sonore says its name). Cut fw3 (the seven-step
+continuum), fp1 (cascade and parallel, a detail of Klatt's design, left to its docstring), fq4
+(the 1980 source against LF) and fq5 (relaxing into breathy voice; page 1's fq3 covers it).
 
-The page that answers "what makes these two voices different?", in the source-filter terms of
-page 1. It keeps the sentence read by both talkers, their pitch tracks, envelopes and long-term
-spectra (tk1 to tk4). It adds:
+**c. Measuring the source: pitch.** Keep c2 (the cepstrogram and its pitch), f1 (cepstral F0, a
+tracker, and Harvest's stored track), pt1 (octave and voicing errors), and hp0 with hp2 (the
+sentence, and a sawtooth on `so.f0_track`). Cut hp1 and hp3, the sawtooths on the other two tracks.
+pt1 already shows where they differ.
 
-- **Source:** F0 level and range for each talker. Voice quality, meaning the LF pulse at three Rd
-  values and relaxing into breathy voice (fq1 to fq5, fn3, moved from page 2).
-- **Indicators measured on both talkers**, each defined in the text: the harmonic levels H1–H2
-  and H1–A3 (spectral tilt), the noise share from `so.band_aperiodicity` in a few bands
-  (breathiness), and a vocal-tract length ratio from the formants (`so.formant_track`) as a
-  formant scaling factor. None of these numbers has been measured yet. They are computed when the
-  page is built, and the page says what each one leaves out.
-- **Toward another talker:** a short section that hears each talker at the other's pitch and
-  formants. It links to page 9, which owns the voice changes (vc14, vc15, vc19 stay there).
+**d. Measuring the filter as resonances: formants.** Keep ft1 (one vowel, four envelopes, the
+formants LPC finds), ft4 (formant tracks of both talkers) and ft5 with ft6 (copy synthesis of
+each talker, which closes the loop with section b). Cut ft2 (given against recovered formants) and
+ft3 (the estimate as the pitch rises). Section f carries the high-F0 problem instead.
 
-Two talkers is the data page the speech pages share ("measured once"), so its loading code stays
-first on the page.
+**e. Measuring the filter as a smooth curve: the envelope.** Keep c1 (one time window, its
+cepstrum and lifter), c3 to c5 (the voice split into envelope and harmonics) and m1 with m2 (MFCCs:
+one vowel at three pitches, the sentence as MFCCs). Cut m3 (two spectra, one set of MFCCs). Move
+the lifter-against-CheapTrick comparison in c1 to page 3, so c1 shows the lifter alone.
 
-### 4 and 5. Pitch tracking, Finding formants (unchanged)
+**f. Putting it back, simply, and where it falls short.** Keep he1 (harmonics shaped by the
+envelope), hu1 and hu2 (silence or shaped noise in the unvoiced gaps) and tk4 (both talkers'
+long-term spectra, as the check that the copy has the right overall spectrum). The page ends on
+three shortfalls, each pointing to page 3:
 
-They only get links back to page 1 and page 3.
+- the lifter's envelope ripples or loses peaks at high F0, as on the female talker
+- voicing is all or nothing, so a breathy vowel is either clean harmonics or plain noise
+- the phases are whatever we choose
 
-### 6. Spectral envelope (slimmer)
+## 3. A richer source-filter model (new; absorbs Source and aperiodicity)
 
-It keeps one time window, splitting the voice in two (c3 to c5), and MFCCs (m1 to m3), with the
-cepstral lifter as the plain way to read an envelope. The lifter-versus-CheapTrick comparison in
-"One time window" moves to page 7. The page ends where the lifter fails, at high F0, which leads
-into page 7.
+The page Cho first asked for ("higher quality voice synthesizer"), in prose and math, ordered by
+the shortfalls page 2 ends on.
 
-### 7. Pitch-adaptive envelopes (new)
+**a. An envelope measured to the pitch period.**
 
-Cho's "higher-quality voice" page, in prose and math. The argument:
-
-- **The problem.** A periodic signal under a fixed window leaves a ripple at F0 in the spectrum
-  (a short window) or in time (a long window). The envelope we want is `|H|`, but every measured
-  spectrum is `|H|` times the harmonic comb, smeared by the window.
-- **STRAIGHT** (Kawahara, Masuda-Katsuse & de Cheveigné, 1999): a window sized to the pitch
-  period, smoothing in frequency over F0 with a kernel that keeps the harmonic peaks' level, and a
-  complementary window that fills the dips in time. **TANDEM-STRAIGHT** (Kawahara et al., 2008):
-  two power spectra half a period apart, added, so the fluctuation over time cancels. Prose and
-  equations only, from the papers. sonore has no STRAIGHT code and the plan writes none (D4).
+- **The problem.** A periodic signal under a fixed window leaves a ripple at F0, either in
+  frequency (a short window) or in time (a long one).
+- **STRAIGHT** (Kawahara, Masuda-Katsuse & de Cheveigné, 1999): a window sized to the pitch period,
+  smoothing in frequency over F0 with a kernel that keeps the harmonic peaks' level, and a
+  complementary window that fills the dips in time.
+- **TANDEM-STRAIGHT** (Kawahara et al., 2008): two power spectra half a period apart, added, so the
+  fluctuation over time cancels.
 - **CheapTrick** (Morise, 2015), as `so.pitch_adaptive_envelope`: a Hann window three periods
-  long, whose power is nearly constant over time, so no second window is needed. Then a moving
-  average over `2 F0 / 3`, and liftering by `sinc(F0 q)` times the recovery lifter
-  `(1 - 2 q1) + 2 q1 cos(2 pi F0 q)`. Each step gets its formula and a figure, written from the
-  function's own docstring.
-- **Examples.** The lifter against CheapTrick on one time window, moved from page 6. A window
-  length sweep showing ripple trading between frequency and time. Both talkers' envelopes, where
-  the higher voice shows the difference most. The effect of `q1`. `TVGaborFrame.pitch_adaptive`
-  is linked as the same idea seen as a frame (an invertible analysis rather than an envelope).
+  long, whose power is nearly constant over time, then a moving average over `2 F0 / 3`, then
+  liftering by `sinc(F0 q)` times the recovery lifter `(1 - 2 q1) + 2 q1 cos(2 pi F0 q)`. Each step
+  gets its formula and a figure.
+- **Examples:** the lifter against CheapTrick on one time window (moved from c1), a window-length
+  sweep showing the ripple trade between frequency and time, both talkers' envelopes (the higher
+  voice shows the difference most), and the effect of `q1`.
 
-### 8. Source and aperiodicity (WORLD wording dropped, resynthesis by the recipe)
+STRAIGHT is prose and equations only. sonore has no STRAIGHT code and this plan writes none (D4).
 
-Buzz, hiss and both (ap1 to ap3) move to page 1, and this page links back to them. It keeps
-"Fit the harmonics, keep the rest" (ap4 to ap6). "What WORLD reports" becomes "What D4C reports"
-(ap7). The sentence (ap8) and the listening examples (ap9 to ap13) stay, but are synthesized by
-the recipe.
+**b. A source that is partly noise.** Keep ap1 to ap3 (buzz, hiss, both), ap4 to ap6 (fit the
+harmonics, keep the rest), ap7 (renamed "What D4C reports") and ap8 (the sentence's envelope and
+aperiodicities).
 
-### 9. Rebuilding and changing a voice (condensed)
+**c. Phase.** Keep hf0 to hf3 (cosine, Schroeder and random phase on a moving pitch), moved from
+the voice-change page, since the phases are one of the shortfalls.
 
-The page already builds most of the recipe step by step: harmonics shaped by the envelope (he1),
-shaped noise in the unvoiced gaps (hu2), and phases on a moving pitch (hf0 to hf3). It gains one
-step, the aperiodicity's split of each frequency between harmonics and noise, so that "Resynthesis
-with WORLD" becomes "Harmonics plus shaped noise". vc2 is then the recipe's resynthesis, and every
-change after it uses the recipe. The phase-vocoder contrast (vc7), pitch range, the aperiodicity
-kept and warped, toward another talker, and "Any pitch track, any envelope" stay. The noise-band
-examples he2 and he3 (channel-vocoder style) move to the Vocoder page, which owns that idea.
+**d. Putting it back.** The recipe that replaces WORLD's synthesis (below), built step by step on
+the page. Keep ap9 to ap13 (the sentence, the recipe with D4C and with the harmonic residual, no
+noise, nothing but noise). Their sound changes, because the recipe replaces WORLD's synthesis. One
+new example compares the page-2 resynthesis with this one on both talkers.
+
+## 4. Rebuilding and changing a voice (condensed)
+
+Keep vc1 (the sentence) and vc2, now the recipe's resynthesis, under "Resynthesis" (no longer
+"Resynthesis with WORLD"). Keep the pitch and formant changes (vc3 to vc6), the phase vocoder
+(vc7), pitch range (vc8 to vc10, hm3), the aperiodicity kept and warped (vc11, vc12), toward
+another talker (vc14, vc15, vc19), and any pitch track, any envelope (vc17, vc18), all synthesized
+by the recipe. hm4 (whispered) stays. he1, hu1, hu2 and hf0 to hf3 move to pages 2 and 3. he2 and
+he3 (noise bands, the channel-vocoder idea) move to the Vocoder page, which owns that idea.
 
 ## The recipe that replaces WORLD's synthesis
 
 For each time and frequency, with envelope `S`, noise share `a` (`Aperiodicity.share`) and F0:
 
-- **Harmonics:** `so.harmonic_complex(duration, fs, f0, amplitudes=...)`, with harmonic `n`'s
-  amplitude chosen so its power is `S (1 - a)` spread over one harmonic spacing. With a power
-  spectral density `P`, a harmonic every `F0` carries `a_n^2 / 2 = 2 F0 P / fs`. The derivation
-  goes in the page text.
-- **Noise:** white noise, its STFT multiplied by `sqrt(S a)` (by `sqrt(S)` where unvoiced), and
-  inverted with `to_sound()`.
+- **Harmonics:** `so.harmonic_complex(duration, fs, f0, amplitudes=...)`, with harmonic `n`'s power
+  equal to `S (1 - a)` over one harmonic spacing. A power spectral density `P` with a harmonic
+  every `F0` gives `a_n^2 / 2 = 2 F0 P / fs`.
+- **Noise:** white noise, its STFT magnitude multiplied by `sqrt(S a)` (by `sqrt(S)` where
+  unvoiced), inverted. The gallery already does this for the unvoiced gaps (hu2).
 - **Output:** the two added together.
 
-Everything in it already exists in sonore. What it loses against the port is the minimum-phase
-pulse shape, since the harmonics take whatever phases they're given, and sample-for-sample
-agreement with WORLD.
+What it loses against the port is the minimum-phase pulse shape and agreement with WORLD sample
+for sample. Cho has said the second doesn't matter.
 
-What we know about the quality, and what not:
+**Measured:** with the same envelope and no noise, `harmonic_complex` and the port come within
+0.11 dB of each other on the steady test vowels (`views/voice-change.md`, C8).
 
-- **Measured:** on the steady test vowels, with the same envelope, `harmonic_complex` and the port
-  come within 0.11 dB of each other in level-free harmonic error (`views/voice-change.md`, C8).
-- **Not measured:** that comparison had no noise in the resynthesis. The noise half, its level
-  calibration, and the score on the two recordings come before any page is rebuilt. A checker,
-  `tools/check_voice_recipe_claims.py`, will report the recipe against the port on the synthetic
-  vowels (harmonic error, recovered noise share against the truth) and on the recordings
-  (level-free log mel distance, as in C11).
+**Not measured:** the noise half, its level calibration, and the score on the recordings. A
+checker, `tools/check_voice_recipe_claims.py`, reports these before any page is rebuilt: the
+recovered noise share against the truth on the synthetic vowels, and the level-free log mel
+distance on both recordings, as in C11. If the noise half measures badly, the plan comes back to
+Cho.
+
+## Writing CheapTrick and D4C from the papers (open)
+
+Cho asked on 2026-10-18 whether BSD-3 can be avoided. It can. Copyright covers WORLD's code, not
+the methods, and the current ports are under BSD-3 only because they were written from WORLD's
+C++. Rewriting them from the CheapTrick (2015) and D4C (2016) papers alone, without reading
+WORLD's source, makes them sonore's own, as the texture code is. `LICENSE-WORLD` and the file
+headers then go. The cost is exactness. Choices that are only in WORLD's code (q1 = −0.15 where the
+paper gives −0.09, WORLD's noise generator, MATLAB-style rounding, the FFT sizes) would follow the
+paper instead, and the distance to pyworld, kept as a development-time comparison, would be
+measured and reported. Before any code, each paper is checked against what the port does, and
+anything the papers leave out is listed for Cho (D8).
 
 ## What leaves the library
 
-`so.source_filter_synthesize` and its tests go. So do the synthesized arrays in
-`tests/data/world_reference.npz` and the synthesis parts of `tools/crosscheck_world_vocoder.py`
-and `tools/check_world_claims.py`. The two DIFFERENCES_FROM_WORLD items about synthesis (the `rng`
-option and the refusal of far-apart pulses) also go. The design notes `views/world.md` and
-`views/voice-change.md` get a dated note, as the rename did.
+`so.source_filter_synthesize` and its tests go, along with the synthesized arrays in
+`tests/data/world_reference.npz`, the synthesis parts of `tools/crosscheck_world_vocoder.py` and
+`tools/check_world_claims.py`, and the two DIFFERENCES_FROM_WORLD items about synthesis. The
+`back_to_sound` lines of the envelope, aperiodicity, F0, LPC, cepstrum and MFCC views point to
+`so.harmonic_complex` and page 3's recipe instead. `views/world.md` and `views/voice-change.md` get
+a dated note.
 
-The rest of `views/world.py` stays where it is. It becomes the home of the pieces the two
-analysis ports share: WORLD's noise generator (`world_randn`, which D4C uses), its FFT sizes
-(`world_fft_size`, `_periods_fft_size`), MATLAB's rounding, the reading of an F0 track onto time
-windows, and DIFFERENCES_FROM_WORLD. Its module docstring changes to say that. Nothing that
-imports from it has to move (D5).
-
-The analysis ports, `so.pitch_adaptive_envelope` and `so.band_aperiodicity`, still match WORLD to
-floating-point precision, tested against stored pyworld output. The plan keeps that (D6). The
-reason to drop the synthesis was that its exactness bought nothing. The analyses' exactness is
-what lets sonore's envelope and aperiodicity be compared with any paper that uses WORLD's, and it
-is already built and tested.
-
-The rest of the library outside `views/world.py` changes only in docstrings. The `back_to_sound`
-lines of the envelope, aperiodicity, F0, LPC, cepstrum and MFCC views now point to
-`so.source_filter_synthesize`. They will point to `so.harmonic_complex` and the recipe's gallery
-section instead.
+The rest of `views/world.py` stays as the home of the helpers the analysis ports share: WORLD's
+noise generator, its FFT sizes, MATLAB rounding, the reading of an F0 track onto time windows, and
+DIFFERENCES_FROM_WORLD (D5). If the analyses are rewritten from the papers (D8), what they still
+need moves next to them, and `views/world.py` goes.
 
 ## Order
 
-1. PR #238 (renames and WORLD's license) merges as it is. It stands on its own.
-2. The recipe and its checker, `tools/check_voice_recipe_claims.py`, with the numbers added to
-   this note. If the noise half measures badly, the plan comes back to Cho before step 3.
-3. Remove `so.source_filter_synthesize`, and move pages 8 and 9 to the recipe (one PR).
-4. Pages 1 and 7, the new pages, with the examples that move into them (one PR each).
-5. Page 3, then the slimmer pages 2 and 6 and the moves to the Vocoder page.
-6. README rows, the Voices descriptions in `TOPICS`, CHANGELOG (removing the synthesizer is a
+1. PR #238 (renames and WORLD's license) merges as it is.
+2. The recipe and its checker, with the numbers added here.
+3. Remove `so.source_filter_synthesize`, and move the pages that used it to the recipe.
+4. Page 2 (the merge). It is the largest step and one PR.
+5. Page 3, then page 1, then page 4's trim and the move to the Vocoder page.
+6. README rows, the Voices entries in `TOPICS`, the CHANGELOG (removing the synthesizer is a
    breaking change for 0.8.0), and `docs/roadmap-done.md`.
+7. If D8 is accepted, the rewrite from the papers, which can run alongside steps 4 and 5.
 
-The audit's sitting on CheapTrick and D4C rebases after step 1. It isn't affected by step 3, since
-the helpers it uses stay in `views/world.py`. Its sitting on WORLD's synthesis is no longer needed.
+The audit's sitting on CheapTrick and D4C rebases after step 1. Its sitting on WORLD's synthesis
+is no longer needed. If D8 is accepted, the CheapTrick and D4C sitting would audit the rewrite
+instead of the port.
 
 ## Decisions
 
-- **D1. Page order and names** as in "Proposed pages". (Recommended.) The alternative is to keep
-  "Two talkers" as the name of page 3 and add a separate voice-quality page. That is one more page,
-  and it splits "how voices differ" in two.
-- **D2. The recipe lives in the gallery, not in a library function.** (Recommended.) It is a few
-  lines on page 9, built from `harmonic_complex` and an STFT mask, and the page shows each step.
-  The alternative is a new `aperiodicity=` option on `harmonic_complex` that adds the shaped noise
-  itself. Choose it if the recipe turns out to be needed outside the gallery.
-- **D3. "How voices differ" measures indicators** (H1–H2, H1–A3, noise share, vocal-tract length
-  ratio) on both talkers. (Recommended.) The alternative is to describe them in prose only and
-  leave the measuring out.
-- **D4. STRAIGHT in prose and math only, no code.** (Recommended.) A sketch of its smoothing could
-  be written from the paper's equations as gallery code, like the clean-room texture code. It
-  would be sonore's own and would need a checker.
-- **D5. `views/world.py` keeps the shared WORLD helpers**, minus the synthesis. (Recommended,
-  because nothing that imports them moves.) The alternative is to move them into
-  `views/spectral_envelope.py` and delete `views/world.py`.
-- **D6. The analysis ports stay exact**, tested against stored pyworld output. (Recommended.) The
-  alternative is to let them drift from WORLD when sonore finds something better, under the rule
-  that a measure changed from WORLD gets its own name.
-- **D7. Noise-band examples he2 and he3 move to the Vocoder page.** (Recommended.) The
-  alternative is to keep them on page 9 as one more way to put the envelope back.
+- **D1. Four pages in the order of "The arc".** (Recommended.)
+- **D2. The recipe lives in the gallery, not in a library function.** (Recommended.) The
+  alternative is an `aperiodicity=` option on `harmonic_complex`, if the recipe is needed outside
+  the gallery.
+- **D3. Page 1 measures only what sonore already computes**, in one small table: F0, H1–H2, CPP,
+  noise share, formant scaling. Jitter, shimmer and HNR are defined but not computed.
+  (Recommended.) The alternative is adding period marking for jitter and shimmer, which is new
+  library work.
+- **D4. STRAIGHT in prose and math only, no code.** (Recommended.)
+- **D5. `views/world.py` keeps the shared helpers while the analyses are ports.** (Recommended.)
+- **D6. Exactness of the analyses follows D8.** They stay exact if they stay ports. If rewritten,
+  they report their distance to WORLD.
+- **D7. The noise-band examples he2 and he3 move to the Vocoder page.** (Recommended.)
+- **D8. Rewrite CheapTrick and D4C from the papers**, retiring `LICENSE-WORLD`. (Recommended.)
+  The alternative is to keep the exact ports and the BSD-3 notice.
+- **D9. The cuts on page 2** as listed in its sections: fw3, fp1, fq4, fq5, hp1, hp3, ft2, ft3
+  and m3. (Recommended.) Any of them can be kept instead.
 
 ## References
 
+- Hillenbrand, Cleveland & Erickson (1994). Acoustic correlates of breathy vocal quality.
+  *Journal of Speech and Hearing Research* 37, 769–778. (CPP.)
 - Kawahara, Masuda-Katsuse & de Cheveigné (1999). Restructuring speech representations using a
   pitch-adaptive time-frequency smoothing and an instantaneous-frequency-based F0 extraction.
   *Speech Communication* 27, 187–207.
 - Kawahara, Morise, Takahashi, Nisimura, Irino & Banno (2008). TANDEM-STRAIGHT: a temporally
   stable power spectral representation for periodic signals and applications to
   interference-free spectrum, F0, and aperiodicity estimation. *Proc. ICASSP*, 3933–3936.
+- Kempster, Gerratt, Verdolini Abbott, Barkmeier-Kraemer & Hillman (2009). Consensus Auditory-
+  Perceptual Evaluation of Voice: development of a standardized clinical protocol. *American
+  Journal of Speech-Language Pathology* 18, 124–132. (CAPE-V.)
+- Hirano (1981). *Clinical Examination of Voice*. Springer. (GRBAS.)
 - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
   *Speech Communication* 67, 1–7.
 - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
   Communication* 84, 57–65.
+
+The citations for page 1's clinical measures are checked against the publications when that page
+is written.
