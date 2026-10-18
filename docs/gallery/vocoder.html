@@ -530,9 +530,9 @@ for label, track in tracks.items():
     for name, f0 in pitch[label].items():
         gains = &quot;, &quot;.join(f&quot;{lowpass_gain_db(f0, cutoff):6.1f} dB at {cutoff} Hz&quot; for cutoff in (50, 300))
         print(f&quot;{label}, {name:&gt;15}: {f0:3.0f} Hz, lowpass gain {gains}&quot;)</code></pre></details><pre class="out">Male talker,          median: 119 Hz, lowpass gain  -60.5 dB at 50 Hz,   -0.0 dB at 300 Hz
-Male talker, 95th percentile: 142 Hz, lowpass gain  -72.8 dB at 50 Hz,   -0.0 dB at 300 Hz
+Male talker, 95th percentile: 144 Hz, lowpass gain  -73.6 dB at 50 Hz,   -0.0 dB at 300 Hz
 Female talker,          median: 183 Hz, lowpass gain  -90.0 dB at 50 Hz,   -0.2 dB at 300 Hz
-Female talker, 95th percentile: 211 Hz, lowpass gain  -99.9 dB at 50 Hz,   -0.5 dB at 300 Hz</pre></div>
+Female talker, 95th percentile: 210 Hz, lowpass gain  -99.6 dB at 50 Hz,   -0.5 dB at 300 Hz</pre></div>
 <p>With 50 Hz envelopes, the pulses of both voices are cut by at least
 60 dB at the
 median pitch, so the noise-vocoded sentences above carry no voice pitch. With 300 Hz envelopes,

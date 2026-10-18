@@ -336,8 +336,8 @@ for label, f0 in voiced_f0.items():
     span = 12 * np.log2(high / low)
     print(f&quot;{label}: median {middle:.0f} Hz, middle 90% {low:.0f} to {high:.0f} Hz ({span:.1f} semitones)&quot;)
 ratio = np.median(voiced_f0[&quot;Female talker&quot;]) / np.median(voiced_f0[&quot;Male talker&quot;])
-print(f&quot;female / male median: {ratio:.2f}, {12 * np.log2(ratio):.1f} semitones&quot;)</code></pre></details><pre class="out">Male talker: median 119 Hz, middle 90% 95 to 142 Hz (7.0 semitones)
-Female talker: median 183 Hz, middle 90% 164 to 211 Hz (4.3 semitones)
+print(f&quot;female / male median: {ratio:.2f}, {12 * np.log2(ratio):.1f} semitones&quot;)</code></pre></details><pre class="out">Male talker: median 119 Hz, middle 90% 95 to 144 Hz (7.2 semitones)
+Female talker: median 183 Hz, middle 90% 164 to 210 Hz (4.3 semitones)
 female / male median: 1.53, 7.4 semitones</pre></div>
 <p>The female talker's voice is about half as high again as the male talker's: a ratio of
 1.53, a little more than a fifth (seven semitones, 1.50), and well short of an
@@ -404,8 +404,8 @@ for tilt in (False, True):
     errors = [misfit(r, tilt) for r in ratios]
     best = ratios[np.argmin(errors)]
     print(f&quot;{&#x27;level and tilt free&#x27; if tilt else &#x27;level free&#x27;:20}: r = {best:.3f}, {min(errors):.2f} dB RMS&quot;)
-warp = ratios[np.argmin([misfit(r, True) for r in ratios])]</code></pre></details><pre class="out">level free          : r = 1.595, 4.52 dB RMS
-level and tilt free : r = 1.220, 2.99 dB RMS</pre></div>
+warp = ratios[np.argmin([misfit(r, True) for r in ratios])]</code></pre></details><pre class="out">level free          : r = 1.595, 4.48 dB RMS
+level and tilt free : r = 1.215, 2.96 dB RMS</pre></div>
 <p>With only the level free, the best ratio is large, because the female talker's average
 envelope is also tilted differently, and moving formants is the only thing the fit can do
 about it. With the tilt free too, the ratio falls to 1.22. Changing a voice

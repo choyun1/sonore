@@ -379,7 +379,7 @@ window_times = np.arange(0, DUR, 0.005)
 exact = {label: (window_times, np.full(len(window_times), f0)) for label, f0 in medians.items()}  # every 5 ms
 inside = (window_times &gt; 0.1) &amp; (window_times &lt; 0.9)  # time windows away from the ends
 pitch_names = {label: f&quot;the {label.lower()}&#x27;s pitch, {f0:.0f} Hz&quot; for label, f0 in medians.items()}</code></pre></details><pre class="out">Male talker: median F0 119.4 Hz
-Female talker: median F0 182.6 Hz</pre></div>
+Female talker: median F0 182.7 Hz</pre></div>
 </section>
 <section aria-labelledby="h-buzz-hiss-and-both">
 <h2 id="h-buzz-hiss-and-both">Buzz, hiss, and both</h2>
@@ -539,7 +539,7 @@ for label, f0 in medians.items():
     print(f&quot;  measured minus truth, 300 to 7000 Hz: {low:+.1f} to {high:+.1f} dB&quot;)</code></pre></details><pre class="out">the male talker&#x27;s pitch, 119 Hz: 60 harmonics below 7.2 kHz, window 33.5 ms
   measured minus truth, 300 to 7000 Hz: -3.1 to +1.0 dB
 the female talker&#x27;s pitch, 183 Hz: 39 harmonics below 7.2 kHz, window 21.9 ms
-  measured minus truth, 300 to 7000 Hz: -1.9 to +3.3 dB</pre></div>
+  measured minus truth, 300 to 7000 Hz: -2.0 to +3.4 dB</pre></div>
 
 <article class="still" id="d-ap6">
   <div class="about">
@@ -647,8 +647,8 @@ male talker&#x27;s pitch, 119 Hz
   D4C, F0 1% high                       -47.4      -40.9      -14.8       -5.6
 female talker&#x27;s pitch, 183 Hz
   truth                                 -12.7      -10.3       -4.6       -2.8
-  harmonic residual, exact F0           -11.2       -7.8       -4.8       -3.0
-  harmonic residual, F0 1% high         -10.8       -7.2       -3.9       -1.7
+  harmonic residual, exact F0           -11.2       -7.8       -4.8       -2.9
+  harmonic residual, F0 1% high         -10.8       -7.3       -3.9       -1.7
   D4C, exact F0                         -45.3      -39.3      -10.7       -5.6
   D4C, F0 1% high                       -45.3      -39.3      -10.7       -5.6</pre></div>
 <p>With the wrong pitch, the harmonic residual's upper bands move toward 0 dB (all noise), as the
