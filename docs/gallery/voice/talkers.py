@@ -25,16 +25,16 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [The sentence, read twice](#h-the-sentence-read-twice): both recordings and their pitch.
 # - [Pitch](#h-pitch): how high each voice is and how far it moves.
 # - [Spectral envelopes](#h-spectral-envelopes): the formants, on average, and how far apart.
-# - [Long-term spectra](#h-long-term-spectra): where each sentence puts its power.
-# - [Harmonics sample the envelope](#h-harmonics-sample-the-envelope): what a higher pitch does
-#   to every analysis on the other pages.
+#
+# What a higher pitch does to every analysis of the voice is on [Harmonics sample the
+# envelope](sourcefilter.html#h-harmonics-sample-the-envelope).
 
 # %% [markdown]
 # ## The sentence, read twice
 #
 # The code every speech page starts from: the two recordings, each with the pitch track that
-# `so.f0_track` measures (see [Pitch tracking](pitch.html)), and a figure with one column per
-# talker.
+# `so.f0_track` measures (see [Measuring the source:
+# pitch](sourcefilter.html#h-measuring-the-source-pitch)), and a figure with one column per talker.
 
 # %% [setup]
 import os
@@ -150,7 +150,7 @@ right.set_xticks([])
 # ## Spectral envelopes
 #
 # The formants are the peaks of the spectral envelope, the shape the vocal tract gives the
-# harmonics. CheapTrick (Morise, 2015), which [Spectral envelope](cepstrum.html) explains,
+# harmonics. CheapTrick (Morise, 2015), which [One time window](sourcefilter.html#h-one-time-window) explains,
 # estimates it every 5 ms; averaging it in dB over each talker's voiced time windows gives one
 # curve per talker. Shorter vocal tracts have higher formants, so a simple model of the
 # difference reads the male envelope at $f/r$: every formant moved up by the same ratio $r$.
@@ -216,111 +216,11 @@ ax.set_title("CheapTrick envelope, mean over voiced time windows")
 ax.legend(loc="upper right", fontsize=8)
 
 # %% [markdown]
-# ## Long-term spectra
-#
-# Averaged over the whole sentence, silences included, the spectrum shows where each reading puts
-# its power (`so.long_term_spectrum`, as for the speech-shaped noise on [Tones and
-# noises](classic.html#h-speech-shaped-noise)). Averaged over many talkers, Byrne et al. (1994)
-# found male and female long-term spectra nearly the same from 250 Hz to 5 kHz, with the male ones
-# higher at 160 Hz and below, where their fundamentals lie. One sentence from each of two talkers
-# can differ by more. The cell prints how each sentence's power divides among octave bands.
-
-# %%
-spectra = {label: so.long_term_spectrum([snd]) for label, snd in talkers.items()}
-octave_edges = [63, 125, 250, 500, 1000, 2000, 4000, 8000]
-print("octave from [Hz]        " + "".join(f"{low:>6}" for low in octave_edges[:-1]))
-for label, spectrum in spectra.items():
-    power = 10 ** (spectrum.level / 10)
-    shares = [
-        10 * np.log10(power[(spectrum.f >= low) & (spectrum.f < high)].sum() / power.sum())
-        for low, high in zip(octave_edges[:-1], octave_edges[1:], strict=True)
-    ]
-    print(f"{label + ', share [dB]':24}" + "".join(f"{share:6.1f}" for share in shares))
-
-# %% [about]
-# The two long-term spectra, smoothed to a third of an octave. Below 125 Hz the female talker's
-# sentence has almost nothing, since the female talker's pitch never goes that low, and the octave
-# from 125 to 250 Hz, where it lies, holds most of the power. In this pair the female spectrum is
-# also lower from 2 to 4 kHz and higher from 4 to 8 kHz.
-
-# %% [figure tk4] Long-term spectra of the two talkers
-fig, ax = plt.subplots(figsize=(10, 3.4), layout="constrained")
-for color, (label, spectrum) in zip(("C0", "C3"), spectra.items(), strict=True):
-    spectrum.smooth(1 / 3).plot(ax, label=label, color=color)
-ax.set_xlim(50, 8000)
-ax.legend()
-ax.grid(ls=":", which="both")
-
-# %% [markdown]
-# ## Harmonics sample the envelope
-#
-# A voiced sound has energy only at the harmonics, multiples of $F_0$. The envelope, and with it
-# the formants, is seen only where a harmonic falls: the harmonics *sample* it, once every $F_0$
-# hertz. To see that alone, the cell makes one vowel twice with `so.klatt_synthesize` (see
-# [Formant synthesis](formants.html)), with the same formants, those of a male "hod", at each
-# talker's median pitch.
-
-# %%
-FS = 16000
-HOD = {"F1": 730, "F2": 1090, "F3": 2440, "F4": 3500, "F5": 4500}  # Peterson and Barney's male "hod"
-medians = {label: float(np.median(f0)) for label, f0 in voiced_f0.items()}
-vowels = {label: so.klatt_synthesize(0.6, FS, F0=f0, **HOD) for label, f0 in medians.items()}
-for label, f0 in medians.items():
-    print(f"{label}: F0 {f0:.0f} Hz, {int(1000 // f0)} harmonics below 1 kHz")
-
-# %% [about]
-# The vowel at each pitch: the same formants, and so the same vowel, sampled by harmonics at
-# different spacings. Left, the spectrum of the middle 400 ms, with the five formants dashed.
-# The female talker's pitch puts fewer harmonics under each formant peak, so the peaks are drawn
-# by fewer points, and a harmonic can miss a peak by up to half the spacing.
-
-# %% [demo tk5] One vowel at the two pitches
-sounds = {label: finish(v) for label, v in vowels.items()}
-fig = plt.figure(figsize=(10, 4.4), layout="constrained")
-columns = fig.subfigures(1, 2)
-playhead = {}
-for column, (label, snd) in zip(columns, sounds.items(), strict=True):
-    top, bottom = column.subplots(2, 1, height_ratios=[0.4, 1])
-    snd.plot(top, color="k", lw=0.4)
-    top.set(
-        title=f"{label}'s pitch, {medians[label]:.0f} Hz",
-        xlabel="Time (s)",
-        ylabel="",
-        xlim=(0, snd.duration),
-    )
-    middle = snd.data[int(0.1 * FS) : int(0.5 * FS), 0] * np.hanning(int(0.4 * FS))
-    spectrum = 20 * np.log10(np.abs(np.fft.rfft(middle, 8 * len(middle))) + 1e-9)
-    bottom.plot(np.fft.rfftfreq(8 * len(middle), 1 / FS), spectrum - spectrum.max(), color="k", lw=0.6)
-    for f in HOD.values():
-        bottom.axvline(f, color="C3", ls="--", lw=0.8)
-    bottom.set(xlim=(0, 4000), ylim=(-70, 3), xlabel="Frequency (Hz)", ylabel="dB re maximum")
-    bottom.set_title("Spectrum, middle 400 ms")
-    playhead[label] = [top]
-
-# %% [markdown]
-# The same sampling sets limits on every page that follows, a little tighter for the female
-# talker:
-#
-# - [Seeing speech](speech.html#d-27): harmonics farther apart are easier to resolve, and a narrowband
-#   spectrogram can use a shorter window.
-# - [Pitch tracking](pitch.html): a window of fixed length holds more periods of the higher
-#   voice, but the cepstrum's second peak, at two periods, then falls inside the range searched
-#   for the pitch, and can be taken for it.
-# - [Spectral envelope](cepstrum.html): the envelope has to be read between fewer samples, so a
-#   cepstral lifter has to cut lower and CheapTrick's error grows.
-# - [Source and aperiodicity](aperiodicity.html): fewer harmonics are left to measure the noise
-#   between.
-# - [Formant synthesis](formants.html#h-six-vowels): the female vowels, made with female formants.
-
-# %% [markdown]
 # ## References
 #
-# - Byrne et al. (1994). An international comparison of long-term average speech spectra. *JASA*
-#   96(4), 2108–2120. [doi:10.1121/1.410152](https://doi.org/10.1121/1.410152).
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
-#   *Speech Communication* 67. [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-# - Peterson & Barney (1952). Control methods used in a study of the vowels. *JASA* 24(2), 175–184.
-#   [doi:10.1121/1.1906875](https://doi.org/10.1121/1.1906875).
+#   *Speech Communication* 67.
+#   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).

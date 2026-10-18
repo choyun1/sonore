@@ -379,14 +379,14 @@ fig, playhead = show(sound, onset_tones, starts, onset_labels)
 # %% [markdown]
 # ## Vowels are timbres
 #
-# Two vowels sung on the same pitch and at the same level differ in their spectral envelopes:
-# the formants, the resonances of the vocal tract, sit at different frequencies. In that sense
-# different vowels are different timbres of one voice, and much of what the speech pages show
-# applies here. Three vowels from `so.klatt_synthesize`, with Peterson and Barney's (1952)
-# female formants for "heed", "hod" and "who'd", sung on E♭4 like the tones above, with the
-# same envelope and RMS. [Formant synthesis](formants.html#d-fw1) builds vowels from a source and a
-# few resonances, and [Spectral envelope](cepstrum.html) separates a voice's pitch from its
-# spectral envelope, the part that carries the vowel.
+# Two vowels sung on the same pitch and at the same level differ in their spectral envelopes: the
+# formants, the resonances of the vocal tract, sit at different frequencies. In that sense different
+# vowels are different timbres of one voice, and much of what the speech pages show applies here.
+# Three vowels from `so.klatt_synthesize`, with Peterson and Barney's (1952) female formants for
+# "heed", "hod" and "who'd", sung on E♭4 like the tones above, with the same envelope and RMS. [The
+# source-filter model](sourcefilter.html) builds [vowels](sourcefilter.html#d-fw1) from a source and
+# a few resonances, and [separates](sourcefilter.html#h-measuring-the-filter-the-envelope) a voice's
+# pitch from its spectral envelope, the part that carries the vowel.
 
 # %%
 VOWELS = {"heed": (310, 2790, 3310), "hod": (850, 1220, 2810), "who'd": (370, 950, 2670)}
@@ -425,8 +425,8 @@ fig, playhead = show(sound, vowel_tones, starts, list(VOWELS))
 # - Peeters, Giordano, Susini, Misdariis & McAdams (2011). The Timbre Toolbox: extracting audio
 #   descriptors from musical signals. *J. Acoust. Soc. Am.* 130(5), 2902–2916.
 #   [doi:10.1121/1.3642604](https://doi.org/10.1121/1.3642604).
-# - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc.
-#   Am.* 24(2), 175–184.
+# - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
+#   24(2), 175–184.
 #   [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 # - Siedenburg (2019). Specifying the perceptual relevance of onset transients for musical
 #   instrument identification. *J. Acoust. Soc. Am.* 145(2), 1078–1087.

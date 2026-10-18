@@ -143,12 +143,12 @@ def show_pair(sounds, targets=None, f_lo=125):
 
 # %% [about]
 # The sentence, read by each talker. Its modulation spectrum is brightest at low rates and
-# densities, as for most natural sounds (Singh & Theunissen, 2003); how that modulation changes
-# over the sentence is on [Modulation spectrogram](modspectrogram.html#d-s1). The
-# [speech-shaped noise](classic.html#d-k1) on Tones and noises has the long-term spectrum of speech
-# but none of this: its modulation spectrum is a single line at zero rate. In the cochleagrams
-# the lowest harmonics show as separate lines, farther apart for the female talker
-# ([Two talkers](talkers.html#h-harmonics-sample-the-envelope)); at the slow rates shown here the
+# densities, as for most natural sounds (Singh & Theunissen, 2003); how that modulation changes over
+# the sentence is on [Modulation spectrogram](modspectrogram.html#d-s1). The [speech-shaped
+# noise](classic.html#d-k1) on Tones and noises has the long-term spectrum of speech but none of
+# this: its modulation spectrum is a single line at zero rate. In the cochleagrams the lowest
+# harmonics show as separate lines, farther apart for the female talker ([Harmonics sample the
+# envelope](sourcefilter.html#h-harmonics-sample-the-envelope)); at the slow rates shown here the
 # two modulation spectra are much alike.
 
 # %% [demo mt1] A sentence
@@ -562,25 +562,24 @@ fig, playhead = show(sound, f_lo=125)
 # %% [markdown]
 # ## References
 #
-# - Elliott & Theunissen (2009). The modulation transfer function for speech intelligibility.
-#   *PLoS Comput. Biol.* 5(3), e1000302.
+# - Elliott & Theunissen (2009). The modulation transfer function for speech intelligibility. *PLoS
+#   Comput. Biol.* 5(3), e1000302.
 #   [doi:10.1371/journal.pcbi.1000302](https://doi.org/10.1371/journal.pcbi.1000302).
 #   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L281)
-# - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE
-#   Trans. Acoust. Speech Signal Process.* 32(2), 236–243.
+# - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE Trans.
+#   Acoust. Speech Signal Process.* 32(2), 236–243.
 #   [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317).
 #   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L422)
-# - Hsu, Woolley, Fremouw & Theunissen (2004). Modulation power and phase spectrum of natural
-#   sounds enhance neural encoding performed by single auditory neurons. *J. Neurosci.* 24(41),
-#   9201–9211.
+# - Hsu, Woolley, Fremouw & Theunissen (2004). Modulation power and phase spectrum of natural sounds
+#   enhance neural encoding performed by single auditory neurons. *J. Neurosci.* 24(41), 9201–9211.
 #   [doi:10.1523/JNEUROSCI.2449-04.2004](https://doi.org/10.1523/JNEUROSCI.2449-04.2004).
 #   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L422)
 # - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).
 #   [`texture`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py)
-# - McDermott, Wrobleski & Oxenham (2011). Recovering sound sources from embedded repetition.
-#   *PNAS* 108(3), 1188–1193. [doi:10.1073/pnas.1004765108](https://doi.org/10.1073/pnas.1004765108).
+# - McDermott, Wrobleski & Oxenham (2011). Recovering sound sources from embedded repetition. *PNAS*
+#   108(3), 1188–1193. [doi:10.1073/pnas.1004765108](https://doi.org/10.1073/pnas.1004765108).
 #   [`gaussian_spectrogram.gaussian_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/gaussian_spectrogram.py#L44)
 # - Singh & Theunissen (2003). Modulation spectra of natural sounds and ethological theories of
 #   auditory processing. *J. Acoust. Soc. Am.* 114(6), 3394–3411.

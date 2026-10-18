@@ -39,20 +39,22 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # smears, the measurement inherits. A few examples, all in this sentence:
 #
 # - **Pitch.** An F0 estimator finds the spacing of the harmonics or the interval between glottal
-#   pulses, so it needs one or the other resolved. Its errors grow with harmonic number: if $F_0$
-#   is off by 2%, the $k$-th harmonic is off by $2k$% of $F_0$, so the 20th harmonic is off by 40%
-#   of the gap to its neighbor, whatever the pitch. A vocoder that splits the voice into harmonics
-#   and noise on that grid counts the misplaced harmonic energy as noise
-#   ([Source and aperiodicity](aperiodicity.html)). An *octave error* is an estimate half or twice
-#   the true $F_0$, as when a tracker takes two periods for one or the second harmonic for the
-#   first; [Pitch tracking](pitch.html) compares trackers and the errors they make.
-# - **Spectral envelope.** The formants are the envelope of the harmonics, and a vocoder needs
-#   that envelope without the excitation in it. A long window leaves a ripple at the harmonics; a
-#   short one flickers as pulses enter and leave it. Both come from the vocal folds, not the vocal
-#   tract, yet a synthesizer would reproduce them as if they were part of the voice's timbre. This
-#   is why STRAIGHT (Kawahara et al., 1999) and WORLD's CheapTrick (Morise, 2015) tie the analysis
-#   to the pitch period. The higher the pitch, the farther apart the harmonics, and the fewer
-#   points the envelope is seen at ([Two talkers](talkers.html#h-harmonics-sample-the-envelope)).
+#   pulses, so it needs one or the other resolved. Its errors grow with harmonic number: if $F_0$ is
+#   off by 2%, the $k$-th harmonic is off by $2k$% of $F_0$, so the 20th harmonic is off by 40% of
+#   the gap to its neighbor, whatever the pitch. A vocoder that splits the voice into harmonics and
+#   noise on that grid counts the misplaced harmonic energy as noise ([Source and
+#   aperiodicity](aperiodicity.html)). An *octave error* is an estimate half or twice the true
+#   $F_0$, as when a tracker takes two periods for one or the second harmonic for the first;
+#   [Measuring the source: pitch](sourcefilter.html#h-measuring-the-source-pitch) compares trackers
+#   and the errors they make.
+# - **Spectral envelope.** The formants are the envelope of the harmonics, and a vocoder needs that
+#   envelope without the excitation in it. A long window leaves a ripple at the harmonics; a short
+#   one flickers as pulses enter and leave it. Both come from the vocal folds, not the vocal tract,
+#   yet a synthesizer would reproduce them as if they were part of the voice's timbre. This is why
+#   STRAIGHT (Kawahara et al., 1999) and WORLD's CheapTrick (Morise, 2015) tie the analysis to the
+#   pitch period. The higher the pitch, the farther apart the harmonics, and the fewer points the
+#   envelope is seen at ([Harmonics sample the
+#   envelope](sourcefilter.html#h-harmonics-sample-the-envelope)).
 # - **Glottal pulses.** Pitch-synchronous processing, such as changing pitch or duration by
 #   moving whole periods, and voice-quality measures such as jitter, the cycle-to-cycle change in
 #   period, need the instant each pulse arrives. Only short windows, or reassignment, show it
@@ -423,7 +425,7 @@ for label, frame in adaptive.items():
 # TANDEM-STRAIGHT: no smoothing, no aperiodicity, no synthesis. Near 0.2, 0.7 and 2.5 s the
 # female talker's Harvest track jumps well above its neighbors, at the edges of voicing; there the
 # dashed line leaves the tenth harmonic, and the pitch-adaptive windows are too short. Errors like
-# these are the subject of [Pitch tracking](pitch.html).
+# these are the subject of [Measuring the source: pitch](sourcefilter.html#h-measuring-the-source-pitch).
 
 # %% [demo 29] Following the pitch
 fig, axes = pair(3)

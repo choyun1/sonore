@@ -111,10 +111,7 @@ def file_name(key: str, title: str) -> str:
 EXAMPLE_PAGES = [
     "talkers",
     "speech",
-    "cepstrum",
-    "pitch",
-    "formants",
-    "lpc",
+    "sourcefilter",
     "aperiodicity",
     "voice",
     "modspectrogram",
@@ -739,14 +736,11 @@ TITLES = {
     "quilts.html": "Sound quilts",
     "speech.html": "Seeing speech",
     "resynthesis.html": "Analysis and resynthesis",
-    "cepstrum.html": "Spectral envelope",
     "modspectrogram.html": "Modulation spectrogram",
     "modtargets.html": "Hearing a modulation spectrum",
     "pv.html": "Phase vocoder",
-    "pitch.html": "Pitch tracking",
     "talkers.html": "Two talkers",
-    "formants.html": "Formant synthesis",
-    "lpc.html": "Finding formants",
+    "sourcefilter.html": "The source-filter model",
     "aperiodicity.html": "Source and aperiodicity",
     "voice.html": "Rebuilding and changing a voice",
     "vocoder.html": "Hearing through a vocoder",
@@ -814,13 +808,11 @@ TOPICS = [
         "Voices",
         [
             ("talkers.html", "the male and the female talker every speech page uses, measured once."),
-            ("formants.html", "vowels and consonants written as a source, formants and a few numbers."),
-            ("lpc.html", "linear prediction reads the formants back out of a sound, and drives a copy."),
             (
-                "pitch.html",
-                "three ways to track a voice's pitch, where each fails, and how the errors sound.",
+                "sourcefilter.html",
+                "a voice built from a source and a filter by rule, each measured back from a recording"
+                " (pitch, formants, envelope), and the voice put back together.",
             ),
-            ("cepstrum.html", "a voice's timbre without its pitch: the cepstrum, CheapTrick and MFCCs."),
             (
                 "aperiodicity.html",
                 "how much of a voice is noise, frequency by frequency, and WORLD's resynthesis.",
@@ -1418,37 +1410,77 @@ RETIRED = {"15": "vocoder.html"}
 # old link (page.html#d-KEY or #h-section) lands where that material is now. A page that no
 # longer exists is written as a stub that forwards; "" is where it forwards a link
 # with no anchor it knows.
+SF = "sourcefilter.html"  # where the four pages merged into The source-filter model went
+
+
+def _merged(anchors: str, others: dict[str, str], default: str) -> dict[str, str]:
+    """The map for a page merged into The source-filter model: anchors kept under the same id,
+    others moved to a new one, and where a link with no anchor it knows lands."""
+    return {"": f"{SF}#{default}", **{a: f"{SF}#{a}" for a in anchors.split()},
+            **{a: f"{SF}#{b}" for a, b in others.items()}}
+
+
 MOVED = {
     "harmonics": {
         "": "voice.html",
         **{f"d-{key}": f"voice.html#d-{key}" for key in
-           ("he1", "he2", "he3", "hu1", "hu2", "hm3", "hm4", "hf0", "hf1", "hf2", "hf3")},
-        **{f"d-hp{i}": f"pitch.html#d-hp{i}" for i in range(4)},
+           ("he2", "he3", "hm3", "hm4", "hf0", "hf1", "hf2", "hf3")},
+        "d-he1": f"{SF}#d-he1",
+        "d-hu1": f"{SF}#d-he1",
+        "d-hu2": f"{SF}#d-hu2",
+        **{f"d-hp{i}": f"{SF}#d-hp{2 if i % 2 else i}" for i in range(4)},
         "d-hm1": "voice.html#d-vc9",
         "d-hm2": "voice.html#d-vc3",
         "d-hv1": "voice.html#d-vc1",
-        "d-hv2": "voice.html#d-hu2",
-        "h-three-pitch-tracks-heard": "pitch.html#h-three-pitch-tracks-heard",
+        "d-hv2": f"{SF}#d-hu2",
+        "h-three-pitch-tracks-heard": f"{SF}#h-a-pitch-track-heard",
         "h-pitch-and-timbre-apart": "voice.html#h-pitch-range",
+        "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply",
+        "h-unvoiced-gaps": f"{SF}#d-hu2",
         **{f"h-{slug}": f"voice.html#h-{slug}" for slug in (
-            "putting-the-envelope-back", "unvoiced-gaps", "phases-on-a-moving-pitch",
-            "what-this-page-leaves-out", "references")},
+            "phases-on-a-moving-pitch", "what-this-page-leaves-out", "references")},
     },
-    "speech": {"d-f1": "pitch.html#d-f1", "h-nothing-is-lost": "resynthesis.html#h-nothing-is-lost",
+    "speech": {"d-f1": f"{SF}#d-f1", "h-nothing-is-lost": "resynthesis.html#h-nothing-is-lost",
                "h-a-higher-voice": "talkers.html"},
-    "cepstrum": {"d-c2": "pitch.html#d-c2", "d-f1": "pitch.html#d-f1", "h-a-higher-voice": "talkers.html",
-                 "h-pitch-from-the-cepstrum": "pitch.html", "h-a-tracker-beside-the-cepstrum": "pitch.html"},
-    "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": "talkers.html#h-spectral-envelopes"},
-    "formants": {"d-fw4": "formants.html#d-fw1", "d-fw5": "formants.html#d-fw2",
-                 "h-female-vowels": "formants.html#d-fw1",
-                 **{f"d-ft{i}": f"lpc.html#d-ft{i}" for i in range(1, 7)},
-                 "h-finding-the-formants-again": "lpc.html#h-linear-prediction",
-                 "h-a-recording": "lpc.html#h-a-recording", "h-copy-synthesis": "lpc.html#h-copy-synthesis"},
+    "talkers": {"d-tk4": f"{SF}#d-tk4", "d-tk5": f"{SF}#d-tk5", "h-long-term-spectra": f"{SF}#d-tk4",
+                "h-harmonics-sample-the-envelope": f"{SF}#h-harmonics-sample-the-envelope"},
+    "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": "talkers.html#h-spectral-envelopes",
+              "d-he1": f"{SF}#d-he1", "d-hu1": f"{SF}#d-he1", "d-hu2": f"{SF}#d-hu2",
+              "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply", "h-unvoiced-gaps": f"{SF}#d-hu2"},
+    "formants": _merged(
+        "h-a-vowel-piece-by-piece h-source-times-filter h-six-vowels h-consonants-from-transitions h-noise"
+        " h-voice-quality h-sonore-says-its-name d-fv1 d-fv2 d-fv3 d-fv4 d-fv5 d-fs1 d-fw1 d-fw2 d-fc1 d-fc2"
+        " d-fc3 d-fn1 d-fn2 d-fn3 d-fq1 d-fq2 d-fq3 d-fl1 d-ft1 d-ft4 d-ft5 d-ft6 h-a-recording"
+        " h-copy-synthesis",
+        {"d-fw3": "d-fw1", "d-fw4": "d-fw1", "d-fw5": "d-fw2", "h-female-vowels": "d-fw1",
+         "d-fp1": "h-synthesis-by-rule", "h-cascade-and-parallel": "h-synthesis-by-rule", "d-fq4": "d-fq3",
+         "d-fq5": "d-fq3", "d-ft2": "d-ft1", "d-ft3": "d-ft1", "h-finding-the-formants-again": "h-linear-prediction",
+         "h-code-the-examples-share": "h-the-sentence-and-code-the-examples-share"},
+        "h-synthesis-by-rule",
+    ),
+    "pitch": _merged(
+        "h-pitch-from-the-cepstrum h-a-tracker-beside-the-cepstrum h-octave-and-voicing-errors d-c2 d-f1 d-pt1"
+        " d-hp0 d-hp2",
+        {"d-hp1": "d-hp2", "d-hp3": "d-hp2", "h-three-pitch-tracks-heard": "h-a-pitch-track-heard"},
+        "h-measuring-the-source-pitch",
+    ),
+    "lpc": _merged(
+        "h-linear-prediction h-a-recording h-copy-synthesis d-ft1 d-ft4 d-ft5 d-ft6",
+        {"d-ft2": "d-ft1", "d-ft3": "d-ft1", "h-code-the-examples-share": "h-the-sentence-and-code-the-examples-share"},
+        "h-measuring-the-filter-formants",
+    ),
+    "cepstrum": _merged(
+        "h-one-time-window h-splitting-the-voice-in-two h-mfccs-a-cepstrum-on-the-mel-scale"
+        " h-reference-implementations h-pitch-from-the-cepstrum h-a-tracker-beside-the-cepstrum d-c1 d-c2 d-c3"
+        " d-c4 d-c5 d-f1 d-m1 d-m2",
+        {"d-m3": "d-m2", "h-a-higher-voice": "h-harmonics-sample-the-envelope"},
+        "h-measuring-the-filter-the-envelope",
+    ),
     "aperiodicity": {"h-a-higher-voice": "talkers.html"},
     "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
     "vocoder": {"d-cf0": "vocoder.html#d-ci0", "d-cf8": "vocoder.html#d-ci8", "d-cf8p": "vocoder.html#d-cp8",
                 "h-a-higher-voice": "vocoder.html#h-pitch-from-the-envelope"},
-    "classic": {"d-k2": "talkers.html#d-tk4", "d-b4": "binaural.html#d-b4", "h-binaural-beats": "binaural.html#d-b4"},
+    "classic": {"d-k2": f"{SF}#d-tk4", "d-b4": "binaural.html#d-b4", "h-binaural-beats": "binaural.html#d-b4"},
     "reverb": {"d-r3": "reverb.html#d-r1"},
     "moving": {"d-m8": "moving.html#d-m2", "d-m9": "moving.html#d-m3", "h-a-different-voice": "moving.html#h-three-talkers",
                **{f"d-cp{i}": f"cocktail.html#d-cp{i}" for i in range(1, 6)},
@@ -1492,7 +1524,7 @@ def write_moved_stubs(site: Site) -> None:
 <script>(() => {{ const moved = {json.dumps(anchors)};
 location.replace(moved[location.hash.slice(1)] || {json.dumps(moved[""])}); }})();</script>
 </head>
-<body><p>This page moved to <a href="{moved[""]}">{html.escape(TITLES[moved[""]])}</a>.</p></body>
+<body><p>This page moved to <a href="{moved[""]}">{html.escape(TITLES[moved[""].split("#")[0]])}</a>.</p></body>
 </html>
 """
         if site.out_dir:

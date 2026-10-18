@@ -24,8 +24,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   dominates, the ideal binary mask.
 #
 # Three other pages go further: the [Phase vocoder](pv.html) changes a sound's duration, pitch or
-# partials, [Hearing through a vocoder](vocoder.html) keeps only band envelopes, and [Spectral
-# envelope](cepstrum.html) separates a voice's spectral envelope from its source.
+# partials, [Hearing through a vocoder](vocoder.html) keeps only band envelopes, and [The source-filter
+# model](sourcefilter.html) separates a voice's spectral envelope from its source.
 
 # %% [setup]
 import os

@@ -24,7 +24,7 @@ sound taken as a thing in its own right and studied for how it is heard rather
 than for what produced it. The `Sound` object at the center of this library is
 meant in the same spirit.
 The logo is drawn from the spectrogram of
-[sonore saying its own name](https://choyun1.github.io/sonore/gallery/formants.html#d-fl1)
+[sonore saying its own name](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-fl1)
 with a formant synthesizer.
 
 **[▶ Listen to the gallery](https://choyun1.github.io/sonore/gallery/)**: every sound in this README and more, each
@@ -157,7 +157,7 @@ glottal pulses, the second the harmonics. [▶ listen](https://choyun1.github.io
 ![Wideband and narrowband spectrograms of a sentence, read by two talkers](https://raw.githubusercontent.com/choyun1/sonore/main/docs/gallery/img/27_two_classic_spectrograms.png)
 
 **Cepstrum.** The cepstrogram of the same sentence for each talker, with
-`so.Cepstrum`'s F0 beside WORLD's Harvest. [▶ listen](https://choyun1.github.io/sonore/gallery/pitch.html#d-c2)
+`so.Cepstrum`'s F0 beside WORLD's Harvest. [▶ listen](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-c2)
 
 ![Cepstrograms and cepstral pitch of a sentence, read by two talkers](https://raw.githubusercontent.com/choyun1/sonore/main/docs/gallery/img/c2_the_cepstrogram_and_its_pitch.png)
 
@@ -194,10 +194,7 @@ More in the gallery:
 **Voices**
 
 - [Two talkers](https://choyun1.github.io/sonore/gallery/talkers.html): the male and female talker every speech page uses. [▶ both](https://choyun1.github.io/sonore/gallery/talkers.html#d-tk1)
-- [Formant synthesis](https://choyun1.github.io/sonore/gallery/formants.html): Klatt's synthesizer taken apart. [▶ ga](https://choyun1.github.io/sonore/gallery/formants.html#d-fc3)
-- [Finding formants](https://choyun1.github.io/sonore/gallery/lpc.html): linear prediction, and a sentence copied from its formants. [▶ copy](https://choyun1.github.io/sonore/gallery/lpc.html#d-ft5)
-- [Pitch tracking](https://choyun1.github.io/sonore/gallery/pitch.html): three trackers, where each fails, and how the errors sound. [▶ buzz on the track](https://choyun1.github.io/sonore/gallery/pitch.html#d-hp2)
-- [Spectral envelope](https://choyun1.github.io/sonore/gallery/cepstrum.html): timbre without pitch, and MFCCs. [▶ envelope only](https://choyun1.github.io/sonore/gallery/cepstrum.html#d-c3)
+- [The source-filter model](https://choyun1.github.io/sonore/gallery/sourcefilter.html): a voice built from a source and a filter, each measured back (pitch, formants, envelope), and put back together. [▶ ga](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-fc3) [▶ formant copy](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-ft5) [▶ buzz on the pitch track](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-hp2) [▶ envelope only](https://choyun1.github.io/sonore/gallery/sourcefilter.html#d-c3)
 - [Source and aperiodicity](https://choyun1.github.io/sonore/gallery/aperiodicity.html): how much of a voice is noise. [▶ whispered](https://choyun1.github.io/sonore/gallery/aperiodicity.html#d-ap13)
 - [Rebuilding and changing a voice](https://choyun1.github.io/sonore/gallery/voice.html): pitch and formants moved separately. [▶ one talker toward another](https://choyun1.github.io/sonore/gallery/voice.html#d-vc15)
 
