@@ -15,7 +15,7 @@ numbers below are with it.
 ## How the numbers are made
 
 `tools/check_female_voices.py` runs the library itself (`so.f0_track`,
-`Cepstrum.f0` and the cepstral envelope, `so.cheaptrick`, `so.d4c`,
+`Cepstrum.f0` and the cepstral envelope, `so.pitch_adaptive_envelope`, `so.band_aperiodicity`,
 `so.harmonic_aperiodicity`) on three sets of sounds:
 
 1. **Synthetic vowels**, where the truth is exact. There are three vowels

@@ -144,7 +144,7 @@ class LPC(View):
     )
     back_to_sound = (
         "so.formant_track reads formant tracks from it, and so.klatt_synthesize makes a voice from those "
-        "and an F0 track; envelope_view() gives an envelope for so.world_synthesize."
+        "and an F0 track; envelope_view() gives an envelope for so.source_filter_synthesize."
     )
 
     def __init__(
@@ -219,7 +219,7 @@ class LPC(View):
         ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
         wherever a spectral envelope is taken
         (:func:`~sonore.views.spectral_envelope.warp_frequency`,
-        :func:`~sonore.views.world.world_synthesize`,
+        :func:`~sonore.views.world.source_filter_synthesize`,
         :func:`~sonore.sources.waveforms.harmonic_complex`)."""
         freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft if f is None else np.asarray(f, float)
         return GridEnvelope(self.envelope(freqs), self.t, freqs)

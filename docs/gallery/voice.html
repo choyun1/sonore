@@ -686,15 +686,15 @@ fig, playhead = show_pair(sounds, &quot;equal harmonics, random phase&quot;, tra
 envelope</a> compares with the liftered cepstrum, and the aperiodicity with D4C
 (Morise, 2016): how much of the voice is noise, frequency by frequency, so that every time
 window can mix harmonics and noise rather than being one or the other as above.
-<code>so.world_synthesize</code> puts the three back together, sample for sample as WORLD does. Both are
+<code>so.source_filter_synthesize</code> puts the three back together, sample for sample as WORLD does. Both are
 measured here on the <code>so.f0_track</code> tracks.</p>
 <p>Each change below is checked by measurement on the output. The pitch: <code>so.f0_track</code> on the
 output, its median over voiced time windows against the same on the original. The formants:
 CheapTrick's envelope of the output, averaged in dB over the original's voiced time windows,
 against the original's average read at <span class="tex">f / r</span> for a range of ratios <span class="tex">r</span>. The ratio whose curve
 fits best over 100 to 5000 Hz, with the overall level left free, is the <strong>fitted warp</strong>.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = {label: so.cheaptrick(snd, tracks[label]) for label, snd in talkers.items()}
-aperiodicities = {label: so.d4c(snd, tracks[label]) for label, snd in talkers.items()}
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = {label: so.pitch_adaptive_envelope(snd, tracks[label]) for label, snd in talkers.items()}
+aperiodicities = {label: so.band_aperiodicity(snd, tracks[label]) for label, snd in talkers.items()}
 frequencies = envelopes[&quot;Male talker&quot;].f
 scored = (frequencies &gt;= 100) &amp; (frequencies &lt;= 5000)
 RATIOS = np.arange(0.60, 2.001, 0.005)
@@ -739,7 +739,7 @@ def report(changed):
     print(f&quot;{&#x27;&#x27;:44}{&#x27;pitch ratio&#x27;:&gt;12}{&#x27;fitted warp&#x27;:&gt;12}&quot;)
     for name, (sounds, changed_tracks) in changed.items():
         for label, snd in sounds.items():
-            changed_db = mean_voiced_db(so.cheaptrick(snd, changed_tracks[label]), label)
+            changed_db = mean_voiced_db(so.pitch_adaptive_envelope(snd, changed_tracks[label]), label)
             warp = fitted_warp(changed_db, original_db[label])[0]
             print(f&quot;{name + &#x27;, &#x27; + label.lower():44}{median_f0(snd) / medians[label]:12.3f}{warp:12.3f}&quot;)
 
@@ -765,10 +765,10 @@ aperiodicity put back together. Every change below is a change of this.</p></div
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
-    label: finish(so.world_synthesize(tracks[label], envelopes[label], aperiodicities[label]))
+    label: finish(so.source_filter_synthesize(tracks[label], envelopes[label], aperiodicities[label]))
     for label in talkers
 }
-fig, playhead = show_pair(sounds, &quot;so.world_synthesize&quot;, tracks)
+fig, playhead = show_pair(sounds, &quot;so.source_filter_synthesize&quot;, tracks)
 changed[&quot;nothing changed&quot;] = (sounds, tracks)</code></pre></details>
 </article>
 </section>
@@ -797,7 +797,7 @@ bands of the formants stay at the same frequencies.</p></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">higher = {label: so.scale_f0(track, 1.5) for label, track in tracks.items()}
 sounds = {
-    label: finish(so.world_synthesize(higher[label], envelopes[label], aperiodicities[label]))
+    label: finish(so.source_filter_synthesize(higher[label], envelopes[label], aperiodicities[label]))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, &quot;F0 × 1.5, formants kept&quot;, higher)
@@ -824,7 +824,9 @@ changed[&quot;F0 × 1.5&quot;] = (sounds, higher)</code></pre></details>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
     label: finish(
-        so.world_synthesize(tracks[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label])
+        so.source_filter_synthesize(
+            tracks[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label]
+        )
     )
     for label in talkers
 }
@@ -851,7 +853,9 @@ changed[&quot;formants × 1.2&quot;] = (sounds, tracks)</code></pre></details>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
     label: finish(
-        so.world_synthesize(higher[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label])
+        so.source_filter_synthesize(
+            higher[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label]
+        )
     )
     for label in talkers
 }
@@ -967,7 +971,7 @@ are left as they were.</p>
 def on_contours(contours):
     &quot;&quot;&quot;Each talker&#x27;s WORLD resynthesis on another contour, envelope and aperiodicity kept.&quot;&quot;&quot;
     return {
-        label: finish(so.world_synthesize(contours[label], envelopes[label], aperiodicities[label]))
+        label: finish(so.source_filter_synthesize(contours[label], envelopes[label], aperiodicities[label]))
         for label in talkers
     }</code></pre></details></div>
 
@@ -1110,7 +1114,7 @@ keep it; compare <a href="#d-vc4">Higher formants</a>.</p></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
     label: finish(
-        so.world_synthesize(
+        so.source_filter_synthesize(
             tracks[label], so.warp_frequency(envelopes[label], 1.2), warped_aperiodicities[label]
         )
     )
@@ -1193,7 +1197,7 @@ changed[&quot;pitch&quot;] = (sounds, moved)</code></pre></details>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
     label: finish(
-        so.world_synthesize(
+        so.source_filter_synthesize(
             moved[label], so.warp_frequency(envelopes[label], warps[label]), aperiodicities[label]
         )
     )
@@ -1223,7 +1227,7 @@ changed[&quot;pitch and formants&quot;] = (sounds, moved)</code></pre></details>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
     label: finish(
-        so.world_synthesize(
+        so.source_filter_synthesize(
             moved[label], tilted(envelopes[label], warps[label], tilts[label]), aperiodicities[label]
         )
     )
@@ -1255,7 +1259,9 @@ for top in (5000, 4000):
     print(f&quot;\nfrom the other talker&#x27;s average envelope, 100 to {top} Hz:&quot;)
     for label, other in toward.items():
         averages = [original_db[label]] + [
-            mean_voiced_db(so.cheaptrick(changed[name][0][label], changed[name][1][label]), label)
+            mean_voiced_db(
+                so.pitch_adaptive_envelope(changed[name][0][label], changed[name][1][label]), label
+            )
             for name in steps
         ]
         distances = [level_free_rms(average, original_db[other], top) for average in averages]
@@ -1300,7 +1306,7 @@ quality, the aperiodicity, the timing and the accent as they were.</p>
 </section>
 <section aria-labelledby="h-any-pitch-track-any-envelope">
 <h2 id="h-any-pitch-track-any-envelope">Any pitch track, any envelope</h2>
-<p><code>so.world_synthesize</code> takes its own envelope as it is and reads any other envelope at its time
+<p><code>so.source_filter_synthesize</code> takes its own envelope as it is and reads any other envelope at its time
 windows and frequencies, so the pitch can come from one analysis and the envelope from another.
 Three pitch tracks, those of <a href="pitch.html">Pitch tracking</a>: <code>so.f0_track</code>, Harvest (Morise, 2017)
 stored with each recording, and the cepstral peak in each 40 ms window (Noll, 1967). Four
@@ -1337,7 +1343,7 @@ for label, snd in talkers.items():
     # the cepstral pitch is resynthesized with the aperiodicity measured on so.f0_track&#x27;s.
     mixed_aperiodicities[label] = {
         &quot;so.f0_track&quot;: aperiodicities[label],
-        &quot;Harvest&quot;: so.d4c(snd, harvest),
+        &quot;Harvest&quot;: so.band_aperiodicity(snd, harvest),
         &quot;cepstral&quot;: aperiodicities[label],
     }
 
@@ -1364,7 +1370,7 @@ for label in talkers:
     for track_name, track in pitch_tracks[label].items():
         aperiodicity = mixed_aperiodicities[label][track_name]
         scores = [
-            distance(so.world_synthesize(track, view, aperiodicity), label)
+            distance(so.source_filter_synthesize(track, view, aperiodicity), label)
             for view in mixed_envelopes[label].values()
         ]
         print(f&quot;  {track_name:&lt;12}&quot; + &quot;&quot;.join(f&quot;{score:&gt;10.2f} dB&quot; for score in scores))</code></pre></details><pre class="out">Male talker
@@ -1381,7 +1387,7 @@ Female talker
 cepstrum scores worse for the female talker than for the male talker: with the harmonics farther
 apart, the lifter has to cut lower (see <a href="cepstrum.html">Spectral envelope</a>).</p>
 <p>The cepstral track's time windows start before 0 s, so it cannot drive D4C, whose time windows
-must start at 0 s. <code>so.world_synthesize</code> reads it onto the aperiodicity's time windows, so it can
+must start at 0 s. <code>so.source_filter_synthesize</code> reads it onto the aperiodicity's time windows, so it can
 drive the synthesis.</p>
 
 <article class="sound pair" id="d-vc17">
@@ -1404,7 +1410,7 @@ D4C's aperiodicity.</p></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
     label: finish(
-        so.world_synthesize(
+        so.source_filter_synthesize(
             pitch_tracks[label][&quot;cepstral&quot;],
             mixed_envelopes[label][&quot;MFCC, area&quot;],
             mixed_aperiodicities[label][&quot;cepstral&quot;],
@@ -1437,7 +1443,7 @@ fig, playhead = show_pair(sounds, &quot;cepstral F0, MFCC envelope&quot;, cepstr
   <details class="code"><summary>Code</summary><pre><code class="language-python">changed_tracks = {label: so.scale_f0(track, 1.5) for label, track in cepstral_tracks.items()}
 sounds = {
     label: finish(
-        so.world_synthesize(
+        so.source_filter_synthesize(
             changed_tracks[label],
             so.warp_frequency(mixed_envelopes[label][&quot;MFCC, area&quot;], 1.2),
             mixed_aperiodicities[label][&quot;cepstral&quot;],
@@ -1463,7 +1469,7 @@ at each harmonic's frequency and time exactly.</p>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Davis &amp; Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 28(4), 357–366. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L106" target="_blank" rel="noopener"><code>mfcc.MFCC</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L226" target="_blank" rel="noopener"><code>spectral_envelope.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L127" target="_blank" rel="noopener"><code>aperiodicity.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L242" target="_blank" rel="noopener"><code>world.world_synthesize</code></a></li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/" target="_blank" rel="noopener">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185" target="_blank" rel="noopener"><code>cepstrum.Cepstrum.f0</code></a></li><li>Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. <em>IEEE Trans. Inf. Theory</em> 16(1), 85–89. <a href="https://doi.org/10.1109/TIT.1970.1054411" target="_blank" rel="noopener">doi:10.1109/TIT.1970.1054411</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L356" target="_blank" rel="noopener"><code>waveforms.schroeder_complex</code></a></li><li>Shannon, Zeng, Kamath, Wygonski &amp; Ekelid (1995). Speech recognition with primarily temporal cues. <em>Science</em> 270(5234), 303–304. <a href="https://doi.org/10.1126/science.270.5234.303" target="_blank" rel="noopener">doi:10.1126/science.270.5234.303</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497" target="_blank" rel="noopener"><code>envelopes.channel_vocode</code></a></li></ul>
+<ul><li>Davis &amp; Mermelstein (1980). Comparison of parametric representations for monosyllabic word recognition in continuously spoken sentences. <em>IEEE Trans. Acoust., Speech, Signal Process.</em> 28(4), 357–366. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L106" target="_blank" rel="noopener"><code>mfcc.MFCC</code></a></li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L228" target="_blank" rel="noopener"><code>spectral_envelope.pitch_adaptive_envelope</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L129" target="_blank" rel="noopener"><code>aperiodicity.band_aperiodicity</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L244" target="_blank" rel="noopener"><code>world.source_filter_synthesize</code></a></li><li>Noll (1967). Cepstrum pitch determination. <em>J. Acoust. Soc. Am.</em> 41(2), 293–309. <a href="https://pubmed.ncbi.nlm.nih.gov/6040805/" target="_blank" rel="noopener">PubMed</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185" target="_blank" rel="noopener"><code>cepstrum.Cepstrum.f0</code></a></li><li>Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low autocorrelation. <em>IEEE Trans. Inf. Theory</em> 16(1), 85–89. <a href="https://doi.org/10.1109/TIT.1970.1054411" target="_blank" rel="noopener">doi:10.1109/TIT.1970.1054411</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L356" target="_blank" rel="noopener"><code>waveforms.schroeder_complex</code></a></li><li>Shannon, Zeng, Kamath, Wygonski &amp; Ekelid (1995). Speech recognition with primarily temporal cues. <em>Science</em> 270(5234), 303–304. <a href="https://doi.org/10.1126/science.270.5234.303" target="_blank" rel="noopener">doi:10.1126/science.270.5234.303</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelopes.py#L497" target="_blank" rel="noopener"><code>envelopes.channel_vocode</code></a></li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/voice/voice.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/voice/voice.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
 </main>

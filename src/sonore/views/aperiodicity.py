@@ -1,3 +1,5 @@
+# The WORLD ports in this file are derived from WORLD (https://github.com/mmorise/World),
+# Copyright (c) 2010 M. Morise, and are used under its BSD 3-clause license (LICENSE-WORLD).
 """Aperiodicity, the share of noise in a voice at each frequency: WORLD's D4C
 (Morise, 2016), ported exactly, and a harmonic-residual aperiodicity that
 measures the share of noise directly.
@@ -40,7 +42,7 @@ if TYPE_CHECKING:
 
     from sonore.sources.waveforms import ContourLike
 
-__all__ = ["Aperiodicity", "d4c", "harmonic_aperiodicity"]
+__all__ = ["Aperiodicity", "band_aperiodicity", "harmonic_aperiodicity"]
 
 
 _FLOOR_F0_D4C = 47.0
@@ -56,12 +58,12 @@ _D4C_SAFEGUARD = 1e-6
 
 
 class Aperiodicity(_FrequencyView):
-    """An aperiodicity, from :func:`d4c` or :func:`harmonic_aperiodicity`:
+    """An aperiodicity, from :func:`band_aperiodicity` or :func:`harmonic_aperiodicity`:
     per frequency and time window, how much of the power is noise rather than
     harmonics. Stored as WORLD stores it, an amplitude ratio between 0 and
     1 (``data``, shape ``(n_channels, n_freqs, n_windows)``): its square
     :attr:`share` is the share of the power that is noise, which is what
-    :func:`~sonore.views.world.world_synthesize` uses. ``method`` names
+    :func:`~sonore.views.world.source_filter_synthesize` uses. ``method`` names
     the measure that made it ("D4C" or "harmonic residual").
     """
 
@@ -70,8 +72,8 @@ class Aperiodicity(_FrequencyView):
         "spectrum, the pitch and the phase."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
-        "a spectral envelope."
+        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
+        "track and a spectral envelope."
     )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, method: str):
@@ -124,7 +126,7 @@ class Aperiodicity(_FrequencyView):
 
 
 # ------------------------------------------------------------------- D4C
-def d4c(
+def band_aperiodicity(
     sound: Sound, f0: ContourLike, *, threshold: float = 0.85, f0_floor: float = _FLOOR_F0
 ) -> Aperiodicity:
     """WORLD's D4C aperiodicity (Morise, 2016), ported exactly.
@@ -153,12 +155,12 @@ def d4c(
     Parameters
     ----------
     sound, f0
-        As :func:`cheaptrick`.
+        As :func:`pitch_adaptive_envelope`.
     threshold
         The LoveTrain voicing threshold.
     f0_floor
         Sets the output's frequency grid, which must match the envelope's
-        for synthesis (WORLD's 71 Hz, as :func:`cheaptrick`).
+        for synthesis (WORLD's 71 Hz, as :func:`pitch_adaptive_envelope`).
     """
     fs = _integer_fs(sound)
     times, f0_values = _time_windows(sound, f0)
@@ -252,7 +254,7 @@ def harmonic_aperiodicity(
     cell_harmonics: float = 2.0,
 ) -> Aperiodicity:
     """The share of noise, measured by fitting the harmonics and keeping
-    what is left. Not part of WORLD; :func:`d4c` is WORLD's measure.
+    what is left. Not part of WORLD; :func:`band_aperiodicity` is WORLD's measure.
 
     The F0 track is interpolated to every sample and integrated to a
     running phase ``Phi(t)``. At each voiced time window, under a Hann window
@@ -264,7 +266,7 @@ def harmonic_aperiodicity(
     exactly from the fit (the share of white noise the residual keeps at
     each frequency), and is divided out. Both are summed over cells
     ``cell_harmonics`` harmonics wide, and the cells' shares are
-    interpolated in dB onto the grid of :func:`cheaptrick`. Unvoiced time windows
+    interpolated in dB onto the grid of :func:`pitch_adaptive_envelope`. Unvoiced time windows
     are all noise.
 
     The measure is what the word means, so it reads a known share of noise
@@ -275,11 +277,11 @@ def harmonic_aperiodicity(
     Parameters
     ----------
     sound, f0
-        As :func:`cheaptrick`.
+        As :func:`pitch_adaptive_envelope`.
     periods
         The window's length in periods of the time window's F0.
     f0_floor
-        Sets the output's frequency grid, as :func:`cheaptrick`.
+        Sets the output's frequency grid, as :func:`pitch_adaptive_envelope`.
     cell_harmonics
         The width of the cells, in harmonics.
     """

@@ -338,7 +338,7 @@ ax.legend(loc="lower right", fontsize=8)
 # %% [markdown]
 # ## What WORLD reports
 #
-# WORLD's own measure is D4C (Morise, 2016), which `so.d4c` reproduces exactly. It works from a
+# WORLD's own measure is D4C (Morise, 2016), which `so.band_aperiodicity` reproduces exactly. It works from a
 # "group delay" of the time window, smoothed over the harmonics, whose spectrum is sorted to see how
 # much of its power lies outside the strongest components, in bands 3 kHz wide around each
 # multiple of 3 kHz. A correction for F0 follows, and the curve is drawn as straight lines (in dB)
@@ -352,12 +352,12 @@ ax.legend(loc="lower right", fontsize=8)
 # at the female talker's.
 
 # %% [figure ap7] D4C and the harmonic residual against the truth
-d4c_shares = {label: so.d4c(vowels[label], exact[label]) for label in vowels}
+d4c_shares = {label: so.band_aperiodicity(vowels[label], exact[label]) for label in vowels}
 fig, ax = plt.subplots(figsize=(10, 3.4), layout="constrained")
 ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color="k", lw=2.5, alpha=0.35, label="truth")
 for name, shares, color in [
     ("so.harmonic_aperiodicity", residual_shares, "C3"),
-    ("so.d4c (WORLD)", d4c_shares, "C0"),
+    ("so.band_aperiodicity (WORLD)", d4c_shares, "C0"),
 ]:
     for (label, share), ls in zip(shares.items(), ["-", "--"], strict=True):
         mean_share = share.share[0][:, inside].mean(axis=1)
@@ -382,7 +382,7 @@ bands = "".join(f"{f'{low}-{high}':>11}" for low, high in zip(band_edges[:-1], b
 print(f"{'Share of noise [dB], band [Hz]':<34}{bands}")
 for label, vowel in vowels.items():
     track = exact[label]
-    envelope = so.cheaptrick(vowel, track)
+    envelope = so.pitch_adaptive_envelope(vowel, track)
     # the truth in each band: noise power over total power, the envelope weighting each frequency
     # as .bands() weights it
     weights = envelope.data[0][:, inside].mean(axis=1)
@@ -394,7 +394,7 @@ for label, vowel in vowels.items():
     print(f"{label.lower()}'s pitch, {medians[label]:.0f} Hz")
     print(f"{'  truth':<34}" + "".join(f"{value:>11.1f}" for value in truth_db))
     wrong_track = (window_times, track[1] * 1.01)
-    for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", so.d4c)]:
+    for name, measure in [("harmonic residual", so.harmonic_aperiodicity), ("D4C", so.band_aperiodicity)]:
         for f0_name, f0 in [("exact F0", track), ("F0 1% high", wrong_track)]:
             shares = measure(vowel, f0).bands(band_edges, envelope=envelope)[0][:, inside].mean(axis=1)
             row = f"  {name}, {f0_name}"
@@ -423,8 +423,8 @@ for label, speaker in SPEAKERS.items():
         fetch(f"docs/speech/{speaker}_arctic_a0131_f0.csv"), delimiter=",", skiprows=2
     ).T
     harvest[label] = (harvest_times, harvest_f0)
-envelopes = {label: so.cheaptrick(talkers[label], harvest[label]) for label in talkers}
-d4c_maps = {label: so.d4c(talkers[label], harvest[label]) for label in talkers}
+envelopes = {label: so.pitch_adaptive_envelope(talkers[label], harvest[label]) for label in talkers}
+d4c_maps = {label: so.band_aperiodicity(talkers[label], harvest[label]) for label in talkers}
 residual_maps = {label: so.harmonic_aperiodicity(talkers[label], harvest[label]) for label in talkers}
 
 print(f"{'Median share of noise [dB], band [Hz]':<44}{bands}")
@@ -447,7 +447,7 @@ for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
     envelopes[label].plot(axes[0], db_range=70)
     axes[0].set_title(f"{label}: spectral envelope (CheapTrick)")
     for ax, aperiodicity, title in [
-        (axes[1], d4c_maps[label], "Aperiodicity: so.d4c (WORLD)"),
+        (axes[1], d4c_maps[label], "Aperiodicity: so.band_aperiodicity (WORLD)"),
         (axes[2], residual_maps[label], "Aperiodicity: so.harmonic_aperiodicity"),
     ]:
         aperiodicity.plot(ax, db_range=40)
@@ -460,7 +460,7 @@ for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
 # %% [markdown]
 # ## Listening
 #
-# `so.world_synthesize` is WORLD's synthesis, reproduced sample for sample. At every pitch period
+# `so.source_filter_synthesize` is WORLD's synthesis, reproduced sample for sample. At every pitch period
 # it adds two pieces: the harmonics' share of the envelope, $S(1 - A)$, as one pulse, and the
 # noise's share, $S A$, as a short burst of filtered noise. Below, each talker's own pitch track
 # and envelope with four aperiodicities. (WORLD keeps $A$ between −60 dB and just under 0 dB, and
@@ -485,9 +485,10 @@ fig, playhead = show_pair(sounds, titled("the sentence"), fmax=8000)
 
 # %% [demo ap10] Resynthesis with D4C
 sounds = {
-    label: finish(so.world_synthesize(harvest[label], envelopes[label], d4c_maps[label])) for label in talkers
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], d4c_maps[label]))
+    for label in talkers
 }
-fig, playhead = show_pair(sounds, titled("with so.d4c"), fmax=8000)
+fig, playhead = show_pair(sounds, titled("with so.band_aperiodicity"), fmax=8000)
 
 # %% [about]
 # The same with the harmonic residual's aperiodicity, which puts more of each voice into noise,
@@ -495,7 +496,7 @@ fig, playhead = show_pair(sounds, titled("with so.d4c"), fmax=8000)
 
 # %% [demo ap11] With the harmonic residual
 sounds = {
-    label: finish(so.world_synthesize(harvest[label], envelopes[label], residual_maps[label]))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], residual_maps[label]))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled("with so.harmonic_aperiodicity"), fmax=8000)
@@ -508,7 +509,7 @@ fig, playhead = show_pair(sounds, titled("with so.harmonic_aperiodicity"), fmax=
 sounds = {}
 for label in talkers:
     periodic = so.Aperiodicity(np.zeros_like(d4c_maps[label].data), d4c_maps[label].t, FS, "none")
-    sounds[label] = finish(so.world_synthesize(harvest[label], envelopes[label], periodic))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], periodic))
 fig, playhead = show_pair(sounds, titled("with A = 0"), fmax=8000)
 
 # %% [about]
@@ -519,7 +520,7 @@ fig, playhead = show_pair(sounds, titled("with A = 0"), fmax=8000)
 sounds = {}
 for label in talkers:
     noise_only = so.Aperiodicity(np.ones_like(d4c_maps[label].data), d4c_maps[label].t, FS, "all noise")
-    sounds[label] = finish(so.world_synthesize(harvest[label], envelopes[label], noise_only))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], noise_only))
 fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 
 # %% [markdown]
@@ -547,10 +548,10 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L226)
+#   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L228)
 # - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
 #   Communication* 84, 57–65. [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
-#   [`aperiodicity.d4c`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L127)
+#   [`aperiodicity.band_aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L129)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
@@ -558,7 +559,7 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
-#   [`world.world_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L242)
+#   [`world.source_filter_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L244)
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
 #   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The formants of "hod".

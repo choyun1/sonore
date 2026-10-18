@@ -35,7 +35,7 @@ to exist:
   warped, coarsely sampled frequency axis (C1).
 - **`ERBFilterbank`** (`frames/frames.md`): sonore's auditory frequency axis. The
   mel scale is a close relative (C2).
-- **`so.cheaptrick`** (`views/world.md`): an F0-adaptive spectral envelope. MFCCs
+- **`so.pitch_adaptive_envelope`** (`views/world.md`): an F0-adaptive spectral envelope. MFCCs
   are a fixed-resolution envelope summary and depend on F0 where
   CheapTrick largely does not (C5).
 
@@ -51,7 +51,7 @@ As in the other design documents, each claim is numbered and tagged:
   below come from NumPy 2.4.6 and SciPy 1.17.1.
 - **[cross]**: a number printed by `tools/crosscheck_mfcc.py`, which uses
   librosa 0.11.0 and python_speech_features 0.6 (development-time only,
-  never dependencies) and `so.cheaptrick`.
+  never dependencies) and `so.pitch_adaptive_envelope`.
 - **[source]**: a published result or a library's documented behavior
   (see References; which ones were checked is said there).
 
@@ -160,7 +160,7 @@ coefficient distance). /a/ and /i/ at the same F0 are 15.4–16.0 dB apart.
 The same vowel at two F0s is 5.6 dB apart in the median and up to 9.2 dB.
 The lowest HTK band centers are 68 Hz apart and stay closer than 200 Hz
 up to 1.4 kHz, so below that each band catches zero, one or two harmonics
-depending on F0. Taking the band powers from `so.cheaptrick`'s envelope
+depending on F0. Taking the band powers from `so.pitch_adaptive_envelope`'s envelope
 instead of the power spectrum (crosscheck), the same-vowel distances fall
 to 1.9 dB median and 3.3 dB at most, with /a/ and /i/ still 16 dB apart.
 This is the didactic point of the comparison proposed for the gallery
@@ -459,7 +459,7 @@ coefs = so.STFT(snd, win_dur=0.040, hop_dur=0.005)
 so.MFCC(coefs, n_mels=40, mel_scale="slaney", triangles="area")
 
 f0 = so.f0_track(snd)
-env = so.cheaptrick(snd, f0)
+env = so.pitch_adaptive_envelope(snd, f0)
 mfcc.envelope(env.f)  # for plotting against env
 ```
 

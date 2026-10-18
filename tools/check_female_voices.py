@@ -3,7 +3,7 @@
 Female voices have F0 roughly an octave above male ones, so their harmonics
 sample the vocal tract's response about half as densely. This checker runs
 the library's own analyses (so.f0_track, Cepstrum.f0 and the cepstral
-envelope, so.cheaptrick, so.d4c and so.harmonic_aperiodicity) where the
+envelope, so.pitch_adaptive_envelope, so.band_aperiodicity and so.harmonic_aperiodicity) where the
 truth is known, and prints the errors side by side for male and female
 voices. Nothing is tuned here: every analysis runs with its defaults, and
 the gallery's 40 ms window for the cepstrum.
@@ -136,7 +136,7 @@ def part1():
                 t = np.arange(0.1, snd.duration - 0.1 + 1e-9, HOP)
                 track = (t, np.full(len(t), float(f0)))
                 # CheapTrick, given the true F0
-                env = so.cheaptrick(snd, track)
+                env = so.pitch_adaptive_envelope(snd, track)
                 in_range = (env.f >= SCORED[0]) & (env.f <= SCORED[1])
                 true_db = 20 * np.log10(envelope_amplitude(env.f[in_range], formants))
                 est_db = env.db[0][in_range]  # (freqs, windows)
@@ -156,7 +156,7 @@ def part1():
                 ap_in = (env.f >= 200) & (env.f <= 6000)
                 true_ap = noise_share_db(env.f[ap_in])
                 ap_err = []
-                for measure in (so.d4c, so.harmonic_aperiodicity):
+                for measure in (so.band_aperiodicity, so.harmonic_aperiodicity):
                     ap = measure(snd, track)
                     est = 10 * np.log10(np.maximum(ap.share[0][ap_in], 1e-12))
                     ap_err.append(np.median(np.abs(est - true_ap[:, None])))
@@ -271,13 +271,16 @@ def part2(root):
             rows["Cepstrum.f0"].append((cref, cf[0], cok))
             # Where the reference voices: how much the envelope moves when the
             # tracked F0 replaces the reference, and the noise share given the reference.
-            env_ref = so.cheaptrick(snd, (track.t, ref))
-            env_trk = so.cheaptrick(snd, track)
+            env_ref = so.pitch_adaptive_envelope(snd, (track.t, ref))
+            env_trk = so.pitch_adaptive_envelope(snd, track)
             both = (ref > 0) & (track.f0[0] > 0)
             band = (env_ref.f >= 100) & (env_ref.f <= 5000)
             diff = env_trk.db[0][band][:, both] - env_ref.db[0][band][:, both]
             envelope_change.append(np.sqrt(np.mean(diff**2, axis=0)))
-            for name, measure in (("D4C", so.d4c), ("harmonic residual", so.harmonic_aperiodicity)):
+            for name, measure in (
+                ("D4C", so.band_aperiodicity),
+                ("harmonic residual", so.harmonic_aperiodicity),
+            ):
                 ap = measure(snd, (track.t, ref))
                 shares = ap.bands(AP_BANDS, envelope=env_ref)[0][:, ref > 0]
                 ap_given_ref[name].append(shares)

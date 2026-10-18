@@ -1,6 +1,6 @@
 """Claims for docs/design/views/voice-change.md: changing a voice's pitch and its
-formants with the WORLD pieces already in sonore (so.f0_track, so.cheaptrick,
-so.d4c, so.harmonic_aperiodicity, so.world_synthesize).
+formants with the WORLD pieces already in sonore (so.f0_track, so.pitch_adaptive_envelope,
+so.band_aperiodicity, so.harmonic_aperiodicity, so.source_filter_synthesize).
 
 The operations themselves are prototyped here, not in the library:
 
@@ -175,12 +175,14 @@ def formant_peaks(envelope_db, freqs, expected):
 
 # ------------------------------------------------------------ the claims
 def c1_identity(sentence, track, envelope, aperiodicity):
-    print("C1. Identity settings against so.world_synthesize")
-    reference = so.world_synthesize(track, envelope, aperiodicity)
+    print("C1. Identity settings against so.source_filter_synthesize")
+    reference = so.source_filter_synthesize(track, envelope, aperiodicity)
     through_interp = warp_envelope(envelope, 1.0, exact_identity=False)
     relative = np.max(np.abs(through_interp.data / envelope.data - 1))
-    out_interp = so.world_synthesize(change_pitch(track, 1.0), through_interp, aperiodicity)
-    out_exact = so.world_synthesize(change_pitch(track, 1.0), warp_envelope(envelope, 1.0), aperiodicity)
+    out_interp = so.source_filter_synthesize(change_pitch(track, 1.0), through_interp, aperiodicity)
+    out_exact = so.source_filter_synthesize(
+        change_pitch(track, 1.0), warp_envelope(envelope, 1.0), aperiodicity
+    )
     print(f"  envelope read back through its interpolation at ratio 1: max relative change {relative:.1e}")
     print(
         f"  output, interpolated envelope: max |difference|"
@@ -205,15 +207,15 @@ def c2_pitch(sentence, track, envelope, aperiodicity, reference_out):
     in_db = mean_db(envelope, voiced)
     for ratio in (0.5, 2 ** (-5 / 12), 2 ** (7 / 12), 2.0):
         changed = change_pitch(track, ratio)
-        out = so.world_synthesize(changed, envelope, aperiodicity)
+        out = so.source_filter_synthesize(changed, envelope, aperiodicity)
         tracked = so.f0_track(out)
         median, within, kept = voiced_ratio(track, (tracked.t, tracked.f0[0]))
         # the formants of the output, analyzed with the imposed track
-        out_env = so.cheaptrick(out, changed)
+        out_env = so.pitch_adaptive_envelope(out, changed)
         warp, _ = fitted_warp(in_db, mean_db(out_env, voiced), envelope.f)
         # the phase vocoder's pitch shift, for contrast
         shifted = so.pitch_shift(sentence, 12 * np.log2(ratio))
-        pv_env = so.cheaptrick(shifted, changed)
+        pv_env = so.pitch_adaptive_envelope(shifted, changed)
         pv_warp, _ = fitted_warp(in_db, mean_db(pv_env, voiced), envelope.f)
         print(f"  {ratio:5.3f} | {median:8.3f}  {within:13.0%}  {kept:9.0%} | {warp:10.3f}  {pv_warp:14.3f}")
 
@@ -224,16 +226,16 @@ def c3_vowel_formants(rng):
     snd = vowel(120.0, formants, rng)
     times = np.arange(int(snd.duration / HOP)) * HOP
     track = (times, np.full(len(times), 120.0))
-    envelope = so.cheaptrick(snd, track)
-    aperiodicity = so.d4c(snd, track)
+    envelope = so.pitch_adaptive_envelope(snd, track)
+    aperiodicity = so.band_aperiodicity(snd, track)
     inner = (times > 0.1) & (times < snd.duration - 0.1)
     in_db = mean_db(envelope, inner)
     in_peaks = formant_peaks(in_db, envelope.f, formants[:3])
     print(f"  input F1-F3 as CheapTrick sees them: {np.round(in_peaks)} Hz (true {formants[:3]})")
     print("  ratio | F1, F2, F3 out / in       | fitted warp")
     for ratio in (0.8, 0.9, 1.1, 1.2, 1.25):
-        out = so.world_synthesize(track, warp_envelope(envelope, ratio), aperiodicity)
-        out_db = mean_db(so.cheaptrick(out, track), inner)
+        out = so.source_filter_synthesize(track, warp_envelope(envelope, ratio), aperiodicity)
+        out_db = mean_db(so.pitch_adaptive_envelope(out, track), inner)
         out_peaks = formant_peaks(out_db, envelope.f, np.array(formants[:3]) * ratio)
         warp, residual = fitted_warp(in_db, out_db, envelope.f)
         print(
@@ -249,8 +251,10 @@ def c4_sentence_formants(track, envelope, aperiodicity, reference_out):
     in_db = mean_db(envelope, voiced)
     for ratio in (0.8, 0.9, 1.1, 1.2):
         warped = warp_envelope(envelope, ratio)
-        out = so.world_synthesize(track, warped, aperiodicity)
-        warp, residual = fitted_warp(in_db, mean_db(so.cheaptrick(out, track), voiced), envelope.f)
+        out = so.source_filter_synthesize(track, warped, aperiodicity)
+        warp, residual = fitted_warp(
+            in_db, mean_db(so.pitch_adaptive_envelope(out, track), voiced), envelope.f
+        )
         power_change = 10 * np.log10(warped.data[0].sum(axis=0) / envelope.data[0].sum(axis=0))
         print(
             f"  {ratio:5.2f} | {warp:.3f} ({residual:.2f} dB) | {rms_db(out, reference_out):+6.2f} dB"
@@ -268,7 +272,7 @@ def c5_aperiodicity(sentence, track, envelope, rng):
     voiced = np.asarray(track[1]) > 0
     inside = (envelope.f >= 100) & (envelope.f <= 6000)
     measures = {
-        "D4C": so.d4c(sentence, track),
+        "D4C": so.band_aperiodicity(sentence, track),
         "harmonic residual": so.harmonic_aperiodicity(sentence, track),
     }
     for name, aperiodicity in measures.items():
@@ -279,8 +283,8 @@ def c5_aperiodicity(sentence, track, envelope, rng):
             for w in np.flatnonzero(voiced)
         ]
         warped_env = warp_envelope(envelope, 1.2)
-        kept = so.world_synthesize(track, warped_env, aperiodicity)
-        moved = so.world_synthesize(track, warped_env, warp_aperiodicity(aperiodicity, 1.2))
+        kept = so.source_filter_synthesize(track, warped_env, aperiodicity)
+        moved = so.source_filter_synthesize(track, warped_env, warp_aperiodicity(aperiodicity, 1.2))
         difference = rms_db(so.Sound(moved.data - kept.data, FS), kept)
         spread = np.ptp(aperiodicity.db[0][inside][:, voiced].mean(axis=1))
         print(
@@ -298,10 +302,10 @@ def c5_aperiodicity(sentence, track, envelope, rng):
     times = np.arange(int(snd.duration / HOP)) * HOP
     vowel_track = (times, np.full(len(times), 120.0))
     inner = (times > 0.1) & (times < snd.duration - 0.1)
-    vowel_env = so.cheaptrick(snd, vowel_track)
+    vowel_env = so.pitch_adaptive_envelope(snd, vowel_track)
     vowel_ap = so.harmonic_aperiodicity(snd, vowel_track)
     band = (vowel_env.f >= 200) & (vowel_env.f <= 6000)
-    for name, ap in (("D4C", so.d4c(snd, vowel_track)), ("harmonic residual", vowel_ap)):
+    for name, ap in (("D4C", so.band_aperiodicity(snd, vowel_track)), ("harmonic residual", vowel_ap)):
         correlations = [
             detrended_correlation(vowel_env.db[0][inside, w], ap.db[0][inside, w], vowel_env.f[inside])
             for w in np.flatnonzero(inner)
@@ -312,7 +316,7 @@ def c5_aperiodicity(sentence, track, envelope, rng):
         )
     truth = noise_share_db(vowel_env.f[band])
     for label, ap in (("kept", vowel_ap), ("warped", warp_aperiodicity(vowel_ap, 1.2))):
-        out = so.world_synthesize(vowel_track, warp_envelope(vowel_env, 1.2), ap)
+        out = so.source_filter_synthesize(vowel_track, warp_envelope(vowel_env, 1.2), ap)
         measured = so.harmonic_aperiodicity(out, vowel_track)
         measured_db = 10 * np.log10(np.maximum(measured.share[0][band][:, inner].mean(axis=1), 1e-12))
         print(
@@ -326,7 +330,7 @@ def c6_bdl_to_slt(bdl, bdl_track, bdl_env, bdl_ap):
     slt = so.load(SLT)
     slt_tracked = so.f0_track(slt)
     slt_track = (slt_tracked.t, slt_tracked.f0[0])
-    slt_env = so.cheaptrick(slt, slt_track)
+    slt_env = so.pitch_adaptive_envelope(slt, slt_track)
     bdl_f0 = np.asarray(bdl_track[1])
     f0_ratio = np.median(slt_track[1][slt_track[1] > 0]) / np.median(bdl_f0[bdl_f0 > 0])
     bdl_db, slt_db = mean_db(bdl_env, bdl_f0 > 0), mean_db(slt_env, slt_track[1] > 0)
@@ -358,8 +362,8 @@ def c6_bdl_to_slt(bdl, bdl_track, bdl_env, bdl_ap):
     }
     for label, (pitch, formant) in choices.items():
         changed = change_pitch(bdl_track, pitch)
-        out = so.world_synthesize(changed, warp_envelope(bdl_env, formant), bdl_ap)
-        out_db = mean_db(so.cheaptrick(out, changed), bdl_f0 > 0)
+        out = so.source_filter_synthesize(changed, warp_envelope(bdl_env, formant), bdl_ap)
+        out_db = mean_db(so.pitch_adaptive_envelope(out, changed), bdl_f0 > 0)
         print(
             f"  bdl, {label} ({pitch:.2f}, {formant:.3f}): mean voiced envelope"
             f" {level_free_rms(out_db, slt_db, bdl_env.f):.2f} dB"
@@ -443,19 +447,19 @@ def c7_any_source(sentence, tracked):
     n_fft = world_fft_size(fs)
     print("  F0 source    envelope    synthesizer        | F0 out/unchanged  within 5% | fitted warp")
     for f0_name, track in tracks.items():
-        aperiodicity = so.d4c(sentence, track)
-        envelopes = {"CheapTrick": so.cheaptrick(sentence, track), "cepstral": cepstral}
+        aperiodicity = so.band_aperiodicity(sentence, track)
+        envelopes = {"CheapTrick": so.pitch_adaptive_envelope(sentence, track), "cepstral": cepstral}
         for env_name, envelope in envelopes.items():
-            for synth_name in ("world_synthesize", "harmonic_complex"):
+            for synth_name in ("source_filter_synthesize", "harmonic_complex"):
                 if synth_name == "harmonic_complex" and f0_name != "Harvest":
                     continue
                 outputs = []
                 for pitch, formant in ((1.0, 1.0), (1.5, 1.2)):
                     changed = change_pitch(track, pitch)
                     view = envelope if formant == 1.0 else Warped(envelope, formant)
-                    if synth_name == "world_synthesize":
+                    if synth_name == "source_filter_synthesize":
                         world_envelope = on_world_grid(view, grid, fs, n_fft)
-                        outputs.append(so.world_synthesize(changed, world_envelope, aperiodicity))
+                        outputs.append(so.source_filter_synthesize(changed, world_envelope, aperiodicity))
                     else:
                         amplitude = pointwise_amplitude(view, grid, np.arange(0, fs / 2 + 1, 10.0))
                         outputs.append(
@@ -467,8 +471,8 @@ def c7_any_source(sentence, tracked):
                     (plain_track.t, plain_track.f0[0]), (moved_track.t, moved_track.f0[0])
                 )
                 both_voiced = np.asarray(track[1]) > 0
-                plain_db = mean_db(so.cheaptrick(plain, track), both_voiced)
-                moved_db = mean_db(so.cheaptrick(moved, change_pitch(track, 1.5)), both_voiced)
+                plain_db = mean_db(so.pitch_adaptive_envelope(plain, track), both_voiced)
+                moved_db = mean_db(so.pitch_adaptive_envelope(moved, change_pitch(track, 1.5)), both_voiced)
                 warp, residual = fitted_warp(plain_db, moved_db, np.arange(n_fft // 2 + 1) * fs / n_fft)
                 print(
                     f"  {f0_name:12s} {env_name:11s} {synth_name:18s} | {median:8.3f} {within:16.0%} |"
@@ -482,8 +486,8 @@ def main():
     sentence = so.load(BDL)
     tracked = so.f0_track(sentence)
     track = (tracked.t, tracked.f0[0])
-    envelope = so.cheaptrick(sentence, track)
-    aperiodicity = so.d4c(sentence, track)
+    envelope = so.pitch_adaptive_envelope(sentence, track)
+    aperiodicity = so.band_aperiodicity(sentence, track)
     reference_out = c1_identity(sentence, track, envelope, aperiodicity)
     c2_pitch(sentence, track, envelope, aperiodicity, reference_out)
     c3_vowel_formants(rng)

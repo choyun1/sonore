@@ -184,7 +184,7 @@ envelopes = {}
 lpc = so.LPC(vowel, win_dur=0.040, hop_dur=0.005)
 column = int(np.argmin(np.abs(lpc.t - time)))
 envelopes["LPC"] = lpc.envelope(freqs)[0, :, column]
-envelopes["CheapTrick"] = so.cheaptrick(vowel, ([time], [100.0]))([time], freqs)[0, :, 0]
+envelopes["CheapTrick"] = so.pitch_adaptive_envelope(vowel, ([time], [100.0]))([time], freqs)[0, :, 0]
 stft = so.STFT(vowel, win_dur=0.040, hop_dur=0.005)
 cepstrum = so.Cepstrum(stft).lifter(0.5 / 100)
 cep_freqs = np.arange(cepstrum.n_fft // 2 + 1) * FS / cepstrum.n_fft

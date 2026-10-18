@@ -141,7 +141,7 @@ def method_comparison():
             columns = [np.argmin(np.abs(cepstrum.t - time)) for time in times]
             found["cepstral envelope"] = [envelope_peaks(bin_freqs, log_envelope[:, i]) for i in columns]
 
-            cheaptrick = so.cheaptrick(sound, (times, np.full(len(times), true_f0)))
+            cheaptrick = so.pitch_adaptive_envelope(sound, (times, np.full(len(times), true_f0)))
             log_envelope = np.log(cheaptrick(times, FREQS)[0])
             found["CheapTrick"] = [envelope_peaks(FREQS, log_envelope[:, i]) for i in range(len(times))]
 

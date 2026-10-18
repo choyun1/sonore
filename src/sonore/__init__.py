@@ -99,7 +99,7 @@ from sonore.spatial.spatialization import (
     rect_to_hcc,
     spatialize,
 )
-from sonore.views.aperiodicity import Aperiodicity, d4c, harmonic_aperiodicity
+from sonore.views.aperiodicity import Aperiodicity, band_aperiodicity, harmonic_aperiodicity
 from sonore.views.cepstrum import Cepstrum
 from sonore.views.chroma import Chroma, chroma
 from sonore.views.envelope_peaks import EnvelopePeaks, envelope_peaks
@@ -127,7 +127,12 @@ from sonore.views.spectra import (
     reassigned_spectrogram,
     tandem_power,
 )
-from sonore.views.spectral_envelope import GridEnvelope, SpectralEnvelope, cheaptrick, warp_frequency
+from sonore.views.spectral_envelope import (
+    GridEnvelope,
+    SpectralEnvelope,
+    pitch_adaptive_envelope,
+    warp_frequency,
+)
 from sonore.views.timbre import (
     DescriptorTrack,
     attack_segment,
@@ -136,7 +141,7 @@ from sonore.views.timbre import (
     spectral_flux,
 )
 from sonore.views.view import NotInvertibleError, View
-from sonore.views.world import DIFFERENCES_FROM_WORLD, world_synthesize
+from sonore.views.world import DIFFERENCES_FROM_WORLD, source_filter_synthesize
 
 __version__ = "0.7.0"
 
@@ -183,10 +188,10 @@ __all__ = [
     "Aperiodicity",
     "DIFFERENCES_FROM_WORLD",
     "SpectralEnvelope",
-    "cheaptrick",
-    "d4c",
+    "pitch_adaptive_envelope",
+    "band_aperiodicity",
     "harmonic_aperiodicity",
-    "world_synthesize",
+    "source_filter_synthesize",
     "GridEnvelope",
     "scale_f0",
     "warp_frequency",

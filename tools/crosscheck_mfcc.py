@@ -9,7 +9,7 @@ implementations, and compare MFCCs with sonore's CheapTrick envelope.
   energy): ``python_speech_features.mfcc`` with its defaults.
 - Kaldi's ``compute-mfcc-feats`` through kaldi-native-fbank 1.22.3 (a C++
   re-implementation of Kaldi's feature code), from the stored fixture.
-- CheapTrick: MFCCs of a synthetic vowel taken from ``so.cheaptrick``'s
+- CheapTrick: MFCCs of a synthetic vowel taken from ``so.pitch_adaptive_envelope``'s
   envelope instead of its power spectrum, at several F0s (claim C5).
 
 The formulas are the claim checker's (``tools/check_mfcc_claims.py``). The
@@ -156,7 +156,9 @@ for vowel in VOWELS:
         raw[vowel, f0] = smoothed_shape(
             mel_matrix(n_mels, 512, fs)[0] @ (np.abs(np.fft.rfft(segment, 512)) ** 2)
         )
-        envelope = so.cheaptrick(so.Sound(signal, fs), (np.array([middle / fs]), np.array([float(f0)])))
+        envelope = so.pitch_adaptive_envelope(
+            so.Sound(signal, fs), (np.array([middle / fs]), np.array([float(f0)]))
+        )
         envelope_weights, _ = mel_matrix(n_mels, envelope.n_fft, fs)
         smooth[vowel, f0] = smoothed_shape(envelope_weights @ envelope.data[0, :, 0])
 

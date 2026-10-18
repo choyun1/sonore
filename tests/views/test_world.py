@@ -65,11 +65,11 @@ def test_fft_size():
 def test_cheaptrick_is_worlds(reference, name):
     sound, track = case(reference, name)
     step = int(reference["bin_step"])
-    envelope = so.cheaptrick(sound, track)
+    envelope = so.pitch_adaptive_envelope(sound, track)
     assert envelope.data.shape == (1, 513, len(track[0]))
     ours = envelope.to_world()[:, ::step]
     assert np.max(np.abs(10 * np.log10(ours / reference[f"{name}_envelope"]))) < 1e-6
-    paper = so.cheaptrick(sound, track, q1=-0.09).to_world()[:, ::step]
+    paper = so.pitch_adaptive_envelope(sound, track, q1=-0.09).to_world()[:, ::step]
     assert np.max(np.abs(10 * np.log10(paper / reference[f"{name}_envelope_paper_q1"]))) < 1e-6
 
 
@@ -77,14 +77,16 @@ def test_cheaptrick_is_worlds(reference, name):
 def test_d4c_is_worlds(reference, name):
     sound, track = case(reference, name)
     step = int(reference["bin_step"])
-    ours = so.d4c(sound, track).to_world()[:, ::step]
+    ours = so.band_aperiodicity(sound, track).to_world()[:, ::step]
     assert np.max(np.abs(20 * np.log10(ours / reference[f"{name}_aperiodicity"]))) < 1e-8
 
 
 @pytest.mark.parametrize("name", ["vowel", "sentence"])
 def test_synthesis_is_worlds(reference, name):
     sound, track = case(reference, name)
-    y = so.world_synthesize(track, so.cheaptrick(sound, track), so.d4c(sound, track))
+    y = so.source_filter_synthesize(
+        track, so.pitch_adaptive_envelope(sound, track), so.band_aperiodicity(sound, track)
+    )
     expected = reference[f"{name}_synthesized"]
     assert y.n_samples == len(expected) and y.fs == FS
     assert np.max(np.abs(y.data[:, 0] - expected)) < 1e-9 * np.max(np.abs(expected))
@@ -100,7 +102,10 @@ def test_synthesis_is_worlds_across_voicing_edges(reference, variant):
     # WORLD extends the track by a step), and a hop that is not a whole
     # number of nanoseconds
     sound, (times, f0) = case(reference, "edges")
-    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+    envelope, aperiodicity = (
+        so.pitch_adaptive_envelope(sound, (times, f0)),
+        so.band_aperiodicity(sound, (times, f0)),
+    )
     if variant == "_ap_0_8":
         aperiodicity = so.Aperiodicity(np.full_like(aperiodicity.data, 0.8), times, FS, "constant")
     if variant == "_f0_16_3":
@@ -111,7 +116,7 @@ def test_synthesis_is_worlds_across_voicing_edges(reference, variant):
         times = np.arange(len(times)) * (10 / 3) / 1000
         envelope = so.SpectralEnvelope(envelope.data, times, FS, envelope.q1)
         aperiodicity = so.Aperiodicity(aperiodicity.data, times, FS, aperiodicity.method)
-    y = so.world_synthesize((times, f0), envelope, aperiodicity)
+    y = so.source_filter_synthesize((times, f0), envelope, aperiodicity)
     expected = reference[f"edges_synthesized{variant}"]
     assert y.n_samples == len(expected)
     assert np.max(np.abs(y.data[:, 0] - expected)) < 1e-9 * np.max(np.abs(expected))
@@ -119,36 +124,44 @@ def test_synthesis_is_worlds_across_voicing_edges(reference, variant):
 
 def test_an_f0_track_object_and_a_one_channel_envelope_function(reference):
     sound, (times, f0) = case(reference, "vowel")
-    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
-    expected = so.world_synthesize((times, f0), envelope, aperiodicity)
+    envelope, aperiodicity = (
+        so.pitch_adaptive_envelope(sound, (times, f0)),
+        so.band_aperiodicity(sound, (times, f0)),
+    )
+    expected = so.source_filter_synthesize((times, f0), envelope, aperiodicity)
 
     track = SimpleNamespace(t=times, f0=f0[None, :])  # anything with .t and .f0 is a track
-    assert np.array_equal(so.world_synthesize(track, envelope, aperiodicity).data, expected.data)
+    assert np.array_equal(so.source_filter_synthesize(track, envelope, aperiodicity).data, expected.data)
     # an envelope function giving one channel is used for every channel of
     # the aperiodicity
     stereo = so.Aperiodicity(np.repeat(aperiodicity.data, 2, axis=0), times, FS, "d4c")
-    y = so.world_synthesize((times, f0), lambda t, f: envelope(t, f)[:1], stereo)
+    y = so.source_filter_synthesize((times, f0), lambda t, f: envelope(t, f)[:1], stereo)
     assert y.n_channels == 2
     assert np.allclose(y.data[:, 1], expected.data[:, 0], rtol=0, atol=1e-9 * np.abs(expected.data).max())
 
 
 def test_a_track_off_the_grid_is_voiced_where_its_nearest_window_is(reference):
     sound, (times, f0) = case(reference, "vowel")
-    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+    envelope, aperiodicity = (
+        so.pitch_adaptive_envelope(sound, (times, f0)),
+        so.band_aperiodicity(sound, (times, f0)),
+    )
     # a track at half the windows' spacing, offset by a quarter: every grid
     # time is a quarter of a hop from one given time and three quarters from
     # the other, so the nearest is never the one below
     half = np.arange(2 * len(times)) * 0.0025 + 0.00125 - 0.0025
     coarse = np.where(np.arange(len(half)) % 4 < 2, 150.0, 0.0)
-    y = so.world_synthesize((half, coarse), envelope, aperiodicity)
+    y = so.source_filter_synthesize((half, coarse), envelope, aperiodicity)
     nearest = coarse[np.round((times - half[0]) / 0.0025).astype(int)]
     on_grid = np.where(nearest > 0, 150.0, 0.0)
-    assert np.array_equal(y.data, so.world_synthesize((times, on_grid), envelope, aperiodicity).data)
+    assert np.array_equal(y.data, so.source_filter_synthesize((times, on_grid), envelope, aperiodicity).data)
     # halfway between a voiced and an unvoiced given time, the earlier one wins
-    tie = so.world_synthesize(([0.0, 0.01, 0.02], [150.0, 0.0, 0.0]), envelope, aperiodicity)
+    tie = so.source_filter_synthesize(([0.0, 0.01, 0.02], [150.0, 0.0, 0.0]), envelope, aperiodicity)
     on_grid = np.zeros(len(times))
     on_grid[:2] = 150.0
-    assert np.array_equal(tie.data, so.world_synthesize((times, on_grid), envelope, aperiodicity).data)
+    assert np.array_equal(
+        tie.data, so.source_filter_synthesize((times, on_grid), envelope, aperiodicity).data
+    )
 
 
 def test_fresh_noise_is_standard_normal():
@@ -157,17 +170,17 @@ def test_fresh_noise_is_standard_normal():
 
 def test_fresh_noise_changes_only_the_noise(reference):
     sound, track = case(reference, "vowel")
-    envelope, aperiodicity = so.cheaptrick(sound, track), so.d4c(sound, track)
-    world = so.world_synthesize(track, envelope, aperiodicity)
-    again = so.world_synthesize(track, envelope, aperiodicity)
+    envelope, aperiodicity = so.pitch_adaptive_envelope(sound, track), so.band_aperiodicity(sound, track)
+    world = so.source_filter_synthesize(track, envelope, aperiodicity)
+    again = so.source_filter_synthesize(track, envelope, aperiodicity)
     assert np.array_equal(world.data, again.data)
-    fresh = so.world_synthesize(track, envelope, aperiodicity, rng=1)
-    assert np.array_equal(fresh.data, so.world_synthesize(track, envelope, aperiodicity, rng=1).data)
+    fresh = so.source_filter_synthesize(track, envelope, aperiodicity, rng=1)
+    assert np.array_equal(fresh.data, so.source_filter_synthesize(track, envelope, aperiodicity, rng=1).data)
     assert not np.allclose(fresh.data, world.data)
     # with no aperiodic part (WORLD keeps a noise share of 1e-6) the noise
     # hardly matters
     periodic = so.Aperiodicity(np.full_like(aperiodicity.data, 0.0), aperiodicity.t, FS, "none")
-    difference = so.world_synthesize(track, envelope, periodic, rng=1) - so.world_synthesize(
+    difference = so.source_filter_synthesize(track, envelope, periodic, rng=1) - so.source_filter_synthesize(
         track, envelope, periodic
     )
     assert so.rms(difference.data) < 0.01 * so.rms(world.data)
@@ -176,20 +189,22 @@ def test_fresh_noise_changes_only_the_noise(reference):
 def test_channels_are_analyzed_separately(reference):
     sound, track = case(reference, "vowel")
     stereo = so.Sound(np.column_stack([sound.data[:, 0], 0.5 * sound.data[:, 0]]), FS)
-    envelope = so.cheaptrick(stereo, track)
-    mono = so.cheaptrick(sound, track)
+    envelope = so.pitch_adaptive_envelope(stereo, track)
+    mono = so.pitch_adaptive_envelope(sound, track)
     assert np.array_equal(envelope.data[0], mono.data[0])
     assert np.allclose(envelope.data[1], 0.25 * mono.data[0], rtol=1e-6)
-    aperiodicity = so.d4c(stereo, track)
-    y = so.world_synthesize(track, envelope, aperiodicity)
+    aperiodicity = so.band_aperiodicity(stereo, track)
+    y = so.source_filter_synthesize(track, envelope, aperiodicity)
     assert y.n_channels == 2
-    assert np.array_equal(y.data[:, 0], so.world_synthesize(track, mono, so.d4c(sound, track)).data[:, 0])
+    assert np.array_equal(
+        y.data[:, 0], so.source_filter_synthesize(track, mono, so.band_aperiodicity(sound, track)).data[:, 0]
+    )
 
 
 def test_views(reference):
     sound, track = case(reference, "sentence")
-    envelope = so.cheaptrick(sound, track)
-    aperiodicity = so.d4c(sound, track)
+    envelope = so.pitch_adaptive_envelope(sound, track)
+    aperiodicity = so.band_aperiodicity(sound, track)
     assert np.allclose(envelope.f, np.arange(513) * FS / 1024)
     assert np.allclose(envelope.t, track[0])
     # reading at window times and bin frequencies gives the stored values
@@ -207,38 +222,43 @@ def test_views(reference):
 def test_bad_tracks_are_refused(reference):
     sound, (times, f0) = case(reference, "vowel")
     with pytest.raises(ValueError, match="values"):
-        so.cheaptrick(sound, (times, f0[:-1]))
+        so.pitch_adaptive_envelope(sound, (times, f0[:-1]))
     with pytest.raises(TypeError):
-        so.d4c(sound, f0)
+        so.band_aperiodicity(sound, f0)
     # an F0 track off the aperiodicity's time windows is read onto them, but
     # those time windows themselves must start at 0, as WORLD assumes
     late = (times + 0.01, f0)
     with pytest.raises(ValueError, match="evenly spaced from time 0"):
-        so.world_synthesize(late, so.cheaptrick(sound, late), so.d4c(sound, late))
+        so.source_filter_synthesize(
+            late, so.pitch_adaptive_envelope(sound, late), so.band_aperiodicity(sound, late)
+        )
     with pytest.raises(ValueError, match="whole-number"):
-        so.cheaptrick(so.Sound(sound.data, 16000.5), (times, f0))
+        so.pitch_adaptive_envelope(so.Sound(sound.data, 16000.5), (times, f0))
     with pytest.raises(ValueError, match="0 \\(unvoiced\\) or positive"):
-        so.cheaptrick(sound, (times, -f0))
+        so.pitch_adaptive_envelope(sound, (times, -f0))
     with pytest.raises(ValueError, match="channels"):
-        so.cheaptrick(sound, (times, np.vstack([f0, f0])))
-    envelope, aperiodicity = so.cheaptrick(sound, (times, f0)), so.d4c(sound, (times, f0))
+        so.pitch_adaptive_envelope(sound, (times, np.vstack([f0, f0])))
+    envelope, aperiodicity = (
+        so.pitch_adaptive_envelope(sound, (times, f0)),
+        so.band_aperiodicity(sound, (times, f0)),
+    )
     one = so.Aperiodicity(aperiodicity.data[:, :, :1], times[:1], FS, "d4c")
     with pytest.raises(ValueError, match="at least two time windows"):
-        so.world_synthesize((times[:1], f0[:1]), lambda t, f: envelope(t, f), one)
+        so.source_filter_synthesize((times[:1], f0[:1]), lambda t, f: envelope(t, f), one)
     # a 17 Hz voice beside an unvoiced stretch on a 200 ms hop puts pulses
     # further apart than the FFT is long (WORLD itself writes past its buffer)
     slow = np.arange(12) * 0.2
     flat = so.SpectralEnvelope(np.ones((1, 513, 12)), slow, FS, -0.15)
     with pytest.raises(ValueError, match="do not fit"):
-        so.world_synthesize(
+        so.source_filter_synthesize(
             (slow, np.array([0, 0, 0, 17, 17, 17, 17, 0, 0, 17, 17, 0.0])),
             flat,
             so.Aperiodicity(np.full((1, 513, 12), 0.1), slow, FS, "constant"),
         )
     with pytest.raises(TypeError, match="envelope"):
-        so.world_synthesize((times, f0), envelope.data, aperiodicity)
+        so.source_filter_synthesize((times, f0), envelope.data, aperiodicity)
     with pytest.raises(ValueError, match="gave shape"):
-        so.world_synthesize((times, f0), lambda t, f: envelope(t, f)[0], aperiodicity)
+        so.source_filter_synthesize((times, f0), lambda t, f: envelope(t, f)[0], aperiodicity)
 
 
 # ------------------------------------------------- harmonic residual
@@ -277,7 +297,9 @@ def test_harmonic_aperiodicity_reads_a_known_noise_share(noise_db, vibrato):
     aperiodicity = so.harmonic_aperiodicity(sound, track)
     assert aperiodicity.method == "harmonic residual"
     inside = (track[0] > 0.05) & (track[0] < 0.45)
-    shares = aperiodicity.bands([200, 1000, 3000, 6000], envelope=so.cheaptrick(sound, track))[0][:, inside]
+    shares = aperiodicity.bands([200, 1000, 3000, 6000], envelope=so.pitch_adaptive_envelope(sound, track))[
+        0
+    ][:, inside]
     expected = 10 ** (noise_db / 10) / (1 + 10 ** (noise_db / 10))
     assert np.allclose(10 * np.log10(shares.mean(axis=1)), 10 * np.log10(expected), atol=1.5)
 
@@ -296,4 +318,4 @@ def test_unvoiced_windows_are_noise():
     f0[:20] = 0
     aperiodicity = so.harmonic_aperiodicity(sound, (times, f0))
     assert np.all(aperiodicity.data[0, :, :20] == 1)
-    assert np.all(so.d4c(sound, (times, f0)).data[0, :, :20] == 1 - 1e-12)
+    assert np.all(so.band_aperiodicity(sound, (times, f0)).data[0, :, :20] == 1 - 1e-12)
