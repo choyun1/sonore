@@ -9,7 +9,7 @@ from sonore.sources.gaussian_spectrogram import _correlated_field
 FS = 16000
 
 
-def _cells_db(env: so.Envelopes, hop: float = 0.010) -> np.ndarray:
+def _cells_db(env: so.TemporalEnvelope, hop: float = 0.010) -> np.ndarray:
     """Cell levels [dB] (band, window): at a window's center only that window is nonzero."""
     n_windows = int(np.ceil(env.t[-1] / hop)) + 1
     centers = np.minimum(np.round(hop * np.arange(n_windows) * env.fs).astype(int), len(env.t) - 1)
@@ -39,7 +39,7 @@ def test_field_covariance_is_the_separable_exponential():
 
 def test_shape_reproducibility_and_edges():
     env = so.gaussian_spectrogram(0.3, FS, rng=4)
-    assert isinstance(env, so.Envelopes)
+    assert isinstance(env, so.TemporalEnvelope)
     assert env.data.shape == (4800, 41, 1)
     assert env.filterbank.n_bands == 39
     np.testing.assert_array_equal(env.data, so.gaussian_spectrogram(0.3, FS, rng=4).data)

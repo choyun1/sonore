@@ -11,7 +11,7 @@ import numpy as np
 from sonore.core.sound import Sound
 from sonore.core.utils import _parabola_vertex, db_to_amp
 from sonore.frames.gabor import STFT, TVSTFT
-from sonore.views.spectral_envelope import GridEnvelope
+from sonore.views.spectral_envelope import SpectralEnvelope, _fft_frequencies
 from sonore.views.view import View
 
 if TYPE_CHECKING:
@@ -142,15 +142,16 @@ class Cepstrum(View):
         peaks, because the lifter averages the peaks with the dips between them."""
         return np.exp(np.fft.rfft(self._full(), axis=1).real)
 
-    def envelope_view(self) -> GridEnvelope:
-        """:meth:`envelope` as power on this cepstrum's time windows and
+    def envelope_view(self) -> SpectralEnvelope:
+        """:meth:`envelope` as a :class:`~sonore.views.spectral_envelope.SpectralEnvelope`
+        (``method="cepstrum"``): power on this cepstrum's time windows and
         frequencies, read as ``env(t, f)``, so it goes wherever a spectral
         envelope is taken (:func:`~sonore.views.spectral_envelope.warp_frequency`,
         :func:`~sonore.sources.source_filter.source_filter_synthesize`,
         :func:`~sonore.sources.waveforms.harmonic_complex`). Lifter first:
         ``cep.lifter(0.5 / f0).envelope_view()``."""
-        freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
-        return GridEnvelope(self.envelope() ** 2, self.t, freqs)
+        freqs = _fft_frequencies(self.fs, self.n_fft)
+        return SpectralEnvelope(self.envelope() ** 2, self.t, freqs, fs=self.fs, method="cepstrum")
 
     def to_stft(self, *, phase: Literal["original", "minimum"] = "original") -> STFT | TVSTFT:
         """Coefficients of the source's type and frame with :meth:`envelope`

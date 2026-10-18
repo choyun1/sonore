@@ -24,8 +24,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BLOB = "https://github.com/choyun1/sonore/blob/main/"
 LINK = re.compile(r"\[`([\w.]+)`\]\(" + re.escape(BLOB) + r"([\w/]+\.py)(?:#L(\d+))?\)")
+# the built pages add target and rel attributes to the link, kept as they are
 HTML_LINK = re.compile(
-    r'<a href="' + re.escape(BLOB) + r'([\w/]+\.py)(?:#L(\d+))?"><code>([\w.]+)</code></a>'
+    r'<a href="' + re.escape(BLOB) + r'([\w/]+\.py)(?:#L(\d+))?"'
+    r'((?: [\w-]+="[^"]*")*)><code>([\w.]+)</code></a>'
 )
 GALLERY = ROOT / "docs" / "gallery"
 
@@ -59,16 +61,16 @@ def expected_link(text: str, rel_path: str) -> str:
     return f"[`{text}`]({BLOB}{rel_path}{anchor})"
 
 
-def expected_html_link(text: str, rel_path: str) -> str:
+def expected_html_link(text: str, rel_path: str, attributes: str = "") -> str:
     """The built-page form of :func:`expected_link`."""
     m = LINK.fullmatch(expected_link(text, rel_path))
     anchor = f"#L{m[3]}" if m[3] else ""
-    return f'<a href="{BLOB}{m[2]}{anchor}"><code>{text}</code></a>'
+    return f'<a href="{BLOB}{m[2]}{anchor}"{attributes}><code>{text}</code></a>'
 
 
 def fixed(text: str) -> str:
     text = LINK.sub(lambda m: expected_link(m[1], m[2]), text)
-    return HTML_LINK.sub(lambda m: expected_html_link(m[3], m[1]), text)
+    return HTML_LINK.sub(lambda m: expected_html_link(m[4], m[1], m[3]), text)
 
 
 def linked_files() -> list[Path]:

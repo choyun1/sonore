@@ -50,7 +50,7 @@ from sonore.core.sound import Sound
 from sonore.core.utils import RNG, as_rng, db_to_amp, n_samples, time_axis
 from sonore.frames.filterbank import Filterbank, Subbands, cosine_filterbank
 from sonore.sources.waveforms import gaussian_noise
-from sonore.views.envelopes import Envelopes
+from sonore.views.temporal_envelope import TemporalEnvelope
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -78,9 +78,9 @@ class _Pattern:
 
     __radd__ = __add__
 
-    def render(self, filterbank: Filterbank, duration: float, fs: float) -> Envelopes:
+    def render(self, filterbank: Filterbank, duration: float, fs: float) -> TemporalEnvelope:
         """The pattern evaluated at each band center of ``filterbank`` (with
-        ``x`` in octaves above ``filterbank.f_lo``), as Envelopes."""
+        ``x`` in octaves above ``filterbank.f_lo``), as a TemporalEnvelope."""
         return render(self, filterbank, duration, fs)
 
     def plot(
@@ -310,15 +310,15 @@ def _check_resolution(pattern: Pattern, per_octave: float, what: str) -> None:
         )
 
 
-def render(pattern: Pattern, filterbank: Filterbank, duration: float, fs: float) -> Envelopes:
+def render(pattern: Pattern, filterbank: Filterbank, duration: float, fs: float) -> TemporalEnvelope:
     """Evaluate any pattern (including a plain ``f(t, x)``) on the band centers
-    of an octave filterbank, giving :class:`~sonore.views.envelopes.Envelopes`.
+    of an octave filterbank, giving a :class:`~sonore.views.temporal_envelope.TemporalEnvelope`.
     Compare it with a sound's measured envelopes on the same filterbank."""
     if filterbank.scale.name != "octave":
         raise TypeError("patterns are defined in octaves; use a filterbank on the octave scale")
     t = time_axis(n_samples(duration, fs), fs)
     x = np.log2(filterbank.cfs / filterbank.f_lo)
-    return Envelopes(_evaluate(pattern, t, x).T, fs, filterbank)
+    return TemporalEnvelope(_evaluate(pattern, t, x).T, fs, filterbank)
 
 
 def _flat_noise_bands(noise: Sound, filterbank: Filterbank) -> Subbands:

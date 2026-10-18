@@ -62,7 +62,7 @@ from sonore.frames.frame import Frame, _check_frame
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
-    from sonore.views.envelopes import Envelopes
+    from sonore.views.temporal_envelope import TemporalEnvelope
 
 __all__ = [
     "FilterType",
@@ -452,7 +452,7 @@ class Filterbank(Frame):
         so the FFT length has no large prime factor, which makes the
         transforms about four times faster than at a prime length (measured
         by tools/measure_docstring_numbers.py). The padding travels
-        with the Subbands (and any Envelopes derived from them) and is
+        with the Subbands (and any envelopes derived from them) and is
         removed on output, so ``.data`` and :meth:`Subbands.to_sound` have
         the sound's own length, and analysis followed by synthesis is exact.
 
@@ -697,17 +697,17 @@ def morlet_filterbank(
 
 
 class _PaddedBands:
-    """What Subbands and Envelopes share: one signal per filter of a filterbank,
-    stored as ``(n_samples, n_bands, n_channels)`` with ``pad`` zero samples at
-    each end that :attr:`data` hides. The array is a copy, read-only, so the
-    caller's array stays writeable and the object can't change under its users."""
+    """What Subbands and TemporalEnvelope share: one signal per filter of a
+    filterbank (or, for an envelope with no filterbank, one band), stored as
+    ``(n_samples, n_bands, n_channels)`` with ``pad`` zero samples at each end
+    that :attr:`data` hides. The array is a copy, read-only, so the caller's
+    array stays writeable and the object can't change under its users."""
 
-    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank, pad: int = 0):
+    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank | None, pad: int = 0):
         bands = np.array(data, dtype=float)
-        if bands.ndim != 3 or bands.shape[1] != filterbank.n_filters:
-            raise ValueError(
-                f"expected shape (n_samples, {filterbank.n_filters}, n_channels), got {bands.shape}"
-            )
+        n_bands = 1 if filterbank is None else filterbank.n_filters
+        if bands.ndim != 3 or bands.shape[1] != n_bands:
+            raise ValueError(f"expected shape (n_samples, {n_bands}, n_channels), got {bands.shape}")
         if 2 * pad >= bands.shape[0]:
             raise ValueError("padding is longer than the data")
         bands = self._checked(bands)
@@ -715,7 +715,7 @@ class _PaddedBands:
         self._full, self.fs, self.filterbank, self.pad = bands, fs, filterbank, int(pad)
 
     def _checked(self, bands: np.ndarray) -> np.ndarray:
-        """A subclass's own check on the band values; Envelopes clips round-off negatives."""
+        """A subclass's own check on the band values; TemporalEnvelope clips round-off negatives."""
         return bands
 
     @property
@@ -728,7 +728,17 @@ class _PaddedBands:
         return self._full.shape[0] - 2 * self.pad
 
     @property
+    def _bank(self) -> Filterbank:
+        """The filterbank, for the operations that need one; a single envelope has none."""
+        if self.filterbank is None:
+            raise TypeError("this envelope has no filterbank; it is a single envelope, not one per band")
+        return self.filterbank
+
+    @property
     def cfs(self) -> np.ndarray:
+        """The filters' center frequencies [Hz], edge filters included."""
+        if self.filterbank is None:
+            raise TypeError("this envelope has no filterbank, so no band centers")
         return self.filterbank.cfs
 
     def __len__(self) -> int:
@@ -759,7 +769,7 @@ class Subbands(_PaddedBands):
 
     The Hilbert decomposition of every band at once::
 
-        sb.envelopes()      # Envelopes: one Envelope per band (a cochleagram)
+        sb.envelopes()      # TemporalEnvelope: one envelope per band (a cochleagram)
         sb.tfs()            # Subbands: the fine structure, itself audible
         sb.envelopes() * sb.tfs()   # == sb
 
@@ -776,12 +786,13 @@ class Subbands(_PaddedBands):
         with threads():
             return hilbert(self._full, axis=0)
 
-    def envelopes(self, *, lowpass: float | None = None, fs: float | None = None) -> Envelopes:
-        """Hilbert envelope of every band, as :class:`~sonore.views.envelopes.Envelopes`.
-        Optionally lowpass-filtered [Hz] and then resampled to ``fs``."""
-        from sonore.views.envelopes import Envelopes
+    def envelopes(self, *, lowpass: float | None = None, fs: float | None = None) -> TemporalEnvelope:
+        """Hilbert envelope of every band, as one
+        :class:`~sonore.views.temporal_envelope.TemporalEnvelope` that keeps this
+        filterbank. Optionally lowpass-filtered [Hz] and then resampled to ``fs``."""
+        from sonore.views.temporal_envelope import TemporalEnvelope
 
-        env = Envelopes(np.abs(self._analytic()), self.fs, self.filterbank, pad=self.pad)
+        env = TemporalEnvelope(np.abs(self._analytic()), self.fs, self.filterbank, pad=self.pad)
         if lowpass is not None:
             env = env.lowpass(lowpass)
         if fs is not None:
@@ -825,7 +836,7 @@ class Subbands(_PaddedBands):
         signal after the bands are modified. For the cosine banks this is
         re-filtering each band and summing; with the default padding,
         re-filtering can't wrap around either."""
-        return self.filterbank.synthesize(self)
+        return self._bank.synthesize(self)
 
     def sum(self) -> Sound:
         """Add the bands without re-filtering. :meth:`to_sound` is almost

@@ -121,7 +121,7 @@ def test_shape_checks_use_n_filters():
     with pytest.raises(ValueError, match=r"\(n_samples, 5, n_channels\)"):
         so.Subbands(np.zeros((N, 7, 1)), FS, fb)
     with pytest.raises(ValueError, match=r"\(n_samples, 5, n_channels\)"):
-        so.Envelopes(np.zeros((N, 7, 1)), FS, fb)
+        so.TemporalEnvelope(np.zeros((N, 7, 1)), FS, fb)
 
 
 # ------------------------------------------------------------------- Gabor

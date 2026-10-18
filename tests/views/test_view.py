@@ -9,15 +9,13 @@ VIEW_NAMES = [
     "Spectrum",
     "TFPower",
     "ReassignedSpectrogram",
-    "Envelope",
-    "Envelopes",
+    "TemporalEnvelope",
     "ModulationSpectrum",
     "ModulationSpectrogram",
     "Cepstrum",
     "MFCC",
     "LPC",
     "FormantTrack",
-    "GridEnvelope",
     "SpectralEnvelope",
     "Aperiodicity",
     "Mask",
@@ -62,7 +60,9 @@ def _public_classes():
         name: getattr(module, name)
         for module, names in namespaces
         for name in names
-        if isinstance(getattr(module, name), type) and not issubclass(getattr(module, name), BaseException)
+        if isinstance(getattr(module, name), type)
+        and not issubclass(getattr(module, name), BaseException)
+        and not getattr(getattr(module, name), "_is_protocol", False)  # TimeFrequencyGrid is a Protocol
     }
 
 
@@ -99,7 +99,7 @@ def test_frames_and_tools_are_not_views():
 
 
 # Views with a canonical route back to a sound; every other view refuses to_sound.
-ROUTES_BACK = {"Spectrum", "Cepstrum", "PVAnalysis", "ModulationSpectrum", "Envelope", "Envelopes", "Chroma"}
+ROUTES_BACK = {"Spectrum", "Cepstrum", "PVAnalysis", "ModulationSpectrum", "TemporalEnvelope", "Chroma"}
 
 
 @pytest.mark.parametrize("view", list(_public_subclasses(View)), ids=lambda view: view.__name__)

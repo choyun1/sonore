@@ -19,7 +19,7 @@ def bump_envelope(center=1000.0, n_windows=20):
     freqs = np.linspace(0, FS / 2, 513)
     times = np.arange(n_windows) * HOP
     power = np.repeat(bump_power(freqs, center)[:, None], n_windows, axis=1)
-    return so.GridEnvelope(power, times, freqs)
+    return so.SpectralEnvelope(power, times, freqs)
 
 
 def peak(view, window=0):
@@ -110,7 +110,7 @@ class TestWarpFrequency:
         envelope = bump_envelope(1000.0)
         for ratio in (0.8, 1.25):
             warped = so.warp_frequency(envelope, ratio)
-            assert isinstance(warped, so.GridEnvelope)
+            assert isinstance(warped, so.SpectralEnvelope)
             assert abs(peak(warped) - 1000.0 * ratio) <= 8.0  # one bin is 7.8 Hz
 
     def test_reads_the_view_at_f_over_ratio(self):
@@ -184,7 +184,7 @@ class TestSynthesizers:
 
     def test_any_envelope(self, vowel):
         _, track, envelope, aperiodicity = vowel
-        as_grid = so.GridEnvelope(envelope.data, envelope.t, envelope.f)
+        as_grid = so.SpectralEnvelope(envelope.data, envelope.t, envelope.f)
         plain = so.source_filter_synthesize(track, envelope, aperiodicity, rng=0)
         np.testing.assert_allclose(
             so.source_filter_synthesize(track, as_grid, aperiodicity, rng=0).data, plain.data, atol=1e-12

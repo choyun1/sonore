@@ -13,7 +13,7 @@ from scipy.signal import savgol_filter
 from sonore.core.sound import Sound
 from sonore.core.utils import MelScale, db_to_power, freq_to_mel, mel_to_freq
 from sonore.frames.gabor import STFT, TVSTFT, GaborFrame
-from sonore.views.spectral_envelope import GridEnvelope
+from sonore.views.spectral_envelope import SpectralEnvelope, _fft_frequencies
 from sonore.views.view import View
 
 if TYPE_CHECKING:
@@ -347,18 +347,22 @@ class MFCC(View):
         log_power = np.einsum("qm,cmw->cqw", interpolation, smoothed_log_power)
         return np.exp(log_power)
 
-    def envelope_view(self, f: ArrayLike | None = None) -> GridEnvelope:
-        """:meth:`envelope` on this analysis's time windows, at frequencies
-        ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
-        wherever a spectral envelope is taken
+    def envelope_view(self, f: ArrayLike | None = None) -> SpectralEnvelope:
+        """:meth:`envelope` as a :class:`~sonore.views.spectral_envelope.SpectralEnvelope`
+        (``method="MFCC"``, with the coefficient count in its settings) on
+        this analysis's time windows, at frequencies ``f`` (by default its
+        FFT bins), read as ``env(t, f)``, so it goes wherever a spectral
+        envelope is taken
         (:func:`~sonore.views.spectral_envelope.warp_frequency`,
         :func:`~sonore.sources.source_filter.source_filter_synthesize`,
         :func:`~sonore.sources.waveforms.harmonic_complex`). It holds band
         powers, sums over triangles that widen with frequency, so with
         ``triangles="height"`` it tilts upward against a spectral density;
         ``triangles="area"`` removes most of that tilt."""
-        freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft if f is None else np.asarray(f, float)
-        return GridEnvelope(self.envelope(freqs), self.t, freqs)
+        freqs = _fft_frequencies(self.fs, self.n_fft) if f is None else np.asarray(f, float)
+        settings = {"n_mfcc": self.data.shape[1]}
+        power = self.envelope(freqs)
+        return SpectralEnvelope(power, self.t, freqs, fs=self.fs, method="MFCC", settings=settings)
 
     def plot(
         self, ax: Axes | None = None, *, channel: int = 0, kind: Literal["mfcc", "mel"] = "mfcc", **kwargs

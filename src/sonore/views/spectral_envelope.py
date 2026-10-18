@@ -1,5 +1,16 @@
 """Spectral envelopes, and moving them along frequency.
 
+A spectral envelope is the smooth curve over a time window's spectrum with the
+source taken out: the harmonics, their phase and everything finer than the
+smoothing. (A *temporal* envelope, :mod:`sonore.views.temporal_envelope`, is the other
+"envelope": smoothed along time, with the fine structure taken out.) Every
+estimator in sonore returns the one class :class:`SpectralEnvelope`, power on a
+grid of times and frequencies with the estimator's name in ``method`` and its
+parameters in ``settings``: :func:`pitch_adaptive_envelope` here,
+:meth:`Cepstrum.envelope_view <sonore.views.cepstrum.Cepstrum.envelope_view>`,
+:meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>` and
+:meth:`LPC.envelope_view <sonore.views.lpc.LPC.envelope_view>`.
+
 :func:`pitch_adaptive_envelope` is CheapTrick (Morise, 2015), written from the paper:
 a window three periods long, its power spectrum smoothed over 2 F0 / 3, and a
 cepstral lifter that removes the harmonic ripple and restores the level the
@@ -9,15 +20,14 @@ size), the choice is stated in the function's docstring. It is not WORLD's
 code: with the same ``q1`` its envelopes are within 0.01 dB of WORLD's
 (median over voiced time windows of two recorded sentences), not equal.
 
-An envelope here is anything read as ``env(t, f)``, giving power at times
-``t`` and frequencies ``f`` with shape ``(n_channels, len(f), len(t))``:
-a :class:`SpectralEnvelope` (CheapTrick), a :class:`GridEnvelope` (from
-:meth:`Cepstrum.envelope_view <sonore.views.cepstrum.Cepstrum.envelope_view>`
-or :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`), or a
-function. :class:`~sonore.views.aperiodicity.Aperiodicity` is read the same
-way. :func:`warp_frequency` moves an envelope (or an aperiodicity) along
-frequency without looking at how it was made, so any envelope and any
-synthesizer combine: :func:`~sonore.sources.source_filter.source_filter_synthesize` and
+An envelope is read as ``env(t, f)``, giving power at times ``t`` and
+frequencies ``f`` with shape ``(n_channels, len(f), len(t))``: a
+:class:`SpectralEnvelope`, anything else held on a grid
+(:class:`~sonore.views.view.TimeFrequencyGrid`), or a plain function.
+:class:`~sonore.views.aperiodicity.Aperiodicity` is read the same way.
+:func:`warp_frequency` moves an envelope (or an aperiodicity) along frequency
+without looking at how it was made, so any envelope and any synthesizer
+combine: :func:`~sonore.sources.source_filter.source_filter_synthesize` and
 :func:`~sonore.sources.waveforms.harmonic_complex` both take any envelope.
 """
 
@@ -25,22 +35,22 @@ from __future__ import annotations
 
 import copy
 import numbers
-from collections.abc import Callable
-from typing import TYPE_CHECKING, TypeGuard
+from collections.abc import Callable, Mapping
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 from sonore.core.sound import Sound
 from sonore.sources.waveforms import _contour_per_channel
-from sonore.views.view import View
+from sonore.views.view import TimeFrequencyGrid, View
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
     from sonore.sources.waveforms import ContourLike
 
-__all__ = ["SpectralEnvelope", "pitch_adaptive_envelope", "GridEnvelope", "warp_frequency"]
+__all__ = ["SpectralEnvelope", "pitch_adaptive_envelope", "warp_frequency"]
 
 
 _FLOOR_F0 = 71.0  # the lowest F0 analyzed; it sets the FFT size
@@ -68,6 +78,11 @@ def _envelope_fft_size(fs: float, f0_floor: float) -> int:
     """The smallest power of two above ``3 fs / f0_floor``, so that a window three
     periods of ``f0_floor`` long fits."""
     return _power_of_two_above(3.0 * fs / f0_floor)
+
+
+def _fft_frequencies(fs: float, n_fft: int) -> np.ndarray:
+    """The ``n_fft // 2 + 1`` bin frequencies [Hz] from 0 to ``fs / 2``."""
+    return np.arange(n_fft // 2 + 1) * fs / n_fft
 
 
 def _windowed_segment(samples, center, window_function, half_length):
@@ -154,56 +169,91 @@ def _pointwise(log_values: np.ndarray, grid_t: np.ndarray, grid_f: np.ndarray, t
     return (below * (1 - f_weight) + above * f_weight).reshape(t.shape)
 
 
+def _power_on_grid(
+    view: TimeFrequencyGrid | Callable, times: np.ndarray, freqs: np.ndarray, shape
+) -> np.ndarray:
+    """``view``'s values at these times and frequencies, shape ``(n_channels,
+    len(freqs), len(times))`` with ``shape`` naming the channel count: its own
+    data when it is held on that grid already, otherwise read there as
+    ``view(t, f)``."""
+    held = getattr(view, "data", None)
+    if (
+        held is not None
+        and np.shape(held) == shape
+        and hasattr(view, "t")
+        and hasattr(view, "f")
+        and np.array_equal(view.t, times)
+        and np.array_equal(view.f, freqs)
+    ):
+        return np.asarray(held, dtype=float)
+    if not callable(view):
+        raise TypeError(
+            "the envelope must be a SpectralEnvelope (or any TimeFrequencyGrid) or a function envelope(t, f)"
+        )
+    values = np.asarray(view(times, freqs), dtype=float)
+    n_channels = shape[0]
+    if values.ndim != 3 or values.shape[1:] != shape[1:] or values.shape[0] not in (1, n_channels):
+        raise ValueError(
+            f"view(t, f) gave shape {values.shape}; expected (n_channels, {shape[1]}, {shape[2]})"
+        )
+    return np.repeat(values, n_channels, axis=0) if values.shape[0] != n_channels else values
+
+
 # ------------------------------------------------------------ the views
-class _FrequencyView(View):
-    """Shared by the envelope and the aperiodicity: data of shape
-    ``(n_channels, n_freqs, n_windows)`` on ``n_fft // 2 + 1`` frequencies from 0 to ``fs / 2``."""
+class _GridView(View):
+    """What the spectral envelope and the aperiodicity share: non-negative
+    values on a grid of times and frequencies, ``data`` of shape
+    ``(n_channels, len(f), len(t))``, read at any point by ``__call__``."""
 
-    def __init__(self, data: np.ndarray, t: np.ndarray, fs: float):
-        self.data = data
-        self.t = t
-        self.fs = fs
-        self.n_fft = 2 * (data.shape[1] - 1)
+    def __init__(self, data: ArrayLike, t: ArrayLike, f: ArrayLike):
+        self.data = np.asarray(data, dtype=float)
+        self.t = np.asarray(t, dtype=float)
+        self.f = np.asarray(f, dtype=float)
+        if self.data.ndim == 2:
+            self.data = self.data[None]
+        if self.data.shape[1:] != (len(self.f), len(self.t)):
+            raise ValueError(
+                f"data has shape {self.data.shape[1:]} per channel, but there are"
+                f" {len(self.f)} frequencies and {len(self.t)} times"
+            )
+        if np.any(self.data < 0):
+            raise ValueError(f"{type(self).__name__} values cannot be negative")
 
-    @property
-    def f(self) -> np.ndarray:
-        """Frequencies [Hz]: ``n_fft // 2 + 1`` bins from 0 to ``fs / 2``."""
-        return np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
-
-    def to_world(self, channel: int = 0) -> np.ndarray:
-        """One channel as WORLD and pyworld hold it: shape ``(n_windows,
-        n_freqs)``, C-contiguous, ready for ``pyworld.synthesize``."""
-        return np.ascontiguousarray(self.data[channel].T)
-
-    def _interpolate(self, log_values: np.ndarray, t, f) -> np.ndarray:
-        """``log_values`` (same shape as data) read linearly at times ``t``
-        and frequencies ``f``: shape ``(n_channels, len(f), len(t))``."""
-        times = np.atleast_1d(np.asarray(t, dtype=float))
-        freqs = np.atleast_1d(np.asarray(f, dtype=float))
-        lower, upper, weight = _positions(times, self.t)
-        bin_pos = np.clip(freqs * self.n_fft / self.fs, 0, self.n_fft // 2)
-        bin_lower = np.floor(bin_pos).astype(int)
-        bin_upper = np.minimum(bin_lower + 1, self.n_fft // 2)
-        bin_weight = (bin_pos - bin_lower)[:, None]
-        at_freqs = log_values[:, bin_lower] * (1 - bin_weight) + log_values[:, bin_upper] * bin_weight
-        return at_freqs[:, :, lower] * (1 - weight) + at_freqs[:, :, upper] * weight
+    def _log(self) -> np.ndarray:
+        """The natural logarithm of the data, floored at the smallest positive float."""
+        return np.log(np.maximum(self.data, np.finfo(float).tiny))
 
     def __call__(self, t: ArrayLike, f: ArrayLike) -> np.ndarray:
         """The values at times ``t`` [s] and frequencies ``f`` [Hz], shape
         ``(n_channels, len(f), len(t))``: linear in time between time
-        windows, linear in dB between bins."""
-        return np.exp(self._interpolate(np.log(self.data), t, f))
+        windows, linear in dB between frequencies, held beyond the ends of
+        the grid."""
+        times = np.atleast_1d(np.asarray(t, dtype=float))
+        freqs = np.atleast_1d(np.asarray(f, dtype=float))
+        t_lower, t_upper, t_weight = _positions(times, self.t)
+        f_lower, f_upper, f_weight = _positions(freqs, self.f)
+        log_values = self._log()
+        f_weight = f_weight[:, None]
+        at_freqs = log_values[:, f_lower] * (1 - f_weight) + log_values[:, f_upper] * f_weight
+        return np.exp(at_freqs[:, :, t_lower] * (1 - t_weight) + at_freqs[:, :, t_upper] * t_weight)
 
 
-class SpectralEnvelope(_FrequencyView):
-    """A spectral envelope from :func:`pitch_adaptive_envelope`: power on ``n_fft // 2 + 1``
-    frequencies :attr:`f` from 0 to ``fs / 2``, at the window times :attr:`t`
-    of the F0 track. ``data`` has shape ``(n_channels, n_freqs, n_windows)``;
-    :meth:`to_world` gives one channel in WORLD's layout.
+class SpectralEnvelope(_GridView):
+    """A spectral envelope: power on a grid of times :attr:`t` and frequencies
+    :attr:`f`, ``data`` of shape ``(n_channels, len(f), len(t))``. A view: it
+    keeps the envelope and drops the harmonics and the phase.
 
-    It is a view (it keeps the envelope, not the sound): calling it,
-    ``env(t, f)``, reads the power at any times and frequencies, linearly
-    in time and in dB over frequency.
+    Every estimator returns one, with its name in :attr:`method`
+    (``"CheapTrick"``, ``"cepstrum"``, ``"MFCC"``, ``"LPC"``) and its
+    parameters in :attr:`settings` (for CheapTrick ``q1``, ``f0_floor`` and
+    ``unvoiced_f0``); one built by hand has neither. :attr:`fs` is the
+    sampling rate of the analyzed sound, or None for an envelope made by
+    hand. Calling it, ``env(t, f)``, reads the power at any times and
+    frequencies, linear in time and in dB over frequency, held beyond the
+    ends of the grid, so it goes wherever an envelope is taken:
+    :func:`warp_frequency`,
+    :func:`~sonore.sources.source_filter.source_filter_synthesize`,
+    :func:`~sonore.sources.waveforms.harmonic_complex`.
     """
 
     discards = (
@@ -215,20 +265,44 @@ class SpectralEnvelope(_FrequencyView):
         "track and an aperiodicity."
     )
 
-    def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, q1: float):
-        super().__init__(data, t, fs)
-        self.q1 = q1
+    def __init__(
+        self,
+        data: ArrayLike,
+        t: ArrayLike,
+        f: ArrayLike,
+        *,
+        fs: float | None = None,
+        method: str | None = None,
+        settings: Mapping[str, float] | None = None,
+    ):
+        super().__init__(data, t, f)
+        self.fs = None if fs is None else float(fs)
+        self.method = method
+        self.settings: dict[str, float] = {} if settings is None else dict(settings)
 
     def __repr__(self) -> str:
         n_channels, n_freqs, n_windows = self.data.shape
-        return (
-            f"SpectralEnvelope({n_freqs} freqs x {n_windows} time windows, {n_channels} ch, q1 {self.q1:g})"
-        )
+        parts = [f"{n_freqs} freqs x {n_windows} time windows", f"{n_channels} ch"]
+        if self.method is not None:
+            parts.insert(0, self.method)
+        parts += [f"{name} {value:g}" for name, value in self.settings.items()]
+        return f"SpectralEnvelope({', '.join(parts)})"
+
+    @property
+    def n_fft(self) -> int | None:
+        """The FFT size whose bins the frequencies are, ``2 (len(f) - 1)``,
+        when :attr:`fs` is known and :attr:`f` is that FFT's grid from 0 to
+        ``fs / 2``; None for an envelope on any other grid."""
+        if self.fs is None:
+            return None
+        n_fft = 2 * (len(self.f) - 1)
+        on_grid = n_fft > 0 and np.allclose(self.f, _fft_frequencies(self.fs, n_fft), rtol=1e-9, atol=1e-6)
+        return n_fft if on_grid else None
 
     @property
     def db(self) -> np.ndarray:
         """``10 log10`` of the power."""
-        return 10 * np.log10(self.data)
+        return 10 * np.log10(np.maximum(self.data, np.finfo(float).tiny))
 
     def amplitude(self, t: ArrayLike, f: ArrayLike, *, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
@@ -236,13 +310,23 @@ class SpectralEnvelope(_FrequencyView):
         :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
         per sample and harmonic. Linear in time and in dB over frequency,
         held beyond the first and last time windows."""
-        return np.exp(0.5 * _pointwise(np.log(self.data[channel]), self.t, self.f, t, f))
+        return np.exp(0.5 * _pointwise(self._log()[channel], self.t, self.f, t, f))
 
     def plot(
         self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
     ) -> Axes:
         """The envelope in dB as a time-frequency image."""
-        return _plot_envelope(self, ax, channel, db_range, fmax)
+        from sonore.plotting import plot_tf_db
+
+        return plot_tf_db(
+            self.db[channel],
+            self.t,
+            self.f,
+            ax=ax,
+            db_range=db_range,
+            fmax=fmax,
+            title="Spectral envelope" if self.method is None else f"Spectral envelope ({self.method})",
+        )
 
 
 # ------------------------------------------------------------ CheapTrick
@@ -269,7 +353,9 @@ def pitch_adaptive_envelope(
        smoothing took from the harmonic peaks (Eq. 8); then back to a spectrum.
 
     The result follows the harmonic peaks and barely changes with the window's
-    position within a period.
+    position within a period. It is a :class:`SpectralEnvelope` on the FFT grid
+    (``n_fft // 2 + 1`` frequencies from 0 to ``fs / 2``) at the F0 track's
+    times, with ``method="CheapTrick"`` and the three parameters in ``settings``.
 
     Choices the paper leaves open: where the smoothing reaches below 0 Hz or above
     Nyquist the spectrum is mirrored there; samples beyond the ends of the sound are
@@ -306,7 +392,9 @@ def pitch_adaptive_envelope(
             data[channel, :, window_index] = _cheaptrick_window(
                 samples, fs, int(np.round(time * fs)), analyzed_f0, n_fft, q1
             )
-    return SpectralEnvelope(data, times, fs, q1)
+    settings = {"q1": q1, "f0_floor": f0_floor, "unvoiced_f0": unvoiced_f0}
+    freqs = _fft_frequencies(fs, n_fft)
+    return SpectralEnvelope(data, times, freqs, fs=fs, method="CheapTrick", settings=settings)
 
 
 def _cheaptrick_window(samples, fs, center, f0, n_fft, q1):
@@ -324,122 +412,26 @@ def _cheaptrick_window(samples, fs, center, f0, n_fft, q1):
     return np.exp(np.fft.rfft(smoothing_lifter * recovery_lifter * cepstrum, n_fft).real)  # Eq. 6
 
 
-class GridEnvelope(View):
-    """A spectral envelope held as power on any grid of times and
-    frequencies: ``data`` has shape ``(n_channels, len(f), len(t))``. A view:
-    it keeps the envelope and drops the harmonics and the phase.
-
-    Any envelope estimate can be put in this form, so that it reads like a
-    :class:`~sonore.views.spectral_envelope.SpectralEnvelope` and goes wherever an
-    envelope is taken: :func:`warp_frequency`,
-    :func:`~sonore.sources.source_filter.source_filter_synthesize`,
-    :func:`~sonore.sources.waveforms.harmonic_complex`.
-    :meth:`Cepstrum.envelope_view <sonore.views.cepstrum.Cepstrum.envelope_view>`
-    and :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`
-    return one.
-
-    Calling it, ``env(t, f)``, reads the power at any times and frequencies,
-    linear in time and in dB over frequency, as ``SpectralEnvelope`` does;
-    beyond the ends of the grid the end values are held.
-    """
-
-    discards = (
-        "GridEnvelope discards the harmonics, the phase, and everything finer than the envelope's smoothing."
-    )
-    back_to_sound = (
-        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
-        "track and an aperiodicity."
-    )
-
-    def __init__(self, data: np.ndarray, t: ArrayLike, f: ArrayLike):
-        self.data = np.asarray(data, dtype=float)
-        self.t = np.asarray(t, dtype=float)
-        self.f = np.asarray(f, dtype=float)
-        if self.data.ndim == 2:
-            self.data = self.data[None]
-        if self.data.shape[1:] != (len(self.f), len(self.t)):
-            raise ValueError(
-                f"data has shape {self.data.shape[1:]} per channel, but there are"
-                f" {len(self.f)} frequencies and {len(self.t)} times"
-            )
-        if np.any(self.data < 0):
-            raise ValueError("an envelope is power, so it cannot be negative")
-
-    def __repr__(self) -> str:
-        n_channels, n_freqs, n_windows = self.data.shape
-        return f"GridEnvelope({n_freqs} freqs x {n_windows} time windows, {n_channels} ch)"
-
-    @property
-    def db(self) -> np.ndarray:
-        """``10 log10`` of the power."""
-        return 10 * np.log10(np.maximum(self.data, np.finfo(float).tiny))
-
-    def _log(self) -> np.ndarray:
-        return np.log(np.maximum(self.data, np.finfo(float).tiny))
-
-    def __call__(self, t: ArrayLike, f: ArrayLike) -> np.ndarray:
-        """Power at times ``t`` [s] and frequencies ``f`` [Hz], shape
-        ``(n_channels, len(f), len(t))``."""
-        times = np.atleast_1d(np.asarray(t, dtype=float))
-        freqs = np.atleast_1d(np.asarray(f, dtype=float))
-        t_lower, t_upper, t_weight = _positions(times, self.t)
-        f_lower, f_upper, f_weight = _positions(freqs, self.f)
-        log_values = self._log()
-        f_weight = f_weight[:, None]
-        at_freqs = log_values[:, f_lower] * (1 - f_weight) + log_values[:, f_upper] * f_weight
-        return np.exp(at_freqs[:, :, t_lower] * (1 - t_weight) + at_freqs[:, :, t_upper] * t_weight)
-
-    def amplitude(self, t: ArrayLike, f: ArrayLike, *, channel: int = 0) -> np.ndarray:
-        """The amplitude (square root of the power) at the points ``(t[i],
-        f[i])``, ``t`` and ``f`` of the same shape: the form
-        :func:`~sonore.sources.waveforms.harmonic_complex` reads, one value
-        per sample and harmonic."""
-        return np.exp(0.5 * _pointwise(self._log()[channel], self.t, self.f, t, f))
-
-    def plot(
-        self, ax: Axes | None = None, *, channel: int = 0, db_range: float = 70.0, fmax: float | None = None
-    ) -> Axes:
-        """The envelope in dB as a time-frequency image."""
-        return _plot_envelope(self, ax, channel, db_range, fmax)
-
-
-def _plot_envelope(envelope, ax, channel: int, db_range: float, fmax: float | None):
-    from sonore.plotting import plot_tf_db
-
-    return plot_tf_db(
-        envelope.db[channel],
-        envelope.t,
-        envelope.f,
-        ax=ax,
-        db_range=db_range,
-        fmax=fmax,
-        title="Spectral envelope",
-    )
-
-
 # ------------------------------------------------------------ the formants
 #: Anything read as ``view(t, f)``: a spectral envelope, an aperiodicity, or a function.
 EnvelopeFunction = Callable[[np.ndarray, np.ndarray], np.ndarray]
 
 
-def _is_grid_view(view: object) -> TypeGuard[_FrequencyView | GridEnvelope]:
-    return isinstance(view, (_FrequencyView, GridEnvelope))
-
-
 def warp_frequency(
-    view: EnvelopeFunction, ratio: float | tuple[ArrayLike, ArrayLike] | Callable[[np.ndarray], ArrayLike]
-) -> EnvelopeFunction:
+    view: TimeFrequencyGrid | EnvelopeFunction,
+    ratio: float | tuple[ArrayLike, ArrayLike] | Callable[[np.ndarray], ArrayLike],
+) -> TimeFrequencyGrid | EnvelopeFunction:
     """A spectral envelope (or aperiodicity) moved along frequency:
     ``new(t, f) = view(t, f / ratio)``. A ratio above 1 moves every formant
     up by that factor, as a shorter vocal tract would; below 1, down. The
     F0 is not touched, so the pitch stays.
 
-    ``view`` is anything read as ``view(t, f)``: a
-    :class:`~sonore.views.spectral_envelope.SpectralEnvelope`, an
-    :class:`~sonore.views.aperiodicity.Aperiodicity`, a :class:`GridEnvelope`,
-    or a function. A view held on a grid comes back as the same type on the
-    same grid (so ``source_filter_synthesize`` takes it as before); a function comes
-    back as a function.
+    ``view`` is anything read as ``view(t, f)``: a :class:`SpectralEnvelope`,
+    an :class:`~sonore.views.aperiodicity.Aperiodicity`, any other
+    :class:`~sonore.views.view.TimeFrequencyGrid`, or a function. A view held
+    on a grid comes back as the same type on the same grid, with its
+    ``method`` and ``settings`` (so ``source_filter_synthesize`` takes it as
+    before); a function comes back as a function.
 
     ``ratio`` is:
 
@@ -490,8 +482,8 @@ def warp_frequency(
         case _:
             raise TypeError("ratio must be a number, a (times, ratios) pair, or a function of frequency")
 
-    if _is_grid_view(view):
-        freqs = view.f
+    if isinstance(view, TimeFrequencyGrid):
+        freqs = np.asarray(view.f, dtype=float)
         if varies_in_time:
             data = np.stack([view(time, source_freqs(freqs, time))[:, :, 0] for time in view.t], axis=2)
         else:

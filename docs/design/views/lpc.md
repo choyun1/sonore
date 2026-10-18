@@ -397,7 +397,8 @@ the caller must remember it; consistent, but every call would need the same
 line, and forgetting it doubles the error.
 
 **D7. `envelope(f)` and `envelope_view()` give E / |A|² on the analyzed
-sound's power scale, as a `GridEnvelope`.** Then LPC plugs into everything
+sound's power scale, as a `GridEnvelope` (since 0.8.0, a `SpectralEnvelope`;
+`views/spectral-envelope-classes.md`).** Then LPC plugs into everything
 that reads an envelope: `warp_frequency`, `source_filter_synthesize`,
 `harmonic_complex`, and the Spectral envelope page's comparisons. By C9 its
 level is that of the time window's power spectrum, the same scale as
@@ -450,7 +451,7 @@ formant synthesizer instead.
     lpc.reflection    # (n_channels, order, n_windows)
     lpc.t             # window times [s]
     lpc.envelope(f)   # power at frequencies f, (n_channels, len(f), n_windows)
-    lpc.envelope_view()                     # GridEnvelope on the STFT's bins
+    lpc.envelope_view()                     # SpectralEnvelope on the STFT's bins
     freqs, bandwidths = lpc.candidates()    # every root, NaN-padded
     lpc.plot(ax)      # the envelope as a spectrogram, candidates as dots
 

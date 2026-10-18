@@ -40,7 +40,7 @@ MOVES_A = {
     ),
     "analysis/cepstrum": "views/cepstrum",
     "analysis/mfcc": "views/mfcc",
-    "analysis/envelopes": "views/envelopes",
+    "analysis/envelopes": "views/temporal_envelope",
     "analysis/modulation": "views/modulation",
     "analysis/modspectrogram": "views/modspectrogram",
     "analysis/f0": "views/f0",

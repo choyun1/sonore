@@ -10,7 +10,7 @@ What keeps the package from tangling is enforced module by module instead:
 - an import inside a function (or a ``TYPE_CHECKING`` block) that would close
   a cycle is listed by name in ``BACK_IMPORTS``, so a new one has to be added
   there on purpose. They exist so that calls chain in a notebook:
-  ``Sound.envelope()`` returns an ``Envelope`` from views.
+  ``Sound.envelope()`` returns a ``TemporalEnvelope`` from views.
 
 ``plotting`` is exempt: the objects' ``.plot()`` methods import it inside the
 method. docs/design/layout.md has the diagram, drawn from the source by
@@ -31,9 +31,9 @@ FOLDERS = ["core", "sources", "frames", "views", "spatial", "texture", "plotting
 # (importer, imported) imports inside a function that point back up the
 # module-level import graph.
 BACK_IMPORTS = {
-    ("core.sound", "views.envelopes"),  # Sound.envelope()
+    ("core.sound", "views.temporal_envelope"),  # Sound.envelope()
     ("core.units", "core.sound"),  # refusing snd * dB with a hint
-    ("frames.filterbank", "views.envelopes"),  # Subbands.envelopes()
+    ("frames.filterbank", "views.temporal_envelope"),  # Subbands.envelopes()
     ("frames.gabor", "views.mask"),  # STFT * mask, TVSTFT * mask
     ("frames.filterbank", "views.mask"),  # Subbands * mask
 }

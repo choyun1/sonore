@@ -19,7 +19,7 @@ def flat_views(f0, share, duration=0.5, n_channels=1):
     reads as) and a noise share that is the same everywhere."""
     times = np.arange(int(duration / HOP)) * HOP
     power = np.ones((n_channels, 513, len(times)))
-    envelope = so.SpectralEnvelope(power, times, FS, np.nan)
+    envelope = so.SpectralEnvelope(power, times, np.arange(513) * FS / 1024, fs=FS)
     aperiodicity = so.Aperiodicity(np.full_like(power, np.sqrt(share)), times, FS, "truth")
     return (times, np.full(len(times), f0)), envelope, aperiodicity
 

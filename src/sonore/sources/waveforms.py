@@ -22,6 +22,7 @@ from scipy.signal import chirp
 
 from sonore.core.sound import Sound
 from sonore.core.utils import RNG, as_rng, db_to_amp, n_samples, time_axis
+from sonore.views.view import TimeFrequencyGrid
 
 __all__ = [
     "silence",
@@ -81,6 +82,7 @@ Amplitudes = (
     ArrayLike
     | Callable[[np.ndarray, np.ndarray], ArrayLike]
     | Callable[[np.ndarray, np.ndarray, int], ArrayLike]
+    | TimeFrequencyGrid
     | None
 )
 
@@ -259,9 +261,9 @@ def harmonic_complex(
     complex values: harmonic ``n`` is then ``Re(a_n exp(i(n Phi + phi_n)))``,
     so the angle of ``a_n`` adds to its phase and can change over time (an
     LF glottal pulse whose shape changes, as in :func:`glottal_source`).
-    ``amplitudes`` may also be a spectral envelope, such as
-    :class:`~sonore.views.spectral_envelope.SpectralEnvelope` or
-    :class:`~sonore.views.spectral_envelope.GridEnvelope` (power on a grid of times
+    ``amplitudes`` may also be a spectral envelope, a
+    :class:`~sonore.views.spectral_envelope.SpectralEnvelope` or any other
+    :class:`~sonore.views.view.TimeFrequencyGrid` (power on a grid of times
     and frequencies), which is read point by point as amplitude, from its
     first channel.
     ``phases`` are starting phases: an array,

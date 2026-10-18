@@ -31,7 +31,7 @@ from sonore.core.utils import (
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
-    from sonore.views.envelopes import Envelope
+    from sonore.views.temporal_envelope import TemporalEnvelope
 
 __all__ = ["Sound", "load"]
 
@@ -406,8 +406,8 @@ class Sound:
             impulse_response = impulse_response[:, None]
         return Sound(fftconvolve(self._data, impulse_response, axes=0), self.fs)
 
-    def envelope(self, *, pad: float | str = "auto") -> Envelope:
-        """Hilbert envelope of each channel, as an :class:`~sonore.views.envelopes.Envelope`
+    def envelope(self, *, pad: float | str = "auto") -> TemporalEnvelope:
+        """Hilbert envelope of each channel, as a :class:`~sonore.views.temporal_envelope.TemporalEnvelope`
         (not a Sound: you apply an envelope to a sound rather than listen to it).
         ``snd / snd.envelope()`` is the fine structure.
 
@@ -416,11 +416,11 @@ class Sound:
         the end of the envelope (or vice versa). ``pad=0`` is circular;
         a number pads by that many seconds.
         """
-        from sonore.views.envelopes import Envelope
+        from sonore.views.temporal_envelope import TemporalEnvelope
 
         n_pad = self.n_samples if pad == "auto" else int(round(float(pad) * self.fs))
         padded = np.pad(self._data, ((n_pad, n_pad), (0, 0))) if n_pad else self._data
-        return Envelope(np.abs(hilbert(padded, axis=0))[n_pad : n_pad + self.n_samples], self.fs)
+        return TemporalEnvelope(np.abs(hilbert(padded, axis=0))[n_pad : n_pad + self.n_samples], self.fs)
 
     # ---------------------------------------------------------------- output
     def play(self, *, blocking: bool = False, **kwargs) -> None:

@@ -1782,7 +1782,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   reference in `tools/check_f0_fda.py`.
 # - Boersma & Weenink. Praat: doing phonetics by computer (computer program).
 #   [praat.org](https://www.praat.org). Its formant recipe, which `so.formant_track` follows.
-#   [`lpc.formant_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L387)
+#   [`lpc.formant_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L390)
 # - Bogert, Healy & Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum,
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
 #   Analysis*. Wiley. [Semantic
@@ -1797,9 +1797,9 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L103)
 # - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis. *STL-QPSR*
 #   36(2–3), 119–156. The Rd parameter.
-#   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L886)
+#   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L888)
 # - Fant, Liljencrants & Lin (1985). A four-parameter model of glottal flow. *STL-QPSR* 26(4), 1–13.
-#   [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L807)
+#   [`waveforms.lf_harmonics`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L809)
 # - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
 #   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940).
 #   [`klatt.klatt_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py#L104)
@@ -1816,7 +1816,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L249)
+#   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L333)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
@@ -1826,7 +1826,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457). StoneMask.
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
-#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185)
+#   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L186)
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
 #   24(2), 175–184.
 #   [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).

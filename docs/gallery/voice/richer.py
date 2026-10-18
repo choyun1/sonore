@@ -1191,11 +1191,11 @@ fig, playhead = show_pair(sounds, titled("CheapTrick and D4C"), fmax=8000, conto
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L249)
+#   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L333)
 # - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
 #   Communication* 84, 57–65.
 #   [doi:10.1016/j.specom.2016.09.001](https://doi.org/10.1016/j.specom.2016.09.001).
-#   [`aperiodicity.band_aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132)
+#   [`aperiodicity.band_aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L143)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored
@@ -1210,7 +1210,7 @@ fig, playhead = show_pair(sounds, titled("CheapTrick and D4C"), fmax=8000, conto
 # - Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low
 #   autocorrelation. *IEEE Trans. Inf. Theory* 16(1), 85–89.
 #   [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411).
-#   [`waveforms.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L372)
+#   [`waveforms.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L374)
 # - Valin & Skoglund (2019). LPCNet: improving neural speech synthesis through linear prediction.
 #   *Proc. ICASSP 2019*, 5891–5895. [arXiv:1810.11846](https://arxiv.org/abs/1810.11846).
 # - van den Oord et al. (2016). WaveNet: a generative model for raw audio.

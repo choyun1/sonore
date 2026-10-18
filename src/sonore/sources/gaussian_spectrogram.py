@@ -4,8 +4,8 @@ Oxenham, 2011).
 A spectrogram of log amplitudes, one cell per ERB band and time window, is
 drawn from a Gaussian whose correlations fall off exponentially in time and
 in frequency, as those of spoken words and animal calls roughly do. The
-result is :class:`~sonore.views.envelopes.Envelopes`; put it on a carrier
-with :meth:`~sonore.views.envelopes.Envelopes.to_sound` to hear it. The
+result is a :class:`~sonore.views.temporal_envelope.TemporalEnvelope`; put it on a carrier
+with :meth:`~sonore.views.temporal_envelope.TemporalEnvelope.to_sound` to hear it. The
 sounds share coarse statistics with natural sources without being any
 recognizable one (docs/design/sources/gaussian-spectrogram.md).
 """
@@ -18,7 +18,7 @@ import numpy as np
 
 from sonore.core.utils import RNG, as_rng, n_samples, time_axis
 from sonore.frames.filterbank import cosine_filterbank
-from sonore.views.envelopes import Envelopes
+from sonore.views.temporal_envelope import TemporalEnvelope
 
 __all__ = ["gaussian_spectrogram"]
 
@@ -53,7 +53,7 @@ def gaussian_spectrogram(
     f_hi: float = 4000.0,
     window: float = 0.020,
     rng: RNG = None,
-) -> Envelopes:
+) -> TemporalEnvelope:
     """A random spectrogram after McDermott, Wrobleski & Oxenham (2011).
 
     Each cell, one ERB band by one time window, holds a level in dB drawn
@@ -74,7 +74,7 @@ def gaussian_spectrogram(
     "scale each window to its cell", written as an envelope. The edge bands
     of the filterbank get zero envelopes.
 
-    The sound comes from :meth:`Envelopes.to_sound`. A noise carrier's fine
+    The sound comes from :meth:`TemporalEnvelope.to_sound`. A noise carrier's fine
     structure alone adds no envelope of its own::
 
         env = so.gaussian_spectrogram(0.4, fs, rng=1)
@@ -119,4 +119,4 @@ def gaussian_spectrogram(
     windows = np.where(np.abs(offset) < 0.5, 0.5 * (1 + np.cos(2 * np.pi * offset)), 0.0)
     envelopes = np.zeros((length, n_bands + 2))
     envelopes[:, 1:-1] = windows @ cell_amplitude.T
-    return Envelopes(envelopes, fs, bank)
+    return TemporalEnvelope(envelopes, fs, bank)

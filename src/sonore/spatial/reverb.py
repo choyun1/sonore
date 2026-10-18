@@ -13,7 +13,7 @@ from sonore.core.sound import Sound
 from sonore.core.utils import RNG, as_rng, db_to_amp
 from sonore.frames.filterbank import cosine_filterbank
 from sonore.sources.waveforms import gaussian_noise
-from sonore.views.envelopes import Envelopes
+from sonore.views.temporal_envelope import TemporalEnvelope
 
 __all__ = ["synth_ir", "band_rt60s", "measure_rt60", "DECAY_SHAPES", "RT60_PROFILES", "DRR_PROFILES"]
 
@@ -164,7 +164,7 @@ def synth_ir(
     envelopes = _decay_envelopes(noise.t, onset_db, taus, decay_shape)
     if decay_shape == "time_reversed":
         envelopes = envelopes[::-1]
-    decay = Envelopes(envelopes, fs, filterbank)  # one decay envelope per band
+    decay = TemporalEnvelope(envelopes, fs, filterbank)  # one decay envelope per band
     # analyze pads by default, so re-filtering the decaying bands can't wrap the
     # loud onset around to the end of the IR
     tail = (decay * filterbank.analyze(noise)).to_sound().normalize()

@@ -98,7 +98,7 @@ def test_envelope_matches_the_power_spectrum_on_average(vowel):
 
 def test_envelope_view_reads_like_any_envelope(vowel):
     view = so.LPC(emphasized(vowel)).envelope_view()
-    assert isinstance(view, so.GridEnvelope)
+    assert isinstance(view, so.SpectralEnvelope)
     warped = so.warp_frequency(view, 1.2)
     assert np.all(np.isfinite(warped(np.array([0.2]), np.array([500.0, 1000.0]))))
 

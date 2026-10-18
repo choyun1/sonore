@@ -23,7 +23,7 @@ bands = so.cosine_filterbank(16).analyze(sentence)
 error = np.max(np.abs(bands.to_sound().data - sentence.data))
 print(f"cosine filterbank: to_sound max error {error:.1e}")
 
-for name, view in [("MFCC", so.MFCC(sentence)), ("Envelopes", bands.envelopes())]:
+for name, view in [("MFCC", so.MFCC(sentence)), ("TemporalEnvelope", bands.envelopes())]:
     try:
         view.synthesize()
     except so.NotInvertibleError as err:

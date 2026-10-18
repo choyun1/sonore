@@ -68,7 +68,7 @@ def true_views(f0, noise_db, duration):
     _, response = freqz([1.0], vowel_filter(FS), worN=freqs, fs=FS)
     power = np.repeat((np.abs(response) ** 2)[None, :, None], len(times), axis=2)
     share = 10 ** (noise_db / 10) / (1 + 10 ** (noise_db / 10))
-    envelope = so.SpectralEnvelope(power, times, FS, np.nan)
+    envelope = so.SpectralEnvelope(power, times, freqs, fs=FS)
     aperiodicity = so.Aperiodicity(np.full_like(power, np.sqrt(share)), times, FS, "truth")
     return (times, np.full(len(times), f0)), envelope, aperiodicity, share
 
@@ -185,7 +185,11 @@ def part3():
         scores = {}
         rebuilt = {
             "WORLD's synthesis": pyworld.synthesize(
-                np.ascontiguousarray(track[1]), envelope.to_world(), aperiodicity.to_world(), FS, HOP * 1000
+                np.ascontiguousarray(track[1]),
+                np.ascontiguousarray(envelope.data[0].T),
+                np.ascontiguousarray(aperiodicity.data[0].T),
+                FS,
+                HOP * 1000,
             ),
             "recipe": so.source_filter_synthesize(
                 track, envelope, aperiodicity, duration=sound.duration, rng=3

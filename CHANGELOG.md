@@ -68,6 +68,36 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- **One class for each meaning of "envelope"** (`docs/design/views/spectral-envelope-classes.md`).
+  `so.TemporalEnvelope` replaces `Envelope` and `Envelopes`: one envelope, or
+  one per band of the filterbank it holds. `snd.envelope()` and
+  `sb.envelopes()` return it; everything either class did still works under
+  the one name (`env * snd`, `env * subbands`, `env[i]`, `.lowpass`,
+  `.resample`, `.modulation_spectrum()`, `.plot()`, `.to_sound(carrier)`).
+  New: a filterbank's envelopes multiply a Sound (split with the filterbank,
+  band by band, summed back), two banded envelopes multiply or divide, and a
+  single envelope goes on a `"noise"` carrier (white noise's fine structure).
+  `len(env)` now counts samples, as for a Sound; `env.n_bands` counts bands.
+  Operations that need the filterbank (`env[i]`, iteration, `cfs`,
+  `without_edges`, `modulation_spectrum`, the `"tone"` carrier) raise
+  `TypeError` on a single envelope. The module is `views/temporal_envelope.py`.
+- `so.SpectralEnvelope` is now the one class for a spectral envelope on a grid
+  of time windows and frequencies, whatever estimator made it: it absorbs
+  `GridEnvelope`, and `Cepstrum.envelope_view()`, `MFCC.envelope_view()` and
+  `LPC.envelope_view()` return it. `env.method` names the estimator
+  (`"CheapTrick"`, `"cepstrum"`, `"MFCC"`, `"LPC"`, or None for one built by
+  hand) and `env.settings` holds its parameters (`q1`, `n_mfcc`, `order`, ...);
+  `env.q1` is gone. The constructor is `SpectralEnvelope(data, t, f, *, fs=None,
+  method=None, settings=None)`: the third argument is the frequency axis, not
+  the sampling rate. `n_fft` is `2 (len(f) - 1)` when `fs` is given and `f` is
+  that FFT's grid, and None otherwise. `Aperiodicity` shares its base and its
+  grid reading; `Aperiodicity.bands(edges, envelope=)` now reads an envelope
+  given on another grid at its own times and frequencies instead of assuming
+  the grids agree.
+- `so.TimeFrequencyGrid`, a `typing.Protocol` for anything held on a grid
+  (`t`, `f`, `data`, read as `view(t, f)`), types what
+  `source_filter_synthesize`, `warp_frequency`, `harmonic_complex(amplitudes=)`
+  and `Aperiodicity.bands(envelope=)` accept, beside a plain function.
 - Gallery: "Rebuilding and changing a voice" is condensed to the fourth page of
   the Voices arc. Its opening section "Envelopes on harmonics and on noise" is
   gone: the 16-band noise vocoder was the Vocoder page's own example, and the
@@ -265,6 +295,11 @@ version (0.x.y) only fixes bugs.
 
 ### Removed
 
+- `so.Envelope`, `so.Envelopes` and `so.GridEnvelope` (see Changed:
+  `TemporalEnvelope` and `SpectralEnvelope`), `SpectralEnvelope.to_world` and
+  `Aperiodicity.to_world` (write `np.ascontiguousarray(view.data[0].T)` for
+  pyworld's layout), `SpectralEnvelope.q1` (now `settings["q1"]`), and the
+  old `SpectralEnvelope(data, t, fs, q1)` constructor.
 - `so.world_synthesize` (WORLD's synthesis, ported sample for sample), with
   `sonore.views.world`, `so.DIFFERENCES_FROM_WORLD` and WORLD's noise
   generator. The new `so.source_filter_synthesize` (see Added) takes its

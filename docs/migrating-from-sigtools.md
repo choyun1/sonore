@@ -11,7 +11,7 @@ PyPI package of that name. Version 0.2 also redesigned the API:
 | `SchroederPhase(dur, fs, f0, n)` | `so.schroeder_complex(dur, fs, f0, n_harmonics=n)` |
 | `SoundLoader(path)`, `Silence(dur, fs)` | `so.load(path)`, `so.silence(dur, fs)` |
 | `snd + 6` (dB gain) | `snd + 6*dB` |
-| `snd.make_binaural()`, `snd.extract_envelope()` | `snd.to_stereo()`, `snd.envelope()` (now returns an `Envelope`, not a Sound) |
+| `snd.make_binaural()`, `snd.extract_envelope()` | `snd.to_stereo()`, `snd.envelope()` (now returns a `TemporalEnvelope`, not a Sound) |
 | `ramp_edges(snd, d)` | `snd.ramp(d)` |
 | `butter_bandpass_filter(snd, lo, hi)` | `so.bandpass(snd, lo, hi)` (no longer RMS-normalizes) |
 | `equalize_fs`, `zeropad_sounds`, `center_sounds`, `truncate_sounds` | `so.match_fs`, `so.match_lengths(align="start"/"center")`, `so.match_lengths(mode="truncate")` |

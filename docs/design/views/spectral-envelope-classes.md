@@ -1,6 +1,7 @@
 # One SpectralEnvelope class
 
-Status: proposed, 2026-10-18. Cho asked what the relationship is between
+Status: accepted by Cho, 2026-10-18 (all of D1 to D8), built as one change for
+0.8.0. Cho asked what the relationship is between
 `Envelope`, `Envelopes` and `SpectralEnvelope`, whether there should be a
 `SpectralEnvelopes`, and whether an envelope isn't spectral anyway, and
 suggested unifying the concepts. He accepted three points, written up here
@@ -200,7 +201,7 @@ above. Instead, name a public Protocol for "power or ratio held on a grid"
 (`t`, `f`, `data`, and `__call__(t, f)`) as part of this change, and type
 the five parameters above with it, or with it or `EnvelopeFunction` where a
 plain function is also accepted. The Protocol's name is Cho's choice;
-`TimeFrequencyGrid` is one option. A method like `amplitude` stays outside
+`TimeFrequencyGrid` is one option, and is the name built, pending his word. A method like `amplitude` stays outside
 it, since only `harmonic_complex` reads it and falls back to calling.
 
 D8. One `TemporalEnvelope`. Today `Envelope` (one band, acts on a sound:
@@ -219,6 +220,12 @@ meaning and breaks no call. Cho (2026-10-18) declined renaming `Envelopes` to
 the envelopes of any filterbank.
 
 ## Work, once agreed
+
+Built 2026-10-18. Two points settled while building, beyond the decisions:
+`TemporalEnvelope` lives in `views/temporal_envelope.py` (the module
+`envelopes.py` renamed, so the pair reads as `temporal_envelope.py` and
+`spectral_envelope.py`), and `len(env)` counts samples, as for a Sound, with
+`n_bands` for the bands (`len(Envelopes)` used to count bands).
 
 One change: the class and its readers in `spectral_envelope.py`,
 `aperiodicity.py`, `cepstrum.py`, `mfcc.py`, `lpc.py`, `source_filter.py`,
