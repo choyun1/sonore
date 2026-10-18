@@ -255,8 +255,8 @@ some frequencies of the source more than others. The tract is the <strong>filter
 sound radiates into the air, which favors high frequencies by about 6 dB per octave.</p>
 <p>The diagram below draws the chain for one vowel: the harmonics of a glottal pulse, the vocal
 tract's gain, and their product, which is what reaches a listener. Everything that follows on
-the voice pages is about measuring the three parts from the product, changing one, and putting
-them back together.</p>
+the voice pages is about measuring the source and the filter from their product, changing one,
+and putting them back together.</p>
 <div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
 import urllib.request
 
@@ -468,8 +468,9 @@ is the perturbation of the period from one cycle to the next, usually given as t
 absolute difference between neighboring periods over the mean period, in percent; <strong>shimmer</strong>
 is the same for the cycles' peak amplitudes, in percent or dB. Both are read from marks on
 each individual cycle of the waveform. Clinical reports give them for a sustained vowel, where
-the voice is meant to be steady. <strong>Not in sonore:</strong> <code>so.f0_track</code> smooths over 5 ms time windows
-and cannot see single cycles, so sonore marks no periods and computes neither. What jitter and
+the voice is meant to be steady. <strong>Not in sonore:</strong> <code>so.f0_track</code> reads a time window several
+periods long at a time and cannot see single cycles, so sonore marks no periods and computes
+neither. What jitter and
 shimmer do to the analyses here is read as noise (<a href="richer.html#h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the
 rest</a>).</p>
 <h3 class="sub" id="h-noise-in-the-voice">Noise in the voice</h3>
@@ -482,9 +483,9 @@ does that frequency by frequency, as an aperiodicity, and its noise share in a b
 inverse of an HNR in that band. <strong>Cepstral peak prominence</strong> (CPP; Hillenbrand, Cleveland &amp;
 Erickson, 1994) is the height of the cepstrum's pitch peak above the trend of the rest of the
 cepstrum, in dB: a regular voice with strong harmonics has a tall peak, and noise and
-irregularity both flatten it, so it needs no pitch track and is the measure clinical studies
-have found most consistent with ratings of breathiness and overall dysphonia. Both are
-computed in the table below.</p>
+irregularity both flatten it, so it needs no pitch track, and it is among the acoustic
+measures clinical studies most often report against ratings of breathiness and overall
+dysphonia. Both are computed in the table below.</p>
 <h3 class="sub" id="h-phonation-type">Phonation type</h3>
 <p><strong>In the source.</strong> How the vocal folds are held changes the shape of each glottal pulse.
 Pressed together they close abruptly, and the sharp closure makes strong high harmonics; held

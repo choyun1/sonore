@@ -244,9 +244,9 @@ for label in talkers:
 # Each talker shifted by the interval between the two median pitches, {{ f"{interval:.1f}" }}
 # semitones: the male talker up, the female talker down, so the two trade pitches, as the printout
 # above shows. The formants moved by the same ratio, which is larger than the gap between the two
-# talkers' formants measured on [What is a voice](whatisavoice.html#h-spectral-envelopes). So the male
-# talker's formants now sit above the female talker's, and the female talker's below the male
-# talker's: each voice has the other talker's pitch, with formants beyond the other talker's.
+# talkers' formants measured on [What is a voice](whatisavoice.html#h-size-the-spectral-envelopes).
+# So the male talker's formants now sit above the female talker's, and the female talker's below the
+# male talker's: each voice has the other talker's pitch, with formants beyond the other talker's.
 # [Higher pitch](voice.html#d-vc3) on Rebuilding and changing a voice moves the pitch alone and
 # leaves the formants where they were.
 
