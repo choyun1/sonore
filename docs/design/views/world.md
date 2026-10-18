@@ -16,6 +16,15 @@ Steps 1–5 of "Order" are built (`sonore.views.spectral_envelope`, `sonore.view
 and `sonore.views.world` since the reorganization), and the gallery page explains aperiodicity
 (`docs/gallery/voice/aperiodicity.py`).
 
+Renamed on 2026-10-18 (Cho): the ports now carry names that say what they
+do, so that sonore does not read as a copy of all of WORLD when it ports
+three of its parts and tracks F0 its own way. `so.cheaptrick` is now
+`so.pitch_adaptive_envelope`, `so.d4c` is `so.band_aperiodicity`, and
+`so.world_synthesize` is `so.source_filter_synthesize`; the code is unchanged.
+Each docstring names the WORLD part it ports, and WORLD's BSD license is
+shipped as `LICENSE-WORLD`. The text below keeps the names it was written
+with.
+
 ## Why
 
 With the Klatt synthesizer, sonore can build speech from numbers set by

@@ -1,3 +1,5 @@
+# The WORLD ports in this file are derived from WORLD (https://github.com/mmorise/World),
+# Copyright (c) 2010 M. Morise, and are used under its BSD 3-clause license (LICENSE-WORLD).
 """Numerical checks for the claims in docs/design/views/world.md (C1-C5).
 
 Like the other claim checkers, this is independent of sonore: only NumPy and

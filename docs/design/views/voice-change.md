@@ -10,7 +10,7 @@ it and whatever puts it back together:
 
 The F0 can come from `so.f0_track`, WORLD's Harvest or `Cepstrum.f0`; the
 envelope from CheapTrick or the cepstral lifter; the result can be
-synthesized by `so.world_synthesize` or `so.harmonic_complex`. The two
+synthesized by `so.source_filter_synthesize` or `so.harmonic_complex`. The two
 operations act on what all of these share, an F0 contour and an envelope
 read as `env(t, f)`, not on any one estimator (Cho, 2026-10-02: "shouldn't
 voice warping be method agnostic?").
@@ -27,8 +27,8 @@ Status: accepted. Cho accepted every recommendation (D1–D12) on
 2026-10-02, and step 2 of "Order" is built: `sonore.analysis.voice` (since split between
 `sonore.views.f0` and `sonore.views.spectral_envelope`)
 (`scale_f0`, `warp_frequency`, `GridEnvelope`), `Cepstrum.envelope_view`,
-`MFCC.envelope_view`, and `world_synthesize` and `harmonic_complex` taking
-any envelope. For D4's open point, `world_synthesize` reads another
+`MFCC.envelope_view`, and `source_filter_synthesize` and `harmonic_complex` taking
+any envelope. For D4's open point, `source_filter_synthesize` reads another
 envelope on its own grid and its docstring asks for a smooth one (C10),
 rather than raising the FFT length. Every number is printed by
 `tools/check_voice_change_claims.py` (C1–C7) or
@@ -40,7 +40,7 @@ for Cho to judge by listening, and nothing here claims it.
 
 ## What exists already
 
-- `world_synthesize` takes any F0 track, and its docstring already says a
+- `source_filter_synthesize` takes any F0 track, and its docstring already says a
   changed F0 is a pitch shift with the envelope and aperiodicity kept. So a
   pitch change needs no new code: `(track.t, track.f0 * 1.5)`. What is
   missing is a statement of what it does to the measured pitch and
@@ -54,7 +54,7 @@ for Cho to judge by listening, and nothing here claims it.
 - **F0 is already method-agnostic.** `harmonic_complex` takes an
   `F0Contour`, anything with `.t` and `.f0`, or a `(times, f0)` pair, so an
   `F0Track`, a Harvest track and `Cepstrum.f0`'s first two outputs all
-  work. `world_synthesize` takes the same, but needs time windows evenly
+  work. `source_filter_synthesize` takes the same, but needs time windows evenly
   spaced from time 0, as WORLD assumes; `Cepstrum.f0`'s windows start at
   −15 ms, so it has to be read onto that grid first.
 - **Envelopes are not, yet.** `SpectralEnvelope` and `Aperiodicity` are
@@ -99,7 +99,7 @@ envelope, so it is the steadier of the two.
 C7 mixes sources: F0 from `so.f0_track`, Harvest (the stored track
 `docs/speech/bdl_arctic_a0131_f0.csv`) and `Cepstrum.f0` (40 ms Hann time
 windows, hop 5 ms); envelope from CheapTrick or the cepstral lifter at half
-the median voiced period; synthesis by `world_synthesize` (any envelope
+the median voiced period; synthesis by `source_filter_synthesize` (any envelope
 sampled at WORLD's time windows and frequencies) or `harmonic_complex`
 (the envelope sampled once on a 5 ms by 10 Hz grid and read point by
 point, as the Voices from harmonics gallery page does). Each changed output
@@ -115,11 +115,11 @@ The checker runs in about a minute (NumPy 2.4.6, SciPy 1.17.1).
 
 ## Claims
 
-**C1. Identity settings reproduce `world_synthesize` only if ratio 1 skips
+**C1. Identity settings reproduce `source_filter_synthesize` only if ratio 1 skips
 the interpolation.** Reading the envelope through its interpolation at the
 exact bin frequencies changes it by up to 2.2e−16 (relative), because the
 interpolation runs through `exp(log(x))`; the output then differs from
-`world_synthesize` by up to 1.4e−16 (peak 0.82). When ratio 1 returns the
+`source_filter_synthesize` by up to 1.4e−16 (peak 0.82). When ratio 1 returns the
 envelope itself, the output is identical, sample for sample. F0 times 1.0
 is the same array. [check]
 
@@ -215,16 +215,16 @@ sentence, against the same sources unchanged:
 
 | F0 from | envelope | synthesizer | F0 out/unchanged | within 5% | fitted warp (residual) |
 |---|---|---|---|---|---|
-| `so.f0_track` | CheapTrick | `world_synthesize` | 1.500 | 100% | 1.200 (0.36 dB) |
-| `so.f0_track` | cepstral | `world_synthesize` | 1.501 | 100% | 1.199 (0.62 dB) |
-| Harvest | CheapTrick | `world_synthesize` | 1.500 | 98% | 1.200 (0.35 dB) |
+| `so.f0_track` | CheapTrick | `source_filter_synthesize` | 1.500 | 100% | 1.200 (0.36 dB) |
+| `so.f0_track` | cepstral | `source_filter_synthesize` | 1.501 | 100% | 1.199 (0.62 dB) |
+| Harvest | CheapTrick | `source_filter_synthesize` | 1.500 | 98% | 1.200 (0.35 dB) |
 | Harvest | CheapTrick | `harmonic_complex` | 1.500 | 100% | 1.201 (0.27 dB) |
-| Harvest | cepstral | `world_synthesize` | 1.500 | 100% | 1.200 (0.57 dB) |
+| Harvest | cepstral | `source_filter_synthesize` | 1.500 | 100% | 1.200 (0.57 dB) |
 | Harvest | cepstral | `harmonic_complex` | 1.500 | 100% | 1.200 (0.55 dB) |
-| `Cepstrum.f0` | CheapTrick | `world_synthesize` | 1.500 | 100% | 1.200 (0.34 dB) |
-| `Cepstrum.f0` | cepstral | `world_synthesize` | 1.500 | 100% | 1.199 (0.57 dB) |
+| `Cepstrum.f0` | CheapTrick | `source_filter_synthesize` | 1.500 | 100% | 1.200 (0.34 dB) |
+| `Cepstrum.f0` | cepstral | `source_filter_synthesize` | 1.500 | 100% | 1.199 (0.57 dB) |
 
-`world_synthesize` uses D4C measured with the same F0; `harmonic_complex`
+`source_filter_synthesize` uses D4C measured with the same F0; `harmonic_complex`
 has no noise (unvoiced stretches silent). The prototypes need only the
 interface: a warped envelope is any envelope read at `f / ratio`, and the
 synthesizers see an envelope like any other. Sources differ in what the
@@ -243,7 +243,7 @@ are tagged [compare].
 Harvest, `Cepstrum.f0`. Envelope: the truth (synthetic only), CheapTrick,
 the cepstral lifter, and `so.MFCC`'s envelope (13 coefficients, 26 HTK
 bands, 25 ms symmetric Hamming, 10 ms hop), with its default height-1
-triangles and with area-normalized ones (`triangles="area"`). Synthesis: `world_synthesize` (with
+triangles and with area-normalized ones (`triangles="area"`). Synthesis: `source_filter_synthesize` (with
 D4C measured on the same F0) and `harmonic_complex` (no noise).
 
 **Scores.** On synthetic vowels the truth is exact, so the score uses none
@@ -260,7 +260,7 @@ ranking.
 
 **C8. The envelope decides the result; the F0 source and the synthesizer
 barely matter on steady vowels.** [compare] Median (worst) error over the
-twelve vowels, true F0, `world_synthesize`:
+twelve vowels, true F0, `source_filter_synthesize`:
 
 | envelope | resynthesis | pitch × 1.5, formants × 1.2 |
 |---|---|---|
@@ -294,7 +294,7 @@ differ in nothing else; their voicing errors on real speech are in
 
 **C10. WORLD's synthesis needs a smooth envelope: given the exact one it
 does worse than given CheapTrick's estimate.** [compare] With the true
-envelope, `world_synthesize`'s resynthesis error is 2.01 dB median and
+envelope, `source_filter_synthesize`'s resynthesis error is 2.01 dB median and
 7.03 dB worst (male who'd at 150 Hz), against 0.66 and 0.86 dB with
 CheapTrick. For that vowel, whose envelope spans 95 dB over 50–5000 Hz,
 the error is 7.04 dB at WORLD's FFT size (1024 at 16 kHz), 2.08 dB at 4096
@@ -344,11 +344,11 @@ Two functions on two interfaces, both of which sonore already half has:
 
 ```python
 track = so.f0_track(snd)               # or a Harvest pair, or Cepstrum.f0
-env = so.cheaptrick(snd, track)        # or cepstrum.lifter(...).envelope_view()
-ap = so.d4c(snd, track)
+env = so.pitch_adaptive_envelope(snd, track)        # or cepstrum.lifter(...).envelope_view()
+ap = so.band_aperiodicity(snd, track)
 
-higher = so.world_synthesize(so.scale_f0(track, 1.5), env, ap)            # pitch only
-shorter_tract = so.world_synthesize(track, so.warp_frequency(env, 1.2), ap)  # formants only
+higher = so.source_filter_synthesize(so.scale_f0(track, 1.5), env, ap)            # pitch only
+shorter_tract = so.source_filter_synthesize(track, so.warp_frequency(env, 1.2), ap)  # formants only
 on_harmonics = so.harmonic_complex(snd.duration, snd.fs, so.scale_f0(track, 1.53),
                                    amplitudes=so.warp_frequency(env, 1.17))
 ```
@@ -374,7 +374,7 @@ on_harmonics = so.harmonic_complex(snd.duration, snd.fs, so.scale_f0(track, 1.53
 - Every envelope source offers the interface. `SpectralEnvelope` and
   `Aperiodicity` already do; `Cepstrum` gains a view of its lifted
   envelope (D3), on the general grid class below.
-- Every synthesizer takes any envelope (D4). `world_synthesize` uses its
+- Every synthesizer takes any envelope (D4). `source_filter_synthesize` uses its
   own `SpectralEnvelope` as it is (so the exact port is untouched) and
   samples any other envelope at its time windows and frequencies, which
   it already knows from the aperiodicity; it reads an F0 contour that is
@@ -398,7 +398,7 @@ large part of what separates bdl from slt.
   `so.warp_frequency`. They depend on nothing but the interface, so any
   F0 tracker, any envelope estimator and any synthesizer combine (C7), and
   a new estimator joins by offering `env(t, f)`, without the operations
-  changing. `world_synthesize` stays the exact port.
+  changing. `source_filter_synthesize` stays the exact port.
 - *Methods on each class* (`F0Track.scale`, `SpectralEnvelope.warp`,
   `Aperiodicity.warp`): reads well in a chain, but a Harvest pair or a
   cepstral envelope has no such method, which is the objection Cho raised.
@@ -411,7 +411,7 @@ large part of what separates bdl from slt.
   method-agnostic too. One line for a stimulus maker; but it hides the
   views the gallery teaches, and every option needs a pass-through. It
   can sit on top of the free functions later.
-- *Keywords on `world_synthesize`*: ties the change to one synthesizer,
+- *Keywords on `source_filter_synthesize`*: ties the change to one synthesizer,
   and `views/world.md` decided the WORLD-named functions reproduce WORLD.
 
 **D2. The envelope convention.**
@@ -440,7 +440,7 @@ large part of what separates bdl from slt.
 
 **D4. Synthesizers that take any envelope.**
 - *Each synthesizer adapts on the way in* (recommended):
-  `world_synthesize` dispatches on its `envelope` (its own
+  `source_filter_synthesize` dispatches on its `envelope` (its own
   `SpectralEnvelope` on its grid: used as it is, exact; anything else:
   sampled at its time windows and frequencies) and reads off-grid F0
   contours onto its time windows; `harmonic_complex` dispatches on
@@ -510,7 +510,7 @@ large part of what separates bdl from slt.
   the function.
 
 **D10. Ratio 1 is exact.** Return the view itself at ratio 1
-(recommended, C1), so identity settings give `world_synthesize`'s output
+(recommended, C1), so identity settings give `source_filter_synthesize`'s output
 sample for sample and a test can say so; or accept 1e−16 and test with a
 tolerance.
 

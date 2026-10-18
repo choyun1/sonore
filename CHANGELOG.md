@@ -56,6 +56,17 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- The three functions ported from WORLD are renamed for what they do:
+  `so.cheaptrick` is now `so.pitch_adaptive_envelope`, `so.d4c` is
+  `so.band_aperiodicity`, and `so.world_synthesize` is
+  `so.source_filter_synthesize`. The old names are gone; the code and its
+  output are unchanged. Each docstring still names the WORLD part it ports.
+  sonore ports these three parts and not WORLD's F0 trackers, so the old
+  names made it read as all of WORLD.
+- WORLD's BSD 3-clause license now ships with sonore as `LICENSE-WORLD`,
+  with a notice at the top of each file holding a port, and the package
+  license is `MIT AND BSD-3-Clause`. The ports have needed the notice since
+  they were added in 0.4.0.
 - `so.f0_track` for low voices (60 to 90 Hz, inside the default range):
   the refinement uses every harmonic up to 1.5 kHz (at least six, at most
   24) instead of the first six, which below 100 Hz hold a few percent of a

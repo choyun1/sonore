@@ -1,7 +1,9 @@
+# The WORLD ports in this file are derived from WORLD (https://github.com/mmorise/World),
+# Copyright (c) 2010 M. Morise, and are used under its BSD 3-clause license (LICENSE-WORLD).
 """WORLD's synthesis (Morise, Yokomori & Ozawa, 2016), ported exactly: a
 sound from an F0 track, a spectral envelope and an aperiodicity, as made by
-:func:`~sonore.views.spectral_envelope.cheaptrick` and
-:func:`~sonore.views.aperiodicity.d4c` (or
+:func:`~sonore.views.spectral_envelope.pitch_adaptive_envelope` and
+:func:`~sonore.views.aperiodicity.band_aperiodicity` (or
 :func:`~sonore.views.aperiodicity.harmonic_aperiodicity`).
 
 Also here are the pieces WORLD's analysis shares with its synthesis: WORLD's
@@ -26,7 +28,7 @@ from sonore.core.utils import RNG, as_rng, time_axis
 if TYPE_CHECKING:
     from sonore.sources.waveforms import ContourLike
 
-__all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "world_fft_size", "world_synthesize"]
+__all__ = ["DIFFERENCES_FROM_WORLD", "world_randn", "world_fft_size", "source_filter_synthesize"]
 
 
 DIFFERENCES_FROM_WORLD = """\
@@ -37,16 +39,16 @@ floating-point precision.
 1. F0 is not estimated: Harvest and DIO are not ported, so every function
    takes an F0 track. so.f0_track is sonore's own tracker, not Harvest, so
    WORLD's numbers need WORLD's track.
-2. cheaptrick(q1=...) accepts any value. WORLD's code uses -0.15 (the
+2. pitch_adaptive_envelope(q1=...) accepts any value. WORLD's code uses -0.15 (the
    default here); its paper (Morise, 2015) gives -0.09.
-3. world_synthesize(rng=...) accepts a seed or Generator, which replaces
+3. source_filter_synthesize(rng=...) accepts a seed or Generator, which replaces
    WORLD's noise stream with fresh Gaussian noise. The default, rng=None,
    is WORLD's stream, restarted at every call as WORLD does.
 4. harmonic_aperiodicity is not part of WORLD. It measures the share of
    noise by fitting the harmonics; D4C is WORLD's measure.
 5. Multichannel sounds are analyzed one channel at a time; WORLD takes one
    channel.
-6. world_synthesize refuses pulses further apart than its FFT is long,
+6. source_filter_synthesize refuses pulses further apart than its FFT is long,
    which only a very low F0 beside an unvoiced stretch on a long hop gives;
    WORLD writes past its buffer there.
 """
@@ -239,7 +241,7 @@ class _GaussianNoise:
         return self.rng.standard_normal(n)
 
 
-def world_synthesize(
+def source_filter_synthesize(
     f0: ContourLike,
     envelope: Callable[[np.ndarray, np.ndarray], np.ndarray],
     aperiodicity: Any,  # an Aperiodicity, which is not imported here: that module imports this one

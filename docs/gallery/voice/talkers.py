@@ -159,7 +159,7 @@ right.set_xticks([])
 # left free as well.
 
 # %%
-envelopes = {label: so.cheaptrick(talkers[label], tracks[label]) for label in talkers}
+envelopes = {label: so.pitch_adaptive_envelope(talkers[label], tracks[label]) for label in talkers}
 frequencies = envelopes["Male talker"].f
 scored = (frequencies >= 100) & (frequencies <= 5000)
 average_db = {

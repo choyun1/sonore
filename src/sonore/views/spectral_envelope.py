@@ -1,6 +1,8 @@
+# The WORLD ports in this file are derived from WORLD (https://github.com/mmorise/World),
+# Copyright (c) 2010 M. Morise, and are used under its BSD 3-clause license (LICENSE-WORLD).
 """Spectral envelopes, and moving them along frequency.
 
-:func:`cheaptrick` is WORLD's CheapTrick (Morise, 2015), ported exactly: every
+:func:`pitch_adaptive_envelope` is WORLD's CheapTrick (Morise, 2015), ported exactly: every
 step reproduces WORLD's C++ code (github.com/mmorise/World, commit d625e76) to
 floating-point precision, including the tiny noise WORLD adds to keep
 logarithms and divisions finite, drawn from WORLD's own generator in WORLD's
@@ -16,7 +18,7 @@ or :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`), or a
 function. :class:`~sonore.views.aperiodicity.Aperiodicity` is read the same
 way. :func:`warp_frequency` moves an envelope (or an aperiodicity) along
 frequency without looking at how it was made, so any envelope and any
-synthesizer combine: :func:`~sonore.views.world.world_synthesize` and
+synthesizer combine: :func:`~sonore.views.world.source_filter_synthesize` and
 :func:`~sonore.sources.waveforms.harmonic_complex` both take any envelope.
 """
 
@@ -49,7 +51,7 @@ if TYPE_CHECKING:
 
     from sonore.sources.waveforms import ContourLike
 
-__all__ = ["SpectralEnvelope", "cheaptrick", "GridEnvelope", "warp_frequency"]
+__all__ = ["SpectralEnvelope", "pitch_adaptive_envelope", "GridEnvelope", "warp_frequency"]
 
 
 def _interp1q(x_start: float, x_step: float, values: np.ndarray, x_query: np.ndarray) -> np.ndarray:
@@ -173,7 +175,7 @@ class _FrequencyView(View):
 
 
 class SpectralEnvelope(_FrequencyView):
-    """A spectral envelope from :func:`cheaptrick`: power on ``n_fft // 2 + 1``
+    """A spectral envelope from :func:`pitch_adaptive_envelope`: power on ``n_fft // 2 + 1``
     frequencies :attr:`f` from 0 to ``fs / 2``, at the window times :attr:`t`
     of the F0 track. ``data`` has shape ``(n_channels, n_freqs, n_windows)``;
     :meth:`to_world` gives one channel in WORLD's layout.
@@ -188,8 +190,8 @@ class SpectralEnvelope(_FrequencyView):
         "smoothing."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
-        "an aperiodicity."
+        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
+        "track and an aperiodicity."
     )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, q1: float):
@@ -223,7 +225,7 @@ class SpectralEnvelope(_FrequencyView):
 
 
 # ------------------------------------------------------------ CheapTrick
-def cheaptrick(
+def pitch_adaptive_envelope(
     sound: Sound, f0: ContourLike, *, q1: float = -0.15, f0_floor: float = _FLOOR_F0
 ) -> SpectralEnvelope:
     """WORLD's CheapTrick spectral envelope (Morise, 2015), ported exactly.
@@ -291,7 +293,7 @@ class GridEnvelope(View):
     Any envelope estimate can be put in this form, so that it reads like a
     :class:`~sonore.views.spectral_envelope.SpectralEnvelope` and goes wherever an
     envelope is taken: :func:`warp_frequency`,
-    :func:`~sonore.views.world.world_synthesize`,
+    :func:`~sonore.views.world.source_filter_synthesize`,
     :func:`~sonore.sources.waveforms.harmonic_complex`.
     :meth:`Cepstrum.envelope_view <sonore.views.cepstrum.Cepstrum.envelope_view>`
     and :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`
@@ -306,8 +308,8 @@ class GridEnvelope(View):
         "GridEnvelope discards the harmonics, the phase, and everything finer than the envelope's smoothing."
     )
     back_to_sound = (
-        "so.world_synthesize rebuilds an approximation of the voice from it together with an F0 track and "
-        "an aperiodicity."
+        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
+        "track and an aperiodicity."
     )
 
     def __init__(self, data: np.ndarray, t: ArrayLike, f: ArrayLike):
@@ -397,7 +399,7 @@ def warp_frequency(
     :class:`~sonore.views.spectral_envelope.SpectralEnvelope`, an
     :class:`~sonore.views.aperiodicity.Aperiodicity`, a :class:`GridEnvelope`,
     or a function. A view held on a grid comes back as the same type on the
-    same grid (so ``world_synthesize`` takes it as before); a function comes
+    same grid (so ``source_filter_synthesize`` takes it as before); a function comes
     back as a function.
 
     ``ratio`` is:

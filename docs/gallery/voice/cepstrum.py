@@ -145,13 +145,13 @@ for label, cep in cepstra.items():
 # It analyzes each time window with a window three periods long, so that it adapts to the pitch;
 # smooths the power spectrum over $2F_0/3$, which fills the dips between harmonics; and then
 # lifters the log spectrum with a lifter matched to $F_0$, one that both smooths over one
-# harmonic spacing and lifts the peaks back up (`so.cheaptrick`). The cell measures how far
+# harmonic spacing and lifts the peaks back up (`so.pitch_adaptive_envelope`). The cell measures how far
 # below each harmonic peak, up to 4 kHz, each envelope runs: the median, and how much that
 # varies from harmonic to harmonic. CheapTrick normalizes its window to unit energy, so its
 # level is not comparable with the STFT's; only its spread is.
 
 # %%
-envelopes = {label: so.cheaptrick(snd, tracks[label]) for label, snd in talkers.items()}
+envelopes = {label: so.pitch_adaptive_envelope(snd, tracks[label]) for label, snd in talkers.items()}
 
 
 def below_peaks(label, envelope_db):
@@ -336,7 +336,7 @@ for vowel in FORMANTS:
         vowel_sound = synthetic_vowel(f0, vowel)
         mfcc_vowel = so.MFCC(vowel_sound)
         middle = len(mfcc_vowel.t) // 2
-        envelope_vowel = so.cheaptrick(
+        envelope_vowel = so.pitch_adaptive_envelope(
             vowel_sound, (mfcc_vowel.t[middle : middle + 1], np.array([float(f0)]))
         )
         envelope_freqs = np.arange(envelope_vowel.n_fft // 2 + 1) * fs / envelope_vowel.n_fft
@@ -580,7 +580,7 @@ for label, (change_db, coefficient_change) in changes.items():
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).
-#   [`spectral_envelope.cheaptrick`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L226)
+#   [`spectral_envelope.pitch_adaptive_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L228)
 # - Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech
 #   signals. *Proc. Interspeech 2017*, 2321–2325.
 #   [doi:10.21437/Interspeech.2017-68](https://doi.org/10.21437/Interspeech.2017-68). The stored

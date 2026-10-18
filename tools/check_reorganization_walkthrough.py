@@ -34,6 +34,6 @@ error = np.max(np.abs(cepstrum.to_sound().data - sentence.data))
 print(f"Cepstrum.to_sound() (original phase, unliftered): max error {error:.1e}")
 
 times, f0 = np.loadtxt("docs/speech/bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2).T
-aperiodicity = so.d4c(sentence, (times, f0))
-voice = so.world_synthesize((times, f0), so.MFCC(sentence).envelope_view(), aperiodicity)
-print(f"world_synthesize from the MFCC envelope: {voice.duration:.3f} s of sound")
+aperiodicity = so.band_aperiodicity(sentence, (times, f0))
+voice = so.source_filter_synthesize((times, f0), so.MFCC(sentence).envelope_view(), aperiodicity)
+print(f"source_filter_synthesize from the MFCC envelope: {voice.duration:.3f} s of sound")

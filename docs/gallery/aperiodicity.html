@@ -577,7 +577,7 @@ irregularity (jitter and shimmer) as noise.</p>
 </section>
 <section aria-labelledby="h-what-world-reports">
 <h2 id="h-what-world-reports">What WORLD reports</h2>
-<p>WORLD's own measure is D4C (Morise, 2016), which <code>so.d4c</code> reproduces exactly. It works from a
+<p>WORLD's own measure is D4C (Morise, 2016), which <code>so.band_aperiodicity</code> reproduces exactly. It works from a
 "group delay" of the time window, smoothed over the harmonics, whose spectrum is sorted to see how
 much of its power lies outside the strongest components, in bands 3 kHz wide around each
 multiple of 3 kHz. A correction for F0 follows, and the curve is drawn as straight lines (in dB)
@@ -595,12 +595,12 @@ at the female talker's.</p></div>
   <figure class="plot"><div class="plate">
     <img src="img/ap7_d4c_and_the_harmonic_residual_against_the_truth.png" width="1000" height="340" alt="D4C and the harmonic residual against the truth" loading="lazy">
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">d4c_shares = {label: so.d4c(vowels[label], exact[label]) for label in vowels}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">d4c_shares = {label: so.band_aperiodicity(vowels[label], exact[label]) for label in vowels}
 fig, ax = plt.subplots(figsize=(10, 3.4), layout=&quot;constrained&quot;)
 ax.plot(freqs, 10 * np.log10(true_aperiodicity(freqs)), color=&quot;k&quot;, lw=2.5, alpha=0.35, label=&quot;truth&quot;)
 for name, shares, color in [
     (&quot;so.harmonic_aperiodicity&quot;, residual_shares, &quot;C3&quot;),
-    (&quot;so.d4c (WORLD)&quot;, d4c_shares, &quot;C0&quot;),
+    (&quot;so.band_aperiodicity (WORLD)&quot;, d4c_shares, &quot;C0&quot;),
 ]:
     for (label, share), ls in zip(shares.items(), [&quot;-&quot;, &quot;--&quot;], strict=True):
         mean_share = share.share[0][:, inside].mean(axis=1)
@@ -622,7 +622,7 @@ bands = &quot;&quot;.join(f&quot;{f&#x27;{low}-{high}&#x27;:&gt;11}&quot; for lo
 print(f&quot;{&#x27;Share of noise [dB], band [Hz]&#x27;:&lt;34}{bands}&quot;)
 for label, vowel in vowels.items():
     track = exact[label]
-    envelope = so.cheaptrick(vowel, track)
+    envelope = so.pitch_adaptive_envelope(vowel, track)
     # the truth in each band: noise power over total power, the envelope weighting each frequency
     # as .bands() weights it
     weights = envelope.data[0][:, inside].mean(axis=1)
@@ -634,7 +634,7 @@ for label, vowel in vowels.items():
     print(f&quot;{label.lower()}&#x27;s pitch, {medians[label]:.0f} Hz&quot;)
     print(f&quot;{&#x27;  truth&#x27;:&lt;34}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in truth_db))
     wrong_track = (window_times, track[1] * 1.01)
-    for name, measure in [(&quot;harmonic residual&quot;, so.harmonic_aperiodicity), (&quot;D4C&quot;, so.d4c)]:
+    for name, measure in [(&quot;harmonic residual&quot;, so.harmonic_aperiodicity), (&quot;D4C&quot;, so.band_aperiodicity)]:
         for f0_name, f0 in [(&quot;exact F0&quot;, track), (&quot;F0 1% high&quot;, wrong_track)]:
             shares = measure(vowel, f0).bands(band_edges, envelope=envelope)[0][:, inside].mean(axis=1)
             row = f&quot;  {name}, {f0_name}&quot;
@@ -670,8 +670,8 @@ for label, speaker in SPEAKERS.items():
         fetch(f&quot;docs/speech/{speaker}_arctic_a0131_f0.csv&quot;), delimiter=&quot;,&quot;, skiprows=2
     ).T
     harvest[label] = (harvest_times, harvest_f0)
-envelopes = {label: so.cheaptrick(talkers[label], harvest[label]) for label in talkers}
-d4c_maps = {label: so.d4c(talkers[label], harvest[label]) for label in talkers}
+envelopes = {label: so.pitch_adaptive_envelope(talkers[label], harvest[label]) for label in talkers}
+d4c_maps = {label: so.band_aperiodicity(talkers[label], harvest[label]) for label in talkers}
 residual_maps = {label: so.harmonic_aperiodicity(talkers[label], harvest[label]) for label in talkers}
 
 print(f&quot;{&#x27;Median share of noise [dB], band [Hz]&#x27;:&lt;44}{bands}&quot;)
@@ -703,7 +703,7 @@ for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
     envelopes[label].plot(axes[0], db_range=70)
     axes[0].set_title(f&quot;{label}: spectral envelope (CheapTrick)&quot;)
     for ax, aperiodicity, title in [
-        (axes[1], d4c_maps[label], &quot;Aperiodicity: so.d4c (WORLD)&quot;),
+        (axes[1], d4c_maps[label], &quot;Aperiodicity: so.band_aperiodicity (WORLD)&quot;),
         (axes[2], residual_maps[label], &quot;Aperiodicity: so.harmonic_aperiodicity&quot;),
     ]:
         aperiodicity.plot(ax, db_range=40)
@@ -716,7 +716,7 @@ for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
 </section>
 <section aria-labelledby="h-listening">
 <h2 id="h-listening">Listening</h2>
-<p><code>so.world_synthesize</code> is WORLD's synthesis, reproduced sample for sample. At every pitch period
+<p><code>so.source_filter_synthesize</code> is WORLD's synthesis, reproduced sample for sample. At every pitch period
 it adds two pieces: the harmonics' share of the envelope, <span class="tex">S(1 - A)</span>, as one pulse, and the
 noise's share, <span class="tex">S A</span>, as a short burst of filtered noise. Below, each talker's own pitch track
 and envelope with four aperiodicities. (WORLD keeps <span class="tex">A</span> between −60 dB and just under 0 dB, and
@@ -764,9 +764,10 @@ sample for sample.</p></div>
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
-    label: finish(so.world_synthesize(harvest[label], envelopes[label], d4c_maps[label])) for label in talkers
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], d4c_maps[label]))
+    for label in talkers
 }
-fig, playhead = show_pair(sounds, titled(&quot;with so.d4c&quot;), fmax=8000)</code></pre></details>
+fig, playhead = show_pair(sounds, titled(&quot;with so.band_aperiodicity&quot;), fmax=8000)</code></pre></details>
 </article>
 
 <article class="sound pair" id="d-ap11">
@@ -788,7 +789,7 @@ mostly at high frequencies.</p></div>
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
-    label: finish(so.world_synthesize(harvest[label], envelopes[label], residual_maps[label]))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], residual_maps[label]))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled(&quot;with so.harmonic_aperiodicity&quot;), fmax=8000)</code></pre></details>
@@ -815,7 +816,7 @@ picture. The voiced parts are harmonics all the way up.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
 for label in talkers:
     periodic = so.Aperiodicity(np.zeros_like(d4c_maps[label].data), d4c_maps[label].t, FS, &quot;none&quot;)
-    sounds[label] = finish(so.world_synthesize(harvest[label], envelopes[label], periodic))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], periodic))
 fig, playhead = show_pair(sounds, titled(&quot;with A = 0&quot;), fmax=8000)</code></pre></details>
 </article>
 
@@ -840,7 +841,7 @@ sentence is whispered; it is still intelligible, because the envelope carries th
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
 for label in talkers:
     noise_only = so.Aperiodicity(np.ones_like(d4c_maps[label].data), d4c_maps[label].t, FS, &quot;all noise&quot;)
-    sounds[label] = finish(so.world_synthesize(harvest[label], envelopes[label], noise_only))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], noise_only))
 fig, playhead = show_pair(sounds, titled(&quot;with A = 1&quot;), fmax=8000)</code></pre></details>
 </article>
 </section>
@@ -850,7 +851,7 @@ fig, playhead = show_pair(sounds, titled(&quot;with A = 1&quot;), fmax=8000)</co
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940" target="_blank" rel="noopener">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L226" target="_blank" rel="noopener"><code>spectral_envelope.cheaptrick</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L127" target="_blank" rel="noopener"><code>aperiodicity.d4c</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L242" target="_blank" rel="noopener"><code>world.world_synthesize</code></a></li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels" target="_blank" rel="noopener">ASA</a>. The formants of "hod".</li></ul>
+<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940" target="_blank" rel="noopener">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L228" target="_blank" rel="noopener"><code>spectral_envelope.pitch_adaptive_envelope</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L129" target="_blank" rel="noopener"><code>aperiodicity.band_aperiodicity</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L244" target="_blank" rel="noopener"><code>world.source_filter_synthesize</code></a></li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels" target="_blank" rel="noopener">ASA</a>. The formants of "hod".</li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/voice/aperiodicity.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/voice/aperiodicity.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
 </main>

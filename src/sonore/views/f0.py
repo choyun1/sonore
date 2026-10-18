@@ -69,7 +69,7 @@ class F0Track(View):
 
     discards = "F0Track keeps only the pitch and the voicing of each time window."
     back_to_sound = (
-        "so.world_synthesize rebuilds an approximation of the voice from it together with a spectral "
+        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with a spectral "
         "envelope and an aperiodicity."
     )
 

@@ -39,7 +39,7 @@ def vowel():
     )
     times = np.arange(int(duration / HOP)) * HOP
     track = (times, np.full(len(times), 150.0))
-    return sound, track, so.cheaptrick(sound, track), so.d4c(sound, track)
+    return sound, track, so.pitch_adaptive_envelope(sound, track), so.band_aperiodicity(sound, track)
 
 
 class TestScaleF0:
@@ -173,8 +173,8 @@ class TestEnvelopeViews:
 class TestSynthesizers:
     def test_identity_settings_are_world_sample_for_sample(self, vowel):
         _, track, envelope, aperiodicity = vowel
-        plain = so.world_synthesize(track, envelope, aperiodicity)
-        unchanged = so.world_synthesize(
+        plain = so.source_filter_synthesize(track, envelope, aperiodicity)
+        unchanged = so.source_filter_synthesize(
             so.scale_f0(track, 1.0), so.warp_frequency(envelope, 1.0), aperiodicity
         )
         np.testing.assert_array_equal(unchanged.data, plain.data)
@@ -182,29 +182,31 @@ class TestSynthesizers:
     def test_any_envelope(self, vowel):
         _, track, envelope, aperiodicity = vowel
         as_grid = so.GridEnvelope(envelope.data, envelope.t, envelope.f)
-        plain = so.world_synthesize(track, envelope, aperiodicity)
+        plain = so.source_filter_synthesize(track, envelope, aperiodicity)
         np.testing.assert_allclose(
-            so.world_synthesize(track, as_grid, aperiodicity).data, plain.data, atol=1e-12
+            so.source_filter_synthesize(track, as_grid, aperiodicity).data, plain.data, atol=1e-12
         )
 
     def test_a_contour_off_the_grid(self, vowel):
         _, (times, values), envelope, aperiodicity = vowel
         shifted = (times - 0.015, values)  # Cepstrum.f0's time windows start before 0
-        out = so.world_synthesize(shifted, envelope, aperiodicity)
-        assert len(out) == len(so.world_synthesize((times, values), envelope, aperiodicity))
+        out = so.source_filter_synthesize(shifted, envelope, aperiodicity)
+        assert len(out) == len(so.source_filter_synthesize((times, values), envelope, aperiodicity))
 
     def test_pitch_and_formants_move_by_their_ratios(self, vowel):
         _, track, envelope, aperiodicity = vowel
-        out = so.world_synthesize(so.scale_f0(track, 1.5), so.warp_frequency(envelope, 1.2), aperiodicity)
+        out = so.source_filter_synthesize(
+            so.scale_f0(track, 1.5), so.warp_frequency(envelope, 1.2), aperiodicity
+        )
         tracked = so.f0_track(out)
         inner = (tracked.t > 0.1) & (tracked.t < 0.3)
         assert np.median(tracked.f0[0][inner]) == pytest.approx(225.0, rel=0.01)
         # the formants: the warp that best explains the output's envelope as the
         # envelope of the same pitch change without the warp, read at f / ratio
         higher = so.scale_f0(track, 1.5)
-        kept = so.world_synthesize(higher, envelope, aperiodicity)
-        kept_db = so.cheaptrick(kept, higher).db[0][:, 20:60].mean(axis=1)
-        moved_db = so.cheaptrick(out, higher).db[0][:, 20:60].mean(axis=1)
+        kept = so.source_filter_synthesize(higher, envelope, aperiodicity)
+        kept_db = so.pitch_adaptive_envelope(kept, higher).db[0][:, 20:60].mean(axis=1)
+        moved_db = so.pitch_adaptive_envelope(out, higher).db[0][:, 20:60].mean(axis=1)
         inside = (envelope.f > 100) & (envelope.f < 5000)
 
         def misfit(ratio):

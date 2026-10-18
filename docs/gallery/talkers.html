@@ -380,7 +380,7 @@ difference reads the male envelope at <span class="tex">f/r</span>: every forman
 The cell finds the <span class="tex">r</span> that brings the male average closest to the female one, with the
 overall level left free, and again with a tilt (a straight line in dB over log frequency)
 left free as well.</p>
-<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = {label: so.cheaptrick(talkers[label], tracks[label]) for label in talkers}
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">envelopes = {label: so.pitch_adaptive_envelope(talkers[label], tracks[label]) for label in talkers}
 frequencies = envelopes[&quot;Male talker&quot;].f
 scored = (frequencies &gt;= 100) &amp; (frequencies &lt;= 5000)
 average_db = {

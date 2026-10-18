@@ -26,11 +26,11 @@ not a ranking.
 Sources compared:
   F0:       the truth (synthetic only), so.f0_track, Harvest (pyworld, a
             development-only tool, skipped if missing), Cepstrum.f0 (40 ms Hann)
-  envelope: the truth (synthetic only), so.cheaptrick, the cepstral lifter
+  envelope: the truth (synthetic only), so.pitch_adaptive_envelope, the cepstral lifter
             (40 ms Hann STFT, lifter at half the median period), and
             so.MFCC's envelope (13 coefficients, its speech defaults), with
             height-1 triangles (the default) and with area-normalized ones
-  synthesis: so.world_synthesize (with so.d4c measured on the same F0) and
+  synthesis: so.source_filter_synthesize (with so.band_aperiodicity measured on the same F0) and
             so.harmonic_complex (envelope read point by point, no noise)
 
     python tools/compare_voice_methods.py
@@ -214,7 +214,7 @@ def envelope_sources(sound, track, formants=None):
     sources = {}
     if formants is not None:
         sources["truth"] = TrueEnvelope(formants)
-    sources["CheapTrick"] = so.cheaptrick(sound, track)
+    sources["CheapTrick"] = so.pitch_adaptive_envelope(sound, track)
     voiced = track[1][track[1] > 0]
     median_f0 = np.median(voiced) if len(voiced) else 100.0
     cepstrum = so.Cepstrum(so.STFT(sound, win_dur=0.040, hop_dur=HOP)).lifter(0.5 / median_f0)
@@ -227,11 +227,11 @@ def envelope_sources(sound, track, formants=None):
 
 
 def synthesize(synth, sound, track, envelope, aperiodicity, grid):
-    if synth == "world_synthesize":
+    if synth == "source_filter_synthesize":
         n_fft = world_fft_size(FS)
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
         world_envelope = SpectralEnvelope(envelope(grid, freqs), grid, FS, np.nan)
-        return so.world_synthesize(track, world_envelope, aperiodicity)
+        return so.source_filter_synthesize(track, world_envelope, aperiodicity)
     amplitude = pointwise_amplitude(envelope, grid, np.arange(0, FS / 2 + 1, 10.0))
     return so.harmonic_complex(sound.duration, FS, track, amplitudes=amplitude)
 
@@ -256,9 +256,9 @@ def part1():
                     voiced_inner = values[inner][values[inner] > 0]
                     f0_error = np.median(np.abs(voiced_inner / f0 - 1)) if len(voiced_inner) else np.nan
                     used_f0 = np.median(voiced_inner) if len(voiced_inner) else f0
-                    aperiodicity = so.d4c(sound, track)
+                    aperiodicity = so.band_aperiodicity(sound, track)
                     for env_name, envelope in envelope_sources(sound, track, formants).items():
-                        synths = ["world_synthesize"]
+                        synths = ["source_filter_synthesize"]
                         if f0_name == "truth":
                             synths.append("harmonic_complex")
                         for synth in synths:
@@ -292,10 +292,12 @@ def part1():
     print("  (median and worst over the 12 vowels; F0 error is the source's, before synthesis)")
     by_voice = {}
     for (f0_name, env_name, synth), rows in results.items():
-        if f0_name == "truth" and synth == "world_synthesize":
+        if f0_name == "truth" and synth == "source_filter_synthesize":
             rows = np.array(rows)
             by_voice[env_name] = (np.median(rows[:6, 0]), np.median(rows[6:, 0]))
-    print("  with the true F0 and world_synthesize, resynthesis error by voice (male / female vowels):")
+    print(
+        "  with the true F0 and source_filter_synthesize, resynthesis error by voice (male / female vowels):"
+    )
     for env_name, (male, female) in by_voice.items():
         print(f"    {env_name:11s} {male:5.2f} / {female:5.2f} dB")
 
@@ -334,10 +336,10 @@ def part2():
         voiced_at_mel = contour_on_grid(grid, reference_voicing, mel_t) > 0
         for f0_name, values in sources.items():
             track = (grid, values)
-            aperiodicity = so.d4c(sound, track)
+            aperiodicity = so.band_aperiodicity(sound, track)
             scores = []
             for envelope in envelope_sources(sound, track).values():
-                out = synthesize("world_synthesize", sound, track, envelope, aperiodicity, grid)
+                out = synthesize("source_filter_synthesize", sound, track, envelope, aperiodicity, grid)
                 _, resynthesized = log_mel_spectrogram(out)
                 count = min(len(original), len(resynthesized))
                 errors = [
@@ -350,7 +352,10 @@ def part2():
 
 # ------------------------------------------------------------ part 3
 def part3():
-    print("Part 3: world_synthesize given the true envelope, by FFT size (male who'd, F0 150 Hz, no noise)")
+    print(
+        "Part 3: source_filter_synthesize given the true envelope, by FFT size "
+        "(male who'd, F0 150 Hz, no noise)"
+    )
     rng = np.random.default_rng(1)
     formants = (*HILLENBRAND["male"]["u"], *UPPER["male"])
     sound = vowel(150.0, formants, rng)
@@ -361,12 +366,12 @@ def part3():
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
         envelope = SpectralEnvelope(truth(grid, freqs), grid, FS, np.nan)
         quiet = Aperiodicity(np.full_like(envelope.data, 1e-3), grid, FS, "none")
-        out = so.world_synthesize(track, envelope, quiet)
+        out = so.source_filter_synthesize(track, envelope, quiet)
         harmonic_freqs, out_db = harmonic_levels_db(out, 150.0)
         keep = harmonic_freqs >= SCORED[0]
         true_db = 20 * np.log10(envelope_amplitude(harmonic_freqs[keep], formants))
         print(f"  n_fft {n_fft:5d}: {level_free_rms(out_db[keep], true_db):.2f} dB")
-    estimate = so.cheaptrick(sound, track)
+    estimate = so.pitch_adaptive_envelope(sound, track)
     harmonic_freqs = 150.0 * np.arange(1, int(SCORED[1] / 150.0) + 1)
     keep = harmonic_freqs >= SCORED[0]
     estimate_db = 10 * np.log10(estimate(np.array([0.4]), harmonic_freqs[keep])[0, :, 0])

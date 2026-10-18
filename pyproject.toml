@@ -9,8 +9,8 @@ description = "Signals and stimuli for auditory research: generators, filterbank
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Adrian Cho", email = "choyun1@gmail.com" }]
-license = "MIT"
-license-files = ["LICENSE"]
+license = "MIT AND BSD-3-Clause"
+license-files = ["LICENSE", "LICENSE-WORLD"]
 keywords = ["psychoacoustics", "auditory", "hearing", "binaural", "HRTF", "stimuli", "audio"]
 classifiers = [
     "Development Status :: 4 - Beta",
