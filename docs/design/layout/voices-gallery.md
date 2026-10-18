@@ -159,7 +159,9 @@ new example compares the page-2 resynthesis with this one on both talkers.
 
 Keep vc1 (the sentence) and vc2, now the recipe's resynthesis, under "Resynthesis" (no longer
 "Resynthesis with WORLD"). Keep the pitch and formant changes (vc3 to vc6), the phase vocoder
-(vc7), pitch range (vc8 to vc10, hm3), the aperiodicity kept and warped (vc11, vc12), toward
+(vc7: the sentence a fifth up, pitch and formants moving together, as the contrast to the
+source-filter route, with a link back to the Phase vocoder page, which stays in "Seeing and
+changing sound" because it works on any sound), pitch range (vc8 to vc10, hm3), the aperiodicity kept and warped (vc11, vc12), toward
 another talker (vc14, vc15, vc19), and any pitch track, any envelope (vc17, vc18), all synthesized
 by the recipe. hm4 (whispered) stays. he1, hu1, hu2 and hf0 to hf3 move to pages 2 and 3. he2 and
 he3 (noise bands, the channel-vocoder idea) move to the Vocoder page, which owns that idea.
