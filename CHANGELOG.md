@@ -8,6 +8,18 @@ version (0.x.y) only fixes bugs.
 
 ### Added
 
+- `so.source_filter_synthesize(f0, envelope, aperiodicity=None)`: a voice
+  rebuilt from an F0 track, a spectral envelope and an aperiodicity, as
+  harmonics (`so.harmonic_complex` on the track) carrying the envelope's
+  periodic part plus white noise shaped to its noise part by an STFT.
+  Without an aperiodicity voicing is all or nothing: harmonics where the
+  track is voiced, noise where it is not, the classic source-filter
+  resynthesis. It replaces `so.world_synthesize` (see Removed) and reads
+  any F0 track and any envelope, as that did. On the bdl
+  and slt sentences it is as close to the originals as WORLD's synthesis
+  was (log mel distance 1.80 and 1.87 dB voiced, against 1.83 and 2.06);
+  its harmonics start in cosine phase, so each period is peakier than a
+  voice's. Checked in `tools/check_voice_recipe_claims.py`.
 - `sonore.texture.synth.pop_start`: a starting sound for `synthesize` that
   already has pops, Gaussian noise times a sparse train of 4 ms bumps at
   power-law sizes, at the recording's own pop rate (`pop_rate`) and
@@ -56,21 +68,13 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
-- The three functions ported from WORLD are renamed for what they do:
-  `so.cheaptrick` is now `so.pitch_adaptive_envelope`, `so.d4c` is
-  `so.band_aperiodicity`, and `so.world_synthesize` is
-  `so.source_filter_synthesize`. The old names are gone; the code and its
-  output are unchanged. Each docstring still names the WORLD part it ports.
-  sonore ports these three parts and not WORLD's F0 trackers, so the old
-  names made it read as all of WORLD.
-- WORLD's BSD 3-clause license now ships with sonore as `LICENSE-WORLD`,
-  with a notice at the top of each file holding a port, and the package
-  license is `MIT AND BSD-3-Clause`. The ports have needed the notice since
-  they were added in 0.4.0.
+- WORLD's two analyses are renamed for what they do: `so.cheaptrick` is now
+  `so.pitch_adaptive_envelope` and `so.d4c` is `so.band_aperiodicity`. The
+  old names are gone. sonore has these two parts of WORLD and not its F0
+  trackers or its synthesis, so the old names made it read as all of WORLD.
 - `so.pitch_adaptive_envelope` (CheapTrick) and `so.band_aperiodicity` (D4C)
   are rewritten from their papers (Morise, 2015 and 2016) instead of ported
-  from WORLD's code, so the WORLD license notice no longer covers them; it
-  still covers `so.source_filter_synthesize`. Their output changes:
+  from WORLD's code. Their output changes:
   - `pitch_adaptive_envelope`'s `q1` defaults to the paper's -0.09 instead
     of WORLD's -0.15. At the same `q1` its envelopes are within 0.01 dB of
     WORLD's (median over voiced time windows of two sentences); the first and
@@ -83,7 +87,7 @@ version (0.x.y) only fixes bugs.
     F0 > 0 is analyzed, and unvoiced ones are all noise (a share of exactly 1).
     The sampling rate must be at least 12 kHz, so that one 6 kHz band fits.
   - Both accept any sampling rate, draw no random numbers, and read zeros
-    beyond the ends of the sound. `sonore.views.world.world_fft_size` is gone.
+    beyond the ends of the sound.
   Measured in `tools/check_paper_vocoder_claims.py`.
 - `so.f0_track` for low voices (60 to 90 Hz, inside the default range):
   the refinement uses every harmonic up to 1.5 kHz (at least six, at most
@@ -220,6 +224,14 @@ version (0.x.y) only fixes bugs.
 - `views/modulation.py` opens with `ModulationSpectrum` (Singh & Theunissen,
   2003); the modulation filterbanks follow.
 
+### Removed
+
+- `so.world_synthesize` (WORLD's synthesis, ported sample for sample), with
+  `sonore.views.world`, `so.DIFFERENCES_FROM_WORLD` and WORLD's noise
+  generator. The new `so.source_filter_synthesize` (see Added) takes its
+  place; for WORLD's own output use pyworld. sonore no longer holds any of WORLD's code, so the
+  package license is MIT alone.
+
 ### Fixed
 
 - `so.f0_track` with `f_hi` raised for singing: a steady high voice has a
@@ -240,18 +252,6 @@ version (0.x.y) only fixes bugs.
   and that lowering `f_lo` below 60 Hz is not reliable. From audit sitting
   12, with tests for every surviving deliberate break that changes the
   output.
-- `so.world_synthesize` with a hop that is not a whole number of
-  nanoseconds (10/3 ms, say) rounded it to one, which differed from WORLD
-  by up to 0.8% of the peak on the gallery sentence; it now keeps the hop as
-  given and snaps only a rounding error away from a whole number of
-  nanoseconds (so 5 ms is still exactly 5 ms). A very low F0 beside an
-  unvoiced stretch on a long hop, which put pulses further apart than the
-  FFT is long, now gives a clear `ValueError` instead of a NumPy broadcast
-  error (WORLD writes past its buffer there; `DIFFERENCES_FROM_WORLD` item
-  6). Unvoiced stretches, voicing edges, a noise share near 1 at 0 Hz, an F0
-  just above the lowest WORLD voices, the last hop and a non-decimal hop are
-  now held to WORLD's own output (`tools/make_world_fixtures.py`), where the
-  stored output was voiced throughout. From audit sitting 13.
 
 ## [0.7.0] - 2026-10-14
 

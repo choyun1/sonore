@@ -25,6 +25,23 @@ Each docstring names the WORLD part it ports, and WORLD's BSD license is
 shipped as `LICENSE-WORLD`. The text below keeps the names it was written
 with.
 
+Superseded on 2026-10-18 (Cho, thread "WORLD renames and voice pages";
+plan in PR #239, `docs/design/layout/voices-gallery.md`): sonore no longer reproduces
+WORLD. `so.pitch_adaptive_envelope` and `so.band_aperiodicity` are rewritten
+from the CheapTrick and D4C papers and measured against pyworld as a
+distance (`tools/check_paper_vocoder_claims.py`), and the synthesis port is
+removed with `sonore.views.world`, `DIFFERENCES_FROM_WORLD` and
+`LICENSE-WORLD`. The name `so.source_filter_synthesize` now belongs to a new
+function in `sources` that puts a voice back together instead: harmonics carrying the envelope's periodic part plus
+shaped noise (`tools/check_voice_recipe_claims.py`). The reason: pyworld
+already gives WORLD's exact output to anyone who needs it, and porting
+WORLD's parts without its F0 trackers read as a partial copy. The files
+named for WORLD were renamed afterwards: `tests/views/test_world.py` is
+now `test_spectral_envelope.py` and `test_aperiodicity.py`,
+`tests/data/world_reference.npz` is `pyworld_reference.npz`, and
+`tools/make_world_fixtures.py` is `tools/make_pyworld_fixtures.py`. The rest
+of this document is the record of the earlier design, with its old names.
+
 ## Why
 
 With the Klatt synthesizer, sonore can build speech from numbers set by

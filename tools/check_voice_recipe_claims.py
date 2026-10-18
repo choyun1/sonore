@@ -1,6 +1,5 @@
-"""Checks the recipe that rebuilds a voice from an F0 track, a spectral envelope and an
-aperiodicity, in place of WORLD's synthesis (so.source_filter_synthesize), before the
-gallery uses it.
+"""Checks so.source_filter_synthesize, which rebuilds a voice from an F0 track, a spectral
+envelope and an aperiodicity in place of WORLD's synthesis.
 
 The recipe, for an envelope S (power), a noise share a and an F0 track:
 
@@ -20,10 +19,11 @@ so.pitch_adaptive_envelope and so.band_aperiodicity on the true F0, rebuilt by t
 and the rebuilt sound's share measured as in part 1. The analyses' errors add to the
 recipe's here.
 
-Part 3, the bdl and slt recordings rebuilt by the recipe and by so.source_filter_synthesize
-from the same analyses (F0 from so.f0_track): the level-free RMS dB between the log mel
-spectra (40 bands) of the original and the rebuilt sound, median over voiced and over
-unvoiced time windows, as in tools/compare_voice_methods.py.
+Part 3, the bdl and slt recordings rebuilt by the recipe and by WORLD's synthesis
+(pyworld.synthesize, development only; part 3 is skipped without it) from the same
+analyses (F0 from so.f0_track): the level-free RMS dB between the log mel spectra (40
+bands) of the original and the rebuilt sound, median over voiced and over unvoiced time
+windows, as in tools/compare_voice_methods.py.
 
     python tools/check_voice_recipe_claims.py
 """
@@ -35,6 +35,11 @@ from scipy.signal import freqz, lfilter
 
 import sonore as so
 
+try:
+    import pyworld
+except ImportError:  # WORLD's synthesis is only a comparison
+    pyworld = None
+
 FS = 16000
 HOP = 0.005
 results = []
@@ -43,44 +48,6 @@ results = []
 def report(name, value, passed, detail=""):
     results.append(passed)
     print(f"  [{'PASS' if passed else 'FAIL'}] {name}: {value}" + (f"  ({detail})" if detail else ""))
-
-
-# ------------------------------------------------------------ the recipe
-def pointwise_share(aperiodicity):
-    """The noise share at the points (t[i], f[i]), linear in time and in dB over frequency."""
-    as_envelope = so.SpectralEnvelope(aperiodicity.share, aperiodicity.t, aperiodicity.fs, np.nan)
-    return lambda t, f: as_envelope.amplitude(t, f) ** 2
-
-
-def recipe(duration, fs, track, envelope, aperiodicity, *, rng=None, win_dur=0.020):
-    """Harmonics carrying S (1 - a) plus white noise shaped to S a."""
-    share = pointwise_share(aperiodicity)
-
-    def amplitudes(t, f, n):
-        return np.sqrt(4 * (f / n) * envelope.amplitude(t, f) ** 2 * (1 - share(t, f)) / fs)
-
-    # harmonic_complex returns RMS 1, as every generator does, so it is scaled back to the
-    # power the amplitudes ask for: sum_n a_n^2 / 2 at each time window of the track
-    # (faded over the top tenth below 0.45 fs as harmonic_complex fades them), averaged
-    # over the sound, unvoiced time windows counting 0
-    times, f0_values = (np.asarray(values, dtype=float) for values in track)
-    f_max = 0.45 * fs
-    powers = np.zeros(len(times))
-    for index, (time, f0) in enumerate(zip(times, f0_values, strict=True)):
-        if f0 > 0:
-            numbers = np.arange(1, int(f_max / f0) + 1)
-            freqs = numbers * f0
-            fade = np.cos(np.pi / 2 * np.clip((freqs - 0.9 * f_max) / (0.1 * f_max), 0, 1)) ** 2
-            powers[index] = np.sum(amplitudes(np.full(len(numbers), time), freqs, numbers) ** 2 / 2 * fade**2)
-    on_samples = np.interp(np.arange(int(round(duration * fs))) / fs, times, powers)
-    harmonics = so.harmonic_complex(duration, fs, track, amplitudes=amplitudes)
-    harmonics = harmonics.data[:, 0] * np.sqrt(np.mean(on_samples))
-    noise = so.STFT(so.gaussian_noise(duration, fs, rng=rng), win_dur=win_dur, hop_dur=HOP)
-    # an Aperiodicity reads as the amplitude ratio, the square root of the share
-    noise.data = noise.data * (np.sqrt(envelope(noise.t, noise.f)) * aperiodicity(noise.t, noise.f))[:1]
-    # gaussian_noise has RMS 1 and white noise of variance 1 is what the envelope reads as 1
-    shaped = noise.to_sound().data[: len(harmonics), 0]
-    return so.Sound(harmonics + shaped, fs)
 
 
 # ------------------------------------------------------------ known vowels
@@ -135,7 +102,7 @@ def part1():
     for f0 in (120.0, 220.0):
         for noise_db in (-20.0, -10.0, -3.0):
             track, envelope, aperiodicity, share = true_views(f0, noise_db, 1.0)
-            out = recipe(1.0, FS, track, envelope, aperiodicity, rng=rng)
+            out = so.source_filter_synthesize(track, envelope, aperiodicity, duration=1.0, rng=rng)
             share_db, rebuilt = measured(out, track)
             inside = (track[0] > 0.1) & (track[0] < 0.9)
             band = (rebuilt.f > 300) & (rebuilt.f < 6000)
@@ -143,7 +110,7 @@ def part1():
             truth_db = 10 * np.log10(share)
             # the share within 2 dB and the level within 1 dB: the measurement itself adds
             # error (harmonic_aperiodicity reads a known share within about 1.5 dB in
-            # tests/views/test_world.py, the envelope's level within 0.3 dB in
+            # tests/views/test_aperiodicity.py, the envelope's level within 0.3 dB in
             # tools/check_paper_vocoder_claims.py), and the noise is one random draw
             report(
                 f"F0 {f0:.0f} Hz, share {truth_db:5.1f} dB",
@@ -165,7 +132,7 @@ def part2():
                 ("D4C", so.band_aperiodicity(sound, track)),
                 ("harmonic residual", so.harmonic_aperiodicity(sound, track)),
             ):
-                out = recipe(1.0, FS, track, envelope, aperiodicity, rng=rng)
+                out = so.source_filter_synthesize(track, envelope, aperiodicity, duration=1.0, rng=rng)
                 share_db, _ = measured(out, track)
                 label = f"F0 {f0:.0f} Hz, noise {noise_db:5.1f} dB, {name}"
                 value = f"original {original_db:5.1f} dB, rebuilt {share_db:5.1f} dB"
@@ -217,8 +184,12 @@ def part3():
         voiced = track[1][np.clip(np.round(mel_t / HOP).astype(int), 0, len(times) - 1)] > 0
         scores = {}
         rebuilt = {
-            "WORLD's synthesis": so.source_filter_synthesize(track, envelope, aperiodicity).data[:, 0],
-            "recipe": recipe(sound.duration, FS, track, envelope, aperiodicity, rng=3).data[:, 0],
+            "WORLD's synthesis": pyworld.synthesize(
+                np.ascontiguousarray(track[1]), envelope.to_world(), aperiodicity.to_world(), FS, HOP * 1000
+            ),
+            "recipe": so.source_filter_synthesize(
+                track, envelope, aperiodicity, duration=sound.duration, rng=3
+            ).data[:, 0],
         }
         for name, samples in rebuilt.items():
             _, spectrum = log_mel_spectrogram(samples)
@@ -237,6 +208,9 @@ def part3():
 
 part1()
 part2()
-part3()
+if pyworld is None:
+    print("Part 3 skipped: pyworld is not installed")
+else:
+    part3()
 print(f"{sum(results)} of {len(results)} checks passed")
 sys.exit(0 if all(results) else 1)

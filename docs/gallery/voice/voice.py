@@ -34,13 +34,14 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # - [Unvoiced gaps](#h-unvoiced-gaps): silence or shaped noise where the voice is not voiced.
 # - [Phases on a moving pitch](#h-phases-on-a-moving-pitch): cosine, Schroeder and random phase.
 #
-# The second part changes the voice with the vocoder WORLD (Morise, Yokomori & Ozawa, 2016), which
-# adds a third measurement, the aperiodicity (see [Source and aperiodicity](aperiodicity.html)).
+# The second part changes the voice with a vocoder built from WORLD's analyses (Morise, Yokomori &
+# Ozawa, 2016), which add a third measurement, the aperiodicity (see [Source and
+# aperiodicity](aperiodicity.html)).
 # Two changes are basic: `so.scale_f0(track, ratio)` multiplies every F0 by a ratio and leaves the
 # envelope alone; `so.warp_frequency(envelope, ratio)` reads the envelope at $f / \text{ratio}$, so
 # a peak at 1000 Hz moves to $1000 \times \text{ratio}$ Hz, and leaves the pitch alone.
 #
-# - [Resynthesis with WORLD](#h-resynthesis-with-world): nothing changed, and how each change is
+# - [Resynthesis](#h-resynthesis): nothing changed, and how each change is
 #   measured.
 # - [Pitch and formants, one at a time](#h-pitch-and-formants-one-at-a-time): each changed alone,
 #   and both together.
@@ -352,14 +353,15 @@ sounds = {label: finish(snd) for label, snd in buzzes["random"].items()}
 fig, playhead = show_pair(sounds, "equal harmonics, random phase", tracks)
 
 # %% [markdown]
-# ## Resynthesis with WORLD
+# ## Resynthesis
 #
 # WORLD measures the envelope with CheapTrick (Morise, 2015), which [Spectral
 # envelope](cepstrum.html) compares with the liftered cepstrum, and the aperiodicity with D4C
 # (Morise, 2016): how much of the voice is noise, frequency by frequency, so that every time
 # window can mix harmonics and noise rather than being one or the other as above.
-# `so.source_filter_synthesize` puts the three back together, sample for sample as WORLD does. Both are
-# measured here on the `so.f0_track` tracks.
+# `so.source_filter_synthesize` puts the three back together: harmonics on the pitch track carrying the
+# periodic part of the envelope, plus white noise shaped to the rest. The envelope and the
+# aperiodicity are measured here on the `so.f0_track` tracks.
 #
 # Each change below is checked by measurement on the output. The pitch: `so.f0_track` on the
 # output, its median over voiced time windows against the same on the original. The formants:
@@ -423,12 +425,12 @@ changed = {}  # each change's sentences, measured after the demos that make them
 
 
 # %% [about]
-# WORLD's resynthesis with nothing changed: the pitch track, CheapTrick's envelope and D4C's
+# The resynthesis with nothing changed: the pitch track, CheapTrick's envelope and D4C's
 # aperiodicity put back together. Every change below is a change of this.
 
 # %% [demo vc2] Resynthesis, nothing changed
 sounds = {
-    label: finish(so.source_filter_synthesize(tracks[label], envelopes[label], aperiodicities[label]))
+    label: finish(so.source_filter_synthesize(tracks[label], envelopes[label], aperiodicities[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, "so.source_filter_synthesize", tracks)
@@ -447,7 +449,7 @@ changed["nothing changed"] = (sounds, tracks)
 # %% [demo vc3] Higher pitch
 higher = {label: so.scale_f0(track, 1.5) for label, track in tracks.items()}
 sounds = {
-    label: finish(so.source_filter_synthesize(higher[label], envelopes[label], aperiodicities[label]))
+    label: finish(so.source_filter_synthesize(higher[label], envelopes[label], aperiodicities[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, "F0 × 1.5, formants kept", higher)
@@ -461,7 +463,7 @@ changed["F0 × 1.5"] = (sounds, higher)
 sounds = {
     label: finish(
         so.source_filter_synthesize(
-            tracks[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label]
+            tracks[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label], rng=1
         )
     )
     for label in talkers
@@ -476,7 +478,7 @@ changed["formants × 1.2"] = (sounds, tracks)
 sounds = {
     label: finish(
         so.source_filter_synthesize(
-            higher[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label]
+            higher[label], so.warp_frequency(envelopes[label], 1.2), aperiodicities[label], rng=1
         )
     )
     for label in talkers
@@ -544,7 +546,7 @@ report({name: changed[name] for name in ("F0 × 1.5", "so.pitch_shift, a fifth u
 
 # %% [markdown]
 # Both raise the pitch by about 1.5. The phase vocoder's fitted warp follows its pitch ratio, so
-# the formants went up a fifth too; WORLD's stays near 1.
+# the formants went up a fifth too; the vocoder's stays near 1.
 
 # %% [markdown]
 # ## Pitch range
@@ -572,9 +574,11 @@ ranges = {
 
 
 def on_contours(contours):
-    """Each talker's WORLD resynthesis on another contour, envelope and aperiodicity kept."""
+    """Each talker's resynthesis on another contour, envelope and aperiodicity kept."""
     return {
-        label: finish(so.source_filter_synthesize(contours[label], envelopes[label], aperiodicities[label]))
+        label: finish(
+            so.source_filter_synthesize(contours[label], envelopes[label], aperiodicities[label], rng=1)
+        )
         for label in talkers
     }
 
@@ -650,7 +654,7 @@ axes[0].set_ylabel("Share of noise (dB)")
 sounds = {
     label: finish(
         so.source_filter_synthesize(
-            tracks[label], so.warp_frequency(envelopes[label], 1.2), warped_aperiodicities[label]
+            tracks[label], so.warp_frequency(envelopes[label], 1.2), warped_aperiodicities[label], rng=1
         )
     )
     for label in talkers
@@ -708,7 +712,7 @@ changed["pitch"] = (sounds, moved)
 sounds = {
     label: finish(
         so.source_filter_synthesize(
-            moved[label], so.warp_frequency(envelopes[label], warps[label]), aperiodicities[label]
+            moved[label], so.warp_frequency(envelopes[label], warps[label]), aperiodicities[label], rng=1
         )
     )
     for label in talkers
@@ -724,7 +728,7 @@ changed["pitch and formants"] = (sounds, moved)
 sounds = {
     label: finish(
         so.source_filter_synthesize(
-            moved[label], tilted(envelopes[label], warps[label], tilts[label]), aperiodicities[label]
+            moved[label], tilted(envelopes[label], warps[label], tilts[label]), aperiodicities[label], rng=1
         )
     )
     for label in talkers
@@ -791,8 +795,9 @@ for label, average in original_db.items():
 # %% [markdown]
 # ## Any pitch track, any envelope
 #
-# `so.source_filter_synthesize` takes its own envelope as it is and reads any other envelope at its time
-# windows and frequencies, so the pitch can come from one analysis and the envelope from another.
+# `so.source_filter_synthesize` reads any envelope at the aperiodicity's time windows and frequencies,
+# and any pitch track at its own times, so the pitch can come from one analysis and the envelope
+# from another.
 # Three pitch tracks, those of [Pitch tracking](pitch.html): `so.f0_track`, Harvest (Morise, 2017)
 # stored with each recording, and the cepstral peak in each 40 ms window (Noll, 1967). Four
 # envelopes: CheapTrick's, the liftered cepstrum of [the first part](#h-putting-the-envelope-back),
@@ -827,8 +832,8 @@ for label, snd in talkers.items():
         "MFCC": so.MFCC(snd).envelope_view(),
         "MFCC, area": so.MFCC(snd, triangles="area").envelope_view(),
     }
-    # D4C needs a track on time windows that start at 0 s, which the cepstral track's do not, so
-    # the cepstral pitch is resynthesized with the aperiodicity measured on so.f0_track's.
+    # the cepstral track's time windows start before 0 s, so the cepstral pitch is resynthesized
+    # with the aperiodicity measured on so.f0_track's time windows
     mixed_aperiodicities[label] = {
         "so.f0_track": aperiodicities[label],
         "Harvest": so.band_aperiodicity(snd, harvest),
@@ -858,7 +863,7 @@ for label in talkers:
     for track_name, track in pitch_tracks[label].items():
         aperiodicity = mixed_aperiodicities[label][track_name]
         scores = [
-            distance(so.source_filter_synthesize(track, view, aperiodicity), label)
+            distance(so.source_filter_synthesize(track, view, aperiodicity, rng=1), label)
             for view in mixed_envelopes[label].values()
         ]
         print(f"  {track_name:<12}" + "".join(f"{score:>10.2f} dB" for score in scores))
@@ -868,9 +873,9 @@ for label in talkers:
 # cepstrum scores worse for the female talker than for the male talker: with the harmonics farther
 # apart, the lifter has to cut lower (see [Spectral envelope](cepstrum.html)).
 #
-# The cepstral track's time windows start before 0 s, so it cannot drive D4C, whose time windows
-# must start at 0 s. `so.source_filter_synthesize` reads it onto the aperiodicity's time windows, so it can
-# drive the synthesis.
+# The cepstral track's time windows start before 0 s, so its resynthesis uses the aperiodicity
+# measured on `so.f0_track`'s time windows; `so.source_filter_synthesize` reads the cepstral track at its
+# own times.
 
 # %% [about]
 # The pitch from the cepstrum and the envelope from the MFCCs (area 1); the only WORLD analysis is
@@ -883,6 +888,7 @@ sounds = {
             pitch_tracks[label]["cepstral"],
             mixed_envelopes[label]["MFCC, area"],
             mixed_aperiodicities[label]["cepstral"],
+            rng=1,
         )
     )
     for label in talkers
@@ -902,6 +908,7 @@ sounds = {
             changed_tracks[label],
             so.warp_frequency(mixed_envelopes[label]["MFCC, area"], 1.2),
             mixed_aperiodicities[label]["cepstral"],
+            rng=1,
         )
     )
     for label in talkers
@@ -913,26 +920,25 @@ changed["cepstral F0 × 1.5, MFCC × 1.2"] = (sounds, higher)
 report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 1.2"]})
 
 # %% [markdown]
-# WORLD's synthesis turns each envelope into a short pulse on its own FFT (1024 points at 16 kHz),
-# which suits a smooth envelope like CheapTrick's; an envelope with deep, narrow valleys comes out
-# a few dB off at the harmonics there, and `so.harmonic_complex`, as in
-# [the first part](#h-putting-the-envelope-back), is the better route for it: it reads the envelope
-# at each harmonic's frequency and time exactly.
+# `so.source_filter_synthesize` builds its harmonics with `so.harmonic_complex`, as in
+# [the first part](#h-putting-the-envelope-back): it reads the envelope at each harmonic's
+# frequency and time, on the aperiodicity's grid (15.6 Hz apart at 16 kHz), so an envelope with
+# deep, narrow valleys comes through nearly as it is.
 
 # %% [markdown]
 # ## What this page leaves out
 #
 # - **Listening.** The measurements say where the pitch and formants went, not how the results
 #   sound, nor who they sound like.
-# - **The glottal pulse.** The harmonics' phases in the first part are fixed numbers, and WORLD
-#   makes each pulse minimum phase. A voice's phases come from the shape of each glottal pulse
+# - **The glottal pulse.** The harmonics' phases are fixed numbers (cosine phase in
+#   `so.source_filter_synthesize`). A voice's phases come from the shape of each glottal pulse
 #   and the vocal tract's phase response (see [Formant synthesis](formants.html)).
 # - **One talker into another.** A pitch ratio, a formant ratio and a tilt leave the voice
 #   quality, the aperiodicity, the timing and the accent as they were.
 # - **Ratios that change across frequency.** Formants do not all move by the same ratio between
 #   talkers. `so.warp_frequency` also takes a ratio that changes over time, or any map from
 #   output frequency to source frequency, but this page uses one ratio throughout.
-# - **The consonants.** Where the track says unvoiced, WORLD's synthesis is noise shaped by the
+# - **The consonants.** Where the track says unvoiced, the resynthesis is noise shaped by the
 #   envelope, so a formant warp moves the noise of the fricatives too.
 
 # %% [markdown]
@@ -958,14 +964,13 @@ report({"cepstral F0 × 1.5, MFCC × 1.2": changed["cepstral F0 × 1.5, MFCC × 
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
-#   [`world.source_filter_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L222)
 # - Noll (1967). Cepstrum pitch determination. *J. Acoust. Soc. Am.* 41(2), 293–309.
 #   [PubMed](https://pubmed.ncbi.nlm.nih.gov/6040805/).
 #   [`cepstrum.Cepstrum.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/cepstrum.py#L185)
 # - Schroeder (1970). Synthesis of low-peak-factor signals and binary sequences with low
 #   autocorrelation. *IEEE Trans. Inf. Theory* 16(1), 85–89.
 #   [doi:10.1109/TIT.1970.1054411](https://doi.org/10.1109/TIT.1970.1054411).
-#   [`waveforms.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L356)
+#   [`waveforms.schroeder_complex`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L372)
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).

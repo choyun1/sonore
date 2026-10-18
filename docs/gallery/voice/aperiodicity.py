@@ -35,7 +35,7 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   of noise directly, at each talker's pitch.
 # - [What WORLD reports](#h-what-world-reports): D4C, WORLD's measure, and why it differs.
 # - [A sentence](#h-a-sentence): both measures on the two recordings.
-# - [Listening](#h-listening): each sentence rebuilt by WORLD's synthesis with each
+# - [Listening](#h-listening): each sentence rebuilt from harmonics and noise with each
 #   aperiodicity, with none, and with nothing else.
 # - [What this page leaves out](#h-what-this-page-leaves-out).
 
@@ -338,12 +338,12 @@ ax.legend(loc="lower right", fontsize=8)
 # %% [markdown]
 # ## What WORLD reports
 #
-# WORLD's own measure is D4C (Morise, 2016), which `so.band_aperiodicity` reproduces exactly. It works from a
-# "group delay" of the time window, smoothed over the harmonics, whose spectrum is sorted to see how
-# much of its power lies outside the strongest components, in bands 3 kHz wide around each
-# multiple of 3 kHz. A correction for F0 follows, and the curve is drawn as straight lines (in dB)
-# from −60 dB at 0 Hz through the bands' values to 0 dB at the top. At 16 kHz there is only one
-# band, at 3 kHz. D4C's paper says it was tuned with listening tests so that WORLD's resynthesis
+# WORLD's own measure is D4C (Morise, 2016); `so.band_aperiodicity` is written from its paper. It
+# works from a "group delay" of the time window, smoothed over the harmonics, whose spectrum is
+# sorted to see how much of its power lies outside the strongest components, in bands 6 kHz wide
+# around each multiple of 3 kHz. The curve is drawn as straight lines (in dB) from −60 dB at 0 Hz
+# through the bands' values, held flat above the last band. At 16 kHz there is only one band, at
+# 3 kHz. D4C's paper says it was tuned with listening tests so that WORLD's resynthesis
 # sounds natural; the −60 dB at 0 Hz says "the lowest frequencies are periodic", which is usually
 # true of speech.
 
@@ -365,12 +365,12 @@ for name, shares, color in [
             share.f, 10 * np.log10(mean_share), color=color, ls=ls, label=f"{name}, {medians[label]:.0f} Hz"
         )
 ax.set(xlabel="Frequency (Hz)", ylabel="Share of noise (dB)", xlim=(0, 7200), ylim=(-62, 3))
-ax.set_title("D4C at 16 kHz: one measured value at 3 kHz, joined to −60 dB at 0 Hz and 0 dB at 8 kHz")
+ax.set_title("D4C at 16 kHz: one measured value at 3 kHz, joined to −60 dB at 0 Hz")
 ax.legend(loc="lower right", fontsize=8, ncol=2)
 
 # %% [markdown]
 # So the two answer different questions. The harmonic residual reports the share of noise. D4C
-# reports a value that makes WORLD's synthesis sound natural, and below 3 kHz it is far from
+# reports a value tuned so that WORLD's synthesis sounds natural, and below 3 kHz it is far from
 # the share of noise on this vowel, at both pitches, and its curve hardly changes with the pitch.
 # In exchange, D4C hardly cares whether the pitch is exact.
 # Averaged over bands and time windows, at each talker's pitch, with the exact pitch track and
@@ -460,11 +460,11 @@ for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
 # %% [markdown]
 # ## Listening
 #
-# `so.source_filter_synthesize` is WORLD's synthesis, reproduced sample for sample. At every pitch period
-# it adds two pieces: the harmonics' share of the envelope, $S(1 - A)$, as one pulse, and the
-# noise's share, $S A$, as a short burst of filtered noise. Below, each talker's own pitch track
-# and envelope with four aperiodicities. (WORLD keeps $A$ between −60 dB and just under 0 dB, and
-# time windows the track calls unvoiced are always noise.)
+# `so.source_filter_synthesize` puts a voice back together from the three views as two parts added:
+# harmonics on the pitch track carrying the harmonics' share of the envelope, $S(1 - A)$, and white
+# noise shaped over time and frequency to the noise's share, $S A$. Below, each talker's own pitch
+# track and envelope with four aperiodicities. (Time windows the track calls unvoiced are always
+# noise.)
 
 
 # %%
@@ -480,12 +480,11 @@ sounds = talkers
 fig, playhead = show_pair(sounds, titled("the sentence"), fmax=8000)
 
 # %% [about]
-# WORLD's resynthesis, with D4C's aperiodicity: what WORLD itself makes from these pitch tracks,
-# sample for sample.
+# The resynthesis with D4C's aperiodicity.
 
 # %% [demo ap10] Resynthesis with D4C
 sounds = {
-    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], d4c_maps[label]))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], d4c_maps[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled("with so.band_aperiodicity"), fmax=8000)
@@ -496,7 +495,7 @@ fig, playhead = show_pair(sounds, titled("with so.band_aperiodicity"), fmax=8000
 
 # %% [demo ap11] With the harmonic residual
 sounds = {
-    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], residual_maps[label]))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], residual_maps[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled("with so.harmonic_aperiodicity"), fmax=8000)
@@ -509,7 +508,7 @@ fig, playhead = show_pair(sounds, titled("with so.harmonic_aperiodicity"), fmax=
 sounds = {}
 for label in talkers:
     periodic = so.Aperiodicity(np.zeros_like(d4c_maps[label].data), d4c_maps[label].t, FS, "none")
-    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], periodic))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], periodic, rng=1))
 fig, playhead = show_pair(sounds, titled("with A = 0"), fmax=8000)
 
 # %% [about]
@@ -520,19 +519,16 @@ fig, playhead = show_pair(sounds, titled("with A = 0"), fmax=8000)
 sounds = {}
 for label in talkers:
     noise_only = so.Aperiodicity(np.ones_like(d4c_maps[label].data), d4c_maps[label].t, FS, "all noise")
-    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], noise_only))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], noise_only, rng=1))
 fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 
 # %% [markdown]
 # ## What this page leaves out
 #
 # - **WORLD's pitch tracker.** Harvest is not part of sonore; its tracks are stored with the
-#   recordings. With `so.f0_track` instead ([Pitch tracking](pitch.html)), the analysis is still
-#   WORLD's but the numbers are not the ones WORLD would give, which `so.DIFFERENCES_FROM_WORLD`
-#   notes.
-# - **Phase.** WORLD's synthesis gives every pulse a minimum phase, so the waveform within each
-#   period is not the original's. Its authors call minimum phase inappropriate for low-pitched
-#   speech, where differences of phase are easier to hear.
+#   recordings. `so.f0_track` gives tracks of its own ([Pitch tracking](pitch.html)).
+# - **Phase.** `so.source_filter_synthesize` starts every harmonic in cosine phase, so each period's
+#   waveform is a pulse, peakier than the original's; the views keep no phase to rebuild it from.
 # - **Jitter and shimmer.** A pitch track smoothed over 5 ms time windows cannot follow
 #   cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis
 #   can only carry it as noise.
@@ -559,7 +555,6 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 # - Morise, Yokomori & Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for
 #   real-time applications. *IEICE Trans. Inf. & Syst.* E99-D(7), 1877–1884.
 #   [doi:10.1587/transinf.2015EDP7457](https://doi.org/10.1587/transinf.2015EDP7457).
-#   [`world.source_filter_synthesize`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L222)
 # - Peterson & Barney (1952). Control methods used in a study of the vowels. *J. Acoust. Soc. Am.*
 #   24(2), 175–184. [ASA](https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels).
 #   The formants of "hod".
