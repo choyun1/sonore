@@ -168,7 +168,7 @@ aperiodicities).
 **c. Phase.** Keep hf0 to hf3 (cosine, Schroeder and random phase on a moving pitch), moved from
 the voice-change page, since the phases are one of the shortfalls.
 
-**d. Putting it back.** `so.harmonics_and_noise` (the recipe below), built step by step on
+**d. Putting it back.** `so.source_filter_synthesize` (the recipe below), built step by step on
 the page. Keep ap9 to ap13 (the sentence, the recipe with D4C and with the harmonic residual, no
 noise, nothing but noise). Their sound changes, because the recipe replaces WORLD's synthesis. One
 new example compares the page-2 resynthesis with this one on both talkers.
@@ -198,7 +198,8 @@ he3 (noise bands, the channel-vocoder idea) move to the Vocoder page, which owns
 ## The recipe that replaces WORLD's synthesis
 
 Since Cho's decision of 2026-10-18 (reversing D2) the recipe is a library function,
-`so.harmonics_and_noise(f0, envelope, aperiodicity)` in `sources/harmonics_and_noise.py`, so
+`so.source_filter_synthesize(f0, envelope, aperiodicity=None)` in `sources/source_filter.py` (PR #241;
+without an aperiodicity voicing is all or nothing, so page 2's classic resynthesis is the same call), so
 the gallery pages, the tools and anyone outside the gallery call one copy. It reproduces the
 checker's numbers below.
 
@@ -301,7 +302,7 @@ reviews the rewrite instead of the port.
 ## Decisions
 
 - **D1. Four pages in the order of "The arc".** (Recommended.)
-- **D2. The recipe is a library function, `so.harmonics_and_noise`, in `sources`.** Accepted by
+- **D2. The recipe is a library function, `so.source_filter_synthesize`, in `sources`.** Accepted by
   Cho (2026-10-18), in place of the first recommendation (keeping it in the gallery), so that the
   gallery and the tools share one copy.
 - **D3. Page 1 measures only what sonore already computes**, in one small table: F0, H1–H2, CPP,
