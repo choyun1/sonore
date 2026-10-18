@@ -1,7 +1,7 @@
 """so.source_filter_synthesize given known views: the level and noise share it
 rebuilds, its channels and the inputs it refuses. The analyses' own errors
-are checked in tests/views/test_world.py, and the whole chain on recordings
-in tools/check_voice_recipe_claims.py."""
+are checked in tests/views/test_spectral_envelope.py and test_aperiodicity.py,
+and the whole chain on recordings in tools/check_voice_recipe_claims.py."""
 
 from types import SimpleNamespace
 

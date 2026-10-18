@@ -1,4 +1,4 @@
-"""Stores WORLD's own output for the envelope tests (tests/data/world_reference.npz).
+"""Stores WORLD's own output for the envelope tests (tests/data/pyworld_reference.npz).
 
 Runs pyworld (WORLD's C++ code, version 0.3.5) on two short sounds: a synthetic
 vowel with vibrato and breath noise, and 0.3 s of the gallery sentence (0.6 to
@@ -10,7 +10,7 @@ The tests compare sonore against these numbers, so they need no pyworld.
 pyworld is used only here.
 
     pip install pyworld            # development only
-    python tools/make_world_fixtures.py
+    python tools/make_pyworld_fixtures.py
 """
 
 from pathlib import Path
@@ -20,7 +20,7 @@ import pyworld
 import soundfile as sf
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "tests" / "data" / "world_reference.npz"
+OUT = ROOT / "tests" / "data" / "pyworld_reference.npz"
 FS = 16000
 HOP_MS = 5.0
 BIN_STEP = 8
