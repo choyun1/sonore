@@ -174,6 +174,17 @@ plain function is also accepted. The Protocol's name is Cho's choice;
 `TimeFrequencyGrid` is one option. A method like `amplitude` stays outside
 it, since only `harmonic_complex` reads it and falls back to calling.
 
+D8. The names of the temporal pair. `Envelope`/`Envelopes` read as if a
+`SpectralEnvelope` should have a plural too. The plural is literal: an
+`Envelopes` is one `Envelope` per band, and `env[i]` gives one back. A
+`SpectralEnvelope` holds all its time windows in one array and is not built
+from one-window objects, so it has no singular to be plural over. Recommend
+keeping the names and stating the rule in `philosophy.md` with the two
+meanings: a plural class name means a bank of the singular class, one per
+band. The alternative, renaming the temporal pair (for example
+`TemporalEnvelope` and `Cochleagram`) so both kinds read alike, touches
+every gallery page that draws a cochleagram for a gain in naming only.
+
 ## Work, once agreed
 
 One change: the class and its readers in `spectral_envelope.py`,
