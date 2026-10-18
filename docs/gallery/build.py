@@ -824,8 +824,8 @@ TOPICS = [
             ),
             (
                 "voice.html",
-                "a voice rebuilt from its pitch and envelope, then changed: pitch, formants, range,"
-                " another talker.",
+                "a voice rebuilt from its pitch track, envelope and aperiodicity, then changed: pitch,"
+                " formants, range, another talker.",
             ),
         ],
     ),
@@ -1430,7 +1430,8 @@ def _merged(anchors: str, others: dict[str, str], default: str) -> dict[str, str
 MOVED = {
     "harmonics": {
         "": "voice.html",
-        **{f"d-{key}": f"voice.html#d-{key}" for key in ("he2", "he3", "hm3", "hm4")},
+        **{f"d-{key}": f"voice.html#d-{key}" for key in ("hm3", "hm4")},
+        "d-he2": "vocoder.html#d-ci16", "d-he3": "vocoder.html#d-he3",
         **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
         "d-he1": f"{SF}#d-he1",
         "d-hu1": f"{SF}#d-he1",
@@ -1456,6 +1457,8 @@ MOVED = {
                 "h-harmonics-sample-the-envelope": f"{SF}#h-harmonics-sample-the-envelope"},
     "sourcefilter": {"d-fq3": f"{WHAT}#d-fq3"},
     "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": f"{WHAT}#h-size-the-spectral-envelopes",
+              "d-he2": "vocoder.html#d-ci16", "d-he3": "vocoder.html#d-he3",
+              "h-envelopes-on-harmonics-and-on-noise": "vocoder.html#h-a-harmonic-carrier-that-follows-the-pitch",
               "d-he1": f"{SF}#d-he1", "d-hu1": f"{SF}#d-he1", "d-hu2": f"{SF}#d-hu2",
               "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply", "h-unvoiced-gaps": f"{SF}#d-hu2",
               **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
