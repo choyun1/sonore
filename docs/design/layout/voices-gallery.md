@@ -86,7 +86,18 @@ examples per idea, both talkers where the talker matters, and no example that re
 page's point.
 
 **a. Source times filter.** The model in prose and math: `s = e * h`, `S(f) = E(f) H(f)`.
-Harmonics at `k F0` sample `|H|`, and noise shows all of it. Keep fv1 to fv4 (a vowel built piece
+Harmonics at `k F0` sample `|H|`, and noise shows all of it.
+
+The page opens on the problem every method on pages 2 and 3 solves (Cho, 2026-10-18): estimating
+the source and the filter from their product alone is a blind deconvolution, like separating a
+sound from the room it was recorded in (link to the reverb page). In general it has no single
+answer, as `x + y = 14` has none for `x` and `y`. A voice is solvable because its structure
+narrows the answers: the source is periodic with an F0 measured first, so the harmonics sample
+the filter every F0; the filter is smooth across frequency, so anything finer than the harmonic
+spacing belongs to the source; and noise is what does not line up with the harmonics. Even so,
+one ambiguity is left and the page says so: a smooth slope of the glottal spectrum and a smooth
+slope of the vocal tract look the same, so a measured envelope holds both. The Klatt and LF
+models separate them only by assuming a model of the source. Keep fv1 to fv4 (a vowel built piece
 by piece), fs1 (source plus filter) and tk5 (harmonics sample the envelope).
 
 **b. Synthesis by rule.** Keep fv5 (the same vowel from `so.klatt_synthesize`), fw1 and fw2 (six
@@ -157,10 +168,21 @@ aperiodicities).
 **c. Phase.** Keep hf0 to hf3 (cosine, Schroeder and random phase on a moving pitch), moved from
 the voice-change page, since the phases are one of the shortfalls.
 
-**d. Putting it back.** The recipe that replaces WORLD's synthesis (below), built step by step on
+**d. Putting it back.** `so.harmonics_and_noise` (the recipe below), built step by step on
 the page. Keep ap9 to ap13 (the sentence, the recipe with D4C and with the harmonic residual, no
 noise, nothing but noise). Their sound changes, because the recipe replaces WORLD's synthesis. One
 new example compares the page-2 resynthesis with this one on both talkers.
+
+**e. What learned vocoders do.** One paragraph, prose only, no code (Cho, 2026-10-18). Most
+neural vocoders (WaveNet, HiFi-GAN) do not split source from filter at all: they map a mel
+spectrogram to a waveform, judged by how it sounds, so they make up plausible phase and fine
+detail rather than recover them. Those that do split keep this page's structure and learn the
+rest: LPCNet (Valin & Skoglund, 2019) keeps linear prediction for the filter, neural
+source-filter models (Wang, Takaki & Yamagishi, 2020) start from a sine source at F0, and DDSP
+(Engel et al., 2020) is harmonics plus filtered noise, close to section d, with a network
+choosing the amplitudes and filters. What settles the ambiguity of section 2a for them is a
+prior learned from many hours of speech, where the hand-made methods have a few fixed constants
+(`q1`, the 8 dB correction); the hand-made version shows the parts that the learned ones hide.
 
 ## 4. Rebuilding and changing a voice (condensed)
 
@@ -174,6 +196,11 @@ by the recipe. hm4 (whispered) stays. he1, hu1, hu2 and hf0 to hf3 move to pages
 he3 (noise bands, the channel-vocoder idea) move to the Vocoder page, which owns that idea.
 
 ## The recipe that replaces WORLD's synthesis
+
+Since Cho's decision of 2026-10-18 (reversing D2) the recipe is a library function,
+`so.harmonics_and_noise(f0, envelope, aperiodicity)` in `sources/harmonics_and_noise.py`, so
+the gallery pages, the tools and anyone outside the gallery call one copy. It reproduces the
+checker's numbers below.
 
 For each time and frequency, with envelope `S`, noise share `a` (`Aperiodicity.share`) and F0:
 
@@ -274,15 +301,16 @@ reviews the rewrite instead of the port.
 ## Decisions
 
 - **D1. Four pages in the order of "The arc".** (Recommended.)
-- **D2. The recipe lives in the gallery, not in a library function.** (Recommended.) The
-  alternative is an `aperiodicity=` option on `harmonic_complex`, if the recipe is needed outside
-  the gallery.
+- **D2. The recipe is a library function, `so.harmonics_and_noise`, in `sources`.** Accepted by
+  Cho (2026-10-18), in place of the first recommendation (keeping it in the gallery), so that the
+  gallery and the tools share one copy.
 - **D3. Page 1 measures only what sonore already computes**, in one small table: F0, H1–H2, CPP,
   noise share, formant scaling. Jitter, shimmer and HNR are defined but not computed.
   (Recommended.) The alternative is adding period marking for jitter and shimmer, which is new
   library work.
 - **D4. STRAIGHT in prose and math only, no code.** (Recommended.)
-- **D5. `views/world.py` keeps the shared helpers while the analyses are ports.** (Recommended.)
+- **D5. `views/world.py` goes whole** (Cho, 2026-10-18), since the analyses are no longer ports;
+  see What leaves the library.
 - **D6. Exactness of the analyses follows D8.** They stay exact if they stay ports. If rewritten,
   they report their distance to WORLD.
 - **D7. The noise-band examples he2 and he3 move to the Vocoder page.** (Recommended.)
@@ -309,6 +337,12 @@ reviews the rewrite instead of the port.
   *Speech Communication* 67, 1–7.
 - Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. *Speech
   Communication* 84, 57–65.
+- Engel, Hantrakul, Gu & Roberts (2020). DDSP: differentiable digital signal processing. *Proc.
+  ICLR 2020*.
+- Valin & Skoglund (2019). LPCNet: improving neural speech synthesis through linear prediction.
+  *Proc. ICASSP 2019*, 5891–5895.
+- Wang, Takaki & Yamagishi (2020). Neural source-filter waveform models for statistical parametric
+  speech synthesis. *IEEE/ACM Trans. Audio, Speech, Lang. Process.* 28, 402–415.
 
-The citations for page 1's clinical measures are checked against the publications when that page
-is written.
+The citations for page 1's clinical measures and for the learned vocoders in page 3e are checked
+against the publications when those pages are written.
