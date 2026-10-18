@@ -142,7 +142,6 @@ from sonore.views.timbre import (
     spectral_flux,
 )
 from sonore.views.view import NotInvertibleError, View
-from sonore.views.world import DIFFERENCES_FROM_WORLD, source_filter_synthesize
 
 __version__ = "0.7.0"
 
@@ -187,13 +186,11 @@ __all__ = [
     "F0Track",
     "f0_track",
     "Aperiodicity",
-    "DIFFERENCES_FROM_WORLD",
     "SpectralEnvelope",
     "pitch_adaptive_envelope",
     "band_aperiodicity",
     "harmonic_aperiodicity",
     "harmonics_and_noise",
-    "source_filter_synthesize",
     "GridEnvelope",
     "scale_f0",
     "warp_frequency",

@@ -398,7 +398,7 @@ line, and forgetting it doubles the error.
 
 **D7. `envelope(f)` and `envelope_view()` give E / |A|² on the analyzed
 sound's power scale, as a `GridEnvelope`.** Then LPC plugs into everything
-that reads an envelope: `warp_frequency`, `source_filter_synthesize`,
+that reads an envelope: `warp_frequency`, `source_filter_synthesize` (since 2026-10-18 `harmonics_and_noise`),
 `harmonic_complex`, and the Spectral envelope page's comparisons. By C9 its
 level is that of the time window's power spectrum, the same scale as
 `Cepstrum.envelope_view()`. When the sound was pre-emphasized the envelope

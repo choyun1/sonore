@@ -17,7 +17,7 @@ import numpy as np
 from sonore.core.sound import Sound
 from sonore.core.utils import RNG, as_rng
 from sonore.frames.gabor import STFT
-from sonore.sources.waveforms import ContourLike, _contour, gaussian_noise, harmonic_complex
+from sonore.sources.waveforms import ContourLike, _contour_per_channel, gaussian_noise, harmonic_complex
 from sonore.views.spectral_envelope import GridEnvelope
 
 __all__ = ["harmonics_and_noise"]
@@ -90,15 +90,8 @@ def harmonics_and_noise(
         duration = times[-1] + hop
     share = np.asarray(aperiodicity.data, dtype=float) ** 2
     power = _on_grid_of(envelope, times, freqs, share.shape)
-    contour = _contour(f0)
-    if contour is None:
-        raise TypeError("f0 must be an F0 track: a (times, values) pair or an object with .t and .f0")
-    track_times, track_values = contour
     n_channels = share.shape[0]
-    if len(track_values) == 1:
-        track_values = np.repeat(track_values, n_channels, axis=0)
-    if len(track_values) != n_channels:
-        raise ValueError(f"f0 has {len(track_values)} channels, the aperiodicity {n_channels}")
+    track_times, track_values = _contour_per_channel(f0, n_channels, "the aperiodicity")
     generator = as_rng(rng)
     channels = []
     for channel in range(n_channels):

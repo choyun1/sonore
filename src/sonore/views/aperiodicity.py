@@ -19,6 +19,7 @@ import numpy as np
 
 from sonore.core.sound import Sound
 from sonore.core.utils import db_to_amp, time_axis
+from sonore.sources.waveforms import _contour_per_channel
 from sonore.views.spectral_envelope import (
     _FLOOR_F0,
     _POWER_FLOOR,
@@ -31,7 +32,6 @@ from sonore.views.spectral_envelope import (
     _unit_energy_power,
     _windowed_segment,
 )
-from sonore.views.world import _time_windows
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -66,7 +66,7 @@ class Aperiodicity(_FrequencyView):
     harmonics. Stored as WORLD stores it, an amplitude ratio between 0 and
     1 (``data``, shape ``(n_channels, n_freqs, n_windows)``): its square
     :attr:`share` is the share of the power that is noise, which is what
-    :func:`~sonore.views.world.source_filter_synthesize` uses. ``method`` names
+    :func:`~sonore.sources.harmonics_and_noise.harmonics_and_noise` uses. ``method`` names
     the measure that made it ("D4C" or "harmonic residual").
     """
 
@@ -75,7 +75,7 @@ class Aperiodicity(_FrequencyView):
         "spectrum, the pitch and the phase."
     )
     back_to_sound = (
-        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
+        "so.harmonics_and_noise rebuilds an approximation of the voice from it together with an F0 "
         "track and a spectral envelope."
     )
 
@@ -184,7 +184,7 @@ def band_aperiodicity(
         Added to every band value [dB]; ``0`` gives the paper's values as they are.
     """
     fs = float(sound.fs)
-    times, f0_values = _time_windows(sound, f0)
+    times, f0_values = _contour_per_channel(f0, sound.n_channels, "the sound")
     n_fft = _power_of_two_above(4.0 * fs / f0_floor)
     bin_width = fs / n_fft
     band_centers = np.array(
@@ -353,7 +353,7 @@ def harmonic_aperiodicity(
         The width of the cells, in harmonics.
     """
     fs = float(sound.fs)
-    times, f0_values = _time_windows(sound, f0)
+    times, f0_values = _contour_per_channel(f0, sound.n_channels, "the sound")
     n_fft_out = _envelope_fft_size(fs, f0_floor)
     freqs_out = np.arange(n_fft_out // 2 + 1) * fs / n_fft_out
     data = np.ones((sound.n_channels, n_fft_out // 2 + 1, len(times)))

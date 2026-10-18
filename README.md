@@ -233,8 +233,8 @@ More in the gallery:
 The folders follow meaning. `core` holds `Sound` and the processing that
 needs no analysis; `sources` makes sounds from parameters; `frames` are
 analyses with an exact inverse, and `views` are one-way analyses together
-with the routes back to sound they have (the channel vocoder, WORLD's
-synthesis, the phase vocoder); `spatial` and `texture` are topics built on
+with the routes back to sound they have (the channel vocoder, the phase
+vocoder; a voice's views go back through `sources.harmonics_and_noise`); `spatial` and `texture` are topics built on
 those. Imports between modules never form a cycle, and `core` imports
 nothing above it at module level. `plotting` is called from every object's
 `.plot()`. docs/design/layout.md has the diagram.
@@ -250,6 +250,7 @@ under `so.texture` and `sonore.texture.synth`.
 | [`core.processing`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py) | `pad`, `truncate`, `concat`, `splice` (segments of a sound in a new order, joined with cross-fades aligned by cross-correlation), `mix`, `normalize`, `match_fs`, `match_channels`, `relative_db`, `bandpass`, `butter_filter`, `amplitude_modulate`, `resonator` and `antiresonator` (Klatt's formant and antiformant; frequency and bandwidth may glide, with no clicks) |
 | [`sources.waveforms`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py) | `silence`, `pure_tone`, `harmonic_complex`, `schroeder_complex`, `square_wave`, `sawtooth_wave`, `pulse_train`, `linear_chirp`, `exponential_chirp`, `gaussian_noise`, `correlated_noise`, `iterated_ripple_noise`, `glottal_source` (Liljencrants-Fant glottal pulses on a fixed F0 or a contour, shape set by Fant's Rd, which may change over time; no aliasing), `lf_harmonics` (the pulse's Fourier coefficients in closed form), `lf_pulse` (one period, to draw) |
 | [`sources.klatt`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py) | `klatt_synthesize` (a Klatt-style cascade/parallel formant synthesizer: harmonic voicing with Klatt's glottal spectrum or LF pulses (`SS`, `RD`), aspiration and frication noise modulated at F0, nasal pole and zero, formants 1-5 in cascade and 1-6 in parallel, radiation; every parameter a number or a `(times, values)` track), `klatt_continuum` (evenly spaced parameter sets between two endpoints), `KLATT_DEFAULTS` |
+| [`sources.harmonics_and_noise`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/harmonics_and_noise.py) | `harmonics_and_noise` (a voice from an F0 track, a spectral envelope and an aperiodicity: harmonics carrying the periodic part of the envelope plus white noise shaped to the rest; reads any F0 track and any envelope; checked in `tools/check_voice_recipe_claims.py`) |
 | [`sources.ripples`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/ripples.py) | `Ripple`, `RippleSum`, `DynamicRipple`, `ripple_sound`; patterns can also be any function `f(t, x)` of time and octaves, and `pattern.render(filterbank, dur, fs)` gives their `Envelopes` |
 | [`sources.gaussian_spectrogram`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/gaussian_spectrogram.py) | `gaussian_spectrogram` (a random spectrogram whose levels correlate exponentially in time and frequency, after McDermott, Wrobleski & Oxenham, 2011; returns `Envelopes`, heard through `to_sound`) |
 | [`sources.events`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/events.py) | `event_train` (copies of one event at random times, levels and pitches, each drawn from a distribution, with a rate that can change over time; from single events to a texture) |
@@ -270,7 +271,6 @@ under `so.texture` and `sonore.texture.synth`.
 | [`views.chroma`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/chroma.py) | `chroma` → `Chroma` (the power in each of the 12 pitch classes per 0.05 s time window, from a cosine filterbank with one band per semitone, A1 to A8, the octaves added together); `Chroma.to_sound(fs, octaves=...)` plays each pitch class as a Shepard tone, with `octaves` saying how the power spreads over octaves; checked in `tools/check_chroma_claims.py` |
 | [`views.spectral_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py) | `pitch_adaptive_envelope` → `SpectralEnvelope` (CheapTrick, written from Morise's 2015 paper; within 0.01 dB of WORLD's at the paper's `q1`), `warp_frequency` (formants moved along frequency on any envelope or aperiodicity, by a ratio, a ratio over time or any frequency map), `GridEnvelope` (any envelope as power on a grid, as `Cepstrum.envelope_view()`, `MFCC.envelope_view()` and `LPC.envelope_view()` give) |
 | [`views.aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py) | `band_aperiodicity` → `Aperiodicity` (D4C, written from Morise's 2016 paper, with its measured 8 dB bias corrected), `harmonic_aperiodicity` (the share of noise, by fitting the harmonics) |
-| [`views.world`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py) | `source_filter_synthesize` (WORLD's synthesis, sample for sample, from an F0 track, envelope and aperiodicity; WORLD's own noise stream by default, or fresh noise from an `rng`; reads any F0 track and any envelope), `DIFFERENCES_FROM_WORLD` |
 | [`views.phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py) | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `to_sound` with `time_scale` and `freq_map`) |
 | [`views.quilting`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/quilting.py) | `quilt` (the sound quilts of Overath et al., 2015: segments of a sound in a new order, each chosen so that its join changes the cochleagram as much as the sound itself did there; written from the paper's methods) |
 | [`views.envelope_peaks`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/envelope_peaks.py) | `envelope_peaks` → `EnvelopePeaks` (how big a sound's pops are: the largest envelope value in each 5 ms bin above 300 Hz and 2 kHz, and the power-law exponent of their upper tail by the Hill estimator, with its uncertainty; `.plot()`) |
@@ -396,12 +396,9 @@ open an issue.
 
 ## License and citation
 
-MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). One function is ported from
-[WORLD](https://github.com/mmorise/World) (Morise): `source_filter_synthesize` (WORLD's synthesis). It is
-used under WORLD's BSD 3-clause license, kept in
-[LICENSE-WORLD](https://github.com/choyun1/sonore/blob/main/LICENSE-WORLD). `pitch_adaptive_envelope`
-(CheapTrick) and `band_aperiodicity` (D4C) are written from Morise's papers, and sonore's F0 tracker is
-its own, not WORLD's. If sonore is useful in your research, please cite
+MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). `pitch_adaptive_envelope`
+(CheapTrick) and `band_aperiodicity` (D4C) are written from Morise's papers, not ported from WORLD's
+code, and sonore's F0 tracker is its own, not WORLD's. If sonore is useful in your research, please cite
 it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff); the
 *Cite this repository* button in the GitHub sidebar gives the same citation in APA and BibTeX.
 

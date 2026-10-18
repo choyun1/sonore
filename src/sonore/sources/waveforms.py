@@ -137,6 +137,22 @@ def _contour(f0) -> tuple[np.ndarray, np.ndarray] | None:
     return t, values
 
 
+def _contour_per_channel(f0, n_channels: int, whose: str) -> tuple[np.ndarray, np.ndarray]:
+    """``(window times, values of shape (n_channels, n_windows))`` for an F0
+    contour that is required (not a fixed number), one row given for every
+    channel or one row per channel; ``whose`` names what sets the channels in
+    the error."""
+    contour = _contour(f0)
+    if contour is None:
+        raise TypeError("f0 must be an F0 track: a (times, values) pair or an object with .t and .f0")
+    t, values = contour
+    if len(values) == 1:
+        values = np.repeat(values, n_channels, axis=0)
+    if len(values) != n_channels:
+        raise ValueError(f"f0 has {len(values)} channels, {whose} {n_channels}")
+    return t, values
+
+
 def _max_harmonic(values: np.ndarray, f_max: float) -> int:
     """The highest harmonic number that is below ``f_max`` somewhere on the contour."""
     voiced = values[values > 0]
