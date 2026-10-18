@@ -187,14 +187,25 @@ For each time and frequency, with envelope `S`, noise share `a` (`Aperiodicity.s
 What it loses against the port is the minimum-phase pulse shape and agreement with WORLD sample
 for sample. Cho has said the second doesn't matter.
 
-**Measured:** with the same envelope and no noise, `harmonic_complex` and the port come within
-0.11 dB of each other on the steady test vowels (`views/voice-change.md`, C8).
+**Measured** (`tools/check_voice_recipe_claims.py`, 2026-10-18, on the analyses rewritten from
+the papers):
 
-**Not measured:** the noise half, its level calibration, and the score on the recordings. A
-checker, `tools/check_voice_recipe_claims.py`, reports these before any page is rebuilt: the
-recovered noise share against the truth on the synthetic vowels, and the level-free log mel
-distance on both recordings, as in C11. If the noise half measures badly, the plan comes back to
-Cho.
+- **Calibration alone.** Given a known envelope and noise share (an /a/ filter, F0 120 and 220
+  Hz, shares from -20 to -5 dB), the rebuilt sound's share comes back within 1.9 dB and its level
+  within 0.8 dB. `harmonic_complex` returns RMS 1, as every generator does, so the recipe scales
+  it back to the power its amplitudes ask for.
+- **Analyzed, then rebuilt.** With `harmonic_aperiodicity`, the share comes back within 1.2 dB of
+  the original's. With `band_aperiodicity` it comes back 8 to 10 dB too periodic: at 16 kHz D4C
+  measures one band, at 3 kHz, and runs down to -60 dB at 0 Hz, so below 3 kHz, where most of a
+  vowel's power is, it reads almost no noise. Page 3 says so, and its recipe example uses
+  whichever measure the page is showing.
+- **The recordings.** Level-free RMS dB between log mel spectra, median, against WORLD's
+  synthesis from the same analyses: bdl 1.75 dB voiced and 3.99 dB unvoiced (WORLD 1.83 and
+  4.67), slt 1.88 and 4.13 (WORLD 2.06 and 5.25). The recipe is no worse than the port.
+
+The recipe uses `harmonic_complex`'s cosine phase, which is peakier than a voice (bdl's peaks
+come out 4 dB above the original's at the same RMS). Whether a different phase sounds closer is a
+listening question for page 3, not a number here.
 
 ## Writing CheapTrick and D4C from the papers (accepted)
 
@@ -217,34 +228,45 @@ anything the papers leave out is listed for Cho (D8).
 `so.harmonic_complex` and page 3's recipe instead. `views/world.md` and `views/voice-change.md` get
 a dated note.
 
-The rest of `views/world.py` stays as the home of the helpers the analysis ports share: WORLD's
-noise generator, its FFT sizes, MATLAB rounding, the reading of an F0 track onto time windows, and
-DIFFERENCES_FROM_WORLD (D5). If the analyses are rewritten from the papers (D8), what they still
-need moves next to them, and `views/world.py` goes.
+The rest of `views/world.py` goes too (Cho, 2026-10-18): the analyses are rewritten from the
+papers (#240), so WORLD's noise generator is used only by the synthesis, and the one helper the
+views still need, which reads an F0 track onto time windows, is replaced by the reader
+`harmonic_complex` already uses in `sources/waveforms.py`, so the rule for what counts as an F0
+track is written once. `LICENSE-WORLD`, the WORLD notices and the package's `BSD-3-Clause` go
+with it. Breaking: `sonore.views.world` (`DIFFERENCES_FROM_WORLD`, `world_randn`) is gone.
+
+Envelopes and aperiodicities are views (each keeps one aspect of the sound and says what it
+drops), so they stay in `views/spectral_envelope.py` and `views/aperiodicity.py`. At the end the
+files named for WORLD are renamed (Cho, 2026-10-18): `tests/views/test_world.py` splits into
+`test_spectral_envelope.py` and `test_aperiodicity.py`, `tests/data/world_reference.npz`
+becomes `pyworld_reference.npz` and `tools/make_world_fixtures.py` becomes
+`make_pyworld_fixtures.py`; `tools/check_world_claims.py` and `tools/crosscheck_world_vocoder.py`,
+which hold the old ports, are deleted. `docs/design/views/world.md` keeps its name as the record,
+with a dated note.
 
 ## Order
 
 Cho's order (2026-10-18): the rewrite from the papers comes before any gallery change.
 
 1. PR #238 (renames and WORLD's license), merged 2026-10-18.
-2. **The rewrite of CheapTrick and D4C from the papers** (D8, accepted by Cho's ordering). It is
-   done clean-room:
+2. **The rewrite of CheapTrick and D4C from the papers** (D8), PR #240, merged 2026-10-18. It
+   was done clean-room:
    - **The gap list.** One session compares each paper with what the port does, and lists every
      choice the paper leaves open as a question for Cho, not as code.
    - **The writing.** A fresh worker writes the new functions, given only the papers, the
      answered questions and the public signatures. It does not open the port's code, its checker,
      or WORLD's source.
    - **The comparison.** Each function is then measured against pyworld, as a development-time
-     comparison, and the distance is reported. When the rewrite replaces the ports,
-     `LICENSE-WORLD` and the file headers go.
-
-   The papers have to be uploaded first (CheapTrick 2015, D4C 2016, and the WORLD overview 2016).
-3. The recipe and its checker, with the numbers added here, on the rewritten analyses.
-4. Remove `so.source_filter_synthesize`, and move the pages that used it to the recipe.
+     comparison, and the distance is reported.
+3. The recipe and its checker, with the numbers added here, on the rewritten analyses (done in
+   this PR).
+4. Remove `so.source_filter_synthesize` and `views/world.py`, with `LICENSE-WORLD` and the
+   notices, and move the pages that used it to the recipe.
 5. Page 2 (the merge). It is the largest step and one PR.
 6. Page 3, then page 1, then page 4's trim and the move to the Vocoder page.
 7. README rows, the Voices entries in `TOPICS`, the CHANGELOG (removing the synthesizer and
    replacing the ports are breaking changes for 0.8.0), and `docs/roadmap-done.md`.
+8. Rename the files named for WORLD (see What leaves the library).
 
 The audit's sitting on WORLD's synthesis is no longer needed. Its CheapTrick and D4C sitting
 reviews the rewrite instead of the port.
