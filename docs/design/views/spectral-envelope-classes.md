@@ -174,16 +174,20 @@ plain function is also accepted. The Protocol's name is Cho's choice;
 `TimeFrequencyGrid` is one option. A method like `amplitude` stays outside
 it, since only `harmonic_complex` reads it and falls back to calling.
 
-D8. The names of the temporal pair. `Envelope`/`Envelopes` read as if a
-`SpectralEnvelope` should have a plural too. The plural is literal: an
-`Envelopes` is one `Envelope` per band, and `env[i]` gives one back. A
-`SpectralEnvelope` holds all its time windows in one array and is not built
-from one-window objects, so it has no singular to be plural over. Recommend
-keeping the names and stating the rule in `philosophy.md` with the two
-meanings: a plural class name means a bank of the singular class, one per
-band. The alternative, renaming the temporal pair (for example
-`TemporalEnvelope` and `Cochleagram`) so both kinds read alike, touches
-every gallery page that draws a cochleagram for a gain in naming only.
+D8. The temporal pair. `Envelope` and `Envelopes` mirror `Sound` and
+`Subbands`: an `Envelope` is the envelope of a sound and acts on one
+(`env * snd`, `env.to_sound(carrier)`); an `Envelopes` is the envelope of
+subbands, one per band, and carries what the filterbank brings (band
+frequencies, the zero padding, `env * subbands`, `modulation_spectrum()` on
+the filterbank's scale); `env[i]` gives one band back as an `Envelope`. A
+`SpectralEnvelope` holds all its time windows in one array, so it has no
+singular to be plural over. One `TemporalEnvelope` with a band axis is
+possible, but each operation would then branch on whether it holds a
+filterbank. Recommend keeping two classes and renaming `Envelopes` to
+`Cochleagram`, which is what its docstring already calls it, so that the
+plural no longer suggests a missing `SpectralEnvelopes`. The alternatives
+are keeping both names and stating the rule in `philosophy.md`, or merging.
+
 
 ## Work, once agreed
 
