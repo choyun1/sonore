@@ -244,7 +244,7 @@ frequencies, so it can be clearly periodic at 500 Hz and mostly noise at 5 kHz.<
 <p>Both talkers are used throughout (<a href="talkers.html">Two talkers</a>): their recordings in the
 sentence sections, and their median pitches for the synthetic vowel, since a higher pitch
 leaves fewer harmonics to measure the noise between.</p>
-<ul><li><a href="#h-buzz-hiss-and-both">Buzz, hiss, and both</a>: a breathy vowel whose aperiodicity is known, and why the filter does not change it.</li><li><a href="#h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the rest</a>: measuring the share of noise directly, at each talker's pitch.</li><li><a href="#h-what-world-reports">What WORLD reports</a>: D4C, WORLD's measure, and why it differs.</li><li><a href="#h-a-sentence">A sentence</a>: both measures on the two recordings.</li><li><a href="#h-listening">Listening</a>: each sentence rebuilt by WORLD's synthesis with each aperiodicity, with none, and with nothing else.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
+<ul><li><a href="#h-buzz-hiss-and-both">Buzz, hiss, and both</a>: a breathy vowel whose aperiodicity is known, and why the filter does not change it.</li><li><a href="#h-fit-the-harmonics-keep-the-rest">Fit the harmonics, keep the rest</a>: measuring the share of noise directly, at each talker's pitch.</li><li><a href="#h-what-world-reports">What WORLD reports</a>: D4C, WORLD's measure, and why it differs.</li><li><a href="#h-a-sentence">A sentence</a>: both measures on the two recordings.</li><li><a href="#h-listening">Listening</a>: each sentence rebuilt from harmonics and noise with each aperiodicity, with none, and with nothing else.</li><li><a href="#h-what-this-page-leaves-out">What this page leaves out</a>.</li></ul>
 <p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point. Start with your volume low.</p>
 <p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/aperiodicity.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/aperiodicity.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
@@ -577,12 +577,12 @@ irregularity (jitter and shimmer) as noise.</p>
 </section>
 <section aria-labelledby="h-what-world-reports">
 <h2 id="h-what-world-reports">What WORLD reports</h2>
-<p>WORLD's own measure is D4C (Morise, 2016), which <code>so.band_aperiodicity</code> reproduces exactly. It works from a
-"group delay" of the time window, smoothed over the harmonics, whose spectrum is sorted to see how
-much of its power lies outside the strongest components, in bands 3 kHz wide around each
-multiple of 3 kHz. A correction for F0 follows, and the curve is drawn as straight lines (in dB)
-from −60 dB at 0 Hz through the bands' values to 0 dB at the top. At 16 kHz there is only one
-band, at 3 kHz. D4C's paper says it was tuned with listening tests so that WORLD's resynthesis
+<p>WORLD's own measure is D4C (Morise, 2016); <code>so.band_aperiodicity</code> is written from its paper. It
+works from a "group delay" of the time window, smoothed over the harmonics, whose spectrum is
+sorted to see how much of its power lies outside the strongest components, in bands 6 kHz wide
+around each multiple of 3 kHz. The curve is drawn as straight lines (in dB) from −60 dB at 0 Hz
+through the bands' values, held flat above the last band. At 16 kHz there is only one band, at
+3 kHz. D4C's paper says it was tuned with listening tests so that WORLD's resynthesis
 sounds natural; the −60 dB at 0 Hz says "the lowest frequencies are periodic", which is usually
 true of speech.</p>
 
@@ -608,11 +608,11 @@ for name, shares, color in [
             share.f, 10 * np.log10(mean_share), color=color, ls=ls, label=f&quot;{name}, {medians[label]:.0f} Hz&quot;
         )
 ax.set(xlabel=&quot;Frequency (Hz)&quot;, ylabel=&quot;Share of noise (dB)&quot;, xlim=(0, 7200), ylim=(-62, 3))
-ax.set_title(&quot;D4C at 16 kHz: one measured value at 3 kHz, joined to −60 dB at 0 Hz and 0 dB at 8 kHz&quot;)
+ax.set_title(&quot;D4C at 16 kHz: one measured value at 3 kHz, joined to −60 dB at 0 Hz&quot;)
 ax.legend(loc=&quot;lower right&quot;, fontsize=8, ncol=2)</code></pre></details>
 </article>
 <p>So the two answer different questions. The harmonic residual reports the share of noise. D4C
-reports a value that makes WORLD's synthesis sound natural, and below 3 kHz it is far from
+reports a value tuned so that WORLD's synthesis sounds natural, and below 3 kHz it is far from
 the share of noise on this vowel, at both pitches, and its curve hardly changes with the pitch.
 In exchange, D4C hardly cares whether the pitch is exact.
 Averaged over bands and time windows, at each talker's pitch, with the exact pitch track and
@@ -640,17 +640,17 @@ for label, vowel in vowels.items():
             row = f&quot;  {name}, {f0_name}&quot;
             print(f&quot;{row:&lt;34}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in 10 * np.log10(shares)))</code></pre></details><pre class="out">Share of noise [dB], band [Hz]         0-1000  1000-2000  2000-4000  4000-7000
 male talker&#x27;s pitch, 119 Hz
-  truth                                 -13.9      -10.9       -5.2       -2.8
-  harmonic residual, exact F0           -17.2      -12.6       -4.9       -3.2
-  harmonic residual, F0 1% high         -16.5      -11.5       -2.6       -0.3
-  D4C, exact F0                         -47.4      -40.9      -14.8       -5.6
-  D4C, F0 1% high                       -47.4      -40.9      -14.8       -5.6
+  truth                                 -14.2      -10.8       -5.2       -2.8
+  harmonic residual, exact F0           -17.0      -12.6       -4.9       -3.3
+  harmonic residual, F0 1% high         -16.4      -11.5       -2.6       -0.3
+  D4C, exact F0                         -45.5      -38.2       -8.6       -0.6
+  D4C, F0 1% high                       -45.5      -38.2       -8.6       -0.6
 female talker&#x27;s pitch, 183 Hz
-  truth                                 -12.7      -10.3       -4.6       -2.8
-  harmonic residual, exact F0           -11.2       -7.8       -4.8       -2.9
-  harmonic residual, F0 1% high         -10.8       -7.3       -3.9       -1.7
-  D4C, exact F0                         -45.3      -39.3      -10.7       -5.6
-  D4C, F0 1% high                       -45.3      -39.3      -10.7       -5.6</pre></div>
+  truth                                 -13.1      -10.3       -4.6       -2.8
+  harmonic residual, exact F0           -11.1       -7.8       -4.8       -2.9
+  harmonic residual, F0 1% high         -10.7       -7.3       -3.9       -1.7
+  D4C, exact F0                         -43.4      -36.8       -5.1       -1.3
+  D4C, F0 1% high                       -43.4      -36.8       -5.1       -1.3</pre></div>
 <p>With the wrong pitch, the harmonic residual's upper bands move toward 0 dB (all noise), as the
 high harmonics drift out of phase with the fit; D4C's numbers do not change. At the female
 talker's pitch the same error matters less. Over a window four periods long, a harmonic drifts
@@ -681,10 +681,10 @@ for label in talkers:
         shares = maps[label].bands(band_edges, envelope=envelopes[label])[0][:, voiced]
         row = f&quot;{label}, {name}&quot;
         print(f&quot;{row:&lt;44}&quot; + &quot;&quot;.join(f&quot;{value:&gt;11.1f}&quot; for value in 10 * np.log10(np.median(shares, axis=1))))</code></pre></details><pre class="out">Median share of noise [dB], band [Hz]            0-1000  1000-2000  2000-4000  4000-7000
-Male talker, D4C                                  -54.1      -33.6       -8.4       -4.0
-Male talker, harmonic residual                    -17.7       -5.1       -1.9       -1.2
-Female talker, D4C                                -54.1      -31.0       -6.2       -2.0
-Female talker, harmonic residual                  -25.2       -7.3       -2.1       -1.1</pre></div>
+Male talker, D4C                                  -53.3      -30.5       -2.8        0.0
+Male talker, harmonic residual                    -17.6       -5.1       -1.9       -1.2
+Female talker, D4C                                -53.1      -29.0       -2.8        0.0
+Female talker, harmonic residual                  -24.6       -7.3       -2.1       -1.1</pre></div>
 <p>For both talkers, in voiced time windows the harmonic residual is lowest below 1 kHz, where the
 harmonics are strong, and within a few decibels of 0 dB (all noise) above 2 kHz. D4C has the same
 shape in every voiced time window, a single bend at 3 kHz, and reads far less noise below it.</p>
@@ -716,11 +716,11 @@ for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
 </section>
 <section aria-labelledby="h-listening">
 <h2 id="h-listening">Listening</h2>
-<p><code>so.source_filter_synthesize</code> is WORLD's synthesis, reproduced sample for sample. At every pitch period
-it adds two pieces: the harmonics' share of the envelope, <span class="tex">S(1 - A)</span>, as one pulse, and the
-noise's share, <span class="tex">S A</span>, as a short burst of filtered noise. Below, each talker's own pitch track
-and envelope with four aperiodicities. (WORLD keeps <span class="tex">A</span> between −60 dB and just under 0 dB, and
-time windows the track calls unvoiced are always noise.)</p>
+<p><code>so.source_filter_synthesize</code> puts a voice back together from the three views as two parts added:
+harmonics on the pitch track carrying the harmonics' share of the envelope, <span class="tex">S(1 - A)</span>, and white
+noise shaped over time and frequency to the noise's share, <span class="tex">S A</span>. Below, each talker's own pitch
+track and envelope with four aperiodicities. (Time windows the track calls unvoiced are always
+noise.)</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def titled(what):
     return {label: f&quot;{label}: {what}&quot; for label in talkers}</code></pre></details></div>
 
@@ -748,14 +748,13 @@ fig, playhead = show_pair(sounds, titled(&quot;the sentence&quot;), fmax=8000)</
 <article class="sound pair" id="d-ap10">
   <div class="about">
     <h3>Resynthesis with D4C</h3>
-    <div class="desc"><p>WORLD's resynthesis, with D4C's aperiodicity: what WORLD itself makes from these pitch tracks,
-sample for sample.</p></div>
+    <div class="desc"><p>The resynthesis with D4C's aperiodicity.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap10_resynthesis_with_d4c_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap10_resynthesis_with_d4c_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -764,7 +763,7 @@ sample for sample.</p></div>
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
-    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], d4c_maps[label]))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], d4c_maps[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled(&quot;with so.band_aperiodicity&quot;), fmax=8000)</code></pre></details>
@@ -777,10 +776,10 @@ fig, playhead = show_pair(sounds, titled(&quot;with so.band_aperiodicity&quot;),
 mostly at high frequencies.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.48677511653152167, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.48677511653152167, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.289573953657408, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.3746487085268173, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap11_with_the_harmonic_residual_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap11_with_the_harmonic_residual_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -789,7 +788,7 @@ mostly at high frequencies.</p></div>
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {
-    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], residual_maps[label]))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], residual_maps[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled(&quot;with so.harmonic_aperiodicity&quot;), fmax=8000)</code></pre></details>
@@ -802,10 +801,10 @@ fig, playhead = show_pair(sounds, titled(&quot;with so.harmonic_aperiodicity&quo
 picture. The voiced parts are harmonics all the way up.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap12_no_noise_in_the_voice_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap12_no_noise_in_the_voice_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -816,7 +815,7 @@ picture. The voiced parts are harmonics all the way up.</p></div>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
 for label in talkers:
     periodic = so.Aperiodicity(np.zeros_like(d4c_maps[label].data), d4c_maps[label].t, FS, &quot;none&quot;)
-    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], periodic))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], periodic, rng=1))
 fig, playhead = show_pair(sounds, titled(&quot;with A = 0&quot;), fmax=8000)</code></pre></details>
 </article>
 
@@ -827,7 +826,7 @@ fig, playhead = show_pair(sounds, titled(&quot;with A = 0&quot;), fmax=8000)</co
 sentence is whispered; it is still intelligible, because the envelope carries the words.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48654974190727934, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.48654974190727934, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap13_nothing_but_noise_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
     <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
@@ -841,17 +840,17 @@ sentence is whispered; it is still intelligible, because the envelope carries th
   <details class="code"><summary>Code</summary><pre><code class="language-python">sounds = {}
 for label in talkers:
     noise_only = so.Aperiodicity(np.ones_like(d4c_maps[label].data), d4c_maps[label].t, FS, &quot;all noise&quot;)
-    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], noise_only))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], noise_only, rng=1))
 fig, playhead = show_pair(sounds, titled(&quot;with A = 1&quot;), fmax=8000)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-what-this-page-leaves-out">
 <h2 id="h-what-this-page-leaves-out">What this page leaves out</h2>
-<ul><li><strong>WORLD's pitch tracker.</strong> Harvest is not part of sonore; its tracks are stored with the recordings. With <code>so.f0_track</code> instead (<a href="pitch.html">Pitch tracking</a>), the analysis is still WORLD's but the numbers are not the ones WORLD would give, which <code>so.DIFFERENCES_FROM_WORLD</code> notes.</li><li><strong>Phase.</strong> WORLD's synthesis gives every pulse a minimum phase, so the waveform within each period is not the original's. Its authors call minimum phase inappropriate for low-pitched speech, where differences of phase are easier to hear.</li><li><strong>Jitter and shimmer.</strong> A pitch track smoothed over 5 ms time windows cannot follow cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis can only carry it as noise.</li></ul>
+<ul><li><strong>WORLD's pitch tracker.</strong> Harvest is not part of sonore; its tracks are stored with the recordings. <code>so.f0_track</code> gives tracks of its own (<a href="pitch.html">Pitch tracking</a>).</li><li><strong>Phase.</strong> <code>so.source_filter_synthesize</code> starts every harmonic in cosine phase, so each period's waveform is a pulse, peakier than the original's; the views keep no phase to rebuild it from.</li><li><strong>Jitter and shimmer.</strong> A pitch track smoothed over 5 ms time windows cannot follow cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis can only carry it as noise.</li></ul>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
-<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940" target="_blank" rel="noopener">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L246" target="_blank" rel="noopener"><code>spectral_envelope.pitch_adaptive_envelope</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132" target="_blank" rel="noopener"><code>aperiodicity.band_aperiodicity</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py#L222" target="_blank" rel="noopener"><code>world.source_filter_synthesize</code></a></li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels" target="_blank" rel="noopener">ASA</a>. The formants of "hod".</li></ul>
+<ul><li>Klatt (1980). Software for a cascade/parallel formant synthesizer. <em>J. Acoust. Soc. Am.</em> 67(3), 971–995. <a href="https://doi.org/10.1121/1.383940" target="_blank" rel="noopener">doi:10.1121/1.383940</a>. The glottal source.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>. The sentence, by speakers bdl and slt.</li><li>Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis. <em>Speech Communication</em> 67, 1–7. <a href="https://doi.org/10.1016/j.specom.2014.09.003" target="_blank" rel="noopener">doi:10.1016/j.specom.2014.09.003</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py#L246" target="_blank" rel="noopener"><code>spectral_envelope.pitch_adaptive_envelope</code></a></li><li>Morise (2016). D4C, a band-aperiodicity estimator for high-quality speech synthesis. <em>Speech Communication</em> 84, 57–65. <a href="https://doi.org/10.1016/j.specom.2016.09.001" target="_blank" rel="noopener">doi:10.1016/j.specom.2016.09.001</a>. <a href="https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py#L132" target="_blank" rel="noopener"><code>aperiodicity.band_aperiodicity</code></a></li><li>Morise (2017). Harvest: a high-performance fundamental frequency estimator from speech signals. <em>Proc. Interspeech 2017</em>, 2321–2325. <a href="https://doi.org/10.21437/Interspeech.2017-68" target="_blank" rel="noopener">doi:10.21437/Interspeech.2017-68</a>. The stored F0 tracks.</li><li>Morise, Yokomori &amp; Ozawa (2016). WORLD: a vocoder-based high-quality speech synthesis system for real-time applications. <em>IEICE Trans. Inf. &amp; Syst.</em> E99-D(7), 1877–1884. <a href="https://doi.org/10.1587/transinf.2015EDP7457" target="_blank" rel="noopener">doi:10.1587/transinf.2015EDP7457</a>.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels" target="_blank" rel="noopener">ASA</a>. The formants of "hod".</li></ul>
 </section>
 <footer>This page is the script <code>docs/gallery/voice/aperiodicity.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/voice/aperiodicity.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
 </main>

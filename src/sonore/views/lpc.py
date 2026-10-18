@@ -219,7 +219,7 @@ class LPC(View):
         ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
         wherever a spectral envelope is taken
         (:func:`~sonore.views.spectral_envelope.warp_frequency`,
-        :func:`~sonore.views.world.source_filter_synthesize`,
+        :func:`~sonore.sources.source_filter.source_filter_synthesize`,
         :func:`~sonore.sources.waveforms.harmonic_complex`)."""
         freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft if f is None else np.asarray(f, float)
         return GridEnvelope(self.envelope(freqs), self.t, freqs)

@@ -15,6 +15,14 @@ operations act on what all of these share, an F0 contour and an envelope
 read as `env(t, f)`, not on any one estimator (Cho, 2026-10-02: "shouldn't
 voice warping be method agnostic?").
 
+Note, 2026-10-18: WORLD's synthesis (`so.world_synthesize`, briefly named
+`so.source_filter_synthesize`) is removed, and that name now belongs to
+harmonics plus shaped noise (`sources/source_filter.py`). Below,
+`source_filter_synthesize` means the WORLD port, and the numbers were
+measured with it. `tools/check_voice_change_claims.py` and
+`tools/compare_voice_methods.py` now run with the new function and print
+today's.
+
 Together they are the two numbers of the classic "change gender" manipulation
 (Praat's command of that name takes a formant shift ratio and a new pitch
 median, among others). The question the design has to settle beyond the

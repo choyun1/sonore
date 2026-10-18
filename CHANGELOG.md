@@ -8,6 +8,18 @@ version (0.x.y) only fixes bugs.
 
 ### Added
 
+- `so.source_filter_synthesize(f0, envelope, aperiodicity=None)`: a voice
+  rebuilt from an F0 track, a spectral envelope and an aperiodicity, as
+  harmonics (`so.harmonic_complex` on the track) carrying the envelope's
+  periodic part plus white noise shaped to its noise part by an STFT.
+  Without an aperiodicity voicing is all or nothing: harmonics where the
+  track is voiced, noise where it is not, the classic source-filter
+  resynthesis. It replaces `so.world_synthesize` (see Removed) and reads
+  any F0 track and any envelope, as that did. On the bdl
+  and slt sentences it is as close to the originals as WORLD's synthesis
+  was (log mel distance 1.80 and 1.87 dB voiced, against 1.83 and 2.06);
+  its harmonics start in cosine phase, so each period is peakier than a
+  voice's. Checked in `tools/check_voice_recipe_claims.py`.
 - `sonore.texture.synth.pop_start`: a starting sound for `synthesize` that
   already has pops, Gaussian noise times a sparse train of 4 ms bumps at
   power-law sizes, at the recording's own pop rate (`pop_rate`) and
@@ -56,21 +68,13 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
-- The three functions ported from WORLD are renamed for what they do:
-  `so.cheaptrick` is now `so.pitch_adaptive_envelope`, `so.d4c` is
-  `so.band_aperiodicity`, and `so.world_synthesize` is
-  `so.source_filter_synthesize`. The old names are gone; the code and its
-  output are unchanged. Each docstring still names the WORLD part it ports.
-  sonore ports these three parts and not WORLD's F0 trackers, so the old
-  names made it read as all of WORLD.
-- WORLD's BSD 3-clause license now ships with sonore as `LICENSE-WORLD`,
-  with a notice at the top of each file holding a port, and the package
-  license is `MIT AND BSD-3-Clause`. The ports have needed the notice since
-  they were added in 0.4.0.
+- WORLD's two analyses are renamed for what they do: `so.cheaptrick` is now
+  `so.pitch_adaptive_envelope` and `so.d4c` is `so.band_aperiodicity`. The
+  old names are gone. sonore has these two parts of WORLD and not its F0
+  trackers or its synthesis, so the old names made it read as all of WORLD.
 - `so.pitch_adaptive_envelope` (CheapTrick) and `so.band_aperiodicity` (D4C)
   are rewritten from their papers (Morise, 2015 and 2016) instead of ported
-  from WORLD's code, so the WORLD license notice no longer covers them; it
-  still covers `so.source_filter_synthesize`. Their output changes:
+  from WORLD's code. Their output changes:
   - `pitch_adaptive_envelope`'s `q1` defaults to the paper's -0.09 instead
     of WORLD's -0.15. At the same `q1` its envelopes are within 0.01 dB of
     WORLD's (median over voiced time windows of two sentences); the first and
@@ -83,7 +87,7 @@ version (0.x.y) only fixes bugs.
     F0 > 0 is analyzed, and unvoiced ones are all noise (a share of exactly 1).
     The sampling rate must be at least 12 kHz, so that one 6 kHz band fits.
   - Both accept any sampling rate, draw no random numbers, and read zeros
-    beyond the ends of the sound. `sonore.views.world.world_fft_size` is gone.
+    beyond the ends of the sound.
   Measured in `tools/check_paper_vocoder_claims.py`.
 - `so.f0_track` for low voices (60 to 90 Hz, inside the default range):
   the refinement uses every harmonic up to 1.5 kHz (at least six, at most
@@ -219,6 +223,14 @@ version (0.x.y) only fixes bugs.
   rates on a sentence.
 - `views/modulation.py` opens with `ModulationSpectrum` (Singh & Theunissen,
   2003); the modulation filterbanks follow.
+
+### Removed
+
+- `so.world_synthesize` (WORLD's synthesis, ported sample for sample), with
+  `sonore.views.world`, `so.DIFFERENCES_FROM_WORLD` and WORLD's noise
+  generator. The new `so.source_filter_synthesize` (see Added) takes its
+  place; for WORLD's own output use pyworld. sonore no longer holds any of WORLD's code, so the
+  package license is MIT alone.
 
 ### Fixed
 
