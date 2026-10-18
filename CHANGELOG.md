@@ -234,6 +234,9 @@ version (0.x.y) only fixes bugs.
 
 ### Fixed
 
+- `so.pitch_adaptive_envelope` no longer returns NaN for a whole time window when part of the spectrum
+  is empty, as above the last harmonic of a synthesized vowel: the smoothing's roundoff could leave
+  a power just below zero there, and its logarithm was NaN.
 - `so.f0_track` with `f_hi` raised for singing: a steady high voice has a
   dip at every multiple of its period, more than the eight candidates, and
   the period itself could be left out, so a sung 600 to 1150 Hz vowel came
