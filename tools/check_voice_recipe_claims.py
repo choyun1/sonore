@@ -110,7 +110,7 @@ def part1():
             truth_db = 10 * np.log10(share)
             # the share within 2 dB and the level within 1 dB: the measurement itself adds
             # error (harmonic_aperiodicity reads a known share within about 1.5 dB in
-            # tests/views/test_world.py, the envelope's level within 0.3 dB in
+            # tests/views/test_aperiodicity.py, the envelope's level within 0.3 dB in
             # tools/check_paper_vocoder_claims.py), and the noise is one random draw
             report(
                 f"F0 {f0:.0f} Hz, share {truth_db:5.1f} dB",
