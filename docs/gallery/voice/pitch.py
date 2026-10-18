@@ -198,8 +198,8 @@ for label, f0 in pitch.items():
 #
 # `so.f0_track` works the other way round. It looks for the period in the waveform rather than
 # the log spectrum, with YIN's difference function (de Cheveigné & Kawahara, 2002): up to eight
-# candidate periods per time window, each sharpened from the instantaneous frequencies of the
-# first six harmonics, as WORLD's StoneMask does (Morise et al., 2016). Each candidate is scored
+# candidate periods per time window, each sharpened from the instantaneous frequencies of its
+# harmonics up to 1.5 kHz, after WORLD's StoneMask (Morise et al., 2016). Each candidate is scored
 # by how well the waveform repeats one period later, and a single pass picks the cheapest path
 # through the candidates, so that the pitch rarely jumps and a time window is voiced only when
 # some candidate repeats well (a score above 0.5).
@@ -432,7 +432,7 @@ fig, playhead = show_pair(sounds, "sawtooth on Harvest", contours)
 #   Analysis*. Wiley. [Semantic Scholar](https://www.semanticscholar.org/paper/15bb1365026071ae3423d64ed2d18c554cafd6f6).
 # - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
 #   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
-#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L91)
+#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L103)
 # - Kominek & Black (2004). The CMU Arctic speech databases. *Proc. 5th ISCA Speech Synthesis
 #   Workshop*, 223–224. [ISCA Archive](https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html).
 #   The sentence, by speakers bdl and slt.

@@ -56,6 +56,22 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- `so.f0_track` for low voices (60 to 90 Hz, inside the default range):
+  the refinement uses every harmonic up to 1.5 kHz (at least six, at most
+  24) instead of the first six, which below 100 Hz hold a few percent of a
+  vowel's power and in noise put the refined F0 a percent off, enough for
+  the true period's score to collapse (a steady 60 Hz /a/ at 20 dB SNR was
+  wrong on 74% of time windows); and the score compares two periods (at
+  least 16.7 ms) instead of three, so that a low voice whose F0 moves
+  still lines up with its copy one period later (a clean 70 Hz vowel with
+  a ±3% vibrato was wrong on 62% of time windows) and a short-period
+  candidate is judged across a whole glottal cycle. Against the
+  laryngograph reference the male speaker's voicing error falls from 5.6%
+  to 4.0% and the female's stays at 1.6%; precision moves by half a point
+  (97.6% and 95.3% within 5% where both voice). On the gallery sentence
+  the agreement with Harvest is 98.6% within 5% (was 99.7%) with 83% of
+  its voiced time windows voiced (was 79%). From the second-model re-audit
+  of sitting 12; measurements in docs/design/views/f0.md.
 - No private class appears in a public signature any more (no change to
   any output). `TVGaborFrame.layout` is now private, since it returned a
   private type that only sonore's own code reads. `gaussian_noise`'s
