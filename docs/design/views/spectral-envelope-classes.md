@@ -174,20 +174,20 @@ plain function is also accepted. The Protocol's name is Cho's choice;
 `TimeFrequencyGrid` is one option. A method like `amplitude` stays outside
 it, since only `harmonic_complex` reads it and falls back to calling.
 
-D8. The temporal pair. `Envelope` and `Envelopes` mirror `Sound` and
-`Subbands`: an `Envelope` is the envelope of a sound and acts on one
-(`env * snd`, `env.to_sound(carrier)`); an `Envelopes` is the envelope of
-subbands, one per band, and carries what the filterbank brings (band
-frequencies, the zero padding, `env * subbands`, `modulation_spectrum()` on
-the filterbank's scale); `env[i]` gives one band back as an `Envelope`. A
-`SpectralEnvelope` holds all its time windows in one array, so it has no
-singular to be plural over. One `TemporalEnvelope` with a band axis is
-possible, but each operation would then branch on whether it holds a
-filterbank. Recommend keeping two classes and renaming `Envelopes` to
-`Cochleagram`, which is what its docstring already calls it, so that the
-plural no longer suggests a missing `SpectralEnvelopes`. The alternatives
-are keeping both names and stating the rule in `philosophy.md`, or merging.
-
+D8. One `TemporalEnvelope`. Today `Envelope` (one band, acts on a sound:
+`env * snd`, `env.to_sound(carrier)`) and `Envelopes` (one envelope per band
+of a filterbank, which it keeps; `env * subbands`, `modulation_spectrum()`)
+are two classes, which reads as if a `SpectralEnvelopes` were missing.
+Recommend one `TemporalEnvelope` holding an optional filterbank, mirroring
+the one `SpectralEnvelope`: with no filterbank it is today's `Envelope`;
+with one, `env * snd` splits the sound with that filterbank, multiplies each
+band by its envelope and sums the bands back (today written
+`(env * fb.analyze(snd)).to_sound()`), and `env[i]` gives one band. The
+dispatch is one `match` on whether a filterbank is held, negligible next to
+the filtering. `Envelopes * Sound` is not defined today, so this adds a
+meaning and breaks no call. Cho (2026-10-18) declined renaming `Envelopes` to
+`Cochleagram`: a cochleagram is only the cochlea-like case, and sonore takes
+the envelopes of any filterbank.
 
 ## Work, once agreed
 
