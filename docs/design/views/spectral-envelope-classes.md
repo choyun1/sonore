@@ -125,6 +125,35 @@ an `amplitude` method), and `Aperiodicity.bands` (`envelope`, typed
 `SpectralEnvelope`). `SpectralEnvelope` and `Aperiodicity` would both
 satisfy it without a shared public base.
 
+## Why two classes, and only two
+
+A view is defined by what it drops (`philosophy.md`). The two envelopes
+drop different things. A temporal envelope drops the fine structure within
+a band and keeps a magnitude over time; Hilbert, with or without a lowpass,
+one band or a filterbank's worth, is the same discard, so one class. A
+spectral envelope drops the source, the harmonics and their phase, and keeps
+the smooth curve over them; CheapTrick, the liftered cepstrum, MFCCs and LPC
+are the same discard at different quality, so one class with a `method`.
+`GridEnvelope` and `SpectralEnvelope` already carry the same `discards`
+sentence word for word. Both names are the field's (Rosen's "temporal
+envelope"; "spectral envelope" throughout speech science).
+
+Both are views by the contract in `views/view.py`: a `discards` sentence, a
+route back (`to_sound(carrier)`; `source_filter_synthesize` with the other
+two voice views) and a refusing `synthesize`. Neither has an exact inverse,
+so neither is a frame. How abstract a class is does not enter the test.
+
+What stays apart. A magnitude on a time by frequency grid that keeps the
+harmonics (the power spectrogram, the mel spectrogram, `tandem_power`) drops
+only the phase and is neither envelope; a banded temporal envelope is not a
+coarse spectral envelope, since its bands follow the filterbank, not F0, and
+keep the harmonics' beating within a band up to the lowpass. D7's Protocol
+without a base class is what keeps these three distinct. `Aperiodicity` is a
+ratio, not an envelope (D3). One asymmetry is correct and stays: a temporal
+envelope is a signal sampled at `fs` and multiplies a sound sample by sample;
+a spectral envelope is a function read off a grid of time windows and
+frequencies.
+
 ## Decisions
 
 D1. Settings as a dict or as attributes. Either `env.settings["q1"]` with a
