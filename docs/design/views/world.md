@@ -31,8 +31,8 @@ WORLD. `so.pitch_adaptive_envelope` and `so.band_aperiodicity` are rewritten
 from the CheapTrick and D4C papers and measured against pyworld as a
 distance (`tools/check_paper_vocoder_claims.py`), and the synthesis port is
 removed with `sonore.views.world`, `DIFFERENCES_FROM_WORLD` and
-`LICENSE-WORLD`. `so.harmonics_and_noise` (in `sources`) puts a voice back
-together instead: harmonics carrying the envelope's periodic part plus
+`LICENSE-WORLD`. The name `so.source_filter_synthesize` now belongs to a new
+function in `sources` that puts a voice back together instead: harmonics carrying the envelope's periodic part plus
 shaped noise (`tools/check_voice_recipe_claims.py`). The reason: pyworld
 already gives WORLD's exact output to anyone who needs it, and porting
 WORLD's parts without its F0 trackers read as a partial copy. The rest of

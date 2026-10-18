@@ -30,7 +30,7 @@ Sources compared:
             (40 ms Hann STFT, lifter at half the median period), and
             so.MFCC's envelope (13 coefficients, its speech defaults), with
             height-1 triangles (the default) and with area-normalized ones
-  synthesis: so.harmonics_and_noise (with so.band_aperiodicity measured on the same F0) and
+  synthesis: so.source_filter_synthesize (with so.band_aperiodicity measured on the same F0) and
             so.harmonic_complex (envelope read point by point, no noise)
 
     python tools/compare_voice_methods.py
@@ -226,11 +226,11 @@ def envelope_sources(sound, track, formants=None):
 
 
 def synthesize(synth, sound, track, envelope, aperiodicity, grid):
-    if synth == "harmonics_and_noise":
+    if synth == "source_filter_synthesize":
         n_fft = aperiodicity.n_fft
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
         on_grid = SpectralEnvelope(envelope(grid, freqs), grid, FS, np.nan)
-        return so.harmonics_and_noise(track, on_grid, aperiodicity, duration=sound.duration, rng=0)
+        return so.source_filter_synthesize(track, on_grid, aperiodicity, duration=sound.duration, rng=0)
     amplitude = pointwise_amplitude(envelope, grid, np.arange(0, FS / 2 + 1, 10.0))
     return so.harmonic_complex(sound.duration, FS, track, amplitudes=amplitude)
 
@@ -257,7 +257,7 @@ def part1():
                     used_f0 = np.median(voiced_inner) if len(voiced_inner) else f0
                     aperiodicity = so.band_aperiodicity(sound, track)
                     for env_name, envelope in envelope_sources(sound, track, formants).items():
-                        synths = ["harmonics_and_noise"]
+                        synths = ["source_filter_synthesize"]
                         if f0_name == "truth":
                             synths.append("harmonic_complex")
                         for synth in synths:
@@ -291,10 +291,12 @@ def part1():
     print("  (median and worst over the 12 vowels; F0 error is the source's, before synthesis)")
     by_voice = {}
     for (f0_name, env_name, synth), rows in results.items():
-        if f0_name == "truth" and synth == "harmonics_and_noise":
+        if f0_name == "truth" and synth == "source_filter_synthesize":
             rows = np.array(rows)
             by_voice[env_name] = (np.median(rows[:6, 0]), np.median(rows[6:, 0]))
-    print("  with the true F0 and harmonics_and_noise, resynthesis error by voice (male / female vowels):")
+    print(
+        "  with the true F0 and source_filter_synthesize, resynthesis error by voice (male / female vowels):"
+    )
     for env_name, (male, female) in by_voice.items():
         print(f"    {env_name:11s} {male:5.2f} / {female:5.2f} dB")
 
@@ -336,7 +338,7 @@ def part2():
             aperiodicity = so.band_aperiodicity(sound, track)
             scores = []
             for envelope in envelope_sources(sound, track).values():
-                out = synthesize("harmonics_and_noise", sound, track, envelope, aperiodicity, grid)
+                out = synthesize("source_filter_synthesize", sound, track, envelope, aperiodicity, grid)
                 _, resynthesized = log_mel_spectrogram(out)
                 count = min(len(original), len(resynthesized))
                 errors = [
@@ -350,7 +352,8 @@ def part2():
 # ------------------------------------------------------------ part 3
 def part3():
     print(
-        "Part 3: harmonics_and_noise given the true envelope, by FFT size (male who'd, F0 150 Hz, no noise)"
+        "Part 3: source_filter_synthesize given the true envelope, by FFT size"
+        " (male who'd, F0 150 Hz, no noise)"
     )
     rng = np.random.default_rng(1)
     formants = (*HILLENBRAND["male"]["u"], *UPPER["male"])
@@ -362,7 +365,7 @@ def part3():
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
         envelope = SpectralEnvelope(truth(grid, freqs), grid, FS, np.nan)
         quiet = Aperiodicity(np.full_like(envelope.data, 1e-3), grid, FS, "none")
-        out = so.harmonics_and_noise(track, envelope, quiet, duration=sound.duration, rng=0)
+        out = so.source_filter_synthesize(track, envelope, quiet, duration=sound.duration, rng=0)
         harmonic_freqs, out_db = harmonic_levels_db(out, 150.0)
         keep = harmonic_freqs >= SCORED[0]
         true_db = 20 * np.log10(envelope_amplitude(harmonic_freqs[keep], formants))

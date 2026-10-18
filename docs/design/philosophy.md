@@ -67,7 +67,7 @@ meant to be readable without them.
   sound stays an experiment until a canonical method is found. Today
   `Spectrum`, `Cepstrum`, `PVAnalysis`, `ModulationSpectrum`, `Envelope`
   and `Envelopes` have `to_sound`; the voice views (F0 track, spectral
-  envelope, aperiodicity) go back together through `harmonics_and_noise`,
+  envelope, aperiodicity) go back together through `source_filter_synthesize`,
   which their refusal names (`layout/sound-first.md`).
 - **Synthesis lives in `to_sound`.** A function next to a view either
   builds the view from a sound (`f0_track`, `pv_analyze`) or is a recipe

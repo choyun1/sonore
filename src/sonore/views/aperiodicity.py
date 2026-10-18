@@ -66,7 +66,7 @@ class Aperiodicity(_FrequencyView):
     harmonics. Stored as WORLD stores it, an amplitude ratio between 0 and
     1 (``data``, shape ``(n_channels, n_freqs, n_windows)``): its square
     :attr:`share` is the share of the power that is noise, which is what
-    :func:`~sonore.sources.harmonics_and_noise.harmonics_and_noise` uses. ``method`` names
+    :func:`~sonore.sources.source_filter.source_filter_synthesize` uses. ``method`` names
     the measure that made it ("D4C" or "harmonic residual").
     """
 
@@ -75,7 +75,7 @@ class Aperiodicity(_FrequencyView):
         "spectrum, the pitch and the phase."
     )
     back_to_sound = (
-        "so.harmonics_and_noise rebuilds an approximation of the voice from it together with an F0 "
+        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
         "track and a spectral envelope."
     )
 

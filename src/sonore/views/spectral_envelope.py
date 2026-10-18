@@ -17,7 +17,7 @@ or :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`), or a
 function. :class:`~sonore.views.aperiodicity.Aperiodicity` is read the same
 way. :func:`warp_frequency` moves an envelope (or an aperiodicity) along
 frequency without looking at how it was made, so any envelope and any
-synthesizer combine: :func:`~sonore.sources.harmonics_and_noise.harmonics_and_noise` and
+synthesizer combine: :func:`~sonore.sources.source_filter.source_filter_synthesize` and
 :func:`~sonore.sources.waveforms.harmonic_complex` both take any envelope.
 """
 
@@ -208,7 +208,7 @@ class SpectralEnvelope(_FrequencyView):
         "smoothing."
     )
     back_to_sound = (
-        "so.harmonics_and_noise rebuilds an approximation of the voice from it together with an F0 "
+        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
         "track and an aperiodicity."
     )
 
@@ -329,7 +329,7 @@ class GridEnvelope(View):
     Any envelope estimate can be put in this form, so that it reads like a
     :class:`~sonore.views.spectral_envelope.SpectralEnvelope` and goes wherever an
     envelope is taken: :func:`warp_frequency`,
-    :func:`~sonore.sources.harmonics_and_noise.harmonics_and_noise`,
+    :func:`~sonore.sources.source_filter.source_filter_synthesize`,
     :func:`~sonore.sources.waveforms.harmonic_complex`.
     :meth:`Cepstrum.envelope_view <sonore.views.cepstrum.Cepstrum.envelope_view>`
     and :meth:`MFCC.envelope_view <sonore.views.mfcc.MFCC.envelope_view>`
@@ -344,7 +344,7 @@ class GridEnvelope(View):
         "GridEnvelope discards the harmonics, the phase, and everything finer than the envelope's smoothing."
     )
     back_to_sound = (
-        "so.harmonics_and_noise rebuilds an approximation of the voice from it together with an F0 "
+        "so.source_filter_synthesize rebuilds an approximation of the voice from it together with an F0 "
         "track and an aperiodicity."
     )
 
@@ -435,7 +435,7 @@ def warp_frequency(
     :class:`~sonore.views.spectral_envelope.SpectralEnvelope`, an
     :class:`~sonore.views.aperiodicity.Aperiodicity`, a :class:`GridEnvelope`,
     or a function. A view held on a grid comes back as the same type on the
-    same grid (so ``harmonics_and_noise`` takes it as before); a function comes
+    same grid (so ``source_filter_synthesize`` takes it as before); a function comes
     back as a function.
 
     ``ratio`` is:

@@ -8,11 +8,14 @@ version (0.x.y) only fixes bugs.
 
 ### Added
 
-- `so.harmonics_and_noise(f0, envelope, aperiodicity)`: a voice rebuilt
-  from an F0 track, a spectral envelope and an aperiodicity, as harmonics
-  (`so.harmonic_complex` on the track) carrying the envelope's periodic
-  part plus white noise shaped to its noise part by an STFT. It reads any
-  F0 track and any envelope, like the synthesis it replaces. On the bdl
+- `so.source_filter_synthesize(f0, envelope, aperiodicity=None)`: a voice
+  rebuilt from an F0 track, a spectral envelope and an aperiodicity, as
+  harmonics (`so.harmonic_complex` on the track) carrying the envelope's
+  periodic part plus white noise shaped to its noise part by an STFT.
+  Without an aperiodicity voicing is all or nothing: harmonics where the
+  track is voiced, noise where it is not, the classic source-filter
+  resynthesis. It replaces `so.world_synthesize` (see Removed) and reads
+  any F0 track and any envelope, as that did. On the bdl
   and slt sentences it is as close to the originals as WORLD's synthesis
   was (log mel distance 1.80 and 1.87 dB voiced, against 1.83 and 2.06);
   its harmonics start in cosine phase, so each period is peakier than a
@@ -225,8 +228,8 @@ version (0.x.y) only fixes bugs.
 
 - `so.world_synthesize` (WORLD's synthesis, ported sample for sample), with
   `sonore.views.world`, `so.DIFFERENCES_FROM_WORLD` and WORLD's noise
-  generator. `so.harmonics_and_noise` takes its place; for WORLD's own
-  output use pyworld. sonore no longer holds any of WORLD's code, so the
+  generator. The new `so.source_filter_synthesize` (see Added) takes its
+  place; for WORLD's own output use pyworld. sonore no longer holds any of WORLD's code, so the
   package license is MIT alone.
 
 ### Fixed

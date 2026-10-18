@@ -214,7 +214,7 @@ class MFCC(View):
     )
     back_to_sound = (
         "For an approximate voice, read the envelope with mfcc.envelope_view() and pass it to "
-        "so.harmonics_and_noise with an F0 track and an aperiodicity."
+        "so.source_filter_synthesize with an F0 track and an aperiodicity."
     )
 
     def __init__(
@@ -352,7 +352,7 @@ class MFCC(View):
         ``f`` (by default its FFT bins), read as ``env(t, f)``, so it goes
         wherever a spectral envelope is taken
         (:func:`~sonore.views.spectral_envelope.warp_frequency`,
-        :func:`~sonore.sources.harmonics_and_noise.harmonics_and_noise`,
+        :func:`~sonore.sources.source_filter.source_filter_synthesize`,
         :func:`~sonore.sources.waveforms.harmonic_complex`). It holds band
         powers, sums over triangles that widen with frequency, so with
         ``triangles="height"`` it tilts upward against a spectral density;

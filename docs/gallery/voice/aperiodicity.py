@@ -460,7 +460,7 @@ for column, label in zip(fig.subfigures(1, 2), talkers, strict=True):
 # %% [markdown]
 # ## Listening
 #
-# `so.harmonics_and_noise` puts a voice back together from the three views as two parts added:
+# `so.source_filter_synthesize` puts a voice back together from the three views as two parts added:
 # harmonics on the pitch track carrying the harmonics' share of the envelope, $S(1 - A)$, and white
 # noise shaped over time and frequency to the noise's share, $S A$. Below, each talker's own pitch
 # track and envelope with four aperiodicities. (Time windows the track calls unvoiced are always
@@ -484,7 +484,7 @@ fig, playhead = show_pair(sounds, titled("the sentence"), fmax=8000)
 
 # %% [demo ap10] Resynthesis with D4C
 sounds = {
-    label: finish(so.harmonics_and_noise(harvest[label], envelopes[label], d4c_maps[label], rng=1))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], d4c_maps[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled("with so.band_aperiodicity"), fmax=8000)
@@ -495,7 +495,7 @@ fig, playhead = show_pair(sounds, titled("with so.band_aperiodicity"), fmax=8000
 
 # %% [demo ap11] With the harmonic residual
 sounds = {
-    label: finish(so.harmonics_and_noise(harvest[label], envelopes[label], residual_maps[label], rng=1))
+    label: finish(so.source_filter_synthesize(harvest[label], envelopes[label], residual_maps[label], rng=1))
     for label in talkers
 }
 fig, playhead = show_pair(sounds, titled("with so.harmonic_aperiodicity"), fmax=8000)
@@ -508,7 +508,7 @@ fig, playhead = show_pair(sounds, titled("with so.harmonic_aperiodicity"), fmax=
 sounds = {}
 for label in talkers:
     periodic = so.Aperiodicity(np.zeros_like(d4c_maps[label].data), d4c_maps[label].t, FS, "none")
-    sounds[label] = finish(so.harmonics_and_noise(harvest[label], envelopes[label], periodic, rng=1))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], periodic, rng=1))
 fig, playhead = show_pair(sounds, titled("with A = 0"), fmax=8000)
 
 # %% [about]
@@ -519,7 +519,7 @@ fig, playhead = show_pair(sounds, titled("with A = 0"), fmax=8000)
 sounds = {}
 for label in talkers:
     noise_only = so.Aperiodicity(np.ones_like(d4c_maps[label].data), d4c_maps[label].t, FS, "all noise")
-    sounds[label] = finish(so.harmonics_and_noise(harvest[label], envelopes[label], noise_only, rng=1))
+    sounds[label] = finish(so.source_filter_synthesize(harvest[label], envelopes[label], noise_only, rng=1))
 fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 
 # %% [markdown]
@@ -527,7 +527,7 @@ fig, playhead = show_pair(sounds, titled("with A = 1"), fmax=8000)
 #
 # - **WORLD's pitch tracker.** Harvest is not part of sonore; its tracks are stored with the
 #   recordings. `so.f0_track` gives tracks of its own ([Pitch tracking](pitch.html)).
-# - **Phase.** `so.harmonics_and_noise` starts every harmonic in cosine phase, so each period's
+# - **Phase.** `so.source_filter_synthesize` starts every harmonic in cosine phase, so each period's
 #   waveform is a pulse, peakier than the original's; the views keep no phase to rebuild it from.
 # - **Jitter and shimmer.** A pitch track smoothed over 5 ms time windows cannot follow
 #   cycle-to-cycle irregularity, so the harmonic residual counts it as noise, and a resynthesis

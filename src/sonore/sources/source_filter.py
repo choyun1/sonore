@@ -1,11 +1,13 @@
 """A voice rebuilt from a source-filter description: an F0 track, a spectral
-envelope and an aperiodicity, as the views measure them.
+envelope and, optionally, an aperiodicity, as the views measure them.
 
 The sound is harmonics plus noise. The harmonics follow the F0 track and carry
 the part of the envelope that is not noise, ``S (1 - a)``, with ``S`` the
 envelope's power and ``a`` the aperiodicity's noise share; white noise, shaped
-over time and frequency, carries the rest, ``S a``. The checks behind it are in
-``tools/check_voice_recipe_claims.py``.
+over time and frequency, carries the rest, ``S a``. Without an aperiodicity
+voicing is all or nothing, the classic source-filter resynthesis: ``a = 0``
+where the track is voiced and ``a = 1`` where it is not. The checks behind it
+are in ``tools/check_voice_recipe_claims.py``.
 """
 
 from __future__ import annotations
@@ -20,25 +22,26 @@ from sonore.frames.gabor import STFT
 from sonore.sources.waveforms import ContourLike, _contour_per_channel, gaussian_noise, harmonic_complex
 from sonore.views.spectral_envelope import GridEnvelope
 
-__all__ = ["harmonics_and_noise"]
+__all__ = ["source_filter_synthesize"]
 
 
 _FADED_FROM = 0.9  # harmonic_complex fades its harmonics out from 0.9 f_max to f_max
 
 
-def harmonics_and_noise(
+def source_filter_synthesize(
     f0: ContourLike,
     envelope: Any,
-    aperiodicity: Any,
+    aperiodicity: Any = None,
     *,
+    fs: float | None = None,
     duration: float | None = None,
     rng: RNG = None,
     win_dur: float = 0.020,
 ) -> Sound:
     """A voice from an F0 track, a spectral envelope and an aperiodicity.
 
-    On the aperiodicity's grid of times and frequencies, with ``S`` the
-    envelope's power and ``a`` the noise share:
+    On the aperiodicity's grid of times and frequencies (without one, the
+    envelope's), with ``S`` the envelope's power and ``a`` the noise share:
 
     1. **Harmonics.** :func:`~sonore.sources.waveforms.harmonic_complex` on the
        F0 track, harmonic ``n`` carrying the power ``S (1 - a)`` over one
@@ -69,29 +72,41 @@ def harmonics_and_noise(
         len(f), len(t))``), such as a
         :class:`~sonore.views.spectral_envelope.GridEnvelope` or one moved by
         :func:`~sonore.views.spectral_envelope.warp_frequency`. It is read at
-        the aperiodicity's times and frequencies.
+        the aperiodicity's times and frequencies. Without an aperiodicity it
+        must be held on a grid (``.t`` and ``.f``, as every envelope view is).
     aperiodicity
         An :class:`~sonore.views.aperiodicity.Aperiodicity`, or anything with
         its grid: ``.t``, ``.f``, ``.fs`` and ``.data`` (the amplitude ratio,
         whose square is the noise share). It sets the grid and the sampling
-        rate.
+        rate. None (the default) is all-or-nothing voicing: no noise in the
+        time windows the track calls voiced (the nearest given F0 above 0),
+        all noise in the others.
+    fs
+        The sampling rate, needed only without an aperiodicity when the
+        envelope has no ``.fs`` (a :class:`~sonore.views.spectral_envelope.GridEnvelope`).
     duration
-        In seconds; by default one hop past the aperiodicity's last time
-        window.
+        In seconds; by default one hop past the grid's last time window.
     rng
         A seed or Generator for the noise.
     win_dur
         The length of the STFT that shapes the noise, in seconds.
     """
-    fs = float(aperiodicity.fs)
-    times, freqs = np.asarray(aperiodicity.t, dtype=float), np.asarray(aperiodicity.f, dtype=float)
+    if aperiodicity is None:
+        fs, times, freqs, n_channels = _envelope_grid(envelope, fs)
+        track_times, track_values = _contour_per_channel(f0, n_channels, "the envelope")
+        share = _all_or_nothing(track_times, track_values, times, len(freqs))
+    else:
+        if fs is not None and fs != aperiodicity.fs:
+            raise ValueError(f"fs is {fs:g} Hz but the aperiodicity's is {aperiodicity.fs:g} Hz")
+        fs = float(aperiodicity.fs)
+        times, freqs = np.asarray(aperiodicity.t, dtype=float), np.asarray(aperiodicity.f, dtype=float)
+        share = np.asarray(aperiodicity.data, dtype=float) ** 2
+        track_times, track_values = _contour_per_channel(f0, share.shape[0], "the aperiodicity")
     hop = times[1] - times[0] if len(times) > 1 else 0.005
     if duration is None:
         duration = times[-1] + hop
-    share = np.asarray(aperiodicity.data, dtype=float) ** 2
     power = _on_grid_of(envelope, times, freqs, share.shape)
     n_channels = share.shape[0]
-    track_times, track_values = _contour_per_channel(f0, n_channels, "the aperiodicity")
     generator = as_rng(rng)
     channels = []
     for channel in range(n_channels):
@@ -103,6 +118,33 @@ def harmonics_and_noise(
             harmonics + _shaped_noise(duration, fs, noise_power, generator, win_dur, hop)[: len(harmonics)]
         )
     return Sound(np.column_stack(channels), fs)
+
+
+def _envelope_grid(envelope, fs):
+    """The sampling rate, times, frequencies and channel count of an envelope
+    held on a grid, for a synthesis without an aperiodicity."""
+    if not (hasattr(envelope, "t") and hasattr(envelope, "f") and hasattr(envelope, "data")):
+        raise TypeError(
+            "without an aperiodicity the envelope must be held on a grid (.t, .f and .data, as"
+            " SpectralEnvelope and GridEnvelope are); pass an aperiodicity to read any other envelope"
+        )
+    own_fs = getattr(envelope, "fs", None)
+    if fs is None and own_fs is None:
+        raise TypeError("the envelope has no .fs, so pass fs")
+    if fs is not None and own_fs is not None and fs != own_fs:
+        raise ValueError(f"fs is {fs:g} Hz but the envelope's is {own_fs:g} Hz")
+    times, freqs = np.asarray(envelope.t, dtype=float), np.asarray(envelope.f, dtype=float)
+    return float(own_fs if fs is None else fs), times, freqs, np.shape(envelope.data)[0]
+
+
+def _all_or_nothing(track_times, track_values, times, n_freqs):
+    """The noise share of all-or-nothing voicing, shape ``(n_channels, n_freqs,
+    len(times))``: 0 where the nearest given F0 is above 0, 1 elsewhere."""
+    upper = np.clip(np.searchsorted(track_times, times), 0, len(track_times) - 1)
+    lower = np.clip(upper - 1, 0, len(track_times) - 1)
+    nearest = np.where(np.abs(track_times[lower] - times) <= np.abs(track_times[upper] - times), lower, upper)
+    unvoiced = (track_values[:, nearest] <= 0).astype(float)
+    return np.repeat(unvoiced[:, None, :], n_freqs, axis=1)
 
 
 def _harmonics(duration, fs, track, harmonic_power):

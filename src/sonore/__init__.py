@@ -58,9 +58,9 @@ from sonore.frames.gabor import STFT, TVSTFT, GaborFrame, TVGaborFrame
 from sonore.plotting import overview
 from sonore.sources.events import event_train
 from sonore.sources.gaussian_spectrogram import gaussian_spectrogram
-from sonore.sources.harmonics_and_noise import harmonics_and_noise
 from sonore.sources.klatt import KLATT_DEFAULTS, klatt_continuum, klatt_synthesize
 from sonore.sources.ripples import DynamicRipple, Ripple, RippleSum, ripple_sound
+from sonore.sources.source_filter import source_filter_synthesize
 from sonore.sources.waveforms import (
     correlated_noise,
     exponential_chirp,
@@ -190,7 +190,7 @@ __all__ = [
     "pitch_adaptive_envelope",
     "band_aperiodicity",
     "harmonic_aperiodicity",
-    "harmonics_and_noise",
+    "source_filter_synthesize",
     "GridEnvelope",
     "scale_f0",
     "warp_frequency",

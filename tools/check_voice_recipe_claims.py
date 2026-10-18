@@ -1,4 +1,4 @@
-"""Checks so.harmonics_and_noise, which rebuilds a voice from an F0 track, a spectral
+"""Checks so.source_filter_synthesize, which rebuilds a voice from an F0 track, a spectral
 envelope and an aperiodicity in place of WORLD's synthesis.
 
 The recipe, for an envelope S (power), a noise share a and an F0 track:
@@ -102,7 +102,7 @@ def part1():
     for f0 in (120.0, 220.0):
         for noise_db in (-20.0, -10.0, -3.0):
             track, envelope, aperiodicity, share = true_views(f0, noise_db, 1.0)
-            out = so.harmonics_and_noise(track, envelope, aperiodicity, duration=1.0, rng=rng)
+            out = so.source_filter_synthesize(track, envelope, aperiodicity, duration=1.0, rng=rng)
             share_db, rebuilt = measured(out, track)
             inside = (track[0] > 0.1) & (track[0] < 0.9)
             band = (rebuilt.f > 300) & (rebuilt.f < 6000)
@@ -132,7 +132,7 @@ def part2():
                 ("D4C", so.band_aperiodicity(sound, track)),
                 ("harmonic residual", so.harmonic_aperiodicity(sound, track)),
             ):
-                out = so.harmonics_and_noise(track, envelope, aperiodicity, duration=1.0, rng=rng)
+                out = so.source_filter_synthesize(track, envelope, aperiodicity, duration=1.0, rng=rng)
                 share_db, _ = measured(out, track)
                 label = f"F0 {f0:.0f} Hz, noise {noise_db:5.1f} dB, {name}"
                 value = f"original {original_db:5.1f} dB, rebuilt {share_db:5.1f} dB"
@@ -187,7 +187,7 @@ def part3():
             "WORLD's synthesis": pyworld.synthesize(
                 np.ascontiguousarray(track[1]), envelope.to_world(), aperiodicity.to_world(), FS, HOP * 1000
             ),
-            "recipe": so.harmonics_and_noise(
+            "recipe": so.source_filter_synthesize(
                 track, envelope, aperiodicity, duration=sound.duration, rng=3
             ).data[:, 0],
         }

@@ -10,13 +10,13 @@
 <line x1="615" y1="350" x2="445" y2="390" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="105" y1="202" x2="445" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="105" y1="202" x2="373" y2="242" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
-<line x1="59" y1="276" x2="615" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
-<line x1="59" y1="276" x2="275" y2="390" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
-<line x1="59" y1="276" x2="785" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="275" y1="350" x2="275" y2="390" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="275" y1="202" x2="445" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="275" y1="202" x2="275" y2="390" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="275" y1="202" x2="373" y2="242" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
+<line x1="59" y1="276" x2="615" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
+<line x1="59" y1="276" x2="275" y2="390" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
+<line x1="59" y1="276" x2="785" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="922" y1="276" x2="445" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="922" y1="276" x2="275" y2="390" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
 <line x1="1001" y1="276" x2="955" y2="316" stroke="#667" stroke-width="1.2" marker-end="url(#a)" opacity="0.7"/>
@@ -75,12 +75,12 @@
 <text x="105.0" y="338" text-anchor="middle" font-size="12">events</text>
 <rect x="30.0" y="168" width="150.0" height="34" rx="5" fill="#d9f0dd" stroke="#556"/>
 <text x="105.0" y="190" text-anchor="middle" font-size="12">gaussian_spectrogram</text>
-<rect x="25.0" y="242" width="68.5" height="34" rx="5" fill="#d9f0dd" stroke="#556"/>
-<text x="59.2" y="264" text-anchor="middle" font-size="12">harmonics_and_noise</text>
 <rect x="200.0" y="316" width="150.0" height="34" rx="5" fill="#d9f0dd" stroke="#556"/>
 <text x="275.0" y="338" text-anchor="middle" font-size="12">klatt</text>
 <rect x="200.0" y="168" width="150.0" height="34" rx="5" fill="#d9f0dd" stroke="#556"/>
 <text x="275.0" y="190" text-anchor="middle" font-size="12">ripples</text>
+<rect x="25.0" y="242" width="68.5" height="34" rx="5" fill="#d9f0dd" stroke="#556"/>
+<text x="59.2" y="264" text-anchor="middle" font-size="12">source_filter</text>
 <rect x="200.0" y="390" width="150.0" height="34" rx="5" fill="#d9f0dd" stroke="#556"/>
 <text x="275.0" y="412" text-anchor="middle" font-size="12">waveforms</text>
 <rect x="888.1" y="242" width="68.5" height="34" rx="5" fill="#f8dbe3" stroke="#556"/>
