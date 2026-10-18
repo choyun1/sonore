@@ -268,8 +268,8 @@ under `so.texture` and `sonore.texture.synth`.
 | [`views.f0`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py) | `f0_track` → `F0Track` (F0 every 5 ms with a voiced/unvoiced decision: candidates from YIN's difference function, refinement by the instantaneous frequency of the harmonics up to 1.5 kHz, a periodicity score, a Viterbi pass; `.plot()`; checked against laryngograph F0), `scale_f0` (a pitch change on any F0 contour, with a range factor) |
 | [`views.timbre`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/timbre.py) | `log_attack_time` and `attack_segment` (the attack by Peeters et al.'s weakest-effort method), `spectral_centroid` (magnitude spectrum by default, as the paper) and `spectral_flux` → `DescriptorTrack` (one value per 5.8 ms, with `.median` and `.iqr`); timbre descriptors written from Peeters et al. (2011), checked in `tools/check_timbre_claims.py` |
 | [`views.chroma`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/chroma.py) | `chroma` → `Chroma` (the power in each of the 12 pitch classes per 0.05 s time window, from a cosine filterbank with one band per semitone, A1 to A8, the octaves added together); `Chroma.to_sound(fs, octaves=...)` plays each pitch class as a Shepard tone, with `octaves` saying how the power spreads over octaves; checked in `tools/check_chroma_claims.py` |
-| [`views.spectral_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py) | `pitch_adaptive_envelope` → `SpectralEnvelope` (WORLD's CheapTrick, ported exactly: it matches WORLD to floating-point precision), `warp_frequency` (formants moved along frequency on any envelope or aperiodicity, by a ratio, a ratio over time or any frequency map), `GridEnvelope` (any envelope as power on a grid, as `Cepstrum.envelope_view()`, `MFCC.envelope_view()` and `LPC.envelope_view()` give) |
-| [`views.aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py) | `band_aperiodicity` → `Aperiodicity` (WORLD's D4C, ported exactly), `harmonic_aperiodicity` (the share of noise, by fitting the harmonics) |
+| [`views.spectral_envelope`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/spectral_envelope.py) | `pitch_adaptive_envelope` → `SpectralEnvelope` (CheapTrick, written from Morise's 2015 paper; within 0.01 dB of WORLD's at the paper's `q1`), `warp_frequency` (formants moved along frequency on any envelope or aperiodicity, by a ratio, a ratio over time or any frequency map), `GridEnvelope` (any envelope as power on a grid, as `Cepstrum.envelope_view()`, `MFCC.envelope_view()` and `LPC.envelope_view()` give) |
+| [`views.aperiodicity`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/aperiodicity.py) | `band_aperiodicity` → `Aperiodicity` (D4C, written from Morise's 2016 paper, with its measured 8 dB bias corrected), `harmonic_aperiodicity` (the share of noise, by fitting the harmonics) |
 | [`views.world`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/world.py) | `source_filter_synthesize` (WORLD's synthesis, sample for sample, from an F0 track, envelope and aperiodicity; WORLD's own noise stream by default, or fresh noise from an `rng`; reads any F0 track and any envelope), `DIFFERENCES_FROM_WORLD` |
 | [`views.phasevocoder`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/phasevocoder.py) | `time_stretch`, `pitch_shift` (identity phase locking), `pv_analyze` → `PVAnalysis` (instantaneous frequency; oscillator-bank `to_sound` with `time_scale` and `freq_map`) |
 | [`views.quilting`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/quilting.py) | `quilt` (the sound quilts of Overath et al., 2015: segments of a sound in a new order, each chosen so that its join changes the cochleagram as much as the sound itself did there; written from the paper's methods) |
@@ -396,12 +396,12 @@ open an issue.
 
 ## License and citation
 
-MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). Three functions are ported from
-[WORLD](https://github.com/mmorise/World) (Morise): `pitch_adaptive_envelope` (CheapTrick),
-`band_aperiodicity` (D4C) and `source_filter_synthesize` (WORLD's synthesis). They are used under
-WORLD's BSD 3-clause license, kept in
-[LICENSE-WORLD](https://github.com/choyun1/sonore/blob/main/LICENSE-WORLD). sonore's F0 tracker is its own,
-not WORLD's. If sonore is useful in your research, please cite
+MIT; see [LICENSE](https://github.com/choyun1/sonore/blob/main/LICENSE). One function is ported from
+[WORLD](https://github.com/mmorise/World) (Morise): `source_filter_synthesize` (WORLD's synthesis). It is
+used under WORLD's BSD 3-clause license, kept in
+[LICENSE-WORLD](https://github.com/choyun1/sonore/blob/main/LICENSE-WORLD). `pitch_adaptive_envelope`
+(CheapTrick) and `band_aperiodicity` (D4C) are written from Morise's papers, and sonore's F0 tracker is
+its own, not WORLD's. If sonore is useful in your research, please cite
 it using [CITATION.cff](https://github.com/choyun1/sonore/blob/main/CITATION.cff); the
 *Cite this repository* button in the GitHub sidebar gives the same citation in APA and BibTeX.
 
