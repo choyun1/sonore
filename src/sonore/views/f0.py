@@ -31,6 +31,9 @@ N_HARMONICS = 6
 PERIODS = 3.0  # window length for refinement and scoring, in periods of the candidate
 
 
+NEAR_DEEPEST = 0.1  # a dip this close to the deepest one counts as nearly as deep
+
+
 SINC_HALF = 32  # half-length of the fractional-delay kernel [samples]
 
 
@@ -45,7 +48,7 @@ class F0Track(View):
     ``f0`` and ``score`` have shape ``(n_channels, n_windows)``; ``f0`` is 0
     where the time window is unvoiced, and ``score`` is the periodicity score of
     the chosen candidate (0 where unvoiced). ``candidates`` and
-    ``candidate_scores`` have shape ``(n_channels, n_windows, 4)`` and hold
+    ``candidate_scores`` have shape ``(n_channels, n_windows, 8)`` and hold
     every refined candidate the tracker weighed, NaN where a time window had fewer.
     ``t`` and a row of ``f0`` go straight into
     :meth:`~sonore.frames.gabor.TVGaborFrame.pitch_adaptive` and
@@ -74,8 +77,9 @@ class F0Track(View):
     def __repr__(self) -> str:
         n_channels, n_windows = self.f0.shape
         voiced = self.voiced
+        share = f"{voiced.mean():.0%}" if voiced.size else "0%"
         f0_range = f", F0 {self.f0[voiced].min():.0f}-{self.f0[voiced].max():.0f} Hz" if voiced.any() else ""
-        return f"F0Track({n_windows} time windows, {n_channels} ch, {voiced.mean():.0%} voiced{f0_range})"
+        return f"F0Track({n_windows} time windows, {n_channels} ch, {share} voiced{f0_range})"
 
     def plot(self, ax: Axes | None = None, *, channel: int = 0, candidates: bool = False, **kwargs) -> Axes:
         """F0 against time (see :func:`~sonore.plotting.plot_f0_track`)."""
@@ -107,7 +111,10 @@ def f0_track(
        or filtered out. Every minimum below 1 is offered, so that the score
        alone decides voicing. A very regular voice has a minimum at every
        multiple of its period, so eight leave room for the period itself
-       (with four, a steady 300 Hz vowel could lose it).
+       (with four, a steady 300 Hz vowel could lose it), and, as in YIN,
+       the shortest-lag minimum within 0.1 of the deepest is always among
+       them (with ``f_hi`` raised, a sung 800 Hz vowel has more multiples in
+       range than there are candidates).
     2. **Refinement.** For a candidate f, a Blackman window three periods long;
        the instantaneous frequency of each of the first six harmonics is its
        phase advance over one sample, and the new F0 is the power-weighted
@@ -126,10 +133,21 @@ def f0_track(
        another one at a whole multiple of its frequency (an octave, a
        twelfth, ...) scores at least as well, less ``subharmonic_margin``:
        anything periodic with period T is also periodic with period 2T, 3T,
-       ..., and without this rule a female voice is tracked an octave low on
-       about 1% of time windows, and a steady synthetic vowel at 300 Hz at a
-       third of its F0. No
-       smoothing follows.
+       ..., and without this rule a female voice is tracked low on about
+       1.4% of the time windows where it and the reference both say voiced
+       (measured on the FDA database), and a steady synthetic vowel at
+       300 Hz at a half or a third of its F0. No smoothing follows.
+
+    Where each stage comes from: the candidates are YIN's (de Cheveigné &
+    Kawahara, 2002); the refinement is WORLD's StoneMask (Morise et al.,
+    2009); the score is the normalized correlation one period apart, as in
+    RAPT (Talkin, 1995) and Praat (Boersma, 1993); the tracking is the
+    dynamic programming of RAPT and Praat, with an unvoiced state and costs
+    for octave jumps and voicing changes. The rule against whole multiples
+    is sonore's own. The combination is no single published tracker; pYIN
+    (Mauch & Dixon, 2014), YIN candidates followed by a Viterbi pass over
+    pitch and voicing, is the closest. Design and measurements in
+    ``docs/design/views/f0.md``.
 
     On synthetic vowels the refined F0 is within 0.12% of the truth on a one
     octave per second glide and a 5.5 Hz vibrato. Against laryngograph
@@ -145,7 +163,13 @@ def f0_track(
         The sound; each channel is tracked separately.
     f_lo, f_hi
         The search range [Hz]. The defaults cover speaking voices; raise
-        ``f_hi`` for singing.
+        ``f_hi`` for singing. Refined candidates are kept from 0.9 ``f_lo``
+        to 1.1 ``f_hi``, so the F0 can come out up to 10% outside the range.
+        Lowering ``f_lo`` below the default is not reliable: below about
+        55 Hz a voice with strong formants can be tracked near its first
+        formant's ringing, which over three of its own short periods looks
+        periodic, and the multiple rule then counts the true F0 as a
+        subharmonic of it.
     hop
         Spacing between time windows [s].
     threshold
@@ -236,6 +260,15 @@ def _candidates(x, t, fs, f_lo, f_hi):
         cmnd_before, cmnd_at_lag, cmnd_after = cmnd[:, lags - 1], cmnd[:, lags], cmnd[:, lags + 1]
         is_min = (cmnd_at_lag < cmnd_before) & (cmnd_at_lag <= cmnd_after) & (cmnd_at_lag < 1)
         ranked_pos = np.argsort(np.where(is_min, cmnd_at_lag, np.inf), axis=1)[:, :MAX_CANDIDATES]
+        # A steady high voice has a dip at every multiple of its period, all
+        # about equally deep, and there can be more of them than candidates.
+        # As in YIN, the shortest-lag dip nearly as deep as the deepest is
+        # always offered (in place of the last), so the period itself is.
+        deepest = np.min(np.where(is_min, cmnd_at_lag, np.inf), axis=1, keepdims=True)
+        near_deepest = is_min & (cmnd_at_lag <= deepest + NEAR_DEEPEST)
+        first_near = np.argmax(near_deepest, axis=1)
+        left_out = near_deepest.any(axis=1) & ~np.any(ranked_pos == first_near[:, None], axis=1)
+        ranked_pos[left_out, -1] = first_near[left_out]
         rows = np.arange(len(segments))[:, None]
         is_valid = is_min[rows, ranked_pos]
         min_before, min_value, min_after = (
@@ -343,6 +376,8 @@ def _periodicity(samples, candidate_times, candidate_f0s, fs):
 def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margin):
     """Cheapest path through (unvoiced, candidates...) per time window."""
     n_windows = len(cand)
+    if not n_windows:  # an empty sound
+        return np.zeros(0), np.zeros(0)
     f_states = np.concatenate([np.zeros((n_windows, 1)), np.nan_to_num(cand, nan=-1.0)], axis=1)
     local_cost = np.concatenate(
         [np.full((n_windows, 1), 1 - threshold), 1 - np.nan_to_num(score, nan=0.0)], axis=1
@@ -375,10 +410,9 @@ def _viterbi(cand, score, threshold, octave_cost, switch_cost, subharmonic_margi
         backpointer[i] = np.argmin(path_cost, axis=1)
         cost = path_cost[np.arange(path_cost.shape[0]), backpointer[i]] + local_cost[i]
     path = np.zeros(n_windows, int)
-    if n_windows:
-        path[-1] = int(np.argmin(cost))
-        for i in range(n_windows - 1, 0, -1):
-            path[i - 1] = backpointer[i][path[i]]
+    path[-1] = int(np.argmin(cost))
+    for i in range(n_windows - 1, 0, -1):
+        path[i - 1] = backpointer[i][path[i]]
     rows = np.arange(n_windows)
     f0 = np.where(path > 0, f_states[rows, path], 0.0)
     chosen_score = np.where(path > 0, np.nan_to_num(score, nan=0.0)[rows, np.maximum(path - 1, 0)], 0.0)
@@ -449,10 +483,11 @@ def scale_f0(contour: ContourLike, ratio: float, *, range: float = 1.0) -> Conto
 
 def _scaled_candidates(track: F0Track, ratio: float, spread: float) -> np.ndarray:
     """The candidates moved by the same map as the chosen F0 (each channel's
-    median of voiced F0 as the center)."""
+    median of voiced F0 as the center). A channel with no voiced time window
+    has no center, so its candidates are only multiplied by ``ratio``."""
+    out = track.candidates * ratio
     if spread == 1:
-        return track.candidates * ratio
-    out = track.candidates.copy()
+        return out
     for channel, f0_row in enumerate(track.f0):
         voiced = f0_row > 0
         if voiced.any():

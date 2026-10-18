@@ -65,6 +65,36 @@ class TestScaleF0:
         np.testing.assert_array_equal(scaled.f0, track.f0 * 2.0)
         np.testing.assert_array_equal(scaled.candidates, track.candidates * 2.0)
 
+    def test_anything_with_t_and_f0_comes_back_as_a_pair(self):
+        from types import SimpleNamespace
+
+        contour = SimpleNamespace(t=np.arange(3) * HOP, f0=np.array([0.0, 100.0, 110.0]))
+        times, values = so.scale_f0(contour, 2.0)
+        assert times is contour.t
+        np.testing.assert_array_equal(values, [0.0, 200.0, 220.0])
+        with pytest.raises(TypeError):
+            so.scale_f0(np.ones(3), 2.0)
+
+    def test_candidates_follow_the_same_map_as_f0(self, vowel):
+        track = so.f0_track(vowel[0])
+        scaled = so.scale_f0(track, 1.5, range=2.0)
+        median = np.median(track.f0[track.voiced])
+        expected = median * 1.5 * (track.candidates / median) ** 2.0
+        np.testing.assert_allclose(scaled.candidates, expected)
+
+    def test_candidates_of_an_unvoiced_channel_follow_the_ratio(self, vowel):
+        sound = vowel[0]
+        both = so.Sound(
+            np.column_stack(
+                [sound.data[:, 0], 0.01 * np.random.default_rng(0).standard_normal(sound.n_samples)]
+            ),
+            sound.fs,
+        )
+        track = so.f0_track(both)
+        assert not track.voiced[1].any()
+        scaled = so.scale_f0(track, 1.5, range=2.0)
+        np.testing.assert_array_equal(scaled.candidates[1], track.candidates[1] * 1.5)
+
     def test_identity_is_the_contour_itself(self):
         contour = (np.arange(3) * HOP, np.array([0.0, 100.0, 110.0]))
         assert so.scale_f0(contour, 1.0) is contour

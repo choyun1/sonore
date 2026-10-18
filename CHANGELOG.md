@@ -175,6 +175,27 @@ version (0.x.y) only fixes bugs.
 - `views/modulation.py` opens with `ModulationSpectrum` (Singh & Theunissen,
   2003); the modulation filterbanks follow.
 
+### Fixed
+
+- `so.f0_track` with `f_hi` raised for singing: a steady high voice has a
+  dip at every multiple of its period, more than the eight candidates, and
+  the period itself could be left out, so a sung 600 to 1150 Hz vowel came
+  out at F0/2, F0/3 or unvoiced (9 of 18 test vowels and F0s). As in YIN,
+  the shortest-lag dip within 0.1 of the deepest is now always offered.
+  The laryngograph numbers are unchanged; on the sentences in `docs/speech`
+  the F0 changes on 0.1% of time windows, by at most 1.4%.
+- `so.f0_track` of an empty sound gives an empty track instead of raising
+  `IndexError`, and `so.scale_f0` with `range` other than 1 multiplies by
+  `ratio` the candidates of a channel with no voiced time window (they were
+  left unchanged).
+- The `f0_track` and `F0Track` docstrings: where each stage comes from
+  (YIN, StoneMask, RAPT and Praat; the multiple rule is sonore's own), the
+  candidates' shape (8 per time window, not 4), the measured effect of the
+  multiple rule, that the F0 can come out up to 10% outside `f_lo`-`f_hi`,
+  and that lowering `f_lo` below 60 Hz is not reliable. From audit sitting
+  12, with tests for every surviving deliberate break that changes the
+  output.
+
 ## [0.7.0] - 2026-10-14
 
 Sound quilts (`so.quilt`, `so.splice`) and event trains (`so.event_train`),
