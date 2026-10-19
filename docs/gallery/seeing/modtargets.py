@@ -299,7 +299,7 @@ for name, snd, drawn in carriers:
 # spoken words and animal calls roughly do, and imposed them on noise. That is a drawn
 # modulation spectrum too: a random phase on a spectrum makes a Gaussian field, and exponential
 # correlations make a spectrum peaked at zero rate and density, a single blob at the origin,
-# drawn in dB. `so.gaussian_spectrogram` draws such a spectrogram as `Envelopes`, and `to_sound`
+# drawn in dB. `so.gaussian_spectrogram` draws such a spectrogram as a `TemporalEnvelope`, and `to_sound`
 # puts it on the fine structure of a noise. The defaults are the paper's: 39 bands from 20 Hz to
 # 4 kHz and correlation lengths of about 8.8 ERB and 154 ms. The paper gives no spread for the
 # levels; the default standard deviation of 14.1 dB is carried over from an earlier
@@ -481,7 +481,7 @@ def band_twin(snd, rng=0):
     phase = np.random.default_rng(rng).uniform(0, 2 * np.pi, magnitude.shape)
     phase[0] = 0  # each band's mean stays
     rebuilt = np.fft.irfft(magnitude * np.exp(1j * phase), n=len(envelopes), axis=0)
-    twin_envelopes = so.Envelopes(np.maximum(rebuilt, 0), 1000, bank)
+    twin_envelopes = so.TemporalEnvelope(np.maximum(rebuilt, 0), 1000, bank)
     return (twin_envelopes * subbands.tfs()).to_sound()
 
 
@@ -565,15 +565,15 @@ fig, playhead = show(sound, f_lo=125)
 # - Elliott & Theunissen (2009). The modulation transfer function for speech intelligibility. *PLoS
 #   Comput. Biol.* 5(3), e1000302.
 #   [doi:10.1371/journal.pcbi.1000302](https://doi.org/10.1371/journal.pcbi.1000302).
-#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L281)
+#   [`modulation.ModulationSpectrum.with_gain`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L282)
 # - Griffin & Lim (1984). Signal estimation from modified short-time Fourier transform. *IEEE Trans.
 #   Acoust. Speech Signal Process.* 32(2), 236–243.
 #   [doi:10.1109/TASSP.1984.1164317](https://doi.org/10.1109/TASSP.1984.1164317).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L422)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L423)
 # - Hsu, Woolley, Fremouw & Theunissen (2004). Modulation power and phase spectrum of natural sounds
 #   enhance neural encoding performed by single auditory neurons. *J. Neurosci.* 24(41), 9201–9211.
 #   [doi:10.1523/JNEUROSCI.2449-04.2004](https://doi.org/10.1523/JNEUROSCI.2449-04.2004).
-#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L422)
+#   [`modulation.ModulationSpectrum.to_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/modulation.py#L423)
 # - McDermott & Simoncelli (2011). Sound texture perception via statistics of the auditory
 #   periphery. *Neuron* 71(5), 926–940.
 #   [doi:10.1016/j.neuron.2011.06.032](https://doi.org/10.1016/j.neuron.2011.06.032).

@@ -12,15 +12,14 @@ are in ``tools/check_voice_recipe_claims.py``.
 
 from __future__ import annotations
 
-from typing import Any
-
 import numpy as np
 
 from sonore.core.sound import Sound
 from sonore.core.utils import RNG, as_rng
 from sonore.frames.gabor import STFT
 from sonore.sources.waveforms import ContourLike, _contour_per_channel, gaussian_noise, harmonic_complex
-from sonore.views.spectral_envelope import GridEnvelope
+from sonore.views.spectral_envelope import EnvelopeFunction, SpectralEnvelope, _power_on_grid
+from sonore.views.view import TimeFrequencyGrid
 
 __all__ = ["source_filter_synthesize"]
 
@@ -30,8 +29,8 @@ _FADED_FROM = 0.9  # harmonic_complex fades its harmonics out from 0.9 f_max to 
 
 def source_filter_synthesize(
     f0: ContourLike,
-    envelope: Any,
-    aperiodicity: Any = None,
+    envelope: TimeFrequencyGrid | EnvelopeFunction,
+    aperiodicity: TimeFrequencyGrid | None = None,
     *,
     fs: float | None = None,
     duration: float | None = None,
@@ -67,23 +66,24 @@ def source_filter_synthesize(
         first (:func:`~sonore.views.f0.scale_f0`, a pitch change); the
         envelope stays, so the formants stay.
     envelope
-        A :class:`~sonore.views.spectral_envelope.SpectralEnvelope`, or any
-        envelope read as ``envelope(t, f)`` (power, shape ``(n_channels,
-        len(f), len(t))``), such as a
-        :class:`~sonore.views.spectral_envelope.GridEnvelope` or one moved by
-        :func:`~sonore.views.spectral_envelope.warp_frequency`. It is read at
-        the aperiodicity's times and frequencies. Without an aperiodicity it
-        must be held on a grid (``.t`` and ``.f``, as every envelope view is).
+        A :class:`~sonore.views.spectral_envelope.SpectralEnvelope` from any
+        estimator, or any envelope read as ``envelope(t, f)`` (power, shape
+        ``(n_channels, len(f), len(t))``): another
+        :class:`~sonore.views.view.TimeFrequencyGrid`, one moved by
+        :func:`~sonore.views.spectral_envelope.warp_frequency`, or a
+        function. It is read at the aperiodicity's times and frequencies.
+        Without an aperiodicity it must be held on a grid (``.t`` and
+        ``.f``, as every envelope view is).
     aperiodicity
-        An :class:`~sonore.views.aperiodicity.Aperiodicity`, or anything with
-        its grid: ``.t``, ``.f``, ``.fs`` and ``.data`` (the amplitude ratio,
-        whose square is the noise share). It sets the grid and the sampling
-        rate. None (the default) is all-or-nothing voicing: no noise in the
-        time windows the track calls voiced (the nearest given F0 above 0),
-        all noise in the others.
+        An :class:`~sonore.views.aperiodicity.Aperiodicity`, or any
+        :class:`~sonore.views.view.TimeFrequencyGrid` with an ``fs`` whose
+        ``data`` is the amplitude ratio (its square the noise share). It sets
+        the grid and the sampling rate. None (the default) is all-or-nothing
+        voicing: no noise in the time windows the track calls voiced (the
+        nearest given F0 above 0), all noise in the others.
     fs
         The sampling rate, needed only without an aperiodicity when the
-        envelope has no ``.fs`` (a :class:`~sonore.views.spectral_envelope.GridEnvelope`).
+        envelope has no ``fs`` (one built by hand).
     duration
         In seconds; by default one hop past the grid's last time window.
     rng
@@ -96,24 +96,27 @@ def source_filter_synthesize(
         track_times, track_values = _contour_per_channel(f0, n_channels, "the envelope")
         share = _all_or_nothing(track_times, track_values, times, len(freqs))
     else:
-        if fs is not None and fs != aperiodicity.fs:
-            raise ValueError(f"fs is {fs:g} Hz but the aperiodicity's is {aperiodicity.fs:g} Hz")
-        fs = float(aperiodicity.fs)
+        own_fs = getattr(aperiodicity, "fs", None)
+        if own_fs is None:
+            raise TypeError("the aperiodicity has no fs; it sets the sampling rate of the synthesis")
+        if fs is not None and fs != own_fs:
+            raise ValueError(f"fs is {fs:g} Hz but the aperiodicity's is {own_fs:g} Hz")
+        fs = float(own_fs)
         times, freqs = np.asarray(aperiodicity.t, dtype=float), np.asarray(aperiodicity.f, dtype=float)
         share = np.asarray(aperiodicity.data, dtype=float) ** 2
         track_times, track_values = _contour_per_channel(f0, share.shape[0], "the aperiodicity")
     hop = times[1] - times[0] if len(times) > 1 else 0.005
     if duration is None:
         duration = times[-1] + hop
-    power = _on_grid_of(envelope, times, freqs, share.shape)
+    power = _power_on_grid(envelope, times, freqs, share.shape)
     n_channels = share.shape[0]
     generator = as_rng(rng)
     channels = []
     for channel in range(n_channels):
         track = (track_times, track_values[channel])
-        harmonic_power = GridEnvelope(power[channel] * (1 - share[channel]), times, freqs)
+        harmonic_power = SpectralEnvelope(power[channel] * (1 - share[channel]), times, freqs, fs=fs)
         harmonics = _harmonics(duration, fs, track, harmonic_power)
-        noise_power = GridEnvelope(power[channel] * share[channel], times, freqs)
+        noise_power = SpectralEnvelope(power[channel] * share[channel], times, freqs, fs=fs)
         channels.append(
             harmonics + _shaped_noise(duration, fs, noise_power, generator, win_dur, hop)[: len(harmonics)]
         )
@@ -125,8 +128,8 @@ def _envelope_grid(envelope, fs):
     held on a grid, for a synthesis without an aperiodicity."""
     if not (hasattr(envelope, "t") and hasattr(envelope, "f") and hasattr(envelope, "data")):
         raise TypeError(
-            "without an aperiodicity the envelope must be held on a grid (.t, .f and .data, as"
-            " SpectralEnvelope and GridEnvelope are); pass an aperiodicity to read any other envelope"
+            "without an aperiodicity the envelope must be held on a grid (.t, .f and .data, as a"
+            " SpectralEnvelope is); pass an aperiodicity to read any other envelope"
         )
     own_fs = getattr(envelope, "fs", None)
     if fs is None:
@@ -180,29 +183,3 @@ def _shaped_noise(duration, fs, noise_power, generator, win_dur, hop):
     noise = STFT(gaussian_noise(duration, fs, rng=generator), win_dur=win_dur, hop_dur=hop)
     noise.data = noise.data * np.sqrt(noise_power(noise.t, noise.f))
     return noise.to_sound().data[:, 0]
-
-
-def _on_grid_of(envelope, times, freqs, shape) -> np.ndarray:
-    """The envelope's power at the aperiodicity's times and frequencies, shape
-    ``(n_channels, n_freqs, n_windows)``: its own data if it is held on that grid
-    already (an envelope measured with the same track), otherwise read there as
-    ``envelope(t, f)``."""
-    held = getattr(envelope, "data", None)
-    if (
-        held is not None
-        and np.shape(held) == shape
-        and hasattr(envelope, "t")
-        and hasattr(envelope, "f")
-        and np.array_equal(envelope.t, times)
-        and np.array_equal(envelope.f, freqs)
-    ):
-        return np.asarray(held, dtype=float)
-    if not callable(envelope):
-        raise TypeError("envelope must be a SpectralEnvelope or be read as envelope(t, f)")
-    power = np.asarray(envelope(times, freqs), dtype=float)
-    n_channels = shape[0]
-    if power.ndim != 3 or power.shape[1:] != shape[1:] or power.shape[0] not in (1, n_channels):
-        raise ValueError(
-            f"envelope(t, f) gave shape {power.shape}; expected (n_channels, {shape[1]}, {shape[2]})"
-        )
-    return np.repeat(power, n_channels, axis=0) if power.shape[0] != n_channels else power

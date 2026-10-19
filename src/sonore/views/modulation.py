@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
 
     from sonore.frames.filterbank import Filterbank, Subbands
-    from sonore.views.envelopes import Envelopes, _EnvelopeAnalysis
+    from sonore.views.temporal_envelope import TemporalEnvelope, _EnvelopeAnalysis
 
 __all__ = [
     "ModulationSpectrum",
@@ -73,7 +73,7 @@ class ModulationSpectrum(View):
     is w.r.t. *linear* frequency (cycles/kHz). :meth:`octave` uses subband
     envelopes on a log-frequency axis (cycles/octave), the axis on which
     ripples (:mod:`sonore.sources.ripples`) are defined; more generally, any
-    :class:`~sonore.views.envelopes.Envelopes` has ``.modulation_spectrum()``.
+    :class:`~sonore.views.temporal_envelope.TemporalEnvelope` has ``.modulation_spectrum()``.
 
     Sign convention: a ripple ``sin(2*pi*(rate*t + density*x))`` appears at
     ``(+rate, +density)``. Only non-negative spectral modulations are stored
@@ -83,7 +83,7 @@ class ModulationSpectrum(View):
     taper applied in time, and only the level (dB, floored) is kept, so the
     phase of the modulations is dropped and no envelope can be read back.
 
-    A spectrum made from :class:`~sonore.views.envelopes.Envelopes` (by
+    A spectrum made from a filterbank's :class:`~sonore.views.temporal_envelope.TemporalEnvelope` (by
     :meth:`octave` or ``env.modulation_spectrum()``) also keeps, for
     :meth:`to_sound`, the magnitude of the untapered transform on the whole
     plane, the envelope's mean, and how the envelopes were made. Edit it with
@@ -102,7 +102,7 @@ class ModulationSpectrum(View):
         "carrier='tone' draws a random modulation phase from rng and puts each envelope on a steady tone "
         "at its band's center."
     )
-    _analysis: _EnvelopeAnalysis | None = None  # set when made from Envelopes or blobs
+    _analysis: _EnvelopeAnalysis | None = None  # set when made from band envelopes or blobs
     _rms_depth: float | None = None  # set by from_blobs, which refuses to clip
     _long_term_phase: np.ndarray | None = None  # phase of the zero-rate column, kept by random draws
 
@@ -208,7 +208,7 @@ class ModulationSpectrum(View):
         """
         from sonore.core.utils import n_samples
         from sonore.frames.filterbank import cosine_filterbank
-        from sonore.views.envelopes import _EnvelopeAnalysis
+        from sonore.views.temporal_envelope import _EnvelopeAnalysis
 
         if isinstance(blobs, ModulationBlob):
             blobs = [blobs]
@@ -259,16 +259,17 @@ class ModulationSpectrum(View):
         n_density, n_times = self._magnitude.shape if shape is None else shape
         analysis = self._envelope_analysis("with_gain")
         rate = np.fft.fftfreq(n_times, 1 / analysis.fs)[None, :]
-        spacing = cast(float, analysis.filterbank.spacing)  # never None: Envelopes.modulation_spectrum checks
+        # never None: TemporalEnvelope.modulation_spectrum checks
+        spacing = cast(float, analysis.filterbank.spacing)
         density = np.fft.fftfreq(n_density, spacing)[:, None]
         return rate, density
 
     def _envelope_analysis(self, what: str) -> _EnvelopeAnalysis:
         """How this spectrum's envelopes were made; ``what`` needs it, and
-        is named in the error when the spectrum was not made from Envelopes."""
+        is named in the error when the spectrum was not made from band envelopes."""
         if self._analysis is None:
             raise TypeError(
-                f"{what} needs a modulation spectrum made from Envelopes (ModulationSpectrum.octave or "
+                f"{what} needs a modulation spectrum made from band envelopes (ModulationSpectrum.octave or "
                 "env.modulation_spectrum()); this one was made from an STFT or an array"
             )
         return self._analysis
@@ -312,7 +313,7 @@ class ModulationSpectrum(View):
         rng: RNG = None,
         phase: np.ndarray | None = None,
         quiet: bool = False,
-    ) -> Envelopes:
+    ) -> TemporalEnvelope:
         """The envelopes this spectrum describes, given a modulation phase.
 
         The stored magnitudes and mean fix everything but the phase of the
@@ -375,10 +376,10 @@ class ModulationSpectrum(View):
             own = amp_to_db(own + 1e-12 * (own.max() or 1.0))
         return np.angle(np.fft.fft2(own.T - own.mean()))
 
-    def _rebuild(self, phase: np.ndarray, quiet: bool = False) -> Envelopes:
+    def _rebuild(self, phase: np.ndarray, quiet: bool = False) -> TemporalEnvelope:
         """Envelopes from the stored magnitudes and mean and this phase;
         ``quiet`` clips without a word (inside a search)."""
-        from sonore.views.envelopes import Envelopes
+        from sonore.views.temporal_envelope import TemporalEnvelope
 
         analysis = self._envelope_analysis("to_envelopes")
         bank, n_env = analysis.filterbank, analysis.n_samples
@@ -403,7 +404,7 @@ class ModulationSpectrum(View):
             values = np.maximum(rebuilt, 0.0)
         bands = np.zeros((n_env, bank.n_filters))
         bands[:, kept] = values.T
-        return Envelopes(bands, analysis.fs, bank)
+        return TemporalEnvelope(bands, analysis.fs, bank)
 
     def iterate(self, sound: Sound) -> Sound:
         """One step of the search ``to_sound(iterations=n)`` takes: analyze
@@ -429,7 +430,7 @@ class ModulationSpectrum(View):
     ) -> Sound:
         """A sound whose envelopes have this modulation spectrum: the
         envelopes of :meth:`to_envelopes`, put on the carrier by
-        :meth:`Envelopes.to_sound <sonore.views.envelopes.Envelopes.to_sound>`.
+        :meth:`TemporalEnvelope.to_sound <sonore.views.temporal_envelope.TemporalEnvelope.to_sound>`.
 
         A modulation spectrum lacks two kinds of phase, and the carrier
         supplies both:
@@ -443,8 +444,8 @@ class ModulationSpectrum(View):
           whatever the sound is (a noise of any color, a sentence, a harmonic
           complex), or a steady tone at each band's center (``"tone"``).
 
-        Unlike :meth:`Envelopes.to_sound
-        <sonore.views.envelopes.Envelopes.to_sound>`, there is no ``"noise"``
+        Unlike :meth:`TemporalEnvelope.to_sound
+        <sonore.views.temporal_envelope.TemporalEnvelope.to_sound>`, there is no ``"noise"``
         carrier here: bands of noise keep random envelopes of their own, which
         would add modulation that the spectrum does not have. For a noise,
         pass one: ``to_sound(carrier=so.gaussian_noise(duration, fs),

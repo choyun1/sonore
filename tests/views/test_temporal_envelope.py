@@ -1,4 +1,4 @@
-"""Envelope and Envelopes types."""
+"""TemporalEnvelope: one envelope, or a filterbank's envelopes."""
 
 import numpy as np
 import pytest
@@ -14,9 +14,14 @@ class TestEnvelopes:
         sb = so.cosine_filterbank(8).analyze(self.x)
         assert isinstance(sb[3], so.Sound) and all(isinstance(b, so.Sound) for b in sb)
         assert isinstance(sb.tfs(), so.Subbands)  # fine structure is audible
-        assert isinstance(sb.envelopes(), so.Envelopes)  # envelopes are not
-        assert isinstance(sb.envelopes()[3], so.Envelope)
-        assert isinstance(self.x.envelope(), so.Envelope)
+        envelopes = sb.envelopes()
+        assert isinstance(envelopes, so.TemporalEnvelope) and envelopes.filterbank is sb.filterbank
+        assert isinstance(envelopes[3], so.TemporalEnvelope) and envelopes[3].filterbank is None
+        assert isinstance(self.x.envelope(), so.TemporalEnvelope)
+        assert envelopes.n_bands == 10 and envelopes[3].n_bands == 1
+        assert len(envelopes) == len(self.x)  # samples, as for a Sound; bands are counted by n_bands
+        assert len(list(envelopes)) == 10
+        assert isinstance(envelopes, so.View)
 
     def test_hilbert_decomposition_is_exact(self):
         sb = so.cosine_filterbank(8).analyze(self.x)
@@ -48,16 +53,16 @@ class TestEnvelopes:
 
     def test_envelope_arithmetic(self):
         t = np.arange(FS // 2) / FS
-        am = so.Envelope(1 + 0.5 * np.sin(2 * np.pi * 4 * t), FS)
+        am = so.TemporalEnvelope(1 + 0.5 * np.sin(2 * np.pi * 4 * t), FS)
         np.testing.assert_allclose((am * self.x).data[:, 0], am.data[:, 0] * self.x.data[:, 0])
         np.testing.assert_allclose((self.x * am).data, (am * self.x).data)
-        assert isinstance(1 + 0.5 * am, so.Envelope) and isinstance(am * am, so.Envelope)
+        assert isinstance(1 + 0.5 * am, so.TemporalEnvelope) and isinstance(am * am, so.TemporalEnvelope)
         with pytest.raises(TypeError):
             self.x + am  # adding an envelope to a sound means nothing
         with pytest.raises(ValueError, match="non-negative"):
-            so.Envelope(np.sin(2 * np.pi * 4 * t), FS)
+            so.TemporalEnvelope(np.sin(2 * np.pi * 4 * t), FS)
         with pytest.raises(ValueError, match="durations differ"):
-            so.Envelope(np.ones(FS), FS) * self.x
+            so.TemporalEnvelope(np.ones(FS), FS) * self.x
 
     def test_modulation_spectrum_from_envelopes(self):
         x = so.harmonic_complex(0.5, FAST, 150, harmonics=np.arange(1, 30), phases="random", rng=0)
@@ -71,7 +76,7 @@ class TestEnvelopes:
     def test_rendered_pattern_matches_its_parameters(self):
         fb = so.cosine_filterbank(f_lo=250, f_hi=8000, spacing=1 / 12, scale="octave")
         env = so.Ripple(-6, 1.5).render(fb, 2.0, 1000)
-        assert isinstance(env, so.Envelopes)
+        assert isinstance(env, so.TemporalEnvelope)
         rate, density = env.modulation_spectrum().peak()
         assert rate == pytest.approx(-6, abs=0.5) and density == pytest.approx(1.5, abs=0.1)
 
@@ -132,15 +137,20 @@ class TestToSound:
         np.testing.assert_allclose(out.data, env.data * fine.data)
         # the carrier's own envelope is gone: any level of carrier gives the same sound
         np.testing.assert_allclose(env.to_sound(carrier=3 * self.carrier).data, out.data, atol=1e-12)
-        with pytest.raises(TypeError, match="Sound"):
-            env.to_sound(carrier="noise")
+        # a single envelope on noise: white noise's fine structure, at the envelope's rate
+        noisy = env.to_sound(carrier="noise", rng=0)
+        assert noisy.fs == FS and len(noisy) == len(env)
+        noise = so.gaussian_noise(env.duration, FS, rng=0)
+        np.testing.assert_allclose(noisy.data, (env * (noise / noise.envelope())).data)
+        with pytest.raises(TypeError, match="filterbank"):
+            env.to_sound(carrier="tone")
 
     def test_envelopes_are_envelope_to_sound_in_every_band(self):
         fb = so.cosine_filterbank(8)
         env = fb.analyze(self.x).envelopes(lowpass=50)
         whole = env.to_sound(carrier=self.carrier)
         carrier_bands = fb.analyze(self.carrier)
-        bands = np.stack([env[i].to_sound(carrier=carrier_bands[i]).data for i in range(len(env))], axis=1)
+        bands = np.stack([env[i].to_sound(carrier=carrier_bands[i]).data for i in range(env.n_bands)], axis=1)
         per_band = fb.synthesize(so.Subbands(bands, FS, fb))
         # away from the ends, where only the bands' padding differs, they agree to 0.1%
         middle = slice(FS // 10, 4 * FS // 10)
@@ -186,22 +196,22 @@ class TestToSound:
 
 class TestEnvelope:
     t = np.arange(FS // 2) / FS
-    am = so.Envelope(1 + 0.5 * np.sin(2 * np.pi * 4 * np.arange(FS // 2) / FS), FS)
+    am = so.TemporalEnvelope(1 + 0.5 * np.sin(2 * np.pi * 4 * np.arange(FS // 2) / FS), FS)
 
     def test_round_off_negatives_are_clipped_and_real_ones_refused(self):
         values = np.ones(10)
         values[3] = -1e-10  # within 1e-9 of the largest value: round-off
-        env = so.Envelope(values, FS)
+        env = so.TemporalEnvelope(values, FS)
         assert env.data[3, 0] == 0.0
         values[3] = -1e-6
         with pytest.raises(ValueError, match="non-negative"):
-            so.Envelope(values, FS)
+            so.TemporalEnvelope(values, FS)
 
     def test_non_finite_values_are_refused(self):
         with pytest.raises(ValueError, match="finite"):
-            so.Envelope([1.0, 0.0, 1.0], FS) / 0
+            so.TemporalEnvelope([1.0, 0.0, 1.0], FS) / 0
         with pytest.raises(ValueError, match="finite"):
-            so.Envelope([1.0, np.nan], FS)
+            so.TemporalEnvelope([1.0, np.nan], FS)
 
     def test_shape_and_axes(self):
         assert self.am.data.shape == (FS // 2, 1) and not self.am.data.flags.writeable
@@ -209,17 +219,18 @@ class TestEnvelope:
         assert self.am.duration == pytest.approx(0.5)
         np.testing.assert_allclose(self.am.db, 20 * np.log10(self.am.data))
         with pytest.raises(ValueError, match="1-D or 2-D"):
-            so.Envelope(np.ones((4, 2, 2)), FS)
+            so.TemporalEnvelope(np.ones((4, 2, 2)), FS)
+        assert repr(self.am) == f"TemporalEnvelope(0.500 s, {FS} Hz, 1 ch)"
 
     def test_arithmetic_values(self):
-        other = so.Envelope(np.full(FS // 2, 2.0), FS)
+        other = so.TemporalEnvelope(np.full(FS // 2, 2.0), FS)
         np.testing.assert_allclose((self.am / 2).data, self.am.data / 2)
         np.testing.assert_allclose((self.am / other).data, self.am.data / 2)
         np.testing.assert_allclose((self.am + 1).data, self.am.data + 1)
         np.testing.assert_allclose((1 + self.am).data, self.am.data + 1)
         np.testing.assert_allclose((self.am * other).data, 2 * self.am.data)
         with pytest.raises(ValueError, match="share fs and length"):
-            self.am * so.Envelope(np.ones(FS // 4), FS)
+            self.am * so.TemporalEnvelope(np.ones(FS // 4), FS)
         with pytest.raises(TypeError):
             self.am * True
 
@@ -249,19 +260,19 @@ class TestEnvelope:
         np.testing.assert_allclose(applied[before_end], self.am.data[before_end, 0], atol=2e-3)
         assert applied[-1] == pytest.approx(self.am.data[-1, 0], abs=0.02)
         # an envelope one sample shorter at the same rate is held at its end
-        short = so.Envelope(self.am.data[:-1], FS)
+        short = so.TemporalEnvelope(self.am.data[:-1], FS)
         assert (short * sound).data[-1, 0] == pytest.approx(self.am.data[-2, 0])
 
     def test_duration_must_agree_within_a_sample_and_a_half(self):
         sound = so.Sound(np.ones(FS // 2), FS)
         coarse = self.am.resample(1000)
-        so.Envelope(np.ones(501), 1000) * sound  # one sample over: fine
+        so.TemporalEnvelope(np.ones(501), 1000) * sound  # one sample over: fine
         with pytest.raises(ValueError, match="durations differ"):
-            so.Envelope(np.ones(502), 1000) * sound
+            so.TemporalEnvelope(np.ones(502), 1000) * sound
         assert len(coarse * sound) == len(sound)
 
     def test_dividing_a_silent_envelope_out_stays_finite(self):
-        silent = so.Envelope(np.zeros(FS // 2), FS)
+        silent = so.TemporalEnvelope(np.zeros(FS // 2), FS)
         divided = so.Sound(np.ones(FS // 2), FS) / silent
         assert np.all(np.isfinite(divided.data))
 
@@ -273,7 +284,7 @@ class TestEnvelope:
         n = int(round(0.5 * fs_odd))
         k = np.arange(n)
         # different values at the two ends, which the FFT would otherwise wrap
-        ramp = so.Envelope(1 + k / (n - 1) + 0.5 * np.sin(2 * np.pi * 4 * k / fs_odd), fs_odd)
+        ramp = so.TemporalEnvelope(1 + k / (n - 1) + 0.5 * np.sin(2 * np.pi * 4 * k / fs_odd), fs_odd)
         sound = so.Sound(np.ones(FS // 2), FS)
         start = time.perf_counter()
         applied = (ramp * sound).data[:, 0]
@@ -306,11 +317,36 @@ class TestEnvelopesBank:
         env = self.sb.envelopes()
         np.testing.assert_allclose((env * 2).data, 2 * env.data)
         np.testing.assert_allclose((2 * env).data, 2 * env.data)
-        for other in (True, env, so.Envelope(np.ones(len(self.x)), FS)):
+        np.testing.assert_allclose((env * env).data, env.data**2)
+        np.testing.assert_allclose((env / env).data[FS // 10 : -FS // 10, 1:-1], 1.0)
+        for other in (True, so.TemporalEnvelope(np.ones(len(self.x)), FS)):
             with pytest.raises(TypeError):
                 env * other
             with pytest.raises(TypeError):
                 other * env
+        with pytest.raises(ValueError, match="padding"):
+            env * so.cosine_filterbank(8).analyze(self.x, pad=0).envelopes()
+
+    def test_banded_envelope_times_a_sound_goes_through_the_bank(self):
+        # env * snd splits the sound with the filterbank, multiplies band by band and sums back,
+        # so an envelope of ones gives the sound back and the sound's own envelopes square it
+        env = self.sb.envelopes()
+        ones = so.TemporalEnvelope(np.ones(env._full.shape), FS, env.filterbank, pad=env.pad)
+        np.testing.assert_allclose((ones * self.x).data, self.x.data, atol=1e-9)
+        squared = env * self.x
+        expected = (env * self.sb).to_sound()
+        np.testing.assert_allclose(squared.data, expected.data, atol=1e-9)
+        np.testing.assert_allclose((self.x * env).data, squared.data)
+        with pytest.raises(TypeError, match="single envelope"):
+            self.x / env
+        with pytest.raises(TypeError, match="filterbank"):
+            self.x.envelope().without_edges()
+        with pytest.raises(TypeError, match="filterbank"):
+            self.x.envelope().modulation_spectrum()
+        with pytest.raises(TypeError, match="filterbank"):
+            self.x.envelope()[0]
+        with pytest.raises(TypeError, match="filterbank"):
+            _ = self.x.envelope().cfs
 
     def test_modulation_spectrum_averages_channels(self):
         stereo = so.Sound(np.column_stack([self.x.data[:, 0], 0.5 * self.x.data[:, 0]]), FS)

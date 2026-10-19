@@ -229,7 +229,7 @@ def synthesize(synth, sound, track, envelope, aperiodicity, grid):
     if synth == "source_filter_synthesize":
         n_fft = aperiodicity.n_fft
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
-        on_grid = SpectralEnvelope(envelope(grid, freqs), grid, FS, np.nan)
+        on_grid = SpectralEnvelope(envelope(grid, freqs), grid, freqs, fs=FS)
         return so.source_filter_synthesize(track, on_grid, aperiodicity, duration=sound.duration, rng=0)
     amplitude = pointwise_amplitude(envelope, grid, np.arange(0, FS / 2 + 1, 10.0))
     return so.harmonic_complex(sound.duration, FS, track, amplitudes=amplitude)
@@ -363,7 +363,7 @@ def part3():
     truth = TrueEnvelope(formants)
     for n_fft in (1024, 4096, 16384):  # 1024 is pitch_adaptive_envelope's FFT size at 16 kHz
         freqs = np.arange(n_fft // 2 + 1) * FS / n_fft
-        envelope = SpectralEnvelope(truth(grid, freqs), grid, FS, np.nan)
+        envelope = SpectralEnvelope(truth(grid, freqs), grid, freqs, fs=FS)
         quiet = Aperiodicity(np.full_like(envelope.data, 1e-3), grid, FS, "none")
         out = so.source_filter_synthesize(track, envelope, quiet, duration=sound.duration, rng=0)
         harmonic_freqs, out_db = harmonic_levels_db(out, 150.0)

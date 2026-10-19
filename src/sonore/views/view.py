@@ -21,12 +21,15 @@ with :attr:`View.no_plot`, a sentence naming what to plot instead.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
+    import numpy as np
+    from numpy.typing import ArrayLike
+
     from sonore.core.sound import Sound
 
-__all__ = ["NotInvertibleError", "View"]
+__all__ = ["NotInvertibleError", "TimeFrequencyGrid", "View"]
 
 _NO_ROUTE = "sonore has no canonical route from it back to a sound yet."
 
@@ -35,6 +38,29 @@ class NotInvertibleError(NotImplementedError):
     """Raised by :meth:`View.synthesize`, and by :meth:`View.to_sound` on a
     view with no route back: the view keeps too little of a sound for any
     sound to be recovered from it alone."""
+
+
+@runtime_checkable
+class TimeFrequencyGrid(Protocol):
+    """Anything held as values on a grid of times and frequencies and read at
+    any point: ``t`` [s] and ``f`` [Hz] are the grid, ``data`` has shape
+    ``(n_channels, len(f), len(t))``, and ``view(t, f)`` gives the values at
+    times ``t`` and frequencies ``f`` with shape ``(n_channels, len(f),
+    len(t))``. :class:`~sonore.views.spectral_envelope.SpectralEnvelope` and
+    :class:`~sonore.views.aperiodicity.Aperiodicity` are two; a user's own
+    class with these four members is a third, without inheriting anything.
+    The functions that take any such view
+    (:func:`~sonore.sources.source_filter.source_filter_synthesize`,
+    :func:`~sonore.views.spectral_envelope.warp_frequency`,
+    :func:`~sonore.sources.waveforms.harmonic_complex`,
+    :meth:`Aperiodicity.bands <sonore.views.aperiodicity.Aperiodicity.bands>`)
+    are typed with it."""
+
+    t: np.ndarray
+    f: np.ndarray
+    data: np.ndarray
+
+    def __call__(self, t: ArrayLike, f: ArrayLike) -> np.ndarray: ...
 
 
 class View:

@@ -233,7 +233,7 @@ def test_mean_is_never_negative_and_silence_has_no_depth():
     level = np.where(
         t < 1, 1 + 0.5 * np.sin(2 * np.pi * 8 * t), 1e-18 * (1 + 0.5 * np.sin(2 * np.pi * 8 * t))
     )
-    envelopes = so.Envelopes(np.repeat(level[:, None], fb.n_filters, axis=1), FE, fb)
+    envelopes = so.TemporalEnvelope(np.repeat(level[:, None], fb.n_filters, axis=1), FE, fb)
     msg = so.ModulationSpectrogram(envelopes, f_lo=4.0, f_hi=16.0)
     assert np.all(msg.mean >= 0)
     late = msg.t > 2

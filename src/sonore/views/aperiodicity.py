@@ -23,15 +23,17 @@ from sonore.sources.waveforms import _contour_per_channel
 from sonore.views.spectral_envelope import (
     _FLOOR_F0,
     _POWER_FLOOR,
-    SpectralEnvelope,
     _envelope_fft_size,
-    _FrequencyView,
+    _fft_frequencies,
+    _GridView,
     _hann,
     _power_of_two_above,
+    _power_on_grid,
     _smooth_rectangular,
     _unit_energy_power,
     _windowed_segment,
 )
+from sonore.views.view import TimeFrequencyGrid
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
@@ -60,14 +62,16 @@ _CORRECTION_DB = 8.0  # the bias measured by tools/check_paper_vocoder_claims.py
 _NUTTALL = (0.3635819, 0.4891775, 0.1365995, 0.0106411)
 
 
-class Aperiodicity(_FrequencyView):
+class Aperiodicity(_GridView):
     """An aperiodicity, from :func:`band_aperiodicity` or :func:`harmonic_aperiodicity`:
     per frequency and time window, how much of the power is noise rather than
     harmonics. Stored as WORLD stores it, an amplitude ratio between 0 and
-    1 (``data``, shape ``(n_channels, n_freqs, n_windows)``): its square
-    :attr:`share` is the share of the power that is noise, which is what
-    :func:`~sonore.sources.source_filter.source_filter_synthesize` uses. ``method`` names
-    the measure that made it ("D4C" or "harmonic residual").
+    1 (``data``, shape ``(n_channels, n_freqs, n_windows)``) on the FFT grid
+    of ``n_fft // 2 + 1`` frequencies :attr:`f` from 0 to ``fs / 2``: its
+    square :attr:`share` is the share of the power that is noise, which is
+    what :func:`~sonore.sources.source_filter.source_filter_synthesize` uses.
+    ``method`` names the measure that made it ("D4C" or "harmonic residual").
+    Calling it, ``ap(t, f)``, reads the ratio at any times and frequencies.
     """
 
     discards = (
@@ -80,7 +84,10 @@ class Aperiodicity(_FrequencyView):
     )
 
     def __init__(self, data: np.ndarray, t: np.ndarray, fs: float, method: str):
-        super().__init__(data, t, fs)
+        data = np.asarray(data, dtype=float)
+        self.n_fft = 2 * (data.shape[-2] - 1)
+        self.fs = float(fs)
+        super().__init__(data, t, _fft_frequencies(self.fs, self.n_fft))
         self.method = method
 
     def __repr__(self) -> str:
@@ -97,13 +104,17 @@ class Aperiodicity(_FrequencyView):
         """The noise share in dB, ``20 log10 data``."""
         return 20 * np.log10(self.data)
 
-    def bands(self, edges: Sequence[float], *, envelope: SpectralEnvelope | None = None) -> np.ndarray:
+    def bands(self, edges: Sequence[float], *, envelope: TimeFrequencyGrid | None = None) -> np.ndarray:
         """The noise share averaged over each band ``[edges[i], edges[i+1])``,
-        shape ``(n_channels, n_bands, n_windows)``. With an ``envelope``, the
-        average is weighted by its power, so the result is the band's noise
-        power over its total power."""
+        shape ``(n_channels, n_bands, n_windows)``. With an ``envelope`` (any
+        spectral envelope, read on this aperiodicity's grid), the average is
+        weighted by its power, so the result is the band's noise power over
+        its total power."""
         freqs = self.f
-        weights = np.ones_like(self.data) if envelope is None else envelope.data
+        if envelope is None:
+            weights = np.ones_like(self.data)
+        else:
+            weights = _power_on_grid(envelope, self.t, self.f, self.data.shape)
         out = []
         for lower, upper in zip(edges[:-1], edges[1:], strict=True):
             in_band = (freqs >= lower) & (freqs < upper)

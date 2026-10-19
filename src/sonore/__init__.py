@@ -104,7 +104,6 @@ from sonore.views.aperiodicity import Aperiodicity, band_aperiodicity, harmonic_
 from sonore.views.cepstrum import Cepstrum
 from sonore.views.chroma import Chroma, chroma
 from sonore.views.envelope_peaks import EnvelopePeaks, envelope_peaks
-from sonore.views.envelopes import Envelope, Envelopes, channel_vocode
 from sonore.views.f0 import F0Track, f0_track, scale_f0
 from sonore.views.lpc import LPC, FormantTrack, formant_track, levinson
 from sonore.views.mask import Mask, ideal_binary_mask, ideal_ratio_mask
@@ -129,11 +128,11 @@ from sonore.views.spectra import (
     tandem_power,
 )
 from sonore.views.spectral_envelope import (
-    GridEnvelope,
     SpectralEnvelope,
     pitch_adaptive_envelope,
     warp_frequency,
 )
+from sonore.views.temporal_envelope import TemporalEnvelope, channel_vocode
 from sonore.views.timbre import (
     DescriptorTrack,
     attack_segment,
@@ -141,7 +140,7 @@ from sonore.views.timbre import (
     spectral_centroid,
     spectral_flux,
 )
-from sonore.views.view import NotInvertibleError, View
+from sonore.views.view import NotInvertibleError, TimeFrequencyGrid, View
 
 __version__ = "0.7.0"
 
@@ -191,15 +190,14 @@ __all__ = [
     "band_aperiodicity",
     "harmonic_aperiodicity",
     "source_filter_synthesize",
-    "GridEnvelope",
     "scale_f0",
     "warp_frequency",
+    "TimeFrequencyGrid",
     "TFPower",
     "tandem_power",
     "ReassignedSpectrogram",
     "reassigned_spectrogram",
-    "Envelopes",
-    "Envelope",
+    "TemporalEnvelope",
     "ripple_sound",
     "gaussian_spectrogram",
     "event_train",

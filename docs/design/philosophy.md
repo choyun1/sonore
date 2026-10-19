@@ -65,17 +65,29 @@ meant to be readable without them.
   A view gets `to_sound` only where a canonical route exists. Elsewhere it
   raises `NotInvertibleError` with the reason, and searching for a matching
   sound stays an experiment until a canonical method is found. Today
-  `Spectrum`, `Cepstrum`, `PVAnalysis`, `ModulationSpectrum`, `Envelope`
-  and `Envelopes` have `to_sound`; the voice views (F0 track, spectral
+  `Spectrum`, `Cepstrum`, `PVAnalysis`, `ModulationSpectrum` and
+  `TemporalEnvelope` have `to_sound`; the voice views (F0 track, spectral
   envelope, aperiodicity) go back together through `source_filter_synthesize`,
   which their refusal names (`layout/sound-first.md`).
+- **"Envelope" means two things, and each has one class.** A *temporal*
+  envelope is how a sound's level changes over time, in one band or in every
+  band of a filterbank (`TemporalEnvelope`, which holds that filterbank or
+  none). A *spectral* envelope is how power is spread over frequency once the
+  harmonics are smoothed away, held on a grid of time windows and frequencies
+  (`SpectralEnvelope`, whatever estimator made it, named by its `method`).
+  Neither takes a plural class: one envelope per band is the banded case of
+  the first, and one spectral envelope per time window is already the grid.
+  What the views on a time-frequency grid share (`t`, `f`, `data`, reading
+  as `view(t, f)`) is the `TimeFrequencyGrid` Protocol, not a base class
+  (`views/spectral-envelope-classes.md`).
 - **Synthesis lives in `to_sound`.** A function next to a view either
   builds the view from a sound (`f0_track`, `pv_analyze`) or is a recipe
   that analyzes, changes the view and calls its `to_sound` (`time_stretch`,
   `channel_vocode`); it holds no synthesis code of its own. Where two views
   share a route, the bigger one is the smaller one applied piece by piece:
-  `Envelopes.to_sound` is `Envelope.to_sound` in every band, then the
-  filterbank's synthesis, and a test holds them to that.
+  a banded `TemporalEnvelope.to_sound` is the single envelope's `to_sound`
+  in every band, then the filterbank's synthesis, and a test holds them to
+  that.
 - **Keep the simplest representation that loses nothing.** Subbands stay
   real; the complex analytic signal is computed from them exactly when
   envelopes or phase are needed.

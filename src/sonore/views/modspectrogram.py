@@ -3,7 +3,7 @@ at each rate, time window by time window.
 
 An STFT shows how a sound's power spectrum changes over time; a
 :class:`ModulationSpectrogram` shows how its modulation spectrum changes over
-time. It is built from :class:`~sonore.views.envelopes.Envelopes` (any
+time. It is built from a filterbank's :class:`~sonore.views.temporal_envelope.TemporalEnvelope` (any
 filterbank) by passing every band's envelope through a
 :class:`~sonore.views.modulation.HannModulationFilterbank` and sampling the
 result every ``hop`` seconds. docs/design/views/modulation-spectrogram.md has the
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from sonore.core.sound import Sound
-    from sonore.views.envelopes import Envelopes
+    from sonore.views.temporal_envelope import TemporalEnvelope
 
 __all__ = ["ModulationSpectrogram"]
 
@@ -93,7 +93,7 @@ class ModulationSpectrogram(View):
 
     def __init__(
         self,
-        envelopes: Envelopes,
+        envelopes: TemporalEnvelope,
         *,
         f_lo: float = 0.5,
         f_hi: float = 64.0,
@@ -104,10 +104,14 @@ class ModulationSpectrogram(View):
         align: Literal["center", "causal"] = "center",
         bank: HannModulationFilterbank | None = None,
     ):
-        from sonore.views.envelopes import Envelopes
+        from sonore.views.temporal_envelope import TemporalEnvelope
 
-        if not isinstance(envelopes, Envelopes):
-            raise TypeError(f"expected Envelopes, not {type(envelopes).__name__}")
+        if not isinstance(envelopes, TemporalEnvelope):
+            raise TypeError(f"expected a TemporalEnvelope, not {type(envelopes).__name__}")
+        if envelopes.filterbank is None:
+            raise TypeError(
+                "expected a filterbank's envelopes, one per band; this envelope has no filterbank"
+            )
         if align not in ("center", "causal"):
             raise ValueError("align must be 'center' or 'causal'")
         if bank is None:

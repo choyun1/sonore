@@ -56,7 +56,8 @@ def test_own_sound_as_carrier_gives_the_sound_back_inside_the_bands():
     y = spectrum.to_sound(carrier=x)
     bank = spectrum._analysis.filterbank
     envelopes = bank.analyze(x).envelopes(fs=1000)
-    unpadded = so.Envelopes(envelopes.data, 1000, bank).without_edges()  # rebuilt envelopes carry no padding
+    # rebuilt envelopes carry no padding
+    unpadded = so.TemporalEnvelope(envelopes.data, 1000, bank).without_edges()
     expected = (unpadded * bank.analyze(x).tfs()).to_sound()
     np.testing.assert_allclose(y.data, expected.normalize().data, atol=1e-9)
 
@@ -120,7 +121,7 @@ def test_with_gain_is_symmetric():
 
 def test_to_sound_needs_envelopes_and_a_rate():
     stft_spectrum = so.ModulationSpectrum(so.STFT(_speech_like(), win_dur=20e-3))
-    with pytest.raises(TypeError, match="made from Envelopes"):
+    with pytest.raises(TypeError, match="made from band envelopes"):
         stft_spectrum.to_sound(carrier="tone", fs=FAST)
     _, spectrum = _octave_spectrum(_speech_like())
     with pytest.raises(TypeError, match="fs is needed"):
@@ -153,7 +154,7 @@ def test_random_carriers_are_seeded(kwargs):
 
 
 def test_tone_carrier_is_the_envelopes_on_tones():
-    # to_sound is a recipe: the drawn envelopes, put on tones by Envelopes.to_sound (re-filtered).
+    # to_sound is a recipe: the drawn envelopes, put on tones by TemporalEnvelope.to_sound (re-filtered).
     _, spectrum = _octave_spectrum(_speech_like())
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -330,13 +331,13 @@ def test_phase_is_given_alone_and_in_shape():
 def test_hooks_need_a_spectrum_made_from_envelopes():
     x = _speech_like()
     from_array = so.ModulationSpectrum.from_array(np.ones((8, 64)), 0.01, 0.1, "cyc/oct")
-    with pytest.raises(TypeError, match="made from Envelopes"):
+    with pytest.raises(TypeError, match="made from band envelopes"):
         _ = from_array.filterbank
-    with pytest.raises(TypeError, match="made from Envelopes"):
+    with pytest.raises(TypeError, match="made from band envelopes"):
         from_array.modulation_phase(x)
-    with pytest.raises(TypeError, match="made from Envelopes"):
+    with pytest.raises(TypeError, match="made from band envelopes"):
         from_array.to_envelopes(phase=np.zeros((8, 64)))
-    with pytest.raises(TypeError, match="made from Envelopes"):
+    with pytest.raises(TypeError, match="made from band envelopes"):
         from_array.iterate(x)
 
 

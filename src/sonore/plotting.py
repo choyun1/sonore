@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     from sonore.views.cepstrum import Cepstrum
     from sonore.views.chroma import Chroma
     from sonore.views.envelope_peaks import EnvelopePeaks
-    from sonore.views.envelopes import Envelope, Envelopes
     from sonore.views.f0 import F0Track
     from sonore.views.lpc import LPC, FormantTrack
     from sonore.views.mask import Mask
@@ -38,6 +37,7 @@ if TYPE_CHECKING:
     from sonore.views.modspectrogram import ModulationSpectrogram
     from sonore.views.modulation import ModulationSpectrum
     from sonore.views.spectra import Spectrum
+    from sonore.views.temporal_envelope import TemporalEnvelope
     from sonore.views.timbre import DescriptorTrack
 
 __all__ = [
@@ -469,8 +469,8 @@ def plot_subbands(
     return axes
 
 
-def plot_envelope(env: Envelope, ax: Axes | None = None, *, db: bool = False, **kwargs) -> Axes:
-    """A single :class:`~sonore.views.envelopes.Envelope` over time."""
+def plot_envelope(env: TemporalEnvelope, ax: Axes | None = None, *, db: bool = False, **kwargs) -> Axes:
+    """A single :class:`~sonore.views.temporal_envelope.TemporalEnvelope` (no filterbank) over time."""
     ax = _ax(ax)
     ax.plot(env.t, env.db if db else env.data, **kwargs)
     ax.set(
@@ -516,7 +516,7 @@ def plot_envelope_peaks(peaks: EnvelopePeaks, ax: Axes | None = None, **kwargs) 
 
 
 def plot_envelopes(
-    env: Envelopes,
+    env: TemporalEnvelope,
     ax: Axes | None = None,
     *,
     channel: int = 0,
@@ -529,7 +529,7 @@ def plot_envelopes(
     fscale: Literal["log", "linear"] = "log",
     fmax: float | None = None,
 ) -> Axes:
-    """Envelopes (a cochleagram) as an image: time x band, in dB, the colors
+    """A filterbank's envelopes (a cochleagram) as an image: time x band, in dB, the colors
     spanning the ``db_range`` dB below ``db_max`` (default: the image's own
     maximum). Give several cochleagrams the same ``db_max`` to draw them on
     one scale, so that equal levels get equal colors.
@@ -550,7 +550,8 @@ def plot_envelopes(
     if align is None:
         t, f = env.t, cfs
     elif align == "peak":
-        t = env.t[None, :] - env.filterbank.envelope_peak_delay[sel][:, None]  # one time axis per band
+        delays = env._bank.envelope_peak_delay[sel]
+        t = env.t[None, :] - delays[:, None]  # one time axis per band
         f = np.broadcast_to(cfs[:, None], t.shape)
     else:
         raise ValueError("align must be None or 'peak'")

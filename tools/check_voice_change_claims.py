@@ -55,7 +55,7 @@ def warp_envelope(envelope, ratio, *, exact_identity=True):
     if ratio == 1 and exact_identity:
         return envelope
     warped = envelope(envelope.t, envelope.f / ratio)
-    return SpectralEnvelope(warped, envelope.t, envelope.fs, envelope.q1)
+    return SpectralEnvelope(warped, envelope.t, envelope.f, fs=envelope.fs, method=envelope.method)
 
 
 def warp_aperiodicity(aperiodicity, ratio):
@@ -401,7 +401,7 @@ class Warped:
 def on_grid(envelope, times, fs, n_fft):
     """Any envelope sampled at the analyses' time windows and frequencies."""
     freqs = np.arange(n_fft // 2 + 1) * fs / n_fft
-    return SpectralEnvelope(envelope(times, freqs), np.asarray(times), fs, np.nan)
+    return SpectralEnvelope(envelope(times, freqs), np.asarray(times), freqs, fs=fs)
 
 
 def pointwise_amplitude(envelope, times, freqs):
