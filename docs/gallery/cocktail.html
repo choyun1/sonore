@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -296,7 +296,7 @@ def finish(snd):
 
 hrirs = so.load_hrirs(distances=&quot;all&quot;)  # PKU-IOA KEMAR, 20 cm to 1.6 m; downloaded on first use
 print(hrirs)
-fs = 16000</code></pre></details><pre class="out">HRIRSet(6343 positions, 1024 taps, 65536 Hz)</pre></div>
+fs = 16000</code></pre></details><pre class="out">HRIRSet(6344 positions, 1024 taps, 65536 Hz)</pre></div>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python"># Each scene&#x27;s cast: LibriSpeech reader and chapter, label in the plots, color. A reader in two
 # casts reads from a different chapter.
 PAIR = [(&quot;2035_152373&quot;, &quot;female talker&quot;, &quot;#d62728&quot;), (&quot;5694_64029&quot;, &quot;male talker&quot;, &quot;#1f77b4&quot;)]
@@ -493,7 +493,7 @@ def party_scene(cast, paths):
 <p>Each scene is drawn as the talkers' paths seen from above and each talker's distance over
 time, and a view from above follows the talkers as the scene plays.</p>
 
-<article class="sound" id="d-cp1" data-regions="[{&quot;x0&quot;: 0.4421153947649572, &quot;x1&quot;: 0.9826455, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+<article class="sound" id="d-cp1" data-regions="[{&quot;x0&quot;: 0.4421247096688034, &quot;x1&quot;: 0.98265721875, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
   <div class="about">
     <h3>A party of two <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Two talkers, one female and one male, for 20 s.</p></div>
@@ -511,7 +511,7 @@ scene = party_scene(PAIR, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp2" data-regions="[{&quot;x0&quot;: 0.44426082745726486, &quot;x1&quot;: 0.9882236249999999, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 25.0}]">
+<article class="sound" id="d-cp2" data-regions="[{&quot;x0&quot;: 0.4442641327457264, &quot;x1&quot;: 0.98821971875, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 25.0}]">
   <div class="about">
     <h3>A party of three <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Three new talkers, one female and two male, for 25 s.</p></div>
@@ -529,7 +529,7 @@ scene = party_scene(TRIO, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp3" data-regions="[{&quot;x0&quot;: 0.4441857072649572, &quot;x1&quot;: 0.9880283125, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
+<article class="sound" id="d-cp3" data-regions="[{&quot;x0&quot;: 0.4441920173611111, &quot;x1&quot;: 0.98803221875, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
   <div class="about">
     <h3>A party of four <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Four more talkers, two female and two male, for 30 s.</p></div>
@@ -547,7 +547,7 @@ scene = party_scene(FOURSOME, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp4" data-regions="[{&quot;x0&quot;: 0.4441857072649572, &quot;x1&quot;: 0.9880283125, &quot;top&quot;: 0.05642433574879213, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
+<article class="sound" id="d-cp4" data-regions="[{&quot;x0&quot;: 0.4441920173611111, &quot;x1&quot;: 0.98803221875, &quot;top&quot;: 0.05642433574879213, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
   <div class="about">
     <h3>A party of four, without the room <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>The same four talkers on the same paths, without the room: only the direct sound, so each
@@ -566,7 +566,7 @@ scene = party_scene(FOURSOME, paths)
 sound = finish(mix)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cp5" data-regions="[{&quot;x0&quot;: 0.4441857072649572, &quot;x1&quot;: 0.9880283125, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
+<article class="sound" id="d-cp5" data-regions="[{&quot;x0&quot;: 0.4441920173611111, &quot;x1&quot;: 0.98803221875, &quot;top&quot;: 0.09295697275060388, &quot;bottom&quot;: 0.8919699973580918, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
   <div class="about">
     <h3>A party of six <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Six talkers, three female and three male, for 30 s. Three of them also read in the scenes
