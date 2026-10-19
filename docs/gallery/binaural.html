@@ -78,9 +78,9 @@ audio { width: 100%; max-width: 19rem; display: block; }
 audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
 figure { margin: 0; }
-.plate { position: relative; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
 .still .plate { cursor: auto; }
-.plate img { display: block; width: 100%; height: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
 .heads { position: absolute; inset: 0; pointer-events: none; }
 .head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
@@ -299,7 +299,7 @@ def show(snd):
 <section aria-labelledby="h-timing-alone">
 <h2 id="h-timing-alone">Timing alone</h2>
 
-<article class="sound" id="d-10" data-regions="[{&quot;x0&quot;: 0.0666942894965278, &quot;x1&quot;: 0.9499619605034721, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29867622153411244, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.0666942894965278, &quot;x1&quot;: 0.9499619605034721, &quot;top&quot;: 0.38301466521572014, &quot;bottom&quot;: 0.6423648345612802, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.0666942894965278, &quot;x1&quot;: 0.9499619605034721, &quot;top&quot;: 0.6653561924494735, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}]">
+<article class="sound" id="d-10" data-regions="[{&quot;x0&quot;: 0.06668647699652779, &quot;x1&quot;: 0.9499541480034721, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29867622153411244, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.06668647699652779, &quot;x1&quot;: 0.9499541480034721, &quot;top&quot;: 0.38301466521572014, &quot;bottom&quot;: 0.6423648345612802, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}, {&quot;x0&quot;: 0.06668647699652779, &quot;x1&quot;: 0.9499541480034721, &quot;top&quot;: 0.6653561924494735, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.9010430839002268}]">
   <div class="about">
     <h3>Timing alone <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Noise with a 500 µs interaural time difference, leading in the left ear and then in the right.
@@ -336,7 +336,7 @@ in the third, the interaural phase stays put and the correlation falls and rises
 right ear's noise is mixed with an independent one. Each panel of zero-lag correlation follows a
 cosine or a sine at the rate of the change.</p>
 
-<article class="sound" id="d-b4" data-regions="[{&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9150400855034722, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29867622153411244, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9150400855034722, &quot;top&quot;: 0.38301466521572014, &quot;bottom&quot;: 0.6423648345612802, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9150400855034722, &quot;top&quot;: 0.6653561924494735, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
+<article class="sound" id="d-b4" data-regions="[{&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9150635230034722, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29867622153411244, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9150635230034722, &quot;top&quot;: 0.38301466521572014, &quot;bottom&quot;: 0.6423648345612802, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}, {&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9150635230034722, &quot;top&quot;: 0.6653561924494735, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.0}]">
   <div class="about">
     <h3>Binaural beats, 4 Hz <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>440 Hz in the left ear, 444 Hz in the right: two steady tones, so nothing in either ear beats.
@@ -371,7 +371,7 @@ an older stimulus they also used, makes the right ear's noise a moving mixture o
 noise and an independent one: the correlation swings between +1 and −1, but the interaural
 phase is only ever 0 or 180°, so there is no ITD that moves.</p>
 
-<article class="sound" id="d-08" data-regions="[{&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9383682105034722, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29867622153411244, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9383682105034722, &quot;top&quot;: 0.38301466521572014, &quot;bottom&quot;: 0.6423648345612802, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9383682105034722, &quot;top&quot;: 0.6653561924494735, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
+<article class="sound" id="d-08" data-regions="[{&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9383682105034722, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29867622153411244, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9383682105034722, &quot;top&quot;: 0.38301466521572014, &quot;bottom&quot;: 0.6423648345612802, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9383682105034722, &quot;top&quot;: 0.6653561924494735, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
   <div class="about">
     <h3>Phasewarp <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Phasewarp at 2 Hz. The interaural phase of every component rotates through 360° twice a
@@ -388,7 +388,7 @@ that rotates around the head.</p></div>
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-07" data-regions="[{&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9499619605034721, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29788476364460803, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9499619605034721, &quot;top&quot;: 0.3822232073262156, &quot;bottom&quot;: 0.6407819187822712, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.07158491449652779, &quot;x1&quot;: 0.9499619605034721, &quot;top&quot;: 0.666147650338978, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
+<article class="sound" id="d-07" data-regions="[{&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9499541480034721, &quot;top&quot;: 0.03932605218855212, &quot;bottom&quot;: 0.29788476364460803, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9499541480034721, &quot;top&quot;: 0.3822232073262156, &quot;bottom&quot;: 0.6407819187822712, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}, {&quot;x0&quot;: 0.0715771019965278, &quot;x1&quot;: 0.9499541480034721, &quot;top&quot;: 0.666147650338978, &quot;bottom&quot;: 0.9247063617950336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.0}]">
   <div class="about">
     <h3>Oscor <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Oscor at 3 Hz. The interaural correlation follows a 3 Hz sine between +1 and −1, and the image
@@ -424,7 +424,7 @@ def in_front(elevation):
     &quot;&quot;&quot;A Cartesian point 1 m away, straight ahead and ``elevation`` degrees up.&quot;&quot;&quot;
     return np.column_stack(so.hcc_to_rect(100, elevation, 0))[0]</code></pre></details></div>
 
-<article class="sound" id="d-u1" data-regions="[{&quot;x0&quot;: 0.04772553949652778, &quot;x1&quot;: 0.5913998755008014, &quot;top&quot;: 0.06830314327485365, &quot;bottom&quot;: 0.8692268389071638, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2250113378684806}]">
+<article class="sound" id="d-u1" data-regions="[{&quot;x0&quot;: 0.047733351996527784, &quot;x1&quot;: 0.5914028803084936, &quot;top&quot;: 0.06830314327485365, &quot;bottom&quot;: 0.8692268389071638, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2250113378684806}]">
   <div class="about">
     <h3>Four heights in front <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Noise from four heights in front: 40° below, level, 40° and 80° above. Each is the same noise
@@ -458,7 +458,7 @@ axes[1].grid(ls=&quot;:&quot;)
 playhead = [axes[0]]</code></pre></details>
 </article>
 
-<article class="sound" id="d-u2" data-regions="[{&quot;x0&quot;: 0.09596734722222224, &quot;x1&quot;: 0.9441963355034722, &quot;top&quot;: 0.037078849206349296, &quot;bottom&quot;: 0.4300614778645838, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}, {&quot;x0&quot;: 0.09596734722222224, &quot;x1&quot;: 0.9441963355034722, &quot;top&quot;: 0.4860500759548615, &quot;bottom&quot;: 0.6825413902839785, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}, {&quot;x0&quot;: 0.09596734722222224, &quot;x1&quot;: 0.9441963355034722, &quot;top&quot;: 0.732517541077629, &quot;bottom&quot;: 0.929008855406746, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
+<article class="sound" id="d-u2" data-regions="[{&quot;x0&quot;: 0.09595953472222223, &quot;x1&quot;: 0.9441885230034721, &quot;top&quot;: 0.037078849206349296, &quot;bottom&quot;: 0.4300614778645838, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}, {&quot;x0&quot;: 0.09595953472222223, &quot;x1&quot;: 0.9441885230034721, &quot;top&quot;: 0.4860500759548615, &quot;bottom&quot;: 0.6825413902839785, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}, {&quot;x0&quot;: 0.09595953472222223, &quot;x1&quot;: 0.9441885230034721, &quot;top&quot;: 0.732517541077629, &quot;bottom&quot;: 0.929008855406746, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
   <div class="about">
     <h3>Over the head <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p>Noise moving through the median plane over 6 s: from 40° below in front, up and over the head,
