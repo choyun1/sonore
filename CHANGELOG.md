@@ -6,6 +6,13 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-19
+
+A breaking release: the envelope classes are merged into `TemporalEnvelope`
+and `SpectralEnvelope`, WORLD's two analyses are rewritten from their papers
+under new names, and WORLD's synthesis is replaced by
+`source_filter_synthesize`. The gallery is rebuilt on this version.
+
 ### Added
 
 - `so.source_filter_synthesize(f0, envelope, aperiodicity=None)`: a voice
@@ -55,7 +62,7 @@ version (0.x.y) only fixes bugs.
 - Gallery: "How big the pops are" on the Sound textures page, the envelope
   peaks of the fire recording and its synthesis, and pops from
   `so.event_train` at power-law exponents 1, 2 and 4.
-- `plot_envelopes(db_max=...)` (and `Envelopes.plot`): the top of the
+- `plot_envelopes(db_max=...)` (and `TemporalEnvelope.plot`): the top of the
   color scale in dB, so several cochleagrams can be drawn on one scale. The
   Sound quilts page draws each quilt on its original's scale.
 - Gallery: "Background plus pops" on the Sound textures page, a recipe of
@@ -278,12 +285,12 @@ version (0.x.y) only fixes bugs.
   Moving talkers, takes the five walking-talker scenes off Moving talkers.
   Old links forward to it.
 - `ModulationSpectrum.to_sound` is now a recipe: the envelopes of
-  `to_envelopes`, put on the carrier by `Envelopes.to_sound`, so the tones
+  `to_envelopes`, put on the carrier by `TemporalEnvelope.to_sound`, so the tones
   are re-filtered by the filterbank's synthesis like every other carrier.
   `carrier` must be named (no default) and is `"tone"` (was `"tones"`; the
-  tones now start at zero phase, as in `Envelopes.to_sound`) or a Sound.
+  tones now start at zero phase, as in `TemporalEnvelope.to_sound`) or a Sound.
   `carrier="noise"` is gone: it meant a noise's fine structure here and
-  bands of noise in `Envelopes.to_sound`; pass a noise as the Sound for the
+  bands of noise in `TemporalEnvelope.to_sound`; pass a noise as the Sound for the
   first. Measured in `tools/check_modulation_carriers.py`.
 - `ModulationSpectrogram.average()` averages only the time windows where a
   cell is `valid`, and is NaN for a band and rate with none (a rate faster
@@ -1045,7 +1052,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.7.0...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.8.0...main
+[0.8.0]: https://github.com/choyun1/sonore/releases/tag/v0.8.0
 [0.7.0]: https://github.com/choyun1/sonore/releases/tag/v0.7.0
 [0.6.0]: https://github.com/choyun1/sonore/releases/tag/v0.6.0
 [0.5.0]: https://github.com/choyun1/sonore/releases/tag/v0.5.0

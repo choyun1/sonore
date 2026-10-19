@@ -142,7 +142,7 @@ from sonore.views.timbre import (
 )
 from sonore.views.view import NotInvertibleError, TimeFrequencyGrid, View
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 __all__ = [
     "Chroma",
