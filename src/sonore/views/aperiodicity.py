@@ -101,8 +101,8 @@ class Aperiodicity(_GridView):
 
     @property
     def db(self) -> np.ndarray:
-        """The noise share in dB, ``20 log10 data``."""
-        return 20 * np.log10(self.data)
+        """The noise share in dB, ``10 log10 share``: 0 dB is all noise."""
+        return self._power_db(self.share)
 
     def bands(self, edges: Sequence[float], *, envelope: TimeFrequencyGrid | None = None) -> np.ndarray:
         """The noise share averaged over each band ``[edges[i], edges[i+1])``,
@@ -174,7 +174,9 @@ def band_aperiodicity(
     the true noise share with a slope of 1 but about 8 dB low (7 dB at an F0 of
     125 Hz, 9 dB at 250 Hz; tools/check_paper_vocoder_claims.py). The paper
     reports about 6 dB and suggests subtracting it; ``correction_db`` adds the
-    8 dB measured here to every band value, capped at 0 dB (all noise).
+    8 dB measured here to every band value, capped at 0 dB (all noise). It is
+    not WORLD's code: before the correction, its band values are within about
+    0.6 dB of WORLD's D4C (median over voiced time windows at 16 and 48 kHz).
 
     Choices the paper leaves open: F0 below ``f0_floor`` is raised to it; the FFT
     size is the smallest power of two above ``4 fs / f0_floor``; samples beyond
@@ -338,7 +340,10 @@ def harmonic_aperiodicity(
     running phase ``Phi(t)``. At each voiced time window, under a Hann window
     ``periods`` periods long, a weighted least-squares fit of the harmonics
     ``cos(k Phi)``, ``sin(k Phi)`` below Nyquist, each with a linear change
-    of amplitude across the window, is subtracted. The residual's power,
+    of amplitude across the window, is subtracted. The running phase already
+    follows a vibrato; the changes of amplitude follow a tremolo or an onset
+    (on a 30% tremolo at 6 Hz the share reads within 0.4 dB of the truth with
+    them and about 1 dB too noisy without them). The residual's power,
     over the windowed sound's power, is the noise share. The fit also
     absorbs a little of the noise near every harmonic; how much is known
     exactly from the fit (the share of white noise the residual keeps at
@@ -357,7 +362,10 @@ def harmonic_aperiodicity(
     sound, f0
         As :func:`pitch_adaptive_envelope`.
     periods
-        The window's length in periods of the time window's F0.
+        The window's length in periods of the time window's F0. The fit has four
+        unknowns per harmonic, so the window needs at least 1.25 samples per
+        unknown, about 2.5 periods; a shorter window fits the noise too and is
+        refused.
     f0_floor
         Sets the output's frequency grid, as :func:`pitch_adaptive_envelope`.
     cell_harmonics
@@ -373,6 +381,7 @@ def harmonic_aperiodicity(
         voiced = f0_values[channel] > 0
         if not voiced.any():
             continue
+        _check_window_fits(fs, f0_values[channel, voiced], periods)
         f0_per_sample = np.interp(sample_times, times[voiced], f0_values[channel, voiced])
         phase = np.cumsum(2 * np.pi * f0_per_sample / fs)
         longest = int(np.ceil(periods / 2 * fs / f0_values[channel, voiced].min())) + 1
@@ -394,13 +403,35 @@ def harmonic_aperiodicity(
     return Aperiodicity(data, times, fs, "harmonic residual")
 
 
+def _n_harmonics(fs, f0):
+    """The number of harmonics of ``f0`` below Nyquist."""
+    return (fs / 2 / np.asarray(f0) - 1e-9).astype(int)
+
+
+def _check_window_fits(fs, voiced_f0, periods):
+    """Refuse a window too short for the fit: with fewer than 1.25 samples per unknown the
+    fit takes up nearly all of the window and the residual, and every band reads as all noise."""
+    n_unknowns = 1 + 4 * _n_harmonics(fs, voiced_f0)
+    n_samples = 2 * np.round(periods / 2 * fs / voiced_f0) + 1
+    if np.all(n_samples >= 1.25 * n_unknowns):
+        return
+    # the shortest window, in periods, whose half length rounds to enough samples
+    needed_half = np.ceil((1.25 * n_unknowns - 1) / 2)
+    shortest = np.max(2 * needed_half * voiced_f0 / fs)
+    raise ValueError(
+        f"a window of {periods:g} periods is too short for harmonic_aperiodicity's fit "
+        f"(4 unknowns per harmonic need at least 1.25 samples each); use periods of at least "
+        f"{np.ceil(shortest * 100 - 1e-6) / 100:g}"
+    )
+
+
 def _residual_share(samples, phase, fs, time, f0, periods, padding, cell_harmonics):
     """One time window: the noise share per cell and the cells' center frequencies."""
     center = int(np.round(time * fs)) + padding
     half_length = int(np.round(periods / 2 * fs / f0))
     offsets = np.arange(-half_length, half_length + 1)
     window = 0.5 + 0.5 * np.cos(np.pi * offsets / (half_length + 1))
-    harmonic_numbers = np.arange(1, int((fs / 2) / f0 - 1e-9) + 1)
+    harmonic_numbers = np.arange(1, _n_harmonics(fs, f0) + 1)
     harmonic_phases = np.outer(phase[center + offsets], harmonic_numbers)
     ramp = (offsets / half_length)[:, None]
     columns = np.column_stack(

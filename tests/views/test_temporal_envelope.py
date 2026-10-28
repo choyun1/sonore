@@ -408,3 +408,12 @@ class TestNoiseVocode:
             so.channel_vocode(self.x, 8, carrier="pink")
         with pytest.raises(ValueError, match="carrier must be"):
             so.channel_vocode(self.x, 8, carrier=np.zeros(10))
+
+    def test_a_single_envelope_has_no_bands(self):
+        envelope = self.x.envelope()
+        with pytest.raises(TypeError, match="no bands to iterate"):
+            iter(envelope)
+        with pytest.raises(TypeError, match="filterbank's envelopes"):
+            envelope.modulation_spectrum()
+        with pytest.raises(TypeError, match="fs and rng apply only"):
+            envelope.to_sound(self.x, fs=FS)

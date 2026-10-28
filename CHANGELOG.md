@@ -8,6 +8,18 @@ version (0.x.y) only fixes bugs.
 
 ### Changed
 
+- `SpectralEnvelope` and `Aperiodicity` refuse NaN and infinite values, as
+  `TemporalEnvelope` does (a NaN made `source_filter_synthesize` silent for
+  that time window without a word).
+- `Aperiodicity.db` is floored like `SpectralEnvelope.db`, so a share of
+  zero reads as a very low, finite level instead of -inf.
+- `harmonic_aperiodicity` refuses a window too short for its fit (fewer than
+  1.25 samples per unknown, about 2.5 periods) and names the shortest that
+  works; such a window used to report all noise.
+- Docstrings: what the harmonic residual's amplitude ramps follow (a tremolo
+  or an onset, not a vibrato), and the measured distances of
+  `pitch_adaptive_envelope` and `band_aperiodicity` from WORLD (audit
+  sitting 14).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local

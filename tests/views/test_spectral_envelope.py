@@ -47,6 +47,40 @@ def test_envelope_is_close_to_worlds(reference, name):
     assert np.percentile(difference, 95) < 0.5
 
 
+def test_unvoiced_windows_are_close_to_worlds(reference):
+    # both analyze an unvoiced time window as if F0 were 500 Hz; measured median
+    # 0.006 dB and 95th percentile 1.4 dB (6.3 and 26 dB if analyzed at 71 Hz instead)
+    sound, (times, _) = case(reference, "sentence")
+    f0 = reference["sentence_unvoiced_f0"]
+    unvoiced = f0 == 0
+    assert unvoiced.sum() == 15
+    envelope = so.pitch_adaptive_envelope(sound, (times, f0))
+    ours = np.ascontiguousarray(envelope.data[0].T)[:, :: int(reference["bin_step"])]
+    difference = np.abs(10 * np.log10(ours / reference["sentence_unvoiced_envelope_paper_q1"]))
+    assert np.median(difference[unvoiced, 1:]) < 0.05
+    assert np.percentile(difference[unvoiced, 1:], 95) < 2.0
+
+
+def test_smoothing_is_the_moving_average_of_the_two_sided_spectrum():
+    """Over +-2.7 bins of the linearly interpolated spectrum, mirrored about 0 Hz
+    and Nyquist as a real signal's two-sided spectrum is, against a fine-grid sum."""
+    from sonore.views.spectral_envelope import _smooth_rectangular
+
+    values = np.random.default_rng(0).uniform(0.1, 1.0, 33)
+    n_fft = 64
+    two_sided = np.concatenate([values, values[-2:0:-1]])
+    half_width = 2.7
+    expected = []
+    for center in range(len(values)):
+        # the midpoints of 200000 equal steps across the width
+        position = center - half_width + (np.arange(200_000) + 0.5) * (2 * half_width / 200_000)
+        lower = np.floor(position).astype(int)
+        fraction = position - lower
+        interpolated = (1 - fraction) * two_sided[lower % n_fft] + fraction * two_sided[(lower + 1) % n_fft]
+        expected.append(interpolated.mean())
+    assert np.allclose(_smooth_rectangular(values, half_width), expected, rtol=1e-8)
+
+
 def test_channels_are_analyzed_separately(reference):
     sound, track = case(reference, "vowel")
     stereo = so.Sound(np.column_stack([sound.data[:, 0], 0.5 * sound.data[:, 0]]), FS)
@@ -74,6 +108,14 @@ def test_views(reference):
     assert bands.shape == (1, 2, len(envelope.t))
     assert np.all((bands > 0) & (bands <= 1))
     assert "D4C" in repr(aperiodicity)
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    assert envelope.plot().get_title() == "Spectral envelope (CheapTrick)"
+    assert aperiodicity.plot().get_title() == "Aperiodicity (D4C)"
+    plt.close("all")
 
 
 def test_bad_tracks_are_refused(reference):
@@ -93,8 +135,10 @@ def test_bad_tracks_are_refused(reference):
 
 
 def test_an_empty_band_does_not_make_the_envelope_nan():
-    """Harmonics that stop below Nyquist leave the top of the spectrum empty; the smoothing's
-    roundoff there must not reach the logarithm as a negative power."""
+    """Harmonics that stop below Nyquist leave the top of the spectrum empty. The smoothing
+    clips its output at zero in case the difference of two cumulative sums comes out just
+    below it there; this test guards that empty band, but does not reproduce a failure (with
+    the clip removed it still passes, and no amplitude from 1e-3 to 1e6 made a NaN)."""
     fs, f0 = 16000, 200.0
     t = np.arange(round(0.4 * fs)) / fs
     harmonics = f0 * np.arange(1, int(0.45 * fs / f0) + 1)
@@ -118,6 +162,16 @@ def test_method_settings_and_fft_size():
     assert bare.method is None and bare.settings == {}
     with pytest.raises(ValueError, match="negative"):
         so.SpectralEnvelope(-power, times, freqs)
+    for bad in (np.nan, np.inf):
+        with pytest.raises(ValueError, match="SpectralEnvelope values must be finite"):
+            so.SpectralEnvelope(np.where(np.arange(513)[:, None] == 7, bad, power), times, freqs)
+        with pytest.raises(ValueError, match="Aperiodicity values must be finite"):
+            so.Aperiodicity(np.where(np.arange(513)[:, None] == 7, bad, power), times, FS, "truth")
+    # a zero reads as a very low, finite level in both views
+    zeros = np.zeros((1, 513, 5))
+    assert np.all(np.isfinite(so.SpectralEnvelope(zeros, times, freqs).db))
+    assert np.all(np.isfinite(so.Aperiodicity(zeros, times, FS, "truth").db))
+    assert np.allclose(so.Aperiodicity(0.1 * power, times, FS, "truth").db, -20.0)
     with pytest.raises(ValueError, match="shape"):
         so.SpectralEnvelope(power[:, :-1], times, freqs)
 
@@ -149,6 +203,8 @@ def test_bands_read_an_envelope_on_another_grid(reference):
     assert np.median(np.abs(from_coarse - fine)) < 0.05
     with pytest.raises(TypeError):
         aperiodicity.bands([0, 8001], envelope=np.ones(513))
+    with pytest.raises(ValueError, match="expected"):
+        aperiodicity.bands([0, 8001], envelope=lambda t, f: np.ones((1, len(f) + 1, len(t))))
 
 
 def test_any_grid_is_a_time_frequency_grid():
