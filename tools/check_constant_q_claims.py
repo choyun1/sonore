@@ -227,9 +227,7 @@ for name, bank in [
         cut = plan(r_bank, threshold_db=level)
         y_cut = synthesize(analyze(x, cut), cut, N)
         report("C7", f"{name}, cut at {level} dB: real numbers / N", real_count(cut, nb_bank) / N)
-        report(
-            "C7", "  reconstruction error with the cut filters", np.abs(y_cut - x).max() / np.abs(x).max()
-        )
+        report("C7", "  reconstruction error with the cut filters", np.abs(y_cut - x).max() / np.abs(x).max())
     report("C7", f"{name}: undecimated real numbers / N", bank.n_filters)
 
 cut_cosine = plan(responses, threshold_db=-100)
