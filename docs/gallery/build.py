@@ -781,7 +781,8 @@ TOPICS = [
             ),
             (
                 "resynthesis.html",
-                "a filterbank that reconstructs exactly, why nothing is lost, and spectrogram masking.",
+                "a filterbank that reconstructs exactly, why nothing is lost, a constant-Q transform with"
+                " about two numbers per sample, and spectrogram masking.",
             ),
             ("pv.html", "how it works, and duration, pitch and partials changed independently."),
             ("vocoder.html", "a simulation of cochlear-implant hearing."),

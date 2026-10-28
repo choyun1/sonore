@@ -179,7 +179,7 @@ More in the gallery:
 **Seeing and changing sound**
 
 - [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html): time-frequency analysis on one sentence. [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30)
-- [Analysis and resynthesis](https://choyun1.github.io/sonore/gallery/resynthesis.html): perfect reconstruction and the ideal binary mask. [▶ binary mask](https://choyun1.github.io/sonore/gallery/resynthesis.html#d-25)
+- [Analysis and resynthesis](https://choyun1.github.io/sonore/gallery/resynthesis.html): perfect reconstruction, a decimated constant-Q transform with about two numbers per sample, and the ideal binary mask. [▶ binary mask](https://choyun1.github.io/sonore/gallery/resynthesis.html#d-25)
 - [Phase vocoder](https://choyun1.github.io/sonore/gallery/pv.html): duration, pitch and partials changed independently. [▶ up a fifth](https://choyun1.github.io/sonore/gallery/pv.html#d-13)
 - [Hearing through a vocoder](https://choyun1.github.io/sonore/gallery/vocoder.html): cochlear-implant simulation. [▶ sixteen bands](https://choyun1.github.io/sonore/gallery/vocoder.html#d-ci16)
 - [Modulation spectrogram](https://choyun1.github.io/sonore/gallery/modspectrogram.html): how each band's envelope moves, moment by moment. [▶ speech, babble, noise](https://choyun1.github.io/sonore/gallery/modspectrogram.html#d-s1)
@@ -327,7 +327,6 @@ Only work still to do is listed here. Finished items are in
   [issue #48](https://github.com/choyun1/sonore/issues/48).
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
   open quotient, spectral tilt, flutter, double pulsing, and its KLGLOTT88 source.
-- A decimated, invertible constant-Q transform (nonstationary Gabor frames in frequency).
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
 - Routes back to sound from a sharpened time-frequency picture: a synchrosqueezed STFT (the
   coefficients moved in frequency only, so it stays exactly invertible) and partials tracked on
