@@ -376,12 +376,13 @@ document every deviation and data choice, and write a design document before
 large features. I reviewed and applied each patch. The design principles that came out of
 this are summarized in [docs/design/philosophy.md](https://github.com/choyun1/sonore/blob/main/docs/design/philosophy.md).
 
-**How it is verified.** I read `src/sonore` and its tests line by line in a
-code audit, one module per sitting, from the bottom of the import graph up
-([issue #48](https://github.com/choyun1/sonore/issues/48)); each sitting closed
-the gaps it found in the tests and fixed what it found wrong. I have not read the
-gallery or the checkers in `tools/` by hand. Besides the audit, I rely on the
-following:
+**How it is verified.** I have not read every line by hand. A code audit went
+through every module of `src/sonore`, one sitting per module
+([issue #48](https://github.com/choyun1/sonore/issues/48)): Claude wrote a
+reading guide for each (every claim the code makes and the test behind it, the
+lines no test runs, the results of deliberately breaking the code), I read the
+guide and parts of the code, and each sitting fixed the bugs it found and
+closed the gaps in the tests. Besides the audit, I rely on the following:
 
 - The test suite, with one file per module.
 - Finite-difference and dense-matrix checks of the mathematics.
