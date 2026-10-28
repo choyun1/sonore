@@ -407,6 +407,7 @@ Every release is archived on Zenodo. The all-versions DOI
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 always points to the latest version. Each version also has its own DOI; cite the version you used.
 
+- 0.9.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23745468.svg)](https://doi.org/10.5281/zenodo.23745468)
 - 0.8.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23463707.svg)](https://doi.org/10.5281/zenodo.23463707)
 - 0.7.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23358082.svg)](https://doi.org/10.5281/zenodo.23358082)
 - 0.6.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23289306.svg)](https://doi.org/10.5281/zenodo.23289306)
