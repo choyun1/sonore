@@ -4,7 +4,8 @@ The roadmap item "a decimated, invertible constant-Q transform
 (nonstationary Gabor frames in frequency)", and where it goes in the
 package and the gallery.
 
-Status: proposed 2026-10-28, D1–D9 open. The claims are checked by
+Status: accepted 2026-10-28. Cho accepted D1–D9 as recommended, with D1's
+class placed in `frames/filterbank.py` rather than a file of its own. The claims are checked by
 `tools/check_constant_q_claims.py` (C1–C9). It writes the decimated
 transform out from its definition in NumPy and imports sonore only for the
 filter responses and for the timing comparison, so it shares no code with
@@ -146,11 +147,11 @@ rate set by its bandwidth unless it is complex.
   `ConstantQTransform` (too narrow: the same class decimates an ERB or a
   gammatone bank). No new factory: the constant-Q transform is the
   semitone cosine bank decimated, as chroma's D5 made the undecimated one
-  a cosine bank rather than a new function. Recommended.
+  a cosine bank rather than a new function. Accepted.
 - **D2. Complex coefficients, the positive half only, scaled by
   `sqrt(M_k / N)`.** A tight bank then gives a Parseval frame with the
   same bound (C2), and a real signal is held in about 2 N real numbers
-  (C3, C4). Recommended.
+  (C3, C4). Accepted.
 - **D3. Each band keeps its support, rounded up to a fast FFT length.**
   It costs 0.28% more numbers (C5) and makes every inverse FFT fast. Hops
   are then not whole samples in general; each band reports its own times,
@@ -158,11 +159,11 @@ rate set by its bandwidth unless it is complex.
   twice the numbers (4.29 N), and that matrix is close to what
   `Subbands` already offers. Whole-sample hops for every band (each `M_k`
   a divisor of the padded length) are possible but not measured here.
-  Recommended: fast lengths.
+  Accepted: fast lengths.
 - **D4. Padding as `Filterbank` does it.** `pad="auto"` pads by at least
   the filters' ringing, the padding travels with the coefficients and is
   removed on the way back, and `pad=0` makes it circular. Not measured
-  here; it is the same padding as today's. Recommended.
+  here; it is the same padding as today's. Accepted.
 - **D5. Filters that never reach zero are cut at `floor_db`, default
   −100 dB.** Analysis and synthesis both use the cut filters, so the frame
   is exact for them (C7); a cut filter differs from the true one by less
@@ -170,27 +171,27 @@ rate set by its bandwidth unless it is complex.
   numbers instead of 62 N and a Morlet bank 7.17 N instead of 56 N, and a
   cosine bank is not changed at all. The cut also makes a causal gammatone
   very slightly noncausal, at about that level (an estimate, not
-  measured). Recommended.
+  measured). Accepted.
 - **D6. First version: the `Frame` contract and little else.**
   `analyze`, `synthesize`, `adjoint`, `energy`, measured `frame_bounds`
   and `is_tight`; `DecimatedSubbands.to_sound`, `cfs`, the times of each
   band, `plot`, and multiplication by one gain per band, as `Subbands`
   has. Masks on this ragged grid, and envelopes, come later, each when a
-  page or an experiment needs it. Recommended.
+  page or an experiment needs it. Accepted.
 - **D7. Out of scope.** Writing `GaborFrame` and `TVGaborFrame` as special
   cases of the same code (one copy of the frame algebra, but no use needs
   it yet); windows that vary over time and frequency at once (not painless
   in general, so no exact inverse to promise); the sliced, real-time
   constant-Q transform of Holighaus et al. (2013); rebuilding chroma or
-  the texture model on it. Recommended.
+  the texture model on it. Accepted.
 - **D8. Tests.** Exact reconstruction and measured tightness for cosine
   banks on every scale, with uniform and random centers, and for gammatone
   and Morlet banks; C6 as an oracle (a decimated band is the undecimated
   band sampled); the real-signal storage (C3); and the extremes: one band,
   a sound shorter than the lowest band's hop, a band whose support is a
-  single bin. Recommended.
+  single bin. Accepted.
 - **D9. Gallery: a section on "Analysis and resynthesis", with links
-  from two pages.** See below. Recommended.
+  from two pages.** See below. Accepted.
 
 ## Where it goes in the gallery
 
