@@ -49,7 +49,9 @@ class Mask(View):
     ``.to_sound()`` on those is the way back to a sound. :attr:`values`
     has the layout of the coefficients' own array: ``(n_channels, n_freqs,
     n_windows)`` for an STFT, ``(n_samples, n_bands, n_channels)`` for
-    Subbands (their padding included)."""
+    Subbands (their padding included). The gains must be finite. A mask
+    applies only to coefficients on its own grid: the same kind, sampling
+    rate and shape, from the same frame (or filterbank and padding)."""
 
     discards = (
         "Mask holds gains for a frame's coefficients, not the coefficients themselves: "
@@ -61,13 +63,17 @@ class Mask(View):
         gains = np.array(values, dtype=float)
         if gains.shape != _array(like).shape:
             raise ValueError(f"mask values have shape {gains.shape}, the coefficients {_array(like).shape}")
+        if not np.all(np.isfinite(gains)):
+            raise ValueError("mask values must be finite")
         gains.flags.writeable = False
         self.values, self._like = gains, like
 
     @property
     def t(self) -> np.ndarray:
         """Times [s] of the coefficients' columns (time windows, or samples
-        for subbands)."""
+        for subbands). For subbands these are the sound's sample times,
+        without the padding that :attr:`values` includes, so ``t`` is
+        shorter than the first axis of ``values`` by twice the padding."""
         if isinstance(self._like, Subbands):
             return time_axis(self._like.n_samples, self._like.fs)
         return self._like.t
@@ -80,7 +86,7 @@ class Mask(View):
 
     def apply(self, coefs: Coefficients) -> Coefficients:
         """The coefficients multiplied by this mask (what ``coefs * mask`` does)."""
-        if type(coefs) is not type(self._like) or _array(coefs).shape != self.values.shape:
+        if not _same_grid(coefs, self._like):
             raise ValueError("this mask was made for coefficients on a different grid")
         if isinstance(coefs, Subbands):
             return coefs._new(coefs._full * self.values)
@@ -101,6 +107,20 @@ def _array(coefs: Coefficients) -> np.ndarray:
     return coefs._full if isinstance(coefs, Subbands) else coefs.data
 
 
+def _same_grid(a: Coefficients, b: Coefficients) -> bool:
+    """Whether two sets of coefficients share a grid: the same kind,
+    sampling rate and shape, and the same frame (STFT, TVSTFT) or filterbank
+    and padding (Subbands). Frames and filterbanks compare by value."""
+    if type(a) is not type(b) or a.fs != b.fs or _array(a).shape != _array(b).shape:
+        return False
+    match a, b:
+        case Subbands(), Subbands():
+            return a.filterbank == b.filterbank and a.pad == b.pad
+        case ((STFT() | TVSTFT()), (STFT() | TVSTFT())):
+            return a.frame == b.frame
+    return False
+
+
 def _level_db(coefs: Coefficients) -> np.ndarray:
     """Level of every coefficient [dB]: of ``|X|`` for complex coefficients,
     of the Hilbert envelope for subbands."""
@@ -118,7 +138,7 @@ def _power(coefs: Coefficients) -> np.ndarray:
 def _check_pair(target: Coefficients, masker: Coefficients) -> None:
     if not isinstance(target, Coefficients) or type(target) is not type(masker):
         raise TypeError("target and masker must be coefficients of the same kind (STFT, TVSTFT or Subbands)")
-    if _array(target).shape != _array(masker).shape:
+    if not _same_grid(target, masker):
         raise ValueError("target and masker must be analyzed by the same frame, at the same length")
 
 
@@ -133,8 +153,11 @@ def ideal_binary_mask(target: Coefficients, masker: Coefficients, *, lc_db: floa
 def ideal_ratio_mask(target: Coefficients, masker: Coefficients, *, beta: float = 0.5) -> Mask:
     """``(T**2 / (T**2 + M**2))**beta`` with ``T**2`` and ``M**2`` the powers
     of each coefficient (Wang, Narayanan & Wang, 2014; 0 where both are
-    silent)."""
+    silent). ``beta`` must be positive: a negative one turns silent cells
+    into huge gains, and 0 keeps every cell."""
     _check_pair(target, masker)
+    if not beta > 0:
+        raise ValueError(f"beta must be positive, not {beta!r}")
     target_power, masker_power = _power(target), _power(masker)
     with np.errstate(invalid="ignore", divide="ignore"):
         irm = np.nan_to_num((target_power / (target_power + masker_power)) ** beta)
