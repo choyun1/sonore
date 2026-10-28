@@ -29,6 +29,12 @@ version (0.x.y) only fixes bugs.
   source-filter model", "A richer source-filter model" and "Rebuilding and
   changing a voice" are rebuilt with it. Its docstring now says the noise is
   shaped on the grid's hop, not a 5 ms one (audit sitting 14b).
+- A `Mask` applies only to coefficients on its own grid: the same sampling
+  rate and frame (or filterbank and padding), not only the same shape; a
+  16 kHz mask used to apply without a word to a same-shaped 32 kHz STFT. The
+  ideal masks check their target and masker the same way. `Mask` refuses NaN
+  and infinite gains, `ideal_ratio_mask` refuses `beta <= 0`, and `Mask.t`
+  says it leaves out the subbands' padding (audit sitting 7b).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local
