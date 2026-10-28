@@ -105,3 +105,69 @@ def test_unknown_options_raise():
         so.synth_ir(1.0, IR_FS, decay_shape="parabolic")
     with pytest.raises(ValueError, match="rt60_profile"):
         so.synth_ir(1.0, IR_FS, rt60_profile="flat")
+
+
+# --- A drawn RT60 curve -------------------------------------------------------
+CURVE_FS = 16000
+CURVE_CFS = so.cosine_filterbank(32, 20, CURVE_FS / 2).cfs  # synth_ir's own bands at this rate
+
+
+@pytest.mark.parametrize("rt60", [0.3, 1.0, 3.0])
+def test_a_real_room_as_a_curve_gives_the_same_ir(rt60):
+    curve = (CURVE_CFS, so.band_rt60s(rt60, CURVE_CFS))
+    np.testing.assert_allclose(
+        so.synth_ir(curve, CURVE_FS, drr_db=5, rng=7).data,
+        so.synth_ir(rt60, CURVE_FS, drr_db=5, rng=7).data,
+        rtol=0,
+        atol=1e-13,  # rounding in the log-log reading; the IR peaks near 15
+    )
+
+
+def test_a_flat_curve_measures_flat():
+    ir = so.synth_ir(((100, 4000), (1.0, 1.0)), CURVE_FS, rng=0)
+    _, measured = so.measure_rt60(ir)
+    assert np.nanmedian(measured) == pytest.approx(1.0, rel=0.1)
+
+
+def test_a_boomy_curve_measures_boomy():
+    ir = so.synth_ir(((63, 7000), (3.0, 0.3)), CURVE_FS, rng=0)
+    cfs, measured = so.measure_rt60(ir)
+    low = measured[np.argmin(np.abs(cfs - 150))]
+    high = measured[np.argmin(np.abs(cfs - 5000))]
+    assert low > 3 * high
+
+
+def test_a_curve_is_read_in_log_frequency_and_log_rt60():
+    # halfway between 100 Hz and 400 Hz in log frequency is 200 Hz, and
+    # halfway between 0.5 s and 2 s in log RT60 is 1 s; beyond the ends it holds
+    rt60s = so.band_rt60s(((100, 400), (0.5, 2.0)), np.array([50.0, 200.0, 1000.0]))
+    np.testing.assert_allclose(rt60s, [0.5, 1.0, 2.0], rtol=1e-12)
+
+
+@pytest.mark.parametrize(
+    "curve",
+    [
+        ((100, 100, 4000), (1.0, 1.0, 1.0)),  # frequencies not strictly increasing
+        ((4000, 100), (1.0, 1.0)),  # decreasing
+        ((0, 4000), (1.0, 1.0)),  # zero frequency
+        ((100, 4000), (1.0, 0.0)),  # zero RT60
+        ((100, 4000), (1.0, np.inf)),  # infinite RT60
+        ((100, 4000), (1.0, 1.0, 1.0)),  # mismatched lengths
+        ((), ()),  # empty
+        (np.ones((2, 2)), np.ones((2, 2))),  # not 1-D
+    ],
+)
+def test_bad_curves_raise(curve):
+    with pytest.raises(ValueError, match="RT60 curve"):
+        so.synth_ir(curve, CURVE_FS)
+
+
+def test_a_curve_refuses_other_profiles():
+    with pytest.raises(ValueError, match="already a profile"):
+        so.synth_ir(((100, 4000), (1.0, 1.0)), CURVE_FS, rt60_profile="inverted")
+
+
+@pytest.mark.parametrize("rt60", [True, [(100, 4000), (1.0, 1.0)], "1.0"])
+def test_rt60_must_be_a_number_or_a_curve(rt60):
+    with pytest.raises(TypeError, match="rt60"):
+        so.synth_ir(rt60, CURVE_FS)

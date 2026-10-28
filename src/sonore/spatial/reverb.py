@@ -3,11 +3,13 @@ reverberation (Traer & McDermott, 2016)."""
 
 from __future__ import annotations
 
+import numbers
 from functools import cache
 from importlib.resources import files
 from typing import Literal, get_args
 
 import numpy as np
+from numpy.typing import ArrayLike
 
 from sonore.core.sound import Sound
 from sonore.core.utils import RNG, as_rng, db_to_amp
@@ -28,12 +30,31 @@ def _model() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 DecayShape = Literal["exponential", "time_reversed", "linear_matched_start", "linear_matched_end"]
 RT60Profile = Literal["ecological", "inverted", "exaggerated", "reduced"]
 DRRProfile = Literal["ecological", "constant"]
+#: A room's RT60: one broadband (median) RT60 [s], or a curve ``(freqs [Hz], RT60s [s])``.
+RT60Like = float | tuple[ArrayLike, ArrayLike]
 DECAY_SHAPES = get_args(DecayShape)
 RT60_PROFILES = get_args(RT60Profile)
 DRR_PROFILES = get_args(DRRProfile)
 
 
-def band_rt60s(rt60: float, freqs: np.ndarray, *, profile: RT60Profile = "ecological") -> np.ndarray:
+def _rt60_curve(curve_freqs: ArrayLike, curve_rt60s: ArrayLike, freqs: np.ndarray) -> np.ndarray:
+    """An RT60 curve read at ``freqs``: interpolated linearly in log frequency
+    and log RT60, and held flat beyond the curve's ends."""
+    curve_freqs = np.asarray(curve_freqs, float)
+    curve_rt60s = np.asarray(curve_rt60s, float)
+    if curve_freqs.ndim != 1 or curve_rt60s.shape != curve_freqs.shape or len(curve_freqs) == 0:
+        raise ValueError(
+            "an RT60 curve is two 1-D arrays of the same length, (freqs, rt60s): "
+            f"got {curve_freqs.shape} freqs, {curve_rt60s.shape} RT60s"
+        )
+    if np.any(curve_freqs <= 0) or np.any(np.diff(curve_freqs) <= 0):
+        raise ValueError("an RT60 curve's frequencies must be positive and strictly increasing")
+    if not np.all(np.isfinite(curve_rt60s) & (curve_rt60s > 0)):
+        raise ValueError("an RT60 curve's RT60s must be positive and finite")
+    return np.exp(np.interp(np.log(freqs), np.log(curve_freqs), np.log(curve_rt60s)))
+
+
+def band_rt60s(rt60: RT60Like, freqs: np.ndarray, *, profile: RT60Profile = "ecological") -> np.ndarray:
     """Per-band RT60s [s] at ``freqs`` for a broadband (median) RT60, from the
     regression fits of Traer & McDermott (2016, Eq. S11), or one of the
     paper's atypical variants (Eq. S15 and following):
@@ -43,7 +64,22 @@ def band_rt60s(rt60: float, freqs: np.ndarray, *, profile: RT60Profile = "ecolog
     ``"exaggerated"``: the profile of a room twice as reverberant, scaled
     down to this length (more sharply peaked than real rooms).
     ``"reduced"``: the profile of a room half as reverberant, scaled up (flatter).
+
+    ``rt60`` may instead be a curve ``(freqs [Hz], RT60s [s])``, such as one
+    drawn by hand. Each frequency then takes the curve's value there,
+    interpolated linearly in log frequency and log RT60 and held flat beyond
+    the curve's ends. A curve is already a profile, so ``profile`` must stay
+    ``"ecological"``.
     """
+    match rt60:
+        case numbers.Real() if not isinstance(rt60, bool):
+            pass  # the regression fits below
+        case tuple((curve_freqs, curve_rt60s)):
+            if profile != "ecological":
+                raise ValueError("an RT60 curve is already a profile: leave rt60_profile at 'ecological'")
+            return _rt60_curve(curve_freqs, curve_rt60s, freqs)
+        case _:
+            raise TypeError("rt60 must be a number [s] or a curve (freqs [Hz], rt60s [s])")
     _, fit_rt60, fit_freqs = _model()
 
     def eco(median_rt60):
@@ -83,7 +119,7 @@ def _decay_envelopes(t, onset_db, taus, shape):
 
 
 def synth_ir(
-    rt60: float,
+    rt60: RT60Like,
     fs: float,
     *,
     drr_db: float | None = None,
@@ -116,7 +152,9 @@ def synth_ir(
     Parameters
     ----------
     rt60
-        Median reverberation time [s].
+        Median reverberation time [s], or a curve ``(freqs [Hz], RT60s [s])``
+        that each band reads at its center frequency (see :func:`band_rt60s`);
+        a curve keeps ``rt60_profile`` at ``"ecological"``.
     drr_db
         Direct-to-reverberant energy ratio [dB]. If given, a unit impulse is
         placed at t=0 and the tail is scaled to this DRR. If None, only the
@@ -144,9 +182,12 @@ def synth_ir(
     cfs = filterbank.cfs
 
     taus = band_rt60s(rt60, cfs, profile=rt60_profile)
+    # a curve has no single RT60 for the onset fit, so its median band RT60
+    # stands in, as the docstring defines the number
+    broadband_rt60 = float(np.median(taus)) if isinstance(rt60, tuple) else rt60
     match drr_profile:
         case "ecological":
-            onset_db = fit_drr[:, 0] * np.log10(rt60) + fit_drr[:, 1]
+            onset_db = fit_drr[:, 0] * np.log10(broadband_rt60) + fit_drr[:, 1]
             onset_db = np.interp(cfs, fit_freqs, onset_db - np.median(onset_db))
         case "constant":
             onset_db = np.zeros(len(cfs))
