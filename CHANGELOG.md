@@ -117,6 +117,16 @@ version (0.x.y) only fixes bugs.
   `ChannelContext.build` refuses a window whose length is not the envelope's
   and says it normalizes the window. New tests cover an odd number of envelope
   samples and the window's normalization (audit sitting 21).
+- Texture synthesis refuses a sound too short for the slowest octave
+  modulation band that C1 or C2 uses (under about 0.32 s at the defaults),
+  where it used to run with a NaN objective and return a poor sound with only
+  a warning. The module docstring describes the whole synthesis and gives the
+  conjugate-gradient budget exactly; `pop_rate` is listed in `__all__`. New
+  tests: a sound that already has the target statistics comes back from an
+  iteration unchanged, a louder subband target makes that subband louder, the
+  budget per iteration, the best iterate returned, the clip at 0, the mean
+  kept without `env_mean`, and `pop_start` rebuilt from its definition
+  (audit sitting 22).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local

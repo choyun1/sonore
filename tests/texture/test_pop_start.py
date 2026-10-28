@@ -55,3 +55,40 @@ def test_pop_start_rejects_bad_options(crackle):
         pop_start(crackle, 1.0, rate=0.0)
     with pytest.raises(ValueError):
         pop_start(crackle, 1.0, exponent=-1.0)
+
+
+@pytest.mark.filterwarnings("ignore:envelope_peaks fitted only")
+def test_pop_rate_counts_a_pop_in_the_first_bin():
+    samples = 0.01 * np.random.default_rng(3).standard_normal(2 * FS)
+    samples[:20] += 1.0
+    sound = so.Sound(samples, FS)
+    assert pop_rate(sound) * sound.duration == 1
+
+
+def test_pop_start_against_its_definition(crackle):
+    """The gain rebuilt from the generator's draws, bump by bump: each bump 4 ms long, decaying
+    with a 1 ms time constant, heights 1 + Pareto capped at 40 dB, the larger of two
+    overlapping bumps winning."""
+    duration, rate, exponent = 2.0, 200.0, 0.5
+    start = pop_start(crackle, duration, rate=rate, exponent=exponent, rng=7)
+    draws = np.random.default_rng(7)
+    n = len(start)
+    noise = draws.standard_normal(n)
+    n_bumps = round(rate * duration)
+    onsets = draws.integers(0, n, n_bumps)
+    heights = np.minimum(1 + draws.pareto(exponent, n_bumps), 100.0)
+    assert np.any(heights == 100.0)
+    gain = np.ones(n)
+    bump = np.exp(-np.arange(int(0.004 * FS)) / (0.001 * FS))
+    for onset, height in zip(onsets, heights, strict=True):
+        for i, value in enumerate(height * bump):
+            if onset + i < n:
+                gain[onset + i] = max(gain[onset + i], value)
+    assert np.allclose(start.data[:, 0], noise * gain, rtol=1e-12, atol=0)
+
+
+def test_pop_start_defaults_come_from_the_recording(crackle):
+    exponent = float(so.envelope_peaks(crackle, cutoffs_hz=(300.0,)).exponent[0])
+    by_default = pop_start(crackle, 1.0, rng=0)
+    explicit = pop_start(crackle, 1.0, rate=pop_rate(crackle), exponent=exponent, rng=0)
+    assert np.array_equal(by_default.data, explicit.data)

@@ -140,3 +140,111 @@ def test_fused_objective_matches_reference(setup, k, classes):
     assert fast[0] == pytest.approx(ref[0], rel=1e-10)
     assert np.allclose(fast[1], ref[1], rtol=1e-8, atol=1e-12 * np.abs(ref[1]).max())
     assert fast[2].keys() == ref[2].keys()
+
+
+@pytest.fixture(scope="module")
+def looped():
+    """1 s of AM noise, prepared, and its statistics measured uniformly (as a loop)."""
+    t = np.arange(FS) / FS
+    tex = so.gaussian_noise(1, FS, rng=0) * so.Sound(1 + 0.9 * np.sin(2 * np.pi * 6 * t), FS)
+    x = M.prepare(tex)
+    return x, TextureStats.measure(so.Sound(x, FS), window="uniform")
+
+
+def test_a_sound_with_the_target_statistics_is_a_fixed_point(looped):
+    """Started from a sound that already has the statistics, an iteration gives the same
+    sound back: the envelopes need no change, and the high-rate residual, the fine structure
+    and the subband levels put back exactly what the analysis took apart."""
+    x, target = looped
+    snd, report = synth.synthesize(target, init=so.Sound(x, FS), max_iter=1)
+    assert np.linalg.norm(snd.data[:, 0] - x) < 1e-12 * np.linalg.norm(x)
+    assert report["converged"]
+    _, strict = synth.synthesize(target, init=so.Sound(x, FS), max_iter=1, converged_db=1000)
+    assert not strict["converged"]
+
+
+def test_each_subband_is_rescaled_to_its_target_variance(looped):
+    """Asking for one subband 6 dB louder, with every other statistic already matched, makes
+    that subband louder than the rest (the final RMS scaling moves all of them)."""
+    x, target = looped
+    channel = 12
+    louder = target.subband_var.copy()
+    louder[channel] *= 4
+    snd, _ = synth.synthesize(target.replace(subband_var=louder), init=so.Sound(x, FS), max_iter=1)
+    before = np.var(M.subbands(x), axis=0)
+    after = np.var(M.subbands(snd.data[:, 0]), axis=0)
+    change_db = 10 * np.log10(after / before)
+    change_db -= np.median(change_db)
+    # the filters overlap, so about 1 dB of the change spills into each neighbor
+    assert change_db[channel] > 4.5
+    assert np.all(
+        (change_db[[channel - 1, channel + 1]] > 0.5) & (change_db[[channel - 1, channel + 1]] < 1.5)
+    )
+    others = np.delete(np.arange(len(change_db)), [channel - 1, channel, channel + 1])
+    assert np.abs(change_db[others]).max() < 0.1
+
+
+def test_the_returned_sound_is_the_best_iterate(looped):
+    x, target = looped
+    sounds = {}
+    snd, report = synth.synthesize(
+        target,
+        init=so.Sound(x, FS),
+        max_iter=4,
+        stop_db=1e6,
+        callback=lambda i, s, snr: sounds.update({i: s}),
+    )
+    averages = [np.mean(list(h.values())) for h in report["snr"]]
+    assert report["average_snr"] == max(averages)
+    assert report["best_iteration"] == 1 + int(np.argmax(averages))
+    assert np.array_equal(snd.data, sounds[report["best_iteration"]].data)
+
+
+def test_the_conjugate_gradient_budget_grows_with_the_iterations(monkeypatch):
+    """5 iterations per channel, plus 0.2 per outer iteration, rounded: 6 from the 4th, 7 from the 9th."""
+    budgets = []
+    impose = synth.impose_channel
+
+    def recording(*args, n_iter, **kwargs):
+        budgets.append(n_iter)
+        return impose(*args, n_iter=n_iter, **kwargs)
+
+    monkeypatch.setattr(synth, "impose_channel", recording)
+    target = TextureStats.measure(so.gaussian_noise(0.5, FS, rng=0))
+    synth.synthesize(target, duration=0.5, rng=1, max_iter=9, stop_db=1e6)
+    per_iteration = budgets[:: len(budgets) // 9]
+    assert per_iteration == [5, 5, 5, 6, 6, 6, 6, 6, 7]
+
+
+def test_the_envelope_is_clipped_at_zero(setup):
+    """A target variance 30 times the start's pushes the corrected envelope below zero; the
+    clip keeps it a magnitude."""
+    target, _, env, adjusted = setup
+    k = 15
+    wide = target.env_var.copy()
+    wide[k] *= 30
+    s, _ = impose_channel(target.replace(env_var=wide), env, k, adjusted=adjusted, n_iter=1)
+    assert s.min() == 0.0
+    assert np.mean(s == 0) > 0.05
+
+
+def test_without_env_mean_the_correction_leaves_the_mean_alone(setup):
+    """The correction sets the normalized variance about the envelope's own mean, not the target's."""
+    target, _, env, adjusted = setup
+    context = tg.ChannelContext.build(M, env.shape[0])
+    s, _ = impose_channel(target, env, 15, adjusted=adjusted, n_iter=2, context=context, classes=("env_var",))
+    mean, normalized_var = tg.env_moments(s, context)[0][:2]
+    assert normalized_var == pytest.approx(target.env_var[15], rel=1e-9)
+    assert mean != pytest.approx(target.env_mean[15], rel=0.01)  # 7% away here
+
+
+def test_a_synthesis_too_short_for_the_slowest_octave_band_is_refused():
+    """At 0.25 s the envelope grid's spacing is 4 Hz, and the lowest octave band (1.56 Hz,
+    used by C2) holds no frequency; without C1 and C2 the same length runs."""
+    target = TextureStats.measure(so.gaussian_noise(1, FS, rng=0))
+    with pytest.raises(
+        ValueError, match=r"0.25 s is too short to synthesize: .* 1.5625 Hz .* spacing is 4 Hz"
+    ):
+        synth.synthesize(target, duration=0.25, rng=1, max_iter=1)
+    snd, _ = synth.synthesize(target, duration=0.25, rng=1, max_iter=1, classes=("env_mean", "mod_power"))
+    assert len(snd) == FS // 4
