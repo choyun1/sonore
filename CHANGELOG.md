@@ -6,6 +6,15 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+
+- `DecimatedFilterbank`: any `Filterbank` with each band kept at its own
+  rate, the nonstationary Gabor frame in frequency, with an exact inverse. On
+  the semitone cosine bank it is a decimated constant-Q transform that keeps
+  about 2 real numbers per sample instead of 85. Its coefficients,
+  `DecimatedSubbands`, are complex, one sequence per band, and draw each band
+  with its own time cells (docs/design/frames/decimated-filterbanks.md).
+
 ### Changed
 
 - `SpectralEnvelope` and `Aperiodicity` refuse NaN and infinite values, as

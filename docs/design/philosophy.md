@@ -35,7 +35,7 @@ meant to be readable without them.
 ## Transforms
 
 - **A transform is an operator with an exact inverse.** Every frame sonore
-  ships (filterbanks, STFTs, time-varying Gabor) reconstructs unmodified
+  ships (filterbanks, decimated filterbanks, STFTs, time-varying Gabor) reconstructs unmodified
   coefficients to floating-point precision, on the whole signal, not just on
   the band it was designed for. Non-tight banks therefore get edge filters by
   default, so that they cover DC to Nyquist.
