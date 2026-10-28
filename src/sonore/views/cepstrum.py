@@ -61,7 +61,7 @@ class Cepstrum(View):
         The coefficients to take the cepstrum of. They are kept (as
         :attr:`source`) for their phase, frame and times.
     floor_db
-        The floor, in dB below each channel's maximum.
+        The floor, in dB below each channel's maximum; negative.
     """
 
     discards = (
@@ -76,6 +76,8 @@ class Cepstrum(View):
     def __init__(self, coefs: STFT | TVSTFT, *, floor_db: float = -200.0):
         if not isinstance(coefs, (STFT, TVSTFT)):
             raise TypeError(f"expected an STFT or TVSTFT, not {type(coefs).__name__}")
+        if not floor_db < 0:
+            raise ValueError(f"floor_db must be negative (dB below each channel's maximum), not {floor_db!r}")
         self.source = coefs
         self.fs = coefs.fs
         self.n_fft = coefs.n_fft

@@ -9,7 +9,7 @@ import pytest
 
 import sonore as so
 from sonore.core.utils import freq_to_mel, mel_to_freq
-from sonore.views.mfcc import delta_features, symmetric_hamming
+from sonore.views.mfcc import delta_features, mel_filterbank, symmetric_hamming
 
 ROOT = Path(__file__).resolve().parents[2]
 REFERENCE = np.load(ROOT / "tests" / "data" / "librosa_mfcc_reference.npz")
@@ -86,6 +86,40 @@ def test_sound_input_uses_the_speech_settings():
         so.MFCC(so.STFT(SENTENCE), win_dur=0.02)
 
 
+def test_a_window_already_a_power_of_two_is_not_padded():
+    """The FFT is the smallest power of two at least as long as the window."""
+    assert so.MFCC(SENTENCE, win_dur=512 / SENTENCE.fs).n_fft == 512
+    assert so.MFCC(SENTENCE, win_dur=513 / SENTENCE.fs).n_fft == 1024
+
+
+def test_the_floor_is_per_channel():
+    """A second channel 100 dB quieter has the first one's coefficients past
+    c0, even with a floor only 80 dB down: each channel has its own floor."""
+    louder = SENTENCE.data[:, 0]
+    mfcc = so.MFCC(so.Sound(np.column_stack([louder, louder * 1e-5]), SENTENCE.fs), floor_db=-80)
+    assert np.allclose(mfcc.data[1, 1:], mfcc.data[0, 1:], atol=1e-9)
+
+
+def test_mel_db_is_the_floored_mel_power():
+    silent_first = so.Sound(np.column_stack([np.zeros(SENTENCE.n_samples), SENTENCE.data[:, 0]]), SENTENCE.fs)
+    mfcc = so.MFCC(silent_first, floor_db=-60)
+    assert np.all(np.isfinite(mfcc.mel_db))
+    loudest = mfcc.mel_db[1].max()
+    assert mfcc.mel_db[1].min() == pytest.approx(loudest - 60)
+
+
+def test_a_time_varying_stft_and_the_repr():
+    frame = so.TVGaborFrame.pitch_adaptive([0.0, 0.8], [100.0, 140.0], t_end=0.8)
+    coefs = frame.analyze(SENTENCE)
+    mfcc = so.MFCC(coefs)
+    assert mfcc.n_fft == coefs.n_fft
+    assert mfcc.data.shape == (1, 13, len(coefs.t))
+    assert np.all(np.isfinite(mfcc.data))
+    assert repr(so.MFCC(SENTENCE)) == (
+        f"MFCC(13 coefficients x {len(so.MFCC(SENTENCE).t)} time windows, 1 ch, 26 htk mel bands to 8000 Hz)"
+    )
+
+
 def test_scaling_moves_only_c0():
     quiet, loud = so.MFCC(SENTENCE), so.MFCC(SENTENCE * 3.7)
     n_mels = len(quiet.cfs)
@@ -144,6 +178,22 @@ def test_rejects_bad_arguments():
         delta_features(np.zeros(10), width=4)
     with pytest.raises(TypeError):
         so.MFCC(np.zeros(100))
+    for f_lo, f_hi in ((-10.0, 8000.0), (4000.0, 4000.0), (5000.0, 4000.0)):
+        with pytest.raises(ValueError, match="f_lo < f_hi"):
+            so.MFCC(SENTENCE, f_lo=f_lo, f_hi=f_hi)
+    for floor_db in (0.0, 10.0):
+        with pytest.raises(ValueError, match="floor_db must be negative"):
+            so.MFCC(SENTENCE, floor_db=floor_db)
+    freqs = np.linspace(0, 8000, 257)
+    with pytest.raises(ValueError, match="triangles"):
+        mel_filterbank(26, freqs, 0, 8000, triangles="peak")
+    with pytest.raises(ValueError, match="triangle_axis"):
+        mel_filterbank(26, freqs, 0, 8000, triangle_axis="bark")
+    for order in (0, 5):
+        with pytest.raises(ValueError, match="order"):
+            delta_features(np.zeros(10), order=order)
+    with pytest.raises(ValueError, match="longer than"):
+        delta_features(np.zeros(4))
 
 
 @pytest.mark.parametrize("kind", ["mfcc", "mel"])

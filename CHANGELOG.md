@@ -35,6 +35,10 @@ version (0.x.y) only fixes bugs.
   ideal masks check their target and masker the same way. `Mask` refuses NaN
   and infinite gains, `ideal_ratio_mask` refuses `beta <= 0`, and `Mask.t`
   says it leaves out the subbands' padding (audit sitting 7b).
+- `Cepstrum` and `MFCC` refuse a `floor_db` of 0 or above, which floored
+  every magnitude at or above the loudest and returned flat coefficients.
+  The `MFCC` docstring says its FFT length is the smallest power of two at
+  least as long as the window, as Kaldi rounds (audit sitting 15).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local
