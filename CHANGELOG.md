@@ -14,6 +14,10 @@ version (0.x.y) only fixes bugs.
   about 2 real numbers per sample instead of 85. Its coefficients,
   `DecimatedSubbands`, are complex, one sequence per band, and draw each band
   with its own time cells (docs/design/frames/decimated-filterbanks.md).
+- `synth_ir` and `band_rt60s` also take a room's RT60 as a curve,
+  `rt60=(freqs, rt60s)` in Hz and seconds, such as one drawn by hand. Each
+  band reads the curve at its center frequency, in log frequency and log RT60,
+  held flat beyond its ends. A single number gives the same samples as before.
 
 ### Changed
 
