@@ -6,6 +6,15 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-28
+
+A release from the code audit's last sittings (14 to 23), with two
+additions: a decimated filterbank (a constant-Q transform with an exact
+inverse) and RT60 curves for synthetic rooms. The fix that changes the most
+sounds is the HRIR gain: renders at a sampling rate other than the HRIR set's
+are louder, by 2.7 dB at 48 kHz for PKU-IOA. Some inputs that used to run
+without a word are now refused in plain words.
+
 ### Added
 
 - `DecimatedFilterbank`: any `Filterbank` with each band kept at its own
@@ -1195,7 +1204,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.8.0...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.9.0...main
+[0.9.0]: https://github.com/choyun1/sonore/releases/tag/v0.9.0
 [0.8.0]: https://github.com/choyun1/sonore/releases/tag/v0.8.0
 [0.7.0]: https://github.com/choyun1/sonore/releases/tag/v0.7.0
 [0.6.0]: https://github.com/choyun1/sonore/releases/tag/v0.6.0
