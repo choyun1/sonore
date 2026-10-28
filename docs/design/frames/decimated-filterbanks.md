@@ -230,6 +230,20 @@ Two pages would link to it:
 The README's module table gains the two classes, and the roadmap line
 moves to `docs/roadmap-done.md` when the work is done.
 
+## Amendment, 2026-10-28 (audit sitting 8b)
+
+As first built (PR #260), the code left a filter uncut whenever its response
+was exactly zero anywhere between 0 Hz and Nyquist. A Morlet response is a
+Gaussian whose tails underflow to exactly zero far from its center, so 44 of
+the 54 bandpass filters of the C7 Morlet bank were not cut: the bank kept
+16.2 real numbers per sample at -100 dB instead of C7's 7.17, though it stayed
+exact. Each filter type now says whether its filters are zero outside a band
+by construction (`FilterType.compact_support`, true for cosines), and the
+bandpass filters of every other type are cut. The Morlet bank then keeps 5.07,
+5.89 and 7.19 real numbers per sample at -40, -60 and -100 dB (C7's 5.06, 5.88
+and 7.17, the difference being the fast FFT lengths of D3). Gammatone and
+cosine banks are unchanged.
+
 ## Citations
 
 | Source | Status on 2026-10-28 |

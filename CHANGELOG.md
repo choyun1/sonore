@@ -80,6 +80,16 @@ version (0.x.y) only fixes bugs.
   as a number of degrees, and the refusal of a source nearer than the
   nearest of several distances. `tools/check_move_sound_speed.py` draws its
   directions above the hole below -40 degrees again (audit sitting 18).
+- `DecimatedFilterbank` cuts Morlet filters at `floor_db` as its docstring
+  says. A Morlet's tails underflow to exactly zero far from its center, which
+  the code took for a support, so most Morlet filters were left uncut: still
+  exact, but 16.2 real numbers per sample instead of 7.2 for a 54-band bank.
+  Filter types now say whether they are zero outside a band by construction
+  (`FilterType.compact_support`, true for cosines). `DecimatedSubbands.db` is
+  documented as the envelope for bandpass bands only (for the lowpass and
+  highpass it is the coefficient's magnitude), the class docstring says what
+  an edge band's coefficients are, and the repr counts real numbers per
+  padded sample (audit sitting 8b).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local
