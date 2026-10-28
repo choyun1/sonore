@@ -119,7 +119,9 @@ class MFCC(View):
 
     - a ``Sound`` is analyzed with the usual speech settings: a symmetric
       Hamming window ``win_dur`` long (25 ms), as HTK and Kaldi use, a hop of
-      ``hop_dur`` (10 ms), and an FFT length of the next power of two;
+      ``hop_dur`` (10 ms), and an FFT length of the smallest power of two at
+      least as long as the window (512 for 25 ms at 16 kHz), as Kaldi
+      rounds;
     - an :class:`~sonore.frames.gabor.STFT` or
       :class:`~sonore.frames.gabor.TVSTFT` is used as it is, so
       any window, hop or pitch-adaptive analysis can be summarized.
@@ -186,7 +188,8 @@ class MFCC(View):
         ``"mel"``: the triangles are straight lines in mel (HTK, Kaldi);
         ``"hz"``: straight in Hz (librosa).
     floor_db
-        Floor of the band powers, in dB below each channel's largest.
+        Floor of the band powers, in dB below each channel's largest;
+        negative.
     lifter
         ``L`` of HTK's sinusoidal lifter, which multiplies ``c[n]`` by
         ``1 + (L / 2) sin(pi n / L)``; 0 for none. It is a fixed gain per
@@ -255,6 +258,8 @@ class MFCC(View):
             )
         if not 1 <= n_mfcc <= n_mels:
             raise ValueError(f"n_mfcc must be between 1 and n_mels ({n_mels}), not {n_mfcc}")
+        if not floor_db < 0:
+            raise ValueError(f"floor_db must be negative (dB below each channel's largest), not {floor_db!r}")
         self.source = coefs
         self.fs = coefs.fs
         self.n_fft = coefs.n_fft

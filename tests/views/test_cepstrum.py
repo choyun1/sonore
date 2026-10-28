@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -134,3 +136,96 @@ def test_plot(noise):
     matplotlib.use("Agg")
     ax = so.Cepstrum(so.STFT(noise, win_dur=0.04)).plot()
     assert ax.get_ylabel() == "Quefrency [ms]"
+
+
+def test_the_floor_is_per_channel():
+    """A stretch 260 dB below the loud part lies under the floor, which is set
+    by the channel's loudest time window, so it reads flat."""
+    rng = np.random.default_rng(0)
+    x = np.concatenate([rng.standard_normal(4000), rng.standard_normal(4000) * 1e-13])
+    cep = so.Cepstrum(so.STFT(so.Sound(x, FS), win_dur=0.02))
+    quiet = np.flatnonzero(cep.t > 0.3)
+    assert np.abs(cep.data[0, 1:][:, quiet]).max() < 1e-12
+
+
+@pytest.mark.parametrize("floor_db", [0.0, 10.0])
+def test_a_floor_at_or_above_the_maximum_is_refused(noise, floor_db):
+    with pytest.raises(ValueError, match="floor_db must be negative"):
+        so.Cepstrum(so.STFT(noise), floor_db=floor_db)
+
+
+@pytest.mark.parametrize("n_fft", [512, 513])
+def test_minimum_phase_keeps_the_envelope_as_its_magnitude(noise, n_fft):
+    cep = so.Cepstrum(so.STFT(noise, frame=so.GaborFrame(0.02, 0.005, n_fft=n_fft)))
+    assert np.allclose(np.abs(cep.to_stft(phase="minimum").data), cep.envelope(), rtol=1e-9)
+
+
+def test_a_liftered_cepstrum_keeps_the_source_phase_on_its_own_envelope(noise):
+    cep = so.Cepstrum(so.STFT(noise)).lifter(2e-3)
+    coefs = cep.to_stft()
+    assert np.allclose(np.abs(coefs.data), cep.envelope(), rtol=1e-12)
+    assert np.allclose(np.angle(coefs.data), np.angle(cep.source.data), atol=1e-12)
+
+
+@pytest.mark.parametrize(("f0", "f_lo", "f_hi"), [(400.0, 75.0, 400.0), (80.0, 80.0, 400.0)])
+def test_f0_at_either_end_of_the_search_range(f0, f_lo, f_hi):
+    snd = vowel(f0, dur=0.4)
+    t, est, _ = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.01)).f0(f_lo=f_lo, f_hi=f_hi)
+    inside = (t > 0.03) & (t < snd.duration - 0.03)
+    assert np.all(np.abs(est[0, inside] / f0 - 1) < 0.002)
+
+
+@pytest.mark.parametrize("f0", [130.0, 260.0])
+def test_f0_between_whole_sample_periods(f0):
+    """The parabola through the peak refines the period between samples
+    (measured within 0.04% at 130 Hz and 0.07% at 260 Hz; the nearest whole
+    sample alone is up to 0.8% off at 260 Hz)."""
+    snd = vowel(f0)
+    t, est, _ = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.01)).f0()
+    inside = (t > 0.03) & (t < snd.duration - 0.03)
+    assert np.all(np.abs(est[0, inside] / f0 - 1) < 0.002)
+
+
+def test_the_voicing_threshold():
+    cep = so.Cepstrum(so.STFT(vowel(150.0), win_dur=0.040, hop_dur=0.01))
+    _, _, peak = cep.f0()
+    window = len(cep.t) // 2
+    _, at_peak, _ = cep.f0(threshold=peak[0, window])
+    _, above, _ = cep.f0(threshold=np.nextafter(peak[0, window], np.inf))
+    assert at_peak[0, window] > 0
+    assert above[0, window] == 0
+
+
+def test_refusals_and_repr(noise):
+    with pytest.raises(TypeError, match="STFT or TVSTFT"):
+        so.Cepstrum(noise)
+    cep = so.Cepstrum(so.STFT(noise, win_dur=0.04))
+    with pytest.raises(ValueError, match="phase"):
+        cep.to_stft(phase="zero")
+    for f_lo, f_hi in ((0.0, 400.0), (400.0, 100.0), (75.0, FS)):
+        with pytest.raises(ValueError, match="f_lo < f_hi"):
+            cep.f0(f_lo=f_lo, f_hi=f_hi)
+    n_quefrencies = cep.n_fft // 2 + 1
+    assert repr(cep).startswith(f"Cepstrum({n_quefrencies} quefrencies x {len(cep.t)} time windows, 2 ch")
+
+
+SPEECH = Path(__file__).resolve().parents[2] / "docs" / "speech"
+
+
+@pytest.mark.skipif(not SPEECH.exists(), reason="docs are not in the sdist")
+def test_f0_agrees_with_harvest_as_the_docstring_says():
+    """The docstring's numbers on the gallery sentence (measured 78.5% within
+    5% of Harvest, and 95.6% where the peak exceeds 0.1)."""
+    snd = so.load(SPEECH / "bdl_arctic_a0131.flac")
+    reference = np.loadtxt(SPEECH / "bdl_arctic_a0131_f0.csv", delimiter=",", skiprows=2)
+    cep = so.Cepstrum(so.STFT(snd, win_dur=0.040, hop_dur=0.005))
+    t, est, peak = cep.f0(threshold=0)
+    on_grid = np.searchsorted(np.round(t, 6), np.round(reference[:, 0], 6))
+    assert np.allclose(t[on_grid], reference[:, 0])
+    harvest, est, peak = reference[:, 1], est[0, on_grid], peak[0, on_grid]
+    inside = (reference[:, 0] >= 0.02) & (reference[:, 0] <= snd.duration - 0.02)
+    voiced = inside & (harvest > 0)
+    agrees = np.abs(est / np.where(voiced, harvest, 1) - 1) < 0.05
+    assert voiced.sum() == 432
+    assert np.mean(agrees[voiced]) > 0.77
+    assert np.mean(agrees[voiced & (peak > 0.1)]) > 0.94
