@@ -210,3 +210,10 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   `so.source_filter_synthesize`) and Rebuilding and changing a voice
   (condensed). Every example that moved kept its key, so old links forward.
   Done 2026-10-18.
+- **A decimated, invertible constant-Q transform.** `so.DecimatedFilterbank`
+  keeps each band of any `Filterbank` at its own rate (nonstationary Gabor
+  frames in frequency, Balazs et al., 2011), with an exact inverse; on the
+  semitone cosine bank it is a constant-Q transform with about two real
+  numbers per sample instead of 85. Design in
+  `docs/design/frames/decimated-filterbanks.md`; the gallery section "Keeping
+  fewer numbers" on Analysis and resynthesis. Done 2026-10-28.

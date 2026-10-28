@@ -347,7 +347,7 @@ tone either side of the center, so its Q, the center frequency over the half-pow
 bandwidth, is <span class="tex">1/(2^{1/24} - 2^{-1/24})</span>, about 17.3 for every band. Because the squares add up
 to one, filtering each band a second time and adding the bands gives the sound back exactly.
 The cell measures both on noise. The price is size: every band keeps every sample, so the
-bank holds one number per band for each sample of the sound.</p>
+bank holds one number per band for each sample of the sound. <a href="resynthesis.html#h-keeping-fewer-numbers">Keeping fewer numbers</a> on Analysis and resynthesis keeps each band at its own rate instead, with about two numbers per sample, and is still exact.</p>
 <div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">bank = so.cosine_filterbank(f_lo=55, f_hi=7040, scale=&quot;cents&quot;, spacing=100)
 noise = so.gaussian_noise(2.0, FS, rng=0)
 back = bank.synthesize(bank.analyze(noise))

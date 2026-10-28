@@ -448,6 +448,10 @@ sounds = talkers
 # sentence, with the harmonics $kF_0(t)$ drawn over them in black. A harmonic is resolved where
 # the boxes are shorter than the gap between harmonics; a pulse is resolved where they are
 # narrower than the period.
+# sonore's Morlet bank is undecimated and keeps every sample of every band. A decimated
+# filterbank keeps each band at its own rate instead, with long steps for the low bands and
+# short ones for the high bands, as these boxes are drawn: see
+# [Keeping fewer numbers](resynthesis.html#h-keeping-fewer-numbers).
 
 # %% [about]
 # Fixed windows tile the plane with identical boxes: flat ones for 5 ms, tall ones for 33.3 ms.
