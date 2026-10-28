@@ -48,6 +48,25 @@ version (0.x.y) only fixes bugs.
   window and hop are rounded to whole samples at twice the ceiling, and
   `FormantTrack`'s repr prints "none" for a formant missing everywhere
   (audit sitting 15b).
+- HRIRs resampled to a sound's rate keep their gain. `HRIRSet.at`,
+  `so.spatialize` and `so.move_sound` resampled a set's IRs as signals, which
+  scaled the filter's gain by the ratio of rates: PKU-IOA's 65,536 Hz set
+  rendered 2.7 dB too quiet at 48 kHz, 3.4 dB at 44.1 kHz and 12.2 dB at
+  16 kHz. The gallery page "Moving talkers" plays normalized sounds, but its
+  two "Level at each ear, re the talker" figures are 12.2 dB too low until
+  the page is rebuilt.
+- `so.spatialize` keeps the start of a sound placed nearer than a
+  single-distance set's distance; it read the sound early and dropped what
+  fell before time 0, so it now agrees with a still `so.move_sound`.
+- `HRIRSet` says plainly when its directions at a distance do not surround
+  the head (they lie in one plane or on one side; this used to fail inside
+  Qhull or as a singular matrix) and when a source is at the head's center.
+  `HRIRSet.from_sofa` adds a nonzero `Data.Delay` to the IRs. Docstrings:
+  `align` applies to `at` and `so.spatialize` while `so.move_sound` always
+  aligns, the length `at` returns, `so.hcc_trajectory` interpolating azimuth
+  as a number of degrees, and the refusal of a source nearer than the
+  nearest of several distances. `tools/check_move_sound_speed.py` draws its
+  directions above the hole below -40 degrees again (audit sitting 18).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local

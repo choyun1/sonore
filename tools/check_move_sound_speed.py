@@ -55,8 +55,11 @@ def db(error, reference):
 
 
 print("Triangle search: nearest measured directions against every triangle")
-directions = rng.standard_normal((20000, 3))
+directions = rng.standard_normal((30000, 3))
 directions /= np.linalg.norm(directions, axis=1, keepdims=True)
+directions = directions[directions[:, 2] > np.sin(np.radians(-39.9))][
+    :20000
+]  # above the hole below -40 degrees
 for shell, distance in enumerate(hrirs.distances):
     fast, full = hrirs._direction_weights(shell, directions), search_all(hrirs, shell, directions)
     same = np.array_equal(fast[0], full[0]) and np.array_equal(fast[1], full[1])
