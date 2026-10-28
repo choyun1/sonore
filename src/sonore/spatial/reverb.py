@@ -1,5 +1,16 @@
 """Synthetic room impulse responses from the statistics of natural
-reverberation (Traer & McDermott, 2016)."""
+reverberation (Traer & McDermott, 2016).
+
+The regression coefficients in ``sonore/data/fit_*.npy`` are Traer &
+McDermott's fits to their survey of 271 real-world rooms: for each of 35
+frequencies from 20 Hz to 16 kHz (their 33 subbands and the two edge
+filters), a slope and an intercept of the band's RT60 (Eq. S11) and onset
+level (Eq. S12) against the room's broadband RT60, the median RT60 across the
+33 subbands (the paper's T, Eq. S9). James Traer supplied them in 2017; the
+slopes, intercepts and RT60 profiles match the paper's Fig. S3 by eye. The
+rooms were fitted from a T of 0.2 s up (shorter ones were left out), so a
+shorter RT60 extrapolates.
+"""
 
 from __future__ import annotations
 
@@ -47,17 +58,19 @@ def _rt60_curve(curve_freqs: ArrayLike, curve_rt60s: ArrayLike, freqs: np.ndarra
             "an RT60 curve is two 1-D arrays of the same length, (freqs, rt60s): "
             f"got {curve_freqs.shape} freqs, {curve_rt60s.shape} RT60s"
         )
-    if np.any(curve_freqs <= 0) or np.any(np.diff(curve_freqs) <= 0):
-        raise ValueError("an RT60 curve's frequencies must be positive and strictly increasing")
+    if not np.all(np.isfinite(curve_freqs) & (curve_freqs > 0)) or np.any(np.diff(curve_freqs) <= 0):
+        raise ValueError("an RT60 curve's frequencies must be finite, positive and strictly increasing")
     if not np.all(np.isfinite(curve_rt60s) & (curve_rt60s > 0)):
         raise ValueError("an RT60 curve's RT60s must be positive and finite")
     return np.exp(np.interp(np.log(freqs), np.log(curve_freqs), np.log(curve_rt60s)))
 
 
 def band_rt60s(rt60: RT60Like, freqs: np.ndarray, *, profile: RT60Profile = "ecological") -> np.ndarray:
-    """Per-band RT60s [s] at ``freqs`` for a broadband (median) RT60, from the
+    """Per-band RT60s [s] at ``freqs`` for a room's broadband RT60, from the
     regression fits of Traer & McDermott (2016, Eq. S11), or one of the
-    paper's atypical variants (Eq. S15 and following):
+    paper's atypical variants (Eq. S15 and following). On ``synth_ir``'s
+    bands, the median of the ecological RT60s comes within about 6% of the
+    broadband RT60 (0.95 to 1.06 times it for 0.3 to 3 s):
 
     ``"ecological"``: mid frequencies decay slowest, as in real rooms.
     ``"inverted"``: ``max + min - ecological``; slow where real rooms are fast.
@@ -73,7 +86,8 @@ def band_rt60s(rt60: RT60Like, freqs: np.ndarray, *, profile: RT60Profile = "eco
     """
     match rt60:
         case numbers.Real() if not isinstance(rt60, bool):
-            pass  # the regression fits below
+            if not (np.isfinite(rt60) and rt60 > 0):
+                raise ValueError(f"rt60 must be a positive number of seconds, got {rt60}")
         case tuple((curve_freqs, curve_rt60s)):
             if profile != "ecological":
                 raise ValueError("an RT60 curve is already a profile: leave rt60_profile at 'ecological'")
@@ -82,8 +96,11 @@ def band_rt60s(rt60: RT60Like, freqs: np.ndarray, *, profile: RT60Profile = "eco
             raise TypeError("rt60 must be a number [s] or a curve (freqs [Hz], rt60s [s])")
     _, fit_rt60, fit_freqs = _model()
 
-    def eco(median_rt60):
-        return np.interp(freqs, fit_freqs, 10 ** (fit_rt60[:, 0] * np.log10(median_rt60) + fit_rt60[:, 1]))
+    # the fits are read linearly in frequency between the paper's 35 frequencies,
+    # while a curve is read in log frequency; the two readings differ by up to 5%
+    # between fit points, and changing this one would change every room
+    def eco(broadband_rt60):
+        return np.interp(freqs, fit_freqs, 10 ** (fit_rt60[:, 0] * np.log10(broadband_rt60) + fit_rt60[:, 1]))
 
     match profile:
         case "ecological":
@@ -139,11 +156,12 @@ def synth_ir(
     envelope, and the bands are re-filtered and summed. With the defaults the
     decay is exponential with frequency-dependent RT60s and onset levels taken
     from the paper's regressions on 271 real-world rooms, scaled to the
-    requested broadband ``rt60`` (the median across bands). Listeners can't
-    tell such IRs from real ones.
+    requested broadband ``rt60``. In the paper, listeners could not tell IRs
+    synthesized this way from real ones; sonore's have not been tested with
+    listeners.
 
-    The paper's "atypical" IRs, which listeners readily hear as unnatural,
-    are available through ``decay_shape``, ``rt60_profile`` and
+    The paper's "atypical" IRs, which its listeners readily heard as
+    unnatural, are available through ``decay_shape``, ``rt60_profile`` and
     ``drr_profile``. Note that in the paper each atypical IR was further
     adjusted to distort sounds as much as the ecological one (equating
     cochleagram error); that psychophysical control isn't done here, so
@@ -152,16 +170,17 @@ def synth_ir(
     Parameters
     ----------
     rt60
-        Median reverberation time [s], or a curve ``(freqs [Hz], RT60s [s])``
+        Broadband reverberation time [s] (the median of the band RT60s comes
+        within about 6% of it; see :func:`band_rt60s`), or a curve ``(freqs [Hz], RT60s [s])``
         that each band reads at its center frequency (see :func:`band_rt60s`);
         a curve keeps ``rt60_profile`` at ``"ecological"``.
     drr_db
         Direct-to-reverberant energy ratio [dB]. If given, a unit impulse is
         placed at t=0 and the tail is scaled to this DRR. If None, only the
-        (unit-RMS) reverberant tail is returned.
+        reverberant tail is returned, with an RMS of 1 over all channels.
     decay_db
         For exponential decays, truncate once the slowest band has decayed
-        this many dB.
+        this many dB (positive).
     n_channels
         Independent tails per channel (e.g. 2 for a decorrelated binaural
         tail); the direct impulse is identical in all channels.
@@ -175,6 +194,8 @@ def synth_ir(
     drr_profile
         ``"ecological"`` onset levels per band, or ``"constant"`` (their mean).
     """
+    if not decay_db > 0:
+        raise ValueError(f"decay_db must be positive, got {decay_db}")
     fit_drr, _, fit_freqs = _model()
     rng = as_rng(rng)
     f_hi = min(f_hi, fs / 2)
@@ -182,13 +203,13 @@ def synth_ir(
     cfs = filterbank.cfs
 
     taus = band_rt60s(rt60, cfs, profile=rt60_profile)
-    # a curve has no single RT60 for the onset fit, so its median band RT60
-    # stands in, as the docstring defines the number
-    broadband_rt60 = float(np.median(taus)) if isinstance(rt60, tuple) else rt60
     match drr_profile:
         case "ecological":
-            onset_db = fit_drr[:, 0] * np.log10(broadband_rt60) + fit_drr[:, 1]
-            onset_db = np.interp(cfs, fit_freqs, onset_db - np.median(onset_db))
+            # the paper's onset fits share one slope against RT60 across bands
+            # (Eq. S12), so once their median is removed the room's RT60 drops
+            # out: every room, and every curve, gets the intercepts' profile
+            onset_db = fit_drr[:, 1] - np.median(fit_drr[:, 1])
+            onset_db = np.interp(cfs, fit_freqs, onset_db)
         case "constant":
             onset_db = np.zeros(len(cfs))
         case _:
@@ -230,10 +251,11 @@ def measure_rt60(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Per-band RT60s of an impulse response: ``(center freqs [Hz], RT60s [s])``.
 
-    Each ERB band's energy decay curve (Schroeder backward integration) is fit
-    with a line over ``fit_range_db`` and extrapolated to -60 dB (so the
-    default measures T20 x 3). The direct sound, if any, should be removed
-    first; bands that never decay through the fit range give NaN.
+    The channels are averaged first. Each ERB band's energy decay curve
+    (Schroeder backward integration) is fit with a line over ``fit_range_db``
+    and extrapolated to -60 dB (so the default measures T20 x 3). The direct
+    sound, if any, should be removed first; bands that never decay through
+    the fit range give NaN.
     """
     filterbank = cosine_filterbank(n_bands, f_lo, min(f_hi, ir.fs / 2))
     bands = filterbank.analyze(ir.mono()).data[:, 1:-1, 0]  # bandpass bands only

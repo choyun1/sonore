@@ -835,7 +835,7 @@ sound = finish(rendered)
 #   party" listening environment. *J. Acoust. Soc. Am.* 152(3), 1684–1694.
 #   [doi:10.1121/10.0013990](https://doi.org/10.1121/10.0013990).
 #   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L647)
-#   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L111)
+#   [`binaural.interaural_cues`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L115)
 # - Cuevas-Rodríguez, Picinali, González-Toledo et al. (2019). 3D Tune-In Toolkit: an open-source
 #   library for real-time binaural spatialisation. *PLOS ONE* 14(3), e0211899.
 #   [doi:10.1371/journal.pone.0211899](https://doi.org/10.1371/journal.pone.0211899).

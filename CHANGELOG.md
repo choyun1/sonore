@@ -90,6 +90,20 @@ version (0.x.y) only fixes bugs.
   highpass it is the coefficient's magnitude), the class docstring says what
   an edge band's coefficients are, and the repr counts real numbers per
   padded sample (audit sitting 8b).
+- `synth_ir`, `band_rt60s` and `interaural_cues` refuse what they cannot
+  use, in plain words: an RT60 curve with a NaN or infinite frequency (it
+  gave a flat 1 s room without a word), `rt60` of 0, a negative or a non-finite
+  number, `decay_db` of 0 or less, a sound shorter than one analysis window,
+  and a `max_itd` as long as the window. Where only one ear is silent,
+  `interaural_cues` reports no ITD (NaN) instead of 0. `synth_ir`'s onset
+  levels are read straight from the regressions' intercepts: the fits share
+  one slope against RT60 across bands, so the room's RT60 never changed them
+  (IRs change by rounding only, under 4e-16 of the peak). Docstrings say how
+  closely the band RT60s' median follows `rt60` (within about 6%), credit the
+  listening results to the paper, give where the fit coefficients came from,
+  how flat `simple_bir` is, what windows and times `interaural_cues` uses, and
+  that oscor and phasewarp are normalized and phasewarp moves the right ear's
+  spectrum up by `f_mod` (audit sitting 19).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local

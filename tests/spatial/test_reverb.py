@@ -5,6 +5,7 @@ import pytest
 from helpers import FS
 
 import sonore as so
+from sonore.spatial.reverb import _decay_envelopes, _model
 
 
 class TestReverb:
@@ -153,6 +154,8 @@ def test_a_curve_is_read_in_log_frequency_and_log_rt60():
         ((100, 4000), (1.0, 0.0)),  # zero RT60
         ((100, 4000), (1.0, np.inf)),  # infinite RT60
         ((100, 4000), (1.0, 1.0, 1.0)),  # mismatched lengths
+        ((100, np.nan), (1.0, 1.0)),  # NaN frequency
+        ((100, np.inf), (1.0, 1.0)),  # infinite frequency
         ((), ()),  # empty
         (np.ones((2, 2)), np.ones((2, 2))),  # not 1-D
     ],
@@ -171,3 +174,60 @@ def test_a_curve_refuses_other_profiles():
 def test_rt60_must_be_a_number_or_a_curve(rt60):
     with pytest.raises(TypeError, match="rt60"):
         so.synth_ir(rt60, CURVE_FS)
+
+
+class TestSynthIrInDetail:
+    @pytest.mark.parametrize("shape", ["linear_matched_start", "linear_matched_end"])
+    def test_linear_decays_keep_each_bands_energy(self, shape):
+        t = np.arange(0, 3, 1e-4)
+        taus, onset_db = np.array([0.3, 0.8, 1.2]), np.array([-3.0, 0.0, 2.0])
+        exponential = _decay_envelopes(t, onset_db, taus, "exponential")
+        linear = _decay_envelopes(t, onset_db, taus, shape)
+        np.testing.assert_allclose(np.sum(linear**2, 0), np.sum(exponential**2, 0), rtol=2e-3)
+        if shape == "linear_matched_start":
+            np.testing.assert_allclose(linear[0], exponential[0])
+        else:
+            np.testing.assert_array_equal(np.argmax(linear == 0, axis=0), np.round(taus / 1e-4).astype(int))
+
+    def test_the_onset_fits_share_one_slope(self):
+        """Why synth_ir's onset levels do not depend on the room's RT60."""
+        fit_drr, _, _ = _model()
+        assert np.ptp(fit_drr[:, 0]) == 0
+
+    def test_ecological_onsets_follow_the_fit(self):
+        fs = 16000
+        fb = so.cosine_filterbank(32, 20, fs / 2)
+        natural = so.synth_ir(1.0, fs, rng=3)
+        constant = so.synth_ir(1.0, fs, rng=3, drr_profile="constant")
+        n = round(0.02 * fs)
+        onset = lambda ir: 10 * np.log10(np.sum(fb.analyze(ir).data[:n, :, 0] ** 2, 0))  # noqa: E731
+        measured = onset(natural) - onset(constant)
+        fit_drr, _, fit_freqs = _model()
+        wanted = np.interp(fb.cfs, fit_freqs, fit_drr[:, 1])
+        measured, wanted = measured - np.median(measured), wanted - np.median(wanted)
+        np.testing.assert_allclose(measured[3:], wanted[3:], atol=0.5)
+
+    def test_a_tail_has_rms_one(self):
+        assert so.synth_ir(0.5, FS, rng=0).rms == pytest.approx(1)
+
+    def test_the_direct_impulse_is_in_every_channel(self):
+        ir = so.synth_ir(0.5, FS, drr_db=20, n_channels=2, rng=0)
+        np.testing.assert_allclose(ir.data[0], 1, atol=0.05)
+
+
+def test_measure_rt60_returns_its_bandpass_centers():
+    ir = so.synth_ir(0.5, 16000, rng=0)
+    cfs, _ = so.measure_rt60(ir, n_bands=12, f_lo=100, f_hi=6000)
+    np.testing.assert_array_equal(cfs, so.cosine_filterbank(12, 100, 6000).cfs[1:-1])
+
+
+@pytest.mark.parametrize("rt60", [0.0, -1.0, np.nan, np.inf])
+def test_rt60_must_be_positive_and_finite(rt60):
+    with pytest.raises(ValueError, match="positive number of seconds"):
+        so.synth_ir(rt60, CURVE_FS)
+
+
+@pytest.mark.parametrize("decay_db", [0.0, -10.0])
+def test_decay_db_must_be_positive(decay_db):
+    with pytest.raises(ValueError, match="decay_db"):
+        so.synth_ir(1.0, CURVE_FS, decay_db=decay_db)
