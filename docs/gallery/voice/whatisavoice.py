@@ -20,10 +20,10 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # [Rebuilding and changing a voice](voice.html).
 #
 # - [What makes a voice](#h-what-makes-a-voice): lungs, vocal folds and vocal tract, in one
-#   diagram.
+#   diagram and one product of spectra.
 # - [The two talkers](#h-the-two-talkers): the sentence, read twice.
 # - [How voices differ](#h-how-voices-differ): pitch, irregularity, noise, phonation type, effort
-#   and size, each as what it is in the source or the filter and how it is measured.
+#   and size, each as what it is in the source or the filter, and each measure with its formula.
 # - [A few indicators, measured](#h-a-few-indicators-measured): what sonore can already compute,
 #   on both talkers, in one table.
 # - [What this page leaves out](#h-what-this-page-leaves-out).
@@ -40,6 +40,33 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # tract**, which resonates at a few frequencies set by its shape, the **formants**, and so passes
 # some frequencies of the source more than others. The tract is the **filter**. At the lips the
 # sound radiates into the air, which favors high frequencies by about 6 dB per octave.
+#
+# In symbols, the vocal folds open once every period $T_0$, so the source repeats with the
+# fundamental frequency $F_0 = 1/T_0$ and its spectrum $E(f)$ has a line at every harmonic $kF_0$.
+# The tract multiplies it by its gain $H(f)$, and the lips by the radiation $R(f)$:
+#
+# $$S(f) = E(f)\,H(f)\,R(f), \qquad E(f) = \sum_{k \ge 1} E_k\, \delta(f - kF_0).$$
+#
+# [The source-filter model](sourcefilter.html) writes the same product as $S = EH$, with the
+# radiation folded into the other two. In decibels the product becomes a sum, so the level of
+# harmonic $k$ is the source's level plus the two gains at its frequency:
+#
+# $$L_k = 20\log_{10}|E_k| + 20\log_{10}|H(kF_0)| + 20\log_{10}|R(kF_0)|.$$
+#
+# The tract below is five formants in cascade, each the second-order resonator of Klatt's (1980)
+# synthesizer. For a formant at $F_i$ Hz with bandwidth $b_i$ Hz, sampled at $f_s$,
+#
+# $$H(f) = \prod_{i=1}^{5} \left|\frac{A_i}{1 - B_i z^{-1} - C_i z^{-2}}\right|_{z = e^{j 2\pi f / f_s}},$$
+#
+# with $C_i = -e^{-2\pi b_i / f_s}$, $B_i = 2 e^{-\pi b_i / f_s} \cos(2\pi F_i / f_s)$ and
+# $A_i = 1 - B_i - C_i$, which makes the gain 1 at 0 Hz. Each formant is a pair of poles of $H$ at
+# $z = e^{-\pi b_i / f_s}\, e^{\pm j 2\pi F_i / f_s}$: the angle sets the frequency, and the
+# closer the poles lie to the unit circle, the narrower the bandwidth and the sharper the peak.
+# The lips act as a first difference,
+#
+# $$R(f) = \left|1 - e^{-j 2\pi f / f_s}\right| = 2 \sin(\pi f / f_s),$$
+#
+# which doubles, that is rises by 6 dB, with every octave well below $f_s / 2$.
 #
 # The diagram below draws the chain for one vowel: the harmonics of a glottal pulse, the vocal
 # tract's gain, and their product, which is what reaches a listener. Everything that follows on
@@ -198,9 +225,21 @@ fig, playhead = show_pair(sounds, "the sentence")
 # mass and tension; longer and heavier folds vibrate more slowly, which is most of why adult male
 # voices are lower (Titze, 1989). A voice has a level (where $F_0$ sits), a range (how far it
 # moves) and a variability (how much it moves from moment to moment). **Measured** from an F0
-# track: the median over voiced time windows, the range that holds the middle 90% of them, and
-# the standard deviation in semitones about the median. A ratio of pitches is given in semitones,
-# twelve to the octave.
+# track, $F_0[n]$ at its $N$ voiced time windows. The interval between two frequencies, in
+# semitones, is
+#
+# $$\Delta(f_1, f_2) = 12 \log_2 \frac{f_2}{f_1},$$
+#
+# so an octave is 12 semitones and a fifth about 7. The level is the median $\tilde F_0$. The
+# range is the middle 90%, from the 5th percentile $P_5$ to the 95th $P_{95}$, which is
+# $\Delta(P_5, P_{95})$ semitones wide. The variability is the standard deviation of the track in
+# semitones,
+#
+# $$\sigma = \sqrt{\frac{1}{N} \sum_{n=1}^{N} \left(s_n - \bar s\right)^2}, \qquad
+# s_n = 12 \log_2 \frac{F_0[n]}{\tilde F_0},$$
+#
+# with $\bar s$ the mean of the $s_n$. The reference $\tilde F_0$ only sets where zero is, so it
+# does not change $\sigma$.
 
 # %%
 voiced_f0 = {label: track.f0[0][track.voiced[0]] for label, track in tracks.items()}
@@ -218,7 +257,7 @@ print(f"female / male median: {ratio:.2f}, {12 * np.log2(ratio):.1f} semitones")
 # %% [markdown]
 # The female talker's voice is about half as high again as the male talker's: a ratio of
 # {{ f"{ratio:.2f}" }}, a little more than a fifth (seven semitones, 1.50), and well short of an
-# octave. The male talker also moves his pitch more: {{ f"{pitch_stats['Male talker']['sd']:.1f}" }}
+# octave. The male talker's pitch also moves more: {{ f"{pitch_stats['Male talker']['sd']:.1f}" }}
 # semitones of standard deviation against {{ f"{pitch_stats['Female talker']['sd']:.1f}" }}.
 
 # %% [about]
@@ -247,11 +286,20 @@ right.set_xticks([])
 # ### Cycle-to-cycle irregularity
 #
 # **In the source.** No two glottal cycles are the same length or the same strength. **Jitter**
-# is the perturbation of the period from one cycle to the next, usually given as the mean
-# absolute difference between neighboring periods over the mean period, in percent; **shimmer**
-# is the same for the cycles' peak amplitudes, in percent or dB. Both are read from marks on
-# each individual cycle of the waveform. Clinical reports give them for a sustained vowel, where
-# the voice is meant to be steady. **Not in sonore:** `so.f0_track` reads a time window several
+# is the perturbation of the period from one cycle to the next, and **shimmer** the same for the
+# cycles' peak amplitudes. With $T_i$ the length of the $i$-th of $N$ consecutive periods and
+# $A_i$ its peak amplitude, the local jitter and shimmer that Praat's voice report gives
+# (Boersma & Weenink, manual pages "Voice 2. Jitter" and "Voice 3. Shimmer") are the mean absolute
+# difference between neighbors over the mean,
+#
+# $$J = \frac{\frac{1}{N-1} \sum_{i=2}^{N} |T_i - T_{i-1}|}{\frac{1}{N} \sum_{i=1}^{N} T_i},
+# \qquad
+# S = \frac{\frac{1}{N-1} \sum_{i=2}^{N} |A_i - A_{i-1}|}{\frac{1}{N} \sum_{i=1}^{N} A_i},$$
+#
+# usually given in percent, and shimmer is also given in decibels, as the mean of
+# $|20 \log_{10}(A_i / A_{i-1})|$. Both are read from marks on each individual cycle of the
+# waveform. Clinical reports give them for a sustained vowel, where the voice is meant to be
+# steady. **Not in sonore:** `so.f0_track` reads a time window several
 # periods long at a time and cannot see single cycles, so sonore marks no periods and computes
 # neither. What jitter and
 # shimmer do to the analyses here is read as noise ([Fit the harmonics, keep the
@@ -261,16 +309,39 @@ right.set_xticks([])
 #
 # **In the source.** Turbulence at the glottis adds a hiss to the buzz, which is heard as
 # breathiness; irregular vibration adds a rougher kind of noise, heard as hoarseness. Two
-# measures are common. The **harmonics-to-noise ratio** (HNR; Yumoto, Gould & Baer, 1982) is the
-# power of the periodic part over the power of the rest, in dB, which needs the periodic part
-# separated out: [A source that is partly noise](richer.html#h-a-source-that-is-partly-noise)
-# does that frequency by frequency, as an aperiodicity, and its noise share in a band is the
-# inverse of an HNR in that band. **Cepstral peak prominence** (CPP; Hillenbrand, Cleveland &
-# Erickson, 1994) is the height of the cepstrum's pitch peak above the trend of the rest of the
-# cepstrum, in dB: a regular voice with strong harmonics has a tall peak, and noise and
-# irregularity both flatten it, so it needs no pitch track, and it is among the acoustic
-# measures clinical studies most often report against ratings of breathiness and overall
-# dysphonia. Both are computed in the table below.
+# measures are common.
+#
+# The **harmonics-to-noise ratio** (HNR; Yumoto, Gould & Baer, 1982) is the power of the periodic
+# part over the power of the rest, in dB, which needs the periodic part separated out. Yumoto et
+# al. took $n$ consecutive periods $x_i(t)$, $0 \le t < T_0$, of a sustained vowel, called their
+# average $\bar x(t) = \frac{1}{n} \sum_i x_i(t)$ the harmonic part and the differences from it the
+# noise:
+#
+# $$\mathrm{HNR} = 10 \log_{10} \frac{n \int_0^{T_0} \bar x(t)^2 \, dt}
+# {\sum_{i=1}^{n} \int_0^{T_0} \left(x_i(t) - \bar x(t)\right)^2 dt} \ \text{dB}.$$
+#
+# [A source that is partly noise](richer.html#h-a-source-that-is-partly-noise) separates the two
+# frequency by frequency instead, as an aperiodicity: at each time and frequency, the share of the
+# power that is noise, $a^2 = P_N / (P_H + P_N)$ for harmonic power $P_H$ and noise power $P_N$.
+# Where the share is $a^2$, the HNR is
+#
+# $$\mathrm{HNR} = 10 \log_{10} \frac{1 - a^2}{a^2} \ \text{dB},$$
+#
+# so a noise share of -20 dB (1% of the power) is an HNR of about 20 dB.
+#
+# **Cepstral peak prominence** (CPP; Hillenbrand, Cleveland & Erickson, 1994) is the height of the
+# cepstrum's pitch peak above the trend of the rest of the cepstrum. With the cepstrum of a time
+# window $c(q) = \mathcal{F}^{-1}\{\ln |X(f)|\}(q)$ ([Pitch from the
+# cepstrum](sourcefilter.html#h-pitch-from-the-cepstrum)) taken in decibels, $C(q) = 20 \log_{10}
+# |c(q)|$, and $\hat C(q) = \alpha q + \beta$ the straight line fitted to $C$ by least squares,
+#
+# $$\mathrm{CPP} = C(q^*) - \hat C(q^*), \qquad
+# q^* = \arg\max_{1/F_{\max} \,\le\, q \,\le\, 1/F_{\min}} C(q),$$
+#
+# in dB, the peak searched for among the periods a voice can have. A regular voice with strong
+# harmonics has a tall peak, and noise and irregularity both flatten it. It needs no pitch track,
+# and it is among the acoustic measures clinical studies most often report against ratings of
+# breathiness and overall dysphonia. Both measures are computed in the table below.
 #
 # ### Phonation type
 #
@@ -280,11 +351,26 @@ right.set_xticks([])
 # as noise. Voice scientists describe the range from pressed (or tense, strained) through modal
 # to breathy (lax), and **measure** it on the source spectrum's tilt: **H1–H2**, the level of
 # the first harmonic over the second, which rises as the voice gets breathier, and **H1–A3**,
-# the first harmonic over the strongest harmonic of the third formant (Hanson, 1997). In the LF
-# model of the glottal pulse the whole shape is one number, $R_d$, from about 0.3 (pressed) to
-# 2.7 (breathy), and Fant (1995) fitted H1–H2 to it as $-7.6 + 11.1\,R_d$ dB. [Voice
-# quality](sourcefilter.html#h-voice-quality) draws the pulses and their spectra; the vowel below
-# puts three of them on the same vocal tract.
+# the first harmonic over the strongest harmonic of the third formant (Hanson, 1997). With
+# $L(f)$ the spectrum of a time window in dB and $L_k$ the level of harmonic $k$, taken as the
+# largest value of $L$ within $F_0/4$ of $kF_0$,
+#
+# $$L_k = \max_{|f - kF_0| < F_0/4} L(f), \qquad \mathrm{H1{-}H2} = L_1 - L_2, \qquad
+# \mathrm{H1{-}A3} = L_1 - \max_{k \in \mathcal{K}_3} L_k,$$
+#
+# with $\mathcal{K}_3$ the harmonics under the third formant. In the LF model of the glottal pulse
+# the whole shape is one number (Fant, 1995),
+#
+# $$R_d = \frac{U_0}{0.11\, E_e T_0},$$
+#
+# with $U_0$ the peak glottal flow, $E_e$ the strength of the closure (the negative peak of the
+# flow's derivative) and $T_0$ the period. It runs from about 0.3 (pressed) to 2.7 (breathy), and
+# Fant fitted H1–H2 to it as
+#
+# $$\mathrm{H1{-}H2} \approx -7.6 + 11.1\, R_d \ \text{dB}.$$
+#
+# [Voice quality](sourcefilter.html#h-voice-quality) draws the pulses and their spectra; the vowel
+# below puts three of them on the same vocal tract.
 
 # %%
 VOWEL_DUR = 1.0
@@ -330,27 +416,50 @@ fig, playhead = show_pair(sounds, "Rd 0.5, 1, 2.5")
 # only louder. The glottal pulses close more sharply, so the spectrum flattens and the high
 # harmonics gain more than the low ones; $F_0$ rises; the mouth opens wider and the first
 # formant rises with it (Traunmüller & Eriksson, 2000). So effort is read from the spectral tilt,
-# the pitch and F1 together, relative to the same talker speaking normally, and a single
-# recording with no quiet or loud counterpart gives no effort measure. **Not measured here**, for
-# that reason.
+# the pitch and F1 together, relative to the same talker speaking normally. The **tilt** is the
+# slope $b$, in dB per octave, of the straight line that best fits a spectrum's level $L(f)$
+# against log frequency over a band $\Phi$:
+#
+# $$(a, b) = \arg\min_{a, b} \sum_{f \in \Phi} \left(L(f) - a - b \log_2 f\right)^2.$$
+#
+# A single recording with no quiet or loud counterpart gives no effort measure. **Not measured
+# here**, for that reason.
 #
 # ### Size: the spectral envelopes
 #
-# **In the filter.** A longer vocal tract resonates lower: to a first approximation every formant
-# scales by the same factor, the ratio of the two tract lengths (Fitch & Giedd, 1999), so the
-# whole spectral envelope slides along a logarithmic frequency axis. Adult men have tracts about
-# 15 to 20% longer than adult women's, and children's are shorter again, which is why a child's
-# vowels sit higher even at the same pitch. **Measured** two ways here: as the ratio that best
-# moves one talker's average spectral envelope onto the other's, and in the table below as the
-# ratio of their median formant frequencies.
+# **In the filter.** A longer vocal tract resonates lower. The simplest tract, a uniform tube of
+# length $\ell$ closed at the glottis and open at the lips, resonates where a quarter wavelength,
+# or an odd multiple of one, fits in it (Fant, 1960):
+#
+# $$F_k = \frac{(2k - 1)\, c}{4 \ell}, \qquad k = 1, 2, 3, \dots,$$
+#
+# with $c \approx 350$ m/s the speed of sound in warm, humid air: 500, 1500 and 2500 Hz for a
+# tract 17.5 cm long. Every formant is inversely proportional to the length, so two tracts of the
+# same shape, lengths $\ell_1$ and $\ell_2$, have every formant in the same ratio,
+# $F_k^{(2)} / F_k^{(1)} = \ell_1 / \ell_2$, and the whole spectral envelope slides along a
+# logarithmic frequency axis by $\log(\ell_1 / \ell_2)$ without changing shape. Real tracts are not
+# uniform, so this holds to a first approximation (Fitch & Giedd, 1999). Adult men have tracts
+# about 15 to 20% longer than adult women's, and children's are shorter again, which is why a
+# child's vowels sit higher even at the same pitch. **Measured** two ways here: as the ratio that
+# best moves one talker's average spectral envelope onto the other's, and in the table below as
+# the ratio of their median formant frequencies.
 #
 # The formants are the peaks of the spectral envelope, the shape the vocal tract gives the
 # harmonics. CheapTrick's envelope (Morise, 2015; [An envelope measured to the pitch
-# period](richer.html#h-an-envelope-measured-to-the-pitch-period)) is measured every 5 ms;
-# averaging it in dB over each talker's voiced time windows gives one curve per talker. The cell
-# reads the male average at $f/r$ and finds the $r$ that brings it closest to the female one,
-# with the overall level left free, and again with a tilt (a straight line in dB over log
-# frequency) left free as well.
+# period](richer.html#h-an-envelope-measured-to-the-pitch-period)) is measured every 5 ms, as a
+# power $P(t, f)$; averaging it in dB over each talker's voiced time windows $V$ gives one curve
+# per talker,
+#
+# $$\bar L(f) = \frac{1}{|V|} \sum_{n \in V} 10 \log_{10} P(t_n, f).$$
+#
+# The cell reads the male average at $f/r$ and finds the $r$ that brings it closest to the
+# female one over the bins $\Phi$ from 100 to 5000 Hz, in RMS dB, with the level $a$ and the tilt
+# $b$ left free:
+#
+# $$r^* = \arg\min_{r} \min_{a, b} \sqrt{\frac{1}{|\Phi|} \sum_{f \in \Phi}
+# \left(\bar L_{\mathrm{F}}(f) - \bar L_{\mathrm{M}}(f / r) - a - b \log_2 f\right)^2},$$
+#
+# and again with only the level free ($b = 0$).
 
 # %%
 envelopes = {label: so.pitch_adaptive_envelope(talkers[label], tracks[label]) for label in talkers}
@@ -372,7 +481,7 @@ def misfit(ratio, tilt=False):
     return np.sqrt(np.mean((difference - basis @ np.linalg.lstsq(basis, difference, rcond=None)[0]) ** 2))
 
 
-ratios = np.arange(0.80, 1.60, 0.005)
+ratios = np.arange(0.80, 2.00, 0.005)
 for tilt in (False, True):
     errors = [misfit(r, tilt) for r in ratios]
     best = ratios[np.argmin(errors)]
@@ -416,24 +525,26 @@ ax.legend(loc="upper right", fontsize=8)
 # measures them on both recordings. Each is defined in the code, over the voiced time windows of
 # the `so.f0_track` track, and each leaves something out:
 #
-# - **F0**: the median and the middle 90% range, from above.
-# - **H1–H2**: in each 40 ms Hann time window, the level of the largest spectral peak within a
-#   quarter of $F_0$ of $F_0$ over that near $2F_0$; the median over time windows. Uncorrected for
-#   the vocal tract: a first formant near either harmonic raises it (Hanson, 1997, corrects for
-#   that), so on running speech this is the raw difference, not the source's.
-# - **CPP**: `so.Cepstrum` of the same time windows (the real cepstrum of the log magnitude), each
-#   expressed in dB as $20 \log_{10} |c(\tau)|$; a straight line is fitted to it from 1 ms up to half
-#   the window, and CPP is the height of the largest peak between 2.5 and 16.7 ms (60 to 400 Hz)
-#   above that line; the median over time windows. Hillenbrand et al. (1994) defined it on the
-#   cepstrum of the log power spectrum of a sustained vowel, so these values compare the two
-#   talkers with each other, not with clinical software's.
-# - **Noise share**: `so.harmonic_aperiodicity`, the share of power that is not harmonic, summed
-#   into four bands with the envelope as weight; the median over time windows, in dB (0 dB is all
-#   noise). Jitter and shimmer count as noise here; D4C's measure, which [What D4C
+# - **F0**: the median $\tilde F_0$ and the middle 90% range, $P_5$ to $P_{95}$, from above.
+# - **H1–H2**: $L_1 - L_2$ as defined above, in each 40 ms Hann time window; the median over time windows.
+#   Uncorrected for the vocal tract: a first formant near either harmonic raises it (Hanson, 1997, corrects
+#   for that), so on running speech this is the raw difference, not the source's.
+# - **CPP**: $C(q^*) - \hat C(q^*)$ as defined above, from `so.Cepstrum` of the same time windows, with the
+#   line $\hat C$ fitted from 1 ms up to half the window and the peak searched for from 2.5 to 16.7 ms
+#   ($F_{\min} = 60$ Hz, $F_{\max} = 400$ Hz); the median over time windows. Hillenbrand et al. (1994) defined
+#   it on the cepstrum of the log power spectrum of a sustained vowel, so these values compare the two talkers
+#   with each other, not with clinical software's.
+# - **Noise share**: the share $a^2(t, f)$ from `so.harmonic_aperiodicity`, averaged over each of
+#   four bands $B$ with the envelope's power as weight, $\sum_{f \in B} a^2 P \big/ \sum_{f \in B}
+#   P$, which is the band's noise power over its total power; the median over time windows, in dB
+#   (0 dB is all noise). Jitter and shimmer count as noise here; D4C's measure, which [What D4C
 #   reports](richer.html#h-what-d4c-reports) explains, would give different numbers below 3 kHz.
 # - **Formant scaling**: `so.formant_track`'s median F1, F2 and F3 (ceiling 5000 Hz for the male
 #   talker, 5500 Hz for the female one, as Praat advises), their ratios, and the geometric mean of
-#   the three, to set beside the envelope warp above.
+#   the three,
+#   $s = \bigl(\prod_{k=1}^{3} \tilde F_k^{\mathrm{F}} / \tilde F_k^{\mathrm{M}}\bigr)^{1/3}$,
+#   to set beside the envelope warp above. In the uniform tube, $s$ is the ratio of the tract lengths,
+#   $\ell_{\mathrm{M}} / \ell_{\mathrm{F}}$.
 
 # %%
 band_edges = [0, 1000, 2000, 4000, 8000]
@@ -522,14 +633,14 @@ print(f"{'Female / male formants':<30}{ratios_text:>14}  geometric mean {scaling
 h1_h2_difference = indicators["Female talker"]["h1_h2"] - indicators["Male talker"]["h1_h2"]
 
 # %% [markdown]
-# Two of the five tell the two talkers apart, and three do not. The pitch does, as above. The
-# formants scale by {{ f"{scaling:.2f}" }} on the median tracks, close to the {{ f"{warp:.2f}" }}
-# that moved the whole envelope: a {{ f"{100 * (scaling - 1):.0f}" }}% shorter vocal tract, in the
-# first approximation, which is within the range the literature gives for adult women against adult
-# men. H1–H2 differs by {{ f"{h1_h2_difference:.0f}" }} dB in the direction of a breathier female
-# voice, but uncorrected for the vocal tract that number is not the source's alone. The CPPs are
-# within a decibel of each other, and the noise shares within a few decibels in every band: by
-# these measures the two recordings are equally regular and equally clean, which is what two
+# Two of the five tell the two talkers apart, and three do not. The pitch does, as above. The formants scale
+# by {{ f"{scaling:.2f}" }} on the median tracks, close to the {{ f"{warp:.2f}" }} that moved the whole
+# envelope. In the first approximation that is a male tract {{ f"{100 * (scaling - 1):.0f}" }}% longer than
+# the female one, or a female tract {{ f"{100 * (1 - 1 / scaling):.0f}" }}% shorter, within the range the
+# literature gives for adult men against adult women. H1–H2 differs by {{ f"{h1_h2_difference:.0f}" }} dB in
+# the direction of a breathier female voice, but uncorrected for the vocal tract that number is not the
+# source's alone. The CPPs are within a decibel of each other, and the noise shares within a few decibels in
+# every band: by these measures the two recordings are equally regular and equally clean, which is what two
 # unremarkable voices reading a sentence should show.
 
 # %% [markdown]
@@ -549,6 +660,11 @@ h1_h2_difference = indicators["Female talker"]["h1_h2"] - indicators["Male talke
 # %% [markdown]
 # ## References
 #
+# - Boersma & Weenink. Praat: doing phonetics by computer (computer program). Manual pages
+#   [Voice 2. Jitter](https://www.fon.hum.uva.nl/praat/manual/Voice_2__Jitter.html) and
+#   [Voice 3. Shimmer](https://www.fon.hum.uva.nl/praat/manual/Voice_3__Shimmer.html). Local jitter
+#   and shimmer.
+# - Fant (1960). *Acoustic Theory of Speech Production*. Mouton, The Hague. The quarter-wave tube.
 # - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis. *STL-QPSR*
 #   36(2–3), 119–156. The Rd parameter and its fit to H1–H2.
 #   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L888)
@@ -569,6 +685,8 @@ h1_h2_difference = indicators["Female talker"]["h1_h2"] - indicators["Male talke
 #   auditory-perceptual evaluation of voice: development of a standardized clinical protocol.
 #   *Am. J. Speech-Lang. Pathol.* 18(2), 124–132.
 #   [doi:10.1044/1058-0360(2008/08-0017)](https://doi.org/10.1044/1058-0360(2008/08-0017)). CAPE-V.
+# - Klatt (1980). Software for a cascade/parallel formant synthesizer. *J. Acoust. Soc. Am.*
+#   67(3), 971–995. [doi:10.1121/1.383940](https://doi.org/10.1121/1.383940). The resonator.
 # - Klatt & Klatt (1990). Analysis, synthesis, and perception of voice quality variations among
 #   female and male talkers. *J. Acoust. Soc. Am.* 87(2), 820–857.
 #   [doi:10.1121/1.398894](https://doi.org/10.1121/1.398894).

@@ -20,6 +20,16 @@ version (0.x.y) only fixes bugs.
   or an onset, not a vibrato), and the measured distances of
   `pitch_adaptive_envelope` and `band_aperiodicity` from WORLD (audit
   sitting 14).
+- Gallery: "What is a voice" gives a formula for every concept and measure it
+  discusses: the source-filter product and the level of each harmonic, Klatt's
+  resonator and the radiation at the lips, semitones and the F0 spread, local
+  jitter and shimmer as Praat defines them, Yumoto's HNR and its relation to a
+  noise share, CPP, H1-H2 and H1-A3, Rd, the spectral tilt, the quarter-wave
+  tube behind formant scaling, and the envelope warp fit. The warp fit with
+  only the level free now searches up to a ratio of 2: its best ratio, 1.65,
+  lay past the old grid's edge at 1.6, so the page printed 1.595. The formant
+  ratio is now read both ways, a male tract 20% longer or a female tract 17%
+  shorter; the page called 1.20 a 20% shorter tract.
 
 ## [0.8.0] - 2026-10-19
 
