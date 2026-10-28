@@ -1782,7 +1782,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   reference in `tools/check_f0_fda.py`.
 # - Boersma & Weenink. Praat: doing phonetics by computer (computer program).
 #   [praat.org](https://www.praat.org). Its formant recipe, which `so.formant_track` follows.
-#   [`lpc.formant_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L390)
+#   [`lpc.formant_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L402)
 # - Bogert, Healy & Tukey (1963). The quefrency alanysis of time series for echoes: cepstrum,
 #   pseudo-autocovariance, cross-cepstrum and saphe cracking. In M. Rosenblatt (Ed.), *Time Series
 #   Analysis*. Wiley. [Semantic
@@ -1812,7 +1812,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   The sentence, by speakers bdl and slt.
 # - Makhoul (1975). Linear prediction: A tutorial review. *Proc. IEEE* 63(4), 561–580.
 #   [doi:10.1109/PROC.1975.9792](https://doi.org/10.1109/PROC.1975.9792).
-#   [`lpc.LPC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L74)
+#   [`lpc.LPC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/lpc.py#L83)
 # - Morise (2015). CheapTrick, a spectral envelope estimator for high-quality speech synthesis.
 #   *Speech Communication* 67, 1–7.
 #   [doi:10.1016/j.specom.2014.09.003](https://doi.org/10.1016/j.specom.2014.09.003).

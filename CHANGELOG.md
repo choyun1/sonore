@@ -39,6 +39,15 @@ version (0.x.y) only fixes bugs.
   every magnitude at or above the loudest and returned flat coefficients.
   The `MFCC` docstring says its FFT length is the smallest power of two at
   least as long as the window, as Kaldi rounds (audit sitting 15).
+- A sound shorter than half the analysis window is refused by `STFT` with a
+  plain message (it failed inside SciPy), and so by every view built on it;
+  `so.formant_track` checks the same before filtering, so an empty sound no
+  longer fails in the pre-emphasis. `so.levinson` refuses a negative order
+  and fewer lags than the order needs, and its docstring gives the sign of
+  its reflection coefficients. The `so.formant_track` docstring says its
+  window and hop are rounded to whole samples at twice the ceiling, and
+  `FormantTrack`'s repr prints "none" for a formant missing everywhere
+  (audit sitting 15b).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local

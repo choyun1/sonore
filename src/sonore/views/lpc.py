@@ -32,10 +32,19 @@ def levinson(autocorrelation: np.ndarray, order: int) -> tuple[np.ndarray, np.nd
     ``(..., order + 1)``, ``a[..., 0] = 1``) minimizing the error of
     ``x[n] + a[1] x[n-1] + ... + a[p] x[n-p]``, the reflection coefficients
     ``k[1] .. k[p]`` (shape ``(..., order)``), and the error power left,
-    ``E = r[0] prod(1 - k[i]**2)`` (shape ``(...)``). Where ``r[0]`` is 0 (a
-    silent time window) the predictor is ``a = [1, 0, ..., 0]`` with no error.
+    ``E = r[0] prod(1 - k[i]**2)`` (shape ``(...)``). Each ``k[i]`` is the
+    last coefficient of the order-``i`` predictor, ``a[i]`` at that order (the
+    sign Makhoul, 1975, uses). Where ``r[0]`` is 0 (a silent time window) the
+    predictor is ``a = [1, 0, ..., 0]`` with no error.
     """
     r = np.asarray(autocorrelation, dtype=float)
+    if order < 0:
+        raise ValueError(f"order must be 0 or more, not {order}")
+    if r.shape[-1] < order + 1:
+        raise ValueError(
+            f"an order-{order} predictor needs the autocorrelation at lags 0 to {order}, "
+            f"not only {r.shape[-1]} of them"
+        )
     leading = r.shape[:-1]
     a = np.zeros((*leading, order + 1))
     a[..., 0] = 1.0
@@ -297,7 +306,10 @@ class FormantTrack(View):
 
     def __repr__(self) -> str:
         n_channels, n_tracks, n_windows = self.frequencies.shape
-        medians = ", ".join(f"F{k + 1} {np.nanmedian(self.frequencies[:, k]):.0f}" for k in range(n_tracks))
+        medians = ", ".join(
+            f"F{k + 1} {np.nanmedian(values):.0f}" if np.isfinite(values).any() else f"F{k + 1} none"
+            for k, values in enumerate(self.frequencies.transpose(1, 0, 2))
+        )
         return (
             f"FormantTrack({n_windows} time windows, {n_channels} ch, ceiling {self.ceiling:g} Hz, "
             f"medians {medians} Hz)"
@@ -429,6 +441,8 @@ def formant_track(
        female gallery sentence the tracker halves how often F3 jumps by more
        than 20% between windows.
 
+    The window and hop are rounded to whole samples at twice the ceiling, so
+    at a ceiling of 5250 Hz the hop is 4.952 ms; ``t`` holds the times used.
     Unvoiced and silent time windows get formants too; mask them with an F0
     track's voicing.
 
@@ -450,6 +464,12 @@ def formant_track(
     if not 0 < ceiling < sound.fs / 2:
         raise ValueError(
             f"ceiling must be between 0 and half the sampling rate ({sound.fs / 2:g} Hz), not {ceiling:g}"
+        )
+    half_window = -(-round(win_dur * 2 * ceiling) // 2)
+    if round(sound.n_samples * 2 * ceiling / sound.fs) < half_window:
+        raise ValueError(
+            f"the sound ({sound.n_samples} samples) is shorter than half the window "
+            f"({win_dur / 2 * 1e3:g} ms)"
         )
     resampled = sound.resample(2 * ceiling)
     emphasized = Sound(lfilter([1.0, -0.97], 1.0, resampled.data, axis=0), resampled.fs)

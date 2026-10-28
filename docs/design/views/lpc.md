@@ -288,6 +288,17 @@ less accurate than the roots. No method was tuned for this, and MFCCs were
 never meant to locate formants; the table says what each envelope keeps,
 not which is better at its own job.
 
+Amendment (2026-10-28, audit sitting 15b). Since 0.8.0 rewrote CheapTrick
+from its paper, `tools/crosscheck_lpc.py` prints a different CheapTrick row:
+27 Hz and 11% become 394 Hz and 78% (male, by count), and 71 Hz and 39%
+become 76 Hz and 52% (female, by count); the nearest-peak columns are
+unchanged (26 Hz, 11%; 67 Hz, 28%). The rewritten envelope has a shallow
+peak near the first harmonic (141 to 155 Hz on male "hod", under 1 dB),
+which counting takes for F1. It is there at WORLD's `q1` of -0.15 too, so it
+does not come from the `q1` choice; that it comes from the envelope's
+treatment of the lowest frequencies is inferred, not checked. The row above
+is the 0.7 measurement; nothing in `lpc.py` or the gallery quotes it.
+
 ## Views, and what this one drops
 
 By `philosophy.md` LPC is a view, not a frame. It keeps, per time window, p
