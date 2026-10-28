@@ -4,10 +4,6 @@
 sonore.frames.gabor.STFT.f
 sonore.frames.gabor.STFT.plot
 sonore.frames.gabor.TVSTFT.f
-sonore.plotting.plot_modulation_spectrum
-sonore.plotting.plot_spectrum
-sonore.plotting.plot_stft
-sonore.plotting.plot_waveform
 sonore.spatial.spatialization.hcc_to_rect
 sonore.spatial.spatialization.rect_to_hcc
 sonore.spatial.spatialization.sph_to_rect

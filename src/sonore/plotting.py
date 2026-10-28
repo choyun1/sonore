@@ -53,10 +53,13 @@ __all__ = [
     "plot_envelope",
     "plot_envelopes",
     "plot_envelope_peaks",
+    "plot_decimated_subbands",
     "plot_tf_db",
     "plot_cepstrum",
     "plot_mfcc",
     "plot_f0_track",
+    "plot_lpc",
+    "plot_formant_track",
     "plot_descriptor_track",
     "plot_chroma",
     "plot_interaural_cues",
@@ -77,6 +80,9 @@ def _ax(ax: Axes | None) -> Axes:
 def plot_waveform(
     sound: Sound, ax: Axes | None = None, *, labels: Sequence[str] | None = None, **kwargs
 ) -> Axes:
+    """The waveform over time, one line per channel. A two-channel sound gets
+    the legend ``L`` and ``R`` unless ``labels`` names the channels; other
+    ``kwargs`` go to ``ax.plot``."""
     ax = _ax(ax)
     kwargs.setdefault("alpha", 0.6)
     kwargs.setdefault("lw", 0.8)
@@ -101,6 +107,9 @@ def plot_spectrum(
     relative: bool = True,
     **kwargs,
 ) -> Axes:
+    """The level spectrum in dB against frequency, in dB re its maximum when
+    ``relative`` (the default). On the log frequency scale the 0 Hz bin is
+    left out. ``kwargs`` go to ``ax.plot``."""
     ax = _ax(ax)
     spec = spectrum.relative() if relative else spectrum
     freqs, levels = (spec.f[1:], spec.level[1:]) if fscale == "log" else (spec.f, spec.level)
@@ -177,6 +186,11 @@ def plot_stft(
     fmax: float | None = None,
     trim_edges: bool = True,
 ) -> Axes:
+    """One channel's spectrogram in dB, frequency in kHz, the colors spanning
+    the ``db_range`` dB below its maximum. With ``trim_edges`` (the default)
+    the time windows that reach past either end of the sound are left out:
+    they are zero-padded, which looks like a click. ``fmax`` [Hz] limits the
+    frequency axis."""
     ax = _ax(ax)
     keep = _interior(stft) if trim_edges else slice(None)
     levels_db = stft.db[channel][:, keep]
@@ -222,12 +236,16 @@ def plot_modulation_spectrum(
     wt_max: float | None = None,
     wf_max: float | None = None,
 ) -> Axes:
+    """The modulation spectrum's level in dB, temporal modulation [Hz] across
+    and spectral modulation up, the colors spanning the ``db_range`` dB below
+    its maximum. ``wt_max`` [Hz] and ``wf_max`` (in the spectrum's spectral
+    unit) limit the axes."""
     ax = _ax(ax)
     _image(ax, ms.w_t, ms.w_f, ms.level, cmap, *_db_limits(ms.level, db_range), colorbar, "dB")
     ax.set(
         title="Modulation spectrum",
         xlabel="Temporal modulation [Hz]",
-        ylabel=f"Spectral modulation [{getattr(ms, 'spectral_unit', 'cyc/kHz')}]",
+        ylabel=f"Spectral modulation [{ms.spectral_unit}]",
     )
     if wt_max:
         wt_max = min(wt_max, np.abs(ms.w_t).max())
@@ -259,14 +277,14 @@ def _depth_limits(db: np.ndarray, db_range: float) -> tuple[float, float]:
 
 def _modulation_view(
     msg: ModulationSpectrogram, channel: int, band: float | None, rate: float | None
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, str, str, bool]:
-    """(values in dB, x, y, ylabel, title, log y) for one 2-D view."""
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, str, str]:
+    """(values in dB, x, y, ylabel, title) for one 2-D view; y is drawn on a log scale."""
     if band is not None and rate is not None:
         raise ValueError("give band or rate, not both")
     if rate is not None:
         rate_idx = int(np.argmin(np.abs(np.log(msg.fm / rate))))
         db = _depth_db(msg.depth[channel, :, rate_idx], msg.valid[:, rate_idx])
-        return db, msg.t, msg.f, "Frequency [Hz]", f"Modulation depth at {msg.fm[rate_idx]:.3g} Hz", True
+        return db, msg.t, msg.f, "Frequency [Hz]", f"Modulation depth at {msg.fm[rate_idx]:.3g} Hz"
     if band is not None:
         band_idx = int(np.argmin(np.abs(msg.f - band)))
         db = _depth_db(msg.depth[channel, band_idx], msg.valid[band_idx])
@@ -276,10 +294,9 @@ def _modulation_view(
             msg.fm,
             "Modulation rate [Hz]",
             f"Modulation depth, band at {msg.f[band_idx]:.0f} Hz",
-            True,
         )
     db = _depth_db(msg.pooled_depth()[channel])
-    return db, msg.t, msg.fm, "Modulation rate [Hz]", "Modulation spectrogram", True
+    return db, msg.t, msg.fm, "Modulation rate [Hz]", "Modulation spectrogram"
 
 
 def plot_modulation_spectrogram(
@@ -299,11 +316,10 @@ def plot_modulation_spectrogram(
     ``band=`` [Hz] picks one acoustic band, ``rate=`` [Hz] shows acoustic
     band against time at one modulation rate. 0 dB is 100% modulation."""
     ax = _ax(ax)
-    db, x, y, ylabel, title, logy = _modulation_view(msg, channel, band, rate)
+    db, x, y, ylabel, title = _modulation_view(msg, channel, band, rate)
     vmin, vmax = _depth_limits(db, db_range)
     _image(ax, x, y, db, _depth_cmap(cmap), vmin, vmax, colorbar, "Depth [dB]")
-    if logy:
-        ax.set_yscale("log")
+    ax.set_yscale("log")
     ax.set(xlabel="Time [s]", ylabel=ylabel, title=title)
     return ax
 
@@ -343,7 +359,7 @@ def plot_modulation_slices(
     vmin, vmax = _depth_limits(
         np.concatenate([view[0].ravel() for view in views] + [band_rate_db.ravel()]), db_range
     )
-    for ax, (db, x, y, ylabel, title, _) in zip(axes[:2], views, strict=True):
+    for ax, (db, x, y, ylabel, title) in zip(axes[:2], views, strict=True):
         _image(ax, x, y, db, colormap, vmin, vmax)
         ax.set(yscale="log", xlabel="Time [s]", ylabel=ylabel, title=title)
         ax.axvline(msg.t[t_idx], color="w", lw=1.2)
@@ -412,8 +428,9 @@ def _save_with_audio(anim: FuncAnimation, path: str, fps: float, dpi: float, sou
         subprocess.run(cmd + ["-c:v", "copy", "-c:a", "aac", "-shortest", path], check=True)
 
 
-def _band_labels(cfs: np.ndarray, edges: bool = True) -> list[str]:
-    """CF labels; the first and last filters are the lowpass/highpass edges."""
+def _band_labels(cfs: np.ndarray, edges: bool) -> list[str]:
+    """CF labels; with ``edges`` the first and last filters are the lowpass and
+    highpass edge filters, labeled ``< f`` and ``> f``."""
     labels = [f"{cf:.0f}" for cf in cfs]
     if edges:
         labels[0] = f"< {cfs[0]:.0f}"
@@ -432,8 +449,8 @@ def plot_subbands(
 ) -> list[Axes]:
     """One trace per band, lowest at the bottom. With ``sharey=True`` (default)
     all traces share one amplitude scale, so relative band levels are visible.
-    The bottom and top traces are the lowpass and highpass edge filters
-    (labeled ``< f_lo`` and ``> f_hi``).
+    When the filterbank has edge filters, the bottom and top traces are its
+    lowpass and highpass (labeled ``< f_lo`` and ``> f_hi``).
 
     ``bands`` selects which bands to show (indices), e.g.
     ``range(1, len(sb) - 1, 5)`` for every fifth band of a fine filterbank.
@@ -446,7 +463,7 @@ def plot_subbands(
     n_shown = len(band_idx)
     t = time_axis(n_samples, sb.fs)
     data = sb.data[:, band_idx, channel]
-    labels = [_band_labels(sb.cfs)[int(i)] for i in band_idx]
+    labels = [_band_labels(sb.cfs, sb._bank.edges)[int(i)] for i in band_idx]
     if axes is None:
         _, axes = plt.subplots(n_shown, 1, figsize=(8, 0.5 * n_shown + 0.6), sharex=True)
     axes = list(axes)
@@ -533,7 +550,8 @@ def plot_envelopes(
     spanning the ``db_range`` dB below ``db_max`` (default: the image's own
     maximum). Give several cochleagrams the same ``db_max`` to draw them on
     one scale, so that equal levels get equal colors.
-    Edge bands are hidden unless ``edges=True``.
+    The filterbank's edge filters, if it has them, are hidden unless
+    ``edges=True``.
 
     ``align="peak"`` draws each band earlier by its filter's
     ``envelope_peak_delay`` (a causal gammatone bank's latency), so a click
@@ -542,7 +560,7 @@ def plot_envelopes(
     :func:`plot_stft`, with an optional ``fmax`` [Hz].
     """
     ax = _ax(ax)
-    sel = slice(None) if edges else slice(1, -1)
+    sel = slice(None) if edges or not env._bank.edges else slice(1, -1)
     db = env.db[:, sel, channel]
     cfs = env.cfs[sel] / (1000 if fscale == "linear" else 1)
     if fscale not in ("log", "linear"):
@@ -585,9 +603,11 @@ def plot_decimated_subbands(
     halfway (on a log scale) to its neighbors' centers. Levels are the band
     envelopes of :attr:`~sonore.frames.filterbank.DecimatedSubbands.db`, the colors
     spanning the ``db_range`` dB below ``db_max`` (default: the largest level
-    inside the sound). Edge bands are hidden unless ``edges=True``."""
+    inside the sound). The filterbank's edge filters, if it has them, are
+    hidden unless ``edges=True``."""
     ax = _ax(ax)
-    keep = range(len(coefs)) if edges else range(1, len(coefs) - 1)
+    has_edges = coefs.frame.filterbank.edges
+    keep = range(len(coefs)) if edges or not has_edges else range(1, len(coefs) - 1)
     cfs = np.maximum(coefs.cfs, 1.0)  # the lowpass's nominal center can be 0 Hz
     log_cfs = np.log(cfs)
     log_edges = np.concatenate([[1.5 * log_cfs[0] - 0.5 * log_cfs[1]], (log_cfs[1:] + log_cfs[:-1]) / 2])
@@ -840,19 +860,29 @@ def plot_chroma(
     return ax
 
 
+def _finite_max(values: np.ndarray) -> float:
+    """The largest finite absolute value, 0 if there is none."""
+    finite = np.abs(values[np.isfinite(values)])
+    return float(finite.max()) if finite.size else 0.0
+
+
 def plot_interaural_cues(cues: InterauralCues, ax: Axes | None = None, *, show_iac: bool = True) -> Axes:
     """Broadband cues: ITD and ILD on twin axes (plus IAC underneath).
-    Per-band cues: ITD as an image."""
+    Per-band cues: ITD as an image, each band labeled by its center frequency.
+
+    A time window in which one ear is silent has an infinite ILD and no ITD;
+    it is left out of the lines and the image, and the axis limits come from
+    the other windows."""
     import matplotlib.pyplot as plt
 
     if cues.itd.ndim == 2:
         cfs = cast(np.ndarray, cues.cfs)  # per-band cues have their center frequencies
         ax = _ax(ax)
-        itd_lim = np.nanmax(np.abs(cues.itd)) * 1e6 or 1
+        itd_lim = _finite_max(cues.itd) * 1e6 or 1
         bands = np.arange(cues.itd.shape[1])
         _image(ax, cues.t, bands, 1e6 * cues.itd.T, "RdBu_r", -itd_lim, itd_lim, True, "ITD [µs]")
         n_bands, step = len(cfs), max(1, len(cfs) // 8)
-        ax.set_yticks(np.arange(n_bands)[::step], _band_labels(cfs)[::step])
+        ax.set_yticks(np.arange(n_bands)[::step], _band_labels(cfs, edges=False)[::step])
         ax.set(xlabel="Time [s]", ylabel="CF [Hz]", title="ITD per band (+ = right leads)")
         return ax
 
@@ -869,9 +899,9 @@ def plot_interaural_cues(cues: InterauralCues, ax: Axes | None = None, *, show_i
     ild_ax = ax.twinx()
     ild_ax.plot(cues.t, cues.ild, color="g", alpha=0.7, label="ILD")
     ild_ax.set_ylabel("ILD [dB]")
-    ild_lim = np.nanmax(np.abs(cues.ild)) * 1.1 or 1
+    ild_lim = _finite_max(cues.ild) * 1.1 or 1
     ild_ax.set_ylim(-ild_lim, ild_lim)
-    itd_lim = np.nanmax(np.abs(cues.itd)) * 1.1e6 or 1
+    itd_lim = _finite_max(cues.itd) * 1.1e6 or 1
     ax.set_ylim(-itd_lim, itd_lim)
     ax.legend(loc="upper left")
     ild_ax.legend(loc="upper right")
