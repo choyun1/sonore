@@ -772,7 +772,7 @@ class _PaddedBands:
         return self.filterbank.cfs
 
     def __len__(self) -> int:
-        """Number of bands (including the two edge filters)."""
+        """Number of bands, edge filters included."""
         return self._full.shape[1]
 
     if TYPE_CHECKING:  # each subclass returns its own kind of band
@@ -793,7 +793,8 @@ class Subbands(_PaddedBands):
     :class:`~sonore.Sound` per filter.
 
     ``sb[i]`` is a Sound, iterating yields Sounds, and ``sb.cfs`` labels them.
-    The first and last bands are the filterbank's lowpass and highpass edges.
+    When the filterbank has edge filters (the default), the first and last
+    bands are its lowpass and highpass.
     Internally the bands are stored as one ``(n_samples, n_bands, n_channels)``
     array (:attr:`data`).
 

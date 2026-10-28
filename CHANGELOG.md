@@ -127,6 +127,17 @@ version (0.x.y) only fixes bugs.
   budget per iteration, the best iterate returned, the clip at 0, the mean
   kept without `env_mean`, and `pop_start` rebuilt from its definition
   (audit sitting 22).
+- `plot_interaural_cues` draws a sound with one ear silent, where it used to
+  fail with "Axis limits cannot be NaN or Inf"; those windows are left out
+  and the axis limits come from the others. Plots of a filterbank built with
+  `edges=False` draw every band and label none of them as an edge filter
+  (`plot_envelopes` and `plot_decimated_subbands` dropped the first and last
+  bands; `plot_subbands` labeled them `<` and `>`); the per-band ITD image
+  labels every band by its center. `plot_waveform`, `plot_spectrum`,
+  `plot_stft` and `plot_modulation_spectrum` have docstrings, and
+  `plot_decimated_subbands`, `plot_lpc` and `plot_formant_track` are listed in
+  `__all__`. New tests read back what each plot draws: the image values, cell
+  edges, lines, color limits and cursors (audit sitting 23).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local
