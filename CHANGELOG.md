@@ -104,6 +104,13 @@ version (0.x.y) only fixes bugs.
   how flat `simple_bir` is, what windows and times `interaural_cues` uses, and
   that oscor and phasewarp are normalized and phasewarp moves the right ear's
   spectrum up by `f_mod` (audit sitting 19).
+- Texture statistics: `TextureModel.prepare` refuses a sound shorter than one
+  envelope sample (2.5 ms at the defaults) instead of failing inside NumPy, and
+  `TextureStats.snr` refuses statistics measured with a different model.
+  Docstrings say that `prepare` averages the channels and that `measure` takes
+  any length but needs about 2 s for one cycle of the slowest modulation band.
+  New tests cover the channel average, resampling, the window's ramps, the
+  subband variance, `duration` and `snr` (audit sitting 20).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local

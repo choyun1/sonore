@@ -141,3 +141,84 @@ def test_snr():
     # channels outside the 30 dB range are ignored
     quiet = a.replace(subband_var=np.where(np.arange(32) < 16, 1e-6, 1.0) * a.subband_var)
     assert quiet.channel_mask().sum() == 16
+
+
+def test_a_stereo_sound_is_measured_as_its_channel_average():
+    noise = so.gaussian_noise(2, FS, n_channels=2, rng=0).data
+    stereo = so.Sound(noise * [1.0, 0.3], FS)
+    average = so.Sound(noise @ [0.5, 0.15], FS)
+    a, b = TextureStats.measure(stereo), TextureStats.measure(average)
+    for name in so.texture.STAT_CLASSES:
+        np.testing.assert_allclose(a.get(name), b.get(name), rtol=1e-10, atol=1e-14)
+
+
+def test_another_rate_is_resampled_to_the_models():
+    t = np.arange(2 * 44100) / 44100
+    tone = so.Sound(np.sin(2 * np.pi * 1000 * t), 44100)
+    prepared = M.prepare(tone)
+    assert len(prepared) == 2 * FS
+    loudest = np.argmax(TextureStats.measure(tone).subband_var)
+    assert M.filterbank.cfs[loudest] == pytest.approx(1000, rel=0.15)
+
+
+def test_measurement_window_ramps():
+    n, seconds = 2400, 3
+    w = measurement_window(n, seconds)
+    ramp_len = n // (seconds + 1)
+    ramp = 0.5 - 0.5 * np.cos(np.pi * np.arange(1, ramp_len + 1) / ramp_len)
+    expected = np.ones(n)
+    expected[:ramp_len], expected[-ramp_len:] = ramp, ramp[::-1]
+    np.testing.assert_allclose(w, expected / expected.sum(), rtol=1e-12)
+
+
+def test_measure_weights_by_the_sounds_whole_seconds():
+    """A 3 s original is weighted by measurement_window(n_env, 3)."""
+    sound = so.gaussian_noise(3, FS, rng=2) * so.Sound(np.linspace(0.2, 1.0, 3 * FS), FS)
+    env = M.envelopes(M.subbands(M.prepare(sound)))
+    weights = measurement_window(len(env), 3)
+    np.testing.assert_allclose(TextureStats.measure(sound).env_mean, weights @ env, rtol=1e-12)
+
+
+def test_subband_variance_is_weighted_and_centered():
+    """With a DC offset the lowpass channel has a nonzero mean, which the
+    variance removes; the weights are the envelope window held over each
+    envelope sample."""
+    sound = so.gaussian_noise(2, FS, rng=3) * so.Sound(np.linspace(0.2, 1.0, 2 * FS), FS) + np.full(
+        2 * FS, 0.5
+    )
+    x = M.prepare(sound)
+    subbands = M.subbands(x)
+    weights = np.repeat(measurement_window(len(x) // M.decimation, 2), M.decimation) / M.decimation
+    expected = weights @ (subbands - weights @ subbands) ** 2
+    np.testing.assert_allclose(TextureStats.measure(sound).subband_var, expected, rtol=1e-12)
+
+
+def test_duration_is_whole_envelope_samples():
+    assert TextureStats.measure(so.gaussian_noise(2.0012, FS, rng=0)).duration == pytest.approx(2.0)
+
+
+class TestSnrInDetail:
+    stats = TextureStats.measure(so.gaussian_noise(2, FS, tilt=-3, rng=0))
+
+    def test_is_relative_to_the_target(self):
+        other = self.stats.replace(env_mean=1.1 * self.stats.env_mean)
+        assert self.stats.snr(other)["env_mean"] == pytest.approx(20)
+
+    def test_a_pair_counts_only_if_both_channels_are_loud(self):
+        quiet = np.where(np.arange(32) == 20, 1e-6, 1.0)
+        target = self.stats.replace(subband_var=quiet * self.stats.subband_var)
+        corr = target.env_corr.copy()
+        corr[19, 0] += 0.5  # the pair (19, 20): channel 20 is quiet
+        assert target.snr(target.replace(env_corr=corr))["env_corr"] == float("inf")
+
+
+def test_a_sound_shorter_than_one_envelope_sample_is_refused():
+    with pytest.raises(ValueError, match="shorter than one envelope sample"):
+        TextureStats.measure(so.Sound(np.ones(49), FS))
+
+
+def test_snr_refuses_statistics_from_another_model():
+    a = TextureStats.measure(so.gaussian_noise(1, FS, rng=0))
+    b = TextureStats.measure(so.gaussian_noise(1, FS, rng=0), model=TextureModel(n_bands=20))
+    with pytest.raises(ValueError, match="different models"):
+        a.snr(b)
