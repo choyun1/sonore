@@ -102,7 +102,8 @@ against an independent implementation.
   statistics of real rooms (Traer & McDermott, 2016), with a controllable DRR
   and decorrelated binaural tails, plus the paper's "unnatural" variants
   (time-reversed and linear decays; inverted, exaggerated and reduced frequency
-  dependence) and a per-band RT60 measurement.
+  dependence) and a per-band RT60 measurement. A room's RT60 is one number or
+  a curve over frequency, such as one drawn by hand.
 - **Sound textures.** The texture model of McDermott & Simoncelli (2011):
   measure a recording's envelope, modulation and correlation statistics, and
   synthesize new samples that share them. A clean-room implementation with
@@ -274,7 +275,7 @@ under `so.texture` and `sonore.texture.synth`.
 | [`spatial.binaural`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py) | `apply_itd_ild`, `simple_bir`, `interaural_cues`, `oscor`, `phasewarp` |
 | [`spatial.spatialization`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py) | `HRIRSet` (PKU-IOA, SOFA; onset-aligned interpolation), `spatialize`, `move_sound` (paths as functions of time, continuous ear delays, room tail), `hcc_trajectory` and other trajectories, coordinate conversions, `distance_gain_db` |
 | [`spatial.hrir_data`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/hrir_data.py) | `load_hrirs`: public HRIR databases (PKU-IOA) downloaded on first use, checksum-verified and cached |
-| [`spatial.reverb`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/reverb.py) | `synth_ir` (natural rooms, or the paper's atypical `decay_shape` / `rt60_profile` / `drr_profile` variants), `band_rt60s`, `measure_rt60` |
+| [`spatial.reverb`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/reverb.py) | `synth_ir` (natural rooms, or the paper's atypical `decay_shape` / `rt60_profile` / `drr_profile` variants; `rt60` is a number or a curve `(freqs, rt60s)`), `band_rt60s`, `measure_rt60` |
 | [`texture.stats`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/stats.py) | `TextureModel`, `TextureStats` (`.measure`, `.snr`, `.replace` for hybrids, `.save`/`.load`) |
 | [`texture.synth`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/synth.py) | `synthesize` (full loop), `impose_channel`; gradients in [`texture.grad`](https://github.com/choyun1/sonore/blob/main/src/sonore/texture/grad.py) |
 | [`plotting`](https://github.com/choyun1/sonore/blob/main/src/sonore/plotting.py) | `overview` and the `plot_*` functions behind each object's `.plot()`; `plot_tf_db` draws any time-frequency level on non-uniform time windows; modulation spectrograms draw invalid cells gray and animate with their sound; cochleagrams take `align="peak"` (draw causal gammatone bands without their latency) and `fscale="linear"` (to match spectrograms) |
@@ -322,9 +323,8 @@ Only work still to do is listed here. Finished items are in
 [docs/roadmap-done.md](https://github.com/choyun1/sonore/blob/main/docs/roadmap-done.md), and changes by release in
 [CHANGELOG.md](https://github.com/choyun1/sonore/blob/main/CHANGELOG.md).
 
-- **Code audit.** A line-by-line human read of `src/sonore`, one module per
-  sitting, each closing the gaps in its tests; progress in
-  [issue #48](https://github.com/choyun1/sonore/issues/48).
+- Hand-written intro pages for the API reference, one per folder: the last
+  step of the code audit ([issue #48](https://github.com/choyun1/sonore/issues/48)).
 - The rest of KLSYN88's voice-quality controls (Klatt & Klatt, 1990) for the formant synthesizer:
   open quotient, spectral tilt, flutter, double pulsing, and its KLGLOTT88 source.
 - Peak-based sinusoidal modeling (McAulay & Quatieri, 1986) alongside the channel oscillator bank.
@@ -376,8 +376,12 @@ document every deviation and data choice, and write a design document before
 large features. I reviewed and applied each patch. The design principles that came out of
 this are summarized in [docs/design/philosophy.md](https://github.com/choyun1/sonore/blob/main/docs/design/philosophy.md).
 
-**How it is verified.** I have not read every line by hand. What I rely on
-instead is the following:
+**How it is verified.** I read `src/sonore` and its tests line by line in a
+code audit, one module per sitting, from the bottom of the import graph up
+([issue #48](https://github.com/choyun1/sonore/issues/48)); each sitting closed
+the gaps it found in the tests and fixed what it found wrong. I have not read the
+gallery or the checkers in `tools/` by hand. Besides the audit, I rely on the
+following:
 
 - The test suite, with one file per module.
 - Finite-difference and dense-matrix checks of the mathematics.

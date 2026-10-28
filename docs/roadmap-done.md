@@ -217,3 +217,14 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   numbers per sample instead of 85. Design in
   `docs/design/frames/decimated-filterbanks.md`; the gallery section "Keeping
   fewer numbers" on Analysis and resynthesis. Done 2026-10-28.
+- **Code audit.** A line-by-line human read of `src/sonore` and its tests,
+  one module per sitting from the bottom of the import graph up, each with a
+  reading guide (every claim and the test behind it, untested lines, the
+  results of deliberately breaking the code) and a pull request closing the
+  gaps it found. Sittings 1 to 23 cover every module; among the bugs they
+  fixed are HRIRs losing gain when resampled (2.7 dB at 48 kHz, 12.2 dB at
+  16 kHz), Klatt voices opening with a click, `DynamicRipple` patterns that
+  depended on the sound's duration, and F0 halving for high voices. Progress
+  and each sitting's findings are in
+  [issue #48](https://github.com/choyun1/sonore/issues/48); the reference's
+  intro pages, its last step, are still on the roadmap. Done 2026-10-28.
