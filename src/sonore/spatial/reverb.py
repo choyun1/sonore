@@ -3,9 +3,11 @@ reverberation (Traer & McDermott, 2016).
 
 The regression coefficients in ``sonore/data/fit_*.npy`` are Traer &
 McDermott's fits to their survey of 271 real-world rooms: for each of 35
-frequencies from 20 Hz to 16 kHz, a slope and an intercept of the band's
-RT60 and onset level against the room's broadband RT60. James Traer supplied
-them in 2017.
+frequencies from 20 Hz to 16 kHz (their 33 subbands and the two edge
+filters), a slope and an intercept of the band's RT60 and onset level against
+the room's broadband RT60 (the paper's T, Eq. S9). James Traer supplied them
+in 2017; the RT60 profiles they give for T = 0.3, 0.6, 0.9 and 1.2 s match
+the paper's Fig. 5B by eye.
 """
 
 from __future__ import annotations
