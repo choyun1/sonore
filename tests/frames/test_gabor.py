@@ -42,3 +42,10 @@ def test_time_varying_window_centers_round_to_the_nearest_sample():
     """At 1 kHz, 2.6 ms is 2.6 samples, which rounds to 3; 2.4 ms rounds to 2."""
     frame = so.TVGaborFrame([0.0026, 0.0054], [0.004, 0.004])
     assert frame._layout(1000).centers.tolist() == [3, 5]
+
+
+def test_a_sound_shorter_than_half_the_window_is_refused():
+    frame = so.GaborFrame(0.025, 0.01)  # 400 samples at 16 kHz
+    assert so.STFT(so.Sound(np.ones(200), 16000), frame=frame).data.shape[-1] > 0
+    with pytest.raises(ValueError, match=r"the sound \(199 samples\) is shorter than half the window \(200"):
+        so.STFT(so.Sound(np.ones(199), 16000), frame=frame)

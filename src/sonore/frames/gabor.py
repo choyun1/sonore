@@ -516,6 +516,11 @@ class STFT(_ShortTimeCoefficients):
         self.frame = GaborFrame(win_dur, hop_dur) if frame is None else frame
         self.fs = sound.fs
         self.sft = _analysis_sft(self.frame, float(sound.fs))
+        half_window = -(-self.sft.m_num // 2)
+        if len(sound) < half_window:
+            raise ValueError(
+                f"the sound ({len(sound)} samples) is shorter than half the window ({half_window} samples)"
+            )
         self.n_samples = len(sound)
         self.data = self.sft.stft(sound.data.T, axis=-1)
 
