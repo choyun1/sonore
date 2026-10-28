@@ -128,12 +128,17 @@ class TextureModel:
         return int(round(ratio))
 
     def prepare(self, sound: Sound) -> np.ndarray:
-        """Mono, resampled to :attr:`fs`, truncated to a whole number of
-        envelope samples, RMS-normalized. Returns a 1-D array."""
+        """Mono (the average of the channels), resampled to :attr:`fs`,
+        truncated to a whole number of envelope samples, RMS-normalized.
+        Returns a 1-D array."""
         mono = sound.mono() if sound.n_channels > 1 else sound
         if mono.fs != self.fs:
             mono = mono.resample(self.fs)
         signal = mono.data[:, 0]
+        if len(signal) < self.decimation:
+            raise ValueError(
+                f"the sound is shorter than one envelope sample ({self.decimation} samples at {self.fs:g} Hz)"
+            )
         signal = signal[: len(signal) // self.decimation * self.decimation]
         signal_rms = np.sqrt(np.mean(signal**2))
         if signal_rms == 0:
@@ -260,7 +265,11 @@ class TextureStats(View):
         """Measure the statistics of ``sound``. ``window="ramped"`` (the
         default, for recorded originals) downweights the ends with
         :func:`measurement_window`; ``"uniform"`` weights all samples
-        equally (as for circular synthetic signals)."""
+        equally (as for circular synthetic signals).
+
+        Any length is measured, but the slowest modulation band is 0.5 Hz,
+        so a sound shorter than about 2 s holds less than one of its cycles;
+        the paper's originals were 7 s."""
         model = TextureModel() if model is None else model
         x = model.prepare(sound)
         return cls.from_subbands(model.subbands(x), model, window=window)
@@ -385,6 +394,10 @@ class TextureStats(View):
         fluctuation dominates the ratio."""
         if isinstance(classes, str):
             classes = (classes,)
+        if other.model != self.model:
+            raise ValueError(
+                "these statistics were measured with different models; snr compares like with like"
+            )
         loud = self.channel_mask(range_db=range_db)
         n_channels = len(loud)
         out = {}
