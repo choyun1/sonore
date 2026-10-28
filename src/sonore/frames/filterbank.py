@@ -33,6 +33,16 @@ is the "flat system response" of the steerable pyramid (Simoncelli &
 Freeman, 1995), and its radial filters in Portilla & Simoncelli (2000) are
 these cosines on a log2 scale. The gammatone and Morlet types are not tight;
 their synthesis is the canonical dual.
+
+:class:`DecimatedFilterbank` keeps each band of a bank at its own rate instead
+of one sample per sample: a band a few hertz wide is held by a few complex
+coefficients per second. It is the nonstationary Gabor frame in frequency
+(Balazs et al., 2011), and on the semitone cosine bank it is an exact,
+decimated constant-Q transform (Velasco et al., 2011)::
+
+    bank = so.cosine_filterbank(f_lo=55, f_hi=7040, scale="cents", spacing=100)
+    cq = so.DecimatedFilterbank(bank).analyze(snd)   # about 2 numbers per sample, not 85
+    cq.to_sound()                                    # exact
 """
 
 from __future__ import annotations
@@ -54,6 +64,7 @@ from sonore.core.utils import (
     ScaleName,
     _as_frequency_scale,
     _parabola_vertex,
+    amp_to_db,
     db_to_amp,
     erb_bandwidth,
 )
@@ -74,6 +85,8 @@ __all__ = [
     "gammatone_filterbank",
     "morlet_filterbank",
     "Subbands",
+    "DecimatedFilterbank",
+    "DecimatedSubbands",
 ]
 
 # A bank is tight when s varies by at most this fraction of its largest value.
@@ -540,7 +553,13 @@ class Filterbank(Frame):
 
 @lru_cache(maxsize=64)
 def _tight_gain(bank: Filterbank, n: int, fs: float) -> float | None:
-    power_sum = bank.frame_power(n, fs)
+    return _constant_gain(bank.frame_power(n, fs))
+
+
+def _constant_gain(power_sum: np.ndarray) -> float | None:
+    """The constant value of ``s``, or None if it varies by more than
+    :data:`TIGHT_TOLERANCE` of its largest value; exactly 1.0 when every ``s``
+    is within the tolerance of 1."""
     largest = float(power_sum.max())
     if np.all(np.abs(power_sum - 1.0) <= TIGHT_TOLERANCE):
         return 1.0
@@ -850,3 +869,354 @@ class Subbands(_PaddedBands):
         from sonore.plotting import plot_subbands
 
         return plot_subbands(self, axes=axes, channel=channel, **kwargs)
+
+
+# ------------------------------------------------------------- decimated filterbanks
+@dataclass(frozen=True)
+class DecimatedFilterbank(Frame):
+    """A :class:`Filterbank` with each band kept at its own rate.
+
+    Each filter is zero outside an arc of DFT bins, its support. The bank's
+    filtered spectrum on that arc is folded into ``M`` bins, at least as many
+    as the arc has, and taken back to time with an FFT of length ``M``: no two
+    bins of the arc share a coefficient, so nothing is aliased, and the
+    synthesis unfolds them again. Band ``k`` then has ``M_k`` coefficients,
+    ``N / M_k`` samples apart on a grid of ``N`` samples, and coefficient ``m``
+    is the band at time ``m N / M_k`` (exactly its samples when the hop is a
+    whole number). This is the painless case of the nonstationary Gabor frames
+    of Balazs et al. (2011), in frequency, as :class:`~sonore.TVGaborFrame` is
+    in time. ``M`` is the support's length rounded up to a fast FFT length.
+    The frame operator is the bank's own, ``s(f) = sum_k |H_k(f)|**2``, and the
+    coefficients are scaled by ``sqrt(M / N)`` so that the frame bounds are
+    the bank's: a tight bank stays tight.
+
+    The coefficients are complex. For a real sound only the lowpass, the
+    positive-frequency half of each bandpass filter and the highpass are kept;
+    a band's negative half would only add the complex conjugate.
+
+    The filters are the bank's, with one change for filters that are nowhere
+    exactly zero between 0 Hz and Nyquist (gammatone, Morlet): their response
+    is set to zero where it is more than ``-floor_db`` dB below its peak, so
+    that they have a support. The frame is exact for the cut filters. A filter
+    that is exactly zero somewhere, as every cosine is, is not changed.
+    Decimating the semitone cosine bank from 55 Hz to 7040 Hz keeps about 2
+    real numbers per sample instead of 85, a 60-band gammatone bank cut at
+    -100 dB about 18 instead of 62 (docs/design/frames/decimated-filterbanks.md).
+    """
+
+    filterbank: Filterbank
+    _: KW_ONLY
+    floor_db: float = -100.0
+
+    def __post_init__(self):
+        if not isinstance(self.filterbank, Filterbank):
+            raise TypeError(f"DecimatedFilterbank needs a Filterbank, not {type(self.filterbank).__name__}")
+        if not (np.isfinite(self.floor_db) and self.floor_db < 0):
+            raise ValueError(f"floor_db must be a negative number of dB, not {self.floor_db!r}")
+
+    @property
+    def cfs(self) -> np.ndarray:
+        """Center frequency [Hz] of each filter, as the bank's :attr:`Filterbank.cfs`."""
+        return self.filterbank.cfs
+
+    def _pad_samples(self, pad: float | str, fs: float, n_samples: int) -> int:
+        return self.filterbank._pad_samples(pad, fs, n_samples)
+
+    def _layout(self, n: int, fs: float) -> _DecimatedLayout:
+        return _decimated_layout(self, int(n), float(fs))
+
+    def frame_power(self, n: int, fs: float) -> np.ndarray:
+        """``s(f) = sum_k |H_k(f)|**2`` of the (cut) filters on the ``rfft``
+        grid of ``n`` samples."""
+        return self._layout(n, fs).power_sum
+
+    def is_tight(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> bool:
+        """Whether ``s`` is constant (to :data:`TIGHT_TOLERANCE`) on the grid
+        :meth:`analyze` would use, padding included."""
+        n_grid = int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples)
+        return self._layout(n_grid, fs).gain is not None
+
+    def frame_bounds(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> tuple[float, float]:
+        """``(min s, max s)`` on the grid :meth:`analyze` would use for
+        ``n_samples`` at ``fs``, padding included, in the norm of :meth:`energy`."""
+        layout = self._layout(int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples), fs)
+        if layout.gain is not None:
+            return (layout.gain, layout.gain)
+        return (float(layout.power_sum.min()), float(layout.power_sum.max()))
+
+    def analyze(self, sound: Sound, *, pad: float | str = "auto") -> DecimatedSubbands:
+        """The decimated coefficients of ``sound``, padded as
+        :meth:`Filterbank.analyze` pads (by default at least the filters'
+        ringing; ``pad=0`` is circular)."""
+        n_pad = self._pad_samples(pad, sound.fs, sound.data.shape[0])
+        padded = np.pad(sound.data, ((n_pad, n_pad), (0, 0))) if n_pad else sound.data
+        n_padded = padded.shape[0]
+        layout = self._layout(n_padded, sound.fs)
+        with threads():
+            spectrum = sp_fft.fft(padded, axis=0)
+            bands = []
+            for band in layout.bands:
+                folded = np.zeros((band.n_coefs, padded.shape[1]), complex)
+                if not band.n_coefs:  # a band too narrow to cover a bin of this grid
+                    bands.append(folded)
+                    continue
+                folded[band.folded_bins] = spectrum[band.bins] * band.response[:, None]
+                bands.append(np.sqrt(band.n_coefs / n_padded) * sp_fft.ifft(folded, axis=0))
+        return DecimatedSubbands(bands, sound.fs, self, n_padded, pad=n_pad)
+
+    def _back(self, coefs: DecimatedSubbands, *, dual: bool) -> Sound:
+        n_padded, fs, n_pad = coefs.n_padded, coefs.fs, coefs.pad
+        layout = self._layout(n_padded, fs)
+        spectrum = np.zeros((n_padded, coefs.n_channels), complex)
+        with threads():
+            for band, values in zip(layout.bands, coefs._bands, strict=True):
+                if not band.n_coefs:
+                    continue
+                unfolded = sp_fft.fft(values, axis=0)[band.folded_bins] * np.sqrt(n_padded / band.n_coefs)
+                spectrum[band.bins] += band.weight * np.conj(band.response)[:, None] * unfolded
+            if dual:
+                if layout.gain is not None:
+                    if layout.gain != 1.0:
+                        spectrum /= layout.gain
+                else:
+                    _check_frame(
+                        float(layout.power_sum.min()),
+                        float(layout.power_sum.max()),
+                        "this decimated filterbank",
+                    )
+                    spectrum /= layout.power_sum[_folded_bins(n_padded)][:, None]
+            signal = sp_fft.ifft(spectrum, axis=0).real
+        return Sound(signal[n_pad : n_padded - n_pad], fs)
+
+    def synthesize(self, coefs: DecimatedSubbands) -> Sound:
+        """Canonical dual synthesis: unfold each band, filter it with
+        ``conj(H) / s`` and sum, then remove the padding. Unmodified
+        coefficients come back exactly; modified ones give the least-squares
+        signal on the (padded) grid, as :meth:`Filterbank.synthesize` does."""
+        return self._back(coefs, dual=True)
+
+    def adjoint(self, coefs: DecimatedSubbands) -> Sound:
+        """:meth:`synthesize` without the division by ``s``."""
+        return self._back(coefs, dual=False)
+
+    def energy(self, coefs: DecimatedSubbands) -> np.ndarray:
+        """Sum of ``|c|**2`` per channel, each bandpass coefficient counted
+        twice for the negative-frequency half it stands for: the energy of
+        the whole two-sided transform, the norm in which :meth:`synthesize`
+        is the least-squares inverse."""
+        layout = self._layout(coefs.n_padded, coefs.fs)
+        total = np.zeros(coefs.n_channels)
+        for band, values in zip(layout.bands, coefs._bands, strict=True):
+            total += band.weight * np.sum(np.abs(values) ** 2, axis=0)
+        return total
+
+
+@dataclass(frozen=True)
+class _DecimatedBand:
+    """One filter of a :class:`DecimatedFilterbank` at one grid length: the
+    DFT ``bins`` of its support, its ``response`` there, where they fold to
+    among ``n_coefs`` coefficients, and its weight in the coefficient norm
+    (2 for a bandpass filter's positive half, which stands for both)."""
+
+    bins: np.ndarray
+    folded_bins: np.ndarray
+    response: np.ndarray
+    n_coefs: int
+    weight: float
+
+
+@dataclass(frozen=True)
+class _DecimatedLayout:
+    bands: tuple[_DecimatedBand, ...]
+    power_sum: np.ndarray  # s on the rfft grid
+    gain: float | None  # the constant s of a tight frame, else None
+
+
+def _folded_bins(n: int) -> np.ndarray:
+    """For each bin of the two-sided DFT grid of ``n`` samples, the bin of the
+    ``rfft`` grid with the same absolute frequency."""
+    bins = np.arange(n)
+    return np.minimum(bins, n - bins)
+
+
+def _cut(column: np.ndarray, floor_db: float, has_support: bool) -> np.ndarray:
+    """A filter's response, set to zero below ``floor_db`` re its peak unless it already has a support."""
+    if has_support:
+        return column
+    peak = np.abs(column).max()
+    return np.where(np.abs(column) >= peak * db_to_amp(floor_db), column, 0)
+
+
+@lru_cache(maxsize=64)
+def _decimated_layout(frame: DecimatedFilterbank, n: int, fs: float) -> _DecimatedLayout:
+    bank = frame.filterbank
+    half = bank.rfft_response(n, fs).astype(complex)  # bins 0 .. n // 2
+    interior = slice(1, (n - 1) // 2 + 1)  # the bins strictly between 0 Hz and Nyquist
+    columns, kinds = [], []
+    for k in range(bank.n_filters):
+        column = half[:, k]
+        has_support = not np.all(column[interior] != 0)
+        columns.append(_cut(column, frame.floor_db, has_support))
+        if bank.edges and k == 0:
+            kinds.append("low")
+        elif bank.edges and k == bank.n_filters - 1:
+            kinds.append("high")
+        else:
+            kinds.append("band")
+    power_sum = np.sum(np.abs(np.stack(columns, axis=1)) ** 2, axis=1)
+    bands = tuple(_decimated_band(column, kind, n) for column, kind in zip(columns, kinds, strict=True))
+    return _DecimatedLayout(bands, power_sum, _constant_gain(power_sum))
+
+
+def _decimated_band(column: np.ndarray, kind: str, n: int) -> _DecimatedBand:
+    """The support of one filter on the two-sided grid of ``n`` bins. The
+    lowpass is an arc around 0 Hz in signed bins, so that its coefficients are
+    the band sampled in time; the highpass an arc around Nyquist; a bandpass
+    filter its positive half. A bandpass filter's value at 0 Hz and at Nyquist
+    belongs to both halves, so each half takes it divided by sqrt(2): the two
+    halves together then have the bank's response there."""
+    nonzero = np.flatnonzero(column)
+    if not len(nonzero):
+        empty = np.zeros(0, int)
+        return _DecimatedBand(empty, empty, np.zeros(0, complex), 0, 1.0)
+    if kind == "low":
+        top = int(nonzero.max())
+        signed = np.arange(-top, top + 1)[:n]
+    elif kind == "high":
+        bottom = int(nonzero.min())
+        signed = np.arange(bottom, n - bottom + 1)[:n]
+    else:
+        signed = np.arange(int(nonzero.min()), int(nonzero.max()) + 1)
+    mirrored = (signed % n) > n // 2  # bins above Nyquist: the conjugate of the bin below
+    folded_index = np.where(mirrored, n - signed % n, signed % n)
+    response = np.where(mirrored, np.conj(column[folded_index]), column[folded_index])
+    weight = 1.0
+    if kind == "band":
+        weight = 2.0
+        shared = (signed == 0) | (2 * signed == n)
+        response = np.where(shared, response / np.sqrt(2), response)
+    n_coefs = sp_fft.next_fast_len(len(signed))
+    return _DecimatedBand(signed % n, signed % n_coefs, response, n_coefs, weight)
+
+
+class DecimatedSubbands:
+    """Coefficients of a :class:`DecimatedFilterbank`: one complex sequence per
+    filter, each at its own rate.
+
+    ``cq[i]`` is band ``i``'s coefficients, shape ``(n_coefs, n_channels)``,
+    and ``cq.times[i]`` their times [s]; ``cq.cfs`` labels the bands, edge
+    filters first and last. Coefficients that fall in the padding are kept
+    (they are needed to go back exactly) and lie before 0 s or after the
+    sound's end. ``cq.db[i]`` is the level of band ``i``'s envelope at those
+    times, as the undecimated band's Hilbert envelope would show it.
+    """
+
+    def __init__(
+        self,
+        bands: Sequence[ArrayLike],
+        fs: float,
+        frame: DecimatedFilterbank,
+        n_padded: int,
+        pad: int = 0,
+    ):
+        layout = frame._layout(n_padded, fs)
+        arrays = []
+        for band, values in zip(layout.bands, bands, strict=True):
+            values = np.array(values, dtype=complex)
+            if values.ndim != 2 or values.shape[0] != band.n_coefs:
+                raise ValueError(
+                    f"expected shape ({band.n_coefs}, n_channels) for a band, got {values.shape}"
+                )
+            values.flags.writeable = False
+            arrays.append(values)
+        if len({values.shape[1] for values in arrays}) != 1:
+            raise ValueError("every band needs the same number of channels")
+        self._bands, self.fs, self.frame = tuple(arrays), float(fs), frame
+        self.n_padded, self.pad = int(n_padded), int(pad)
+
+    @property
+    def n_channels(self) -> int:
+        """Number of channels of the sound the coefficients came from."""
+        return self._bands[0].shape[1]
+
+    @property
+    def n_samples(self) -> int:
+        """Length of the sound the coefficients came from, without the padding."""
+        return self.n_padded - 2 * self.pad
+
+    @property
+    def cfs(self) -> np.ndarray:
+        """Center frequency [Hz] of each band, edge filters first and last."""
+        return self.frame.cfs
+
+    @property
+    def times(self) -> list[np.ndarray]:
+        """Times [s] of each band's coefficients, from the start of the sound."""
+        return [
+            (np.arange(len(values)) * self.n_padded / len(values) - self.pad) / self.fs
+            if len(values)
+            else np.zeros(0)
+            for values in self._bands
+        ]
+
+    @property
+    def db(self) -> list[np.ndarray]:
+        """Each band's envelope level [dB] at :attr:`times`, shape ``(n_coefs, n_channels)``.
+        A coefficient ``c`` of a band with ``M`` coefficients is the band's
+        positive-frequency half at that time times ``sqrt(N / M)``, so the
+        envelope is ``2 |c| sqrt(M / N)`` (``|c| sqrt(M / N)`` for the edge filters)."""
+        layout = self.frame._layout(self.n_padded, self.fs)
+        return [
+            amp_to_db(band.weight * np.abs(values) * np.sqrt(len(values) / self.n_padded), floor_db=-200.0)
+            for band, values in zip(layout.bands, self._bands, strict=True)
+        ]
+
+    def __len__(self) -> int:
+        """Number of filters, edges included."""
+        return len(self._bands)
+
+    def __getitem__(self, i: int) -> np.ndarray:
+        return self._bands[i]
+
+    def __iter__(self):
+        return iter(self._bands)
+
+    def _with_bands(self, bands: Sequence[ArrayLike]) -> DecimatedSubbands:
+        return DecimatedSubbands(bands, self.fs, self.frame, self.n_padded, self.pad)
+
+    def __mul__(self, other):
+        """``coefs * gain``: a number, or one gain per band (length ``len(coefs)``,
+        edges included)."""
+        match other:
+            case int() | float() | list() | tuple() | np.ndarray() | np.number():
+                gains = np.asarray(other, float)
+            case _:
+                return NotImplemented
+        if gains.ndim == 0:
+            gains = np.full(len(self), float(gains))
+        if gains.shape != (len(self),):
+            raise ValueError(
+                f"multiply by a number or one gain per band (length {len(self)}), not {gains.shape}"
+            )
+        return self._with_bands([values * gain for values, gain in zip(self._bands, gains, strict=True)])
+
+    __rmul__ = __mul__
+
+    def to_sound(self) -> Sound:
+        """Back to a Sound (:meth:`DecimatedFilterbank.synthesize`): exact for
+        unmodified coefficients, the least-squares signal for changed ones."""
+        return self.frame.synthesize(self)
+
+    def plot(self, ax: Axes | None = None, *, channel: int = 0, **kwargs) -> Axes:
+        """Each band drawn with its own time cells (see
+        :func:`sonore.plotting.plot_decimated_subbands`)."""
+        from sonore.plotting import plot_decimated_subbands
+
+        return plot_decimated_subbands(self, ax=ax, channel=channel, **kwargs)
+
+    def __repr__(self) -> str:
+        n_numbers = 2 * sum(len(values) for values in self._bands)
+        return (
+            f"DecimatedSubbands({len(self)} bands, {self.n_samples / self.fs:.3f} s, {self.fs:g} Hz, "
+            f"{self.n_channels} ch, {n_numbers / self.n_padded:.2f} real numbers per sample)"
+        )

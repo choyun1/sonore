@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from matplotlib.figure import Figure
 
     from sonore.core.sound import Sound
-    from sonore.frames.filterbank import Subbands
+    from sonore.frames.filterbank import DecimatedSubbands, Subbands
     from sonore.frames.gabor import STFT
     from sonore.sources.ripples import Pattern
     from sonore.spatial.binaural import InterauralCues
@@ -565,6 +565,55 @@ def plot_envelopes(
             ax.set_ylim(0, fmax / 1000)
     if align == "peak":
         ax.set_xlim(env.t[0], env.t[-1])
+    return ax
+
+
+def plot_decimated_subbands(
+    coefs: DecimatedSubbands,
+    ax: Axes | None = None,
+    *,
+    channel: int = 0,
+    db_range: float = 60.0,
+    db_max: float | None = None,
+    cmap: str | Colormap = "magma",
+    colorbar: bool = True,
+    edges: bool = False,
+) -> Axes:
+    """A decimated filterbank's coefficients as an image, each band drawn with
+    its own time cells: long ones for the low bands, which have few
+    coefficients, and short ones for the high bands. Each band's row reaches
+    halfway (on a log scale) to its neighbors' centers. Levels are the band
+    envelopes of :attr:`~sonore.frames.filterbank.DecimatedSubbands.db`, the colors
+    spanning the ``db_range`` dB below ``db_max`` (default: the largest level
+    inside the sound). Edge bands are hidden unless ``edges=True``."""
+    ax = _ax(ax)
+    keep = range(len(coefs)) if edges else range(1, len(coefs) - 1)
+    cfs = np.maximum(coefs.cfs, 1.0)  # the lowpass's nominal center can be 0 Hz
+    log_cfs = np.log(cfs)
+    log_edges = np.concatenate([[1.5 * log_cfs[0] - 0.5 * log_cfs[1]], (log_cfs[1:] + log_cfs[:-1]) / 2])
+    log_edges = np.concatenate([log_edges, [1.5 * log_cfs[-1] - 0.5 * log_cfs[-2]]])
+    duration = coefs.n_samples / coefs.fs
+    rows = []
+    for k in keep:
+        t, db = coefs.times[k], coefs.db[k][:, channel]
+        if not len(t):
+            continue
+        hop = coefs.n_padded / len(t) / coefs.fs
+        inside = (t >= -hop / 2) & (t <= duration + hop / 2)
+        rows.append((k, t[inside], db[inside], hop))
+    levels = np.concatenate([db for _, _, db, _ in rows])
+    vmin, vmax = _db_limits(levels, db_range, db_max)
+    image = None
+    for k, t, db, hop in rows:
+        x = np.concatenate([t - hop / 2, [t[-1] + hop / 2]]) if len(t) else np.zeros(1)
+        y = np.exp(log_edges[k : k + 2])
+        image = ax.pcolormesh(
+            x, y, db[None, :], cmap=cmap, vmin=vmin, vmax=vmax, shading="flat", rasterized=True
+        )
+    if colorbar and image is not None:
+        ax.figure.colorbar(image, ax=ax, label="dB")
+    ax.set_yscale("log")
+    ax.set(xlim=(0, duration), xlabel="Time [s]", ylabel="Frequency [Hz]", title="Decimated filterbank")
     return ax
 
 

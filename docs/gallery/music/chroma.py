@@ -142,6 +142,8 @@ def show(snd):
 # to one, filtering each band a second time and adding the bands gives the sound back exactly.
 # The cell measures both on noise. The price is size: every band keeps every sample, so the
 # bank holds one number per band for each sample of the sound.
+# [Keeping fewer numbers](resynthesis.html#h-keeping-fewer-numbers) on Analysis and resynthesis
+# keeps each band at its own rate instead, with about two numbers per sample, and is still exact.
 
 # %%
 bank = so.cosine_filterbank(f_lo=55, f_hi=7040, scale="cents", spacing=100)

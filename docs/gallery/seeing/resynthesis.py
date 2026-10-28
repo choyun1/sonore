@@ -20,6 +20,8 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 #   original exactly.
 # - [Nothing is lost](#h-nothing-is-lost): every short-time Fourier transform and filterbank drawn
 #   on [Seeing speech](speech.html) gives the sentence back, and why overlap-add works.
+# - [Keeping fewer numbers](#h-keeping-fewer-numbers): a filterbank that keeps each band at its own
+#   rate, an exact constant-Q transform with about two numbers per sample.
 # - [Masking the spectrogram](#h-masking-the-spectrogram): switching off the cells where noise
 #   dominates, the ideal binary mask.
 #
@@ -160,6 +162,103 @@ for label, snd in talkers.items():
 # reassigned spectrogram: they keep only magnitudes, and have no synthesis.
 
 # %% [markdown]
+# ## Keeping fewer numbers
+#
+# Exact is not the same as economical. A filterbank keeps one number per band for every sample of
+# the sound, so a bank of 85 filters turns each second of sound into 85 seconds' worth of numbers.
+# A band only a few hertz wide cannot change faster than its width allows, so most of those
+# numbers are redundant. A *decimated* filterbank keeps each band at its own rate: band $k$, whose
+# filter is zero outside a stretch of $L_k$ frequency bins, is held by $M_k \ge L_k$ complex
+# coefficients, taken $N / M_k$ samples apart on a sound of $N$ samples. Because no two of its bins
+# fold onto the same coefficient, nothing is aliased and synthesis is still exact. These are the
+# nonstationary Gabor frames of Balazs et al. (2011), here in frequency; the pitch-adaptive frame
+# above is the same idea in time.
+#
+# On the semitone bank of [Pitch class and height](chroma.html#h-a-constant-q-filter-bank), 83
+# cosines one semitone apart from 55 Hz to 7040 Hz plus the two edge filters, this is an exact
+# constant-Q transform. The low bands are a few hertz wide and need a coefficient only every
+# hundred milliseconds or so; the high bands are hundreds of hertz wide and need one every
+# millisecond or two.
+
+# %%
+semitones = so.cosine_filterbank(f_lo=55, f_hi=7040, scale="cents", spacing=100)
+constant_q = so.DecimatedFilterbank(semitones)
+decimated = {label: constant_q.analyze(snd) for label, snd in talkers.items()}
+for label, snd in talkers.items():
+    coefs = decimated[label]
+    numbers = 2 * sum(len(band) for band in coefs) / coefs.n_padded  # real numbers per sample
+    error = np.max(np.abs(coefs.to_sound().data - snd.data)) / snd.peak
+    print(
+        f"{label}: {semitones.n_filters} numbers per sample undecimated, {numbers:.2f} decimated; "
+        f"largest error {error:.1e} of the peak"
+    )
+hops = [1e3 * (coefs.times[k][1] - coefs.times[k][0]) for k in (1, len(coefs) - 2)]
+print(
+    f"time between coefficients: {hops[0]:.0f} ms at {semitones.cfs[1]:.0f} Hz, "
+    f"{hops[1]:.1f} ms at {semitones.cfs[-2]:.0f} Hz"
+)
+
+
+# %%
+def show_decimated(coefs_by_talker, title):
+    """Each talker's decimated coefficients. Returns the figure and the panels the playhead follows."""
+    fig = plt.figure(figsize=(10, 3.6), layout="constrained")
+    panels = {}
+    columns = fig.subfigures(1, 2, wspace=0.03)
+    for column, (label, coefs) in zip(columns, coefs_by_talker.items(), strict=True):
+        ax = column.subplots()
+        coefs.plot(ax, colorbar=False, db_range=60)
+        ax.set_title(f"{label}: {title}")
+        panels[label] = [ax]
+    return fig, panels
+
+
+# %% [about]
+# Each band drawn with its own cells: long ones at the bottom, where a band has few coefficients,
+# short ones at the top. The harmonics are resolved where the bands are narrower than their spacing,
+# and the glottal pulses where the cells are shorter than the period. What you hear is the sentence
+# synthesized back from these coefficients, the same to within rounding.
+
+# %% [demo dq1] A decimated constant-Q transform
+sounds = {label: finish(coefs.to_sound()) for label, coefs in decimated.items()}
+fig, playhead = show_decimated(decimated, "all coefficients")
+
+# %% [markdown]
+# The coefficients can be changed and played like any others. Keeping only the largest few, and
+# setting the rest to zero, is the simplest test of how much of the sound they concentrate in
+# few numbers. Each bandpass coefficient stands for its band's negative frequencies too, so it
+# counts twice in the energy.
+
+# %%
+KEEP = 0.02  # the share of coefficients kept
+weights = [1.0] + [2.0] * (len(semitones.cfs) - 2) + [1.0]  # the edge filters count once
+sparse, snrs = {}, {}
+for label, coefs in decimated.items():
+    energy = np.concatenate([w * np.abs(band[:, 0]) ** 2 for w, band in zip(weights, coefs, strict=True)])
+    cutoff = np.quantile(energy, 1 - KEEP)
+    kept_bands = [
+        np.where(w * np.abs(band) ** 2 >= cutoff, band, 0) for w, band in zip(weights, coefs, strict=True)
+    ]
+    sparse[label] = so.DecimatedSubbands(kept_bands, coefs.fs, constant_q, coefs.n_padded, pad=coefs.pad)
+    snd = talkers[label]
+    difference = sparse[label].to_sound() - snd
+    snrs[label] = 10 * np.log10(np.sum(snd.data**2) / np.sum(difference.data**2))
+    kept = energy[energy >= cutoff].sum() / energy.sum()
+    print(
+        f"{label}: the largest {KEEP:.0%} keep {kept:.1%} of the energy; "
+        f"the error is {snrs[label]:.1f} dB below the sentence"
+    )
+
+# %% [about]
+# Only the largest {{ f"{KEEP:.0%}" }} of each talker's coefficients, the rest set to zero, synthesized
+# back. The difference from the sentence is {{ f"{snrs['Male talker']:.0f}" }} dB below it for the
+# male talker and {{ f"{snrs['Female talker']:.0f}" }} dB for the female talker.
+
+# %% [demo dq2] The largest coefficients only
+sounds = {label: finish(coefs.to_sound()) for label, coefs in sparse.items()}
+fig, playhead = show_decimated(sparse, f"largest {KEEP:.0%}")
+
+# %% [markdown]
 # ## Masking the spectrogram
 #
 # Since the STFT is invertible, a spectrogram with some of its cells switched off is still a
@@ -222,6 +321,10 @@ fig, playhead = show_mask(sound, target, mask)
 # %% [markdown]
 # ## References
 #
+# - Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011). Theory, implementation and applications
+#   of nonstationary Gabor frames. *J. Comput. Appl. Math.* 236, 1481–1496.
+#   [doi:10.1016/j.cam.2011.09.011](https://doi.org/10.1016/j.cam.2011.09.011).
+#   [`filterbank.DecimatedFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L876)
 # - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In
 #   *Speech Separation by Humans and Machines*, 181–197. Springer.
 #   [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12).

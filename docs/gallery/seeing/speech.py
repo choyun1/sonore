@@ -448,6 +448,10 @@ sounds = talkers
 # sentence, with the harmonics $kF_0(t)$ drawn over them in black. A harmonic is resolved where
 # the boxes are shorter than the gap between harmonics; a pulse is resolved where they are
 # narrower than the period.
+# sonore's Morlet bank is undecimated and keeps every sample of every band. A decimated
+# filterbank keeps each band at its own rate instead, with long steps for the low bands and
+# short ones for the high bands, as these boxes are drawn: see
+# [Keeping fewer numbers](resynthesis.html#h-keeping-fewer-numbers).
 
 # %% [about]
 # Fixed windows tile the plane with identical boxes: flat ones for 5 ms, tall ones for 33.3 ms.
@@ -577,7 +581,7 @@ sounds = talkers
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
 #   Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
-#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L231)
+#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L244)
 # - Kawahara, Masuda-Katsuse & de Cheveigné (1999). Restructuring speech representations using a
 #   pitch-adaptive time-frequency smoothing and an instantaneous-frequency-based F0 extraction.
 #   *Speech Communication* 27.

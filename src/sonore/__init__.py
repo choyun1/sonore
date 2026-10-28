@@ -47,6 +47,8 @@ from sonore.core.utils import (
     rms,
 )
 from sonore.frames.filterbank import (
+    DecimatedFilterbank,
+    DecimatedSubbands,
     Filterbank,
     Subbands,
     cosine_filterbank,
@@ -167,6 +169,8 @@ __all__ = [
     "cents_to_ratio",
     "note_to_freq",
     "Filterbank",
+    "DecimatedFilterbank",
+    "DecimatedSubbands",
     "FrequencyScale",
     "Frame",
     "View",
