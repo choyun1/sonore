@@ -487,4 +487,4 @@ fig, playhead = show_pair(sounds, ir, kw)
 # - Traer & McDermott (2016). Statistics of natural reverberation enable perceptual separation of
 #   sound and space. *Proc. Natl. Acad. Sci. USA* 113(48), E7856–E7865.
 #   [doi:10.1073/pnas.1612524113](https://doi.org/10.1073/pnas.1612524113).
-#   [`reverb.synth_ir`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/reverb.py#L136)
+#   [`reverb.synth_ir`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/reverb.py#L138)

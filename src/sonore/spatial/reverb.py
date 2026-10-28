@@ -4,10 +4,12 @@ reverberation (Traer & McDermott, 2016).
 The regression coefficients in ``sonore/data/fit_*.npy`` are Traer &
 McDermott's fits to their survey of 271 real-world rooms: for each of 35
 frequencies from 20 Hz to 16 kHz (their 33 subbands and the two edge
-filters), a slope and an intercept of the band's RT60 and onset level against
-the room's broadband RT60 (the paper's T, Eq. S9). James Traer supplied them
-in 2017; the RT60 profiles they give for T = 0.3, 0.6, 0.9 and 1.2 s match
-the paper's Fig. 5B by eye.
+filters), a slope and an intercept of the band's RT60 (Eq. S11) and onset
+level (Eq. S12) against the room's broadband RT60, the median RT60 across the
+33 subbands (the paper's T, Eq. S9). James Traer supplied them in 2017; the
+slopes, intercepts and RT60 profiles match the paper's Fig. S3 by eye. The
+rooms were fitted from a T of 0.2 s up (shorter ones were left out), so a
+shorter RT60 extrapolates.
 """
 
 from __future__ import annotations
@@ -203,9 +205,9 @@ def synth_ir(
     taus = band_rt60s(rt60, cfs, profile=rt60_profile)
     match drr_profile:
         case "ecological":
-            # the paper's onset fits share one slope against RT60 across bands, so
-            # once their median is removed the room's RT60 drops out: every room,
-            # and every curve, gets the intercepts' profile
+            # the paper's onset fits share one slope against RT60 across bands
+            # (Eq. S12), so once their median is removed the room's RT60 drops
+            # out: every room, and every curve, gets the intercepts' profile
             onset_db = fit_drr[:, 1] - np.median(fit_drr[:, 1])
             onset_db = np.interp(cfs, fit_freqs, onset_db)
         case "constant":
