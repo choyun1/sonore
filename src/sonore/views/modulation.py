@@ -592,6 +592,21 @@ class ModulationFilterbank:
         """Magnitude responses, shape ``(len(freqs), n_bands)`` (``freqs`` >= 0)."""
         raise NotImplementedError
 
+    def transfer(self, n_samples: int, fs: float, *, analytic: bool = False) -> np.ndarray:
+        """What :meth:`filter` multiplies a signal's spectrum by, one column per band.
+
+        On the ``rfft`` grid of ``n_samples``, shape ``(n_samples // 2 + 1, n_bands)``;
+        with ``analytic=True``, on the ``fft`` grid, shape ``(n_samples, n_bands)``,
+        with negative frequencies removed and positive ones doubled.
+        """
+        if not analytic:
+            return self.response(np.fft.rfftfreq(n_samples, 1 / fs))
+        freqs = np.fft.fftfreq(n_samples, 1 / fs)
+        gain = np.where(freqs > 0, 2.0, np.where(freqs == 0, 1.0, 0.0))
+        if n_samples % 2 == 0:
+            gain[n_samples // 2] = 1.0  # Nyquist bin is its own conjugate
+        return self.response(np.abs(freqs)) * gain[:, None]
+
     def filter(self, x: ArrayLike, fs: float, *, axis: int = 0, analytic: bool = False) -> np.ndarray:
         """Filter ``x`` (circularly) along ``axis`` with every band.
 
@@ -603,17 +618,11 @@ class ModulationFilterbank:
         x = np.moveaxis(np.asarray(x, float), axis, 0)
         n_samples = x.shape[0]
         trailing_axes = (None,) * (x.ndim - 1)
+        transfer = self.transfer(n_samples, fs, analytic=analytic)
         if not analytic:
-            transfer = self.response(np.fft.rfftfreq(n_samples, 1 / fs))  # (F, M)
             spectrum = np.fft.rfft(x, axis=0)[..., None]
             filtered = np.fft.irfft(spectrum * transfer[(slice(None),) + trailing_axes], n=n_samples, axis=0)
         else:
-            freqs = np.fft.fftfreq(n_samples, 1 / fs)
-            transfer = self.response(np.abs(freqs))
-            gain = np.where(freqs > 0, 2.0, np.where(freqs == 0, 1.0, 0.0))
-            if n_samples % 2 == 0:
-                gain[n_samples // 2] = 1.0  # Nyquist bin is its own conjugate
-            transfer = transfer * gain[:, None]
             spectrum = np.fft.fft(x, axis=0)[..., None]
             filtered = np.fft.ifft(spectrum * transfer[(slice(None),) + trailing_axes], axis=0)
         return np.moveaxis(filtered, 0, axis) if axis != 0 else filtered
