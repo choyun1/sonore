@@ -49,10 +49,15 @@ def source_filter_synthesize(
        ``a_n^2 / 2 = 2 F0 S / fs``. ``harmonic_complex`` returns RMS 1, as
        every generator does, so its output is scaled back to that power.
     2. **Noise.** White noise of variance 1, which the envelope reads as 1,
-       its STFT (``win_dur`` long, on a 5 ms hop) multiplied by
+       its STFT (``win_dur`` long, on the grid's hop) multiplied by
        ``sqrt(S a)`` and inverted. Unvoiced time windows have ``a = 1``, so
        there the noise carries all of ``S``.
     3. The two added.
+
+    The harmonics are switched on and off by the track alone: in the time
+    windows it calls unvoiced their power is held at the nearest voiced
+    window's, and :func:`~sonore.sources.waveforms.harmonic_complex` fades
+    them over its 5 ms gate.
 
     The harmonics start in cosine phase and keep their phases as the pitch
     moves, so each period's waveform is a pulse, peakier than a voice's.
@@ -114,7 +119,8 @@ def source_filter_synthesize(
     channels = []
     for channel in range(n_channels):
         track = (track_times, track_values[channel])
-        harmonic_power = SpectralEnvelope(power[channel] * (1 - share[channel]), times, freqs, fs=fs)
+        held = _held_through_unvoiced(power[channel] * (1 - share[channel]), track, times)
+        harmonic_power = SpectralEnvelope(held, times, freqs, fs=fs)
         harmonics = _harmonics(duration, fs, track, harmonic_power)
         noise_power = SpectralEnvelope(power[channel] * share[channel], times, freqs, fs=fs)
         channels.append(
@@ -145,11 +151,30 @@ def _envelope_grid(envelope, fs):
 def _all_or_nothing(track_times, track_values, times, n_freqs):
     """The noise share of all-or-nothing voicing, shape ``(n_channels, n_freqs,
     len(times))``: 0 where the nearest given F0 is above 0, 1 elsewhere."""
-    upper = np.clip(np.searchsorted(track_times, times), 0, len(track_times) - 1)
-    lower = np.clip(upper - 1, 0, len(track_times) - 1)
-    nearest = np.where(np.abs(track_times[lower] - times) <= np.abs(track_times[upper] - times), lower, upper)
-    unvoiced = (track_values[:, nearest] <= 0).astype(float)
+    unvoiced = (track_values[:, _nearest(track_times, times)] <= 0).astype(float)
     return np.repeat(unvoiced[:, None, :], n_freqs, axis=1)
+
+
+def _nearest(given, times):
+    """The index of the nearest of ``given`` (sorted) to each of ``times``,
+    ties going to the earlier."""
+    upper = np.clip(np.searchsorted(given, times), 0, len(given) - 1)
+    lower = np.clip(upper - 1, 0, len(given) - 1)
+    return np.where(np.abs(given[lower] - times) <= np.abs(given[upper] - times), lower, upper)
+
+
+def _held_through_unvoiced(harmonic_power, track, times):
+    """The harmonics' power with each unvoiced time window given its nearest
+    voiced window's power, so that harmonic_complex's own 5 ms gate fades the
+    harmonics at a voicing edge. Left at 0 there, the power would be read
+    between windows in dB from the floor and cut the harmonics within half a
+    millisecond of the last voiced window."""
+    track_times, track_f0 = track
+    voiced = track_f0[_nearest(track_times, times)] > 0
+    if voiced.all() or not voiced.any():
+        return harmonic_power
+    voiced_indices = np.flatnonzero(voiced)
+    return harmonic_power[:, voiced_indices[_nearest(times[voiced_indices], times)]]
 
 
 def _harmonics(duration, fs, track, harmonic_power):

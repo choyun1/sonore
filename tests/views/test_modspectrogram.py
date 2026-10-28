@@ -138,6 +138,9 @@ def test_checks():
         so.ModulationSpectrogram(env)
     with pytest.raises(TypeError):
         so.ModulationSpectrogram(np.zeros((10, 3)))
+    # a single envelope (no filterbank) has no bands to make a spectrogram of
+    with pytest.raises(TypeError, match="no filterbank"):
+        so.ModulationSpectrogram(am_tone(dur=0.5, on=(0, 0.5)).envelope())
     with pytest.raises(ValueError, match="align"):
         so.ModulationSpectrogram(env, f_hi=32, align="left")
 

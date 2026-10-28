@@ -20,6 +20,15 @@ version (0.x.y) only fixes bugs.
   or an onset, not a vibrato), and the measured distances of
   `pitch_adaptive_envelope` and `band_aperiodicity` from WORLD (audit
   sitting 14).
+- `source_filter_synthesize` fades the harmonics at a voicing edge over
+  `harmonic_complex`'s 5 ms gate. Their power was 0 in unvoiced time windows,
+  and read in dB between windows that cut them within half a millisecond of
+  the last voiced window; it is now held at the nearest voiced window's. On
+  the checker's two sentences the unvoiced distance from the originals drops
+  from 4.01 to 3.97 dB (bdl) and 4.15 to 4.13 dB (slt). The gallery pages "The
+  source-filter model", "A richer source-filter model" and "Rebuilding and
+  changing a voice" are rebuilt with it. Its docstring now says the noise is
+  shaped on the grid's hop, not a 5 ms one (audit sitting 14b).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local
