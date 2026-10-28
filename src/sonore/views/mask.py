@@ -113,9 +113,12 @@ def _same_grid(a: Coefficients, b: Coefficients) -> bool:
     and padding (Subbands). Frames and filterbanks compare by value."""
     if type(a) is not type(b) or a.fs != b.fs or _array(a).shape != _array(b).shape:
         return False
-    if isinstance(a, Subbands):
-        return a.filterbank == b.filterbank and a.pad == b.pad
-    return a.frame == b.frame
+    match a, b:
+        case Subbands(), Subbands():
+            return a.filterbank == b.filterbank and a.pad == b.pad
+        case ((STFT() | TVSTFT()), (STFT() | TVSTFT())):
+            return a.frame == b.frame
+    return False
 
 
 def _level_db(coefs: Coefficients) -> np.ndarray:
