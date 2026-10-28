@@ -17,7 +17,6 @@ sonore.sources.ripples.Ripple.direction
 sonore.sources.ripples.Ripple.envelope
 sonore.sources.ripples.RippleSum.envelope
 sonore.sources.ripples.RippleSum.scale
-sonore.texture.grad.ChannelContext.build
 sonore.texture.grad.ChannelContext.n
 sonore.texture.stats.TextureModel.decimation
 sonore.texture.stats.TextureModel.filterbank

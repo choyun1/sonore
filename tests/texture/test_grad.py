@@ -67,3 +67,44 @@ def test_values_equal_measured_stats(envs):
         ok = [i for i, d in enumerate(M.c1_offsets) if ch + d < env.shape[1]]
         others = env[:, [ch + M.c1_offsets[i] for i in ok]]
         assert np.allclose(tg.c1(s, others, context)[0], st.c1[ch][:, ok])
+
+
+@pytest.fixture(scope="module")
+def odd_length_envelopes():
+    """401 envelope samples: an odd length has no Nyquist bin."""
+    sound = so.gaussian_noise(401 * M.decimation / FS, FS, rng=4)
+    subbands = M.subbands(M.prepare(sound))
+    return subbands, M.envelopes(subbands)
+
+
+@pytest.mark.parametrize("window", ["uniform", "ramped"])
+def test_an_odd_number_of_envelope_samples(odd_length_envelopes, window):
+    subbands, envs = odd_length_envelopes
+    n = envs.shape[0]
+    assert n % 2 == 1
+    w = None if window == "uniform" else measurement_window(n, 1)
+    context = tg.ChannelContext.build(M, n, w)
+    stats = TextureStats.from_subbands(subbands, M, window=window)
+    ch = 12
+    s = envs[:, ch]
+    assert np.allclose(tg.mod_power(s, context)[0], stats.mod_power[ch])
+    assert np.allclose(tg.c2(s, context)[0], stats.c2[ch])
+    fd_check(lambda x: tg.mod_power(x, context), s, context)
+    fd_check(lambda x: tg.c1(x, envs[:, [ch - 2, ch - 1]], context), s, context)
+    fd_check(lambda x: tg.c2(x, context), s, context, complex_out=True)
+
+
+def test_the_window_is_normalized_to_sum_to_1(envs):
+    n = envs.shape[0]
+    w = measurement_window(n, 1)
+    s = envs[:, 9]
+    unscaled = tg.ChannelContext.build(M, n, w)
+    scaled = tg.ChannelContext.build(M, n, 3 * w)
+    assert np.sum(scaled.w) == pytest.approx(1)
+    assert np.allclose(tg.env_moments(s, scaled)[0], tg.env_moments(s, unscaled)[0])
+    assert np.allclose(tg.mod_power(s, scaled)[0], tg.mod_power(s, unscaled)[0])
+
+
+def test_a_window_of_another_length_is_refused():
+    with pytest.raises(ValueError, match="the window has 300 samples but the envelope has 400"):
+        tg.ChannelContext.build(M, 400, measurement_window(300, 1))

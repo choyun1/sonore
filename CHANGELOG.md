@@ -111,6 +111,12 @@ version (0.x.y) only fixes bugs.
   any length but needs about 2 s for one cycle of the slowest modulation band.
   New tests cover the channel average, resampling, the window's ramps, the
   subband variance, `duration` and `snr` (audit sitting 20).
+- `ModulationFilterbank.transfer` gives what `filter` multiplies a spectrum
+  by, and the texture gradients use it instead of their own copy of the
+  analytic filters; synthesis output is unchanged bit for bit.
+  `ChannelContext.build` refuses a window whose length is not the envelope's
+  and says it normalizes the window. New tests cover an odd number of envelope
+  samples and the window's normalization (audit sitting 21).
 - Gallery: "What is a voice" gives a formula for every concept and measure it
   discusses: the source-filter product and the level of each harmonic, Klatt's
   resonator and the radiation at the lips, semitones and the F0 spread, local

@@ -52,13 +52,13 @@ class ChannelContext:
 
     @classmethod
     def build(cls, model: TextureModel, n: int, w: np.ndarray | None = None) -> ChannelContext:
+        """The context for envelopes of ``n`` samples, measured with window
+        ``w`` (``n`` samples, normalized here to sum to 1; uniform if omitted)."""
+        if w is not None and len(w) != n:
+            raise ValueError(f"the window has {len(w)} samples but the envelope has {n}")
         w = np.full(n, 1.0 / n) if w is None else np.asarray(w, float) / np.sum(w)
-        H_mod = model.mod_bank.response(np.fft.rfftfreq(n, 1 / model.env_fs))
-        freqs = np.fft.fftfreq(n, 1 / model.env_fs)
-        gain = np.where(freqs > 0, 2.0, np.where(freqs == 0, 1.0, 0.0))
-        if n % 2 == 0:
-            gain[n // 2] = 1.0
-        A_oct = model.oct_bank.response(np.abs(freqs)) * gain[:, None]
+        H_mod = model.mod_bank.transfer(n, model.env_fs)
+        A_oct = model.oct_bank.transfer(n, model.env_fs, analytic=True)
         return cls(model, w, H_mod, A_oct)
 
     @property
