@@ -113,7 +113,9 @@ coefs.to_sound()                       # exact
 coefs.plot()                           # each band drawn with its own time cells
 ```
 
-`DecimatedFilterbank` is a new `Frame` in `frames/decimated_filterbank.py`.
+`DecimatedFilterbank` is a new `Frame` in `frames/filterbank.py`, next to
+the bank it decimates, as `TVGaborFrame` sits next to `GaborFrame` in
+`frames/gabor.py`.
 It holds a `Filterbank` and takes the filters from it (`rfft_response`),
 so the responses, the scales and the measured tightness have one copy.
 `Filterbank` itself does not change: its `analyze` still returns real
@@ -134,8 +136,9 @@ rate set by its bandwidth unless it is complex.
 ## Decisions
 
 - **D1. A new frame, `DecimatedFilterbank(bank)`, holding a
-  `Filterbank`, with coefficients `DecimatedSubbands`, in its own file
-  `frames/decimated_filterbank.py`.** The alternatives were a `hop` field
+  `Filterbank`, with coefficients `DecimatedSubbands`, in
+  `frames/filterbank.py`** (Cho, 2026-10-28: no separate file; `gabor.py`
+  already keeps the fixed and the time-varying Gabor frames together). The alternatives were a `hop` field
   on `Filterbank` (then one class's `analyze` would return two types, real
   or complex depending on a field), the paper's name
   `NonstationaryGaborFrame` (accurate, but `TVGaborFrame` is a
