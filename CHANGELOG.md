@@ -6,6 +6,21 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Changed
+
+- `SpectralEnvelope` and `Aperiodicity` refuse NaN and infinite values, as
+  `TemporalEnvelope` does (a NaN made `source_filter_synthesize` silent for
+  that time window without a word).
+- `Aperiodicity.db` is floored like `SpectralEnvelope.db`, so a share of
+  zero reads as a very low, finite level instead of -inf.
+- `harmonic_aperiodicity` refuses a window too short for its fit (fewer than
+  1.25 samples per unknown, about 2.5 periods) and names the shortest that
+  works; such a window used to report all noise.
+- Docstrings: what the harmonic residual's amplitude ramps follow (a tremolo
+  or an onset, not a vibrato), and the measured distances of
+  `pitch_adaptive_envelope` and `band_aperiodicity` from WORLD (audit
+  sitting 14).
+
 ## [0.8.0] - 2026-10-19
 
 A breaking release: the envelope classes are merged into `TemporalEnvelope`

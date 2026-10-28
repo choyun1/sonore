@@ -619,6 +619,21 @@ voiced F0 as `fs / n_fft + 1` (16.6 Hz at 16 kHz); WORLD divides whole
 numbers, `fs // n_fft + 1` (16 Hz), as the library did, which a 16.3 Hz
 track confirms against pyworld; the checker now does too.
 
+## Amendment, 2026-10-28 (audit sitting 14)
+
+The distances of the rewritten estimators from pyworld 0.3.5, at the same `q1`
+(-0.09) and F0 tracks, measured at 0.8.0. The envelope: median absolute
+difference over voiced time windows 0.026 dB on the stored vowel, 0.007 dB on
+the stored sentence (95th percentiles 0.18 and 0.11 dB), 0.01 and 0.00 dB on
+the bdl and slt sentences, 0.005 dB on a synthetic vowel at 48 kHz; on 15
+time windows of the stored sentence set to unvoiced, 0.006 dB (95th percentile
+1.4 dB), now stored and tested (`tests/data/pyworld_reference.npz` grew from
+110 to 140 kB). The band aperiodicity before its 8 dB
+correction: median absolute difference at 3 kHz 0.39 dB on the vowel and
+0.59 dB on the sentence at 16 kHz; at 48 kHz a steady 0.6 dB more periodic
+than WORLD in all five bands (95th percentile 0.8 dB), not chased since the
+design asks for a distance.
+
 ## References
 
 Morise (2015), Morise (2016) and Morise, Yokomori & Ozawa (2016) were read

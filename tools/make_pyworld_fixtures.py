@@ -5,6 +5,9 @@ vowel with vibrato and breath noise, and 0.3 s of the gallery sentence (0.6 to
 0.9 s) with its stored Harvest track. It stores every 8th frequency bin of
 WORLD's CheapTrick envelope at the paper's q1 (so.pitch_adaptive_envelope is
 written from the paper and is compared with it as a distance, not a match).
+The sentence is also analyzed with a stretch of its track set to 0, so that
+the unvoiced time windows (analyzed as if F0 were 500 Hz in both) are compared
+too: both stored sounds are voiced throughout.
 
 The tests compare sonore against these numbers, so they need no pyworld.
 pyworld is used only here.
@@ -24,6 +27,7 @@ OUT = ROOT / "tests" / "data" / "pyworld_reference.npz"
 FS = 16000
 HOP_MS = 5.0
 BIN_STEP = 8
+UNVOICED = slice(20, 35)  # the sentence's time windows set to unvoiced
 
 
 def breathy_vowel(duration=0.3, seed=7):
@@ -78,6 +82,12 @@ def main():
     }.items():
         for key, value in world_outputs(sound, window_times, window_f0).items():
             arrays[f"{name}_{key}"] = value
+    sound, window_times, window_f0 = sentence_excerpt()
+    window_f0 = window_f0.copy()
+    window_f0[UNVOICED] = 0.0
+    with_gap = world_outputs(sound, window_times, window_f0)
+    arrays["sentence_unvoiced_f0"] = with_gap["f0"]
+    arrays["sentence_unvoiced_envelope_paper_q1"] = with_gap["envelope_paper_q1"]
     OUT.parent.mkdir(exist_ok=True)
     np.savez_compressed(OUT, **arrays)
     print(f"wrote {OUT.relative_to(ROOT)}, {OUT.stat().st_size / 1024:.0f} kB, pyworld {pyworld.__version__}")

@@ -148,6 +148,20 @@ class TestWarpFrequency:
         with pytest.raises(TypeError):
             so.warp_frequency(envelope, ((0.0, 1.0), (1.0, 1.2)))
 
+    def test_refuses(self):
+        envelope = bump_envelope()
+        for ratio in (0, -1.2):
+            with pytest.raises(ValueError, match="positive"):
+                so.warp_frequency(envelope, ratio)
+        with pytest.raises(ValueError, match="positive"):
+            so.warp_frequency(envelope, ((0.0, 1.0), (1.2, 0.0)))
+        with pytest.raises(ValueError, match="equal-length"):
+            so.warp_frequency(envelope, ((0.0, 0.5, 1.0), (1.0, 1.2)))
+        with pytest.raises(TypeError, match="ratio must be"):
+            so.warp_frequency(envelope, "1.2")
+        with pytest.raises(TypeError, match="view"):
+            so.warp_frequency(np.ones(5), 1.2)
+
     def test_keeps_the_type_of_world_views(self, vowel):
         _, _, envelope, aperiodicity = vowel
         assert isinstance(so.warp_frequency(envelope, 1.2), so.SpectralEnvelope)

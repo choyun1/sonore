@@ -17,8 +17,9 @@ cepstral lifter that removes the harmonic ripple and restores the level the
 smoothing took from the harmonic peaks. Where the paper leaves a choice open
 (the window's gain, what happens below 0 Hz, unvoiced time windows, the FFT
 size), the choice is stated in the function's docstring. It is not WORLD's
-code: with the same ``q1`` its envelopes are within 0.01 dB of WORLD's
-(median over voiced time windows of two recorded sentences), not equal.
+code: with the same ``q1`` its envelopes are within a few hundredths of a dB of
+WORLD's (median over voiced time windows: 0.00 to 0.01 dB on two recorded
+sentences, 0.03 dB on a breathy synthetic vowel), not equal.
 
 An envelope is read as ``env(t, f)``, giving power at times ``t`` and
 frequencies ``f`` with shape ``(n_channels, len(f), len(t))``: a
@@ -216,8 +217,16 @@ class _GridView(View):
                 f"data has shape {self.data.shape[1:]} per channel, but there are"
                 f" {len(self.f)} frequencies and {len(self.t)} times"
             )
+        if not np.all(np.isfinite(self.data)):
+            raise ValueError(f"{type(self).__name__} values must be finite")
         if np.any(self.data < 0):
             raise ValueError(f"{type(self).__name__} values cannot be negative")
+
+    @staticmethod
+    def _power_db(power: np.ndarray) -> np.ndarray:
+        """``10 log10`` of a power, floored at the smallest positive float so that a zero
+        reads as a very low, finite level."""
+        return 10 * np.log10(np.maximum(power, np.finfo(float).tiny))
 
     def _log(self) -> np.ndarray:
         """The natural logarithm of the data, floored at the smallest positive float."""
@@ -302,7 +311,7 @@ class SpectralEnvelope(_GridView):
     @property
     def db(self) -> np.ndarray:
         """``10 log10`` of the power."""
-        return 10 * np.log10(np.maximum(self.data, np.finfo(float).tiny))
+        return self._power_db(self.data)
 
     def amplitude(self, t: ArrayLike, f: ArrayLike, *, channel: int = 0) -> np.ndarray:
         """The amplitude (square root of the power) at the points ``(t[i],
