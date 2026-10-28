@@ -13,6 +13,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+import scipy.fft as sp_fft
 
 import sonore as so
 
@@ -88,7 +89,7 @@ def test_far_fewer_numbers_than_the_undecimated_bank():
     coefs = so.DecimatedFilterbank(bank).analyze(_noise(1.0), pad=0)
     real_numbers = 2 * sum(map(len, coefs))
     assert real_numbers < 2.2 * coefs.n_padded < bank.n_filters * coefs.n_padded
-    assert "real numbers per sample" in repr(coefs)
+    assert "real numbers per padded sample" in repr(coefs)
 
 
 def test_a_decimated_band_is_the_undecimated_band_sampled():
@@ -184,3 +185,108 @@ def test_checks_and_plot():
     ax = coefs.plot()
     assert ax.get_yscale() == "log" and ax.get_xlim() == (0.0, 0.2)
     plt.close("all")
+
+
+def _noise_samples(n, seed=0):
+    return so.Sound(np.random.default_rng(seed).standard_normal(n), FS)
+
+
+def _band_at(subband, times, frequencies):
+    """A real band's value at fractional sample ``times``, interpolated with the DFT bins
+    taken at ``frequencies`` (in bins)."""
+    n = len(subband)
+    return np.exp(2j * np.pi * np.outer(times, frequencies) / n) @ np.fft.fft(subband) / n
+
+
+@pytest.mark.parametrize(
+    "bank",
+    [so.gammatone_filterbank(20, 70, 7000), so.morlet_filterbank(20, 70, 7000, cycles=6)],
+    ids=["gammatone", "morlet"],
+)
+@pytest.mark.parametrize("floor_db", [-40, -100])
+def test_the_cut_keeps_exactly_the_bins_above_the_floor(bank, floor_db):
+    """Every bandpass filter is cut, the Morlet's too, though its tails underflow to
+    zero far from its center: what is left is the bank's response wherever it is
+    within ``floor_db`` of the peak."""
+    n = FS
+    layout = so.DecimatedFilterbank(bank, floor_db=floor_db)._layout(n, FS)
+    half = bank.rfft_response(n, FS)
+    for k in range(1, bank.n_filters - 1):
+        band, column = layout.bands[k], half[:, k]
+        kept = np.flatnonzero(np.abs(column) >= np.abs(column).max() * 10 ** (floor_db / 20))
+        assert band.bins[0] == kept[0] and band.bins[-1] == kept[-1]
+        shared = (kept == 0) | (2 * kept == n)  # 0 Hz and Nyquist, split between the two halves
+        expected = np.where(shared, column[kept] / np.sqrt(2), column[kept])
+        np.testing.assert_array_equal(band.response[np.isin(band.bins, kept)], expected)
+        assert np.all(band.response[~np.isin(band.bins, kept)] == 0)
+
+
+def test_a_cosine_filters_tail_is_never_cut():
+    """A cosine filter is exactly zero outside its band, so it is not cut, even where a
+    grid bin falls so close to its edge that the response is far below the floor."""
+    bank = so.cosine_filterbank(centers=[999.999999, 2000, 3000], scale="linear")
+    frame = so.DecimatedFilterbank(bank)
+    # 1 Hz bins: the bin at 1000 Hz is a millionth of a hertz inside the 2 kHz filter, the only bandpass
+    n = FS
+    tail = bank.rfft_response(n, FS)[1000, 1]
+    assert 0 < abs(tail) < 1e-5
+    band = frame._layout(n, FS).bands[1]
+    assert band.response[band.bins == 1000] == tail
+    assert frame.is_tight(n, FS, pad=0)
+
+
+def test_each_band_keeps_the_smallest_fast_length_that_holds_its_support():
+    bank = so.cosine_filterbank(12, 100, 6000)
+    n = 8000
+    layout = so.DecimatedFilterbank(bank)._layout(n, FS)
+    half = bank.rfft_response(n, FS)
+    for k, band in enumerate(layout.bands):
+        nonzero = np.flatnonzero(half[:, k])
+        if k == 0:
+            support = 2 * nonzero.max() + 1
+        elif k == len(layout.bands) - 1:
+            support = n - 2 * nonzero.min() + 1
+        else:
+            support = nonzero.max() - nonzero.min() + 1
+        assert len(band.bins) == support
+        assert band.n_coefs == sp_fft.next_fast_len(support)
+
+
+def test_the_edge_bands_coefficients():
+    """The lowpass's coefficients are its band sampled, real for a real sound. The
+    highpass's are its band interpolated with frequencies from 0 to the sampling rate
+    rather than signed ones: the band shifted down by Nyquist, times a phase, so they
+    are its samples only at whole-sample times. Both levels are the magnitude of the
+    coefficient, not a Hilbert envelope."""
+    n = 3**4 * 5**2 * 7  # odd, so no Nyquist bin
+    x = _noise_samples(n)
+    bank = so.cosine_filterbank(12, 100, 6000)
+    coefs = so.DecimatedFilterbank(bank).analyze(x, pad=0)
+    subbands = bank.analyze(x, pad=0)
+    for k, frequencies in ((0, np.fft.fftfreq(n) * n), (len(coefs) - 1, np.arange(n))):
+        n_coefs = len(coefs[k])
+        values = coefs[k][:, 0] * np.sqrt(n_coefs / n)
+        expected = _band_at(subbands.data[:, k, 0], np.arange(n_coefs) * n / n_coefs, frequencies)
+        np.testing.assert_allclose(values, expected, atol=1e-10)
+        np.testing.assert_allclose(10 ** (coefs.db[k][:, 0] / 20), np.abs(values), atol=1e-10)
+    np.testing.assert_allclose(coefs[0].imag, 0, atol=1e-12)
+
+
+def test_times_start_before_the_sound_by_the_padding():
+    frame = so.DecimatedFilterbank(so.cosine_filterbank(10, 100, 6000))
+    coefs = frame.analyze(_noise_samples(4000), pad=0.01)
+    assert coefs.pad == 160 and coefs.n_samples == 4000
+    for times, values in zip(coefs.times, coefs, strict=True):
+        assert times[0] == pytest.approx(-0.01)
+        np.testing.assert_allclose(np.diff(times), coefs.n_padded / len(values) / FS)
+
+
+def test_refusals_and_the_count_in_the_repr():
+    with pytest.raises(ValueError, match="floor_db"):
+        so.DecimatedFilterbank(so.cosine_filterbank(), floor_db=-np.inf)
+    frame = so.DecimatedFilterbank(so.cosine_filterbank(10, 100, 6000))
+    coefs = frame.analyze(_noise_samples(4000), pad=0)
+    with pytest.raises(ValueError, match="same number of channels"):
+        coefs._with_bands([np.ones((len(band), 1 + (k == 3))) for k, band in enumerate(coefs)])
+    per_sample = 2 * sum(map(len, coefs)) / coefs.n_padded
+    assert f"{per_sample:.2f} real numbers per padded sample" in repr(coefs)

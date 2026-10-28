@@ -105,6 +105,11 @@ class FilterType:
     under :meth:`responses`. Filter types must be hashable (a frozen dataclass)."""
 
     edge_width = 1.0
+    #: Whether every bandpass filter is exactly zero outside a band of
+    #: frequencies by construction. A decimated bank cuts the filters of a type
+    #: without, where a response that only underflows to zero far from its
+    #: center does not count as a support.
+    compact_support = False
 
     def band_response(self, bank: Filterbank, freqs: np.ndarray) -> np.ndarray:
         """Responses of the bandpass filters at ``freqs`` [Hz] (all >= 0),
@@ -170,6 +175,7 @@ class Cosine(FilterType):
     which (:meth:`Filterbank.is_tight`)."""
 
     width: float = 1.0
+    compact_support = True
 
     def __post_init__(self):
         if not self.width > 0:
@@ -440,7 +446,7 @@ class Filterbank(Frame):
         """Whether ``s`` is constant (to :data:`TIGHT_TOLERANCE`) on the grid
         :meth:`analyze` would use for ``n_samples`` at ``fs``, padding
         included. Synthesis is then re-filtering, divided by that constant."""
-        return self._tight_gain(int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples), fs) is not None
+        return self._tight_gain(self._grid_length(n_samples, fs, pad), fs) is not None
 
     def ringing(self, fs: float, *, level_db: float = -60.0) -> int:
         """How long [samples] the filters ring: the longest time, over all
@@ -454,6 +460,11 @@ class Filterbank(Frame):
             # at least the ringing, rounded up to an FFT length without large prime factors
             return fast_padding(int(n_samples), self.ringing(fs))
         return int(round(float(pad) * fs))
+
+    def _grid_length(self, n_samples: int, fs: float, pad: float | str) -> int:
+        """Length of the grid :meth:`analyze` uses for ``n_samples``: the sound
+        and its padding on both sides."""
+        return int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples)
 
     def analyze(self, sound: Sound, *, pad: float | str = "auto") -> Subbands:
         """Split ``sound`` into subbands (via FFT).
@@ -525,7 +536,7 @@ class Filterbank(Frame):
         bounds of the grid the coefficients actually live on, which depends on
         the signal length and rate (hence a method, not a property). A tight
         bank returns its constant twice, ``(1.0, 1.0)`` for the cosine banks."""
-        n_grid = int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples)
+        n_grid = self._grid_length(n_samples, fs, pad)
         gain = self._tight_gain(n_grid, fs)
         if gain is not None:
             return (gain, gain)
@@ -882,9 +893,10 @@ class DecimatedFilterbank(Frame):
     bins of the arc share a coefficient, so nothing is aliased, and the
     synthesis unfolds them again. Band ``k`` then has ``M_k`` coefficients,
     ``N / M_k`` samples apart on a grid of ``N`` samples, and coefficient ``m``
-    is the band at time ``m N / M_k`` (exactly its samples when the hop is a
-    whole number). This is the painless case of the nonstationary Gabor frames
-    of Balazs et al. (2011), in frequency, as :class:`~sonore.TVGaborFrame` is
+    of a bandpass filter is the band's positive-frequency half at time
+    ``m N / M_k`` (exactly its samples when the hop is a whole number). This
+    is the painless case of the nonstationary Gabor frames of Balazs et al.
+    (2011), in frequency, as :class:`~sonore.TVGaborFrame` is
     in time. ``M`` is the support's length rounded up to a fast FFT length.
     The frame operator is the bank's own, ``s(f) = sum_k |H_k(f)|**2``, and the
     coefficients are scaled by ``sqrt(M / N)`` so that the frame bounds are
@@ -892,13 +904,21 @@ class DecimatedFilterbank(Frame):
 
     The coefficients are complex. For a real sound only the lowpass, the
     positive-frequency half of each bandpass filter and the highpass are kept;
-    a band's negative half would only add the complex conjugate.
+    a band's negative half would only add the complex conjugate. The lowpass
+    is kept whole, so its coefficients are its band sampled, real for a real
+    sound. The highpass is kept whole around Nyquist: its coefficients are its
+    band shifted down by Nyquist, times a phase, so they equal the band's
+    samples only at whole-sample times, and their magnitude is ``|band|``
+    there, not an envelope.
 
-    The filters are the bank's, with one change for filters that are nowhere
-    exactly zero between 0 Hz and Nyquist (gammatone, Morlet): their response
-    is set to zero where it is more than ``-floor_db`` dB below its peak, so
-    that they have a support. The frame is exact for the cut filters. A filter
-    that is exactly zero somewhere, as every cosine is, is not changed.
+    The filters are the bank's, with one change for bandpass filters of a type
+    that is not exactly zero outside a band by construction (gammatone,
+    Morlet; see :attr:`FilterType.compact_support`): their response is set to
+    zero where it is more than ``-floor_db`` dB below its peak, so that they
+    have a support. A Morlet's tails underflow to zero far from its center,
+    which does not count. The frame is exact for the cut filters. Cosine
+    filters, and the edge filters when they are exactly zero somewhere, are
+    not changed.
     Decimating the semitone cosine bank from 55 Hz to 7040 Hz keeps about 2
     real numbers per sample instead of 85, a 60-band gammatone bank cut at
     -100 dB about 18 instead of 62 (docs/design/frames/decimated-filterbanks.md).
@@ -933,13 +953,12 @@ class DecimatedFilterbank(Frame):
     def is_tight(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> bool:
         """Whether ``s`` is constant (to :data:`TIGHT_TOLERANCE`) on the grid
         :meth:`analyze` would use, padding included."""
-        n_grid = int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples)
-        return self._layout(n_grid, fs).gain is not None
+        return self._layout(self.filterbank._grid_length(n_samples, fs, pad), fs).gain is not None
 
     def frame_bounds(self, n_samples: int, fs: float, *, pad: float | str = "auto") -> tuple[float, float]:
         """``(min s, max s)`` on the grid :meth:`analyze` would use for
         ``n_samples`` at ``fs``, padding included, in the norm of :meth:`energy`."""
-        layout = self._layout(int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples), fs)
+        layout = self._layout(self.filterbank._grid_length(n_samples, fs, pad), fs)
         if layout.gain is not None:
             return (layout.gain, layout.gain)
         return (float(layout.power_sum.min()), float(layout.power_sum.max()))
@@ -1055,14 +1074,16 @@ def _decimated_layout(frame: DecimatedFilterbank, n: int, fs: float) -> _Decimat
     columns, kinds = [], []
     for k in range(bank.n_filters):
         column = half[:, k]
-        has_support = not np.all(column[interior] != 0)
-        columns.append(_cut(column, frame.floor_db, has_support))
         if bank.edges and k == 0:
             kinds.append("low")
         elif bank.edges and k == bank.n_filters - 1:
             kinds.append("high")
         else:
             kinds.append("band")
+        # the edge filters are raised-cosine tapers unless the type says otherwise
+        compact = bank.filter_type.compact_support or kinds[-1] != "band"
+        has_support = compact and not np.all(column[interior] != 0)
+        columns.append(_cut(column, frame.floor_db, has_support))
     power_sum = np.sum(np.abs(np.stack(columns, axis=1)) ** 2, axis=1)
     bands = tuple(_decimated_band(column, kind, n) for column, kind in zip(columns, kinds, strict=True))
     return _DecimatedLayout(bands, power_sum, _constant_gain(power_sum))
@@ -1107,8 +1128,10 @@ class DecimatedSubbands:
     and ``cq.times[i]`` their times [s]; ``cq.cfs`` labels the bands, edge
     filters first and last. Coefficients that fall in the padding are kept
     (they are needed to go back exactly) and lie before 0 s or after the
-    sound's end. ``cq.db[i]`` is the level of band ``i``'s envelope at those
-    times, as the undecimated band's Hilbert envelope would show it.
+    sound's end. ``cq.db[i]`` is the level of bandpass band ``i``'s envelope
+    at those times, as the undecimated band's Hilbert envelope would show it;
+    for the lowpass and highpass it is the magnitude of the coefficient, which
+    is not an envelope (see :class:`DecimatedFilterbank`).
     """
 
     def __init__(
@@ -1161,10 +1184,12 @@ class DecimatedSubbands:
 
     @property
     def db(self) -> list[np.ndarray]:
-        """Each band's envelope level [dB] at :attr:`times`, shape ``(n_coefs, n_channels)``.
-        A coefficient ``c`` of a band with ``M`` coefficients is the band's
-        positive-frequency half at that time times ``sqrt(N / M)``, so the
-        envelope is ``2 |c| sqrt(M / N)`` (``|c| sqrt(M / N)`` for the edge filters)."""
+        """Each band's level [dB] at :attr:`times`, shape ``(n_coefs, n_channels)``.
+        A coefficient ``c`` of a bandpass band with ``M`` coefficients is the
+        band's positive-frequency half at that time times ``sqrt(N / M)``, so
+        its envelope is ``2 |c| sqrt(M / N)``. For the edge filters the level
+        is ``|c| sqrt(M / N)``, the magnitude of the band (lowpass) or of the
+        band shifted down by Nyquist (highpass), not an envelope."""
         layout = self.frame._layout(self.n_padded, self.fs)
         return [
             amp_to_db(band.weight * np.abs(values) * np.sqrt(len(values) / self.n_padded), floor_db=-200.0)
@@ -1215,8 +1240,9 @@ class DecimatedSubbands:
         return plot_decimated_subbands(self, ax=ax, channel=channel, **kwargs)
 
     def __repr__(self) -> str:
+        # per sample of the padded grid, as the undecimated Subbands keep the same padding
         n_numbers = 2 * sum(len(values) for values in self._bands)
         return (
             f"DecimatedSubbands({len(self)} bands, {self.n_samples / self.fs:.3f} s, {self.fs:g} Hz, "
-            f"{self.n_channels} ch, {n_numbers / self.n_padded:.2f} real numbers per sample)"
+            f"{self.n_channels} ch, {n_numbers / self.n_padded:.2f} real numbers per padded sample)"
         )
