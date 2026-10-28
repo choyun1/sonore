@@ -121,3 +121,28 @@ def test_pku_ioa_registry_corrects_the_mirrored_copy():
     from sonore.spatial import hrir_data
 
     assert hrir_data.HRIR_DATABASES["pku-ioa"].azimuth_clockwise
+
+
+def test_data_dir(monkeypatch, tmp_path):
+    from sonore.spatial import hrir_data
+
+    monkeypatch.delenv("SONORE_DATA_DIR", raising=False)
+    monkeypatch.setattr(hrir_data.sys, "platform", "linux")
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    assert hrir_data.data_dir() == tmp_path / "sonore"
+    monkeypatch.setattr(hrir_data.sys, "platform", "darwin")
+    assert hrir_data.data_dir() == hrir_data.Path.home() / "Library" / "Caches" / "sonore"
+    monkeypatch.setattr(hrir_data.sys, "platform", "win32")
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    assert hrir_data.data_dir() == tmp_path / "sonore" / "Cache"
+    monkeypatch.setenv("SONORE_DATA_DIR", "~/somewhere")
+    assert hrir_data.data_dir() == hrir_data.Path.home() / "somewhere"
+
+
+def test_an_unpinned_file_warns_with_its_hash(monkeypatch, tmp_path):
+    from sonore.spatial import hrir_data
+
+    monkeypatch.setattr(hrir_data, "_download", lambda url, dest: dest.write_bytes(b"abc"))
+    with pytest.warns(UserWarning, match="no pinned checksum for f.sofa; sha256 is ba7816bf"):
+        path = hrir_data._fetch("https://example.org/f.sofa", tmp_path / "f.sofa", None)
+    assert path.read_bytes() == b"abc"

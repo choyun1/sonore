@@ -358,4 +358,4 @@ sound = finish(mix)
 #   Scholar](http://scholar.pku.edu.cn/qutianshu/publications/distance-dependent-head-related-transfer-functions-measured-high-spatial).
 #   The HRIRs.
 #   [`hrir_data.load_hrirs`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/hrir_data.py#L124)
-#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L609)
+#   [`spatialization.move_sound`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/spatialization.py#L647)

@@ -3,8 +3,10 @@
 import numpy as np
 import pytest
 from helpers import toy_hrirs
+from scipy.interpolate import CubicSpline
 
 import sonore as so
+from sonore.spatial.spatialization import _emission_times
 
 
 def error_db(estimate, reference):
@@ -228,3 +230,231 @@ class TestHRIRFiles:
         hs = so.HRIRSet.from_pku_ioa(tmp_path)
         assert hs.irs.shape == (2 * 13, 2, 1024)
         assert sorted(np.unique(np.round(np.linalg.norm(hs.positions, axis=1), 6))) == [0.2, 0.5]
+
+
+def impulse_hrirs(onset=(140, 140), gain=None, fs=48000):
+    toy, _ = toy_hrirs(fs=fs)
+    irs = np.zeros_like(toy.irs)
+    for ear in (0, 1):
+        irs[:, ear, onset[ear]] = 1.0 if gain is None else gain(toy.positions, ear)
+    return so.HRIRSet(irs, toy.positions, fs)
+
+
+def test_trajectory_refusals():
+    hs, _ = toy_hrirs()
+    x = so.gaussian_noise(0.05, hs.fs, rng=0)
+    p = np.array(so.hcc_to_rect(100, 0, 20))
+    with pytest.raises(ValueError, match="times must increase"):
+        so.move_sound(x, (np.array([0.0, 0.0]), np.array([p, p])), hs)
+    with pytest.raises(ValueError, match=r"\(N,\) times and \(N, 3\) points"):
+        so.move_sound(x, (np.array([0.0, 0.01, 0.02]), np.array([p, p])), hs)
+    with pytest.raises(ValueError, match=r"shape \(N, 3\)"):
+        so.move_sound(x, np.ones((4, 2)), hs)
+
+
+def test_duplicate_positions_are_dropped():
+    hs, _ = toy_hrirs()
+    doubled = so.HRIRSet(
+        np.concatenate([hs.irs, hs.irs[:3]]), np.concatenate([hs.positions, hs.positions[:3]]), hs.fs
+    )
+    assert len(doubled.positions) == len(hs.positions)
+
+
+def test_onset_is_the_first_sample_within_20_db_and_the_shapes_keep_what_comes_before():
+    hs, _ = toy_hrirs()
+    irs = np.zeros_like(hs.irs)
+    irs[:, :, 48:51] = [0.05, 0.2, 1.0]  # 0.05 is more than 20 dB down, 0.2 is not
+    ramped = so.HRIRSet(irs, hs.positions, hs.fs, fit_onsets=False)
+    assert np.all(ramped._onsets == 49)
+    np.testing.assert_allclose(ramped.at(hs.positions[7])[0, :, :256], irs[7], atol=1e-9)
+
+
+def test_onset_fit_follows_a_plus_b_over_r():
+    hs, _ = toy_hrirs(taps=512)
+    sets = []
+    for distance in (0.25, 0.5, 1.0, 1.6):
+        # onsets that follow r/c + a + b/r, to the nearest sample
+        shift = int(round((distance / so.SPEED_OF_SOUND + 20e-6 + 30e-6 / distance) * hs.fs))
+        sets.append(so.HRIRSet(np.roll(hs.irs, shift, axis=-1), hs.positions * distance, hs.fs))
+    fitted = so.HRIRSet.concat(sets)
+    measured = so.HRIRSet.concat(sets, fit_onsets=False)
+    assert np.abs(fitted._delay_onsets - measured._onsets).max() < 0.5  # the rounding, no more
+
+
+def test_between_distances_the_weights_are_linear_in_distance():
+    hs, _ = toy_hrirs()
+    far = so.HRIRSet(hs.irs * 0.5, hs.positions * 2, hs.fs)
+    both = so.HRIRSet.concat([hs, far])
+    peak = np.abs(both.at(hs.positions[5] * 1.25)[0]).max()
+    assert peak == pytest.approx(0.875 * np.abs(hs.irs[5]).max(), rel=1e-6)
+    with pytest.raises(ValueError, match="outside the measured distances"):
+        both.at(hs.positions[5] * 0.5)
+    x = so.gaussian_noise(0.05, hs.fs, rng=0)
+    with pytest.raises(ValueError, match="outside the measured distances"):
+        so.spatialize(x, hs.positions[5] * 0.5, both)
+
+
+def test_without_align_the_raw_irs_are_blended():
+    hs, _ = toy_hrirs()
+    raw = so.HRIRSet(hs.irs, hs.positions, hs.fs, align=False)
+    point = (hs.positions[0] + hs.positions[1]) / 2
+    indices, weights = raw._weights(np.atleast_2d(point))
+    np.testing.assert_allclose(raw.at(point)[0], np.einsum("k,kij->ij", weights[0], hs.irs[indices[0]]))
+
+
+def test_emission_times_solve_the_delay_equation():
+    duration, lookup = 2.0, np.linspace(0, 2.0, 2001)
+    delay = CubicSpline(lookup, 0.003 + 0.002 * np.sin(2 * np.pi * 1.3 * lookup))
+    arrival = np.linspace(-0.01, 2.02, 50001)
+    emission = _emission_times(arrival, delay, duration, lookup)
+    inside = (emission > 0) & (emission < duration)
+    assert np.abs(emission + delay(emission) - arrival)[inside].max() < 1e-12
+    assert np.allclose(emission[~inside], arrival[~inside] - delay(np.clip(emission[~inside], 0, duration)))
+
+
+def test_move_sound_refuses_a_source_nearer_than_its_delay_allows():
+    hs, _ = (
+        toy_hrirs()
+    )  # onsets about 0.4 ms: a source 50 cm nearer than measured would arrive before it left
+    with pytest.raises(ValueError, match="closer than sound can travel"):
+        so.move_sound(
+            so.gaussian_noise(0.05, hs.fs, rng=0), np.repeat([so.hcc_to_rect(50, 0, 0)], 4, axis=0), hs
+        )
+
+
+def test_shapes_cross_fade_with_raised_cosines():
+    hs = impulse_hrirs(gain=lambda positions, ear: 2.0 + positions[:, 0] * (1 if ear else -1))
+    fs = hs.fs
+    x = so.Sound(np.ones(fs), fs)
+    duration = (len(x) - 1) / fs
+    y = so.move_sound(x, so.hcc_trajectory(100, 0, ([0, duration], [0, 80])), hs, hop=0.25)
+    shape_times = np.linspace(0, duration, 5)
+    gains = np.array([hs.at(so.hcc_to_rect(100, 0, 80 * t / duration))[0, 1].sum() for t in shape_times])
+    delay = (140 - hs._pre) / fs + hs._pre / fs  # every onset is 140 samples
+    for k, fraction in ((1, 0.25), (2, 0.5), (3, 0.75)):
+        emitted = shape_times[k] + fraction * (shape_times[1] - shape_times[0])
+        weight = (1 + np.cos(np.pi * fraction)) / 2
+        expected = weight * gains[k] + (1 - weight) * gains[k + 1]
+        assert y.data[int(round((emitted + delay) * fs)), 1] == pytest.approx(expected, rel=1e-3)
+
+
+def test_the_room_is_driven_at_the_mean_of_the_ears_delays():
+    hs = impulse_hrirs(onset=(100, 200))
+    fs = hs.fs
+    click = np.zeros(4800)
+    click[0] = 1.0
+    room = so.Sound(np.r_[1.0, np.zeros(99)], fs)
+    point = np.repeat([so.hcc_to_rect(100, 0, 0)], 4, axis=0)
+    dry = so.move_sound(so.Sound(click, fs), point, hs)
+    wet = so.move_sound(so.Sound(click, fs), point, hs, room=room, drr_db=0.0)
+    reverberant = wet.data[: len(dry)] - dry.data
+    assert np.argmax(np.abs(reverberant[:, 0])) == pytest.approx(150 - hs._pre, abs=2)
+
+
+def test_diffuse_field_is_per_ear_and_scaled_to_one_meter():
+    hs = impulse_hrirs(gain=lambda positions, ear: 1.0 + 0.5 * ear)
+    energy, filters = hs._diffuse_field(hs.fs)
+    assert energy == pytest.approx((1 + 1.5**2) / 2)
+    assert np.sum(filters[1] ** 2) / np.sum(filters[0] ** 2) == pytest.approx(1.5**2, rel=1e-3)
+    near = so.HRIRSet(hs.irs * 2, hs.positions / 2, hs.fs)  # the same set at 50 cm, 1/r louder
+    assert near._diffuse_field(hs.fs)[0] == pytest.approx(energy)
+
+
+def test_room_must_be_one_or_two_channels_at_the_sound_rate():
+    hs, _ = toy_hrirs()
+    x = so.gaussian_noise(0.05, hs.fs, rng=0)
+    point = np.repeat([so.hcc_to_rect(100, 0, 0)], 4, axis=0)
+    with pytest.raises(ValueError, match="one or two channels"):
+        so.move_sound(x, point, hs, room=so.Sound(np.ones((10, 3)), hs.fs))
+    with pytest.raises(ValueError, match="one or two channels"):
+        so.move_sound(x, point, hs, room=so.Sound(np.ones(10), 44100))
+
+
+def test_concat_refusals():
+    hs, _ = toy_hrirs()
+    with pytest.raises(ValueError, match="no HRIR sets"):
+        so.HRIRSet.concat([])
+    short, _ = toy_hrirs(taps=128)
+    with pytest.raises(ValueError, match="IR shape"):
+        so.HRIRSet.concat([hs, short])
+
+
+def test_sofa_cartesian_positions(tmp_path):
+    h5py = pytest.importorskip("h5py")
+    hs, _ = toy_hrirs()
+    x, y, z = hs.positions.T
+    with h5py.File(tmp_path / "c.sofa", "w") as f:
+        f["Data.IR"] = hs.irs
+        f["Data.SamplingRate"] = np.array([hs.fs])
+        pos = f.create_dataset("SourcePosition", data=np.column_stack([y, -x, z]))  # SOFA: x front, y left
+        pos.attrs["Type"] = b"cartesian"
+    np.testing.assert_allclose(so.HRIRSet.from_sofa(tmp_path / "c.sofa").positions, hs.positions, atol=1e-12)
+
+
+def test_at_keeps_room_for_the_latest_onset():
+    hs, _ = toy_hrirs()
+    n_taps = hs.irs.shape[-1]
+    assert hs.at(hs.positions[0]).shape == (1, 2, n_taps + int(np.ceil(hs._delay_onsets.max())))
+
+
+def test_resampling_keeps_an_hrirs_gain():
+    hs = impulse_hrirs(fs=65536)
+    point = hs.positions[3]
+    for fs in (48000, 44100, 16000):
+        np.testing.assert_allclose(hs.at(point, fs=fs)[0].sum(axis=-1), 1.0, rtol=2e-3)
+
+
+@pytest.mark.parametrize("distance_cm", [90, 200])
+def test_spatialize_matches_a_still_move_sound_off_the_measured_distance(distance_cm):
+    hs, _ = toy_hrirs()
+    x = so.gaussian_noise(0.05, hs.fs, rng=0)
+    point = np.array(so.hcc_to_rect(distance_cm, 0, 30))
+    still = so.spatialize(x, point, hs)
+    moving = so.move_sound(x, np.repeat([point], 4, axis=0), hs)
+    n = min(len(still), len(moving))
+    assert error_db(still.data[:n], moving.data[:n]) < -60
+
+
+def test_directions_must_surround_the_head():
+    hs, _ = toy_hrirs()
+    _, elev, _ = so.rect_to_hcc(*hs.positions.T)
+    for keep in (np.abs(elev) < 1e-6, hs.positions[:, 1] > 0):  # one plane, the front half
+        part = so.HRIRSet(hs.irs[keep], hs.positions[keep], hs.fs)
+        with pytest.raises(ValueError, match="must surround the head"):
+            part.at(part.positions[0])
+
+
+def test_a_source_at_the_center_of_the_head_is_refused():
+    hs, _ = toy_hrirs()
+    x = so.gaussian_noise(0.05, hs.fs, rng=0)
+    with pytest.raises(ValueError, match="center of the head"):
+        hs.at([0, 0, 0])
+    with pytest.raises(ValueError, match="center of the head"):
+        so.spatialize(x, [0, 0, 0], hs)
+    with pytest.raises(ValueError, match="center of the head"):
+        so.move_sound(x, np.zeros((4, 3)), hs)
+
+
+def test_sofa_delays_are_added_to_the_irs(tmp_path):
+    h5py = pytest.importorskip("h5py")
+    hs, _ = toy_hrirs()
+    x, y, z = hs.positions.T
+    delays = np.zeros((len(hs.positions), 2))
+    delays[:, 1] = 3
+    delays[0] = [5, 2]
+    with h5py.File(tmp_path / "d.sofa", "w") as f:
+        f["Data.IR"] = hs.irs
+        f["Data.SamplingRate"] = np.array([hs.fs])
+        f["Data.Delay"] = delays
+        pos = f.create_dataset("SourcePosition", data=np.column_stack([y, -x, z]))
+        pos.attrs["Type"] = b"cartesian"
+    loaded = so.HRIRSet.from_sofa(tmp_path / "d.sofa")
+    n_taps = hs.irs.shape[-1]
+    assert loaded.irs.shape[-1] == n_taps + 5
+    for position in (0, 1):
+        for ear in (0, 1):
+            shift = int(delays[position, ear])
+            np.testing.assert_allclose(
+                loaded.irs[position, ear, shift : shift + n_taps], hs.irs[position, ear], atol=1e-12
+            )
+            np.testing.assert_allclose(loaded.irs[position, ear, :shift], 0, atol=1e-12)

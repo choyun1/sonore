@@ -40,7 +40,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 from scipy.interpolate import CubicSpline
 from scipy.signal import fftconvolve, minimum_phase
-from scipy.spatial import ConvexHull, cKDTree
+from scipy.spatial import ConvexHull, QhullError, cKDTree
 
 from sonore.core.processing import _track
 from sonore.core.sound import Sound
@@ -117,7 +117,9 @@ def hcc_trajectory(dist: Coordinate, elev: Coordinate, azim: Coordinate) -> Sour
     linearly, held before the first and after the last time), or a function
     of time in seconds. ``dist`` is in cm, ``elev`` and ``azim`` in degrees
     (azimuth clockwise from the front). Interpolating in these coordinates,
-    rather than between Cartesian points, keeps an arc an arc.
+    rather than between Cartesian points, keeps an arc an arc. Azimuth is
+    interpolated as a number of degrees, so 350 to 10 sweeps 340 degrees the
+    long way round; write 350 to 370 for the short way.
 
     Returns a function ``t -> positions``, Cartesian [m], shape ``(n, 3)``,
     which :func:`move_sound` takes as a trajectory. For example, the azimuth
@@ -169,6 +171,15 @@ def _as_path(trajectory, duration: float) -> SourcePath:
     return path
 
 
+def _radii(points: np.ndarray) -> np.ndarray:
+    """The distance [m] of each point (N, 3) from the head's center, refusing the center
+    itself, which has no direction."""
+    radii = np.linalg.norm(points, axis=1)
+    if np.any(radii == 0):
+        raise ValueError("a source at the center of the head has no direction; place it away from (0, 0, 0)")
+    return radii
+
+
 def distance_gain_db(distance: ArrayLike, *, ref: float = 1.0) -> np.ndarray:
     """Inverse-square-law level change [dB] for a point source re ``ref`` meters:
     ``-20*log10(d/ref)``, i.e. -6 dB per doubling of distance."""
@@ -197,7 +208,8 @@ class HRIRSet:
     align
         Interpolate onset-aligned IRs and interpolate the onset delays
         separately. Avoids the comb filtering you get from averaging HRIRs with
-        different delays.
+        different delays. Used by :meth:`at` and :func:`spatialize`;
+        :func:`move_sound` always interpolates aligned shapes and delays.
     fit_onsets
         With ``align`` and three or more measured distances, delay each IR's
         two ears together so that their mean onset follows a fit across
@@ -272,12 +284,15 @@ class HRIRSet:
 
     @classmethod
     def from_sofa(cls, path: str | PathLike, **kwargs) -> HRIRSet:
-        """Load a SOFA ``SimpleFreeFieldHRIR`` file (needs ``h5py``)."""
+        """Load a SOFA ``SimpleFreeFieldHRIR`` file (needs ``h5py``). A nonzero
+        ``Data.Delay`` (samples, per measurement and ear or one for all) is added
+        to the IRs, which grow by the largest delay."""
         import h5py
 
         with h5py.File(path, "r") as sofa:
-            irs = sofa["Data.IR"][()]  # (M, R, N)
+            irs = sofa["Data.IR"][()][:, :2, :]  # (M, R, N)
             fs = float(np.ravel(sofa["Data.SamplingRate"][()])[0])
+            delay = sofa["Data.Delay"][()][..., :2] if "Data.Delay" in sofa else np.zeros(1)
             source_pos = sofa["SourcePosition"][()]  # (M, 3)
             pos_type = sofa["SourcePosition"].attrs.get("Type", b"spherical")
         pos_type = pos_type.decode() if isinstance(pos_type, bytes) else str(pos_type)
@@ -287,7 +302,10 @@ class HRIRSet:
         else:
             azimuth, elevation, radius = source_pos.T  # SOFA azimuth is counter-clockwise from front
             xyz = np.column_stack(hcc_to_rect(100 * radius, elevation, np.mod(-azimuth, 360)))
-        return cls(irs[:, :2, :], xyz, fs, **kwargs)
+        delay = np.broadcast_to(np.asarray(delay, float), irs.shape[:2])
+        if np.any(delay != 0):
+            irs = _frac_shift(irs, delay, irs.shape[-1] + max(0, int(np.ceil(delay.max()))))
+        return cls(irs, xyz, fs, **kwargs)
 
     @classmethod
     def concat(cls, sets: Iterable[HRIRSet], **kwargs) -> HRIRSet:
@@ -355,7 +373,17 @@ class HRIRSet:
         shells = []
         for members in np.split(order, breaks):
             directions = self.positions[members] / radii[members, None]
-            triangles = members[ConvexHull(directions).simplices]
+            try:
+                hull = ConvexHull(directions)
+            except QhullError:
+                hull = None
+            # the head's center must be inside the hull, so every facet's plane has it on its inner side
+            if hull is None or np.any(hull.equations[:, -1] > -1e-9):
+                raise ValueError(
+                    f"the measured directions at {radii[members].mean():g} m must surround the head; "
+                    "directions in one plane or on one side cannot be interpolated between"
+                )
+            triangles = members[hull.simplices]
             unit = self.positions[triangles] / radii[triangles][..., None]  # (T, 3 corners, 3)
             shells.append((float(radii[members].mean()), triangles, np.linalg.inv(unit.transpose(0, 2, 1))))
         return shells
@@ -452,11 +480,11 @@ class HRIRSet:
         """Interpolation weights: (indices (N, k), weights (N, k)). On one
         shell, by direction only; between shells, by direction on the two
         shells around the point's distance, then linearly in distance."""
-        directions = points / np.linalg.norm(points, axis=1, keepdims=True)
+        radii = _radii(points)
+        directions = points / radii[:, None]
         if self._single_distance:
             return self._direction_weights(0, directions)
         distances = self.distances
-        radii = np.linalg.norm(points, axis=1)
         if np.any(radii < distances[0] * (1 - 1e-6)) or np.any(radii > distances[-1] * (1 + 1e-6)):
             raise ValueError(
                 "some positions are outside the measured distances "
@@ -478,9 +506,9 @@ class HRIRSet:
     def _nearest_measured(self, points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Each point moved along its direction to the nearest measured distance,
         and its own distance [m]. Points between measured distances stay put; with
-        several distances, points nearer than the nearest are left to fail."""
+        several distances, points nearer than the nearest are refused later, in ``_weights``."""
         distances = self.distances
-        radii = np.linalg.norm(points, axis=1)
+        radii = _radii(points)
         lower = distances[0] if self._single_distance else 0.0
         measured = np.clip(radii, lower, distances[-1])
         return points * (measured / radii)[:, None], radii
@@ -508,7 +536,9 @@ class HRIRSet:
         """``hrir`` (at ``self.fs``) resampled to ``fs`` along its last axis."""
         if fs is None or fs == self.fs:
             return hrir
-        return _resample_poly(hrir, self.fs, fs, axis=-1)
+        # an impulse response resampled as a signal keeps its height, so its gain scales by
+        # fs / self.fs; rescaling keeps the filter's response
+        return _resample_poly(hrir, self.fs, fs, axis=-1) * (self.fs / fs)
 
     def _diffuse_field(self, fs: float) -> tuple[float, np.ndarray]:
         """What sound arriving from every direction at once sounds like at the ears,
@@ -534,7 +564,10 @@ class HRIRSet:
 
     def at(self, positions: ArrayLike, *, fs: float | None = None) -> np.ndarray:
         """Interpolated HRIRs at Cartesian ``positions`` (N, 3), resampled to
-        ``fs``. Returns shape ``(N, 2, n_taps)``."""
+        ``fs``. Returns shape ``(N, 2, n)``: with ``align``, ``n`` is the number
+        of taps plus the latest onset in the set, so a shape placed at any
+        onset fits; without, ``n`` is the number of taps (counted at the set's
+        rate; resampling scales it)."""
         points = np.atleast_2d(np.asarray(positions, float))
         indices, weights = self._weights(points)
         if self.align:
@@ -555,19 +588,24 @@ def spatialize(
     Beyond the measured distances (or off the one distance of a
     single-distance set) the HRIR of the nearest measured distance in the
     same direction is delayed by the extra distance over ``speed_of_sound``
-    and scaled by the ratio of distances (1/r).
+    and scaled by the ratio of distances (1/r). With several distances, a
+    position nearer than the nearest measured one is refused.
     """
     point = np.atleast_2d(np.asarray(position, float))
     measured_point, radius = hrirs._nearest_measured(point)
     measured_radius = np.linalg.norm(measured_point)
     hrir = hrirs.at(measured_point, fs=sound.fs)[0]
     sound = sound.mono()
-    if not np.isclose(radius[0], measured_radius):
-        extra_delay = (radius[0] - measured_radius) / speed_of_sound * sound.fs
-        n_out = len(sound) + max(0, int(np.ceil(extra_delay)))
-        delayed = _read_between_samples(sound.data[:, 0], np.arange(n_out) - extra_delay)
-        sound = Sound(delayed * (measured_radius / radius[0]), sound.fs)
-    return sound.convolve(Sound(hrir.T, sound.fs))
+    if np.isclose(radius[0], measured_radius):
+        return sound.convolve(Sound(hrir.T, sound.fs))
+    # nearer than the measured distance the sound is read early; reading starts that many
+    # samples before time 0 and the output drops them, so no part of the sound is lost
+    extra_delay = (radius[0] - measured_radius) / speed_of_sound * sound.fs
+    lead = max(0, int(np.ceil(-extra_delay)))
+    n_out = len(sound) + lead + max(0, int(np.ceil(extra_delay)))
+    delayed = _read_between_samples(sound.data[:, 0], np.arange(n_out) - lead - extra_delay)
+    near = Sound(delayed * (measured_radius / radius[0]), sound.fs)
+    return Sound(near.convolve(Sound(hrir.T, sound.fs)).data[lead:], sound.fs)
 
 
 _DELAY_STEP = 1e-3  # s; spacing at which ear delays are looked up before smoothing
@@ -633,7 +671,8 @@ def move_sound(
     hrirs
         The measured HRIRs. Between measured distances they are interpolated;
         beyond them, distance acts through travel time and 1/r only (see the
-        module notes). A set with one distance renders every distance that way.
+        module notes). A set with one distance renders every distance that way;
+        with several, a path nearer than the nearest measured distance is refused.
     room
         A reverberant tail, one or two channels, such as
         ``so.synth_ir(rt60, fs, n_channels=2)`` (without ``drr_db``, so it has
