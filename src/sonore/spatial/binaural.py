@@ -36,7 +36,8 @@ __all__ = [
 
 
 def apply_itd_ild(sound: Sound, *, itd: float = 0.0, ild: float = 0.0) -> Sound:
-    """Impose an ITD [s] and ILD [dB] on a mono (or diotic stereo) sound.
+    """Impose an ITD [s] and ILD [dB] on a mono or two-channel sound (a
+    two-channel sound keeps whatever differences it already has).
 
     The lagging ear is delayed by ``|itd|`` (fractional delays are exact up
     to band-limiting); the ILD is split symmetrically, ``±ild/2`` per ear.
@@ -68,6 +69,9 @@ def simple_bir(fs: float, *, itd: float = 0.0, ild: float = 0.0, half_width: int
     Each ear is a (possibly fractionally delayed) unit impulse scaled by
     ``±ild/2`` dB. Fractional delays use a windowed sinc, so the IR starts
     ``half_width`` samples late whenever the ITD isn't a whole number of samples.
+    With the default ``half_width``, the ears differ by the ITD and ILD within
+    0.005 dB and 1e-3 rad below 0.4 fs; above about 0.47 fs the lagging ear
+    rolls off (3 dB down at 0.488 fs).
     """
     delay_samples = abs(itd) * fs
     fractional = abs(delay_samples - round(delay_samples)) > 1e-9
@@ -119,12 +123,16 @@ def interaural_cues(
 ) -> InterauralCues:
     """Windowed ITD, ILD and interaural coherence.
 
-    ITD is the lag (within ``±max_itd``) of the peak of the normalized
-    cross-correlation, refined by parabolic interpolation. ``iac`` is that
-    peak's height (interaural coherence); ``corr0`` is the zero-lag
-    correlation, which can be negative (use it for Oscor/Phasewarp).
-    Time windows more than ``silence_db`` below the loudest one are NaN. If a
-    ``filterbank`` is given, cues are computed per band.
+    The ears are cut into Hann windows of ``win_dur`` every ``hop_dur``
+    (default ``win_dur / 2``); ``t`` gives each window's center. ITD is the
+    lag (within ``±max_itd``) of the peak of the normalized cross-correlation,
+    with the window's own taper divided out, refined by parabolic
+    interpolation. ``iac`` is that peak's height (interaural coherence);
+    ``corr0`` is the zero-lag correlation, which can be negative (use it for
+    Oscor/Phasewarp). Time windows more than ``silence_db`` below the loudest
+    one are NaN. A window where only one ear is silent has no ITD, IAC or
+    ``corr0`` (NaN) and an ILD of ±inf. If a ``filterbank`` is given, cues
+    are computed per band, each band against its own loudest window.
     """
     if sound.n_channels != 2:
         raise ValueError("interaural_cues needs a 2-channel sound")
@@ -132,6 +140,12 @@ def interaural_cues(
     n_win = n_samples(win_dur, fs)
     hop = max(1, n_samples(hop_dur if hop_dur is not None else win_dur / 2, fs))
     max_lag = int(np.ceil(max_itd * fs))
+    if n_win > sound.n_samples:
+        raise ValueError(
+            f"the sound ({sound.duration:g} s) is shorter than one window (win_dur={win_dur:g} s)"
+        )
+    if max_lag >= n_win:
+        raise ValueError(f"max_itd ({max_itd:g} s) must be shorter than the window (win_dur={win_dur:g} s)")
 
     if filterbank is None:
         bands = sound.data[:, None, :]  # (n, 1, 2)
@@ -168,7 +182,8 @@ def interaural_cues(
     peak_lag = lags[peak_idx].astype(float)
     refinable = (np.abs(lags[peak_idx]) < max_lag) & np.isfinite(delta)
     delta = np.where(refinable, np.clip(delta, -0.5, 0.5), 0.0)
-    itd = (peak_lag + delta) / fs
+    # with one ear silent the correlation is 0/0: no lag to report
+    itd = np.where(np.isfinite(iac), (peak_lag + delta) / fs, np.nan)
     iac = np.minimum(iac - 0.25 * (corr_before - corr_after) * delta, 1.0)
 
     corr0 = norm_xcorr[..., 0]
@@ -186,7 +201,8 @@ def interaural_cues(
 
 def oscor(duration: float, fs: float, f_mod: float, *, rng: RNG = None, **noise_kwargs) -> Sound:
     """Oscillating-correlation noise (Siveke et al., 2008): the interaural
-    correlation follows ``sin(2*pi*f_mod*t)``."""
+    correlation follows ``sin(2*pi*f_mod*t)``. Normalized to an RMS of 1 over
+    both ears."""
     noise = gaussian_noise(duration, fs, n_channels=2, rng=rng, **noise_kwargs).data
     t = time_axis(len(noise), fs)
     right = np.sin(2 * np.pi * f_mod * t) * noise[:, 0] + np.cos(2 * np.pi * f_mod * t) * noise[:, 1]
@@ -198,7 +214,10 @@ def phasewarp(duration: float, fs: float, f_mod: float, *, rng: RNG = None, **no
     phase difference rotates at ``f_mod`` Hz, so the IPD sweeps through 360°
     and the zero-lag interaural correlation follows ``cos(2*pi*f_mod*t)``.
 
-    Implemented as a single-sideband frequency shift of the left-ear noise.
+    Implemented as a single-sideband frequency shift of the left-ear noise,
+    so the right ear's spectrum is the left's moved up by ``f_mod`` Hz (a
+    500-1000 Hz noise covers 500 + f_mod to 1000 + f_mod Hz in the right
+    ear). Normalized to an RMS of 1 over both ears.
     """
     left = gaussian_noise(duration, fs, rng=rng, **noise_kwargs).data[:, 0]
     t = time_axis(len(left), fs)

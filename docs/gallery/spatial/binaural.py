@@ -255,8 +255,8 @@ playhead = list(axes)
 # - Siveke, Ewert, Grothe & Wiegrebe (2008). Psychophysical and physiological evidence for fast
 #   binaural processing. *J. Neurosci.* 28(9), 2043–2052.
 #   [doi:10.1523/JNEUROSCI.4488-07.2008](https://doi.org/10.1523/JNEUROSCI.4488-07.2008).
-#   [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L187)
-#   [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L196)
+#   [`binaural.oscor`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L202)
+#   [`binaural.phasewarp`](https://github.com/choyun1/sonore/blob/main/src/sonore/spatial/binaural.py#L212)
 # - Wenzel, Arruda, Kistler & Wightman (1993). Localization using nonindividualized head-related
 #   transfer functions. *J. Acoust. Soc. Am.* 94(1), 111–123.
 #   [doi:10.1121/1.407089](https://doi.org/10.1121/1.407089).
