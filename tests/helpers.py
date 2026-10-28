@@ -76,10 +76,12 @@ def DelayedGaussianFilterbank(f_hi: float = 4000.0, delay: float = 0.3e-3):
 
 def coef_matrix(coefs) -> np.ndarray:
     """Coefficients as a matrix, one column per channel: ``Subbands`` in
-    (time, band) order including padding, ``STFT`` and ``TVSTFT`` in
-    (freq, time window) order."""
+    (time, band) order including padding, ``DecimatedSubbands`` band after band,
+    ``STFT`` and ``TVSTFT`` in (freq, time window) order."""
     if isinstance(coefs, so.Subbands):
         return coefs._full.reshape(-1, coefs._full.shape[2])
+    if isinstance(coefs, so.DecimatedSubbands):
+        return np.concatenate(list(coefs), axis=0)
     return np.moveaxis(coefs.data, 0, -1).reshape(-1, coefs.data.shape[0])
 
 
@@ -87,6 +89,9 @@ def coef_weights(frame, coefs) -> np.ndarray:
     """The coefficient-norm weight (``bin_weights``) of each row of :func:`coef_matrix`."""
     if isinstance(frame, (so.GaborFrame, so.TVGaborFrame)):
         return np.repeat(frame.bin_weights(coefs.fs), coefs.data.shape[2])
+    if isinstance(frame, so.DecimatedFilterbank):
+        bands = frame._layout(coefs.n_padded, coefs.fs).bands
+        return np.concatenate([np.full(band.n_coefs, band.weight) for band in bands])
     return np.ones(coef_matrix(coefs).shape[0])
 
 

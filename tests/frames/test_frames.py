@@ -343,6 +343,10 @@ ORACLE = {
     "gammatone": (so.gammatone_filterbank(19, 300, 3500), [0, 4e-3]),
     "gammatone zero": (so.gammatone_filterbank(19, 300, 3500, phase="zero"), [0, 4e-3]),
     "morlet": (so.morlet_filterbank(5, 300, 3500, cycles=3), [0, 4e-3]),
+    # Decimated banks: each band at its own rate (docs/design/frames/decimated-filterbanks.md).
+    "decimated erb": (so.DecimatedFilterbank(so.cosine_filterbank(10, 50, 3000)), ["auto", 0]),
+    "decimated gammatone": (so.DecimatedFilterbank(so.gammatone_filterbank(19, 300, 3500)), [0, 4e-3]),
+    "decimated morlet": (so.DecimatedFilterbank(so.morlet_filterbank(5, 300, 3500, cycles=3)), [0, 4e-3]),
     **{f"gabor {k}": (v, [None]) for k, v in GABORS.items()},
     **{k: (v, [None]) for k, v in TVS.items()},
 }
@@ -366,12 +370,15 @@ def _masked(coefs, seed=0):
     if isinstance(coefs, so.Subbands):
         m = rng.random(coefs._full.shape[:2])[:, :, None]
         return so.Subbands(coefs._full * m, coefs.fs, coefs.filterbank, coefs.pad)
+    if isinstance(coefs, so.DecimatedSubbands):
+        return coefs._with_bands([band * rng.random(band.shape[0])[:, None] for band in coefs])
     return coefs._with_data(coefs.data * rng.random(coefs.data.shape[1:]))
 
 
 def _is_padded_grid_case(frame, pad):
     """Padded non-tight filterbank: least squares on the padded grid."""
-    return isinstance(frame, so.Filterbank) and not frame.is_tight(N, FS, pad=pad) and pad != 0
+    filterbanks = (so.Filterbank, so.DecimatedFilterbank)
+    return isinstance(frame, filterbanks) and not frame.is_tight(N, FS, pad=pad) and pad != 0
 
 
 @pytest.mark.parametrize(("name", "pad"), ORACLE_CASES)

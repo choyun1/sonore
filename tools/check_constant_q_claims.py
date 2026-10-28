@@ -35,7 +35,7 @@ def full_responses(bank, n, fs):
     frequency), and each bandpass split into its positive-frequency half and
     its mirror. Responses satisfy H(-f) = conj(H(f)), as Filterbank assumes."""
     half = bank.rfft_response(n, fs)  # (n // 2 + 1, n_filters), f >= 0
-    signed = np.fft.fftfreq(n) * n  # signed bin index
+    signed = np.round(np.fft.fftfreq(n) * n).astype(int)  # signed bin index
     index = np.abs(signed).astype(int)
     full = half[index]  # |f| lookup
     negative = signed < 0

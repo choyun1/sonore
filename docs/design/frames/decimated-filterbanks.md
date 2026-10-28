@@ -10,7 +10,9 @@ class placed in `frames/filterbank.py` rather than a file of its own. The claims
 transform out from its definition in NumPy and imports sonore only for the
 filter responses and for the timing comparison, so it shares no code with
 an implementation that does not exist yet. Every number below is what it
-printed on 2026-10-28 for 3 s of white noise at 44.1 kHz, unless stated.
+printed on 2026-10-28 (rerun after a fix: the first version rounded a few
+signed bin indices down, moving a few response values by one bin; no
+conclusion changed) for 3 s of white noise at 44.1 kHz, unless stated.
 
 ## Why
 
@@ -55,10 +57,10 @@ not a new kind of analysis.
   any `Filterbank` unchanged. On the two-sided DFT grid the semitone bank
   (83 bands) has `max |s - 1|` = 4.4e-16.
 - **C2. Decimated to each filter's support, it is still exact and still
-  tight.** The reconstruction error is 7.8e-16 of the peak, the largest
+  tight.** The reconstruction error is 8.5e-16 of the peak, the largest
   imaginary part of the result is 2.9e-15, the coefficient energy equals
-  the signal energy to 2.2e-16, and synthesis by the dual and by the
-  adjoint differ by 2.9e-16 of the peak.
+  the signal energy to rounding (the checker prints 0), and synthesis by
+  the dual and by the adjoint differ by 2.9e-16 of the peak.
 - **C3. A real signal needs only the lowpass, the positive halves of the
   bands and the highpass.** Each band's negative-frequency half only adds
   the complex conjugate. Rebuilding from the edges plus twice the real part
@@ -68,18 +70,18 @@ not a new kind of analysis.
   for the 83 bands, 1.40 N for the highpass (the flat edge from 7 kHz to
   22 kHz is a wide band), and 0.005 N for the lowpass. Extending the bank
   to 20 kHz (101 bands) gives 2.05 N. With 48 bands per octave instead of
-  12 the undecimated bank keeps 337 N and the decimated one 2.00 N: every
+  12 the undecimated bank keeps 337 N and the decimated one 2.01 N: every
   frequency lies under two cosines whatever the spacing, so the count
   hardly depends on it.
 - **C5. Hops and FFT lengths.** The 58 Hz band's coefficients are
-  157.9 ms apart, the 6.6 kHz band's 1.30 ms. Rounding each `M_k` up to a
-  fast FFT length adds 0.28% to the count and leaves the error at 7.5e-16.
+  150.0 ms apart, the 6.6 kHz band's 1.30 ms. Rounding each `M_k` up to a
+  fast FFT length adds 0.28% to the count and leaves the error at 6.4e-16.
   Giving every bandpass filter the same hop (one matrix, like a
   spectrogram) needs 4.29 N.
 - **C6. A decimated band is a sampled band.** For the 587 Hz band with
   `M_k` chosen so the hop is a whole 630 samples, the coefficients equal
   the undecimated positive-frequency band sampled every 630 samples, times
-  `sqrt(N / M_k)`, to 4.9e-16.
+  `sqrt(N / M_k)`, to 5.1e-16.
 - **C7. Filters that never reach zero are cut at a level, and the cut bank
   is exact.** The positive half of a gammatone response is nonzero at
   every frequency, so its support is the whole half-spectrum. Setting the
@@ -96,9 +98,9 @@ not a new kind of analysis.
   the semitone bank changes.
 - **C8. Edited coefficients go back as the least-squares signal.** With
   half the coefficients set to zero, analysis after synthesis is a
-  projection: applying it twice differs from once by 7.3e-16.
+  projection: applying it twice differs from once by 6.7e-16.
 - **C9. It is not slower.** Analysis plus synthesis of the 3 s takes
-  0.12 s with the checker's plain loop over bands, against 0.61 s for
+  0.11 s with the checker's plain loop over bands, against 0.52 s for
   today's undecimated `Filterbank` with `pad=0` (one run on the cloud
   container; timings vary by machine and run).
 
@@ -128,7 +130,10 @@ each at its own rate. They keep the lowpass, the positive half of every
 bandpass filter and the highpass (C3). Their energy counts each bandpass
 coefficient twice, for its mirror, as `GaborFrame` counts its stored bins,
 so that it equals the energy of the whole two-sided transform and the
-least-squares meaning of synthesis (C8) holds in that norm.
+least-squares meaning of synthesis (C8) holds in that norm. A bandpass filter's value at 0 Hz and at
+Nyquist belongs to both of its halves, so each half carries it divided by
+`sqrt(2)`; the two halves together then have the bank's response there,
+and `s` is exactly the bank's.
 
 Philosophy.md says subbands stay real and that complex-coefficient
 synthesis waits for a use. This is that use: a band cannot be kept at a

@@ -38,7 +38,14 @@ def _public_subclasses(cls):
 
 # Every other public class, by kind. A new class has to be put in one of
 # these on purpose, so a one-way analysis cannot arrive without being a View.
-FRAME_SIDE = ["Frame", "Filterbank", "STFT", "TVSTFT", "Subbands"]  # with their subclasses
+FRAME_SIDE = [
+    "Frame",
+    "Filterbank",
+    "STFT",
+    "TVSTFT",
+    "Subbands",
+    "DecimatedSubbands",
+]  # with their subclasses
 NOT_ANALYSES = [
     "Sound",
     "Decibels",
@@ -128,6 +135,6 @@ def test_view_draws_or_says_why_not(view):
     assert str(refusal.value) == view.no_plot
 
 
-@pytest.mark.parametrize("name", ["Sound", "STFT", "TVSTFT", "Subbands"])
+@pytest.mark.parametrize("name", ["Sound", "STFT", "TVSTFT", "Subbands", "DecimatedSubbands"])
 def test_analysis_results_that_are_not_views_draw(name):
     assert callable(getattr(getattr(so, name), "plot", None)), f"{name} lost its plot"

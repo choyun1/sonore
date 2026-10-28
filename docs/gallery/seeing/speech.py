@@ -577,7 +577,7 @@ sounds = talkers
 # - Glasberg & Moore (1990). Derivation of auditory filter shapes from notched-noise data. *Hearing
 #   Research* 47.
 #   [doi:10.1016/0378-5955(90)90170-T](https://doi.org/10.1016/0378-5955%2890%2990170-T).
-#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L231)
+#   [`filterbank.Gammatone`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L244)
 # - Kawahara, Masuda-Katsuse & de Cheveigné (1999). Restructuring speech representations using a
 #   pitch-adaptive time-frequency smoothing and an instantaneous-frequency-based F0 extraction.
 #   *Speech Communication* 27.
