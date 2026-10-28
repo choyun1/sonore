@@ -1,9 +1,9 @@
-"""Imposing texture statistics on envelopes (McDermott & Simoncelli, 2011).
+"""Texture synthesis (McDermott & Simoncelli, 2011): imposing statistics on noise.
 
-Milestone 3 of the synthesis: adjust *one* channel's compressed envelope so
-its statistics approach the targets, holding the other channels fixed. The
-full loop (channel ordering, fine structure, subband rescaling, iterations)
-builds on :func:`impose_channel`.
+:func:`synthesize` runs the full loop (channel ordering, fine structure,
+subband rescaling, iterations). Each iteration adjusts one cochlear channel's
+compressed envelope at a time with :func:`impose_channel`, holding the others
+fixed. :func:`pop_start` makes a starting sound for textures with heavy pops.
 
 The objective for channel ``k`` is the unweighted sum of squared errors of
 the statistics that depend on ``k``:
@@ -14,9 +14,9 @@ the statistics that depend on ``k``:
 
 It is minimized by nonlinear conjugate gradient (SciPy's Polak-Ribiere CG)
 with a fixed number of iterations per call, then the envelope is clipped at
-0. :func:`synthesize` gives each channel 5 iterations on its first pass and
-one more for every 5 outer iterations after that (the toolbox's rule), so
-later passes polish more.
+0. :func:`synthesize` gives each channel ``5 + round(0.2 * (iteration - 1))``
+iterations (the toolbox's rule): 5 on the first three passes, 6 from the
+4th, 7 from the 9th, so later passes polish more.
 
 The loss is nearly flat along two directions: a uniform shift of the envelope
 and a scaling of its deviations from the mean. Only the mean and variance
@@ -46,7 +46,7 @@ from sonore.texture import grad as tg
 from sonore.texture.stats import PAPER_CLASSES, TextureStats
 from sonore.views.envelope_peaks import envelope_peaks
 
-__all__ = ["ChannelObjective", "impose_channel", "synthesize", "channel_order", "pop_start"]
+__all__ = ["ChannelObjective", "impose_channel", "synthesize", "channel_order", "pop_start", "pop_rate"]
 
 MOMENTS = ("env_mean", "env_var", "env_skew", "env_kurt")
 
@@ -260,6 +260,22 @@ def _resample_circular(x: np.ndarray, n: int) -> np.ndarray:
         return resample(x, n, axis=0)
 
 
+def _check_octave_bands(context: tg.ChannelContext, classes: tuple[str, ...], duration: float) -> None:
+    """Refuse a length at which an octave band used by ``classes`` has no frequency
+    on the envelope's FFT grid: C1 or C2 would divide 0 by 0 and stall the synthesis."""
+    model = context.model
+    used = set(range(model.n_oct)) if "c2" in classes else set()
+    if "c1" in classes:
+        used |= set(model.c1_bands)
+    empty = [band for band in sorted(used) if not np.any(context.A_oct[:, band])]
+    if empty:
+        center = model.oct_bank.cfs[empty[0]]
+        raise ValueError(
+            f"{duration:g} s is too short to synthesize: the octave modulation band at {center:g} Hz "
+            f"has no frequency on the envelope grid, whose spacing is {model.env_fs / context.n:g} Hz"
+        )
+
+
 def synthesize(
     target: TextureStats,
     *,
@@ -287,6 +303,10 @@ def synthesize(
     recombine with the fine structure; rescale each subband to its target
     variance; resynthesize. All analysis is circular, so the result loops
     seamlessly.
+
+    A sound too short for the slowest octave modulation band that C1 or C2
+    uses to hold one frequency of the envelope grid (under about 0.32 s at
+    the defaults) is refused.
 
     Stops when every class in ``classes`` is at least ``stop_db`` SNR, or
     after ``max_iter`` iterations. The synthesis counts as converged if the
@@ -317,6 +337,7 @@ def synthesize(
     signal_length = len(x)
     n_env = signal_length // model.decimation
     context = tg.ChannelContext.build(model, n_env)
+    _check_octave_bands(context, classes, signal_length / model.fs)
     order = channel_order(target.env_mean)
     history, best = [], (-np.inf, x, 0)
 
