@@ -164,14 +164,15 @@ def show(snd, fmin=100, fmax=5000, title="Spectrogram (Hann 30 ms)", log=True):
 # of equal amplitude: B at 650 Hz and C at 300 Hz always, and A at 1800, 1200 or 650 Hz in the
 # three examples. Tones and the silences between them are 200 ms long, the tones with 10 ms rise
 # and decay, so the cycle is A, silence, B and C together, silence. Four cycles of the standard
-# (A and B alone) come first, then twelve of the full pattern, all as in the booklet. The booklet
-# reports that the closer A is to B, the more easily B is heard going with A rather than with C.
+# (A and B alone) come first, as in the booklet, then six of the full pattern, where the booklet
+# plays twelve. The booklet reports that the closer A is to B, the more easily B is heard going
+# with A rather than with C.
 
 # %% [demo cc1] A far above the chord
 CYCLE = 0.8
 
 
-def capture(a, b=650, c=300, c_delay=0.0, n_standard=4, n_full=12):
+def capture(a, b=650, c=300, c_delay=0.0, n_standard=4, n_full=6):
     """The A, B-and-C cycle after its A-B standard; C starts and stops `c_delay` seconds after B."""
     events = []
     for k in range(n_standard + n_full):
@@ -214,7 +215,8 @@ fig, playhead = show(sound, fmin=200, fmax=2500)
 # Bregman & Ahad, Demonstration 26. As Demonstration 25 with A at 1000 Hz, B at 650 Hz and C at
 # 300 Hz, so that A and B are 350 Hz apart, a distance the booklet chose to leave the two pulls
 # balanced. Both the onset and the offset of C are delayed by 0, 30 or 60 ms relative to B in the
-# three examples. Four cycles of the standard, then twelve of the full pattern, as in the booklet.
+# three examples. Four cycles of the standard, then six of the full pattern (the booklet plays
+# twelve), as on the previous example.
 
 # %% [demo cc2] B and C together
 sound = finish(capture(1000))
