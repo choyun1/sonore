@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -48,6 +49,10 @@ NEAR_DEEPEST = 0.1  # a dip this close to the deepest one counts as nearly as de
 
 
 SINC_HALF = 32  # half-length of the fractional-delay kernel [samples]
+
+
+SINC_TAPER = np.kaiser(2 * SINC_HALF, 8.0)  # the kernel's taper
+SINC_TAPER.flags.writeable = False
 
 
 CHUNK = 512  # candidates processed at once
@@ -418,6 +423,14 @@ def _blackman(n, length):
     return np.where(np.abs(n) <= half, window, 0.0)
 
 
+@lru_cache(maxsize=1024)
+def _blackman_row(half_length, length):
+    """:func:`_blackman` at the offsets ``-half_length .. half_length`` (cached, read-only)."""
+    row = _blackman(np.arange(-half_length, half_length + 1), length)
+    row.flags.writeable = False
+    return row
+
+
 def _refine(samples, candidate_positions, candidate_f0s, fs, iters=2, origin=0):
     """Instantaneous-frequency refinement of the candidate F0s at their
     positions (times in samples; ``samples[0]`` is sample ``origin``). Each
@@ -437,7 +450,7 @@ def _refine(samples, candidate_positions, candidate_f0s, fs, iters=2, origin=0):
         segment, segment_next = padded[sample_index], padded[sample_index + 1]
         for _ in range(iters):
             length = np.round(PERIODS * fs / chunk_f0).astype(int) | 1
-            window = _blackman(offsets[None, :], length[:, None])
+            window = np.stack([_blackman_row(half_length, n) for n in length.tolist()])
             windowed, windowed_next = segment * window, segment_next * window
             rotation = np.exp(-2j * np.pi * chunk_f0[:, None] * offsets[None, :] / fs)
             harmonic_rotation = rotation.copy()
@@ -447,12 +460,15 @@ def _refine(samples, candidate_positions, candidate_f0s, fs, iters=2, origin=0):
             # (more for some candidates of the group than they use, which get no weight below)
             up_to_ceiling = np.ceil(HARMONIC_CEILING / chunk_f0.min())
             n_harmonics = int(min(MAX_HARMONICS, max(N_HARMONICS, up_to_ceiling)))
-            spectrum = np.zeros((len(chunk_f0), MAX_HARMONICS), complex)
-            spectrum_next = np.zeros_like(spectrum)
+            # both windowed stretches against each harmonic's rotation, as real and
+            # imaginary parts: sums[:, i, j, part]
+            both = np.stack([windowed, windowed_next], axis=1)
+            sums = np.zeros((len(chunk_f0), MAX_HARMONICS, 2, 2))
             for i in range(n_harmonics):  # harmonic_rotation = rotation ** (i + 1)
-                spectrum[:, i] = np.sum(windowed * harmonic_rotation, axis=1)
-                spectrum_next[:, i] = np.sum(windowed_next * harmonic_rotation, axis=1)
+                sums[:, i] = both @ harmonic_rotation.view(float).reshape(*rotation.shape, 2)
                 harmonic_rotation *= rotation
+            spectrum = sums[:, :, 0, 0] + 1j * sums[:, :, 0, 1]
+            spectrum_next = sums[:, :, 1, 0] + 1j * sums[:, :, 1, 1]
             harmonic_freq = harmonic_numbers[None, :] * chunk_f0[:, None]
             used = (harmonic_freq < fs / 2) & (
                 (harmonic_numbers[None, :] <= N_HARMONICS) | (harmonic_freq <= HARMONIC_CEILING)
@@ -486,7 +502,6 @@ def _periodicity(samples, candidate_positions, candidate_f0s, fs, origin=0):
     pad = int(row_lengths.max()) + max_period + 2 * SINC_HALF + 2
     padded = np.concatenate([np.zeros(pad), samples, np.zeros(pad)])
     taps = np.arange(-SINC_HALF + 1, SINC_HALF + 1)
-    kaiser = np.kaiser(2 * SINC_HALF, 8.0)
     for chunk, row_length in _groups(row_lengths):
         chunk_f0 = candidate_f0s[chunk]
         period = fs / chunk_f0
@@ -497,14 +512,15 @@ def _periodicity(samples, candidate_positions, candidate_f0s, fs, origin=0):
         stretch = padded[start[:, None] + offsets[None, :]] * in_window
         period_int = np.floor(period).astype(int)
         period_frac = period - period_int
-        sinc_kernel = np.sinc(taps[None, :] - period_frac[:, None]) * kaiser[None, :]
+        sinc_kernel = np.sinc(taps[None, :] - period_frac[:, None]) * SINC_TAPER[None, :]
         # stretch_later[j] = samples(start + j + period)
         #                  = sum_tap sinc_kernel[tap] samples[start + j + period_int + tap]
-        base = start + period_int
-        stretch_later = np.zeros_like(stretch)
-        for i, tap in enumerate(taps):
-            stretch_later += sinc_kernel[:, i : i + 1] * padded[base[:, None] + offsets[None, :] + tap]
-        stretch_later *= in_window
+        base = start + period_int + taps[0]
+        reach = np.arange(row_length + len(taps) - 1)
+        later_windows = np.lib.stride_tricks.sliding_window_view(
+            padded[base[:, None] + reach], len(taps), axis=1
+        )
+        stretch_later = (later_windows @ sinc_kernel[:, :, None])[..., 0] * in_window
         norm = np.sqrt(np.sum(stretch * stretch, axis=1) * np.sum(stretch_later * stretch_later, axis=1))
         with np.errstate(divide="ignore", invalid="ignore"):
             out[chunk] = np.where(norm > 0, np.sum(stretch * stretch_later, axis=1) / norm, 0.0)

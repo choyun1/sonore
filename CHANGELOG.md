@@ -60,6 +60,14 @@ version (0.x.y) only fixes bugs.
   Candidates and F0s move by rounding only (under 4e-13 Hz on
   `bdl_arctic_a0131`, no voicing change); on that recording the track
   also ran faster, 1.2 s against 2.1 s (timed once).
+- `f0_track` and `F0TrackStream` run about twice as fast: the refinement's
+  harmonic sums and the score's fractional delay are matrix products instead
+  of loops over harmonics and taps. On the first 1.5 s of `bdl_arctic_a0131`
+  (16 kHz) a 10 ms block takes about 5 to 6 ms instead of 10 ms, and on the
+  whole recording `f0_track` takes 0.67 s instead of 1.4 s (best of 3 or 4
+  runs in a shared cloud machine). F0s move by rounding only (under 1.3e-12
+  Hz on four recordings, no voicing change), and a stream still equals the
+  batch track bit for bit.
 
 ## [0.9.0] - 2026-10-28
 
