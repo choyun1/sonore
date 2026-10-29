@@ -240,11 +240,11 @@ of ASA 2.
 - **D8. Comodulation masking release.** It is on neither disc (Bregman 22's rhythmic masking
   release is a variant of it), but it is one of the classic stimuli. Add it to the Fusion page,
   after Hall, Haggard & Fernandes (1984). Recommended.
+- **D9. sonore-infer.** The pages are content only. sonore-infer copies a stimulus's few lines
+  when it needs one; no shared stimulus module now. Recommended.
 - **D10. Language (Cho, 2026-10-29).** The originals are always credited, and every page is
   framed as a reproduction that tests sonore, as set out in "What the pages are". Page titles say
   so, e.g. "Streams: reproducing Bregman & Ahad (1996)". Decided by Cho.
-- **D9. sonore-infer.** The pages are content only. sonore-infer copies a stimulus's few lines
-  when it needs one; no shared stimulus module now. Recommended.
 
 ## References
 
