@@ -362,6 +362,9 @@ ruff check . && ruff format .
 python docs/gallery/build.py       # regenerate the listening gallery (a few minutes)
 ```
 
+How to report a problem or propose a change, and what support to expect:
+[CONTRIBUTING.md](https://github.com/choyun1/sonore/blob/main/CONTRIBUTING.md).
+
 ## How sonore was developed
 
 sonore began as sigtools, the code I (Adrian Cho) wrote in graduate school to
