@@ -177,6 +177,10 @@ More in the gallery:
 - [Iterated rippled noise](https://choyun1.github.io/sonore/gallery/irn.html): a pitch made from noise and a delay. [▶ sixteen iterations](https://choyun1.github.io/sonore/gallery/irn.html#d-09)
 - [Spectrotemporal ripples](https://choyun1.github.io/sonore/gallery/ripples.html): moving ripples on different carriers. [▶ dynamic ripple](https://choyun1.github.io/sonore/gallery/ripples.html#d-06)
 
+**Classic demonstrations** (reproductions, credited to their authors)
+
+- [Streams: reproducing Bregman & Ahad](https://choyun1.github.io/sonore/gallery/streams.html): sonore's attempt to rebuild Bregman & Ahad's (1996) demonstrations of streaming from their booklet. [▶ a six-tone cycle](https://choyun1.github.io/sonore/gallery/streams.html#d-sg1)
+
 **Seeing and changing sound**
 
 - [Seeing speech](https://choyun1.github.io/sonore/gallery/speech.html): time-frequency analysis on one sentence. [▶ reassignment](https://choyun1.github.io/sonore/gallery/speech.html#d-30)
