@@ -114,3 +114,40 @@ def test_a_gabor_frame_is_streamable():
     # the Protocol so.stream takes; mypy checks the same in CI
     frame: so.Streamable = FRAMES["default"]
     assert callable(frame.step)
+
+
+# The cepstrum and MFCCs are maps over a stream's STFT parts. Their floor is
+# set below the whole sound's peak unless reference= fixes it, so a stream
+# uses reference= (docs/design/streaming.md).
+SILENT_STRETCH = NOISE.data.copy()
+SILENT_STRETCH[: len(SILENT_STRETCH) // 3] *= 2.0  # the loudest stretch first
+SILENT_STRETCH[len(SILENT_STRETCH) // 2 :] = 0.0  # then digital silence, where the floor binds
+WITH_SILENCE = so.Sound(SILENT_STRETCH, FS)
+
+
+@pytest.mark.parametrize("view", [so.Cepstrum, so.MFCC], ids=["cepstrum", "mfcc"])
+def test_cepstrum_and_mfcc_of_a_stream_with_a_fixed_floor_equal_batch(view):
+    frame = FRAMES["default"]
+    batch = view(frame.analyze(WITH_SILENCE), reference=1.0)
+    parts = [view(part, reference=1.0) for part in so.stream(frame, so.blocks(WITH_SILENCE, 441))]
+    joined = view.concatenate(parts)
+    assert np.array_equal(joined.data, batch.data)
+    assert np.array_equal(joined.t, batch.t)
+
+
+@pytest.mark.parametrize("view", [so.Cepstrum, so.MFCC], ids=["cepstrum", "mfcc"])
+def test_without_a_fixed_floor_parts_differ_and_do_not_join(view):
+    frame = FRAMES["default"]
+    batch = view(frame.analyze(WITH_SILENCE))
+    parts = [view(part) for part in so.stream(frame, so.blocks(WITH_SILENCE, 441))]
+    data = np.concatenate([part.data for part in parts], axis=-1)
+    assert not np.array_equal(data, batch.data)  # each part floors below its own peak
+    with pytest.raises(ValueError, match="reference="):
+        view.concatenate(parts)
+
+
+def test_reference_none_is_todays_floor():
+    coefs = FRAMES["default"].analyze(WITH_SILENCE)
+    assert so.Cepstrum(coefs).reference is None and so.MFCC(coefs).reference is None
+    with pytest.raises(ValueError, match="positive"):
+        so.Cepstrum(coefs, reference=0.0)

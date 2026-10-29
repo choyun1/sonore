@@ -20,6 +20,12 @@ version (0.x.y) only fixes bugs.
   protocol `stream` takes.
 - `STFT.is_whole`: false for a part of a stream, which `to_sound`,
   `griffin_lim` and the frame's `synthesize` and `adjoint` refuse.
+- `Cepstrum(..., reference=)` and `MFCC(..., reference=)`: a fixed floor,
+  `floor_db` below that magnitude in every time window, so each time window
+  depends on its own samples only. The default, `None`, is the floor below
+  each channel's peak as before. With it, cepstra and MFCCs of a stream's
+  STFT parts join (`Cepstrum.concatenate`, `MFCC.concatenate`) into exactly
+  those of the whole sound.
 
 ## [0.9.0] - 2026-10-28
 

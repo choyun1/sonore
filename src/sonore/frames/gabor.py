@@ -583,10 +583,13 @@ class STFT(_ShortTimeCoefficients):
         return STFT._part(data, self.fs, self.frame, self.first_window, self.n_samples)
 
     @classmethod
-    def concatenate(cls, parts: Sequence[STFT]) -> STFT:
+    def concatenate(cls, parts: Sequence[STFT | TVSTFT]) -> STFT:
         """Parts of a stream joined in order: after the last part (the one
         ``finish`` returns) this is the STFT of the whole sound, exactly."""
-        parts = list(parts)
+        stft_parts = [part for part in parts if isinstance(part, STFT)]
+        if len(stft_parts) != len(parts):
+            raise TypeError("only STFT parts join (a TVGaborFrame does not stream)")
+        parts = stft_parts
         if not parts:
             raise ValueError("no parts to join")
         first = parts[0]
