@@ -7,7 +7,7 @@ the F0 track. A streaming view takes sound a block at a time as it arrives,
 keeps what it needs from earlier blocks, and returns the time windows each
 block completes.
 
-Status: proposed 2026-10-28, decisions D1–D11 open. The claims are checked by
+Status: proposed 2026-10-28. Cho accepted D1 and D2 (with the mixin) on 2026-10-29; D3–D11 open. The claims are checked by
 `tools/check_streaming_claims.py` (C1–C10). It writes every streaming version
 out from its definition in NumPy and SciPy, as the step functions D1
 proposes, and imports sonore only for the batch results it compares them
@@ -210,7 +210,7 @@ place. C7 measures this for the largest state in view.
 
 ## Decisions
 
-**D1. A streaming view is a pure step function with an immutable state.**
+**D1. A streaming view is a pure step function with an immutable state. (accepted 2026-10-29)**
 Each view that streams provides `start(fs) -> state`,
 `step(state, block) -> (state, output)` and `finish(state) -> output`. States
 are frozen dataclasses holding arrays. A public `typing.Protocol`,
@@ -231,13 +231,37 @@ use them and sonore-infer can't branch them.
 real time.
 
 **D2. The step lives with the batch view, and both use one copy of each
-formula.** `GaborFrame.start/step/finish` sit in `frames/gabor.py`, next to
+formula. (accepted 2026-10-29, with the mixin below)** `GaborFrame.start/step/finish` sit in `frames/gabor.py`, next to
 `analyze`. The modulation spectrogram's sit in `views/modspectrogram.py`,
 and so on. There is no streaming folder, because folders follow meaning
 (philosophy.md). The batch path and the step call the same function for one
 time window (or one block of filtering). The batch path is not rewritten as
 "the scan over one block", because that could change today's outputs.
 Every batch result stays bit for bit as it is, the texture output included.
+
+The buffering is written once. Streaming views come in three kinds:
+- *Sliding-window views* (the STFT, pooled envelopes, FIR rate changes, the
+  modulation kernels) all step the same way: append the block, compute every
+  time window now complete, keep the rest. A mixin, `SlidingWindowStream` in
+  `core/stream.py`, writes `start`, `step` and `finish` once. A view
+  supplies `window_layout(fs)` (window length, hop, start of time window 0)
+  and `time_windows(samples, fs, first, count)` (the view for those time
+  windows, from the same code its batch path runs). The zeros before sample
+  0, the zeros after the end and the time-window bookkeeping, where an
+  off-by-one would make a stream disagree with batch, then exist in one
+  place.
+- *Maps* (the cepstrum, MFCCs) are computed from each STFT a stream yields,
+  so they need no state of their own.
+- *Recursive views* (the IIR gammatone's filter state, the F0 track's
+  Viterbi pass) write their own `start`, `step` and `finish`.
+
+*Alternative.* A decorator that adds the three methods (Cho asked,
+2026-10-29). It works at runtime, but Python's type system cannot say "this
+class plus three methods", so mypy (run in CI) would reject every call to
+`step` and every use as a `Streamable`, and a reader would find no `step`
+in the view's source. A decorator form mypy accepts would still need the
+class to name the methods itself (`start, step, finish = ...`), which is
+clumsier than inheriting.
 
 **D3. A step returns ordinary views of the new time windows.** Each output
 is an `STFT`, `Cepstrum`, `MFCC`, `TemporalEnvelope` or
