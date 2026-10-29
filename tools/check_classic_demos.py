@@ -134,6 +134,20 @@ report(
 )
 
 
+# Bregman & Ahad, Demonstration 14: low (500-1000 Hz) and high (2000-4000 Hz) bands of noise at
+# equal spectrum level, the first burst high and the second low.
+data, fs = load("sg9")
+x = data[:, 0]
+first, second = onsets(x, fs)[:2]
+densities = []
+for start, lo, hi in ((first, 2000, 4000), (second, 500, 1000)):
+    burst = x[round(start * fs) : round((start + 0.05) * fs)]
+    power = np.abs(np.fft.rfft(burst)) ** 2
+    freqs = np.fft.rfftfreq(len(burst), 1 / fs)
+    densities.append(power[(freqs > lo) & (freqs < hi)].sum() / (hi - lo))
+report("sg9 spectrum level, low band re high band [dB]", 10 * np.log10(densities[1] / densities[0]), 0.0, 0.5)
+
+
 def band_envelope(x, fs, centre, half_width):
     """The envelope of `x` within `half_width` Hz of `centre`: an FFT band-pass, then the
     magnitude of the analytic signal."""
@@ -164,14 +178,44 @@ segments = [x[round((t + 0.02) * fs) : round((t + 0.23) * fs)] for t in starts]
 report(
     "fu2 target, lowest and highest over both series [Hz]",
     [
-        min(peak_in_band(s, fs, 500, 700) for s in segments),
-        max(peak_in_band(s, fs, 500, 700) for s in segments),
+        min(peak_in_band(s, fs, 570, 630) for s in segments),
+        max(peak_in_band(s, fs, 570, 630) for s in segments),
     ],
     [600, 600],
     0.5,
 )
 errors = [peak_in_band(s, fs, 300, 450) - 400 * f for s, f in zip(segments, frame, strict=True)]
 report("fu2 frame's second harmonic, largest error [Hz]", np.max(np.abs(errors)), 0, 0.5)
+
+
+def peak_level(x, fs, lo, hi):
+    """Height in dB of the largest spectral peak of `x` between `lo` and `hi` Hz."""
+    spectrum = np.abs(np.fft.rfft(x * np.hanning(len(x)), 1 << 16))
+    freqs = np.fft.rfftfreq(1 << 16, 1 / fs)
+    return 20 * np.log10(spectrum[(freqs >= lo) & (freqs <= hi)].max())
+
+
+in_tune = segments[0]
+report(
+    "fu2 in tune, target and harmonics 1, 2, 8 re harmonic 4 [dB]",
+    [
+        peak_level(in_tune, fs, *band) - peak_level(in_tune, fs, 750, 850)
+        for band in ((550, 650), (150, 250), (350, 450), (1550, 1650))
+    ],
+    [0, 0, 0, 0],
+    0.3,
+)
+
+# Bregman & Ahad, Demonstration 20: all four partials at equal intensity. In the first sound both
+# sets follow the fast pattern (400 to 660 Hz), so the single partial stays below 700 Hz and the
+# other three above 1100 Hz.
+data, fs = load("fu4")
+x = data[round(0.2 * fs) : round(2.3 * fs), 0]
+power = np.abs(np.fft.rfft(x)) ** 2
+freqs = np.fft.rfftfreq(len(x), 1 / fs)
+single = power[(freqs > 300) & (freqs < 750)].sum()
+three = power[(freqs > 1100) & (freqs < 3500)].sum()
+report("fu4 single partial re the mean of the other three [dB]", 10 * np.log10(3 * single / three), 0.0, 0.3)
 
 # Bregman & Ahad, Demonstration 21: with a 125 ms rise, the second and third tones of a cluster
 # peak at 0.88 and 0.76 of the first (the second pair starts at 4 s; its first cluster is MHLM).

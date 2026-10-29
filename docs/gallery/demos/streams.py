@@ -406,11 +406,11 @@ def band(lo, hi, step):
     """Equal tones `step` Hz apart in random phase from `lo` to `hi`, at a spectrum level that
     does not depend on `step`: a burst of noise with sharp edges."""
     harmonics = np.arange(round(lo / step), round(hi / step) + 1)
-    amplitudes = np.full(len(harmonics), np.sqrt(step))
     phases = rng.uniform(0, 2 * np.pi, len(harmonics))
-    snd = so.harmonic_complex(
-        0.05, FS, step, harmonics=harmonics, amplitudes=amplitudes, phases=phases, ramp=0
-    )
+    snd = so.harmonic_complex(0.05, FS, step, harmonics=harmonics, phases=phases, ramp=0)
+    # It comes out at RMS 1, as every sonore generator's sound does; scaled so that each tone has
+    # power `step`, the band has power 1 per Hz.
+    snd = snd * np.sqrt(len(harmonics) * step)
     n = snd.n_samples
     ramp = np.minimum(1, np.minimum(np.arange(n), np.arange(n)[::-1]) / (5e-3 * FS))
     return so.Sound(ramp * snd.data[:, 0], FS)
