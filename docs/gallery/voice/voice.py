@@ -112,7 +112,7 @@ def show_pair(sounds, title, contours=None, fmax=5000):
         bottom.set_title("Spectrogram (Hann 33 ms)")
         if contours is not None:
             times, values = contour_of(contours[label])
-            bottom.plot(times, values / 1000, color="c", lw=1.2)  # the spectrogram's axis is in kHz
+            bottom.plot(times, values, color="c", lw=1.2)
         for ax in (top, bottom):
             ax.set_xlim(0, snd.duration)
         playhead[label] = [top, bottom]

@@ -433,7 +433,7 @@ for label, snd in talkers.items():
     top, middle, bottom = axes[label]
     times, f0 = harvest[label]
     image(top, narrow.analyze(snd), "Narrowband, Hann 33.3 ms, with 10 × F0 (dashed)")
-    top.plot(times, np.where(f0 > 0, 10 * f0 / 1000, np.nan), color="w", ls="--", lw=0.9)
+    top.plot(times, np.where(f0 > 0, 10 * f0, np.nan), color="w", ls="--", lw=0.9)
     image(middle, adaptive[label].analyze(snd), "Pitch-adaptive: Hann, 3 periods")
     image(bottom, so.tandem_power(snd, times, f0), "TANDEM-style: Blackman pair, 2.5 periods")
 playhead = shared_time(axes)

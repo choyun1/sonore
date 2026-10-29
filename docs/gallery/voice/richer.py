@@ -123,7 +123,7 @@ def draw(container, snd, title, fmax, contour=None):
     ax1.set_title("Spectrogram (Hann 33 ms)")
     if contour is not None:
         times, values = contour_of(contour)
-        ax1.plot(times, values / 1000, color="c", lw=1.2)  # the spectrogram's axis is in kHz
+        ax1.plot(times, values, color="c", lw=1.2)
     for ax in (ax0, ax1):
         ax.set_xlim(0, snd.duration)
     return [ax0, ax1]

@@ -64,13 +64,13 @@ def stereo():
     return so.Sound(np.stack([noise, tone], axis=1), FS)
 
 
-def test_plot_stft_draws_the_channel_asked_in_khz_without_the_edge_windows(stereo):
+def test_plot_stft_draws_the_channel_asked_in_hz_without_the_edge_windows(stereo):
     stft = so.STFT(stereo, win_dur=0.02)
     values, coords = _image(so.plotting.plot_stft(stft, channel=1, colorbar=False))
     inner = so.plotting._interior(stft)
     np.testing.assert_array_equal(values, stft.db[1][:, inner])
     assert values.shape[1] < len(stft.t)  # the zero-padded windows at either end are left out
-    assert coords[..., 1].max() == pytest.approx(FS / 2 / 1000, rel=0.01)
+    assert coords[..., 1].max() == pytest.approx(FS / 2, rel=0.01)  # up to 8 kHz: drawn in Hz
     untrimmed, _ = _image(so.plotting.plot_stft(stft, colorbar=False, trim_edges=False))
     assert untrimmed.shape[1] == len(stft.t)
 
@@ -302,3 +302,26 @@ def test_log_frequency_axis_labels_plain_numbers(limits, expected):
     assert ax.get_yscale() == "log"
     assert all(label.get_text() == "" for label in ax.yaxis.get_ticklabels(minor=True))
     plt.close(fig)
+
+
+def test_plot_stft_draws_in_khz_from_10_khz_up():
+    fs = 44100
+    stft = so.STFT(so.pure_tone(0.2, fs, 1000), win_dur=0.02)
+    ax = so.plotting.plot_stft(stft, colorbar=False)
+    assert ax.get_ylabel() == "Frequency [kHz]"
+    assert _image(ax)[1][..., 1].max() == pytest.approx(fs / 2 / 1000, rel=0.01)
+    ax = so.plotting.plot_stft(stft, colorbar=False, fmax=8000)
+    assert ax.get_ylabel() == "Frequency [Hz]"
+    assert ax.get_ylim() == (0, 8000)
+
+
+def test_plot_formant_track_follows_the_spectrogram_unit():
+    import matplotlib.pyplot as plt
+
+    snd = so.Sound(np.random.default_rng(0).standard_normal(FS // 2), FS)
+    track = so.formant_track(snd)
+    ax = so.plotting.plot_stft(so.STFT(snd, win_dur=0.02), colorbar=False)
+    so.plotting.plot_formant_track(track, ax)
+    assert ax.get_ylabel() == "Frequency [Hz]"
+    np.testing.assert_array_equal(ax.lines[0].get_ydata(), track.frequencies[0, 0])
+    plt.close("all")

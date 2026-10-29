@@ -285,7 +285,7 @@ def show_mask(snd, target, mask):
     snd.plot(axes[0, 0], lw=0.4)
     axes[0, 0].set_title("Waveform")
     mask.plot(axes[0, 1])
-    axes[0, 1].set(title="Ideal binary mask (target > noise)", ylim=(0, 5))
+    axes[0, 1].set(title="Ideal binary mask (target > noise)", ylim=(0, 5000))
     so.STFT(snd, win_dur=25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
     axes[1, 0].set_title("Spectrogram of this sound")
     so.STFT(target, win_dur=25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
