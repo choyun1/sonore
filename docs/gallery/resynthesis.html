@@ -514,8 +514,8 @@ def show_mask(snd, target, mask):
     fig, axes = plt.subplots(2, 2, figsize=(10, 6.2), sharex=True, layout=&quot;constrained&quot;)
     snd.plot(axes[0, 0], lw=0.4)
     axes[0, 0].set_title(&quot;Waveform&quot;)
-    mask.plot(axes[0, 1])
-    axes[0, 1].set(title=&quot;Ideal binary mask (target &gt; noise)&quot;, ylim=(0, 5))
+    mask.plot(axes[0, 1], fmax=5000)
+    axes[0, 1].set_title(&quot;Ideal binary mask (target &gt; noise)&quot;)
     so.STFT(snd, win_dur=25e-3).plot(axes[1, 0], fmax=5000, colorbar=False)
     axes[1, 0].set_title(&quot;Spectrogram of this sound&quot;)
     so.STFT(target, win_dur=25e-3).plot(axes[1, 1], fmax=5000, colorbar=False)
@@ -531,7 +531,7 @@ mask = so.ideal_binary_mask(S_t, S_m, lc_db=0)
 snr = 20 * np.log10(target.rms / (masker + 5 * dB).rms)
 print(f&quot;signal-to-noise ratio: {snr:.1f} dB&quot;)</code></pre></details><pre class="out">signal-to-noise ratio: -8.6 dB</pre></div>
 
-<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.4913828124999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.06208491449652778, &quot;x1&quot;: 0.4913828124999999, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-24" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4816640624999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4816640624999999, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Target in noise</h3>
     <div class="desc"><p>A gliding harmonic target (a stand-in for a voice) in pink noise, at a signal-to-noise ratio of
@@ -547,7 +547,7 @@ print(f&quot;signal-to-noise ratio: {snr:.1f} dB&quot;)</code></pre></details><p
 fig, playhead = show_mask(sound, target, mask)</code></pre></details>
 </article>
 
-<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4911562500000001, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4911562500000001, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
+<article class="sound" id="d-25" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4816640624999999, &quot;top&quot;: 0.041863216845878015, &quot;bottom&quot;: 0.4359661454833107, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4816640624999999, &quot;top&quot;: 0.5257457790798608, &quot;bottom&quot;: 0.9198487077172939, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.0}]">
   <div class="about">
     <h3>Ideal binary mask</h3>
     <div class="desc"><p>The same mixture with every time-frequency cell where the noise dominates switched off. The

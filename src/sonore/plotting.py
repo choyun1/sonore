@@ -277,9 +277,11 @@ def plot_mask(
     channel: int = 0,
     cmap: str | Colormap = "Greys_r",
     colorbar: bool = False,
+    fmax: float | None = None,
 ) -> Axes:
     """A mask's gains as an image, black 0 to white 1: time windows by FFT
-    bins for an STFT mask, samples by bands for a subband mask."""
+    bins for an STFT mask (frequency in Hz or kHz as in :func:`plot_stft`,
+    up to ``fmax`` [Hz] if given), samples by bands for a subband mask."""
     from sonore.frames.filterbank import Subbands
 
     ax = _ax(ax)
@@ -290,7 +292,7 @@ def plot_mask(
         ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]")
         log_frequency_axis(ax)
     else:
-        _tf_image(ax, mask.values[channel], mask.t, mask.f, cmap, 0, 1, colorbar, "")
+        _tf_image(ax, mask.values[channel], mask.t, mask.f, cmap, 0, 1, colorbar, "", fmax)
     ax.set_title("Mask")
     return ax
 

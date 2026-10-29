@@ -327,7 +327,7 @@ def draw(container, snd, title, fmax, contour=None):
     ax1.set_title(&quot;Spectrogram (Hann 33 ms)&quot;)
     if contour is not None:
         times, values = contour_of(contour)
-        ax1.plot(times, values / 1000, color=&quot;c&quot;, lw=1.2)  # the spectrogram&#x27;s axis is in kHz
+        ax1.plot(times, values, color=&quot;c&quot;, lw=1.2)
     for ax in (ax0, ax1):
         ax.set_xlim(0, snd.duration)
     return [ax0, ax1]
@@ -821,7 +821,7 @@ harmonics fall about 6 dB per octave and its noise is flat, so its share of nois
 <p>The first-order picture has two settings of the source, and the voice in between. The first
 two sounds are at the male talker's pitch.</p>
 
-<article class="sound" id="d-ap1" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
+<article class="sound" id="d-ap1" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.29039490377269217, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.987708, &quot;top&quot;: 0.37368848842877656, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]">
   <div class="about">
     <h3>The buzz alone</h3>
     <div class="desc"><p>The buzz alone: harmonics through the formants, <span class="tex">A = 0</span> everywhere. Every frequency is
@@ -865,10 +865,10 @@ them (see <a href="sourcefilter.html#h-harmonics-sample-the-envelope">Harmonics 
 noise.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap3_a_breathy_vowel_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4827080000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.4827080000000001, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]"></audio>
+    <audio controls preload="metadata" src="audio/ap3_a_breathy_vowel_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4827080000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4827080000000001, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]"></audio>
     <p class="file">ap3_a_breathy_vowel_male_talker.flac, 1.0 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap3_a_breathy_vowel_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.9877080000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.9877080000000001, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]"></audio>
+    <audio controls preload="metadata" src="audio/ap3_a_breathy_vowel_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.9877080000000001, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.9877080000000001, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 1.0}]"></audio>
     <p class="file">ap3_a_breathy_vowel_female_talker.flac, 1.0 s, mono</p></div>
     </div>
   </div>
@@ -1192,10 +1192,10 @@ for column, label in zip(columns, talkers, strict=True):
     <div class="desc"><p>Cosine phase: a pulse train that follows each talker's intonation.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/hf1_cosine_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4857909101101411, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4857909101101411, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/hf1_cosine_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">hf1_cosine_phase_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/hf1_cosine_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/hf1_cosine_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">hf1_cosine_phase_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1213,10 +1213,10 @@ fig, playhead = show_pair(sounds, titled(&quot;equal harmonics, cosine phase&quo
     <div class="desc"><p>Schroeder phase: the same harmonics, with no instant in the period carrying all the energy.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.48570755081604894, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.061631789496527783, &quot;x1&quot;: 0.48570755081604894, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">hf2_schroeder_phase_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5666317894965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/hf2_schroeder_phase_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">hf2_schroeder_phase_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1273,10 +1273,10 @@ windows the track calls unvoiced are always noise.)</p>
     <div class="desc"><p>The sentence, for reference.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap9_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857095820640773, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857095820640773, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/ap9_the_sentence_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">ap9_the_sentence_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap9_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/ap9_the_sentence_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">ap9_the_sentence_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1294,10 +1294,10 @@ fig, playhead = show_pair(sounds, titled(&quot;the sentence&quot;), fmax=8000)</
     <div class="desc"><p>The resynthesis with D4C's aperiodicity.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap10_resynthesis_with_d4c_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap10_resynthesis_with_d4c_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap10_resynthesis_with_d4c_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1321,10 +1321,10 @@ fig, playhead = show_pair(sounds, titled(&quot;with so.band_aperiodicity&quot;),
 mostly at high frequencies.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.28957405944959336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.3746484734330716, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.28957405944959336, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.3746484734330716, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap11_with_the_harmonic_residual_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap11_with_the_harmonic_residual_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap11_with_the_harmonic_residual_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1348,10 +1348,10 @@ fig, playhead = show_pair(sounds, titled(&quot;with so.harmonic_aperiodicity&quo
 picture. The voiced parts are harmonics all the way up.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.4866473354945656, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap12_no_noise_in_the_voice_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap12_no_noise_in_the_voice_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap12_no_noise_in_the_voice_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1375,10 +1375,10 @@ fig, playhead = show_pair(sounds, titled(&quot;with A = 0&quot;), fmax=8000)</co
 sentence is whispered; it is still intelligible, because the envelope carries the words.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4865497732204248, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
+    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.4864913357546575, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.53}]"></audio>
     <p class="file">ap13_nothing_but_noise_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5664286644965277, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap13_nothing_but_noise_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap13_nothing_but_noise_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1487,10 +1487,10 @@ not judgments of how natural the voices sound.</p>
 rebuilds above.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap14_the_simple_rebuild_for_comparison_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857096002929735, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.28843532514393433, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.06142866449652779, &quot;x1&quot;: 0.4857096002929735, &quot;top&quot;: 0.37717899411231437, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/ap14_the_simple_rebuild_for_comparison_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.28843532514393433, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.37717899411231437, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">ap14_the_simple_rebuild_for_comparison_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap14_the_simple_rebuild_for_comparison_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/ap14_the_simple_rebuild_for_comparison_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">ap14_the_simple_rebuild_for_comparison_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -1508,10 +1508,10 @@ fig, playhead = show_pair(sounds, titled(&quot;liftered envelope, no aperiodicit
     <div class="desc"><p>CheapTrick's envelope and D4C's aperiodicity on the same tracks.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/ap15_cheaptrick_and_d4c_on_the_same_tracks_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.48579092044540967, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.05329585199652779, &quot;x1&quot;: 0.48579092044540967, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/ap15_cheaptrick_and_d4c_on_the_same_tracks_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">ap15_cheaptrick_and_d4c_on_the_same_tracks_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/ap15_cheaptrick_and_d4c_on_the_same_tracks_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5582958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
+    <audio controls preload="metadata" src="audio/ap15_cheaptrick_and_d4c_on_the_same_tracks_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.291301718491488, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.37080923111775055, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.64}]"></audio>
     <p class="file">ap15_cheaptrick_and_d4c_on_the_same_tracks_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>

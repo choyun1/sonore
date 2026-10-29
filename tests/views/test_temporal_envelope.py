@@ -118,7 +118,7 @@ def test_gammatone_peak_delay_aligns_a_click():
     mesh = ax.collections[0].get_coordinates()  # (rows + 1, cols + 1, 2) cell corners
     row_left = mesh[:-1, 0, 0]
     assert np.ptp(row_left) > 5e-3  # each row starts at its own, shifted time
-    assert ax.get_ylim() == (0, 5.0)
+    assert ax.get_ylim() == (0, 5000.0)  # a linear axis below 10 kHz is in Hz
     zero = so.gammatone_filterbank(n_bands=16, f_lo=100, f_hi=5000, phase="zero")
     assert not np.any(zero.envelope_peak_delay)
     morlet = so.morlet_filterbank(n_bands=8, f_lo=100, f_hi=5000)
