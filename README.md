@@ -337,8 +337,9 @@ Only work still to do is listed here. Finished items are in
   coefficients moved in frequency only, so it stays exactly invertible) and partials tracked on
   the reassigned spectrogram, played by an oscillator bank (as in Fitz & Haken's Loris).
 - On-demand download of other public HRIR databases.
-- A block-by-block (streaming) modulation spectrogram, as the reference for a
-  live version on a phone: the modulation spectrum of everyday sounds as they happen.
+- Live input: an optional `sonore[live]` adapter from a sound card
+  (python-sounddevice) to the streaming views, then a page in the browser
+  that runs them on the microphone.
 - Quilts longer than their source, which would reuse segments. The paper's rule picks
   the best match every time, so a reused segment would start a loop that repeats; it
   would need a random pick among the best few and a minimum gap before a segment

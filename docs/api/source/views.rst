@@ -1,7 +1,7 @@
 views
 =====
 
-One-way analyses, each saying what it drops: spectra and spectrograms (with the reassigned spectrogram), timbre descriptors, chroma, envelopes, modulation, the cepstrum and MFCCs, linear prediction and formant tracking, F0 tracking, WORLD's envelope and aperiodicity, and the routes back to sound they have: the channel vocoder (with the envelopes), WORLD's synthesis and the phase vocoder.
+One-way analyses, each saying what it drops: spectra and spectrograms (with the reassigned spectrogram), timbre descriptors, chroma, envelopes, modulation, the cepstrum and MFCCs, linear prediction and formant tracking, F0 tracking, the pitch-adaptive spectral envelope and band aperiodicity (after WORLD), envelope peaks and sound quilts, and the routes back to sound they have: the channel vocoder (with the envelopes) and the phase vocoder. A voice rebuilt from an F0 track, an envelope and an aperiodicity is in :mod:`sonore.sources.source_filter`.
 
 ``sonore.views.view``
 ---------------------
@@ -63,10 +63,10 @@ One-way analyses, each saying what it drops: spectra and spectrograms (with the 
 
 .. automodule:: sonore.views.aperiodicity
 
-``sonore.views.world``
-----------------------
+``sonore.views.envelope_peaks``
+-------------------------------
 
-.. automodule:: sonore.views.world
+.. automodule:: sonore.views.envelope_peaks
 
 ``sonore.views.phasevocoder``
 -----------------------------
@@ -82,3 +82,8 @@ One-way analyses, each saying what it drops: spectra and spectrograms (with the 
 -----------------------
 
 .. automodule:: sonore.views.chroma
+
+``sonore.views.quilting``
+-------------------------
+
+.. automodule:: sonore.views.quilting

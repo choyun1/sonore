@@ -228,3 +228,11 @@ release are in [CHANGELOG.md](../CHANGELOG.md).
   and each sitting's findings are in
   [issue #48](https://github.com/choyun1/sonore/issues/48); the reference's
   intro pages, its last step, are still on the roadmap. Done 2026-10-28.
+- **Streaming views.** Views computed one block of sound at a time, whose
+  joined parts equal the batch analysis of the whole sound: the STFT,
+  cepstrum and MFCCs, a time-domain gammatone bank and pooled envelopes
+  (a cochleagram), the causal modulation spectrogram (by sliding sums,
+  within 1e-12 of batch), and the F0 track with a decision delay
+  (`f0_track(..., delay=)`, `F0TrackStream`). Design in
+  `docs/design/streaming.md`, numbers in `tools/check_streaming_claims.py`;
+  pull requests #275, #277, #279 and #281. Done 2026-10-29.
