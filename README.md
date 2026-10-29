@@ -118,7 +118,7 @@ models of the ear or of perception; see "Related projects" below for those.
 ## Install
 
 ```bash
-pip install "sonore[notebook]"   # extras: sofa (HRIR files), play (sounddevice), dev (tests)
+pip install "sonore[notebook]"   # extras: sofa (HRIR files), play (sounddevice), live (microphone input), dev (tests)
 ```
 
 or, for the development version:
@@ -252,6 +252,8 @@ under `so.texture` and `sonore.texture.synth`.
 | [`core.units`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/units.py) | `dB`, `Decibels` |
 | [`core.utils`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/utils.py) | `rms`, `amp_to_db`, `power_to_db`, `db_to_amp`, `db_to_power`, `freq_to_erb`, `erb_to_freq`, `freq_to_mel`, `mel_to_freq` (HTK or Slaney mel) |
 | [`core.fft`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/fft.py) | `set_fft_workers`, `fft_workers` (threads for the large FFTs; default every available core; results identical for any setting) |
+| [`core.stream`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/stream.py) | `stream`, `blocks`, `Streamable`, `SlidingWindowStream` (views computed one block of sound at a time, equal to the analysis of the whole sound: `GaborFrame`, `Cepstrum`, `MFCC`, the time-domain gammatone `Filterbank`, `EnvelopePooling`, `ModulationSpectrogramStream`, `F0TrackStream`) |
+| [`core.live`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/live.py) | `live_blocks` (blocks from a microphone or sound card for any stream; the `live` extra), `DroppedSamplesError` |
 | [`core.processing`](https://github.com/choyun1/sonore/blob/main/src/sonore/core/processing.py) | `pad`, `truncate`, `concat`, `splice` (segments of a sound in a new order, joined with cross-fades aligned by cross-correlation), `mix`, `normalize`, `match_fs`, `match_channels`, `relative_db`, `bandpass`, `butter_filter`, `amplitude_modulate`, `resonator` and `antiresonator` (Klatt's formant and antiformant; frequency and bandwidth may glide, with no clicks) |
 | [`sources.waveforms`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py) | `silence`, `pure_tone`, `harmonic_complex`, `schroeder_complex`, `square_wave`, `sawtooth_wave`, `pulse_train`, `linear_chirp`, `exponential_chirp`, `gaussian_noise`, `correlated_noise`, `iterated_ripple_noise`, `glottal_source` (Liljencrants-Fant glottal pulses on a fixed F0 or a contour, shape set by Fant's Rd, which may change over time; no aliasing), `lf_harmonics` (the pulse's Fourier coefficients in closed form), `lf_pulse` (one period, to draw) |
 | [`sources.klatt`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/klatt.py) | `klatt_synthesize` (a Klatt-style cascade/parallel formant synthesizer: harmonic voicing with Klatt's glottal spectrum or LF pulses (`SS`, `RD`), aspiration and frication noise modulated at F0, nasal pole and zero, formants 1-5 in cascade and 1-6 in parallel, radiation; every parameter a number or a `(times, values)` track), `klatt_continuum` (evenly spaced parameter sets between two endpoints), `KLATT_DEFAULTS` |
@@ -339,9 +341,9 @@ Only work still to do is listed here. Finished items are in
   coefficients moved in frequency only, so it stays exactly invertible) and partials tracked on
   the reassigned spectrogram, played by an oscillator bank (as in Fitz & Haken's Loris).
 - On-demand download of other public HRIR databases.
-- Live input: an optional `sonore[live]` adapter from a sound card
-  (python-sounddevice) to the streaming views, then a page in the browser
-  that runs them on the microphone.
+- Live input in the browser: a page that runs the streaming views on the
+  microphone. The Python side, `so.live_blocks` (the `sonore[live]` extra),
+  is in but has only been tested with a stand-in for the sound card.
 - Quilts longer than their source, which would reuse segments. The paper's rule picks
   the best match every time, so a reused segment would start a loop that repeats; it
   would need a random pick among the best few and a minimum gap before a segment
@@ -418,6 +420,7 @@ Every release is archived on Zenodo. The all-versions DOI
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23086165.svg)](https://doi.org/10.5281/zenodo.23086165)
 always points to the latest version. Each version also has its own DOI; cite the version you used.
 
+- 0.10.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23770426.svg)](https://doi.org/10.5281/zenodo.23770426)
 - 0.9.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23745468.svg)](https://doi.org/10.5281/zenodo.23745468)
 - 0.8.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23463707.svg)](https://doi.org/10.5281/zenodo.23463707)
 - 0.7.0: [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23358082.svg)](https://doi.org/10.5281/zenodo.23358082)

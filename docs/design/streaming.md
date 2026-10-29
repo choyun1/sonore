@@ -467,7 +467,10 @@ of their own), and states are built by `start`, so no factory is involved.
 - Microphone and sound-card input in Python. The proposed work runs on
   existing `Sound`s cut into blocks. A later adapter, for example over
   python-sounddevice as an optional extra, would wrap each input buffer in a
-  `Sound` (D11) and call `step`. Cho expects it will be needed (2026-10-29).
+  `Sound` (D11) and call `step`. Cho expects it will be needed (2026-10-29). Built
+  after these as `so.live_blocks` (the `live` extra): it yields each input
+  buffer as a `Sound`, and a lost sample (an overflow, or a reader more than
+  2 s behind) raises `DroppedSamplesError` once the blocks before it are read.
 - Streaming synthesis (Klatt, the source-filter synthesizer): a separate
   direction ("real-time synthesis").
 - Streaming the time-varying STFT (`TVGaborFrame`) and WORLD-style views: their
