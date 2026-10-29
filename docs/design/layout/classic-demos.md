@@ -1,15 +1,18 @@
-# Classic auditory demonstrations, rebuilt with sonore
+# Reproducing classic auditory demonstrations with sonore
 
-Cho agreed on 2026-10-29 to gallery pages for the two best-known sets of auditory demonstrations:
+Cho agreed on 2026-10-29 to gallery pages that reproduce the two best-known sets of auditory demonstrations:
 the ASA *Auditory Demonstrations* CD (Houtsma, Rossing & Wagenaars, 1987; 39 demonstrations) and
 Bregman & Ahad's *Demonstrations of Auditory Scene Analysis* (1996; 41 demonstrations). Many
-hearing scientists learned from these two discs, so pages that rebuild them give a later
-announcement something familiar to point to, and the stimuli are ones sonore-infer can use.
+hearing scientists learned from these two discs. The demonstrations are the work of their
+authors; the pages are a test of sonore, asking whether its building blocks can reproduce each
+stimulus from the published description. They give a later announcement something familiar to
+point to, and the stimuli are ones sonore-infer can use.
 
 This note lists every demonstration, says what sonore already makes, and proposes pages. It adds
 no code; the decisions at the end come first.
 
-Status: draft for Cho, 2026-10-29.
+Status: draft for Cho, 2026-10-29. Revised the same day for Cho's note on language: always credit
+the originals, and frame every page as a reproduction that tests sonore (D10).
 
 ## What the pages are, and what they are not
 
@@ -26,6 +29,12 @@ Status: draft for Cho, 2026-10-29.
   listeners hear, attributed ("Bregman & Ahad report that…"), never in sonore's own voice. A
   rebuilt stimulus is described by what it is ("tones of 1400 and 500 Hz, 100 ms each"), not as
   equal to the original.
+- **A reproduction, credited every time.** Each page opens by naming the original authors and
+  disc and saying that the page is sonore's attempt to reproduce their stimuli from the booklet,
+  a test of the library, not a replacement for the disc, with a link to where the original audio
+  is published. Every example credits its demonstration. Where a reproduction departs from the
+  booklet (a stand-in, a shortened sequence, a parameter the booklet does not give), the example
+  says so. Words like "the demonstration" refer to the original; ours is "the reproduction".
 - **Each demonstration keeps its source number.** An example is titled for its source, e.g. "A
   galloping rhythm that splits (Bregman & Ahad, Demonstration 3)", so readers who know the discs
   can find it.
@@ -231,6 +240,9 @@ of ASA 2.
 - **D8. Comodulation masking release.** It is on neither disc (Bregman 22's rhythmic masking
   release is a variant of it), but it is one of the classic stimuli. Add it to the Fusion page,
   after Hall, Haggard & Fernandes (1984). Recommended.
+- **D10. Language (Cho, 2026-10-29).** The originals are always credited, and every page is
+  framed as a reproduction that tests sonore, as set out in "What the pages are". Page titles say
+  so, e.g. "Streams: reproducing Bregman & Ahad (1996)". Decided by Cho.
 - **D9. sonore-infer.** The pages are content only. sonore-infer copies a stimulus's few lines
   when it needs one; no shared stimulus module now. Recommended.
 
