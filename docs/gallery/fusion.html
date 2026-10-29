@@ -343,7 +343,7 @@ def show(snd, fmin=100, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;, l
 <p>Components that are harmonics of one fundamental fuse into one tone, with one pitch. One that
 changes on its own, or does not fit the series, is heard out.</p>
 
-<article class="sound" id="d-fu1" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9878525312499998, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 40.0}]">
+<article class="sound" id="d-fu1" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.98803221875, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 30.0}]">
   <div class="about">
     <h3>A harmonic switched off and on</h3>
     <div class="desc"><p><strong>Listen for</strong> one rich tone at first, then the harmonic that goes off and on: each time it
@@ -354,17 +354,17 @@ harmonics of 200 Hz, then for each of harmonics 1 to 10 in turn, the harmonic sw
 on again. Their booklet reports that while the harmonics stay steady the tone is heard as a
 whole, and that a harmonic turned off and on stands out clearly. It gives neither the
 harmonics' levels nor the timing; here the harmonics are equal in amplitude, and each harmonic
-gets 1 s with every harmonic on, then three times 0.5 s off and 0.5 s on, with 10 ms ramps.</p></div>
+gets 1 s with every harmonic on, then twice 0.5 s off and 0.5 s on, with 10 ms ramps.</p></div>
     <audio controls preload="metadata" src="audio/fu1_a_harmonic_switched_off_and_on.flac"></audio>
-    <p class="file">fu1_a_harmonic_switched_off_and_on.flac, 40.0 s, mono</p>
+    <p class="file">fu1_a_harmonic_switched_off_and_on.flac, 30.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fu1_a_harmonic_switched_off_and_on.png" width="1000" height="320" alt="Plots of the a harmonic switched off and on sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">PER_HARMONIC = 4.0
-steps = np.array([1.0, 1.5, 2.0, 2.5, 3.0, 3.5])
-switches = {n: gate(PER_HARMONIC * (n - 1) + steps, [0, 1, 0, 1, 0, 1]) for n in range(1, 11)}
+  <details class="code"><summary>Code</summary><pre><code class="language-python">PER_HARMONIC = 3.0
+steps = np.array([1.0, 1.5, 2.0, 2.5])
+switches = {n: gate(PER_HARMONIC * (n - 1) + steps, [0, 1, 0, 1]) for n in range(1, 11)}
 
 
 def cancelled(t, f, n):
@@ -422,7 +422,7 @@ fig, playhead = show(sound, fmin=100, fmax=2000)</code></pre></details>
 <p>Harmonics whose frequencies change together, by the same proportion, fuse; two sets that move
 differently split into two sounds, even when each set on its own is harmonic.</p>
 
-<article class="sound" id="d-fu3" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.900045351473922}]">
+<article class="sound" id="d-fu3" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}]">
   <div class="about">
     <h3>Some harmonics rising and falling</h3>
     <div class="desc"><p><strong>Listen for</strong> one steady tone, then two sounds while some of its harmonics rise and fall: a
@@ -432,10 +432,9 @@ harmonics come back together they are heard as one tone again.</p><p>Bregman &am
 that moves in straight lines up to 600 Hz and down to 300 Hz, four times, each rise and fall
 0.25 s, then back to 400 Hz, while harmonics 1, 3, 5, 6 and 7 stay put, all as in the booklet.
 The booklet reports the two sets heard as separate sounds while they move apart and as one tone
-again when they come back together. It plays the pattern twice with a brief pause; the pause
-here is 0.5 s.</p></div>
+again when they come back together. It plays the pattern twice; here it plays once.</p></div>
     <audio controls preload="metadata" src="audio/fu3_some_harmonics_rising_and_falling.flac"></audio>
-    <p class="file">fu3_some_harmonics_rising_and_falling.flac, 12.9 s, mono</p>
+    <p class="file">fu3_some_harmonics_rising_and_falling.flac, 6.2 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fu3_some_harmonics_rising_and_falling.png" width="1000" height="320" alt="Plots of the some harmonics rising and falling sound" loading="lazy">
@@ -446,7 +445,7 @@ moving_f0 = (np.concatenate([[0], 2.0 + 0.25 * np.arange(len(corners)), [6.2]]),
 steady = so.harmonic_complex(6.2, FS, 400, harmonics=[1, 3, 5, 6, 7], phases=&quot;sine&quot;, ramp=0)
 moving = so.harmonic_complex(6.2, FS, moving_f0, harmonics=[2, 4, 8], phases=&quot;sine&quot;, ramp=0)
 once = so.Sound(envelope(steady.n_samples, 40e-3, 40e-3) * (steady.data[:, 0] + moving.data[:, 0]), FS)
-sound = finish(place([(0, once), (6.7, once)]))
+sound = finish(once)
 fig, playhead = show(sound, fmin=200, fmax=6000)</code></pre></details>
 </article>
 
@@ -454,17 +453,19 @@ fig, playhead = show(sound, fmin=200, fmax=6000)</code></pre></details>
   <div class="about">
     <h3>Two sets moving at two rates</h3>
     <div class="desc"><p><strong>Listen for</strong> one tone sliding up and down, quickly and then slowly. In the third and fourth
-sounds the two sets move differently, and the booklet reports two distinct tones, one moving
-slowly and one quickly.</p><p>Bregman &amp; Ahad, Demonstration 20. Two sets of partials, equal in level and starting in sine
+sounds the two sets move at different rates, and the booklet reports two distinct tones, one
+moving slowly and one quickly. In the fourth the rates are swapped between the sets, so the tone
+that sounded pure now moves slowly and the rich one quickly.</p><p>Bregman &amp; Ahad, Demonstration 20. Two sets of partials, equal in level and starting in sine
 phase: set 1 holds three partials in the ratio 3:4:5, set 2 a single partial, the fundamental
 itself. The slow pattern rises from 400 to 800 Hz in 1.25 s and falls back in 1.25 s; the fast
 one moves between 400 and 660 Hz five times, each rise and fall 0.25 s. Each sound lasts 2.5 s
 with 40 ms rise and decay. First both sets on the fast pattern, then both on the slow one, so
 that together they are harmonics 1, 3, 4 and 5 of one moving fundamental; then set 1 on the
-slow pattern and set 2 on the fast one, played twice, all as in the booklet's technical
-details. Its text describes the slow tone as pure and the fast one as rich, which would be the
-other way round; this reproduction follows the technical details, so here the fast tone is the
-single partial. The pauses between sounds (0.5 s) are ours.</p></div>
+slow pattern and set 2 on the fast one, as in the booklet's technical details. The booklet
+plays that third sound twice; this reproduction plays it once and then swaps the rates, set 1
+fast and set 2 slow. The booklet's text describes the slow tone as pure and the fast one as
+rich, which is the fourth sound here, while its technical details describe the third. The
+pauses between sounds (0.5 s) are ours.</p></div>
     <audio controls preload="metadata" src="audio/fu4_two_sets_moving_at_two_rates.flac"></audio>
     <p class="file">fu4_two_sets_moving_at_two_rates.flac, 11.5 s, mono</p>
   </div>
@@ -483,19 +484,20 @@ def two_sets(set1, set2):
     return so.Sound(envelope(len(mix), 40e-3, 40e-3) * mix, FS)
 
 
-parts = [two_sets(fast, fast), two_sets(slow, slow), two_sets(slow, fast), two_sets(slow, fast)]
+parts = [two_sets(fast, fast), two_sets(slow, slow), two_sets(slow, fast), two_sets(fast, slow)]
 sound = finish(place([(3.0 * k, snd) for k, snd in enumerate(parts)]))
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 <p>Speech and singing are never steady in pitch, and every harmonic of a voice follows the same
 small wobble. The next demonstration adds that wobble to a steady spectrum.</p>
 
-<article class="sound" id="d-fu5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 38.00004535147392}]">
+<article class="sound" id="d-fu5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
   <div class="about">
-    <h3>A voice emerging from a tone</h3>
+    <h3>A voice emerging from a 400 Hz tone</h3>
     <div class="desc"><p><strong>Listen for</strong> a pure tone, which seems to carry on when a steady rich tone joins it; then,
 when every harmonic starts to wobble together, the pure tone disappears into the sound and a
-singing voice on a vowel emerges. This happens three times, for three vowels on three pitches.</p><p>After Bregman &amp; Ahad, Demonstration 24, which plays examples made by John Chowning with FM
+singing voice on a vowel emerges. There are three examples, for three vowels on three pitches;
+this first one is "oh" on 400 Hz.</p><p>After Bregman &amp; Ahad, Demonstration 24, which plays examples made by John Chowning with FM
 synthesis. For each vowel, a pure tone, then the same tone joined by its harmonics at the levels
 they would have in a vowel, then all of them modulated by one pattern of vibrato and random
 micromodulation. The pure tones are 400, 500 and 600 Hz, and the vowels "oh" (more), "ah"
@@ -509,11 +511,11 @@ Barney's (1952) average formants for women, for "aw" (closest to "oh" as in more
 kept at the pure tone's level; the vibrato is 5 to 6 Hz and ±2 %, plus random micromodulation
 of 0.5 % RMS below 8 Hz. The booklet's timing is 5 s of pure tone, 5 s of steady spectrum and
 10 s of modulation; here it is 3, 3 and 6 s.</p></div>
-    <audio controls preload="metadata" src="audio/fu5_a_voice_emerging_from_a_tone.flac"></audio>
-    <p class="file">fu5_a_voice_emerging_from_a_tone.flac, 38.0 s, mono</p>
+    <audio controls preload="metadata" src="audio/fu5_a_voice_emerging_from_a_400_hz_tone.flac"></audio>
+    <p class="file">fu5_a_voice_emerging_from_a_400_hz_tone.flac, 12.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
-    <img src="img/fu5_a_voice_emerging_from_a_tone.png" width="1000" height="320" alt="Plots of the a voice emerging from a tone sound" loading="lazy">
+    <img src="img/fu5_a_voice_emerging_from_a_400_hz_tone.png" width="1000" height="320" alt="Plots of the a voice emerging from a 400 hz tone sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {  # pure tone and fundamental, formant frequencies (Peterson &amp; Barney, women)
@@ -523,7 +525,6 @@ of 0.5 % RMS below 8 Hz. The booklet's timing is 5 s of pure tone, 5 s of steady
 }
 BANDWIDTHS = (80, 90, 150)
 PURE, STEADY, MODULATED = 3.0, 3.0, 6.0
-DUR = PURE + STEADY + MODULATED
 
 
 def vowel_level(f, formants):
@@ -536,10 +537,11 @@ def vowel_level(f, formants):
     return gain
 
 
-def sung(f0, formants, vibrato_rate, rng):
+def sung(f0, formants, vibrato_rate, rng, modulated=MODULATED):
     &quot;&quot;&quot;The three parts of one example: pure tone, steady vowel, vowel with vibrato.&quot;&quot;&quot;
-    t = np.arange(0, DUR, 0.005)
-    drift = so.gaussian_noise(DUR, 200, band=(0, 8), rng=rng).data[: len(t), 0]
+    dur = PURE + STEADY + modulated
+    t = np.arange(0, dur, 0.005)
+    drift = so.gaussian_noise(dur, 200, band=(0, 8), rng=rng).data[: len(t), 0]
     drift = 0.005 * drift / drift.std()
     onset = np.clip((t - PURE - STEADY) / 0.3, 0, 1)
     contour = (t, f0 * (1 + onset * (0.02 * np.sin(2 * np.pi * vibrato_rate * t) + drift)))
@@ -549,33 +551,70 @@ def sung(f0, formants, vibrato_rate, rng):
     def levels(t, f, n):
         return np.ones_like(t) if n == 1 else harmonics_on(t) * vowel_level(f, formants) / reference
 
-    return so.harmonic_complex(DUR, FS, contour, amplitudes=levels, f_max=5000, phases=&quot;sine&quot;)
+    return so.harmonic_complex(dur, FS, contour, amplitudes=levels, f_max=5000, phases=&quot;sine&quot;)
 
 
-rates, seeds = (5.0, 5.6, 6.1), (1, 2, 3)
-examples = [
-    sung(f0, formants, rate, np.random.default_rng(seed))
-    for (f0, formants), rate, seed in zip(VOWELS.values(), rates, seeds, strict=True)
-]
-sound = finish(place([(13.0 * k, snd) for k, snd in enumerate(examples)]))
+RATES, SEEDS = (5.0, 5.6, 6.1), (1, 2, 3)  # one vibrato rate and noise seed per vowel
+
+
+def example(vowel, modulated=MODULATED):
+    k = list(VOWELS).index(vowel)
+    f0, formants = VOWELS[vowel]
+    return sung(f0, formants, RATES[k], np.random.default_rng(SEEDS[k]), modulated)
+
+
+sound = finish(example(&quot;oh&quot;))
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fu6" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
+<article class="sound" id="d-fu5b" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
+  <div class="about">
+    <h3>A voice emerging from a 500 Hz tone</h3>
+    <div class="desc"><p><strong>Listen for</strong> the same three stages: a pure tone, the tone joined by a steady rich tone, then
+a voice. This one is "ah" on 500 Hz.</p><p>After Bregman &amp; Ahad, Demonstration 24, its second example, built as the first.</p></div>
+    <audio controls preload="metadata" src="audio/fu5b_a_voice_emerging_from_a_500_hz_tone.flac"></audio>
+    <p class="file">fu5b_a_voice_emerging_from_a_500_hz_tone.flac, 12.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu5b_a_voice_emerging_from_a_500_hz_tone.png" width="1000" height="320" alt="Plots of the a voice emerging from a 500 hz tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(example(&quot;ah&quot;))
+fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fu5c" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
+  <div class="about">
+    <h3>A voice emerging from a 600 Hz tone</h3>
+    <div class="desc"><p><strong>Listen for</strong> the same three stages again, now "e" (as in bed) on 600 Hz.</p><p>After Bregman &amp; Ahad, Demonstration 24, its third example, built as the first.</p></div>
+    <audio controls preload="metadata" src="audio/fu5c_a_voice_emerging_from_a_600_hz_tone.flac"></audio>
+    <p class="file">fu5c_a_voice_emerging_from_a_600_hz_tone.flac, 12.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu5c_a_voice_emerging_from_a_600_hz_tone.png" width="1000" height="320" alt="Plots of the a voice emerging from a 600 hz tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(example(&quot;e&quot;))
+fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fu6" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9893486249999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.0}]">
   <div class="about">
     <h3>Three voices at once</h3>
     <div class="desc"><p><strong>Listen for</strong> a chord of three pure tones, then a chord of three steady rich tones, then three
 voices singing three vowels on three pitches. The booklet expects most listeners to tell at
 least two of the vowels apart.</p><p>After Bregman &amp; Ahad, Demonstration 24, its fourth part: the three examples above played at
-once, each with its own pattern of vibrato and micromodulation, as in the booklet.</p></div>
+once, each with its own pattern of vibrato and micromodulation, as in the booklet. Here the
+voices sing for 4 s rather than 6 s.</p></div>
     <audio controls preload="metadata" src="audio/fu6_three_voices_at_once.flac"></audio>
-    <p class="file">fu6_three_voices_at_once.flac, 12.0 s, mono</p>
+    <p class="file">fu6_three_voices_at_once.flac, 10.0 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fu6_three_voices_at_once.png" width="1000" height="320" alt="Plots of the three voices at once sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.Sound(sum(snd.data for snd in examples), FS))
+  <details class="code"><summary>Code</summary><pre><code class="language-python">voices = [example(vowel, modulated=4.0) for vowel in VOWELS]
+sound = finish(so.Sound(sum(snd.data for snd in voices), FS))
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 </section>
@@ -733,13 +772,14 @@ fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
 <h2 id="h-speech-from-three-tones">Speech from three tones</h2>
 <p>Speech holds together even with almost every grouping clue taken away.</p>
 
-<article class="sound" id="d-fu10" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.75}]">
+<article class="sound" id="d-fu10" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9957109090586364, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>A sentence as three whistles</h3>
-    <div class="desc"><p><strong>Listen for</strong> the sentence, first as recorded, then as three gliding whistles. The booklet
-reports that after a little practice listeners can understand sine-wave speech, sentences more
-easily than single words, although the three tones share no fundamental and do not start or
-move together the way the harmonics of a voice do.</p><p>A stand-in for Bregman &amp; Ahad, Demonstration 23, after Remez, Rubin, Pisoni &amp; Carrell (1981).
+    <div class="desc"><p><strong>Listen for</strong> words. Three gliding whistles: can you tell what the speaker is saying? The
+booklet reports that after a little practice listeners can understand sine-wave speech,
+sentences more easily than single words, although the three tones share no fundamental and do
+not start or move together the way the harmonics of a voice do. The answer is the next
+example.</p><p>A stand-in for Bregman &amp; Ahad, Demonstration 23, after Remez, Rubin, Pisoni &amp; Carrell (1981).
 The disc plays sine-wave speech made from parameters supplied by Robert Remez and Philip Rubin,
 which are not ours to use. This reproduction makes it from the male talker's recorded sentence (CMU
 ARCTIC, speaker bdl): <code>so.formant_track</code> follows the first three formants, and each becomes a
@@ -748,7 +788,7 @@ and -12 dB. The tones are switched off where <code>so.f0_track</code> finds no v
 examples instead put steady tones in noisy stretches such as "s", so this one leaves gaps
 there. The levels are ours.</p></div>
     <audio controls preload="metadata" src="audio/fu10_a_sentence_as_three_whistles.flac"></audio>
-    <p class="file">fu10_a_sentence_as_three_whistles.flac, 5.8 s, mono</p>
+    <p class="file">fu10_a_sentence_as_three_whistles.flac, 2.5 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/fu10_a_sentence_as_three_whistles.png" width="1000" height="320" alt="Plots of the a sentence as three whistles sound" loading="lazy">
@@ -774,8 +814,23 @@ for k, db in enumerate((0, -6, -12)):
     contour = (formants.t, track)
     whistle = so.harmonic_complex(speech.duration, speech.fs, contour, harmonics=[1], amplitudes=level(db))
     whistles = whistles + whistle.data[:, 0]
-gap = so.silence(0.7, speech.fs)
-sound = finish(so.concat([speech, gap, finish(so.Sound(whistles, speech.fs))]))
+sound = finish(so.Sound(whistles, speech.fs))
+fig, playhead = show(sound, fmin=100, fmax=5000, log=False)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fu11" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9957109090586364, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
+  <div class="about">
+    <h3>The sentence as recorded</h3>
+    <div class="desc"><p><strong>Listen for</strong> the answer: the recorded sentence the whistles were made from, "Providence had
+delivered him through the maelstrom," read by the male talker. Then try the whistles again.</p></div>
+    <audio controls preload="metadata" src="audio/fu11_the_sentence_as_recorded.flac"></audio>
+    <p class="file">fu11_the_sentence_as_recorded.flac, 2.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu11_the_sentence_as_recorded.png" width="1000" height="320" alt="Plots of the the sentence as recorded sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = speech
 fig, playhead = show(sound, fmin=100, fmax=5000, log=False)</code></pre></details>
 </article>
 </section>

@@ -153,12 +153,12 @@ def show(snd, fmin=100, fmax=5000, title="Spectrogram (Hann 30 ms)", log=True):
 # on again. Their booklet reports that while the harmonics stay steady the tone is heard as a
 # whole, and that a harmonic turned off and on stands out clearly. It gives neither the
 # harmonics' levels nor the timing; here the harmonics are equal in amplitude, and each harmonic
-# gets 1 s with every harmonic on, then three times 0.5 s off and 0.5 s on, with 10 ms ramps.
+# gets 1 s with every harmonic on, then twice 0.5 s off and 0.5 s on, with 10 ms ramps.
 
 # %% [demo fu1] A harmonic switched off and on
-PER_HARMONIC = 4.0
-steps = np.array([1.0, 1.5, 2.0, 2.5, 3.0, 3.5])
-switches = {n: gate(PER_HARMONIC * (n - 1) + steps, [0, 1, 0, 1, 0, 1]) for n in range(1, 11)}
+PER_HARMONIC = 3.0
+steps = np.array([1.0, 1.5, 2.0, 2.5])
+switches = {n: gate(PER_HARMONIC * (n - 1) + steps, [0, 1, 0, 1]) for n in range(1, 11)}
 
 
 def cancelled(t, f, n):
@@ -220,8 +220,7 @@ fig, playhead = show(sound, fmin=100, fmax=2000)
 # that moves in straight lines up to 600 Hz and down to 300 Hz, four times, each rise and fall
 # 0.25 s, then back to 400 Hz, while harmonics 1, 3, 5, 6 and 7 stay put, all as in the booklet.
 # The booklet reports the two sets heard as separate sounds while they move apart and as one tone
-# again when they come back together. It plays the pattern twice with a brief pause; the pause
-# here is 0.5 s.
+# again when they come back together. It plays the pattern twice; here it plays once.
 
 # %% [demo fu3] Some harmonics rising and falling
 corners = [400] + [600, 300] * 4 + [400]
@@ -229,13 +228,14 @@ moving_f0 = (np.concatenate([[0], 2.0 + 0.25 * np.arange(len(corners)), [6.2]]),
 steady = so.harmonic_complex(6.2, FS, 400, harmonics=[1, 3, 5, 6, 7], phases="sine", ramp=0)
 moving = so.harmonic_complex(6.2, FS, moving_f0, harmonics=[2, 4, 8], phases="sine", ramp=0)
 once = so.Sound(envelope(steady.n_samples, 40e-3, 40e-3) * (steady.data[:, 0] + moving.data[:, 0]), FS)
-sound = finish(place([(0, once), (6.7, once)]))
+sound = finish(once)
 fig, playhead = show(sound, fmin=200, fmax=6000)
 
 # %% [about]
 # **Listen for** one tone sliding up and down, quickly and then slowly. In the third and fourth
-# sounds the two sets move differently, and the booklet reports two distinct tones, one moving
-# slowly and one quickly.
+# sounds the two sets move at different rates, and the booklet reports two distinct tones, one
+# moving slowly and one quickly. In the fourth the rates are swapped between the sets, so the tone
+# that sounded pure now moves slowly and the rich one quickly.
 #
 # Bregman & Ahad, Demonstration 20. Two sets of partials, equal in level and starting in sine
 # phase: set 1 holds three partials in the ratio 3:4:5, set 2 a single partial, the fundamental
@@ -243,10 +243,11 @@ fig, playhead = show(sound, fmin=200, fmax=6000)
 # one moves between 400 and 660 Hz five times, each rise and fall 0.25 s. Each sound lasts 2.5 s
 # with 40 ms rise and decay. First both sets on the fast pattern, then both on the slow one, so
 # that together they are harmonics 1, 3, 4 and 5 of one moving fundamental; then set 1 on the
-# slow pattern and set 2 on the fast one, played twice, all as in the booklet's technical
-# details. Its text describes the slow tone as pure and the fast one as rich, which would be the
-# other way round; this reproduction follows the technical details, so here the fast tone is the
-# single partial. The pauses between sounds (0.5 s) are ours.
+# slow pattern and set 2 on the fast one, as in the booklet's technical details. The booklet
+# plays that third sound twice; this reproduction plays it once and then swaps the rates, set 1
+# fast and set 2 slow. The booklet's text describes the slow tone as pure and the fast one as
+# rich, which is the fourth sound here, while its technical details describe the third. The
+# pauses between sounds (0.5 s) are ours.
 
 # %% [demo fu4] Two sets moving at two rates
 slow = (np.array([0, 1.25, 2.5]), np.array([400, 800, 400]))
@@ -260,7 +261,7 @@ def two_sets(set1, set2):
     return so.Sound(envelope(len(mix), 40e-3, 40e-3) * mix, FS)
 
 
-parts = [two_sets(fast, fast), two_sets(slow, slow), two_sets(slow, fast), two_sets(slow, fast)]
+parts = [two_sets(fast, fast), two_sets(slow, slow), two_sets(slow, fast), two_sets(fast, slow)]
 sound = finish(place([(3.0 * k, snd) for k, snd in enumerate(parts)]))
 fig, playhead = show(sound, fmin=300, fmax=5000)
 
@@ -271,7 +272,8 @@ fig, playhead = show(sound, fmin=300, fmax=5000)
 # %% [about]
 # **Listen for** a pure tone, which seems to carry on when a steady rich tone joins it; then,
 # when every harmonic starts to wobble together, the pure tone disappears into the sound and a
-# singing voice on a vowel emerges. This happens three times, for three vowels on three pitches.
+# singing voice on a vowel emerges. There are three examples, for three vowels on three pitches;
+# this first one is "oh" on 400 Hz.
 #
 # After Bregman & Ahad, Demonstration 24, which plays examples made by John Chowning with FM
 # synthesis. For each vowel, a pure tone, then the same tone joined by its harmonics at the levels
@@ -288,7 +290,7 @@ fig, playhead = show(sound, fmin=300, fmax=5000)
 # of 0.5 % RMS below 8 Hz. The booklet's timing is 5 s of pure tone, 5 s of steady spectrum and
 # 10 s of modulation; here it is 3, 3 and 6 s.
 
-# %% [demo fu5] A voice emerging from a tone
+# %% [demo fu5] A voice emerging from a 400 Hz tone
 VOWELS = {  # pure tone and fundamental, formant frequencies (Peterson & Barney, women)
     "oh": (400, (610, 920, 2710)),
     "ah": (500, (850, 1220, 2810)),
@@ -296,7 +298,6 @@ VOWELS = {  # pure tone and fundamental, formant frequencies (Peterson & Barney,
 }
 BANDWIDTHS = (80, 90, 150)
 PURE, STEADY, MODULATED = 3.0, 3.0, 6.0
-DUR = PURE + STEADY + MODULATED
 
 
 def vowel_level(f, formants):
@@ -309,10 +310,11 @@ def vowel_level(f, formants):
     return gain
 
 
-def sung(f0, formants, vibrato_rate, rng):
+def sung(f0, formants, vibrato_rate, rng, modulated=MODULATED):
     """The three parts of one example: pure tone, steady vowel, vowel with vibrato."""
-    t = np.arange(0, DUR, 0.005)
-    drift = so.gaussian_noise(DUR, 200, band=(0, 8), rng=rng).data[: len(t), 0]
+    dur = PURE + STEADY + modulated
+    t = np.arange(0, dur, 0.005)
+    drift = so.gaussian_noise(dur, 200, band=(0, 8), rng=rng).data[: len(t), 0]
     drift = 0.005 * drift / drift.std()
     onset = np.clip((t - PURE - STEADY) / 0.3, 0, 1)
     contour = (t, f0 * (1 + onset * (0.02 * np.sin(2 * np.pi * vibrato_rate * t) + drift)))
@@ -322,15 +324,38 @@ def sung(f0, formants, vibrato_rate, rng):
     def levels(t, f, n):
         return np.ones_like(t) if n == 1 else harmonics_on(t) * vowel_level(f, formants) / reference
 
-    return so.harmonic_complex(DUR, FS, contour, amplitudes=levels, f_max=5000, phases="sine")
+    return so.harmonic_complex(dur, FS, contour, amplitudes=levels, f_max=5000, phases="sine")
 
 
-rates, seeds = (5.0, 5.6, 6.1), (1, 2, 3)
-examples = [
-    sung(f0, formants, rate, np.random.default_rng(seed))
-    for (f0, formants), rate, seed in zip(VOWELS.values(), rates, seeds, strict=True)
-]
-sound = finish(place([(13.0 * k, snd) for k, snd in enumerate(examples)]))
+RATES, SEEDS = (5.0, 5.6, 6.1), (1, 2, 3)  # one vibrato rate and noise seed per vowel
+
+
+def example(vowel, modulated=MODULATED):
+    k = list(VOWELS).index(vowel)
+    f0, formants = VOWELS[vowel]
+    return sung(f0, formants, RATES[k], np.random.default_rng(SEEDS[k]), modulated)
+
+
+sound = finish(example("oh"))
+fig, playhead = show(sound, fmin=300, fmax=5000)
+
+# %% [about]
+# **Listen for** the same three stages: a pure tone, the tone joined by a steady rich tone, then
+# a voice. This one is "ah" on 500 Hz.
+#
+# After Bregman & Ahad, Demonstration 24, its second example, built as the first.
+
+# %% [demo fu5b] A voice emerging from a 500 Hz tone
+sound = finish(example("ah"))
+fig, playhead = show(sound, fmin=300, fmax=5000)
+
+# %% [about]
+# **Listen for** the same three stages again, now "e" (as in bed) on 600 Hz.
+#
+# After Bregman & Ahad, Demonstration 24, its third example, built as the first.
+
+# %% [demo fu5c] A voice emerging from a 600 Hz tone
+sound = finish(example("e"))
 fig, playhead = show(sound, fmin=300, fmax=5000)
 
 # %% [about]
@@ -339,10 +364,12 @@ fig, playhead = show(sound, fmin=300, fmax=5000)
 # least two of the vowels apart.
 #
 # After Bregman & Ahad, Demonstration 24, its fourth part: the three examples above played at
-# once, each with its own pattern of vibrato and micromodulation, as in the booklet.
+# once, each with its own pattern of vibrato and micromodulation, as in the booklet. Here the
+# voices sing for 4 s rather than 6 s.
 
 # %% [demo fu6] Three voices at once
-sound = finish(so.Sound(sum(snd.data for snd in examples), FS))
+voices = [example(vowel, modulated=4.0) for vowel in VOWELS]
+sound = finish(so.Sound(sum(snd.data for snd in voices), FS))
 fig, playhead = show(sound, fmin=300, fmax=5000)
 
 # %% [markdown]
@@ -485,10 +512,11 @@ fig, playhead = show(sound, fmin=300, fmax=3000)
 # Speech holds together even with almost every grouping clue taken away.
 
 # %% [about]
-# **Listen for** the sentence, first as recorded, then as three gliding whistles. The booklet
-# reports that after a little practice listeners can understand sine-wave speech, sentences more
-# easily than single words, although the three tones share no fundamental and do not start or
-# move together the way the harmonics of a voice do.
+# **Listen for** words. Three gliding whistles: can you tell what the speaker is saying? The
+# booklet reports that after a little practice listeners can understand sine-wave speech,
+# sentences more easily than single words, although the three tones share no fundamental and do
+# not start or move together the way the harmonics of a voice do. The answer is the next
+# example.
 #
 # A stand-in for Bregman & Ahad, Demonstration 23, after Remez, Rubin, Pisoni & Carrell (1981).
 # The disc plays sine-wave speech made from parameters supplied by Robert Remez and Philip Rubin,
@@ -520,8 +548,15 @@ for k, db in enumerate((0, -6, -12)):
     contour = (formants.t, track)
     whistle = so.harmonic_complex(speech.duration, speech.fs, contour, harmonics=[1], amplitudes=level(db))
     whistles = whistles + whistle.data[:, 0]
-gap = so.silence(0.7, speech.fs)
-sound = finish(so.concat([speech, gap, finish(so.Sound(whistles, speech.fs))]))
+sound = finish(so.Sound(whistles, speech.fs))
+fig, playhead = show(sound, fmin=100, fmax=5000, log=False)
+
+# %% [about]
+# **Listen for** the answer: the recorded sentence the whistles were made from, "Providence had
+# delivered him through the maelstrom," read by the male talker. Then try the whistles again.
+
+# %% [demo fu11] The sentence as recorded
+sound = speech
 fig, playhead = show(sound, fmin=100, fmax=5000, log=False)
 
 # %% [markdown]
