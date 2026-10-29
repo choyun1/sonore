@@ -180,6 +180,7 @@ More in the gallery:
 **Classic demonstrations** (reproductions, credited to their authors)
 
 - [Streams: reproducing Bregman & Ahad](https://choyun1.github.io/sonore/gallery/streams.html): sonore's attempt to rebuild Bregman & Ahad's (1996) demonstrations of streaming from their booklet. [▶ a six-tone cycle](https://choyun1.github.io/sonore/gallery/streams.html#d-sg1)
+- [Fusion: reproducing Bregman & Ahad](https://choyun1.github.io/sonore/gallery/fusion.html): sonore's attempt to rebuild the demonstrations of fusion (Bregman & Ahad 1996; Houtsma, Rossing & Wagenaars 1987) and comodulation masking release (Hall, Haggard & Fernandes 1984). [▶ one harmonic mistuned](https://choyun1.github.io/sonore/gallery/fusion.html#d-fu2)
 
 **Seeing and changing sound**
 

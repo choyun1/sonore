@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fusion: reproducing Bregman &amp; Ahad</title>
+<link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { width: 100%; max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.home { display: inline-flex; align-items: center; gap: 0.3rem; }
+nav.pages .home .logo { width: 2.1rem; height: 2.1rem; margin: -0.5rem 0 -0.5rem -0.4rem; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+.links { display: flex; align-items: center; gap: 0.5rem 1.25rem; font-family: var(--sans); }
+.links a { display: inline-flex; align-items: center; gap: 0.45rem; }
+.links svg { width: 1.15rem; height: 1.15rem; }
+footer .links { margin-top: 1rem; font-size: 0.95rem; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h3.sub { font-weight: 500; font-size: 1.45rem; margin: 2.5rem 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
+  footer .links { display: none; }
+  .side-repo { display: none; }
+  .side-closed .side-repo { display: flex; justify-content: center; margin-top: auto; color: var(--muted); }
+  .side-closed .side-repo:hover { color: var(--ink); }
+  .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
+  .side-foot { margin-top: auto; padding-top: 2rem; }
+  .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
+    border-top: 1px solid var(--rule); }
+  .side-closed .layout { grid-template-columns: 4.25rem minmax(0, 1fr); }
+  .side { scrollbar-gutter: stable; }  /* room for a scrollbar always, so opening a list never rewraps the menu */
+  .side-closed .side { padding: 2.5rem 0 1.5rem; overflow: hidden; scrollbar-gutter: auto; }
+  .side-closed .side .home-title, .side-closed .side-body { display: none; }
+  .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
+  .side-closed .side .home { padding: 0; border: 0; }
+  .side-closed .side .home .logo { width: 2.8rem; height: 2.8rem; margin: 0; }
+  .side-toggle { margin-top: 3.8rem; }  /* level with where it sits under the logo in the folded strip */
+  .side-closed .side-toggle { margin-top: 0; }
+  /* With the sidebar folded, the top menu stays in view while the page scrolls. */
+  .side-closed nav.pages { position: sticky; top: 0; z-index: 20; background: var(--paper);
+    padding: 0.9rem 0; margin-top: -0.9rem; border-bottom: 1px solid var(--rule); }
+  html.side-closed { scroll-padding-top: 4rem; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home-title, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home-title, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home-title, .side-opening .side-body, .side-closing .side .home-title, .side-closing .side-body { animation: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home-title { display: block; }
+.side .home .logo { display: block; width: 2.6rem; height: 2.6rem; margin: -0.4rem 0 0.1rem -0.35rem; }
+.logo .logo-ink { stroke: var(--ink); } .logo .logo-accent { stroke: var(--accent); }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-label="Listening gallery"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="home-title">Listening gallery</span></a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group"><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="group here" open><summary>Classic demonstrations</summary><ul><li><a href="streams.html">Streams: reproducing Bregman & Ahad</a></li><li class="has-sections"><a href="fusion.html" aria-current="page">Fusion: reproducing Bregman & Ahad</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-harmonics-of-one-fundamental">Harmonics of one fundamental</a></li><li><a href="#h-moving-together">Moving together</a></li><li><a href="#h-starting-together">Starting together</a></li><li><a href="#h-grouping-undoes-masking">Grouping undoes masking</a></li><li><a href="#h-speech-from-three-tones">Speech from three tones</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group"><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="group"><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details class="group"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><div class="side-foot"><div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></div></div><a class="side-repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded on every page load.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    showSections(false);
+    // Going back to a page can restore it as it was left; fold its sections then too.
+    addEventListener("pageshow", (event) => { if (event.persisted) showSections(false); });
+    sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
+  // Only the group of the page being read starts open; groups opened on another page do not stay open.
+  addEventListener("pageshow", (event) => { if (event.persisted)
+    groups.forEach((group) => { group.open = group.classList.contains("here"); }); });
+  groups.forEach((group) => {
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><details><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="here"><summary>Classic demonstrations</summary><ul><li><a href="streams.html">Streams: reproducing Bregman & Ahad</a></li><li><a href="fusion.html" aria-current="page">Fusion: reproducing Bregman & Ahad</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>Fusion: reproducing Bregman &amp; Ahad</h1>
+<p>Every sound on this page is sonore's reproduction of a published demonstration, or of a classic
+stimulus. Most are from Albert Bregman and Pierre Ahad's <em>Demonstrations of Auditory Scene
+Analysis</em> (1996), the compact disc that accompanies Bregman's book <em>Auditory Scene Analysis</em>
+(1990); one is from the Acoustical Society of America's <em>Auditory Demonstrations</em> (Houtsma,
+Rossing &amp; Wagenaars, 1987), and one, comodulation masking release, is after Hall, Haggard &amp;
+Fernandes (1984), whose stimulus is on neither disc. The demonstrations, their design and what
+they show are their authors' work. Bregman's laboratory publishes the original recordings and
+booklet (<a href="https://webpages.mcgill.ca/staff/Group2/abregm1/web/downloadsdl.htm" target="_blank" rel="noopener">McGill</a>), and
+they are the ones to listen to.</p>
+<p><strong>What they show.</strong> At any moment the ear receives one mixture: the sum of every sound
+around. Hearing splits that mixture into separate sounds, and it decides which frequency
+components belong together by clues that one sound source tends to leave: its components are
+harmonics of one fundamental, they start together, and they move together in pitch and level.
+Components that share these clues <em>fuse</em> into one sound, heard with one pitch and one timbre;
+a component that breaks them is heard on its own. <a href="streams.html">Streams</a> is about sounds
+grouped one after another; this page is about sounds grouped at the same time. Each section
+below changes one clue, and each example opens with what to listen for, taken from what its
+source reports listeners hear.</p>
+<p>This page is a test of sonore: can its generators rebuild each stimulus from the description
+in the booklet? Each example names the demonstration it reproduces, rebuilds it from the
+booklet's frequencies, levels and timing, and says where it departs from them: where the
+booklet leaves a value open, where a recording is replaced by a stand-in, or where a long track
+is shortened. What listeners hear is reported as the booklet or paper reports it; this page has
+not tested any of it.</p>
+<ul><li><a href="#h-harmonics-of-one-fundamental">Harmonics of one fundamental</a>: a harmonic switched off and on, and one mistuned (Houtsma et al., Demonstration 1; Bregman &amp; Ahad, Demonstration 18).</li><li><a href="#h-moving-together">Moving together</a>: harmonics that glide together fuse, and sets that glide apart split (Demonstrations 19, 20 and 24).</li><li><a href="#h-starting-together">Starting together</a>: tones in a cluster stand apart when they start abruptly (Demonstration 21).</li><li><a href="#h-grouping-undoes-masking">Grouping undoes masking</a>: sounds added far from a target make it easier to hear when they fuse with its masker (Demonstration 22, and comodulation masking release).</li><li><a href="#h-speech-from-three-tones">Speech from three tones</a>: a sentence made of three whistles that is still heard as speech (a stand-in for Demonstration 23).</li></ul>
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/fusion.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/fusion.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
+</header>
+<section aria-labelledby="h-code-the-examples-share">
+<h2 id="h-code-the-examples-share">Code the examples share</h2>
+<p>Most sounds here are one call to <code>so.harmonic_complex</code>, whose <code>amplitudes</code> can be a function of
+time, frequency and harmonic number, and whose F0 can be a contour; the rest are tones placed at
+their onset times, as on the <a href="streams.html">Streams</a> page. The booklets give levels relative to
+the other sounds in a demonstration, and <code>finish</code> keeps those relations, scaling only the whole
+sound. The sample rate is 22.05 kHz, except for the speech, which keeps its recording's 16 kHz.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 22050
+
+
+def envelope(n, rise, decay):
+    &quot;&quot;&quot;Linear rise and decay ramps, in seconds, over `n` samples.&quot;&quot;&quot;
+    i = np.arange(n)
+    return np.clip(np.minimum(i / (rise * FS), (n - 1 - i) / (decay * FS)), 0, 1)
+
+
+def tone(freq, dur, rise=10e-3, decay=10e-3, db=0.0):
+    &quot;&quot;&quot;A sine tone `dur` seconds long including linear rise and decay ramps, `db` re the others.&quot;&quot;&quot;
+    snd = so.pure_tone(dur, FS, freq, phase=-np.pi / 2)
+    return so.Sound(envelope(snd.n_samples, rise, decay) * snd.data[:, 0], FS).gain_db(db)
+
+
+def place(events, dur=None):
+    &quot;&quot;&quot;Sounds added at their onset times: `events` is a list of (onset in seconds, Sound).&quot;&quot;&quot;
+    end = max(onset + snd.duration for onset, snd in events)
+    out = np.zeros((round((dur or end) * FS) + 1, 1))
+    for onset, snd in events:
+        i = round(onset * FS)
+        out[i : i + snd.n_samples] += snd.data[: len(out) - i]
+    return so.Sound(out, FS)
+
+
+def gate(times, levels, start=1.0, ramp=10e-3):
+    &quot;&quot;&quot;A level, as a function of time, that starts at `start` and moves to `levels[k]` at
+    `times[k]` along a straight `ramp` seconds long: for an `amplitudes` function.&quot;&quot;&quot;
+    knots, values = [0.0], [start]
+    for time, level in zip(times, levels, strict=True):
+        knots += [time, time + ramp]
+        values += [values[-1], level]
+    return lambda t: np.interp(t, knots, values)
+
+
+def show(snd, fmin=100, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;, log=True):
+    &quot;&quot;&quot;A spectrogram, on a log frequency axis unless `log` is False. Returns the figure and the
+    panels the playhead follows.&quot;&quot;&quot;
+    fig, ax = plt.subplots(figsize=(10, 3.2), layout=&quot;constrained&quot;)
+    stft = so.STFT(snd, win_dur=30e-3, hop_dur=5e-3)
+    keep = (stft.f &gt;= fmin) &amp; (stft.f &lt;= fmax)
+    top = stft.db[:, keep].max()
+    ax.pcolormesh(stft.t, stft.f[keep], stft.db[0][keep], vmin=top - 60, vmax=top, cmap=&quot;magma&quot;)
+    ax.set(yscale=&quot;log&quot; if log else &quot;linear&quot;, ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title)
+    ax.set(xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
+    return fig, [ax]</code></pre></details></div>
+</section>
+<section aria-labelledby="h-harmonics-of-one-fundamental">
+<h2 id="h-harmonics-of-one-fundamental">Harmonics of one fundamental</h2>
+<p>Components that are harmonics of one fundamental fuse into one tone, with one pitch. One that
+changes on its own, or does not fit the series, is heard out.</p>
+
+<article class="sound" id="d-fu1" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9878525312499998, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 40.0}]">
+  <div class="about">
+    <h3>A harmonic switched off and on</h3>
+    <div class="desc"><p><strong>Listen for</strong> one rich tone at first, then the harmonic that goes off and on: each time it
+comes back it stands out as a pure tone of its own for a moment, before it fuses again. The
+demonstration does this for each of the first ten harmonics in turn, so the tone that stands out
+rises in steps of 200 Hz.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 1, after Plomp (1964). A complex tone of 20
+harmonics of 200 Hz, then for each of harmonics 1 to 10 in turn, the harmonic switched off and
+on again. Their booklet reports that while the harmonics stay steady the tone is heard as a
+whole, and that a harmonic turned off and on stands out clearly. It gives neither the
+harmonics' levels nor the timing; here the harmonics are equal in amplitude, and each harmonic
+gets 1 s with every harmonic on, then three times 0.5 s off and 0.5 s on, with 10 ms ramps.</p></div>
+    <audio controls preload="metadata" src="audio/fu1_a_harmonic_switched_off_and_on.flac"></audio>
+    <p class="file">fu1_a_harmonic_switched_off_and_on.flac, 40.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu1_a_harmonic_switched_off_and_on.png" width="1000" height="320" alt="Plots of the a harmonic switched off and on sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">PER_HARMONIC = 4.0
+steps = np.array([1.0, 1.5, 2.0, 2.5, 3.0, 3.5])
+switches = {n: gate(PER_HARMONIC * (n - 1) + steps, [0, 1, 0, 1, 0, 1]) for n in range(1, 11)}
+
+
+def cancelled(t, f, n):
+    return switches[n](t) if n in switches else np.ones_like(t)
+
+
+sound = so.harmonic_complex(10 * PER_HARMONIC, FS, 200, harmonics=np.arange(1, 21), amplitudes=cancelled)
+sound = finish(sound)
+fig, playhead = show(sound, fmin=150, fmax=4500, log=False)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fu2" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 44.0}]">
+  <div class="about">
+    <h3>One harmonic mistuned</h3>
+    <div class="desc"><p><strong>Listen for</strong> a thin pure tone that begins to stand apart from the rich tone after a few steps
+of the first series, and fuses back into it during the last few steps of the second. Counting
+the steps it takes gives the mistuning, in percent, at which you start to hear it.</p><p>Bregman &amp; Ahad, Demonstration 18, after Moore, Glasberg &amp; Peters (1986). A tone of the first
+eight harmonics at equal amplitude in sine phase, 250 ms long with a 10 ms rise and a 9 ms
+decay, and 1 s of silence between presentations, as in the booklet. The third harmonic is the
+target: it stays at its frequency while the other seven, the harmonic frame, move. In the first
+series the target plays alone twice, then the full tone in tune, then the frame drops by 1 % of
+its starting frequency at each presentation for 15 steps. In the second, after the target alone
+twice, the frame starts 15 % low and rises 1 % at a time back into tune. The booklet reports the
+target heard as a separate pure tone after a few steps of mistuning, and that holding it still
+while the frame moves keeps a changing frequency from drawing attention to it. The fundamental
+is not in the booklet's text; 200 Hz, a 600 Hz target, is ours.</p></div>
+    <audio controls preload="metadata" src="audio/fu2_one_harmonic_mistuned.flac"></audio>
+    <p class="file">fu2_one_harmonic_mistuned.flac, 44.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu2_one_harmonic_mistuned.png" width="1000" height="320" alt="Plots of the one harmonic mistuned sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">F0 = 200
+
+
+def presentation(frame_f0):
+    &quot;&quot;&quot;The eight-harmonic tone with the frame on `frame_f0` and the target fixed at 3 * F0.&quot;&quot;&quot;
+    frame = so.harmonic_complex(0.25, FS, frame_f0, harmonics=[1, 2, 4, 5, 6, 7, 8], phases=&quot;sine&quot;)
+    target = so.pure_tone(0.25, FS, 3 * F0)
+    mix = frame.data[:, 0] + target.data[:, 0]
+    return so.Sound(envelope(len(mix), 10e-3, 9e-3) * mix, FS)
+
+
+alone = tone(3 * F0, 0.25, 10e-3, 9e-3)
+descending = [1 - k / 100 for k in range(16)]
+series = [alone, alone] + [presentation(F0 * s) for s in descending]
+series += [alone, alone] + [presentation(F0 * s) for s in descending[::-1]]
+sound = finish(place([(1.25 * k, snd) for k, snd in enumerate(series)]))
+fig, playhead = show(sound, fmin=100, fmax=2000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-moving-together">
+<h2 id="h-moving-together">Moving together</h2>
+<p>Harmonics whose frequencies change together, by the same proportion, fuse; two sets that move
+differently split into two sounds, even when each set on its own is harmonic.</p>
+
+<article class="sound" id="d-fu3" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.900045351473922}]">
+  <div class="about">
+    <h3>Some harmonics rising and falling</h3>
+    <div class="desc"><p><strong>Listen for</strong> one steady tone, then two sounds while some of its harmonics rise and fall: a
+steady tone and a warbling one, the steady one a little thinner than before. When the
+harmonics come back together they are heard as one tone again.</p><p>Bregman &amp; Ahad, Demonstration 19. Harmonics 1 to 8 of 400 Hz at equal amplitude in sine phase,
+6.2 s with 40 ms rise and decay. After 2 s steady, harmonics 2, 4 and 8 follow a fundamental
+that moves in straight lines up to 600 Hz and down to 300 Hz, four times, each rise and fall
+0.25 s, then back to 400 Hz, while harmonics 1, 3, 5, 6 and 7 stay put, all as in the booklet.
+The booklet reports the two sets heard as separate sounds while they move apart and as one tone
+again when they come back together. It plays the pattern twice with a brief pause; the pause
+here is 0.5 s.</p></div>
+    <audio controls preload="metadata" src="audio/fu3_some_harmonics_rising_and_falling.flac"></audio>
+    <p class="file">fu3_some_harmonics_rising_and_falling.flac, 12.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu3_some_harmonics_rising_and_falling.png" width="1000" height="320" alt="Plots of the some harmonics rising and falling sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">corners = [400] + [600, 300] * 4 + [400]
+moving_f0 = (np.concatenate([[0], 2.0 + 0.25 * np.arange(len(corners)), [6.2]]), [400] + corners + [400])
+steady = so.harmonic_complex(6.2, FS, 400, harmonics=[1, 3, 5, 6, 7], phases=&quot;sine&quot;, ramp=0)
+moving = so.harmonic_complex(6.2, FS, moving_f0, harmonics=[2, 4, 8], phases=&quot;sine&quot;, ramp=0)
+once = so.Sound(envelope(steady.n_samples, 40e-3, 40e-3) * (steady.data[:, 0] + moving.data[:, 0]), FS)
+sound = finish(place([(0, once), (6.7, once)]))
+fig, playhead = show(sound, fmin=200, fmax=6000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fu4" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.500045351473922}]">
+  <div class="about">
+    <h3>Two sets moving at two rates</h3>
+    <div class="desc"><p><strong>Listen for</strong> one tone sliding up and down, quickly and then slowly. In the third and fourth
+sounds the two sets move differently, and the booklet reports two distinct tones, one moving
+slowly and one quickly.</p><p>Bregman &amp; Ahad, Demonstration 20. Two sets of partials, equal in level and starting in sine
+phase: set 1 holds three partials in the ratio 3:4:5, set 2 a single partial, the fundamental
+itself. The slow pattern rises from 400 to 800 Hz in 1.25 s and falls back in 1.25 s; the fast
+one moves between 400 and 660 Hz five times, each rise and fall 0.25 s. Each sound lasts 2.5 s
+with 40 ms rise and decay. First both sets on the fast pattern, then both on the slow one, so
+that together they are harmonics 1, 3, 4 and 5 of one moving fundamental; then set 1 on the
+slow pattern and set 2 on the fast one, played twice, all as in the booklet's technical
+details. Its text describes the slow tone as pure and the fast one as rich, which would be the
+other way round; this reproduction follows the technical details, so here the fast tone is the
+single partial. The pauses between sounds (0.5 s) are ours.</p></div>
+    <audio controls preload="metadata" src="audio/fu4_two_sets_moving_at_two_rates.flac"></audio>
+    <p class="file">fu4_two_sets_moving_at_two_rates.flac, 11.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu4_two_sets_moving_at_two_rates.png" width="1000" height="320" alt="Plots of the two sets moving at two rates sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">slow = (np.array([0, 1.25, 2.5]), np.array([400, 800, 400]))
+fast = (0.25 * np.arange(11), np.array([400, 660] * 5 + [400]))
+
+
+def two_sets(set1, set2):
+    first = so.harmonic_complex(2.5, FS, set1, harmonics=[3, 4, 5], phases=&quot;sine&quot;, ramp=0)
+    second = so.harmonic_complex(2.5, FS, set2, harmonics=[1], phases=&quot;sine&quot;, ramp=0)
+    mix = first.data[:, 0] + second.data[:, 0]
+    return so.Sound(envelope(len(mix), 40e-3, 40e-3) * mix, FS)
+
+
+parts = [two_sets(fast, fast), two_sets(slow, slow), two_sets(slow, fast), two_sets(slow, fast)]
+sound = finish(place([(3.0 * k, snd) for k, snd in enumerate(parts)]))
+fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
+</article>
+<p>Speech and singing are never steady in pitch, and every harmonic of a voice follows the same
+small wobble. The next demonstration adds that wobble to a steady spectrum.</p>
+
+<article class="sound" id="d-fu5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 38.00004535147392}]">
+  <div class="about">
+    <h3>A voice emerging from a tone</h3>
+    <div class="desc"><p><strong>Listen for</strong> a pure tone, which seems to carry on when a steady rich tone joins it; then,
+when every harmonic starts to wobble together, the pure tone disappears into the sound and a
+singing voice on a vowel emerges. This happens three times, for three vowels on three pitches.</p><p>After Bregman &amp; Ahad, Demonstration 24, which plays examples made by John Chowning with FM
+synthesis. For each vowel, a pure tone, then the same tone joined by its harmonics at the levels
+they would have in a vowel, then all of them modulated by one pattern of vibrato and random
+micromodulation. The pure tones are 400, 500 and 600 Hz, and the vowels "oh" (more), "ah"
+(bomb) and "e" (bed), as in the booklet. The booklet reports that the pure tone is heard
+continuing into the steady rich tone (the old-plus-new principle, the subject of the
+demonstrations on capture), and that once the
+harmonics move together the tone can no longer be heard on its own and a voice emerges. These
+are not Chowning's tones. Ours: the harmonic levels come from three resonances at Peterson &amp;
+Barney's (1952) average formants for women, for "aw" (closest to "oh" as in more), "ah" and
+"eh", with bandwidths 80, 90 and 150 Hz, on a source falling 6 dB an octave, with the fundamental
+kept at the pure tone's level; the vibrato is 5 to 6 Hz and ±2 %, plus random micromodulation
+of 0.5 % RMS below 8 Hz. The booklet's timing is 5 s of pure tone, 5 s of steady spectrum and
+10 s of modulation; here it is 3, 3 and 6 s.</p></div>
+    <audio controls preload="metadata" src="audio/fu5_a_voice_emerging_from_a_tone.flac"></audio>
+    <p class="file">fu5_a_voice_emerging_from_a_tone.flac, 38.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu5_a_voice_emerging_from_a_tone.png" width="1000" height="320" alt="Plots of the a voice emerging from a tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {  # pure tone and fundamental, formant frequencies (Peterson &amp; Barney, women)
+    &quot;oh&quot;: (400, (610, 920, 2710)),
+    &quot;ah&quot;: (500, (850, 1220, 2810)),
+    &quot;e&quot;: (600, (610, 2330, 2990)),
+}
+BANDWIDTHS = (80, 90, 150)
+PURE, STEADY, MODULATED = 3.0, 3.0, 6.0
+DUR = PURE + STEADY + MODULATED
+
+
+def vowel_level(f, formants):
+    &quot;&quot;&quot;Resonances at `formants` (each 1 at 0 Hz) on a source falling 6 dB an octave.&quot;&quot;&quot;
+    gain = 1 / np.maximum(f, 1.0)
+    for formant, bw in zip(formants, BANDWIDTHS, strict=True):
+        half = bw / 2
+        below, above = (f - formant) ** 2 + half**2, (f + formant) ** 2 + half**2
+        gain = gain * (formant**2 + half**2) / np.sqrt(below * above)
+    return gain
+
+
+def sung(f0, formants, vibrato_rate, rng):
+    &quot;&quot;&quot;The three parts of one example: pure tone, steady vowel, vowel with vibrato.&quot;&quot;&quot;
+    t = np.arange(0, DUR, 0.005)
+    drift = so.gaussian_noise(DUR, 200, band=(0, 8), rng=rng).data[: len(t), 0]
+    drift = 0.005 * drift / drift.std()
+    onset = np.clip((t - PURE - STEADY) / 0.3, 0, 1)
+    contour = (t, f0 * (1 + onset * (0.02 * np.sin(2 * np.pi * vibrato_rate * t) + drift)))
+    harmonics_on = gate([PURE], [1], start=0, ramp=0.05)
+    reference = vowel_level(f0, formants)
+
+    def levels(t, f, n):
+        return np.ones_like(t) if n == 1 else harmonics_on(t) * vowel_level(f, formants) / reference
+
+    return so.harmonic_complex(DUR, FS, contour, amplitudes=levels, f_max=5000, phases=&quot;sine&quot;)
+
+
+rates, seeds = (5.0, 5.6, 6.1), (1, 2, 3)
+examples = [
+    sung(f0, formants, rate, np.random.default_rng(seed))
+    for (f0, formants), rate, seed in zip(VOWELS.values(), rates, seeds, strict=True)
+]
+sound = finish(place([(13.0 * k, snd) for k, snd in enumerate(examples)]))
+fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fu6" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
+  <div class="about">
+    <h3>Three voices at once</h3>
+    <div class="desc"><p><strong>Listen for</strong> a chord of three pure tones, then a chord of three steady rich tones, then three
+voices singing three vowels on three pitches. The booklet expects most listeners to tell at
+least two of the vowels apart.</p><p>After Bregman &amp; Ahad, Demonstration 24, its fourth part: the three examples above played at
+once, each with its own pattern of vibrato and micromodulation, as in the booklet.</p></div>
+    <audio controls preload="metadata" src="audio/fu6_three_voices_at_once.flac"></audio>
+    <p class="file">fu6_three_voices_at_once.flac, 12.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu6_three_voices_at_once.png" width="1000" height="320" alt="Plots of the three voices at once sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(so.Sound(sum(snd.data for snd in examples), FS))
+fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-starting-together">
+<h2 id="h-starting-together">Starting together</h2>
+<p>Components that start at the same moment tend to fuse, and an abrupt start makes a component
+stand out from what is already sounding.</p>
+
+<article class="sound" id="d-fu7" data-regions="[{&quot;x0&quot;: 0.06330366449652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.500045351473922}]">
+  <div class="about">
+    <h3>Clusters with faster and faster onsets</h3>
+    <div class="desc"><p><strong>Listen for</strong> the order of the two middle notes in each pair of clusters: is it the same in
+both clusters, or different? The booklet reports that as the notes start more abruptly they
+sound clearer and more bell-like, and their order gets easier to hear. The answers for this
+reproduction, pair by pair: different, same, different, different.</p><p>Bregman &amp; Ahad, Demonstration 21, after Bregman, Ahad &amp; Kim (1994). Clusters of four pure tones,
+each starting 120 ms after the one before and all ending together; the notes are L = 700,
+M = 800 and H = 900 Hz, in the order MHLM or MLHM, so that both clusters start and end on M,
+the positions that are easiest to hear. Each tone's envelope rises in a straight line and
+falls in a straight line with no pause, and the whole of the first tone takes 1 s; the later
+tones rise at the same rate but stop where they meet the first tone's falling line and follow
+it down, so no later tone is ever louder than an earlier one (with a 125 ms rise their peaks
+are 0.88, 0.76 and 0.64 of the first, as in the booklet). The first tone's rise is 250, 125,
+50 and 10 ms in successive pairs. Which pairs are the same is ours, as are the silences:
+0.5 s within a pair and 1.5 s between pairs.</p></div>
+    <audio controls preload="metadata" src="audio/fu7_clusters_with_faster_and_faster_onsets.flac"></audio>
+    <p class="file">fu7_clusters_with_faster_and_faster_onsets.flac, 14.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu7_clusters_with_faster_and_faster_onsets.png" width="1000" height="320" alt="Plots of the clusters with faster and faster onsets sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">L, M, H = 700, 800, 900
+
+
+def cluster(order, rise):
+    t = np.arange(round(1.0 * FS)) / FS
+    first = np.minimum(t / rise, (1 - t) / (1 - rise))
+    total = np.zeros_like(t)
+    for k, freq in enumerate(order):
+        rising = (t - 0.12 * k) / rise
+        total += np.clip(np.minimum(rising, first), 0, None) * np.sin(2 * np.pi * freq * t)
+    return so.Sound(total, FS)
+
+
+PAIRS = [(250e-3, &quot;different&quot;), (125e-3, &quot;same&quot;), (50e-3, &quot;different&quot;), (10e-3, &quot;different&quot;)]
+events, start = [], 0.0
+for rise, answer in PAIRS:
+    second = (M, L, H, M) if answer == &quot;different&quot; else (M, H, L, M)
+    events += [(start, cluster((M, H, L, M), rise)), (start + 1.5, cluster(second, rise))]
+    start += 4.0
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=500, fmax=1200, log=False)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-grouping-undoes-masking">
+<h2 id="h-grouping-undoes-masking">Grouping undoes masking</h2>
+<p>A sound can hide another at the same frequency. Adding more sound far away in frequency can
+make the hidden one easier to hear, when the added sound fuses with the masker and takes it
+away into a sound of its own.</p>
+
+<article class="sound" id="d-fu8" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 23.200090702947847}]">
+  <div class="about">
+    <h3>A rhythm hidden and released</h3>
+    <div class="desc"><p><strong>Listen for</strong> an even beat of soft tones, twice a second. When irregular tones of the same
+pitch are mixed in, the beat is hard to follow. When each irregular tone gets four partners an
+octave or two away, the booklet reports that they fuse into rich tones and the even beat of
+pure tones can be heard again; when the partners start and stop slightly late, the fusion
+fails and the beat is lost again.</p><p>Bregman &amp; Ahad, Demonstration 22, rhythmic masking release. Targets and maskers are 1000 Hz
+tones with 5 ms rise and decay and equal amplitude; the targets are 50 ms long with a regular
+0.5 s from onset to onset, and the flankers, partners of the maskers, are 250, 500, 2000 and
+4000 Hz tones each 12 dB below the masker, all as in the booklet. Four parts: ten targets
+alone, then with the maskers, then with maskers and flankers, then with the flankers delayed.
+Ours: one masker in each gap between targets, at a random time (seed 22), and 30 to 60 ms long,
+the range the booklet gives for the flankers; the delay of the flankers, 30 ms at onset and
+offset; and each part played once, where the booklet plays the middle two twice.</p></div>
+    <audio controls preload="metadata" src="audio/fu8_a_rhythm_hidden_and_released.flac"></audio>
+    <p class="file">fu8_a_rhythm_hidden_and_released.flac, 23.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu8_a_rhythm_hidden_and_released.png" width="1000" height="320" alt="Plots of the a rhythm hidden and released sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rng = np.random.default_rng(22)
+targets = [(0.5 * k, tone(1000, 0.05, 5e-3, 5e-3)) for k in range(10)]
+gaps = [(0.5 * k + 0.08 + rng.uniform(0, 0.3), rng.uniform(0.03, 0.06)) for k in range(10)]
+
+
+def masked(flankers=False, delay=0.0):
+    events = list(targets)
+    for onset, length in gaps:
+        events.append((onset, tone(1000, length, 5e-3, 5e-3)))
+        if flankers:
+            partners = [tone(f, length, 5e-3, 5e-3, db=-12) for f in (250, 500, 2000, 4000)]
+            events += [(onset + delay, partner) for partner in partners]
+    return place(events, dur=5.2)
+
+
+parts = [place(targets, dur=5.2), masked(), masked(flankers=True), masked(flankers=True, delay=0.03)]
+sound = finish(place([(6.0 * k, snd) for k, snd in enumerate(parts)]))
+fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-fu9" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 26.500045351473922}]">
+  <div class="about">
+    <h3>A tone in fluctuating noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> a steady tone that comes and goes in a fluctuating hum, getting softer at every
+beep. Count how many beeps you hear in each of the three parts. Hall, Haggard &amp; Fernandes
+(1984) found the tone detectable at lower levels when the noise's fluctuations were shared by
+bands far from the tone, and Bregman's booklet explains the effect as the shared fluctuation
+telling hearing that the bands are one sound, which leaves the steady tone apart.</p><p>Comodulation masking release, after Hall, Haggard &amp; Fernandes (1984), in the form with separate
+flanking bands that later work made common (see Moore, 1990); it is on neither disc, and every
+number here is ours. A 1000 Hz tone, 300 ms long with 20 ms ramps, every 0.8 s, stepping down
+3 dB at each beep from the level of the noise band it sits in. The noise is a 1000 Hz carrier
+times a slowly fluctuating envelope (low-pass Gaussian noise below 25 Hz), a band about 50 Hz
+wide. Three parts: that band alone; with four more bands at 500, 700, 1400 and 2000 Hz, all
+with the same envelope (comodulated); and with the same four bands, each with an envelope of
+its own.</p></div>
+    <audio controls preload="metadata" src="audio/fu9_a_tone_in_fluctuating_noise.flac"></audio>
+    <p class="file">fu9_a_tone_in_fluctuating_noise.flac, 26.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu9_a_tone_in_fluctuating_noise.png" width="1000" height="320" alt="Plots of the a tone in fluctuating noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">PART = 8.0
+rng = np.random.default_rng(1984)
+
+
+def fluctuation():
+    snd = so.gaussian_noise(PART, FS, band=(0, 25), rng=rng)
+    return snd.data[:, 0] / snd.data[:, 0].std()
+
+
+t = np.arange(round(PART * FS)) / FS
+beeps = place([(0.25 + 0.8 * k, tone(1000, 0.3, 20e-3, 20e-3, db=-3 * k)) for k in range(10)], dur=PART)
+beeps = beeps.data[: len(t), 0]  # RMS 1/sqrt(2) at the first beep, the noise band&#x27;s RMS
+
+
+def noise(flankers):
+    shared = fluctuation()
+    total = shared * np.cos(2 * np.pi * 1000 * t)
+    for f in (500, 700, 1400, 2000) if flankers else ():
+        total += (shared if flankers == &quot;comodulated&quot; else fluctuation()) * np.cos(2 * np.pi * f * t)
+    return total
+
+
+parts = [
+    so.Sound(noise(flankers) + beeps, FS).ramp(20e-3) for flankers in (None, &quot;comodulated&quot;, &quot;independent&quot;)
+]
+sound = finish(place([(0.5 + (PART + 1.0) * k, snd) for k, snd in enumerate(parts)]))
+fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-speech-from-three-tones">
+<h2 id="h-speech-from-three-tones">Speech from three tones</h2>
+<p>Speech holds together even with almost every grouping clue taken away.</p>
+
+<article class="sound" id="d-fu10" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.75}]">
+  <div class="about">
+    <h3>A sentence as three whistles</h3>
+    <div class="desc"><p><strong>Listen for</strong> the sentence, first as recorded, then as three gliding whistles. The booklet
+reports that after a little practice listeners can understand sine-wave speech, sentences more
+easily than single words, although the three tones share no fundamental and do not start or
+move together the way the harmonics of a voice do.</p><p>A stand-in for Bregman &amp; Ahad, Demonstration 23, after Remez, Rubin, Pisoni &amp; Carrell (1981).
+The disc plays sine-wave speech made from parameters supplied by Robert Remez and Philip Rubin,
+which are not ours to use. This reproduction makes it from the male talker's recorded sentence (CMU
+ARCTIC, speaker bdl): <code>so.formant_track</code> follows the first three formants, and each becomes a
+pure tone that glides along it, at levels that follow the sentence's short-time RMS at 0, -6
+and -12 dB. The tones are switched off where <code>so.f0_track</code> finds no voicing; the booklet's
+examples instead put steady tones in noisy stretches such as "s", so this one leaves gaps
+there. The levels are ours.</p></div>
+    <audio controls preload="metadata" src="audio/fu10_a_sentence_as_three_whistles.flac"></audio>
+    <p class="file">fu10_a_sentence_as_three_whistles.flac, 5.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/fu10_a_sentence_as_three_whistles.png" width="1000" height="320" alt="Plots of the a sentence as three whistles sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">speech = finish(so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)))
+formants = so.formant_track(speech, ceiling=5000)
+pitch = so.f0_track(speech)
+voiced = np.interp(formants.t, pitch.t, pitch.voiced[0].astype(float)) &gt; 0.5
+window = np.hanning(round(0.025 * speech.fs))
+power = np.convolve(speech.data[:, 0] ** 2, window / window.sum(), mode=&quot;same&quot;)
+rms = np.sqrt(np.interp(formants.t, speech.t, power))
+
+
+def level(db):
+    &quot;&quot;&quot;The sentence&#x27;s short-time RMS, `db` below it, for an `amplitudes` function.&quot;&quot;&quot;
+    return lambda t, f: 10 ** (db / 20) * np.interp(t, formants.t, rms)
+
+
+whistles = 0
+for k, db in enumerate((0, -6, -12)):
+    track = np.where(voiced &amp; np.isfinite(formants.frequencies[0, k]), formants.frequencies[0, k], 0)
+    contour = (formants.t, track)
+    whistle = so.harmonic_complex(speech.duration, speech.fs, contour, harmonics=[1], amplitudes=level(db))
+    whistles = whistles + whistle.data[:, 0]
+gap = so.silence(0.7, speech.fs)
+sound = finish(so.concat([speech, gap, finish(so.Sound(whistles, speech.fs))]))
+fig, playhead = show(sound, fmin=100, fmax=5000, log=False)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Bregman &amp; Ahad (1996). <em>Demonstrations of Auditory Scene Analysis: The Perceptual Organization of Sound</em> (compact disc and booklet). Auditory Perception Laboratory, McGill University; MIT Press. <a href="https://webpages.mcgill.ca/staff/Group2/abregm1/web/downloadsdl.htm" target="_blank" rel="noopener">Recordings and booklet</a>.</li><li>Houtsma, Rossing &amp; Wagenaars (1987). <em>Auditory Demonstrations</em> (compact disc and booklet). Institute for Perception Research (IPO), Eindhoven, and the Acoustical Society of America. <a href="https://research.tue.nl/en/publications/auditory-demonstrations" target="_blank" rel="noopener">Booklet</a>.</li><li>Bregman (1990). <em>Auditory Scene Analysis: The Perceptual Organization of Sound</em>. MIT Press. <a href="https://doi.org/10.7551/mitpress/1486.001.0001" target="_blank" rel="noopener">doi:10.7551/mitpress/1486.001.0001</a>.</li><li>Bregman, Ahad &amp; Kim (1994). Resetting the pitch-analysis system. 2. Role of sudden onsets and offsets in the perception of individual components in a cluster of overlapping tones. <em>JASA</em> 96(5), 2694–2703. <a href="https://doi.org/10.1121/1.411277" target="_blank" rel="noopener">doi:10.1121/1.411277</a>.</li><li>Hall, Haggard &amp; Fernandes (1984). Detection in noise by spectro-temporal pattern analysis. <em>JASA</em> 76(1), 50–56. <a href="https://doi.org/10.1121/1.391005" target="_blank" rel="noopener">doi:10.1121/1.391005</a>.</li><li>Kominek &amp; Black (2004). The CMU Arctic speech databases. <em>Proc. 5th ISCA Speech Synthesis Workshop (SSW5)</em>, 223–224. <a href="https://www.isca-archive.org/ssw_2004/kominek04b_ssw.html" target="_blank" rel="noopener">ISCA Archive</a>.</li><li>Moore (1990). Co-modulation masking release: spectro-temporal pattern analysis in hearing. <em>British Journal of Audiology</em> 24(2), 131–137. <a href="https://doi.org/10.3109/03005369009077854" target="_blank" rel="noopener">doi:10.3109/03005369009077854</a>.</li><li>Moore, Glasberg &amp; Peters (1986). Thresholds for hearing mistuned partials as separate tones in harmonic complexes. <em>JASA</em> 80(2), 479–483. <a href="https://doi.org/10.1121/1.394043" target="_blank" rel="noopener">doi:10.1121/1.394043</a>.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>JASA</em> 24(2), 175–184. <a href="https://pubs.aip.org/asa/jasa/article/24/2/175/722376/Control-Methods-Used-in-a-Study-of-the-Vowels" target="_blank" rel="noopener">ASA</a>.</li><li>Plomp (1964). The ear as a frequency analyzer. <em>JASA</em> 36(9), 1628–1636. <a href="https://doi.org/10.1121/1.1919256" target="_blank" rel="noopener">doi:10.1121/1.1919256</a>.</li><li>Remez, Rubin, Pisoni &amp; Carrell (1981). Speech perception without traditional speech cues. <em>Science</em> 212(4497), 947–950. <a href="https://doi.org/10.1126/science.7233191" target="_blank" rel="noopener">doi:10.1126/science.7233191</a>.</li></ul>
+<p>The papers were checked for their publication details only; the parameters on this page come
+from the booklets, and those marked as ours are choices made for this page.</p>
+</section>
+<footer>This page is the script <code>docs/gallery/demos/fusion.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/demos/fusion.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
+</main>
+</div>
+<script>
+(() => {
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the color bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

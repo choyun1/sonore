@@ -121,6 +121,7 @@ EXAMPLE_PAGES = [
     "ripples",
     "irn",
     "streams",
+    "fusion",
     "binaural",
     "classic",
     "textures",
@@ -732,6 +733,7 @@ TITLES = {
     "irn.html": "Iterated rippled noise",
     "ripples.html": "Spectrotemporal ripples",
     "streams.html": "Streams: reproducing Bregman & Ahad",
+    "fusion.html": "Fusion: reproducing Bregman & Ahad",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
     "events.html": "Events and pops",
@@ -781,6 +783,11 @@ TOPICS = [
                 "streams.html",
                 "sonore's reproductions of Bregman & Ahad's demonstrations of streaming: speed,"
                 " frequency, timbre, competition and place.",
+            ),
+            (
+                "fusion.html",
+                "sonore's reproductions of the demonstrations of fusion: harmonics heard as one tone or"
+                " apart, by mistuning, common motion, onsets, and masking undone by grouping.",
             ),
         ],
     ),

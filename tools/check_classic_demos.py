@@ -1,7 +1,8 @@
 """Numerical checks of the classic demonstration reproductions against their booklets.
 
 The gallery's Classic demonstrations pages reproduce Bregman & Ahad (1996) and Houtsma, Rossing
-& Wagenaars (1987) from the numbers in their booklets. This script reads the committed audio
+& Wagenaars (1987) from the numbers in their booklets (and, on the Fusion page, comodulation
+masking release, whose numbers are the page's own). This script reads the committed audio
 files with soundfile and measures them with NumPy alone, sharing no code with sonore, so a page
 that drifts from the booklet numbers it states shows up here. The audio is normalized for
 playback, so levels are checked relative to each other, never absolutely. Each line prints what
@@ -130,6 +131,105 @@ report(
     [np.corrcoef(start.T)[0, 1], np.corrcoef(end.T)[0, 1]],
     [1.0, 0.0],
     0.05,
+)
+
+
+def band_envelope(x, fs, centre, half_width):
+    """The envelope of `x` within `half_width` Hz of `centre`: an FFT band-pass, then the
+    magnitude of the analytic signal."""
+    spectrum = np.fft.fft(x)
+    freqs = np.fft.fftfreq(len(x), 1 / fs)
+    keep = (freqs > centre - half_width) & (freqs < centre + half_width)  # positive side only
+    return 2 * np.abs(np.fft.ifft(np.where(keep, spectrum, 0)))
+
+
+def peak_in_band(x, fs, lo, hi):
+    """Frequency of the largest spectral peak of `x` between `lo` and `hi` Hz."""
+    n = 1 << int(np.ceil(np.log2(len(x) * 8)))
+    spectrum = np.abs(np.fft.rfft(x * np.hanning(len(x)), n))
+    freqs = np.fft.rfftfreq(n, 1 / fs)
+    inside = np.flatnonzero((freqs >= lo) & (freqs <= hi))
+    k = inside[np.argmax(spectrum[inside])]
+    a, b, c = np.log(spectrum[k - 1 : k + 2] + 1e-300)
+    return (k + 0.5 * (a - c) / (a - 2 * b + c)) * fs / n
+
+
+# Bregman & Ahad, Demonstration 18: eight harmonics, the third (here 600 Hz on a 200 Hz
+# fundamental) held still while the frame drops 1 % a step for 15 steps, then rises back.
+data, fs = load("fu2")
+x = data[:, 0]
+frame = np.concatenate([1 - np.arange(16) / 100, (1 - np.arange(16) / 100)[::-1]])
+starts = 1.25 * np.concatenate([2 + np.arange(16), 20 + np.arange(16)])
+segments = [x[round((t + 0.02) * fs) : round((t + 0.23) * fs)] for t in starts]
+report(
+    "fu2 target, lowest and highest over both series [Hz]",
+    [
+        min(peak_in_band(s, fs, 500, 700) for s in segments),
+        max(peak_in_band(s, fs, 500, 700) for s in segments),
+    ],
+    [600, 600],
+    0.5,
+)
+errors = [peak_in_band(s, fs, 300, 450) - 400 * f for s, f in zip(segments, frame, strict=True)]
+report("fu2 frame's second harmonic, largest error [Hz]", np.max(np.abs(errors)), 0, 0.5)
+
+# Bregman & Ahad, Demonstration 21: with a 125 ms rise, the second and third tones of a cluster
+# peak at 0.88 and 0.76 of the first (the second pair starts at 4 s; its first cluster is MHLM).
+data, fs = load("fu7")
+x = data[round(4.0 * fs) : round(5.0 * fs), 0]
+first = band_envelope(x, fs, 800, 40)[: round(0.3 * fs)].max()
+report(
+    "fu7 peaks of the second and third tones re the first",
+    [band_envelope(x, fs, 900, 40).max() / first, band_envelope(x, fs, 700, 40).max() / first],
+    [0.88, 0.76],
+    0.03,
+)
+
+# Bregman & Ahad, Demonstration 22: each masker (1000 Hz) has flankers at 250, 500, 2000 and
+# 4000 Hz, 12 dB down; in the last part the flankers start late. The masker times come from
+# the page's seed, as the booklet leaves them open.
+data, fs = load("fu8")
+x = data[:, 0]
+rng = np.random.default_rng(22)
+gaps = [(0.5 * k + 0.08 + rng.uniform(0, 0.3), rng.uniform(0.03, 0.06)) for k in range(10)]
+levels = []
+for onset, length in gaps:
+    segment = x[round((12.0 + onset + 0.008) * fs) : round((12.0 + onset + length - 0.008) * fs)]
+    n = 1 << 15
+    spectrum = np.abs(np.fft.rfft(segment * np.hanning(len(segment)), n))
+    at = [spectrum[round(f * n / fs) - 3 : round(f * n / fs) + 4].max() for f in (250, 500, 1000, 2000, 4000)]
+    levels.append(20 * np.log10(np.delete(at, 2) / at[2]))
+report(
+    "fu8 flankers re masker, lowest and highest over the third part [dB]",
+    [np.min(levels), np.max(levels)],
+    [-12, -12],
+    0.5,
+)
+delays = []
+for onset, length in gaps:
+    region = x[round((18.0 + onset - 0.02) * fs) : round((18.0 + onset + length + 0.06) * fs)]
+    starts = [
+        np.argmax(band_envelope(region, fs, f, 100) > 0.5 * band_envelope(region, fs, f, 100).max())
+        for f in (1000, 4000)
+    ]
+    delays.append(1000 * (starts[1] - starts[0]) / fs)
+report("fu8 flanker delay in the last part, median [ms] (the page's own value)", np.median(delays), 30, 2.0)
+
+# Comodulation masking release (every number ours): the flanking bands share the on-target
+# band's envelope in the second part and have their own in the third.
+data, fs = load("fu9")
+x = data[:, 0]
+correlations = []
+for part in (1, 2):
+    segment = x[round((0.5 + 9.0 * part + 0.5) * fs) : round((0.5 + 9.0 * part + 7.5) * fs)]
+    correlations.append(
+        np.corrcoef(band_envelope(segment, fs, 500, 40), band_envelope(segment, fs, 2000, 40))[0, 1]
+    )
+report(
+    "fu9 envelope correlation, 500 and 2000 Hz bands, parts 2 and 3 (page's own)",
+    correlations,
+    [1.0, 0.0],
+    0.15,
 )
 
 print()
