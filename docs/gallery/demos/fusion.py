@@ -85,7 +85,9 @@ def finish(snd):
 # time, frequency and harmonic number, and whose F0 can be a contour; the rest are tones placed at
 # their onset times, as on the [Streams](streams.html) page. The booklets give levels relative to
 # the other sounds in a demonstration, and `finish` keeps those relations, scaling only the whole
-# sound. The sample rate is 22.05 kHz, except for the speech, which keeps its recording's 16 kHz.
+# sound. Like every sonore generator, `so.harmonic_complex` scales the sound it makes to RMS 1, so
+# where two of its sounds are added, `partials` first scales each back to the level its partials
+# should have. The sample rate is 22.05 kHz, except for the speech, which keeps its recording's 16 kHz.
 
 # %%
 FS = 22050
@@ -111,6 +113,12 @@ def place(events, dur=None):
         i = round(onset * FS)
         out[i : i + snd.n_samples] += snd.data[: len(out) - i]
     return so.Sound(out, FS)
+
+
+def partials(snd, n):
+    """A sound of `n` steady partials of equal amplitude, as `so.harmonic_complex` makes it (at RMS
+    1), scaled so that each partial has RMS 1, as one `tone` does."""
+    return snd * np.sqrt(n)
 
 
 def gate(times, levels, start=1.0, ramp=10e-3):
@@ -191,7 +199,9 @@ F0 = 200
 
 def presentation(frame_f0):
     """The eight-harmonic tone with the frame on `frame_f0` and the target fixed at 3 * F0."""
-    frame = so.harmonic_complex(0.25, FS, frame_f0, harmonics=[1, 2, 4, 5, 6, 7, 8], phases="sine")
+    frame_harmonics = [1, 2, 4, 5, 6, 7, 8]
+    frame = so.harmonic_complex(0.25, FS, frame_f0, harmonics=frame_harmonics, phases="sine")
+    frame = partials(frame, len(frame_harmonics))
     target = so.pure_tone(0.25, FS, 3 * F0)
     mix = frame.data[:, 0] + target.data[:, 0]
     return so.Sound(envelope(len(mix), 10e-3, 9e-3) * mix, FS)
@@ -225,8 +235,8 @@ fig, playhead = show(sound, fmin=100, fmax=2000)
 # %% [demo fu3] Some harmonics rising and falling
 corners = [400] + [600, 300] * 4 + [400]
 moving_f0 = (np.concatenate([[0], 2.0 + 0.25 * np.arange(len(corners)), [6.2]]), [400] + corners + [400])
-steady = so.harmonic_complex(6.2, FS, 400, harmonics=[1, 3, 5, 6, 7], phases="sine", ramp=0)
-moving = so.harmonic_complex(6.2, FS, moving_f0, harmonics=[2, 4, 8], phases="sine", ramp=0)
+steady = partials(so.harmonic_complex(6.2, FS, 400, harmonics=[1, 3, 5, 6, 7], phases="sine", ramp=0), 5)
+moving = partials(so.harmonic_complex(6.2, FS, moving_f0, harmonics=[2, 4, 8], phases="sine", ramp=0), 3)
 once = so.Sound(envelope(steady.n_samples, 40e-3, 40e-3) * (steady.data[:, 0] + moving.data[:, 0]), FS)
 sound = finish(once)
 fig, playhead = show(sound, fmin=200, fmax=6000)
@@ -255,7 +265,7 @@ fast = (0.25 * np.arange(11), np.array([400, 660] * 5 + [400]))
 
 
 def two_sets(set1, set2):
-    first = so.harmonic_complex(2.5, FS, set1, harmonics=[3, 4, 5], phases="sine", ramp=0)
+    first = partials(so.harmonic_complex(2.5, FS, set1, harmonics=[3, 4, 5], phases="sine", ramp=0), 3)
     second = so.harmonic_complex(2.5, FS, set2, harmonics=[1], phases="sine", ramp=0)
     mix = first.data[:, 0] + second.data[:, 0]
     return so.Sound(envelope(len(mix), 40e-3, 40e-3) * mix, FS)
@@ -489,7 +499,7 @@ def fluctuation():
 
 t = np.arange(round(PART * FS)) / FS
 beeps = place([(0.25 + 0.8 * k, tone(1000, 0.3, 20e-3, 20e-3, db=-3 * k)) for k in range(10)], dur=PART)
-beeps = beeps.data[: len(t), 0]  # RMS 1/sqrt(2) at the first beep, the noise band's RMS
+beeps = np.sqrt(0.5) * beeps.data[: len(t), 0]  # RMS 1/sqrt(2) at the first beep, the noise band's RMS
 
 
 def noise(flankers):
@@ -520,34 +530,31 @@ fig, playhead = show(sound, fmin=300, fmax=3000)
 #
 # A stand-in for Bregman & Ahad, Demonstration 23, after Remez, Rubin, Pisoni & Carrell (1981).
 # The disc plays sine-wave speech made from parameters supplied by Robert Remez and Philip Rubin,
-# which are not ours to use. This reproduction makes it from the male talker's recorded sentence (CMU
-# ARCTIC, speaker bdl): `so.formant_track` follows the first three formants, and each becomes a
+# which are not ours to use. This reproduction makes it from the male talker's recorded sentence
+# (CMU ARCTIC, speaker bdl): `so.formant_track` follows the first three formants, and each becomes a
 # pure tone that glides along it, at levels that follow the sentence's short-time RMS at 0, -6
-# and -12 dB. The tones are switched off where `so.f0_track` finds no voicing; the booklet's
-# examples instead put steady tones in noisy stretches such as "s", so this one leaves gaps
-# there. The levels are ours.
+# and -12 dB. The tones are switched off where `so.f0_track` finds no voicing (or a formant track
+# has a gap); the booklet's examples instead put steady tones in noisy stretches such as "s", so
+# this one leaves gaps there. The levels are ours.
 
 # %% [demo fu10] A sentence as three whistles
 speech = finish(so.load(fetch("docs/speech/bdl_arctic_a0131.flac")))
 formants = so.formant_track(speech, ceiling=5000)
 pitch = so.f0_track(speech)
 voiced = np.interp(formants.t, pitch.t, pitch.voiced[0].astype(float)) > 0.5
+heard = voiced & np.isfinite(formants.frequencies[0, :3]).all(axis=0)
 window = np.hanning(round(0.025 * speech.fs))
 power = np.convolve(speech.data[:, 0] ** 2, window / window.sum(), mode="same")
-rms = np.sqrt(np.interp(formants.t, speech.t, power))
+rms = np.sqrt(power)
 
-
-def level(db):
-    """The sentence's short-time RMS, `db` below it, for an `amplitudes` function."""
-    return lambda t, f: 10 ** (db / 20) * np.interp(t, formants.t, rms)
-
-
+# Each whistle is switched on and off at the same times, so the three come out of
+# `so.harmonic_complex` (at RMS 1) at one level, and the sentence's RMS and the -6 and -12 dB are
+# applied afterward.
 whistles = 0
 for k, db in enumerate((0, -6, -12)):
-    track = np.where(voiced & np.isfinite(formants.frequencies[0, k]), formants.frequencies[0, k], 0)
-    contour = (formants.t, track)
-    whistle = so.harmonic_complex(speech.duration, speech.fs, contour, harmonics=[1], amplitudes=level(db))
-    whistles = whistles + whistle.data[:, 0]
+    contour = (formants.t, np.where(heard, formants.frequencies[0, k], 0))
+    whistle = so.harmonic_complex(speech.duration, speech.fs, contour, harmonics=[1])
+    whistles = whistles + 10 ** (db / 20) * rms * whistle.data[:, 0]
 sound = finish(so.Sound(whistles, speech.fs))
 fig, playhead = show(sound, fmin=100, fmax=5000, log=False)
 
