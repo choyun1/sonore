@@ -7,8 +7,8 @@ the F0 track. A streaming view takes sound a block at a time as it arrives,
 keeps what it needs from earlier blocks, and returns the time windows each
 block completes.
 
-Status: proposed 2026-10-28. Cho accepted D1 and D2 (with the mixin) on 2026-10-29; D3–D11 open. The claims are checked by
-`tools/check_streaming_claims.py` (C1–C10). It writes every streaming version
+Status: proposed 2026-10-28. Cho accepted D1–D6 and D8–D11 on 2026-10-29 (D2 with the mixin); D7 open. The claims are checked by
+`tools/check_streaming_claims.py` (C1–C11). It writes every streaming version
 out from its definition in NumPy and SciPy, as the step functions D1
 proposes, and imports sonore only for the batch results it compares them
 with. Every number below is what it printed on 2026-10-28 in the cloud
@@ -184,9 +184,6 @@ place. C7 measures this for the largest state in view.
   10 ms block takes 0.05 to 0.08 ms over two runs (under 1% of the block).
   Writing the block into a ring buffer in place takes 0.003 to 0.004 ms. So the pure step costs nothing that
   matters, and a ring buffer stays available if a larger state ever needs it.
-- **C10. Making each block a `Sound` costs almost nothing.** Wrapping a
-  441-sample block in a `Sound` (which copies the samples and checks their
-  shape) takes 0.0013 ms, about 0.01% of the block's 10 ms.
 - **C8. A live F0 track can decide 50 ms late without changing the result.**
   Today's tracker runs a Viterbi pass over the whole track. A live tracker
   has to commit to each time window after a fixed delay. Decoding with that
@@ -207,6 +204,16 @@ place. C7 measures this for the largest state in view.
   own changes no voicing decision and moves no F0 by more than 1%. The
   candidates themselves do move on some time windows: 27 of 505 on
   `bdl_arctic_a0131`.
+- **C10. Making each block a `Sound` costs almost nothing.** Wrapping a
+  441-sample block in a `Sound` (which copies the samples and checks their
+  shape) takes 0.0013 ms, about 0.01% of the block's 10 ms.
+- **C11. Computing the modulation spectrogram's kept time windows directly
+  is far slower than batch's FFT.** Batch convolves each modulation band by
+  FFT over the whole envelope and keeps every hop-th sample. Computing only
+  the kept time windows, each as a dot product with the kernel, agrees with it
+  to 1.5e-15 of the peak. For 10 s of 24 envelopes at 1 kHz, a 10 ms hop and
+  the default 15 kernels, it takes 17.4 s against 0.24 s, about 70 times
+  slower (a straightforward NumPy version; a better-written one was not tried).
 
 ## Decisions
 
@@ -263,7 +270,7 @@ in the view's source. A decorator form mypy accepts would still need the
 class to name the methods itself (`start, step, finish = ...`), which is
 clumsier than inheriting.
 
-**D3. A step returns ordinary views of the new time windows.** Each output
+**D3. A step returns ordinary views of the new time windows. (accepted 2026-10-29)** Each output
 is an `STFT`, `Cepstrum`, `MFCC`, `TemporalEnvelope` or
 `ModulationSpectrogram` holding only the time windows that block completed,
 so `.plot()`, `.db` and everything else work on it. This needs one addition
@@ -275,14 +282,14 @@ display and simpler, but every stage of a pipeline would need to know
 array layouts, and a user couldn't plot a part. *Recommended: views.* A
 live page can still read `.data`.
 
-**D4. The contract is equality, tested bit for bit where measured.**
+**D4. The contract is equality, tested bit for bit where measured. (accepted 2026-10-29)**
 C1–C3 are bit for bit, so the tests assert `np.array_equal`, not a
 tolerance. Each test cuts the sound at random, including into one-sample
 blocks and empty blocks. Any later view that cannot be bit for bit (one
 whose batch path groups FFTs differently, for example) says so in its
 docstring, with the measured worst difference and a tolerance in the test.
 
-**D5. A time-domain gammatone, batch and streamed.** For banks of
+**D5. A time-domain gammatone, batch and streamed. (accepted 2026-10-29)** For banks of
 `Gammatone(phase="causal")` filters, a second analysis path runs each band
 as the exact IIR filter of C3 and keeps the complex output. Its real part is
 the band (within 2e-5 of today's, C4) and its magnitude is the envelope
@@ -302,7 +309,7 @@ earlier gammatone notebook). (C) A truncated FIR. It is exact
 only up to its truncation, and much slower at low frequencies.
 *Recommended: the exact IIR, as an option of `analyze`.*
 
-**D6. Lower envelope rates by FIR filters, so they stream too.** Today
+**D6. Lower envelope rates by FIR filters, so they stream too. (accepted 2026-10-29)** Today
 `TemporalEnvelope.lowpass` is zero-phase and `resample` extends the ends
 along a line. Neither has a causal form. Any FIR rate change (a polyphase
 FIR decimator, or Hann-weighted pooling of the squared envelope, which is
@@ -318,10 +325,23 @@ accepted D6 (2026-10-01) set the rule: keep the last `L_k - 1` envelope
 samples per band, and match `align="causal"` exactly. Its C8 measured a
 64-sample block version against the offline causal result (worst
 difference 2e-16). Here it becomes `ModulationSpectrogram`'s step, fed by D5
-and D6. This step also checks whether that 2e-16 can become bit for bit.
+and D6. Four adaptations:
+- *It is a sliding-window view* (D2's mixin): its window is the longest
+  kernel (6 s at 0.5 Hz), and shorter kernels take the tail of the buffer.
+- *Its blocks are `TemporalEnvelope`s*, the output of D5 and D6, not
+  `Sound`s. D11 applies to views that read sound.
+- *Only `align="causal"` streams.* The centered result is the same numbers
+  shifted in time and needs half a kernel of the future.
+- *The arithmetic.* Batch convolves by FFT; a stream computes each time window
+  directly. They agree to 1.5e-15 but not bit for bit (C11). Options:
+  (a) batch also computes each kept time window directly, which gives one formula and bitwise
+  equality, but is about 70 times slower (C11); (b) batch keeps its FFT, the
+  step computes directly, and the test allows 1e-12, stated in the docstring
+  as D4 allows. Cho first chose (a) on condition that the timing was close;
+  C11 shows it is not. *Recommended now: (b).*
 
 **D8. The F0 track gets a decision delay, and each time window's candidates
-are computed on their own.** Two changes, both measured on 16 recordings:
+are computed on their own. (accepted 2026-10-29)** Two changes, both measured on 16 recordings:
 (a) the refinement's window length depends only on the candidate itself, not
 on the group of 512 time windows it is computed with (C9: no voicing or F0
 change of over 1% on the 16 recordings, though the candidates moved on 27
@@ -334,7 +354,7 @@ batch now and then. That breaks the contract, and C8 shows it would differ
 on 0% of 12,505 time windows at 50 ms anyway, so nothing is gained.
 *Recommended: both changes, and a default `delay` of 0.05 s for the step.*
 
-**D9. Order of work.** One PR per stage, each with its tests and docs:
+**D9. Order of work. (accepted 2026-10-29)** One PR per stage, each with its tests and docs:
 1. `core/stream.py` (D1), the STFT, cepstrum and MFCC steps (C1, C2).
 2. The time-domain gammatone and pooled envelopes (D5, D6): the cochleagram
    that sonore-infer's step 2 needs.
@@ -344,13 +364,13 @@ on 0% of 12,505 time windows at 50 ms anyway, so nothing is gained.
 A live microphone page is a separate design after these. It needs a Pyodide
 timing check first (C6 has container numbers only).
 
-**D10. Tests and checker.** A generic test helper takes any `Streamable`
+**D10. Tests and checker. (accepted 2026-10-29)** A generic test helper takes any `Streamable`
 and a batch function, and asserts equality over random cuts, one-sample
 blocks, empty blocks, and a sound shorter than one time window. This checker
 stays as the record of the measurements above. Target: under 1 s added to
 the suite per stage.
 
-**D11. Blocks are Sounds.** (Cho asked 2026-10-29.) `step` takes a `Sound`,
+**D11. Blocks are Sounds. (accepted 2026-10-29)** (Cho asked 2026-10-29.) `step` takes a `Sound`,
 the same type every batch analysis takes, so a block can be listened to,
 plotted or analyzed on its own like any other sound. Its `fs` is checked
 against the state's, and a mismatch raises. `so.blocks` yields `Sound`s, and a

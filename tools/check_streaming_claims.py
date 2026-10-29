@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/streaming.md (C1-C10).
+"""Numerical checks for the claims in docs/design/streaming.md (C1-C11).
 
 The streaming versions are written out here from their definitions, with
 NumPy and SciPy only, as the step functions the design proposes: a step takes
@@ -275,6 +275,33 @@ def check_sound_blocks():
     report("C10", "Wrapping one 10 ms block (441 samples) in a Sound: time [ms]", per_block * 1e3)
 
 
+def check_modulation_direct():
+    """The modulation spectrogram's batch path convolves by FFT and keeps every
+    hop-th sample; a stream computes each kept time window directly. Both on
+    10 s of 24 envelopes at 1 kHz, hop 10 ms, the default 15 kernels."""
+    from sonore.views.modspectrogram import HannModulationFilterbank
+    from sonore.views.modulation import _correlate
+
+    fs, n_bands = 1000.0, 24
+    env = np.abs(RNG.standard_normal((int(10 * fs), n_bands, 1)))
+    positions = np.arange(0, len(env), 10)
+    kernels = [kernel for kernel, _ in HannModulationFilterbank(0.5, 64.0, 2, 3, None).kernels(fs)]
+    start = time.perf_counter()
+    by_fft = [_correlate(env, kernel, "causal")[positions] for kernel in kernels]
+    fft_time = time.perf_counter() - start
+    start = time.perf_counter()
+    direct = []
+    for kernel in kernels:
+        padded = np.concatenate([np.zeros((len(kernel) - 1, n_bands, 1)), env])
+        stretches = np.lib.stride_tricks.sliding_window_view(padded, len(kernel), axis=0)[positions]
+        direct.append(stretches @ np.conj(kernel))
+    direct_time = time.perf_counter() - start
+    worst = max(np.abs(a - b).max() / np.abs(a).max() for a, b in zip(by_fft, direct, strict=True))
+    report("C11", "Modulation spectrogram, direct per time window vs FFT: worst difference / peak", worst)
+    report("C11", "Time of the FFT path [ms]", fft_time * 1e3)
+    report("C11", "Time computing each kept time window directly [ms]", direct_time * 1e3)
+
+
 def check_stft_cost(frame):
     step, _ = make_stft_step(frame, FS)
     blocks = [NOISE[i : i + 441] for i in range(0, len(NOISE) - 441, 441)]
@@ -385,5 +412,6 @@ if __name__ == "__main__":
     check_state_copy()
     check_stft_cost(frame)
     check_sound_blocks()
+    check_modulation_direct()
     check_f0_locality()
     check_f0_lag()
