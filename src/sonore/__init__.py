@@ -51,6 +51,7 @@ from sonore.frames.filterbank import (
     DecimatedFilterbank,
     DecimatedSubbands,
     Filterbank,
+    FilterbankState,
     Subbands,
     cosine_filterbank,
     gammatone_filterbank,
@@ -135,7 +136,7 @@ from sonore.views.spectral_envelope import (
     pitch_adaptive_envelope,
     warp_frequency,
 )
-from sonore.views.temporal_envelope import TemporalEnvelope, channel_vocode
+from sonore.views.temporal_envelope import EnvelopePooling, TemporalEnvelope, channel_vocode
 from sonore.views.timbre import (
     DescriptorTrack,
     attack_segment,
@@ -170,6 +171,7 @@ __all__ = [
     "cents_to_ratio",
     "note_to_freq",
     "Filterbank",
+    "FilterbankState",
     "DecimatedFilterbank",
     "DecimatedSubbands",
     "FrequencyScale",
@@ -203,6 +205,7 @@ __all__ = [
     "ReassignedSpectrogram",
     "reassigned_spectrogram",
     "TemporalEnvelope",
+    "EnvelopePooling",
     "ripple_sound",
     "gaussian_spectrogram",
     "event_train",

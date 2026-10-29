@@ -324,7 +324,7 @@ fig, playhead = show_mask(sound, target, mask)
 # - Balazs, Dörfler, Jaillet, Holighaus & Velasco (2011). Theory, implementation and applications
 #   of nonstationary Gabor frames. *J. Comput. Appl. Math.* 236, 1481–1496.
 #   [doi:10.1016/j.cam.2011.09.011](https://doi.org/10.1016/j.cam.2011.09.011).
-#   [`filterbank.DecimatedFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L888)
+#   [`filterbank.DecimatedFilterbank`](https://github.com/choyun1/sonore/blob/main/src/sonore/frames/filterbank.py#L1101)
 # - Wang (2005). On ideal binary mask as the computational goal of auditory scene analysis. In
 #   *Speech Separation by Humans and Machines*, 181–197. Springer.
 #   [doi:10.1007/0-387-22794-6_12](https://doi.org/10.1007/0-387-22794-6_12).

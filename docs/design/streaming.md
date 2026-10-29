@@ -422,8 +422,10 @@ assert np.array_equal(streamed.data, so.STFT(snd, frame=frame).data)
 
 # a cochleagram as samples arrive (D5, D6)
 bank = so.gammatone_filterbank(n_bands=64, edges=False)
-for subbands in so.stream(bank, so.blocks(snd, 441)):
-    cochleagram = subbands.envelopes().pooled(25e-3, 10e-3)
+pooling = so.EnvelopePooling(25e-3, 10e-3, bank)
+envelopes = (subbands.envelopes() for subbands in so.stream(bank, so.blocks(snd, 441)))
+for cochleagram in so.stream(pooling, envelopes):   # the time windows each block completed
+    ...
 
 # pushed from a callback instead (a live page)
 state = bank.start(snd.fs)

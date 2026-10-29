@@ -13,10 +13,10 @@ One-way analyses, each saying what it drops: spectra and spectrograms (with the 
 
 .. automodule:: sonore.views.spectra
 
-``sonore.views.envelopes``
---------------------------
+``sonore.views.temporal_envelope``
+----------------------------------
 
-.. automodule:: sonore.views.envelopes
+.. automodule:: sonore.views.temporal_envelope
 
 ``sonore.views.mask``
 ---------------------

@@ -26,6 +26,19 @@ version (0.x.y) only fixes bugs.
   each channel's peak as before. With it, cepstra and MFCCs of a stream's
   STFT parts join (`Cepstrum.concatenate`, `MFCC.concatenate`) into exactly
   those of the whole sound.
+- `Filterbank.analyze(sound, domain="time")`: a bank of causal gammatones
+  without edge filters run as exact recursive (IIR) filters, the sampled
+  gammatone's own z-transform. The bands are within 2e-5 of the
+  frequency-domain ones, and their envelopes are the filters' complex
+  magnitude, with no Hilbert transform. The bank streams in this domain
+  (`start`, `step`, `finish`; `Subbands.concatenate` joins the parts). These
+  subbands are not resynthesized.
+- `TemporalEnvelope.pooled(win_dur, hop_dur)` and `EnvelopePooling`, its
+  stream: the envelope's power in Hann time windows (25 ms every 10 ms by
+  default), as an amplitude at `1 / hop_dur`, a cochleagram that streams.
+  `TemporalEnvelope.concatenate` joins its parts.
+- `Subbands.t` and `first_sample` on subbands and envelopes, the sample a
+  part of a stream starts at.
 
 ## [0.9.0] - 2026-10-28
 
