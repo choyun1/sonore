@@ -58,7 +58,9 @@ NOT_ANALYSES = [
     "ModulationFilterbank",
     "ModulationBlob",
     "FrequencyScale",
-]  # ModulationFilterbank: a tool that makes views
+    "SlidingWindowStream",
+    "WindowState",
+]  # ModulationFilterbank: a tool that makes views; SlidingWindowStream and WindowState: how views stream
 
 
 def _public_classes():

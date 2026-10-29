@@ -7,7 +7,7 @@ the F0 track. A streaming view takes sound a block at a time as it arrives,
 keeps what it needs from earlier blocks, and returns the time windows each
 block completes.
 
-Status: Cho accepted D1–D11 on 2026-10-29, D2 with the mixin and D7 with option (b). D12, added afterwards, is open. The claims are checked by
+Status: Cho accepted D1–D11 on 2026-10-29, D2 with the mixin and D7 with option (b). D12, added afterwards, was accepted the same day. The claims are checked by
 `tools/check_streaming_claims.py` (C1–C11). It writes every streaming version
 out from its definition in NumPy and SciPy, as the step functions D1
 proposes, and imports sonore only for the batch results it compares them
@@ -393,7 +393,7 @@ is one call anyway.
 *Recommended: Sounds only.* That keeps "a sound is a value" and one input
 type, and inputs match D3's views-out.
 
-**D12. A fixed floor for streamed cepstra and MFCCs.** (Found after D1–D11
+**D12. A fixed floor for streamed cepstra and MFCCs. (accepted 2026-10-29)** (Found after D1–D11
 were accepted; C2.) A stream can't know the whole sound's peak in advance.
 Proposed: `Cepstrum` and `MFCC` take `reference=None`. `None` is today's
 floor, `floor_db` below each channel's peak, so batch output is unchanged. A number
@@ -404,7 +404,7 @@ require it, and the stream equals batch called with the same `reference`.
 arrives, so early time windows would disagree with batch. (B) No relative
 floor in streams, only the smallest positive number: on silence that gives
 values near log(1e-308), which swamp a plot or a distance.
-*Recommended: `reference`.*
+*Accepted: `reference`.*
 
 ## API sketch
 

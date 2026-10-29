@@ -133,3 +133,36 @@ def toy_hrirs(fs=48000, taps=256):
         irs[i, 0, base + int(round(max(d, 0) * fs))] = 10 ** (-np.sin(lat[i]) * 5 / 20)
         irs[i, 1, base + int(round(max(-d, 0) * fs))] = 10 ** (np.sin(lat[i]) * 5 / 20)
     return so.HRIRSet(irs, pos, fs), itd
+
+
+def random_cuts(
+    sound: so.Sound, rng: np.random.Generator, largest: int, *, empty: bool = False
+) -> list[so.Sound]:
+    """``sound`` cut into consecutive blocks of random length from 1 to
+    ``largest`` samples, and with ``empty`` also some blocks of none."""
+    data, blocks, start = sound.data, [], 0
+    while start < len(data):
+        if empty and rng.random() < 0.1:
+            blocks.append(so.Sound(data[start:start], sound.fs))
+        length = int(rng.integers(1, largest + 1))
+        blocks.append(so.Sound(data[start : start + length], sound.fs))
+        start += length
+    return blocks
+
+
+def assert_streams_like_batch(view, sound: so.Sound, batch, concatenate, *, seed: int = 0) -> None:
+    """Streaming ``view`` over ``sound``, cut in several ways, and joining
+    the parts with ``concatenate`` gives ``batch``'s data and times exactly:
+    one block, one-sample blocks, random cuts, and random cuts with empty
+    blocks (docs/design/streaming.md)."""
+    rng = np.random.default_rng(seed)
+    cuttings = {
+        "one block": [sound],
+        "one sample each": list(so.blocks(sound, 1)) if len(sound) <= 5000 else random_cuts(sound, rng, 3),
+        "random": random_cuts(sound, rng, 500),
+        "random with empty blocks": random_cuts(sound, rng, 2000, empty=True),
+    }
+    for name, blocks in cuttings.items():
+        joined = concatenate(list(so.stream(view, blocks)))
+        assert np.array_equal(joined.data, batch.data), name
+        assert np.array_equal(joined.t, batch.t), name
