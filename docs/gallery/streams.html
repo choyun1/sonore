@@ -239,14 +239,20 @@ Wagenaars, 1987). The demonstrations, their design and what they show are their 
 work. Bregman's laboratory publishes the original recordings and booklet
 (<a href="https://webpages.mcgill.ca/staff/Group2/abregm1/web/downloadsdl.htm" target="_blank" rel="noopener">McGill</a>), and they are the
 ones to listen to.</p>
+<p><strong>What they show.</strong> When sounds follow one another, hearing sorts them into <em>streams</em>: sequences
+heard as coming from one source, like one voice or one instrument. Sounds close in pitch, timbre
+or location tend to join one stream; sounds far apart, played fast, split into separate streams,
+and you hear two things at once. Once a sequence has split, what lies across the streams gets
+hard to hear: which tone came before which, or the rhythm the tones make together. Bregman
+called this <em>auditory stream segregation</em>. Each section below varies one thing that makes a
+sequence split or hold together, and each example opens with what to listen for, taken from
+what its booklet reports listeners hear.</p>
 <p>This page is a test of sonore: can its generators rebuild each stimulus from the description
 in the booklet? Each example names the demonstration it reproduces, rebuilds it from the
 booklet's frequencies, levels and timing, and says where it departs from them: where the
 booklet leaves a value open, where a recording is replaced by a stand-in, or where a long track
 is shortened. What listeners hear is reported as the booklet reports it; this page has not
 tested any of it.</p>
-<p>All the demonstrations here are about <em>sequential</em> grouping: how sounds that follow one another
-are heard as one stream or split into several.</p>
 <ul><li><a href="#h-speed-and-frequency">Speed and frequency</a>: a six-tone cycle that splits into two melodies when played fast, and a gallop that loses its rhythm (Bregman &amp; Ahad, Demonstrations 1–3; Houtsma et al., Demonstration 19).</li><li><a href="#h-streaming-builds-up">Streaming builds up</a>: the same gallop in runs of 2 to 32 (Demonstration 4).</li><li><a href="#h-a-hidden-melody">A hidden melody</a>: a tune interleaved with distractors, moved away from them (Demonstration 5).</li><li><a href="#h-timbre-and-spectrum">Timbre and spectrum</a>: tones of one pitch split by where their spectrum peaks, vowels, and bands of noise (Demonstrations 10, 11 and 14).</li><li><a href="#h-glides-and-timing">Glides and timing</a>: glides that hold a sequence together, and timing that is hard to judge across streams (Demonstrations 12 and 13).</li><li><a href="#h-competition-and-capture">Competition and capture</a>: which tones group depends on the others present (Demonstrations 15–17).</li><li><a href="#h-interlocking-parts">Interlocking parts</a>: two interleaved parts split by pitch, timbre and place, with a stand-in for the East African xylophone music on the disc (Demonstrations 7–9 and 41).</li><li><a href="#h-place">Place</a>: noise bursts that split when they come from two sides (Demonstrations 38 and 39).</li></ul>
 <p>Headphones are best for the last two sections, which send different sounds to the two ears.</p>
 <div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
@@ -343,7 +349,9 @@ becomes hard to report.</p>
 <article class="sound" id="d-sg1" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.400045351473922}]">
   <div class="about">
     <h3>A six-tone cycle, slow then fast</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 1. Highs of 2500, 2000 and 1600 Hz alternate with lows of 350,
+    <div class="desc"><p><strong>Listen for</strong> the slow cycle as one six-note tune, and the fast one splitting into two
+three-note tunes, one high and one low, heard at once. Try to say which low tone follows which
+high one.</p><p>Bregman &amp; Ahad, Demonstration 1. Highs of 2500, 2000 and 1600 Hz alternate with lows of 350,
 430 and 550 Hz in the order H1 L1 H2 L2 H3 L3, with no silences and 10 ms onsets and offsets,
 the lows 6 dB stronger, as in the booklet: three cycles with 400 ms from one onset to the next,
 then, after a second's silence, twelve cycles at 100 ms. The booklet gives no repetition counts;
@@ -371,7 +379,8 @@ fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
 <article class="sound" id="d-sg2" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.600045351473923}]">
   <div class="about">
     <h3>Standards within and across streams</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 2. A three-tone standard, the fast cycle with three of its tones
+    <div class="desc"><p><strong>Listen for</strong> the three-tone standard inside the fast cycle. The first standard, all high
+tones, should be easy to find; the second, high, low, high, very hard.</p><p>Bregman &amp; Ahad, Demonstration 2. A three-tone standard, the fast cycle with three of its tones
 replaced by silence, is heard first, then the full cycle, in which a listener tries to keep
 hearing the standard. The booklet's lows are 1.5 dB stronger here. First a standard of the three
 highs, which lie in one stream, then a standard of two highs and the low between them (H1 L1
@@ -401,7 +410,8 @@ fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
 <article class="sound" id="d-sg3" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 32.108934240362814}]">
   <div class="about">
     <h3>A gallop that speeds up</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 3, after van Noorden (1975). Triplets HLH, each followed by a
+    <div class="desc"><p><strong>Listen for</strong> the first gallop's da-da-dum rhythm breaking apart as it speeds up, into a fast
+high beat and a slow low one. The second gallop, its tones close in pitch, keeps galloping.</p><p>Bregman &amp; Ahad, Demonstration 3, after van Noorden (1975). Triplets HLH, each followed by a
 silence as long as a tone, speeding up from 287 to 88 ms per unit (a tone or the silence); the
 tones fill their units, with 10 ms rises and 20 ms decays. First with H and L 17.8 semitones
 apart (1400 and 500 Hz), then one semitone apart (1400 and 1320 Hz). The booklet reports that
@@ -435,7 +445,8 @@ fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
 <article class="sound" id="d-sg4" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 19.45002267573696}]">
   <div class="about">
     <h3>B sweeps past A</h3>
-    <div class="desc"><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 19, after van Noorden (1975), whose thesis
+    <div class="desc"><p><strong>Listen for</strong> a gallop while B is near A in pitch, in the middle of the sound, and two
+separate, evenly beating sequences while B is far above or below.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 19, after van Noorden (1975), whose thesis
 introduced the gallop. Tone A stays at 2000 Hz; tone B steps from 1000 Hz up to 4000 Hz and back,
 in the ABA- rhythm. Their booklet reports a galloping rhythm near the crossing and two
 separate sequences when A and B are far apart. It gives neither the tone length nor the rate;
@@ -459,11 +470,14 @@ fig, playhead = show(sound, fmin=500, fmax=6000)</code></pre></details>
 </section>
 <section aria-labelledby="h-streaming-builds-up">
 <h2 id="h-streaming-builds-up">Streaming builds up</h2>
+<p>Splitting takes time: a sequence often starts as one stream and splits after a few seconds of
+listening.</p>
 
 <article class="sound" id="d-sg5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 47.00004535147392}]">
   <div class="about">
     <h3>Runs of 2 to 32 gallops</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 4. The gallop of a 2000 Hz H and a 700 Hz L, each tone a 12.5 ms
+    <div class="desc"><p><strong>Listen for</strong> the gallop holding together in the short runs and splitting into a high and a low
+beat during the long ones.</p><p>Bregman &amp; Ahad, Demonstration 4. The gallop of a 2000 Hz H and a 700 Hz L, each tone a 12.5 ms
 rise, 88 ms steady and 12.5 ms decay then 12 ms of silence (125 ms a unit), the low tone 6 dB
 stronger, in runs of 2, 4, 8, 16 and 32 triplets separated by 4 s of silence, all as in the
 booklet. Its reasoning: if a tendency to split builds up while the gallop plays and dies away
@@ -487,11 +501,13 @@ fig, playhead = show(sound, fmin=300, fmax=4000)</code></pre></details>
 </section>
 <section aria-labelledby="h-a-hidden-melody">
 <h2 id="h-a-hidden-melody">A hidden melody</h2>
+<p>Splitting can hide a tune among other notes, or free it.</p>
 
 <article class="sound" id="d-sg6" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 29.433061224489794}]">
   <div class="about">
     <h3>A melody pulling away from its distractors</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 5, after Dowling (1973). A familiar tune's notes, each long note
+    <div class="desc"><p><strong>Listen for</strong> a familiar tune hidden among the notes. In the first presentation it is lost
+among the distractors; by the last it stands out above them.</p><p>Bregman &amp; Ahad, Demonstration 5, after Dowling (1973). A familiar tune's notes, each long note
 broken into quarter notes, alternate with random distractors, 7 tones a second (3 ms rise, 97 ms
 steady, 20 ms decay, 23 ms silence). The melody starts between C4 and G4, with C4 at 256 Hz as
 in the booklet, and moves up four semitones on each of three presentations (the booklet has
@@ -530,7 +546,8 @@ fig, playhead = show(sound, fmin=150, fmax=800)</code></pre></details>
 <article class="sound" id="d-sg7" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 18.222403628117913}]">
   <div class="about">
     <h3>One pitch, two spectral peaks</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 10. Two tones on the same 300 Hz fundamental, 30 equal harmonics
+    <div class="desc"><p><strong>Listen for</strong> tones of one pitch splitting into a bright stream and a dull one as the gallop
+speeds up.</p><p>Bregman &amp; Ahad, Demonstration 10. Two tones on the same 300 Hz fundamental, 30 equal harmonics
 through a resonance 80 Hz wide, peaking at 2000 Hz (H, bright) or 300 Hz (L, dull), 65 ms long
 with 20 ms rises and decays, the dull ones 3 dB stronger at their peaks. They gallop, HLH- with a
 65 ms silence for the missing L, and the silences between sounds shrink from 140 to 10 ms (from
@@ -562,7 +579,7 @@ fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
 <article class="sound" id="d-sg8" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.20004535147392}]">
   <div class="about">
     <h3>Vowels in alternation</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 11. Short vowels alternating: "ay" (as in hay) with "o" (hoe),
+    <div class="desc"><p><strong>Listen for</strong> the alternating vowels splitting into two streams, each repeating one vowel.</p><p>Bregman &amp; Ahad, Demonstration 11. Short vowels alternating: "ay" (as in hay) with "o" (hoe),
 "a" (had) with "ee" (he), and "aw" (haw) with "ee", at a steady 112 Hz, then "a" with "ee" on a
 pitch falling from 118 to 92 Hz. The booklet used Peterson &amp; Barney's (1952) formant frequencies
 and an envelope of a 20 ms rise, an 80 ms decline and an exponential decay (10 ms time
@@ -611,7 +628,8 @@ fig, playhead = show(sound, fmin=80, fmax=5000)</code></pre></details>
 <article class="sound" id="d-sg9" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.60185941043084}]">
   <div class="about">
     <h3>High and low bands of noise</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 14, after Dannenbring &amp; Bregman (1976). Noise bursts in a gallop:
+    <div class="desc"><p><strong>Listen for</strong> the noise gallop splitting into a high hiss and a low hiss as it speeds up, as
+tones do.</p><p>Bregman &amp; Ahad, Demonstration 14, after Dannenbring &amp; Bregman (1976). Noise bursts in a gallop:
 a low band from 500 to 1000 Hz and a high band from 2000 to 4000 Hz, 50 ms long with 5 ms rises
 and decays. As in the booklet, each burst is a sum of equal tones in random phase, 2 Hz apart in
 the low band and 3 Hz in the high one, which gives flat bands with sharp edges, at equal
@@ -652,11 +670,14 @@ fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </section>
 <section aria-labelledby="h-glides-and-timing">
 <h2 id="h-glides-and-timing">Glides and timing</h2>
+<p>A smooth path from tone to tone holds a sequence together, and timing is hard to judge across
+two streams.</p>
 
 <article class="sound" id="d-sg10" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.000045351473922}]">
   <div class="about">
     <h3>Tones joined by glides, then not</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 12, after Bregman &amp; Dannenbring (1973). The cycle 2000, 614, 1600,
+    <div class="desc"><p><strong>Listen for</strong> the joined version as one wavy line, and the tones without glides splitting into
+high and low streams sooner.</p><p>Bregman &amp; Ahad, Demonstration 12, after Bregman &amp; Dannenbring (1973). The cycle 2000, 614, 1600,
 400 Hz, ten times (the booklet plays it twenty), first with each tone joined to the next by a
 glide (100 ms steady, 100 ms gliding, straight on a log-frequency axis), then with the glides
 left out: 100 ms tones with 10 ms rises and decays and the rest of each 200 ms slot silent. The
@@ -685,7 +706,9 @@ fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
 <article class="sound" id="d-sg11" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 28.620045351473923}]">
   <div class="about">
     <h3>Where the low tone falls</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 13, after van Noorden (1975). A 1400 Hz tone H repeats throughout:
+    <div class="desc"><p><strong>Listen for</strong> the low tone sitting off center in the gap. It should be easy to hear when it is
+close in pitch to the repeating tone (the first two sets) and hard when it is far below (the
+last two).</p><p>Bregman &amp; Ahad, Demonstration 13, after van Noorden (1975). A 1400 Hz tone H repeats throughout:
 60 ms tones (20 ms rises and decays) with 180 ms between them. Four times a low tone L is brought
 in for ten ABA triplets, in every other gap: at 1350 Hz centered in the gap, at 1350 Hz 30 ms late
 (90 ms before it, 30 after), at 600 Hz 30 ms early, and at 600 Hz centered. The booklet reports
@@ -719,7 +742,8 @@ else is playing.</p>
 <article class="sound" id="d-sg12" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.97002267573696}]">
   <div class="about">
     <h3>A and B, isolated or absorbed</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 15, after Bregman (1978). A two-tone standard, A (3400 Hz) and B
+    <div class="desc"><p><strong>Listen for</strong> the standard, A then B, inside the cycle: easy in the first cycle, hard in the
+second, where other tones near their pitches pull A and B away.</p><p>Bregman &amp; Ahad, Demonstration 15, after Bregman (1978). A two-tone standard, A (3400 Hz) and B
 (1525 Hz) followed by two silences, then the four-tone cycle ABXY: 45 ms tones with 10 ms rises
 and decays and 30 ms silences, 300 ms a cycle, thirty cycles with a three-cycle fade-in and a
 ten-cycle fade-out. First X and Y low (246 and 455 Hz), then X near A and Y near B (2760 and
@@ -758,7 +782,8 @@ fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
 <article class="sound" id="d-sg13" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.231065759637188}]">
   <div class="about">
     <h3>A two-tone order, hidden and freed</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 16, after Bregman &amp; Rudnicky (1975). Is A (2200 Hz) before B (2400
+    <div class="desc"><p><strong>Listen for</strong> the order of the two high tones: clear alone, hard to hear between the lower X
+tones, and clear again when a run of captor tones pulls the X tones into a stream of their own.</p><p>Bregman &amp; Ahad, Demonstration 16, after Bregman &amp; Rudnicky (1975). Is A (2200 Hz) before B (2400
 Hz), or after? Tones are 57 ms (7 ms rise, 5 ms decay) with 9 ms between them, and the 2400 and
 1460 Hz tones are scaled by 0.5 and 0.4, as in the booklet. Three parts: the pair alone (BA then
 AB); a standard AB, then the pair between two 1460 Hz tones X (XABX), whose order the booklet
@@ -791,7 +816,9 @@ fig, playhead = show(sound, fmin=800, fmax=4000)</code></pre></details>
 <article class="sound" id="d-sg14" data-regions="[{&quot;x0&quot;: 0.054069289496527784, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 36.60004535147392}]">
   <div class="about">
     <h3>An X that bounces, and one that crosses</h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 17, after Tougas &amp; Bregman (1985). A rising sequence from 400 to
+    <div class="desc"><p><strong>Listen for</strong> the path you follow through the X. With pure tones it tends to fall and then
+bounce back up, or rise and bounce down, rather than cross; once the rising tones are richer in
+timbre, the crossing line is easy to follow.</p><p>Bregman &amp; Ahad, Demonstration 17, after Tougas &amp; Bregman (1985). A rising sequence from 400 to
 1600 Hz in seven equal log steps interleaved with the falling one, 100 ms tones with 10 ms rises
 and decays and no silences: an X. The booklet reports that listeners follow a path that bounces
 off the crossing (down then up, or up then down) rather than one that crosses, until the rising
@@ -862,7 +889,8 @@ partials at 2.76 and 5.40 times it, the first modes of a free bar, decaying with
 <article class="sound" id="d-sg15" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
   <div class="about">
     <h3>Two interleaved parts</h3>
-    <div class="desc"><p>After Bregman &amp; Ahad, Demonstration 7. The first part alone, the second joining it, the second
+    <div class="desc"><p><strong>Listen for</strong> each part alone as an even beat with a simple tune; together, neither tune can be
+heard, and new rhythms appear.</p><p>After Bregman &amp; Ahad, Demonstration 7. The first part alone, the second joining it, the second
 alone, both again, two cycles each. The booklet reports that when the parts play together,
 neither player's melody and even rhythm can be heard.</p></div>
     <audio controls preload="metadata" src="audio/sg15_two_interleaved_parts.flac"></audio>
@@ -906,7 +934,8 @@ fig, playhead = show(sound, fmin=150, fmax=3000)</code></pre></details>
 <article class="sound" id="d-sg16" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
   <div class="about">
     <h3>The second part an octave up</h3>
-    <div class="desc"><p>After Bregman &amp; Ahad, Demonstration 8. The same, with the second part an octave higher. The
+    <div class="desc"><p><strong>Listen for</strong> each part's own tune and even rhythm staying audible when they play together, now
+that the second part is an octave up.</p><p>After Bregman &amp; Ahad, Demonstration 8. The same, with the second part an octave higher. The
 booklet reports that each player's part now stays audible with its own even rhythm when they
 play together.</p></div>
     <audio controls preload="metadata" src="audio/sg16_the_second_part_an_octave_up.flac"></audio>
@@ -924,7 +953,7 @@ fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
 <article class="sound" id="d-sg17" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
   <div class="about">
     <h3>The two parts in two timbres</h3>
-    <div class="desc"><p>After Bregman &amp; Ahad, Demonstration 9. The parts in the same range again, the first muffled
+    <div class="desc"><p><strong>Listen for</strong> the two parts, in the same range again, separating by their timbres.</p><p>After Bregman &amp; Ahad, Demonstration 9. The parts in the same range again, the first muffled
 (fundamental and second harmonic, as the booklet describes it) and the second brittle (strong
 high inharmonic partials and a weak fundamental). The booklet reports that the two parts split
 by timbre. The partials of both timbres are ours.</p></div>
@@ -950,11 +979,13 @@ fig, playhead = show(sound, fmin=150, fmax=8000)</code></pre></details>
 </section>
 <section aria-labelledby="h-place">
 <h2 id="h-place">Place</h2>
+<p>Sounds from different sides split into streams, as sounds of different pitch do.</p>
 
 <article class="sound" id="d-sg18" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}, {&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}]">
   <div class="about">
     <h3>Noise bursts that move apart <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 38. Bursts of white noise in an ABA- gallop, 50 ms each with 1 ms
+    <div class="desc"><p><strong>Listen for</strong> the gallop splitting into a fast beat on the left and a slow one on the right as
+the bursts move apart, and coming back when they return to the center.</p><p>Bregman &amp; Ahad, Demonstration 38. Bursts of white noise in an ABA- gallop, 50 ms each with 1 ms
 onsets and offsets and 50 ms silences, so that A repeats every 200 ms and B every 400 ms. All
 start in the center (both ears equally); then A moves gradually into the left ear only and B
 into the right only, and back. The booklet reports that the gallop splits into a fast stream on
@@ -984,7 +1015,8 @@ fig, playhead = show(sound, fmin=100, fmax=8000)</code></pre></details>
 <article class="sound" id="d-sg19" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}, {&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}]">
   <div class="about">
     <h3>A middle burst on time or late <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>Bregman &amp; Ahad, Demonstration 39. 40 ms bursts of white noise, A then B then A, with 200 ms
+    <div class="desc"><p><strong>Listen for</strong> whether the middle burst is late: easy to hear with everything in one ear, harder
+with B in the other ear.</p><p>Bregman &amp; Ahad, Demonstration 39. 40 ms bursts of white noise, A then B then A, with 200 ms
 from the end of one A to the start of the next; B either sits in the middle (80 ms of silence
 on each side) or is late (130 ms before it, 30 after). Each gallop is framed by A bursts alone.
 First everything in the left ear, B in the middle and then late; then A in the left ear and B
@@ -1022,7 +1054,7 @@ fig, playhead = show(sound, fmin=100, fmax=8000)</code></pre></details>
 <article class="sound" id="d-sg20" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9863438716169167, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.44937766178759597, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}, {&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9863438716169167, &quot;top&quot;: 0.5096937058488986, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}]">
   <div class="about">
     <h3>The two parts moving apart <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
-    <div class="desc"><p>After Bregman &amp; Ahad, Demonstration 41. The interleaved parts of the stand-in above, first sent
+    <div class="desc"><p><strong>Listen for</strong> the two parts, once in opposite ears, each heard with its own even rhythm.</p><p>After Bregman &amp; Ahad, Demonstration 41. The interleaved parts of the stand-in above, first sent
 equally to both ears for two cycles, then moving apart over three, the first part to the left
 and the second to the right, and apart for two more. The booklet reports that the parts, once
 apart, are heard each with its own even rhythm.</p></div>

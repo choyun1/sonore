@@ -21,15 +21,21 @@ or a cell at a time ("# %%" starts a cell in VS Code, Spyder and Jupytext).
 # ([McGill](https://webpages.mcgill.ca/staff/Group2/abregm1/web/downloadsdl.htm)), and they are the
 # ones to listen to.
 #
+# **What they show.** When sounds follow one another, hearing sorts them into *streams*: sequences
+# heard as coming from one source, like one voice or one instrument. Sounds close in pitch, timbre
+# or location tend to join one stream; sounds far apart, played fast, split into separate streams,
+# and you hear two things at once. Once a sequence has split, what lies across the streams gets
+# hard to hear: which tone came before which, or the rhythm the tones make together. Bregman
+# called this *auditory stream segregation*. Each section below varies one thing that makes a
+# sequence split or hold together, and each example opens with what to listen for, taken from
+# what its booklet reports listeners hear.
+#
 # This page is a test of sonore: can its generators rebuild each stimulus from the description
 # in the booklet? Each example names the demonstration it reproduces, rebuilds it from the
 # booklet's frequencies, levels and timing, and says where it departs from them: where the
 # booklet leaves a value open, where a recording is replaced by a stand-in, or where a long track
 # is shortened. What listeners hear is reported as the booklet reports it; this page has not
 # tested any of it.
-#
-# All the demonstrations here are about *sequential* grouping: how sounds that follow one another
-# are heard as one stream or split into several.
 #
 # - [Speed and frequency](#h-speed-and-frequency): a six-tone cycle that splits into two melodies
 #   when played fast, and a gallop that loses its rhythm (Bregman & Ahad, Demonstrations 1–3;
@@ -147,6 +153,10 @@ def show(snd, fmin=100, fmax=5000, title="Spectrogram (Hann 30 ms)"):
 # becomes hard to report.
 
 # %% [about]
+# **Listen for** the slow cycle as one six-note tune, and the fast one splitting into two
+# three-note tunes, one high and one low, heard at once. Try to say which low tone follows which
+# high one.
+#
 # Bregman & Ahad, Demonstration 1. Highs of 2500, 2000 and 1600 Hz alternate with lows of 350,
 # 430 and 550 Hz in the order H1 L1 H2 L2 H3 L3, with no silences and 10 ms onsets and offsets,
 # the lows 6 dB stronger, as in the booklet: three cycles with 400 ms from one onset to the next,
@@ -167,6 +177,9 @@ sound = finish(place(six_tone_cycle(0.4, 3) + six_tone_cycle(0.1, 12, start=8.2)
 fig, playhead = show(sound, fmin=200, fmax=4000)
 
 # %% [about]
+# **Listen for** the three-tone standard inside the fast cycle. The first standard, all high
+# tones, should be easy to find; the second, high, low, high, very hard.
+#
 # Bregman & Ahad, Demonstration 2. A three-tone standard, the fast cycle with three of its tones
 # replaced by silence, is heard first, then the full cycle, in which a listener tries to keep
 # hearing the standard. The booklet's lows are 1.5 dB stronger here. First a standard of the three
@@ -189,6 +202,9 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=200, fmax=4000)
 
 # %% [about]
+# **Listen for** the first gallop's da-da-dum rhythm breaking apart as it speeds up, into a fast
+# high beat and a slow low one. The second gallop, its tones close in pitch, keeps galloping.
+#
 # Bregman & Ahad, Demonstration 3, after van Noorden (1975). Triplets HLH, each followed by a
 # silence as long as a tone, speeding up from 287 to 88 ms per unit (a tone or the silence); the
 # tones fill their units, with 10 ms rises and 20 ms decays. First with H and L 17.8 semitones
@@ -215,6 +231,9 @@ sound = finish(place(first + second))
 fig, playhead = show(sound, fmin=300, fmax=3000)
 
 # %% [about]
+# **Listen for** a gallop while B is near A in pitch, in the middle of the sound, and two
+# separate, evenly beating sequences while B is far above or below.
+#
 # Houtsma, Rossing & Wagenaars, Demonstration 19, after van Noorden (1975), whose thesis
 # introduced the gallop. Tone A stays at 2000 Hz; tone B steps from 1000 Hz up to 4000 Hz and back,
 # in the ABA- rhythm. Their booklet reports a galloping rhythm near the crossing and two
@@ -233,8 +252,14 @@ fig, playhead = show(sound, fmin=500, fmax=6000)
 
 # %% [markdown]
 # ## Streaming builds up
+#
+# Splitting takes time: a sequence often starts as one stream and splits after a few seconds of
+# listening.
 
 # %% [about]
+# **Listen for** the gallop holding together in the short runs and splitting into a high and a low
+# beat during the long ones.
+#
 # Bregman & Ahad, Demonstration 4. The gallop of a 2000 Hz H and a 700 Hz L, each tone a 12.5 ms
 # rise, 88 ms steady and 12.5 ms decay then 12 ms of silence (125 ms a unit), the low tone 6 dB
 # stronger, in runs of 2, 4, 8, 16 and 32 triplets separated by 4 s of silence, all as in the
@@ -253,8 +278,13 @@ fig, playhead = show(sound, fmin=300, fmax=4000)
 
 # %% [markdown]
 # ## A hidden melody
+#
+# Splitting can hide a tune among other notes, or free it.
 
 # %% [about]
+# **Listen for** a familiar tune hidden among the notes. In the first presentation it is lost
+# among the distractors; by the last it stands out above them.
+#
 # Bregman & Ahad, Demonstration 5, after Dowling (1973). A familiar tune's notes, each long note
 # broken into quarter notes, alternate with random distractors, 7 tones a second (3 ms rise, 97 ms
 # steady, 20 ms decay, 23 ms silence). The melody starts between C4 and G4, with C4 at 256 Hz as
@@ -287,6 +317,9 @@ fig, playhead = show(sound, fmin=150, fmax=800)
 # Streams also split by timbre, with the pitch held fixed.
 
 # %% [about]
+# **Listen for** tones of one pitch splitting into a bright stream and a dull one as the gallop
+# speeds up.
+#
 # Bregman & Ahad, Demonstration 10. Two tones on the same 300 Hz fundamental, 30 equal harmonics
 # through a resonance 80 Hz wide, peaking at 2000 Hz (H, bright) or 300 Hz (L, dull), 65 ms long
 # with 20 ms rises and decays, the dull ones 3 dB stronger at their peaks. They gallop, HLH- with a
@@ -311,6 +344,8 @@ sound = finish(place(gallop(bright, dull, onsets)))
 fig, playhead = show(sound, fmin=150, fmax=5000)
 
 # %% [about]
+# **Listen for** the alternating vowels splitting into two streams, each repeating one vowel.
+#
 # Bregman & Ahad, Demonstration 11. Short vowels alternating: "ay" (as in hay) with "o" (hoe),
 # "a" (had) with "ee" (he), and "aw" (haw) with "ee", at a steady 112 Hz, then "a" with "ee" on a
 # pitch falling from 118 to 92 Hz. The booklet used Peterson & Barney's (1952) formant frequencies
@@ -352,6 +387,9 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=80, fmax=5000)
 
 # %% [about]
+# **Listen for** the noise gallop splitting into a high hiss and a low hiss as it speeds up, as
+# tones do.
+#
 # Bregman & Ahad, Demonstration 14, after Dannenbring & Bregman (1976). Noise bursts in a gallop:
 # a low band from 500 to 1000 Hz and a high band from 2000 to 4000 Hz, 50 ms long with 5 ms rises
 # and decays. As in the booklet, each burst is a sum of equal tones in random phase, 2 Hz apart in
@@ -387,8 +425,14 @@ fig, playhead = show(sound, fmin=300, fmax=5000)
 
 # %% [markdown]
 # ## Glides and timing
+#
+# A smooth path from tone to tone holds a sequence together, and timing is hard to judge across
+# two streams.
 
 # %% [about]
+# **Listen for** the joined version as one wavy line, and the tones without glides splitting into
+# high and low streams sooner.
+#
 # Bregman & Ahad, Demonstration 12, after Bregman & Dannenbring (1973). The cycle 2000, 614, 1600,
 # 400 Hz, ten times (the booklet plays it twenty), first with each tone joined to the next by a
 # glide (100 ms steady, 100 ms gliding, straight on a log-frequency axis), then with the glides
@@ -410,6 +454,10 @@ sound = finish(so.concat([joined.ramp(0.01), so.silence(1.0, FS), apart]))
 fig, playhead = show(sound, fmin=200, fmax=4000)
 
 # %% [about]
+# **Listen for** the low tone sitting off center in the gap. It should be easy to hear when it is
+# close in pitch to the repeating tone (the first two sets) and hard when it is far below (the
+# last two).
+#
 # Bregman & Ahad, Demonstration 13, after van Noorden (1975). A 1400 Hz tone H repeats throughout:
 # 60 ms tones (20 ms rises and decays) with 180 ms between them. Four times a low tone L is brought
 # in for ten ABA triplets, in every other gap: at 1350 Hz centered in the gap, at 1350 Hz 30 ms late
@@ -437,6 +485,9 @@ fig, playhead = show(sound, fmin=300, fmax=3000)
 # else is playing.
 
 # %% [about]
+# **Listen for** the standard, A then B, inside the cycle: easy in the first cycle, hard in the
+# second, where other tones near their pitches pull A and B away.
+#
 # Bregman & Ahad, Demonstration 15, after Bregman (1978). A two-tone standard, A (3400 Hz) and B
 # (1525 Hz) followed by two silences, then the four-tone cycle ABXY: 45 ms tones with 10 ms rises
 # and decays and 30 ms silences, 300 ms a cycle, thirty cycles with a three-cycle fade-in and a
@@ -468,6 +519,9 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=5000)
 
 # %% [about]
+# **Listen for** the order of the two high tones: clear alone, hard to hear between the lower X
+# tones, and clear again when a run of captor tones pulls the X tones into a stream of their own.
+#
 # Bregman & Ahad, Demonstration 16, after Bregman & Rudnicky (1975). Is A (2200 Hz) before B (2400
 # Hz), or after? Tones are 57 ms (7 ms rise, 5 ms decay) with 9 ms between them, and the 2400 and
 # 1460 Hz tones are scaled by 0.5 and 0.4, as in the booklet. Three parts: the pair alone (BA then
@@ -493,6 +547,10 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=800, fmax=4000)
 
 # %% [about]
+# **Listen for** the path you follow through the X. With pure tones it tends to fall and then
+# bounce back up, or rise and bounce down, rather than cross; once the rising tones are richer in
+# timbre, the crossing line is easy to follow.
+#
 # Bregman & Ahad, Demonstration 17, after Tougas & Bregman (1985). A rising sequence from 400 to
 # 1600 Hz in seven equal log steps interleaved with the falling one, 100 ms tones with 10 ms rises
 # and decays and no silences: an X. The booklet reports that listeners follow a path that bounces
@@ -557,6 +615,9 @@ fig, playhead = show(sound, fmin=300, fmax=11000)
 # 25 ms, inside the booklet's 15 to 30 ms. It is not an amadinda, and the cycles are not the piece.
 
 # %% [about]
+# **Listen for** each part alone as an even beat with a simple tune; together, neither tune can be
+# heard, and new rhythms appear.
+#
 # After Bregman & Ahad, Demonstration 7. The first part alone, the second joining it, the second
 # alone, both again, two cycles each. The booklet reports that when the parts play together,
 # neither player's melody and even rhythm can be heard.
@@ -593,6 +654,9 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=3000)
 
 # %% [about]
+# **Listen for** each part's own tune and even rhythm staying audible when they play together, now
+# that the second part is an octave up.
+#
 # After Bregman & Ahad, Demonstration 8. The same, with the second part an octave higher. The
 # booklet reports that each player's part now stays audible with its own even rhythm when they
 # play together.
@@ -603,6 +667,8 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=5000)
 
 # %% [about]
+# **Listen for** the two parts, in the same range again, separating by their timbres.
+#
 # After Bregman & Ahad, Demonstration 9. The parts in the same range again, the first muffled
 # (fundamental and second harmonic, as the booklet describes it) and the second brittle (strong
 # high inharmonic partials and a weak fundamental). The booklet reports that the two parts split
@@ -623,8 +689,13 @@ fig, playhead = show(sound, fmin=150, fmax=8000)
 
 # %% [markdown]
 # ## Place
+#
+# Sounds from different sides split into streams, as sounds of different pitch do.
 
 # %% [about]
+# **Listen for** the gallop splitting into a fast beat on the left and a slow one on the right as
+# the bursts move apart, and coming back when they return to the center.
+#
 # Bregman & Ahad, Demonstration 38. Bursts of white noise in an ABA- gallop, 50 ms each with 1 ms
 # onsets and offsets and 50 ms silences, so that A repeats every 200 ms and B every 400 ms. All
 # start in the center (both ears equally); then A moves gradually into the left ear only and B
@@ -647,6 +718,9 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=8000)
 
 # %% [about]
+# **Listen for** whether the middle burst is late: easy to hear with everything in one ear, harder
+# with B in the other ear.
+#
 # Bregman & Ahad, Demonstration 39. 40 ms bursts of white noise, A then B then A, with 200 ms
 # from the end of one A to the start of the next; B either sits in the middle (80 ms of silence
 # on each side) or is late (130 ms before it, 30 after). Each gallop is framed by A bursts alone.
@@ -677,6 +751,8 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=8000)
 
 # %% [about]
+# **Listen for** the two parts, once in opposite ears, each heard with its own even rhythm.
+#
 # After Bregman & Ahad, Demonstration 41. The interleaved parts of the stand-in above, first sent
 # equally to both ears for two cycles, then moving apart over three, the first part to the left
 # and the second to the right, and apart for two more. The booklet reports that the parts, once
