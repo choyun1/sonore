@@ -788,7 +788,8 @@ for column, (label, snd) in zip(fig.subfigures(1, 2), sounds.items(), strict=Tru
     bottom.plot(
         t[low], f0["cepstral"][low], "o", ms=7, mfc="none", color="tab:red", label="octave below Harvest"
     )
-    bottom.set(yscale="log", ylim=(55, 420), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
+    so.plotting.log_frequency_axis(bottom)
+    bottom.set(ylim=(55, 420), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
     bottom.set_yticks(F0_TICKS, [str(f) for f in F0_TICKS])
     bottom.minorticks_off()
     bottom.legend(loc="upper right", fontsize=8, markerscale=2)
@@ -840,7 +841,8 @@ playhead = {}
 for column, (label, snd) in zip(fig.subfigures(1, 2), sounds.items(), strict=True):
     top, bottom = column.subplots(2, 1, sharex=True)
     tracks[label].plot(top, candidates=True, color="tab:orange")
-    top.set(yscale="log", ylim=(50, 520), xlabel="", title=f"{label}: so.f0_track, candidates and path")
+    so.plotting.log_frequency_axis(top)
+    top.set(ylim=(50, 520), xlabel="", title=f"{label}: so.f0_track, candidates and path")
     t = tracks[label].t
     f0 = pitch[label]
     for name in ("Harvest", "cepstral"):
@@ -848,7 +850,8 @@ for column, (label, snd) in zip(fig.subfigures(1, 2), sounds.items(), strict=Tru
         bottom.plot(t[on], f0[name][on], ".", ms=3, color=COLORS[name], label=name)
     tracked = np.where(f0["so.f0_track"] > 0, f0["so.f0_track"], np.nan)
     bottom.plot(t, tracked, color=COLORS["so.f0_track"], lw=1.5, label="so.f0_track")
-    bottom.set(yscale="log", ylim=(55, 420), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
+    so.plotting.log_frequency_axis(bottom)
+    bottom.set(ylim=(55, 420), xlabel="Time [s]", ylabel="F0 [Hz]", title="Pitch")
     bottom.legend(loc="upper right", fontsize=8, markerscale=2)
     bottom.grid(ls=":")
     for ax in (top, bottom):

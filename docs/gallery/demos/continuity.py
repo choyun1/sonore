@@ -142,7 +142,9 @@ def show(snd, fmin=100, fmax=5000, title="Spectrogram (Hann 30 ms)", log=True):
     keep = (stft.f >= fmin) & (stft.f <= fmax)
     top = stft.db[:, keep].max()
     ax.pcolormesh(stft.t, stft.f[keep], stft.db[0][keep], vmin=top - 60, vmax=top, cmap="magma")
-    ax.set(yscale="log" if log else "linear", ylim=(fmin, fmax), ylabel="Frequency [Hz]", title=title)
+    if log:
+        so.plotting.log_frequency_axis(ax)
+    ax.set(ylim=(fmin, fmax), ylabel="Frequency [Hz]", title=title)
     ax.set(xlabel="Time [s]", xlim=(0, snd.duration))
     return fig, [ax]
 

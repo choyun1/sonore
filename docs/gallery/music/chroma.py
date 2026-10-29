@@ -115,7 +115,8 @@ def draw(snd, ax_spectrogram, ax_chroma, fmin=50, fmax=8000):
     ax_spectrogram.pcolormesh(
         stft.t, stft.f[keep], level, vmin=level.max() - 70, vmax=level.max(), cmap="magma", rasterized=True
     )
-    ax_spectrogram.set(yscale="log", ylabel="Frequency [Hz]", title="Spectrogram (Hann 80 ms)")
+    so.plotting.log_frequency_axis(ax_spectrogram)
+    ax_spectrogram.set(ylabel="Frequency [Hz]", title="Spectrogram (Hann 80 ms)")
     so.chroma(snd).plot(ax_chroma)
     ax_chroma.set(xlim=(0, snd.duration))
     ax_spectrogram.set(xlim=(0, snd.duration))
@@ -166,7 +167,8 @@ shown = (bank.band_cfs >= 219) & (bank.band_cfs <= 881)
 fig, ax = plt.subplots(figsize=(10, 2.8), layout="constrained")
 ax.plot(freqs, responses[:, shown], lw=1)
 ax.plot(freqs, np.sum(responses**2, axis=1), "--", color="0.4", lw=1, label="sum of squares")
-ax.set(xscale="log", xlabel="Frequency [Hz]", ylabel="Response", xlim=(200, 950), ylim=(0, 1.1))
+so.plotting.log_frequency_axis(ax, "x")
+ax.set(xlabel="Frequency [Hz]", ylabel="Response", xlim=(200, 950), ylim=(0, 1.1))
 ax.set_xticks([220, 440, 880], ["A3, 220", "A4, 440", "A5, 880"])
 ax.legend(loc="lower right")
 
@@ -220,7 +222,8 @@ for name, color in [("C4", "C0"), ("F#4", "C3")]:
     partials = lowest * 2 ** np.arange(int(np.floor(np.log2(FS / 2 / lowest))) + 1)
     partials = partials[partials >= 20]
     ax.vlines(partials, 0, bell(0, partials), color=color, lw=2, label=f"{name[:-1]} Shepard tone")
-ax.set(xscale="log", xlabel="Frequency [Hz]", ylabel="Amplitude", xlim=(20, FS / 2), ylim=(0, 1.05))
+so.plotting.log_frequency_axis(ax, "x")
+ax.set(xlabel="Frequency [Hz]", ylabel="Amplitude", xlim=(20, FS / 2), ylim=(0, 1.05))
 ax.legend(loc="upper right")
 
 # %% [about]

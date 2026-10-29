@@ -158,7 +158,8 @@ def show(snd, events, fmin=80, fmax=3000, reference=440.0):
     keep = (stft.f >= fmin) & (stft.f <= fmax)
     level = stft.db[0][keep]
     ax_s.pcolormesh(stft.t, stft.f[keep], level, vmin=level.max() - 70, vmax=level.max(), cmap="magma")
-    ax_s.set(yscale="log", ylabel="Frequency [Hz]", title="Spectrogram (Hann 80 ms)")
+    so.plotting.log_frequency_axis(ax_s)
+    ax_s.set(ylabel="Frequency [Hz]", title="Spectrogram (Hann 80 ms)")
     for start, duration, f0 in events:
         steps = 12 * np.log2(f0 / reference) + 69  # MIDI note number, equal temperament at A4 = 440
         offset = 100 * (steps - np.round(steps))

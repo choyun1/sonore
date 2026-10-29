@@ -66,7 +66,45 @@ __all__ = [
     "plot_ripple_pattern",
     "plot_lissajous",
     "overview",
+    "log_frequency_axis",
 ]
+
+
+# Tick multiples of each power of ten for log_frequency_axis, coarsest first.
+_PLAIN_SUBS = (
+    (1.0, 2.0, 5.0),
+    (1.0, 2.0, 3.0, 5.0),
+    (1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0),
+    (1.0, 1.2, 1.5, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0),
+)
+
+
+def log_frequency_axis(ax: Axes, axis: Literal["x", "y", "both"] = "y") -> Axes:
+    """Put ``axis`` of ``ax`` on a log scale labeled in plain numbers (20, 50,
+    100, 200, 500, 1000, ...) instead of powers of ten. A narrower range gets
+    denser ticks (100, 200, 300, 500; then 800, 1000, 1500, ...), the first set
+    that puts at least three ticks on it. Returns ``ax``."""
+    from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
+
+    class PlainLocator(LogLocator):
+        def tick_values(self, vmin: float, vmax: float) -> Sequence[float]:
+            low, high = sorted((vmin, vmax))
+            for subs in _PLAIN_SUBS:
+                self.set_params(subs=subs)
+                ticks = super().tick_values(vmin, vmax)
+                values = np.asarray(ticks)
+                if np.count_nonzero((values >= low) & (values <= high)) >= 3:
+                    break
+            return ticks
+
+    for name in ("x", "y") if axis == "both" else (axis,):
+        getattr(ax, f"set_{name}scale")("log")
+        target = getattr(ax, f"{name}axis")
+        target.set_major_locator(PlainLocator(numticks=30))
+        target.set_major_formatter(FuncFormatter(lambda value, _: f"{value:g}"))
+        target.set_minor_locator(LogLocator(subs=tuple(np.arange(2.0, 10.0)), numticks=30))
+        target.set_minor_formatter(NullFormatter())
+    return ax
 
 
 def _ax(ax: Axes | None) -> Axes:
@@ -114,7 +152,10 @@ def plot_spectrum(
     spec = spectrum.relative() if relative else spectrum
     freqs, levels = (spec.f[1:], spec.level[1:]) if fscale == "log" else (spec.f, spec.level)
     ax.plot(freqs, levels, **kwargs)
-    ax.set_xscale(fscale)
+    if fscale == "log":
+        log_frequency_axis(ax, "x")
+    else:
+        ax.set_xscale(fscale)
     ax.set(
         title="Magnitude spectrum",
         xlabel="Frequency [Hz]",
@@ -219,7 +260,8 @@ def plot_mask(
     if isinstance(like, Subbands):
         values = mask.values[like.pad : mask.values.shape[0] - like.pad, :, channel].T
         _image(ax, mask.t, mask.f, values, cmap, 0, 1, colorbar, "")
-        ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", yscale="log")
+        ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]")
+        log_frequency_axis(ax)
     else:
         _tf_image(ax, mask.values[channel], mask.t, mask.f, cmap, 0, 1, colorbar, "")
     ax.set_title("Mask")
@@ -319,7 +361,7 @@ def plot_modulation_spectrogram(
     db, x, y, ylabel, title = _modulation_view(msg, channel, band, rate)
     vmin, vmax = _depth_limits(db, db_range)
     _image(ax, x, y, db, _depth_cmap(cmap), vmin, vmax, colorbar, "Depth [dB]")
-    ax.set_yscale("log")
+    log_frequency_axis(ax)
     ax.set(xlabel="Time [s]", ylabel=ylabel, title=title)
     return ax
 
@@ -329,7 +371,8 @@ def _plot_band_rate(
 ) -> QuadMesh:
     db = _depth_db(msg.depth[channel, :, :, i], msg.valid[:, :, i])
     im = _image(ax, msg.fm, msg.f, db, cmap, vmin, vmax)
-    ax.set(xscale="log", yscale="log", xlabel="Modulation rate [Hz]", ylabel="Frequency [Hz]")
+    log_frequency_axis(ax, "both")
+    ax.set(xlabel="Modulation rate [Hz]", ylabel="Frequency [Hz]")
     ax.set_title(f"Band x rate at {msg.t[i]:.2f} s")
     return im
 
@@ -361,7 +404,8 @@ def plot_modulation_slices(
     )
     for ax, (db, x, y, ylabel, title) in zip(axes[:2], views, strict=True):
         _image(ax, x, y, db, colormap, vmin, vmax)
-        ax.set(yscale="log", xlabel="Time [s]", ylabel=ylabel, title=title)
+        log_frequency_axis(ax)
+        ax.set(xlabel="Time [s]", ylabel=ylabel, title=title)
         ax.axvline(msg.t[t_idx], color="w", lw=1.2)
     im = _plot_band_rate(msg, axes[2], t_idx, channel, vmin, vmax, colormap)
     fig.colorbar(im, ax=axes, label="Depth [dB]", shrink=0.9)
@@ -575,7 +619,7 @@ def plot_envelopes(
         raise ValueError("align must be None or 'peak'")
     _image(ax, t, f, db.T, cmap, *_db_limits(db, db_range, db_max), colorbar, "dB")
     if fscale == "log":
-        ax.set_yscale("log")
+        log_frequency_axis(ax)
         ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Envelopes (cochleagram)")
     else:
         ax.set(xlabel="Time [s]", ylabel="Frequency [kHz]", title="Envelopes (cochleagram)")
@@ -632,7 +676,7 @@ def plot_decimated_subbands(
         )
     if colorbar and image is not None:
         ax.figure.colorbar(image, ax=ax, label="dB")
-    ax.set_yscale("log")
+    log_frequency_axis(ax)
     ax.set(xlim=(0, duration), xlabel="Time [s]", ylabel="Frequency [Hz]", title="Decimated filterbank")
     return ax
 
@@ -965,7 +1009,7 @@ def plot_ripple_pattern(
     db = 20 * np.log10(np.maximum(env, 1e-6) / np.mean(env))
     db_lim = np.max(np.abs(db)) or 1.0
     _image(ax, t, f_lo * 2**octaves, db, cmap, -db_lim, db_lim, colorbar, "Envelope [dB]")
-    ax.set_yscale("log")
+    log_frequency_axis(ax)
     ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Ripple pattern")
     return ax
 

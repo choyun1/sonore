@@ -163,7 +163,7 @@ def show_room(ax_decay, ax_rt60, ir, kw=None):
     ax_decay.grid(ls=":")
     # measured RT60 profile vs the ecological one
     cfs, rt = so.measure_rt60(tail)
-    ax_rt60.semilogx(
+    ax_rt60.plot(
         cfs,
         so.band_rt60s(1.0, cfs, profile="ecological"),
         color="k",
@@ -176,9 +176,9 @@ def show_room(ax_decay, ax_rt60, ir, kw=None):
         # requested profile, computed over synth_ir's own bands (which run to 16 kHz)
         synth_cfs = so.cosine_filterbank(32, 20, min(16000, FS / 2)).cfs
         requested = np.interp(cfs, synth_cfs, so.band_rt60s(1.0, synth_cfs, profile=profile))
-        ax_rt60.semilogx(cfs, requested, color="tab:purple", lw=1, ls=":", label=f"requested ({profile})")
+        ax_rt60.plot(cfs, requested, color="tab:purple", lw=1, ls=":", label=f"requested ({profile})")
     if not kw or "decay_shape" not in kw:
-        ax_rt60.semilogx(cfs, rt, color="tab:purple", lw=1.2, marker=".", label="this IR (measured)")
+        ax_rt60.plot(cfs, rt, color="tab:purple", lw=1.2, marker=".", label="this IR (measured)")
     else:
         ax_rt60.text(
             0.03,
@@ -187,6 +187,7 @@ def show_room(ax_decay, ax_rt60, ir, kw=None):
             transform=ax_rt60.transAxes,
             fontsize=8,
         )
+    so.plotting.log_frequency_axis(ax_rt60, "x")
     ax_rt60.set(xlabel="Frequency [Hz]", ylabel="RT60 [s]", title="Decay time by frequency", ylim=(0, 1.8))
     ax_rt60.legend(fontsize=8, loc="upper right")
     ax_rt60.grid(ls=":", which="both")

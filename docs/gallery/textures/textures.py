@@ -110,18 +110,20 @@ def texture_fig(snd, original, synthetic=False):
     mcf = target.model.mod_bank.cfs
     lev = 10 * np.log10(np.maximum(this.mod_power[1:-1], 1e-6))
     ax_m.pcolormesh(mcf, cfs, lev, cmap="magma", vmin=lev.max() - 25, vmax=lev.max(), shading="nearest")
+    so.plotting.log_frequency_axis(ax_m, "both")
     ax_m.set(
-        xscale="log",
-        yscale="log",
         xlabel="Modulation rate [Hz]",
         ylabel="Band center [Hz]",
         title="Modulation spectrum by band",
     )
-    ax_v.semilogx(cfs, this.env_var[1:-1], lw=1.2)
-    ax_p.loglog(target.model.mod_bank.cfs, this.mod_power[ok].mean(0), lw=1.2)
+    ax_v.plot(cfs, this.env_var[1:-1], lw=1.2)
+    ax_p.plot(target.model.mod_bank.cfs, this.mod_power[ok].mean(0), lw=1.2)
     if synthetic:
-        ax_v.semilogx(cfs, target.env_var[1:-1], "k--", lw=1)
-        ax_p.loglog(target.model.mod_bank.cfs, target.mod_power[ok].mean(0), "k--", lw=1)
+        ax_v.plot(cfs, target.env_var[1:-1], "k--", lw=1)
+        ax_p.plot(target.model.mod_bank.cfs, target.mod_power[ok].mean(0), "k--", lw=1)
+    so.plotting.log_frequency_axis(ax_v, "x")
+    ax_p.set_yscale("log")
+    so.plotting.log_frequency_axis(ax_p, "x")
     ax_v.set(xlabel="Band center [Hz]", ylabel="var / mean²", title="Envelope sparsity by band")
     ax_p.set(
         xlabel="Modulation rate [Hz]", ylabel="Power / variance", title="Modulation power (band average)"

@@ -149,8 +149,8 @@ def show(snd, tones, starts, labels, fmin=150, fmax=8000, lower="envelope"):
     centroid = so.spectral_centroid(snd)
     ax_s.plot(centroid.t, centroid.values[0], color="c", lw=1.2, label="spectral centroid")
     ax_s.legend(loc="upper right", fontsize=8)
+    so.plotting.log_frequency_axis(ax_s)
     ax_s.set(
-        yscale="log",
         ylim=(fmin, fmax),
         ylabel="Frequency [Hz]",
         title="Spectrogram (Hann 30 ms) and spectral centroid (power)",
@@ -320,7 +320,7 @@ ax.set(
     ylabel="Spectral centroid [Hz]",
     title="Descriptors of every tone on the page",
 )
-ax.set_yscale("log")
+so.plotting.log_frequency_axis(ax)
 ax.grid(ls=":")
 
 # %% [markdown]

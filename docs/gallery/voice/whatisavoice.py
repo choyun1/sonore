@@ -275,7 +275,8 @@ for color, (label, track) in zip(("C0", "C3"), tracks.items(), strict=True):
     right.hist(voiced_f0[label], bins=bins, orientation="horizontal", color=color, alpha=0.6, density=True)
     for ax in (left, right):
         ax.axhline(np.median(voiced_f0[label]), color=color, ls="--", lw=0.8)
-left.set(yscale="log", xlabel="Time (s)", ylabel="F0 (Hz)", title="so.f0_track, voiced time windows")
+so.plotting.log_frequency_axis(left)
+left.set(xlabel="Time (s)", ylabel="F0 (Hz)", title="so.f0_track, voiced time windows")
 left.set_yticks([80, 100, 125, 160, 200, 250], ["80", "100", "125", "160", "200", "250"])
 left.set_yticks([], minor=True)
 left.legend(loc="upper right", fontsize=8)

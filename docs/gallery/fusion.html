@@ -343,7 +343,9 @@ def show(snd, fmin=100, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;, l
     keep = (stft.f &gt;= fmin) &amp; (stft.f &lt;= fmax)
     top = stft.db[:, keep].max()
     ax.pcolormesh(stft.t, stft.f[keep], stft.db[0][keep], vmin=top - 60, vmax=top, cmap=&quot;magma&quot;)
-    ax.set(yscale=&quot;log&quot; if log else &quot;linear&quot;, ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title)
+    if log:
+        so.plotting.log_frequency_axis(ax)
+    ax.set(ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title)
     ax.set(xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
     return fig, [ax]</code></pre></details></div>
 </section>
@@ -385,7 +387,7 @@ sound = finish(sound)
 fig, playhead = show(sound, fmin=150, fmax=4500, log=False)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fu2" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 44.0}]">
+<article class="sound" id="d-fu2" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 44.0}]">
   <div class="about">
     <h3>One harmonic mistuned</h3>
     <div class="desc"><p><strong>Listen for</strong> a thin pure tone that begins to stand apart from the rich tone after a few steps
@@ -433,7 +435,7 @@ fig, playhead = show(sound, fmin=100, fmax=2000)</code></pre></details>
 <p>Harmonics whose frequencies change together, by the same proportion, fuse; two sets that move
 differently split into two sounds, even when each set on its own is harmonic.</p>
 
-<article class="sound" id="d-fu3" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}]">
+<article class="sound" id="d-fu3" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}]">
   <div class="about">
     <h3>Some harmonics rising and falling</h3>
     <div class="desc"><p><strong>Listen for</strong> one steady tone, then two sounds while some of its harmonics rise and fall: a
@@ -460,7 +462,7 @@ sound = finish(once)
 fig, playhead = show(sound, fmin=200, fmax=6000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fu4" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.500045351473922}]">
+<article class="sound" id="d-fu4" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.500045351473922}]">
   <div class="about">
     <h3>Two sets moving at two rates</h3>
     <div class="desc"><p><strong>Listen for</strong> one tone sliding up and down, quickly and then slowly. In the third and fourth
@@ -502,7 +504,7 @@ fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 <p>Speech and singing are never steady in pitch, and every harmonic of a voice follows the same
 small wobble. The next demonstration adds that wobble to a steady spectrum.</p>
 
-<article class="sound" id="d-fu5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
+<article class="sound" id="d-fu5" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9894775312500002, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
   <div class="about">
     <h3>A voice emerging from a 400 Hz tone</h3>
     <div class="desc"><p><strong>Listen for</strong> a pure tone, which seems to carry on when a steady rich tone joins it; then,
@@ -578,7 +580,7 @@ sound = finish(example(&quot;oh&quot;))
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fu5b" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
+<article class="sound" id="d-fu5b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9894775312500002, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
   <div class="about">
     <h3>A voice emerging from a 500 Hz tone</h3>
     <div class="desc"><p><strong>Listen for</strong> the same three stages: a pure tone, the tone joined by a steady rich tone, then
@@ -594,7 +596,7 @@ a voice. This one is "ah" on 500 Hz.</p><p>After Bregman &amp; Ahad, Demonstrati
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fu5c" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.98947753125, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
+<article class="sound" id="d-fu5c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9894775312500002, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.0}]">
   <div class="about">
     <h3>A voice emerging from a 600 Hz tone</h3>
     <div class="desc"><p><strong>Listen for</strong> the same three stages again, now "e" (as in bed) on 600 Hz.</p><p>After Bregman &amp; Ahad, Demonstration 24, its third example, built as the first.</p></div>
@@ -609,7 +611,7 @@ fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fu6" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.9893486249999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.0}]">
+<article class="sound" id="d-fu6" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9893486249999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.0}]">
   <div class="about">
     <h3>Three voices at once</h3>
     <div class="desc"><p><strong>Listen for</strong> a chord of three pure tones, then a chord of three steady rich tones, then three
@@ -686,7 +688,7 @@ fig, playhead = show(sound, fmin=500, fmax=1200, log=False)</code></pre></detail
 make the hidden one easier to hear, when the added sound fuses with the masker and takes it
 away into a sound of its own.</p>
 
-<article class="sound" id="d-fu8" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 23.200090702947847}]">
+<article class="sound" id="d-fu8" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 23.200090702947847}]">
   <div class="about">
     <h3>A rhythm hidden and released</h3>
     <div class="desc"><p><strong>Listen for</strong> an even beat of soft tones, twice a second. When irregular tones of the same
@@ -728,7 +730,7 @@ sound = finish(place([(6.0 * k, snd) for k, snd in enumerate(parts)]))
 fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-fu9" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 26.500045351473922}]">
+<article class="sound" id="d-fu9" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 26.500045351473922}]">
   <div class="about">
     <h3>A tone in fluctuating noise</h3>
     <div class="desc"><p><strong>Listen for</strong> a steady tone that comes and goes in a fluctuating hum, getting softer at every
