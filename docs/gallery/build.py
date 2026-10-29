@@ -124,6 +124,7 @@ EXAMPLE_PAGES = [
     "streams",
     "fusion",
     "continuity",
+    "complexpitch",
     "binaural",
     "classic",
     "textures",
@@ -740,6 +741,7 @@ TITLES = {
     "streams.html": "Streams: reproducing Bregman & Ahad",
     "fusion.html": "Fusion: reproducing Bregman & Ahad",
     "continuity.html": "Continuity and capture: reproducing Bregman & Ahad",
+    "complexpitch.html": "Pitch of complex tones: reproducing Houtsma, Rossing & Wagenaars",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
     "events.html": "Events and pops",
@@ -800,6 +802,11 @@ TOPICS = [
                 "continuity.html",
                 "sonore's reproductions of the old-plus-new demonstrations: tones captured out of a"
                 " mixture, sounds heard continuing through noise, and the residuals left over.",
+            ),
+            (
+                "complexpitch.html",
+                "sonore's reproductions of the ASA pitch demonstrations: the missing fundamental, shifted"
+                " partials, melodies of virtual pitch, repetition pitch, beats and combination tones.",
             ),
         ],
     ),
