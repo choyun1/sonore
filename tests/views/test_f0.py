@@ -97,7 +97,7 @@ def test_score_in_noise_follows_the_power_ratio():
     tc = np.arange(0.05, 0.25, 0.005)
     for snr_db in (10, 0):
         s = 10 ** (snr_db / 10)
-        r = _periodicity(x + noise / np.sqrt(s), tc, np.full(len(tc), 120.0), FS)
+        r = _periodicity(x + noise / np.sqrt(s), tc * FS, np.full(len(tc), 120.0), FS)
         assert abs(np.median(r) - s / (1 + s)) < 0.03
 
 
@@ -250,7 +250,7 @@ def test_raw_candidates_are_refined_by_a_parabola():
 
     x = vowel(np.full(N, 123.4))  # a period of 129.66 samples
     t = np.arange(0.05, 0.25, 0.01)
-    cand = _candidates(x, t, FS, 60.0, 500.0)
+    cand = _candidates(x, t * FS, FS, 60.0, 500.0)
     assert np.nanmin(np.abs(cand / 123.4 - 1), axis=1).max() < 1e-4
 
 
@@ -261,7 +261,7 @@ def test_weak_periodicity_still_offers_its_period():
 
     x = vowel(np.full(N, 150.0)) + np.random.default_rng(3).standard_normal(N) * 10 ** (3 / 20)
     t = np.arange(0.05, 0.25, 0.005)
-    cand = _candidates(x, t, FS, 60.0, 500.0)
+    cand = _candidates(x, t * FS, FS, 60.0, 500.0)
     assert np.mean(np.any(np.abs(cand / 150 - 1) < 0.02, axis=1)) > 0.9
 
 
@@ -271,7 +271,7 @@ def test_score_is_exact_at_a_fractional_period():
     for f0 in (123.4, 333.3):  # flat harmonics up to 7 kHz
         x = so.harmonic_complex(0.3, FS, f0, harmonics=np.arange(1, int(7000 / f0))).data[:, 0]
         t = np.arange(0.05, 0.25, 0.01)
-        assert _periodicity(x, t, np.full(len(t), f0), FS).min() > 1 - 1e-6
+        assert _periodicity(x, t * FS, np.full(len(t), f0), FS).min() > 1 - 1e-6
 
 
 def test_harmonics_above_nyquist_are_left_out_of_refinement():
@@ -280,7 +280,7 @@ def test_harmonics_above_nyquist_are_left_out_of_refinement():
     # 1400 Hz: harmonics 6 (8400 Hz) lies above Nyquist and would alias.
     x = so.harmonic_complex(0.3, FS, 1400.0, harmonics=np.arange(1, 6)).data[:, 0]
     t = np.arange(0.05, 0.25, 0.01)
-    refined = _refine(x, t, np.full(len(t), 1400.0), FS)
+    refined = _refine(x, t * FS, np.full(len(t), 1400.0), FS)
     assert np.max(np.abs(refined / 1400 - 1)) < 0.005
 
 
@@ -332,7 +332,99 @@ def test_low_voice_in_noise_is_refined_from_its_strong_harmonics():
 
     x = vowel(np.full(N, 60.0)) + np.random.default_rng(4).standard_normal(N) * 10 ** (-10 / 20)
     t = np.arange(0.06, 0.24, 0.005)
-    assert np.max(np.abs(_refine(x, t, np.full(len(t), 60.0), FS) / 60 - 1)) < 0.001
+    assert np.max(np.abs(_refine(x, t * FS, np.full(len(t), 60.0), FS) / 60 - 1)) < 0.001
     err, unvoiced = errors(so.f0_track(so.Sound(x, FS)), np.full(N, 60.0))
     assert unvoiced == 0
     assert err < 1
+
+
+# ------------------------------------------------------------ streaming
+STREAM_SOUND = so.Sound(
+    vowel(np.full(int(0.6 * FS), 140.0)) + 0.1 * np.random.default_rng(5).standard_normal(int(0.6 * FS)), FS
+)
+
+
+def same(a, b):
+    return np.array_equal(np.nan_to_num(a, nan=-7.0), np.nan_to_num(b, nan=-7.0))
+
+
+def assert_track_streams_like_batch(tracker, sound, batch):
+    rng = np.random.default_rng(0)
+    lengths = []
+    while sum(lengths) < len(sound):
+        lengths += [0] if rng.random() < 0.1 else []
+        lengths.append(int(rng.integers(1, 900)))
+    starts = np.concatenate([[0], np.cumsum(lengths)])
+    cuttings = {
+        "one block": [sound],
+        "10 ms blocks": list(so.blocks(sound, 160)),
+        "random with empty blocks": [
+            so.Sound(sound.data[a:b], sound.fs) for a, b in zip(starts[:-1], starts[1:], strict=True)
+        ],
+    }
+    for name, blocks in cuttings.items():
+        joined = so.F0Track.concatenate(list(so.stream(tracker, blocks)))
+        assert np.array_equal(joined.t, batch.t), name
+        for field in ("f0", "score", "candidates", "candidate_scores"):
+            assert same(getattr(joined, field), getattr(batch, field)), (name, field)
+
+
+@pytest.mark.parametrize("delay", [0.05, 0.0, 0.02])
+def test_the_track_streams_like_batch_with_the_same_delay(delay):
+    tracker = so.F0TrackStream(delay=delay)
+    assert_track_streams_like_batch(tracker, STREAM_SOUND, so.f0_track(STREAM_SOUND, delay=delay))
+
+
+@pytest.mark.skipif(not SPEECH.exists(), reason="docs are not in the sdist")
+def test_stereo_speech_streams_like_batch():
+    snd = so.load(SPEECH / "bdl_arctic_a0131.flac")
+    data, fs = snd.data[:, 0], snd.fs
+    data = data[int(0.5 * fs) : int(1.3 * fs)]
+    stereo = so.Sound(np.stack([data, data[::-1]], axis=1), fs)
+    assert_track_streams_like_batch(so.F0TrackStream(), stereo, so.f0_track(stereo, delay=0.05))
+
+
+def test_candidates_do_not_depend_on_the_rest_of_the_sound():
+    whole = so.f0_track(STREAM_SOUND)
+    cut = int(0.3 * FS)
+    later = so.f0_track(so.Sound(STREAM_SOUND.data[cut:], FS))
+    offset = int(round(cut / FS / 0.005))
+    # 20 time windows (100 ms) from the cut, every time window has the same samples
+    n = whole.candidates.shape[1] - offset - 20
+    assert same(whole.candidates[:, offset + 20 :], later.candidates[:, 20 : 20 + n])
+
+
+def test_a_delay_of_none_is_the_whole_path():
+    track = so.f0_track(STREAM_SOUND)
+    assert same(track.f0, so.f0_track(STREAM_SOUND, delay=None).f0)
+    with pytest.raises(ValueError, match="delay"):
+        so.f0_track(STREAM_SOUND, delay=-1.0)
+
+
+def test_the_stream_checks_its_blocks_and_parts():
+    tracker = so.F0TrackStream()
+    state = tracker.start(FS)
+    with pytest.raises(TypeError, match="a block is a Sound"):
+        tracker.step(state, np.ones(10))
+    with pytest.raises(ValueError, match="Hz"):
+        tracker.step(state, so.Sound(np.ones(10), 8000.0))
+    state, _ = tracker.step(state, so.Sound(np.ones(10), FS))
+    with pytest.raises(ValueError, match="channels"):
+        tracker.step(state, so.Sound(np.ones((10, 2)), FS))
+    parts = [part for part in so.stream(tracker, so.blocks(STREAM_SOUND, 1600)) if part.f0.shape[1]]
+    with pytest.raises(ValueError, match="not consecutive"):
+        so.F0Track.concatenate([parts[0], parts[2]])
+    assert list(so.stream(tracker, [])) == []
+    empty = so.F0Track.concatenate(list(so.stream(tracker, [so.Sound(np.zeros(0), FS)])))
+    assert empty.f0.shape == (1, 0)
+
+
+def test_the_track_state_is_a_value():
+    tracker = so.F0TrackStream()
+    state, _ = tracker.step(tracker.start(FS), so.Sound(STREAM_SOUND.data[:3000], FS))
+    cost = state.cost.copy()
+    block = so.Sound(STREAM_SOUND.data[3000:5000], FS)
+    _, first = tracker.step(state, block)
+    _, second = tracker.step(state, block)
+    assert np.array_equal(state.cost, cost)
+    assert same(first.f0, second.f0) and same(first.candidates, second.candidates)

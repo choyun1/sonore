@@ -63,6 +63,8 @@ NOT_ANALYSES = [
     "FilterbankState",
     "ModulationState",
     "ModulationSpectrogramStream",
+    "F0State",
+    "F0TrackStream",
 ]  # ModulationFilterbank: a tool that makes views; SlidingWindowStream and WindowState: how views stream
 
 

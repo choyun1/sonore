@@ -419,9 +419,10 @@ def check_f0_locality():
         "F0 candidates computed from the sound cut 0.1 s before: share of windows identical",
         same.mean(),
     )
-    # The few that differ do so because today's code works on chunks of
-    # time windows that share settings (a window length taken from the
-    # chunk's lowest candidate); with one window per chunk they all agree.
+    # Before D8 (a), a few differed because the code worked on chunks of
+    # time windows that shared a window length taken from the chunk's
+    # lowest candidate; with one window per chunk they all agreed. Now the
+    # row lengths are set by each candidate, so both lines read 1.
     import sonore.views.f0 as f0_module
 
     default_chunk = f0_module.CHUNK

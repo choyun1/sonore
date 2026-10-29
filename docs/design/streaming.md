@@ -210,6 +210,9 @@ place. C7 measures this for the largest state in view.
   own changes no voicing decision and moves no F0 by more than 1%. The
   candidates themselves do move on some time windows: 27 of 505 on
   `bdl_arctic_a0131`.
+  (After D8 (a) was built, the checker's first line also reads 100%: each
+  candidate's rows are padded to a length set by the candidate alone, so
+  the candidates no longer depend on their group, bit for bit.)
 - **C10. Making each block a `Sound` costs almost nothing.** Wrapping a
   441-sample block in a `Sound` (which copies the samples and checks their
   shape) takes 0.0013 ms, about 0.01% of the block's 10 ms.
@@ -375,6 +378,11 @@ is the fixed-delay decoding of C8, which the step reproduces exactly.
 batch now and then. That breaks the contract, and C8 shows it would differ
 on 0% of 12,505 time windows at 50 ms anyway, so nothing is gained.
 *Recommended: both changes, and a default `delay` of 0.05 s for the step.*
+*Built as recommended:* `f0_track(..., delay=)` and `F0TrackStream(delay=0.05)`.
+For (a), the refinement and the score now group candidates by a row length
+set by the candidate (rounded up to a multiple of 32 samples) instead of by
+512 at a time, and pad the rows with zeros the windows give no weight. The
+streamed track equals `f0_track(sound, delay=...)` bit for bit.
 
 **D9. Order of work. (accepted 2026-10-29)** One PR per stage, each with its tests and docs:
 1. `core/stream.py` (D1), the STFT, cepstrum and MFCC steps (C1, C2).
