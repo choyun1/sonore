@@ -344,7 +344,9 @@ def show(snd, fmin=50, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;, lo
     keep = (stft.f &gt;= fmin) &amp; (stft.f &lt;= fmax)
     top = stft.db[:, keep].max()
     ax.pcolormesh(stft.t, stft.f[keep], stft.db[0][keep], vmin=top - 60, vmax=top, cmap=&quot;magma&quot;)
-    ax.set(yscale=&quot;log&quot; if log else &quot;linear&quot;, ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title)
+    if log:
+        so.plotting.log_frequency_axis(ax)
+    ax.set(ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title)
     ax.set(xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
     return fig, [ax]</code></pre></details></div>
 </section>
@@ -353,7 +355,7 @@ def show(snd, fmin=50, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;, lo
 <p>A pitch needs some time to form, and the pitch heard is not always the one a frequency ratio
 predicts.</p>
 
-<article class="sound" id="d-pk1" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.842721088435374}]">
+<article class="sound" id="d-pk1" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.842721088435374}]">
   <div class="about">
     <h3>Tone bursts from one period to 128</h3>
     <div class="desc"><p><strong>Listen for</strong> the moment a click turns into a tone. Each of the three series plays bursts of
@@ -380,7 +382,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=8000, win=10e-3, title=&quot;Spectrogram (Hann 10 ms)&quot;)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk2" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 29.20004535147392}]">
+<article class="sound" id="d-pk2" data-regions="[{&quot;x0&quot;: 0.06330366449652779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 29.20004535147392}]">
   <div class="about">
     <h3>Matching an octave</h3>
     <div class="desc"><p><strong>Listen for</strong> the pair that sounds like a true octave. A 500 Hz tone alternates with a
@@ -409,7 +411,7 @@ fig, playhead = show(sound, fmin=300, fmax=1500)</code></pre></details>
 <p>The pitch of a harmonic tone does not need its fundamental: hearing takes it from the spacing
 and pattern of the harmonics that remain.</p>
 
-<article class="sound" id="d-pk3" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.4}]">
+<article class="sound" id="d-pk3" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.4}]">
   <div class="about">
     <h3>Harmonics removed from the bottom</h3>
     <div class="desc"><p><strong>Listen for</strong> whether the pitch changes as the tone loses its lowest harmonics, one at a time.
@@ -434,7 +436,7 @@ sound = finish(so.Sound(place(tones, dur=8.4).data[: rumble.n_samples] + rumble.
 fig, playhead = show(sound, fmin=50, fmax=3000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk4" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9919711322081802, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
+<article class="sound" id="d-pk4" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919710626308701, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
   <div class="about">
     <h3>Three partials shifted off the harmonic series</h3>
     <div class="desc"><p><strong>Listen for</strong> a low pitch that rises a little at each step. Three partials 200 Hz apart, 800,
@@ -457,7 +459,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=2000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk4b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2500226757369615}]">
+<article class="sound" id="d-pk4b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.2500226757369615}]">
   <div class="about">
     <h3>Matching the shifted pitch</h3>
     <div class="desc"><p><strong>Listen for</strong> the pitch of each three-partial tone against the harmonic tone after it. First
@@ -482,7 +484,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=3000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk5" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
+<article class="sound" id="d-pk5" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
   <div class="about">
     <h3>Up or down</h3>
     <div class="desc"><p><strong>Listen for</strong> which way the pitch goes from the first tone of each pair to the second: up or
@@ -515,7 +517,7 @@ fig, playhead = show(sound, fmin=100, fmax=3000)</code></pre></details>
 that covers the frequencies of the pitches does not mask it; noise that covers the harmonics
 does.</p>
 
-<article class="sound" id="d-pk6" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.800045351473923}]">
+<article class="sound" id="d-pk6" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.800045351473923}]">
   <div class="about">
     <h3>A tune in pure tones and in high harmonics</h3>
     <div class="desc"><p><strong>Listen for</strong> the tune of the Westminster chime twice over, in pairs: each note first as a pure
@@ -553,7 +555,7 @@ sound = finish(westminster())
 fig, playhead = show(sound, fmin=100, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk6b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.8}]">
+<article class="sound" id="d-pk6b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.8}]">
   <div class="about">
     <h3>The tune under low noise</h3>
     <div class="desc"><p><strong>Listen for</strong> the same pairs under a low noise, which covers the pure tones. The booklet
@@ -573,7 +575,7 @@ sound = finish(westminster(low_noise))
 fig, playhead = show(sound, fmin=100, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk6c" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.8}]">
+<article class="sound" id="d-pk6c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.8}]">
   <div class="about">
     <h3>The tune under high noise</h3>
     <div class="desc"><p><strong>Listen for</strong> the same pairs under a high noise, which covers the harmonics of the complex
@@ -684,7 +686,7 @@ fig, playhead = show_harmonics(sound, firsts)</code></pre></details>
 delay, whatever the sound. The booklet traces this to Huygens, who heard a pitch in the sound
 of a fountain reflected from the steps of a staircase.</p>
 
-<article class="sound" id="d-pk8" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.999183673469387}]">
+<article class="sound" id="d-pk8" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.999183673469387}]">
   <div class="about">
     <h3>A scale of click pairs</h3>
     <div class="desc"><p><strong>Listen for</strong> a scale rising five octaves, played by pairs of clicks. Within each pair the
@@ -734,7 +736,7 @@ sound = finish(click_scale(scale_delays(5), 1 / 25, seed=261))
 fig, playhead = show(sound, fmin=50, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk8b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.249342403628118}]">
+<article class="sound" id="d-pk8b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.249342403628118}]">
   <div class="about">
     <h3>A scale of click pairs at random times</h3>
     <div class="desc"><p><strong>Listen for</strong> a scale rising four octaves, from click pairs that now come at random times. The
@@ -756,7 +758,7 @@ sound = finish(click_scale(scale_delays(4), scipy.stats.expon(scale=1 / 100), se
 fig, playhead = show(sound, fmin=50, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk8c" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.249342403628118}]">
+<article class="sound" id="d-pk8c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.249342403628118}]">
   <div class="about">
     <h3>A scale of echoed noise</h3>
     <div class="desc"><p><strong>Listen for</strong> the same four-octave scale played by bursts of hiss, each added to a copy of
@@ -790,7 +792,7 @@ fig, playhead = show(sound, fmin=50, fmax=8000)</code></pre></details>
 <p>Two tones heard together can make beats, both when their frequencies are close and when they
 are close to a simple ratio; and the ear itself adds tones that are not in the sound.</p>
 
-<article class="sound" id="d-pk9" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
+<article class="sound" id="d-pk9" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.991958, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.0}]">
   <div class="about">
     <h3>Primary beats</h3>
     <div class="desc"><p><strong>Listen for</strong> a steady tone, a second steady tone, then the two together, rising and falling
@@ -810,7 +812,7 @@ sound = finish(so.concat([tone(1000, 2.0), pause, tone(1004, 2.0), pause, partia
 fig, playhead = show(sound, fmin=500, fmax=2500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk9b" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.1}]">
+<article class="sound" id="d-pk9b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.1}]">
   <div class="about">
     <h3>Beats of mistuned consonances</h3>
     <div class="desc"><p><strong>Listen for</strong> beats again, four a second, in three pairs of tones that are far apart: a little
@@ -831,7 +833,7 @@ sound = finish(so.concat([mistuned[0], pause, mistuned[1], pause, mistuned[2]]))
 fig, playhead = show(sound, fmin=500, fmax=3000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk10" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
+<article class="sound" id="d-pk10" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
   <div class="about">
     <h3>A probe beating with a tone that is not there</h3>
     <div class="desc"><p><strong>Listen for</strong> a third, softer tone joining two steady ones, and beating slowly, four times a

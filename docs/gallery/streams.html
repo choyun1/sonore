@@ -335,7 +335,8 @@ def show(snd, fmin=100, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;):
     for ch, ax in enumerate(axes[:, 0]):
         ax.pcolormesh(stft.t, stft.f[keep], stft.db[ch][keep], vmin=top - 60, vmax=top, cmap=&quot;magma&quot;)
         side = f&quot;, {(&#x27;left&#x27;, &#x27;right&#x27;)[ch]} ear&quot; if n == 2 else &quot;&quot;
-        ax.set(yscale=&quot;log&quot;, ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title + side)
+        so.plotting.log_frequency_axis(ax)
+        ax.set(ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title + side)
     axes[-1, 0].set(xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
     return fig, list(axes[:, 0])</code></pre></details></div>
 </section>
@@ -347,7 +348,7 @@ that played slowly it is heard as one six-note melody, and played fast it splits
 and a low stream, each with its own three-note melody, so that the order of high and low tones
 becomes hard to report.</p>
 
-<article class="sound" id="d-sg1" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.400045351473922}]">
+<article class="sound" id="d-sg1" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.400045351473922}]">
   <div class="about">
     <h3>A six-tone cycle, slow then fast</h3>
     <div class="desc"><p><strong>Listen for</strong> the slow cycle as one six-note tune, and the fast one splitting into two
@@ -377,7 +378,7 @@ sound = finish(place(six_tone_cycle(0.4, 3) + six_tone_cycle(0.1, 12, start=8.2)
 fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg2" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.600045351473923}]">
+<article class="sound" id="d-sg2" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.600045351473923}]">
   <div class="about">
     <h3>Standards within and across streams</h3>
     <div class="desc"><p><strong>Listen for</strong> the three-tone standard inside the fast cycle. The first standard, all high
@@ -408,7 +409,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg3" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 32.108934240362814}]">
+<article class="sound" id="d-sg3" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 32.108934240362814}]">
   <div class="about">
     <h3>A gallop that speeds up</h3>
     <div class="desc"><p><strong>Listen for</strong> the first gallop's da-da-dum rhythm breaking apart as it speeds up, into a fast
@@ -443,7 +444,7 @@ sound = finish(place(first + second))
 fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg4" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 19.45002267573696}]">
+<article class="sound" id="d-sg4" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 19.45002267573696}]">
   <div class="about">
     <h3>B sweeps past A</h3>
     <div class="desc"><p><strong>Listen for</strong> a gallop while B is near A in pitch, in the middle of the sound, and two
@@ -474,7 +475,7 @@ fig, playhead = show(sound, fmin=500, fmax=6000)</code></pre></details>
 <p>Splitting takes time: a sequence often starts as one stream and splits after a few seconds of
 listening.</p>
 
-<article class="sound" id="d-sg5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 47.00004535147392}]">
+<article class="sound" id="d-sg5" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 47.00004535147392}]">
   <div class="about">
     <h3>Runs of 2 to 32 gallops</h3>
     <div class="desc"><p><strong>Listen for</strong> the gallop holding together in the short runs and splitting into a high and a low
@@ -504,7 +505,7 @@ fig, playhead = show(sound, fmin=300, fmax=4000)</code></pre></details>
 <h2 id="h-a-hidden-melody">A hidden melody</h2>
 <p>Splitting can hide a tune among other notes, or free it.</p>
 
-<article class="sound" id="d-sg6" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 29.433061224489794}]">
+<article class="sound" id="d-sg6" data-regions="[{&quot;x0&quot;: 0.05805366449652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 29.433061224489794}]">
   <div class="about">
     <h3>A melody pulling away from its distractors</h3>
     <div class="desc"><p><strong>Listen for</strong> a familiar tune hidden among the notes. In the first presentation it is lost
@@ -544,7 +545,7 @@ fig, playhead = show(sound, fmin=150, fmax=800)</code></pre></details>
 <h2 id="h-timbre-and-spectrum">Timbre and spectrum</h2>
 <p>Streams also split by timbre, with the pitch held fixed.</p>
 
-<article class="sound" id="d-sg7" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 18.222403628117913}]">
+<article class="sound" id="d-sg7" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 18.222403628117913}]">
   <div class="about">
     <h3>One pitch, two spectral peaks</h3>
     <div class="desc"><p><strong>Listen for</strong> tones of one pitch splitting into a bright stream and a dull one as the gallop
@@ -577,7 +578,7 @@ sound = finish(place(gallop(bright, dull, onsets)))
 fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg8" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.20004535147392}]">
+<article class="sound" id="d-sg8" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.20004535147392}]">
   <div class="about">
     <h3>Vowels in alternation</h3>
     <div class="desc"><p><strong>Listen for</strong> the alternating vowels splitting into two streams, each repeating one vowel.</p><p>Bregman &amp; Ahad, Demonstration 11. Short vowels alternating: "ay" (as in hay) with "o" (hoe),
@@ -626,7 +627,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=80, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg9" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.60185941043084}]">
+<article class="sound" id="d-sg9" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.60185941043084}]">
   <div class="about">
     <h3>High and low bands of noise</h3>
     <div class="desc"><p><strong>Listen for</strong> the noise gallop splitting into a high hiss and a low hiss as it speeds up, as
@@ -674,7 +675,7 @@ fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 <p>A smooth path from tone to tone holds a sequence together, and timing is hard to judge across
 two streams.</p>
 
-<article class="sound" id="d-sg10" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.000045351473922}]">
+<article class="sound" id="d-sg10" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.000045351473922}]">
   <div class="about">
     <h3>Tones joined by glides, then not</h3>
     <div class="desc"><p><strong>Listen for</strong> the joined version as one wavy line, and the tones without glides splitting into
@@ -704,7 +705,7 @@ sound = finish(so.concat([joined.ramp(0.01), so.silence(1.0, FS), apart]))
 fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg11" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 28.620045351473923}]">
+<article class="sound" id="d-sg11" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 28.620045351473923}]">
   <div class="about">
     <h3>Where the low tone falls</h3>
     <div class="desc"><p><strong>Listen for</strong> the low tone sitting off center in the gap. It should be easy to hear when it is
@@ -740,7 +741,7 @@ fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
 <p>Whether two tones fall in one stream depends not only on how far apart they are but on what
 else is playing.</p>
 
-<article class="sound" id="d-sg12" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.97002267573696}]">
+<article class="sound" id="d-sg12" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.97002267573696}]">
   <div class="about">
     <h3>A and B, isolated or absorbed</h3>
     <div class="desc"><p><strong>Listen for</strong> the standard, A then B, inside the cycle: easy in the first cycle, hard in the
@@ -780,7 +781,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg13" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.231065759637188}]">
+<article class="sound" id="d-sg13" data-regions="[{&quot;x0&quot;: 0.06593647699652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.231065759637188}]">
   <div class="about">
     <h3>A two-tone order, hidden and freed</h3>
     <div class="desc"><p><strong>Listen for</strong> the order of the two high tones: clear alone, hard to hear between the lower X
@@ -814,7 +815,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=800, fmax=4000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg14" data-regions="[{&quot;x0&quot;: 0.054069289496527784, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 36.60004535147392}]">
+<article class="sound" id="d-sg14" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 36.60004535147392}]">
   <div class="about">
     <h3>An X that bounces, and one that crosses</h3>
     <div class="desc"><p><strong>Listen for</strong> the path you follow through the X. With pure tones it tends to fall and then
@@ -887,7 +888,7 @@ tone, 4.2 tones a second for each part as in the booklet. The struck tone is a f
 partials at 2.76 and 5.40 times it, the first modes of a free bar, decaying with a half-life of
 25 ms, inside the booklet's 15 to 30 ms. It is not an amadinda, and the cycles are not the piece.</p>
 
-<article class="sound" id="d-sg15" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
+<article class="sound" id="d-sg15" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
   <div class="about">
     <h3>Two interleaved parts</h3>
     <div class="desc"><p><strong>Listen for</strong> each part alone as an even beat with a simple tune; together, neither tune can be
@@ -932,7 +933,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=3000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg16" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
+<article class="sound" id="d-sg16" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
   <div class="about">
     <h3>The second part an octave up</h3>
     <div class="desc"><p><strong>Listen for</strong> each part's own tune and even rhythm staying audible when they play together, now
@@ -951,7 +952,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg17" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
+<article class="sound" id="d-sg17" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
   <div class="about">
     <h3>The two parts in two timbres</h3>
     <div class="desc"><p><strong>Listen for</strong> the two parts, in the same range again, separating by their timbres.</p><p>After Bregman &amp; Ahad, Demonstration 9. The parts in the same range again, the first muffled
@@ -982,7 +983,7 @@ fig, playhead = show(sound, fmin=150, fmax=8000)</code></pre></details>
 <h2 id="h-place">Place</h2>
 <p>Sounds from different sides split into streams, as sounds of different pitch do.</p>
 
-<article class="sound" id="d-sg18" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}, {&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}]">
+<article class="sound" id="d-sg18" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}, {&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}]">
   <div class="about">
     <h3>Noise bursts that move apart <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p><strong>Listen for</strong> the gallop splitting into a fast beat on the left and a slow one on the right as
@@ -1013,7 +1014,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=8000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg19" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}, {&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}]">
+<article class="sound" id="d-sg19" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}, {&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}]">
   <div class="about">
     <h3>A middle burst on time or late <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p><strong>Listen for</strong> whether the middle burst is late: easy to hear with everything in one ear, harder
@@ -1052,7 +1053,7 @@ sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=8000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-sg20" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9863438716169167, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.44937766178759597, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}, {&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9863438716169167, &quot;top&quot;: 0.5096937058488986, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}]">
+<article class="sound" id="d-sg20" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9863702134558594, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.44937766178759597, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}, {&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9863702134558594, &quot;top&quot;: 0.5096937058488986, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}]">
   <div class="about">
     <h3>The two parts moving apart <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
     <div class="desc"><p><strong>Listen for</strong> the two parts, once in opposite ears, each heard with its own even rhythm.</p><p>After Bregman &amp; Ahad, Demonstration 41. The interleaved parts of the stand-in above, first sent

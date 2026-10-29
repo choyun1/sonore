@@ -349,7 +349,9 @@ def show(snd, fmin=100, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;, l
     keep = (stft.f &gt;= fmin) &amp; (stft.f &lt;= fmax)
     top = stft.db[:, keep].max()
     ax.pcolormesh(stft.t, stft.f[keep], stft.db[0][keep], vmin=top - 60, vmax=top, cmap=&quot;magma&quot;)
-    ax.set(yscale=&quot;log&quot; if log else &quot;linear&quot;, ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title)
+    if log:
+        so.plotting.log_frequency_axis(ax)
+    ax.set(ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title)
     ax.set(xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
     return fig, [ax]</code></pre></details></div>
 </section>
@@ -359,7 +361,7 @@ def show(snd, fmin=100, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;, l
 them, close in frequency to one of the two, can pull that one away into a stream of its own.
 Which grouping wins depends on how strong each pull is.</p>
 
-<article class="sound" id="d-cc1" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919710257581928, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
+<article class="sound" id="d-cc1" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919710626308701, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
   <div class="about">
     <h3>A far above the chord</h3>
     <div class="desc"><p><strong>Listen for</strong> the high tone A and the upper tone B of the chord: can you keep hearing the
@@ -397,7 +399,7 @@ sound = finish(capture(1800))
 fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc1b" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919710257581928, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
+<article class="sound" id="d-cc1b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919710626308701, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
   <div class="about">
     <h3>A nearer the chord</h3>
     <div class="desc"><p><strong>Listen for</strong> the same question with A at 1200 Hz, nearer to B.</p><p>Bregman &amp; Ahad, Demonstration 25, its second example, built as the first.</p></div>
@@ -412,7 +414,7 @@ fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc1c" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919710257581928, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
+<article class="sound" id="d-cc1c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919710626308701, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
   <div class="about">
     <h3>A the same as B</h3>
     <div class="desc"><p><strong>Listen for</strong> the same question with A at 650 Hz, the same as B: the standard is one repeated
@@ -429,7 +431,7 @@ on its own as a low tone.</p><p>Bregman &amp; Ahad, Demonstration 25, its third 
 fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc2" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919710257581928, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
+<article class="sound" id="d-cc2" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919710626308701, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
   <div class="about">
     <h3>B and C together</h3>
     <div class="desc"><p><strong>Listen for</strong> how easily you can keep hearing the standard's A B A B once C joins. Here B and C
@@ -451,7 +453,7 @@ twelve), as on the previous example.</p></div>
 fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc2b" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919710257581928, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
+<article class="sound" id="d-cc2b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919710626308701, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
   <div class="about">
     <h3>C 30 ms after B</h3>
     <div class="desc"><p><strong>Listen for</strong> the same question with C starting and stopping 30 ms after B.</p><p>Bregman &amp; Ahad, Demonstration 26, its second example.</p></div>
@@ -466,7 +468,7 @@ fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc2c" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919710257581928, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
+<article class="sound" id="d-cc2c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919710626308701, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000045351473922}]">
   <div class="about">
     <h3>C 60 ms after B</h3>
     <div class="desc"><p><strong>Listen for</strong> the same question with C starting and stopping 60 ms after B.</p><p>Bregman &amp; Ahad, Demonstration 26, its third example.</p></div>
@@ -481,7 +483,7 @@ fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 fig, playhead = show(sound, fmin=200, fmax=2500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc3" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.800045351473923}]">
+<article class="sound" id="d-cc3" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.800045351473923}]">
   <div class="about">
     <h3>A fourth tone that frees the chord</h3>
     <div class="desc"><p><strong>Listen for</strong> the standard, A B, inside each of the two patterns that follow it. In the first
@@ -522,7 +524,7 @@ fig, playhead = show(sound, fmin=400, fmax=2500)</code></pre></details>
 as the noise could have hidden it. With a silence in the cut instead, the sound is heard
 stopping and starting.</p>
 
-<article class="sound" id="d-cc4" data-regions="[{&quot;x0&quot;: 0.054069289496527784, &quot;x1&quot;: 0.9892509687500001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.0}]">
+<article class="sound" id="d-cc4" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.9892509687500001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.0}]">
   <div class="about">
     <h3>A tone and a noise in its gap</h3>
     <div class="desc"><p><strong>Listen for</strong> a steady tone that breaks off for a tenth of a second every second. The gap
@@ -577,7 +579,7 @@ sound = finish(so.Sound((1 - noise_slots) * 10 ** (tone_db / 20) * tone_2000 + n
 fig, playhead = show(sound, fmin=1000, fmax=3000, log=False)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc6" data-regions="[{&quot;x0&quot;: 0.054069289496527784, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
+<article class="sound" id="d-cc6" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
   <div class="about">
     <h3>A glide cut in the middle of its rises and falls</h3>
     <div class="desc"><p><strong>Listen for</strong> a tone gliding up and down, with a short piece cut out of the middle of every
@@ -622,7 +624,7 @@ sound = finish(silent_then_noise(mid_legs, 0.15))
 fig, playhead = show(sound, fmin=500, fmax=10000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc6b" data-regions="[{&quot;x0&quot;: 0.054069289496527784, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
+<article class="sound" id="d-cc6b" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
   <div class="about">
     <h3>A glide cut where it turns</h3>
     <div class="desc"><p><strong>Listen for</strong> the same glide, now cut at its tops and bottoms, where it turns: silent cuts
@@ -641,7 +643,7 @@ sound = finish(silent_then_noise(turns, 0.15))
 fig, playhead = show(sound, fmin=500, fmax=10000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc7" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
+<article class="sound" id="d-cc7" data-regions="[{&quot;x0&quot;: 0.06593647699652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
   <div class="about">
     <h3>The top cut out, silent</h3>
     <div class="desc"><p><strong>Listen for</strong> the highest pitch the glide reaches. The top of each cycle is cut out, first by
@@ -669,7 +671,7 @@ sound = finish(so.concat([top_cut(0.4, 0), so.silence(1.0, FS), top_cut(0.1, 0)]
 fig, playhead = show(sound, fmin=1000, fmax=4000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc7b" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
+<article class="sound" id="d-cc7b" data-regions="[{&quot;x0&quot;: 0.06593647699652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 13.0}]">
   <div class="about">
     <h3>The top cut out, with noise</h3>
     <div class="desc"><p><strong>Listen for</strong> the highest pitch the glide seems to reach behind the noise, wide cut first and
@@ -760,7 +762,7 @@ sound = finish(so.concat([gapped, pause, filled]))
 fig, playhead = show(sound, fmin=100, fmax=8000, log=False)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc9" data-regions="[{&quot;x0&quot;: 0.054069289496527784, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.34}]">
+<article class="sound" id="d-cc9" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.34}]">
   <div class="about">
     <h3>A noise swelling slowly, then suddenly</h3>
     <div class="desc"><p><strong>Listen for</strong> a hiss that swells and fades in each cycle at first. Then the swells become
@@ -797,7 +799,7 @@ fig, playhead = show(sound, fmin=100, fmax=10000)</code></pre></details>
 <p>When the old sound is taken out of a mixture, what is left, the residual, is heard as a new
 sound of its own, even though nothing in the signal is shaped like it.</p>
 
-<article class="sound" id="d-cc10" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9826572187499999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
+<article class="sound" id="d-cc10" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.98265721875, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.0}]">
   <div class="about">
     <h3>Two harmonics capturing their match</h3>
     <div class="desc"><p><strong>Listen for</strong> a rich low tone at first. Then it alternates with a thinner tone that holds
@@ -879,7 +881,7 @@ sound = finish(so.concat(parts))
 fig, playhead = show(sound, fmin=50, fmax=4000, log=False)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc12" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.8}]">
+<article class="sound" id="d-cc12" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.8}]">
   <div class="about">
     <h3>Three bands in a cycle</h3>
     <div class="desc"><p><strong>Listen for</strong> a busy pattern of hisses. Each cycle of 0.8 s is a high wide burst, a middle
@@ -933,7 +935,7 @@ sound = finish(bands())
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc12b" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.6}]">
+<article class="sound" id="d-cc12b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.6}]">
   <div class="about">
     <h3>Following the low band</h3>
     <div class="desc"><p><strong>Listen for</strong> the low bursts that open this sound, alone, and keep following them once the
@@ -951,7 +953,7 @@ eight of the full pattern. The number of cycles is ours.</p></div>
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc12c" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.6}]">
+<article class="sound" id="d-cc12c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.6}]">
   <div class="about">
     <h3>Following the high band</h3>
     <div class="desc"><p><strong>Listen for</strong> the high bursts, alone at first, then inside the full pattern. The booklet adds
@@ -967,7 +969,7 @@ that the high band seems higher in the full pattern than alone.</p><p>Bregman &a
 fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc12d" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.6}]">
+<article class="sound" id="d-cc12d" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 9.6}]">
   <div class="about">
     <h3>Following the middle band</h3>
     <div class="desc"><p><strong>Listen for</strong> the steady middle band, alone at first, carrying on through the full pattern.</p><p>Bregman &amp; Ahad, Demonstration 35, its third standard: the middle band steady for four cycles'
@@ -989,7 +991,7 @@ fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
 captured part as a continuation of what came before or as a repeat of it, and a vowel, which
 changes when one of its harmonics is captured.</p>
 
-<article class="sound" id="d-cc13" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9919918787909643, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000226757369614}]">
+<article class="sound" id="d-cc13" data-regions="[{&quot;x0&quot;: 0.06330366449652779, &quot;x1&quot;: 0.9919921351232428, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.000226757369614}]">
   <div class="about">
     <h3>A glide moving up to match another</h3>
     <div class="desc"><p><strong>Listen for</strong> two high glides in a row, A and then B, with the lower glide C under B. When A
@@ -1032,7 +1034,7 @@ sound = finish(so.concat([glides(a, 4) for a in positions]))
 fig, playhead = show(sound, fmin=250, fmax=1500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc13b" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.800090702947846}]">
+<article class="sound" id="d-cc13b" data-regions="[{&quot;x0&quot;: 0.06330366449652779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.800090702947846}]">
   <div class="about">
     <h3>A glide broken and unbroken</h3>
     <div class="desc"><p><strong>Listen for</strong> A and B as one long rising glide, broken by a short silence in the first part
@@ -1053,7 +1055,7 @@ sound = finish(so.concat([glides(aligned, 6), so.silence(1.0, FS), glides(aligne
 fig, playhead = show(sound, fmin=250, fmax=1500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc13c" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.300181405895692}]">
+<article class="sound" id="d-cc13c" data-regions="[{&quot;x0&quot;: 0.06330366449652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.300181405895692}]">
   <div class="about">
     <h3>Identical glides further and further apart</h3>
     <div class="desc"><p><strong>Listen for</strong> A and B as a repeated pair of identical high glides, while the silence after each
@@ -1071,7 +1073,7 @@ the silences; 30, 60, 120 and 240 ms after every glide, five cycles of each, are
 fig, playhead = show(sound, fmin=250, fmax=1500)</code></pre></details>
 </article>
 
-<article class="sound" id="d-cc14" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.24997732426304}]">
+<article class="sound" id="d-cc14" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.24997732426304}]">
   <div class="about">
     <h3>A vowel losing part of a harmonic</h3>
     <div class="desc"><p><strong>Listen for</strong> the vowel. First four times as "i" (as in hid), then four times without its third
