@@ -32,7 +32,7 @@ try:
         started = time.perf_counter()
         state, part = tracker.step(state, block)
         step_times.append(time.perf_counter() - started)
-        for t, f0 in zip(part.t, part.f0[0]):
+        for t, f0 in zip(part.t, part.f0[0], strict=True):
             if round(t / tracker.hop) % 10:
                 continue  # one line every 50 ms
             if f0 > 0:
