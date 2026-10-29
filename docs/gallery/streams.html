@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Streams: reproducing Bregman &amp; Ahad</title>
+<link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { width: 100%; max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.home { display: inline-flex; align-items: center; gap: 0.3rem; }
+nav.pages .home .logo { width: 2.1rem; height: 2.1rem; margin: -0.5rem 0 -0.5rem -0.4rem; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+.links { display: flex; align-items: center; gap: 0.5rem 1.25rem; font-family: var(--sans); }
+.links a { display: inline-flex; align-items: center; gap: 0.45rem; }
+.links svg { width: 1.15rem; height: 1.15rem; }
+footer .links { margin-top: 1rem; font-size: 0.95rem; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h3.sub { font-weight: 500; font-size: 1.45rem; margin: 2.5rem 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
+  footer .links { display: none; }
+  .side-repo { display: none; }
+  .side-closed .side-repo { display: flex; justify-content: center; margin-top: auto; color: var(--muted); }
+  .side-closed .side-repo:hover { color: var(--ink); }
+  .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
+  .side-foot { margin-top: auto; padding-top: 2rem; }
+  .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
+    border-top: 1px solid var(--rule); }
+  .side-closed .layout { grid-template-columns: 4.25rem minmax(0, 1fr); }
+  .side { scrollbar-gutter: stable; }  /* room for a scrollbar always, so opening a list never rewraps the menu */
+  .side-closed .side { padding: 2.5rem 0 1.5rem; overflow: hidden; scrollbar-gutter: auto; }
+  .side-closed .side .home-title, .side-closed .side-body { display: none; }
+  .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
+  .side-closed .side .home { padding: 0; border: 0; }
+  .side-closed .side .home .logo { width: 2.8rem; height: 2.8rem; margin: 0; }
+  .side-toggle { margin-top: 3.8rem; }  /* level with where it sits under the logo in the folded strip */
+  .side-closed .side-toggle { margin-top: 0; }
+  /* With the sidebar folded, the top menu stays in view while the page scrolls. */
+  .side-closed nav.pages { position: sticky; top: 0; z-index: 20; background: var(--paper);
+    padding: 0.9rem 0; margin-top: -0.9rem; border-bottom: 1px solid var(--rule); }
+  html.side-closed { scroll-padding-top: 4rem; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home-title, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home-title, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home-title, .side-opening .side-body, .side-closing .side .home-title, .side-closing .side-body { animation: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home-title { display: block; }
+.side .home .logo { display: block; width: 2.6rem; height: 2.6rem; margin: -0.4rem 0 0.1rem -0.35rem; }
+.logo .logo-ink { stroke: var(--ink); } .logo .logo-accent { stroke: var(--accent); }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-label="Listening gallery"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="home-title">Listening gallery</span></a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group"><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="group here" open><summary>Classic demonstrations</summary><ul><li class="has-sections"><a href="streams.html" aria-current="page">Streams: reproducing Bregman & Ahad</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-speed-and-frequency">Speed and frequency</a></li><li><a href="#h-streaming-builds-up">Streaming builds up</a></li><li><a href="#h-a-hidden-melody">A hidden melody</a></li><li><a href="#h-timbre-and-spectrum">Timbre and spectrum</a></li><li><a href="#h-glides-and-timing">Glides and timing</a></li><li><a href="#h-competition-and-capture">Competition and capture</a></li><li><a href="#h-interlocking-parts">Interlocking parts</a></li><li><a href="#h-place">Place</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details class="group"><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="group"><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details class="group"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><div class="side-foot"><div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></div></div><a class="side-repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded on every page load.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    showSections(false);
+    // Going back to a page can restore it as it was left; fold its sections then too.
+    addEventListener("pageshow", (event) => { if (event.persisted) showSections(false); });
+    sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
+  // Only the group of the page being read starts open; groups opened on another page do not stay open.
+  addEventListener("pageshow", (event) => { if (event.persisted)
+    groups.forEach((group) => { group.open = group.classList.contains("here"); }); });
+  groups.forEach((group) => {
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><details><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="here"><summary>Classic demonstrations</summary><ul><li><a href="streams.html" aria-current="page">Streams: reproducing Bregman & Ahad</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li></ul></details><details><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>Streams: reproducing Bregman &amp; Ahad</h1>
+<p>Every sound on this page is sonore's reproduction of a published demonstration. Almost all of
+them are from Albert Bregman and Pierre Ahad's <em>Demonstrations of Auditory Scene Analysis</em>
+(1996), a compact disc made to accompany Bregman's book <em>Auditory Scene Analysis</em> (1990); one
+is from the Acoustical Society of America's <em>Auditory Demonstrations</em> (Houtsma, Rossing &amp;
+Wagenaars, 1987). The demonstrations, their design and what they show are their authors'
+work. Bregman's laboratory publishes the original recordings and booklet
+(<a href="https://webpages.mcgill.ca/staff/Group2/abregm1/web/downloadsdl.htm" target="_blank" rel="noopener">McGill</a>), and they are the
+ones to listen to.</p>
+<p><strong>What they show.</strong> When sounds follow one another, hearing sorts them into <em>streams</em>: sequences
+heard as coming from one source, like one voice or one instrument. Sounds close in pitch, timbre
+or location tend to join one stream; sounds far apart, played fast, split into separate streams,
+and you hear two things at once. Once a sequence has split, what lies across the streams gets
+hard to hear: which tone came before which, or the rhythm the tones make together. Bregman
+called this <em>auditory stream segregation</em>. Each section below varies one thing that makes a
+sequence split or hold together, and each example opens with what to listen for, taken from
+what its booklet reports listeners hear.</p>
+<p>This page is a test of sonore: can its generators rebuild each stimulus from the description
+in the booklet? Each example names the demonstration it reproduces, rebuilds it from the
+booklet's frequencies, levels and timing, and says where it departs from them: where the
+booklet leaves a value open, where a recording is replaced by a stand-in, or where a long track
+is shortened. What listeners hear is reported as the booklet reports it; this page has not
+tested any of it.</p>
+<ul><li><a href="#h-speed-and-frequency">Speed and frequency</a>: a six-tone cycle that splits into two melodies when played fast, and a gallop that loses its rhythm (Bregman &amp; Ahad, Demonstrations 1–3; Houtsma et al., Demonstration 19).</li><li><a href="#h-streaming-builds-up">Streaming builds up</a>: the same gallop in runs of 2 to 32 (Demonstration 4).</li><li><a href="#h-a-hidden-melody">A hidden melody</a>: a tune interleaved with distractors, moved away from them (Demonstration 5).</li><li><a href="#h-timbre-and-spectrum">Timbre and spectrum</a>: tones of one pitch split by where their spectrum peaks, vowels, and bands of noise (Demonstrations 10, 11 and 14).</li><li><a href="#h-glides-and-timing">Glides and timing</a>: glides that hold a sequence together, and timing that is hard to judge across streams (Demonstrations 12 and 13).</li><li><a href="#h-competition-and-capture">Competition and capture</a>: which tones group depends on the others present (Demonstrations 15–17).</li><li><a href="#h-interlocking-parts">Interlocking parts</a>: two interleaved parts split by pitch, timbre and place, with a stand-in for the East African xylophone music on the disc (Demonstrations 7–9 and 41).</li><li><a href="#h-place">Place</a>: noise bursts that split when they come from two sides (Demonstrations 38 and 39).</li></ul>
+<p>Headphones are best for the last two sections, which send different sounds to the two ears.</p>
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. The audio is lossless, since compression would alter the binaural sounds. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/streams.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/streams.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
+</header>
+<section aria-labelledby="h-code-the-examples-share">
+<h2 id="h-code-the-examples-share">Code the examples share</h2>
+<p>Every sound is built from timed events: a tone or a noise burst, placed at its onset time. The
+booklet gives levels relative to the other sounds in a demonstration, and <code>finish</code> keeps those
+relations, scaling only the whole sound. The sample rate is 22.05 kHz, enough for everything on
+the page, which has nothing above 4 kHz except the white noise of the last section.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 22050
+
+
+def tone(freq, dur, rise=10e-3, decay=10e-3, db=0.0):
+    &quot;&quot;&quot;A sine tone `dur` seconds long including linear rise and decay ramps, `db` re the others.&quot;&quot;&quot;
+    n = round(dur * FS)
+    env = np.minimum(1, np.minimum(np.arange(n) / (rise * FS), np.arange(n)[::-1] / (decay * FS)))
+    return so.Sound(env * so.pure_tone(dur, FS, freq).data[:, 0], FS).gain_db(db)
+
+
+def place(events, dur=None):
+    &quot;&quot;&quot;Sounds added at their onset times: `events` is a list of (onset in seconds, Sound).&quot;&quot;&quot;
+    end = max(onset + snd.duration for onset, snd in events)
+    n_channels = max(snd.n_channels for _, snd in events)
+    out = np.zeros((round((dur or end) * FS) + 1, n_channels))
+    for onset, snd in events:
+        i = round(onset * FS)
+        out[i : i + snd.n_samples] += snd.data[: len(out) - i]
+    return so.Sound(out, FS)
+
+
+def gallop(high, low, onsets):
+    &quot;&quot;&quot;HLH- triplets: `onsets` is every unit&#x27;s onset; a unit is a tone or the silence after a triplet.&quot;&quot;&quot;
+    return [(t, (high, low, high, None)[i % 4]) for i, t in enumerate(onsets) if i % 4 != 3]
+
+
+def accelerating(n_units, first, last):
+    &quot;&quot;&quot;Onsets of `n_units` units whose length shrinks geometrically from `first` to `last` seconds.&quot;&quot;&quot;
+    lengths = np.geomspace(first, last, n_units)
+    return np.concatenate([[0], np.cumsum(lengths[:-1])]), lengths
+
+
+def show(snd, fmin=100, fmax=5000, title=&quot;Spectrogram (Hann 30 ms)&quot;):
+    &quot;&quot;&quot;A spectrogram on a log frequency axis, one panel per channel. Returns the figure and the
+    panels the playhead follows.&quot;&quot;&quot;
+    n = snd.n_channels
+    fig, axes = plt.subplots(
+        n, 1, figsize=(10, 2.6 + 1.6 * n), sharex=True, layout=&quot;constrained&quot;, squeeze=False
+    )
+    stft = so.STFT(snd, win_dur=30e-3, hop_dur=5e-3)
+    keep = (stft.f &gt;= fmin) &amp; (stft.f &lt;= fmax)
+    top = stft.db[:, keep].max()
+    for ch, ax in enumerate(axes[:, 0]):
+        ax.pcolormesh(stft.t, stft.f[keep], stft.db[ch][keep], vmin=top - 60, vmax=top, cmap=&quot;magma&quot;)
+        side = f&quot;, {(&#x27;left&#x27;, &#x27;right&#x27;)[ch]} ear&quot; if n == 2 else &quot;&quot;
+        ax.set(yscale=&quot;log&quot;, ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=title + side)
+    axes[-1, 0].set(xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
+    return fig, list(axes[:, 0])</code></pre></details></div>
+</section>
+<section aria-labelledby="h-speed-and-frequency">
+<h2 id="h-speed-and-frequency">Speed and frequency</h2>
+<p>Bregman &amp; Ahad's first demonstration, after an experiment by Bregman &amp; Campbell (1971), is a
+repeating cycle of three high and three low tones in strict alternation. Their booklet reports
+that played slowly it is heard as one six-note melody, and played fast it splits into a high
+and a low stream, each with its own three-note melody, so that the order of high and low tones
+becomes hard to report.</p>
+
+<article class="sound" id="d-sg1" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.400045351473922}]">
+  <div class="about">
+    <h3>A six-tone cycle, slow then fast</h3>
+    <div class="desc"><p><strong>Listen for</strong> the slow cycle as one six-note tune, and the fast one splitting into two
+three-note tunes, one high and one low, heard at once. Try to say which low tone follows which
+high one.</p><p>Bregman &amp; Ahad, Demonstration 1. Highs of 2500, 2000 and 1600 Hz alternate with lows of 350,
+430 and 550 Hz in the order H1 L1 H2 L2 H3 L3, with no silences and 10 ms onsets and offsets,
+the lows 6 dB stronger, as in the booklet: three cycles with 400 ms from one onset to the next,
+then, after a second's silence, twelve cycles at 100 ms. The booklet gives no repetition counts;
+these are ours.</p></div>
+    <audio controls preload="metadata" src="audio/sg1_a_six-tone_cycle_slow_then_fast.flac"></audio>
+    <p class="file">sg1_a_six-tone_cycle_slow_then_fast.flac, 15.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg1_a_six-tone_cycle_slow_then_fast.png" width="1000" height="420" alt="Plots of the a six-tone cycle, slow then fast sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">HIGHS, LOWS = (2500, 2000, 1600), (350, 430, 550)
+
+
+def six_tone_cycle(period, n_cycles, start=0.0, low_db=6.0):
+    pairs = zip(HIGHS, LOWS, strict=True)
+    cycle = [tone(f, period, db=low_db * (i % 2)) for pair in pairs for i, f in enumerate(pair)]
+    return [(start + period * (6 * c + k), cycle[k]) for c in range(n_cycles) for k in range(6)]
+
+
+sound = finish(place(six_tone_cycle(0.4, 3) + six_tone_cycle(0.1, 12, start=8.2)))
+fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg2" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.600045351473923}]">
+  <div class="about">
+    <h3>Standards within and across streams</h3>
+    <div class="desc"><p><strong>Listen for</strong> the three-tone standard inside the fast cycle. The first standard, all high
+tones, should be easy to find; the second, high, low, high, very hard.</p><p>Bregman &amp; Ahad, Demonstration 2. A three-tone standard, the fast cycle with three of its tones
+replaced by silence, is heard first, then the full cycle, in which a listener tries to keep
+hearing the standard. The booklet's lows are 1.5 dB stronger here. First a standard of the three
+highs, which lie in one stream, then a standard of two highs and the low between them (H1 L1
+H2), which crosses streams; the booklet reports the first easy to hear in the cycle and the
+second very hard. The booklet makes its across-stream standard evenly spaced in time by changing
+the full pattern; this reproduction keeps the strict alternation, so its across-stream standard
+is not evenly spaced.</p></div>
+    <audio controls preload="metadata" src="audio/sg2_standards_within_and_across_streams.flac"></audio>
+    <p class="file">sg2_standards_within_and_across_streams.flac, 12.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg2_standards_within_and_across_streams.png" width="1000" height="420" alt="Plots of the standards within and across streams sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">def standard(keep, n_cycles, start):
+    events = six_tone_cycle(0.1, n_cycles, start, low_db=1.5)
+    return [event for i, event in enumerate(events) if i % 6 in keep]
+
+
+events = []
+for start, keep in ((0.0, {0, 2, 4}), (6.4, {0, 1, 2})):
+    events += standard(keep, 4, start) + six_tone_cycle(0.1, 6, start + 2.6, low_db=1.5)
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg3" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 32.108934240362814}]">
+  <div class="about">
+    <h3>A gallop that speeds up</h3>
+    <div class="desc"><p><strong>Listen for</strong> the first gallop's da-da-dum rhythm breaking apart as it speeds up, into a fast
+high beat and a slow low one. The second gallop, its tones close in pitch, keeps galloping.</p><p>Bregman &amp; Ahad, Demonstration 3, after van Noorden (1975). Triplets HLH, each followed by a
+silence as long as a tone, speeding up from 287 to 88 ms per unit (a tone or the silence); the
+tones fill their units, with 10 ms rises and 20 ms decays. First with H and L 17.8 semitones
+apart (1400 and 500 Hz), then one semitone apart (1400 and 1320 Hz). The booklet reports that
+the first loses its galloping rhythm as it speeds up, splitting into a fast high stream and a
+slow low one, and that the second keeps galloping. How quickly the gallop speeds up is not in
+the booklet; here it takes 20 triplets and then holds the fastest speed for 6.</p></div>
+    <audio controls preload="metadata" src="audio/sg3_a_gallop_that_speeds_up.flac"></audio>
+    <p class="file">sg3_a_gallop_that_speeds_up.flac, 32.1 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg3_a_gallop_that_speeds_up.png" width="1000" height="420" alt="Plots of the a gallop that speeds up sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">def speeding_gallop(high_hz, low_hz, start):
+    onsets, lengths = accelerating(4 * 20, 0.287, 0.088)
+    onsets = np.concatenate([onsets, onsets[-1] + 0.088 * np.arange(1, 4 * 6 + 1)])
+    lengths = np.concatenate([lengths, np.full(4 * 6, 0.088)])
+    events = []
+    for i, (t, length) in enumerate(zip(onsets, lengths, strict=True)):
+        if i % 4 != 3:
+            events.append((start + t, tone((high_hz, low_hz, high_hz)[i % 4], length, decay=20e-3)))
+    return events, start + onsets[-1] + 0.088
+
+
+first, end = speeding_gallop(1400, 500, 0.0)
+second, _ = speeding_gallop(1400, 1320, end + 1.0)
+sound = finish(place(first + second))
+fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg4" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 19.45002267573696}]">
+  <div class="about">
+    <h3>B sweeps past A</h3>
+    <div class="desc"><p><strong>Listen for</strong> a gallop while B is near A in pitch, in the middle of the sound, and two
+separate, evenly beating sequences while B is far above or below.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 19, after van Noorden (1975), whose thesis
+introduced the gallop. Tone A stays at 2000 Hz; tone B steps from 1000 Hz up to 4000 Hz and back,
+in the ABA- rhythm. Their booklet reports a galloping rhythm near the crossing and two
+separate sequences when A and B are far apart. It gives neither the tone length nor the rate;
+here the tones are 50 ms with 5 ms ramps, 100 ms apart, and B moves one semitone per triplet.</p></div>
+    <audio controls preload="metadata" src="audio/sg4_b_sweeps_past_a.flac"></audio>
+    <p class="file">sg4_b_sweeps_past_a.flac, 19.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg4_b_sweeps_past_a.png" width="1000" height="420" alt="Plots of the b sweeps past a sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">steps = np.concatenate([np.arange(0, 24), np.arange(24, -1, -1)])
+events = []
+for k, semitones in enumerate(steps):
+    b = tone(1000 * 2 ** (semitones / 12), 0.05, 5e-3, 5e-3)
+    a = tone(2000, 0.05, 5e-3, 5e-3)
+    events += [(0.4 * k, a), (0.4 * k + 0.1, b), (0.4 * k + 0.2, a)]
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=500, fmax=6000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-streaming-builds-up">
+<h2 id="h-streaming-builds-up">Streaming builds up</h2>
+<p>Splitting takes time: a sequence often starts as one stream and splits after a few seconds of
+listening.</p>
+
+<article class="sound" id="d-sg5" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 47.00004535147392}]">
+  <div class="about">
+    <h3>Runs of 2 to 32 gallops</h3>
+    <div class="desc"><p><strong>Listen for</strong> the gallop holding together in the short runs and splitting into a high and a low
+beat during the long ones.</p><p>Bregman &amp; Ahad, Demonstration 4. The gallop of a 2000 Hz H and a 700 Hz L, each tone a 12.5 ms
+rise, 88 ms steady and 12.5 ms decay then 12 ms of silence (125 ms a unit), the low tone 6 dB
+stronger, in runs of 2, 4, 8, 16 and 32 triplets separated by 4 s of silence, all as in the
+booklet. Its reasoning: if a tendency to split builds up while the gallop plays and dies away
+in silence, the longer runs should split more. This is the page's longest sound, 47 s, because
+the build-up is the point.</p></div>
+    <audio controls preload="metadata" src="audio/sg5_runs_of_2_to_32_gallops.flac"></audio>
+    <p class="file">sg5_runs_of_2_to_32_gallops.flac, 47.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg5_runs_of_2_to_32_gallops.png" width="1000" height="420" alt="Plots of the runs of 2 to 32 gallops sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">h, l = tone(2000, 0.113, 12.5e-3, 12.5e-3), tone(700, 0.113, 12.5e-3, 12.5e-3, db=6)
+events, start = [], 0.0
+for run in (2, 4, 8, 16, 32):
+    events += [(start + t, snd) for t, snd in gallop(h, l, 0.125 * np.arange(4 * run))]
+    start += 0.5 * run + 4.0
+sound = finish(place(events, dur=start - 4.0))
+fig, playhead = show(sound, fmin=300, fmax=4000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-a-hidden-melody">
+<h2 id="h-a-hidden-melody">A hidden melody</h2>
+<p>Splitting can hide a tune among other notes, or free it.</p>
+
+<article class="sound" id="d-sg6" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 29.433061224489794}]">
+  <div class="about">
+    <h3>A melody pulling away from its distractors</h3>
+    <div class="desc"><p><strong>Listen for</strong> a familiar tune hidden among the notes. In the first presentation it is lost
+among the distractors; by the last it stands out above them.</p><p>Bregman &amp; Ahad, Demonstration 5, after Dowling (1973). A familiar tune's notes, each long note
+broken into quarter notes, alternate with random distractors, 7 tones a second (3 ms rise, 97 ms
+steady, 20 ms decay, 23 ms silence). The melody starts between C4 and G4, with C4 at 256 Hz as
+in the booklet, and moves up four semitones on each of three presentations (the booklet has
+five presentations, two semitones apart, ending at the same place); each distractor is
+drawn within four semitones of the previous note of the <em>untransposed</em> melody, so the
+distractors stay where they were. The booklet reports the tune hidden at first and easier to
+hear as it pulls away. The booklet keeps the tune secret until its last page; the code below
+names it. The tune and the seed of the distractors are ours to choose, as the booklet's choices
+are only partly given.</p></div>
+    <audio controls preload="metadata" src="audio/sg6_a_melody_pulling_away_from_its_distractors.flac"></audio>
+    <p class="file">sg6_a_melody_pulling_away_from_its_distractors.flac, 29.4 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg6_a_melody_pulling_away_from_its_distractors.png" width="1000" height="420" alt="Plots of the a melody pulling away from its distractors sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python"># Mary Had a Little Lamb, in semitones above C4, long notes broken into quarter notes.
+melody = [4, 2, 0, 2, 4, 4, 4, 4, 2, 2, 2, 2, 4, 7, 7, 7, 4, 2, 0, 2, 4, 4, 4, 4, 2, 2, 4, 2, 0, 0, 0, 0]
+rng = np.random.default_rng(5)
+distractors = [m + rng.integers(-4, 5) for m in melody]
+events, t = [], 0.0
+for shift in (0, 4, 8):
+    for note, other in zip(melody, distractors, strict=True):
+        for semitones in (note + shift, other):
+            events.append((t, tone(256 * 2 ** (semitones / 12), 0.12, rise=3e-3, decay=20e-3)))
+            t += 0.143
+    t += 1.0
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=150, fmax=800)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-timbre-and-spectrum">
+<h2 id="h-timbre-and-spectrum">Timbre and spectrum</h2>
+<p>Streams also split by timbre, with the pitch held fixed.</p>
+
+<article class="sound" id="d-sg7" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 18.222403628117913}]">
+  <div class="about">
+    <h3>One pitch, two spectral peaks</h3>
+    <div class="desc"><p><strong>Listen for</strong> tones of one pitch splitting into a bright stream and a dull one as the gallop
+speeds up.</p><p>Bregman &amp; Ahad, Demonstration 10. Two tones on the same 300 Hz fundamental, 30 equal harmonics
+through a resonance 80 Hz wide, peaking at 2000 Hz (H, bright) or 300 Hz (L, dull), 65 ms long
+with 20 ms rises and decays, the dull ones 3 dB stronger at their peaks. They gallop, HLH- with a
+65 ms silence for the missing L, and the silences between sounds shrink from 140 to 10 ms (from
+about 5 to 13 tones a second). The booklet reports the bright and dull tones separating as the
+gallop speeds up. sonore's <code>so.resonator</code> is Klatt's second-order resonator; the booklet does not
+name its formant filter, and the number of triplets (40 here) is ours.</p></div>
+    <audio controls preload="metadata" src="audio/sg7_one_pitch_two_spectral_peaks.flac"></audio>
+    <p class="file">sg7_one_pitch_two_spectral_peaks.flac, 18.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg7_one_pitch_two_spectral_peaks.png" width="1000" height="420" alt="Plots of the one pitch, two spectral peaks sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">def peaked(center):
+    buzz = so.harmonic_complex(0.065, FS, 300, harmonics=np.arange(1, 31), phases=&quot;sine&quot;)
+    snd = so.resonator(buzz, center, 80)
+    n = snd.n_samples
+    ramp = np.minimum(1, np.minimum(np.arange(n), np.arange(n)[::-1]) / (20e-3 * FS))
+    return so.Sound(ramp * snd.data[:, 0] / np.abs(snd.data).max(), FS)
+
+
+bright, dull = peaked(2000), peaked(300).gain_db(3)
+silences = np.geomspace(0.140, 0.010, 4 * 40)
+onsets = np.concatenate([[0], np.cumsum(0.065 + silences[:-1])])
+sound = finish(place(gallop(bright, dull, onsets)))
+fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg8" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.20004535147392}]">
+  <div class="about">
+    <h3>Vowels in alternation</h3>
+    <div class="desc"><p><strong>Listen for</strong> the alternating vowels splitting into two streams, each repeating one vowel.</p><p>Bregman &amp; Ahad, Demonstration 11. Short vowels alternating: "ay" (as in hay) with "o" (hoe),
+"a" (had) with "ee" (he), and "aw" (haw) with "ee", at a steady 112 Hz, then "a" with "ee" on a
+pitch falling from 118 to 92 Hz. The booklet used Peterson &amp; Barney's (1952) formant frequencies
+and an envelope of a 20 ms rise, an 80 ms decline and an exponential decay (10 ms time
+constant). It reports that the vowels split into streams, with or without the pitch movement.
+Here they come from <code>so.klatt_synthesize</code>, with Peterson &amp; Barney's averages for men; the two
+diphthongs glide between two of their vowels (our choice, since they measured no diphthongs),
+each vowel lasts 150 ms, the decline falls to half amplitude, and there are 16 alternations of
+each pair instead of the booklet's 32.</p></div>
+    <audio controls preload="metadata" src="audio/sg8_vowels_in_alternation.flac"></audio>
+    <p class="file">sg8_vowels_in_alternation.flac, 22.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg8_vowels_in_alternation.png" width="1000" height="420" alt="Plots of the vowels in alternation sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">VOWELS = {  # F1, F2, F3 [Hz], Peterson &amp; Barney (1952), men
+    &quot;ee&quot;: (270, 2290, 3010), &quot;eh&quot;: (530, 1840, 2480), &quot;a&quot;: (660, 1720, 2410),
+    &quot;aw&quot;: (570, 840, 2410), &quot;oo&quot;: (300, 870, 2240),
+}
+DIPHTHONGS = {&quot;ay&quot;: (&quot;eh&quot;, &quot;ee&quot;), &quot;o&quot;: (&quot;aw&quot;, &quot;oo&quot;)}
+
+
+def vowel(name, f0):
+    start, end = (VOWELS[v] for v in DIPHTHONGS.get(name, (name, name)))
+    times = np.array([0.0, 0.15])
+    tracks = {f&quot;F{k + 1}&quot;: (times, [start[k], end[k]]) for k in range(3)}
+    snd = so.klatt_synthesize(0.15, FS, F0=(times, f0), **tracks)
+    t = snd.t
+    decay = np.where(t &lt; 0.1, 1 - 0.5 * (t - 0.02) / 0.08, 0.5 * np.exp(-(t - 0.1) / 0.01))
+    env = np.where(t &lt; 0.02, t / 0.02, decay)
+    return so.Sound(env * snd.data[:, 0], FS).normalize(rms=0.1)
+
+
+events, t = [], 0.0
+pairs = [((&quot;ay&quot;, &quot;o&quot;), [112, 112]), ((&quot;a&quot;, &quot;ee&quot;), [112, 112]), ((&quot;aw&quot;, &quot;ee&quot;), [112, 112])]
+for pair, f0 in pairs + [((&quot;a&quot;, &quot;ee&quot;), [118, 92])]:
+    two_vowels = [vowel(name, f0) for name in pair]
+    for k in range(32):
+        events.append((t, two_vowels[k % 2]))
+        t += 0.15
+    t += 1.0
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=80, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg9" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.60185941043084}]">
+  <div class="about">
+    <h3>High and low bands of noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> the noise gallop splitting into a high hiss and a low hiss as it speeds up, as
+tones do.</p><p>Bregman &amp; Ahad, Demonstration 14, after Dannenbring &amp; Bregman (1976). Noise bursts in a gallop:
+a low band from 500 to 1000 Hz and a high band from 2000 to 4000 Hz, 50 ms long with 5 ms rises
+and decays. As in the booklet, each burst is a sum of equal tones in random phase, 2 Hz apart in
+the low band and 3 Hz in the high one, which gives flat bands with sharp edges, at equal
+spectrum level; the silences between elements (a burst, or the 50 ms gap after a triplet)
+shrink from 140 to 10 ms over 52 triplets. The booklet reports that the bands split as tones
+do.</p></div>
+    <audio controls preload="metadata" src="audio/sg9_high_and_low_bands_of_noise.flac"></audio>
+    <p class="file">sg9_high_and_low_bands_of_noise.flac, 20.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg9_high_and_low_bands_of_noise.png" width="1000" height="420" alt="Plots of the high and low bands of noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rng = np.random.default_rng(14)
+
+
+def band(lo, hi, step):
+    &quot;&quot;&quot;Equal tones `step` Hz apart in random phase from `lo` to `hi`, at a spectrum level that
+    does not depend on `step`: a burst of noise with sharp edges.&quot;&quot;&quot;
+    harmonics = np.arange(round(lo / step), round(hi / step) + 1)
+    amplitudes = np.full(len(harmonics), np.sqrt(step))
+    phases = rng.uniform(0, 2 * np.pi, len(harmonics))
+    snd = so.harmonic_complex(
+        0.05, FS, step, harmonics=harmonics, amplitudes=amplitudes, phases=phases, ramp=0
+    )
+    n = snd.n_samples
+    ramp = np.minimum(1, np.minimum(np.arange(n), np.arange(n)[::-1]) / (5e-3 * FS))
+    return so.Sound(ramp * snd.data[:, 0], FS)
+
+
+silences = np.geomspace(0.140, 0.010, 4 * 52)
+onsets = np.concatenate([[0], np.cumsum(0.05 + silences[:-1])])
+high_band, low_band = (2000, 4000, 3), (500, 1000, 2)
+events = [(t, band(*(low_band if i % 4 == 1 else high_band))) for i, t in enumerate(onsets) if i % 4 != 3]
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=300, fmax=5000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-glides-and-timing">
+<h2 id="h-glides-and-timing">Glides and timing</h2>
+<p>A smooth path from tone to tone holds a sequence together, and timing is hard to judge across
+two streams.</p>
+
+<article class="sound" id="d-sg10" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 17.000045351473922}]">
+  <div class="about">
+    <h3>Tones joined by glides, then not</h3>
+    <div class="desc"><p><strong>Listen for</strong> the joined version as one wavy line, and the tones without glides splitting into
+high and low streams sooner.</p><p>Bregman &amp; Ahad, Demonstration 12, after Bregman &amp; Dannenbring (1973). The cycle 2000, 614, 1600,
+400 Hz, ten times (the booklet plays it twenty), first with each tone joined to the next by a
+glide (100 ms steady, 100 ms gliding, straight on a log-frequency axis), then with the glides
+left out: 100 ms tones with 10 ms rises and decays and the rest of each 200 ms slot silent. The
+booklet reports the joined sequence heard as more coherent, and streaming building up faster
+without the glides.</p></div>
+    <audio controls preload="metadata" src="audio/sg10_tones_joined_by_glides_then_not.flac"></audio>
+    <p class="file">sg10_tones_joined_by_glides_then_not.flac, 17.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg10_tones_joined_by_glides_then_not.png" width="1000" height="420" alt="Plots of the tones joined by glides, then not sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">FREQS = [2000, 614, 1600, 400]
+times = np.linspace(0, 8, 8 * 400 + 1)
+slot, within = np.divmod(times, 0.2)
+f_from = np.take(FREQS, slot.astype(int) % 4)
+f_to = np.take(FREQS, (slot.astype(int) + 1) % 4)
+glide = np.clip((within - 0.1) / 0.1, 0, 1)
+contour = f_from * (f_to / f_from) ** glide
+joined = so.harmonic_complex(8, FS, (times, contour), harmonics=[1], ramp=0)
+apart = place([(0.2 * k, tone(FREQS[k % 4], 0.12)) for k in range(40)], dur=8)
+sound = finish(so.concat([joined.ramp(0.01), so.silence(1.0, FS), apart]))
+fig, playhead = show(sound, fmin=200, fmax=4000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg11" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 28.620045351473923}]">
+  <div class="about">
+    <h3>Where the low tone falls</h3>
+    <div class="desc"><p><strong>Listen for</strong> the low tone sitting off center in the gap. It should be easy to hear when it is
+close in pitch to the repeating tone (the first two sets) and hard when it is far below (the
+last two).</p><p>Bregman &amp; Ahad, Demonstration 13, after van Noorden (1975). A 1400 Hz tone H repeats throughout:
+60 ms tones (20 ms rises and decays) with 180 ms between them. Four times a low tone L is brought
+in for ten ABA triplets, in every other gap: at 1350 Hz centered in the gap, at 1350 Hz 30 ms late
+(90 ms before it, 30 after), at 600 Hz 30 ms early, and at 600 Hz centered. The booklet reports
+the off-center L easy to hear at 1350 Hz, in the same stream as H, and hard at 600 Hz, in a
+stream of its own. How long H plays alone between the sets (five triplets here) is ours.</p></div>
+    <audio controls preload="metadata" src="audio/sg11_where_the_low_tone_falls.flac"></audio>
+    <p class="file">sg11_where_the_low_tone_falls.flac, 28.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg11_where_the_low_tone_falls.png" width="1000" height="420" alt="Plots of the where the low tone falls sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">h = tone(1400, 0.06, 20e-3, 20e-3)
+events, t = [], 0.0
+for low_hz, offset in [(1350, 0.0), (1350, 0.03), (600, -0.03), (600, 0.0)]:
+    l_tone = tone(low_hz, 0.06, 20e-3, 20e-3)
+    for k in range(15):
+        events += [(t, h), (t + 0.24, h)]
+        if k &gt;= 5:
+            events.append((t + 0.06 + 0.06 + offset, l_tone))
+        t += 0.48
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-competition-and-capture">
+<h2 id="h-competition-and-capture">Competition and capture</h2>
+<p>Whether two tones fall in one stream depends not only on how far apart they are but on what
+else is playing.</p>
+
+<article class="sound" id="d-sg12" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.97002267573696}]">
+  <div class="about">
+    <h3>A and B, isolated or absorbed</h3>
+    <div class="desc"><p><strong>Listen for</strong> the standard, A then B, inside the cycle: easy in the first cycle, hard in the
+second, where other tones near their pitches pull A and B away.</p><p>Bregman &amp; Ahad, Demonstration 15, after Bregman (1978). A two-tone standard, A (3400 Hz) and B
+(1525 Hz) followed by two silences, then the four-tone cycle ABXY: 45 ms tones with 10 ms rises
+and decays and 30 ms silences, 300 ms a cycle, thirty cycles with a three-cycle fade-in and a
+ten-cycle fade-out. First X and Y low (246 and 455 Hz), then X near A and Y near B (2760 and
+1860 Hz). The booklet reports the standard easy to hear in the first cycle, where A and B form a
+stream of their own, and hard in the second, where A goes with X and B with Y. How many cycles
+of the standard come first (six here) is ours.</p></div>
+    <audio controls preload="metadata" src="audio/sg12_a_and_b_isolated_or_absorbed.flac"></audio>
+    <p class="file">sg12_a_and_b_isolated_or_absorbed.flac, 23.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg12_a_and_b_isolated_or_absorbed.png" width="1000" height="420" alt="Plots of the a and b, isolated or absorbed sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">def cycle_of(freqs, n_cycles, start, fade=False):
+    &quot;&quot;&quot;`n_cycles` cycles of 45 ms tones 75 ms apart; with `fade`, a three-cycle fade-in and a
+    ten-cycle fade-out.&quot;&quot;&quot;
+    gain = np.ones(n_cycles)
+    if fade:
+        gain = np.minimum(1, np.minimum((np.arange(n_cycles) + 1) / 3, (n_cycles - np.arange(n_cycles)) / 10))
+    return [
+        (start + 0.3 * c + 0.075 * k, so.Sound(gain[c] * tone(f, 0.045).data, FS))
+        for c in range(n_cycles)
+        for k, f in enumerate(freqs)
+        if f
+    ]
+
+
+events = []
+for start, (x, y) in ((0.0, (246, 455)), (12.0, (2760, 1860))):
+    events += cycle_of((3400, 1525, None, None), 6, start)
+    events += cycle_of((3400, 1525, x, y), 30, start + 2.0, fade=True)
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg13" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.231065759637188}]">
+  <div class="about">
+    <h3>A two-tone order, hidden and freed</h3>
+    <div class="desc"><p><strong>Listen for</strong> the order of the two high tones: clear alone, hard to hear between the lower X
+tones, and clear again when a run of captor tones pulls the X tones into a stream of their own.</p><p>Bregman &amp; Ahad, Demonstration 16, after Bregman &amp; Rudnicky (1975). Is A (2200 Hz) before B (2400
+Hz), or after? Tones are 57 ms (7 ms rise, 5 ms decay) with 9 ms between them, and the 2400 and
+1460 Hz tones are scaled by 0.5 and 0.4, as in the booklet. Three parts: the pair alone (BA then
+AB); a standard AB, then the pair between two 1460 Hz tones X (XABX), whose order the booklet
+reports is hard to hear; and a standard BA, then XABX inside a run of captor tones C at the
+same 1460 Hz and spacing, C--C--C--C--XABX--C--C, which the booklet reports frees A and B again.
+The silence between the parts (0.8 s) is ours.</p></div>
+    <audio controls preload="metadata" src="audio/sg13_a_two-tone_order_hidden_and_freed.flac"></audio>
+    <p class="file">sg13_a_two-tone_order_hidden_and_freed.flac, 4.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg13_a_two-tone_order_hidden_and_freed.png" width="1000" height="420" alt="Plots of the a two-tone order, hidden and freed sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">UNIT = 0.066
+A = tone(2200, 0.057, 7e-3, 5e-3)
+B = so.Sound(0.5 * tone(2400, 0.057, 7e-3, 5e-3).data, FS)
+X = so.Sound(0.4 * tone(1460, 0.057, 7e-3, 5e-3).data, FS)
+parts = [&quot;BA  AB&quot;, &quot;AB  XABX&quot;, &quot;BA  C  C  C  C  XABX  C  C&quot;]
+events, t = [], 0.0
+for part in parts:
+    for symbol in part:
+        if symbol != &quot; &quot;:
+            events.append((t, {&quot;A&quot;: A, &quot;B&quot;: B, &quot;X&quot;: X, &quot;C&quot;: X}[symbol]))
+        t += UNIT
+    t += 0.8
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=800, fmax=4000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg14" data-regions="[{&quot;x0&quot;: 0.054069289496527784, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 36.60004535147392}]">
+  <div class="about">
+    <h3>An X that bounces, and one that crosses</h3>
+    <div class="desc"><p><strong>Listen for</strong> the path you follow through the X. With pure tones it tends to fall and then
+bounce back up, or rise and bounce down, rather than cross; once the rising tones are richer in
+timbre, the crossing line is easy to follow.</p><p>Bregman &amp; Ahad, Demonstration 17, after Tougas &amp; Bregman (1985). A rising sequence from 400 to
+1600 Hz in seven equal log steps interleaved with the falling one, 100 ms tones with 10 ms rises
+and decays and no silences: an X. The booklet reports that listeners follow a path that bounces
+off the crossing (down then up, or up then down) rather than one that crosses, until the rising
+tones get a richer timbre (harmonics 1, 2, 4 and 8, each 20 dB below the pure tone). The disc
+then tests four standards against the X, before and after the change of timbre; this
+reproduction keeps two, the upper V (the falling tones above the crossing, then the rising ones)
+and the whole rising line, each as three cycles of standard then three of X, and after the
+change of timbre only the rising line. At this
+page's sample rate the eighth harmonic of the two highest rising tones does not fit and is left
+out.</p></div>
+    <audio controls preload="metadata" src="audio/sg14_an_x_that_bounces_and_one_that_crosses.flac"></audio>
+    <p class="file">sg14_an_x_that_bounces_and_one_that_crosses.flac, 36.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg14_an_x_that_bounces_and_one_that_crosses.png" width="1000" height="420" alt="Plots of the an x that bounces, and one that crosses sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rising = 400 * 4 ** (np.arange(7) / 6)
+falling = rising[::-1]
+
+
+def pure(f):
+    return tone(f, 0.1)
+
+
+def rich(f):
+    &quot;&quot;&quot;Harmonics 1, 2, 4 and 8, each 20 dB below the pure tone; those above 11 kHz, which this
+    sample rate cannot hold, are left out.&quot;&quot;&quot;
+    return so.Sound(sum(0.1 * tone(n * f, 0.1).data for n in (1, 2, 4, 8) if n * f &lt; FS / 2), FS)
+
+
+def x_pattern(rising_tone, keep, n_cycles, start):
+    &quot;&quot;&quot;`n_cycles` of the X, falling and rising tones in alternation, keeping those `keep` allows.&quot;&quot;&quot;
+    events = []
+    for c in range(n_cycles):
+        for k in range(7):
+            for j, (f, make) in enumerate(((falling[k], pure), (rising[k], rising_tone))):
+                if keep(f, j):
+                    events.append((start + 1.4 * c + 0.2 * k + 0.1 * j, make(f)))
+    return events
+
+
+standards = {&quot;upper V&quot;: lambda f, j: f &gt;= 800, &quot;rising line&quot;: lambda f, j: j == 1}
+events, t = [], 0.0
+for rising_tone, tests in ((pure, standards.values()), (rich, [standards[&quot;rising line&quot;]])):
+    events += x_pattern(rising_tone, lambda f, j: True, 3, t)
+    t += 4.2 + 0.6
+    for keep in tests:
+        events += x_pattern(rising_tone, keep, 3, t) + x_pattern(rising_tone, lambda f, j: True, 3, t + 4.2)
+        t += 8.4 + 0.6
+    t += 0.6
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=300, fmax=11000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-interlocking-parts">
+<h2 id="h-interlocking-parts">Interlocking parts</h2>
+<p>On the disc, Demonstrations 7 to 9 and 41 use a recording of East African xylophone (amadinda)
+music from Buganda, provided by Ulrich Wegner: two players each play an evenly spaced cycle of
+notes, interleaved, so that the listener hears high and low streams with rhythms that neither
+player plays. The recording is not ours to use, and neither is the piece's notation, so this
+section is a stand-in: two cycles of twelve notes drawn at random (seed 7) from a five-step
+scale of equal steps (240 cents) over two octaves from 220 Hz, played by a synthetic struck
+tone, 4.2 tones a second for each part as in the booklet. The struck tone is a fundamental with
+partials at 2.76 and 5.40 times it, the first modes of a free bar, decaying with a half-life of
+25 ms, inside the booklet's 15 to 30 ms. It is not an amadinda, and the cycles are not the piece.</p>
+
+<article class="sound" id="d-sg15" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
+  <div class="about">
+    <h3>Two interleaved parts</h3>
+    <div class="desc"><p><strong>Listen for</strong> each part alone as an even beat with a simple tune; together, neither tune can be
+heard, and new rhythms appear.</p><p>After Bregman &amp; Ahad, Demonstration 7. The first part alone, the second joining it, the second
+alone, both again, two cycles each. The booklet reports that when the parts play together,
+neither player's melody and even rhythm can be heard.</p></div>
+    <audio controls preload="metadata" src="audio/sg15_two_interleaved_parts.flac"></audio>
+    <p class="file">sg15_two_interleaved_parts.flac, 22.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg15_two_interleaved_parts.png" width="1000" height="420" alt="Plots of the two interleaved parts sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">SCALE = 220 * 2 ** (np.arange(11) * 240 / 1200)
+rng = np.random.default_rng(7)
+parts = [rng.integers(0, 11, 12), rng.integers(0, 11, 12)]
+PERIOD = 1 / 4.2
+
+
+def struck(freq, partials=(1, 2.76, 5.40), amps=(1, 0.3, 0.15), half_life=0.025):
+    t = np.arange(round(0.2 * FS)) / FS
+    env = np.minimum(1, t / 2e-3) * 0.5 ** (t / half_life)
+    waves = sum(a * np.sin(2 * np.pi * p * freq * t) for p, a in zip(partials, amps, strict=True))
+    return so.Sound(env * waves, FS)
+
+
+def interlocking(plan, timbres=(struck, struck), octave=(0, 0), start=0.0, n_cycles=2):
+    &quot;&quot;&quot;`plan` lists which parts play in each block of `n_cycles` cycles.&quot;&quot;&quot;
+    events, t = [], start
+    for playing in plan:
+        for c in range(n_cycles):
+            for k in range(12):
+                for p in playing:
+                    onset = t + (12 * c + k) * PERIOD + p * PERIOD / 2
+                    events.append((onset, timbres[p](SCALE[parts[p][k]] * 2 ** octave[p])))
+        t += 12 * n_cycles * PERIOD
+    return events, t
+
+
+events, _ = interlocking([(0,), (0, 1), (1,), (0, 1)])
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=150, fmax=3000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg16" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
+  <div class="about">
+    <h3>The second part an octave up</h3>
+    <div class="desc"><p><strong>Listen for</strong> each part's own tune and even rhythm staying audible when they play together, now
+that the second part is an octave up.</p><p>After Bregman &amp; Ahad, Demonstration 8. The same, with the second part an octave higher. The
+booklet reports that each player's part now stays audible with its own even rhythm when they
+play together.</p></div>
+    <audio controls preload="metadata" src="audio/sg16_the_second_part_an_octave_up.flac"></audio>
+    <p class="file">sg16_the_second_part_an_octave_up.flac, 22.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg16_the_second_part_an_octave_up.png" width="1000" height="420" alt="Plots of the the second part an octave up sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">events, _ = interlocking([(0,), (0, 1), (1,), (0, 1)], octave=(0, 1))
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=150, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg17" data-regions="[{&quot;x0&quot;: 0.07284706727430557, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0617980820105819, &quot;bottom&quot;: 0.8816814256779101, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.938140589569162}]">
+  <div class="about">
+    <h3>The two parts in two timbres</h3>
+    <div class="desc"><p><strong>Listen for</strong> the two parts, in the same range again, separating by their timbres.</p><p>After Bregman &amp; Ahad, Demonstration 9. The parts in the same range again, the first muffled
+(fundamental and second harmonic, as the booklet describes it) and the second brittle (strong
+high inharmonic partials and a weak fundamental). The booklet reports that the two parts split
+by timbre. The partials of both timbres are ours.</p></div>
+    <audio controls preload="metadata" src="audio/sg17_the_two_parts_in_two_timbres.flac"></audio>
+    <p class="file">sg17_the_two_parts_in_two_timbres.flac, 22.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg17_the_two_parts_in_two_timbres.png" width="1000" height="420" alt="Plots of the the two parts in two timbres sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">def muffled(f):
+    return struck(f, partials=(1, 2), amps=(1, 0.5))
+
+
+def brittle(f):
+    return struck(f, partials=(1, 4.7, 7.3, 10.9), amps=(0.3, 1, 0.8, 0.6), half_life=0.015)
+
+
+events, _ = interlocking([(0,), (0, 1), (1,), (0, 1)], timbres=(muffled, brittle))
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=150, fmax=8000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-place">
+<h2 id="h-place">Place</h2>
+<p>Sounds from different sides split into streams, as sounds of different pitch do.</p>
+
+<article class="sound" id="d-sg18" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}, {&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 15.85002267573696}]">
+  <div class="about">
+    <h3>Noise bursts that move apart <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
+    <div class="desc"><p><strong>Listen for</strong> the gallop splitting into a fast beat on the left and a slow one on the right as
+the bursts move apart, and coming back when they return to the center.</p><p>Bregman &amp; Ahad, Demonstration 38. Bursts of white noise in an ABA- gallop, 50 ms each with 1 ms
+onsets and offsets and 50 ms silences, so that A repeats every 200 ms and B every 400 ms. All
+start in the center (both ears equally); then A moves gradually into the left ear only and B
+into the right only, and back. The booklet reports that the gallop splits into a fast stream on
+the left and a slow one on the right, and returns when the bursts come back to the center. The
+booklet moves the bursts by level alone; how fast they move (over ten triplets, holding for ten)
+and the constant-power pan are ours, and the sequence plays once instead of twice.</p></div>
+    <audio controls preload="metadata" src="audio/sg18_noise_bursts_that_move_apart.flac"></audio>
+    <p class="file">sg18_noise_bursts_that_move_apart.flac, 15.9 s, stereo</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg18_noise_bursts_that_move_apart.png" width="1000" height="580" alt="Plots of the noise bursts that move apart sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rng = np.random.default_rng(38)
+pan = np.concatenate([np.zeros(5), np.linspace(0, 1, 10), np.ones(10), np.linspace(1, 0, 10), np.zeros(5)])
+events = []
+for k, p in enumerate(pan):
+    for j, side in enumerate((-1, 1, -1)):
+        burst = so.gaussian_noise(0.05, FS, rng=rng).ramp(1e-3, shape=&quot;linear&quot;).data[:, 0]
+        angle = np.pi / 4 * (1 + side * p)
+        pair = np.column_stack([np.cos(angle) * burst, np.sin(angle) * burst])
+        events.append((0.4 * k + 0.1 * j, so.Sound(pair, FS)))
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=100, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg19" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.4457494608327347, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}, {&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.5133219068037596, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 22.000045351473922}]">
+  <div class="about">
+    <h3>A middle burst on time or late <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
+    <div class="desc"><p><strong>Listen for</strong> whether the middle burst is late: easy to hear with everything in one ear, harder
+with B in the other ear.</p><p>Bregman &amp; Ahad, Demonstration 39. 40 ms bursts of white noise, A then B then A, with 200 ms
+from the end of one A to the start of the next; B either sits in the middle (80 ms of silence
+on each side) or is late (130 ms before it, 30 after). Each gallop is framed by A bursts alone.
+First everything in the left ear, B in the middle and then late; then A in the left ear and B
+in the right, B late and then in the middle (the order the booklet's answer gives). The booklet
+reports the late B harder to notice when it comes from the other side. The number of bursts
+(six A alone before and after, eight triplets) is ours.</p></div>
+    <audio controls preload="metadata" src="audio/sg19_a_middle_burst_on_time_or_late.flac"></audio>
+    <p class="file">sg19_a_middle_burst_on_time_or_late.flac, 22.0 s, stereo</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg19_a_middle_burst_on_time_or_late.png" width="1000" height="580" alt="Plots of the a middle burst on time or late sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">rng = np.random.default_rng(39)
+
+
+def burst(ear):
+    data = so.gaussian_noise(0.04, FS, rng=rng).ramp(1e-3, shape=&quot;linear&quot;).data[:, 0]
+    return so.Sound(np.column_stack([data * (ear == &quot;left&quot;), data * (ear == &quot;right&quot;)]), FS)
+
+
+events, t = [], 0.0
+for b_ear, delays in ((&quot;left&quot;, (0.08, 0.13)), (&quot;right&quot;, (0.13, 0.08))):
+    for delay in delays:
+        for k in range(6 + 8 + 6):
+            events.append((t, burst(&quot;left&quot;)))
+            if 6 &lt;= k &lt; 14 and (k - 6) % 2 == 0:
+                events.append((t + 0.04 + delay, burst(b_ear)))
+            t += 0.24
+        t += 1.0
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=100, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-sg20" data-regions="[{&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9863438716169167, &quot;top&quot;: 0.04475033524904193, &quot;bottom&quot;: 0.44937766178759597, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}, {&quot;x0&quot;: 0.07234706727430557, &quot;x1&quot;: 0.9863438716169167, &quot;top&quot;: 0.5096937058488986, &quot;bottom&quot;: 0.9143210323874521, &quot;t0&quot;: 0.0, &quot;t1&quot;: 20.080997732426304}]">
+  <div class="about">
+    <h3>The two parts moving apart <span class="headphones" title="Headphones required for binaural sounds" role="img" aria-label="Headphones required for binaural sounds">🎧</span></h3>
+    <div class="desc"><p><strong>Listen for</strong> the two parts, once in opposite ears, each heard with its own even rhythm.</p><p>After Bregman &amp; Ahad, Demonstration 41. The interleaved parts of the stand-in above, first sent
+equally to both ears for two cycles, then moving apart over three, the first part to the left
+and the second to the right, and apart for two more. The booklet reports that the parts, once
+apart, are heard each with its own even rhythm.</p></div>
+    <audio controls preload="metadata" src="audio/sg20_the_two_parts_moving_apart.flac"></audio>
+    <p class="file">sg20_the_two_parts_moving_apart.flac, 20.1 s, stereo</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/sg20_the_two_parts_moving_apart.png" width="1000" height="580" alt="Plots of the the two parts moving apart sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">events, end = interlocking([(0, 1)], n_cycles=7)
+stereo = []
+for onset, snd in events:
+    first_part = round(onset / (PERIOD / 2)) % 2 == 0
+    p = np.clip((onset - 2 * 12 * PERIOD) / (3 * 12 * PERIOD), 0, 1)
+    angle = np.pi / 4 * (1 + (-1 if first_part else 1) * p)
+    pair = np.column_stack([np.cos(angle) * snd.data[:, 0], np.sin(angle) * snd.data[:, 0]])
+    stereo.append((onset, so.Sound(pair, FS)))
+sound = finish(place(stereo))
+fig, playhead = show(sound, fmin=150, fmax=3000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Bregman &amp; Ahad (1996). <em>Demonstrations of Auditory Scene Analysis: The Perceptual Organization of Sound</em> (compact disc and booklet). Auditory Perception Laboratory, McGill University; MIT Press. <a href="https://webpages.mcgill.ca/staff/Group2/abregm1/web/downloadsdl.htm" target="_blank" rel="noopener">Recordings and booklet</a>.</li><li>Houtsma, Rossing &amp; Wagenaars (1987). <em>Auditory Demonstrations</em> (compact disc and booklet). Institute for Perception Research (IPO), Eindhoven, and the Acoustical Society of America. <a href="https://research.tue.nl/en/publications/auditory-demonstrations" target="_blank" rel="noopener">Booklet</a>.</li><li>Bregman (1978). Auditory streaming: competition among alternative organizations. <em>Perception &amp; Psychophysics</em> 23, 391–398. <a href="https://doi.org/10.3758/BF03204141" target="_blank" rel="noopener">doi:10.3758/BF03204141</a>.</li><li>Bregman (1990). <em>Auditory Scene Analysis: The Perceptual Organization of Sound</em>. MIT Press. <a href="https://doi.org/10.7551/mitpress/1486.001.0001" target="_blank" rel="noopener">doi:10.7551/mitpress/1486.001.0001</a>.</li><li>Bregman &amp; Campbell (1971). Primary auditory stream segregation and perception of order in rapid sequences of tones. <em>J. Exp. Psychol.</em> 89(2), 244–249. <a href="https://doi.org/10.1037/h0031163" target="_blank" rel="noopener">doi:10.1037/h0031163</a>.</li><li>Bregman &amp; Dannenbring (1973). The effect of continuity on auditory stream segregation. <em>Perception &amp; Psychophysics</em> 13, 308–312. <a href="https://doi.org/10.3758/BF03214144" target="_blank" rel="noopener">doi:10.3758/BF03214144</a>.</li><li>Bregman &amp; Rudnicky (1975). Auditory segregation: stream or streams? <em>J. Exp. Psychol.: Human Perception and Performance</em> 1(3), 263–267. <a href="https://doi.org/10.1037/0096-1523.1.3.263" target="_blank" rel="noopener">doi:10.1037/0096-1523.1.3.263</a>.</li><li>Dannenbring &amp; Bregman (1976). Stream segregation and the illusion of overlap. <em>J. Exp. Psychol.: Human Perception and Performance</em> 2(4), 544–555. <a href="https://doi.org/10.1037/0096-1523.2.4.544" target="_blank" rel="noopener">doi:10.1037/0096-1523.2.4.544</a>.</li><li>Dowling (1973). The perception of interleaved melodies. <em>Cognitive Psychology</em> 5(3), 322–337. <a href="https://doi.org/10.1016/0010-0285(73)90040-6" target="_blank" rel="noopener">doi:10.1016/0010-0285(73)90040-6</a>.</li><li>Peterson &amp; Barney (1952). Control methods used in a study of the vowels. <em>J. Acoust. Soc. Am.</em> 24(2), 175–184.</li><li>Tougas &amp; Bregman (1985). Crossing of auditory streams. <em>J. Exp. Psychol.: Human Perception and Performance</em> 11(6), 788–798. <a href="https://doi.org/10.1037/0096-1523.11.6.788" target="_blank" rel="noopener">doi:10.1037/0096-1523.11.6.788</a>.</li><li>van Noorden (1975). <em>Temporal Coherence in the Perception of Tone Sequences</em>. Doctoral thesis, Eindhoven University of Technology. <a href="https://research.tue.nl/en/publications/temporal-coherence-in-the-perception-of-tone-sequences" target="_blank" rel="noopener">TU/e</a>.</li></ul>
+<p>The original papers were checked for their titles and publication details; the stimulus
+parameters on this page come from Bregman &amp; Ahad's and Houtsma et al.'s booklets, not from
+the papers.</p>
+</section>
+<footer>This page is the script <code>docs/gallery/demos/streams.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/demos/streams.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
+</main>
+</div>
+<script>
+(() => {
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the color bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
