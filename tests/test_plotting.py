@@ -272,3 +272,33 @@ def test_per_band_cues_label_every_band_by_its_center():
     ax = so.plotting.plot_interaural_cues(cues)
     labels = [tick.get_text() for tick in ax.get_yticklabels()]
     assert labels == [f"{cf:.0f}" for cf in cues.cfs]
+
+
+@pytest.mark.parametrize(
+    ("limits", "expected"),
+    [
+        ((20, 20000), [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000]),
+        ((55, 420), [100, 200, 300]),
+        ((800, 1800), [800, 1000, 1500]),
+    ],
+)
+def test_log_frequency_axis_labels_plain_numbers(limits, expected):
+    import matplotlib.pyplot as plt
+
+    from sonore.plotting import log_frequency_axis
+
+    fig, ax = plt.subplots()
+    log_frequency_axis(ax)
+    ax.set_ylim(*limits)
+    fig.canvas.draw()
+    ticks = [t for t in ax.get_yticks() if limits[0] <= t <= limits[1]]
+    labels = [
+        label.get_text()
+        for label in ax.get_yticklabels()
+        if limits[0] <= label.get_position()[1] <= limits[1]
+    ]
+    np.testing.assert_allclose(ticks, expected)
+    assert labels == [f"{t:g}" for t in expected]
+    assert ax.get_yscale() == "log"
+    assert all(label.get_text() == "" for label in ax.yaxis.get_ticklabels(minor=True))
+    plt.close(fig)

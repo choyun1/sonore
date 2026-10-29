@@ -393,8 +393,9 @@ for ax, (label, snd) in zip(axes, talkers.items(), strict=True):
         ranges.items(), ["k", "C0", "C3", "C2"], ["-", "-", "-", "--"], strict=True
     ):
         ax.plot(*contour_of(contours[label]), color=color, ls=style, lw=1, label=name)
+    so.plotting.log_frequency_axis(ax)
     ax.set(
-        xlabel="Time (s)", xlim=(0, snd.duration), yscale="log", title=f"{label}: so.f0_track, range changed"
+        xlabel="Time (s)", xlim=(0, snd.duration), title=f"{label}: so.f0_track, range changed"
     )
     ax.set_yticks([50, 70, 100, 140, 200, 280, 400], ["50", "70", "100", "140", "200", "280", "400"])
     ax.set_yticks([], minor=True)

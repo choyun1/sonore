@@ -6,6 +6,19 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+
+- `sonore.plotting.log_frequency_axis(ax, axis)`: a log axis labeled in
+  plain numbers (20, 50, 100, 200, 500, 1000, ...) instead of powers of ten,
+  with denser ticks on narrow ranges.
+
+### Changed
+
+- Every log frequency axis that sonore's plot functions draw (masks,
+  modulation spectrograms and slices, cochleagrams, the decimated filterbank,
+  ripple patterns, spectra) is labeled in plain numbers, and so are the
+  gallery's figures.
+
 ## [0.10.0] - 2026-10-29
 
 A release for streams: views computed one block of sound at a time, whose

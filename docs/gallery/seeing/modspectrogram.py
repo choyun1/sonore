@@ -202,7 +202,8 @@ def show_pair(sounds, marks, moments):
                 msg.fm, msg.f, db[:, :, i], cmap="magma", vmin=top - 30, vmax=top, shading="nearest"
             )
             image.cmap.set_bad("0.75")
-            ax.set(xscale="log", yscale="log", title=f"{name}, {msg.t[i]:.1f} s", xlabel="Rate [Hz]")
+            so.plotting.log_frequency_axis(ax, "both")
+            ax.set(title=f"{name}, {msg.t[i]:.1f} s", xlabel="Rate [Hz]")
             rate_ticks(ax.xaxis)
         cuts[0].set_ylabel("Frequency [Hz]")
         lower.colorbar(image, ax=cuts, label="Depth [dB]", shrink=0.9)
@@ -231,7 +232,8 @@ for msg, label, color in ((noise_msg, "1 s window", "C0"), (noise_sharp, "0.25 s
     left.plot(msg.fm, pooled, color=color, ls="--", label=f"{label}, pooled")
     response = msg.bank.response(rates)[:, list(msg.fm).index(16.0)]
     right.plot(rates, response, color=color, label=label)
-left.set(xscale="log", xlabel="Modulation rate [Hz]", ylabel="Depth [dB]", ylim=(-40, -5))
+left.set_xscale("log")
+left.set(xlabel="Modulation rate [Hz]", ylabel="Depth [dB]", ylim=(-40, -5))
 rate_ticks(left.xaxis)
 left.legend(fontsize=8, ncols=2, loc="upper center")
 right.set(xlabel="Modulation rate [Hz]", ylabel="Gain", title="The filter at 16 Hz")
