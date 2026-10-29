@@ -1,7 +1,7 @@
 # A live page: sonore's streams on the microphone, in the browser
 
-Status: proposed 2026-10-29, for Cho to accept or change. No page code
-until then.
+Status: accepted by Cho 2026-10-29; the page is built in docs/live/ and
+checked with tools/live_page/check.js.
 
 The streaming views (docs/design/streaming.md) take sound one block at a
 time and give exactly what the batch analysis gives. This note proposes a
@@ -113,3 +113,25 @@ shows (computing time per 10 ms of sound).
 - A phone layout beyond what fits by itself: phones are slower, and the
   timing check here is for a laptop.
 - Recording or saving the microphone's sound.
+
+## As built
+
+What the page needed beyond L1 to L7, found with the fake-microphone check:
+
+- The worklet sends its buffers straight to the worker through a
+  `MessageChannel`, not through the page's thread, and only once the
+  worker says the analysis is ready. Before that change, the buffers that
+  queued while Pyodide started arrived at once and the page restarted
+  eight times in its first 35 ms.
+- Each buffer carries the worklet's `currentFrame`, so the worker can tell
+  a gap in the sound (the browser skipped audio) from continuous sound; a
+  gap restarts the streams, as falling behind does (L5).
+- `live.py` runs one second of quiet noise through the streams before the
+  microphone starts, so the first slow steps (building cached kernels) do
+  not count against the backlog.
+
+The check plays `bdl_arctic_a0131` as the microphone in headless Chromium
+in this cloud machine: over 10 s, the page's 1,969 F0s equal
+`f0_track(..., delay=0.05)` on the samples the worker received, exactly,
+with no restart, and the page reported 8.1 ms of computing per 10 ms of
+sound.
