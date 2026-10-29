@@ -500,11 +500,11 @@ fig, playhead = show(sound, fmin=500, fmax=2500)
 #
 # Houtsma, Rossing & Wagenaars, Demonstration 32, its second part. A 1000 Hz tone with 2004,
 # 1502 and 1334.67 Hz in turn, each mistuned from 2/1, 3/2 and 4/3 so that the second-order beats
-# come 4 times a second, as in the booklet. Ours: equal levels, 4 s each, 20 ms ramps, pauses of
-# 0.5 s.
+# come 4 times a second, as in the booklet. Ours: equal levels, 2.7 s each, 20 ms ramps, pauses
+# of 0.5 s.
 
 # %% [demo pk9b] Beats of mistuned consonances
-mistuned = [partials((1000, f), 4.0) for f in (2004, 1502, 1334.67)]
+mistuned = [partials((1000, f), 2.7) for f in (2004, 1502, 1334.67)]
 sound = finish(so.concat([mistuned[0], pause, mistuned[1], pause, mistuned[2]]))
 fig, playhead = show(sound, fmin=500, fmax=3000)
 
@@ -518,12 +518,12 @@ fig, playhead = show(sound, fmin=500, fmax=3000)
 # Houtsma, Rossing & Wagenaars, Demonstration 34, after Goldstein (1967). Tones of 1000 and 1200 Hz,
 # then an 804 Hz probe added, as in the booklet. Its text calls 800 Hz the quadratic difference
 # tone; it is the cubic one, 2f1 - f2 (the quadratic one, f2 - f1, is at 200 Hz). Ours: equal
-# levels for the two tones, the probe 20 dB below them, 3 s of the two tones before the probe
-# joins for 5 s, and 20 ms ramps.
+# levels for the two tones, the probe 20 dB below them, 2 s of the two tones before the probe
+# joins for 4 s, and 20 ms ramps.
 
 # %% [demo pk10] A probe beating with a tone that is not there
-two = partials((1000, 1200), 8.0)
-probe = place([(3.0, tone(804, 5.0).gain_db(-20))], dur=8.0)
+two = partials((1000, 1200), 6.0)
+probe = place([(2.0, tone(804, 4.0).gain_db(-20))], dur=6.0)
 sound = finish(so.Sound(two.data + probe.data[: two.n_samples], FS))
 fig, playhead = show(sound, fmin=500, fmax=2500)
 
@@ -542,7 +542,7 @@ times = np.array([0.0, 8.0, 16.0])
 glide = so.harmonic_complex(16.0, FS, (times, np.array([1200, 1600, 1200])), harmonics=[1], ramp=0)
 steady = so.pure_tone(16.0, FS, 1000)
 sound = finish(ramped(so.Sound(steady.data[:, 0] + glide.data[:, 0], FS)))
-fig, playhead = show(sound, fmin=100, fmax=2500)
+fig, playhead = show(sound, fmin=800, fmax=1800, log=False, win=0.1, title="Spectrogram (Hann 100 ms)")
 
 # %% [markdown]
 # ## References

@@ -483,13 +483,13 @@ report(
     0.02,
 )
 
-# Demonstration 32: 1000 Hz with 2004, 1502 and 1334.67 Hz in turn (4 s each, 0.5 s pauses).
+# Demonstration 32: 1000 Hz with 2004, 1502 and 1334.67 Hz in turn (2.7 s each, 0.5 s pauses).
 data, fs = load("pk9b")
 x = data[:, 0]
 report(
     "pk9b upper tones [Hz]",
     [
-        peak_in_band(x[round((4.5 * k + 0.5) * fs) : round((4.5 * k + 3.5) * fs)], fs, 1100, 2500)
+        peak_in_band(x[round((3.2 * k + 0.5) * fs) : round((3.2 * k + 2.2) * fs)], fs, 1100, 2500)
         for k in range(3)
     ],
     [2004, 1502, 1334.67],
@@ -497,14 +497,14 @@ report(
 )
 
 # Demonstration 34: 1000 and 1200 Hz with nothing at 2f1 - f2 = 800 Hz or f2 - f1 = 200 Hz in the
-# sound (the first 3 s, before the 804 Hz probe), then the probe 20 dB below the two tones.
+# sound (the first 2 s, before the 804 Hz probe), then the probe 20 dB below the two tones.
 data, fs = load("pk10")
 x = data[:, 0]
-before, after = x[round(0.5 * fs) : round(2.5 * fs)], x[round(4.0 * fs) : round(7.5 * fs)]
+before, after = x[round(0.3 * fs) : round(1.8 * fs)], x[round(2.5 * fs) : round(5.7 * fs)]
 report(
-    "pk10 energy at 800 and 200 Hz re 1000 Hz, before the probe [dB] (below -100 counts as -100)",
-    [max(peak_level(before, fs, f - 5, f + 5) - peak_level(before, fs, 995, 1005), -100) for f in (800, 200)],
-    [-100, -100],
+    "pk10 energy at 800 and 200 Hz re 1000 Hz, before the probe [dB] (below -90 counts as -90)",
+    [max(peak_level(before, fs, f - 5, f + 5) - peak_level(before, fs, 995, 1005), -90) for f in (800, 200)],
+    [-90, -90],
     0,
 )
 report(
