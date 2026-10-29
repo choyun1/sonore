@@ -6,6 +6,17 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-29
+
+A release for streams: views computed one block of sound at a time, whose
+joined parts equal the analysis of the whole sound (docs/design/streaming.md).
+The STFT, cepstrum, MFCCs, a time-domain gammatone bank with pooled
+envelopes, the causal modulation spectrogram and the F0 track all stream,
+and `live_blocks` feeds them from a sound card. The F0 track runs about
+twice as fast, and its F0s move by rounding only. A page that runs the
+streams on the microphone in the browser (docs/live/) needs this release,
+since it installs sonore from PyPI.
+
 ### Added
 
 - Streams: views computed one block of sound at a time, equal to the batch
@@ -1275,7 +1286,8 @@ First release on PyPI.
 Renamed to sonore, with the version kept in one place (`src/sonore/__init__.py`).
 Not published to PyPI.
 
-[Unreleased]: https://github.com/choyun1/sonore/compare/v0.9.0...main
+[Unreleased]: https://github.com/choyun1/sonore/compare/v0.10.0...main
+[0.10.0]: https://github.com/choyun1/sonore/releases/tag/v0.10.0
 [0.9.0]: https://github.com/choyun1/sonore/releases/tag/v0.9.0
 [0.8.0]: https://github.com/choyun1/sonore/releases/tag/v0.8.0
 [0.7.0]: https://github.com/choyun1/sonore/releases/tag/v0.7.0
