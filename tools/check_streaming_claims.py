@@ -1,4 +1,4 @@
-"""Numerical checks for the claims in docs/design/streaming.md (C1-C9).
+"""Numerical checks for the claims in docs/design/streaming.md (C1-C10).
 
 The streaming versions are written out here from their definitions, with
 NumPy and SciPy only, as the step functions the design proposes: a step takes
@@ -263,6 +263,18 @@ def check_state_copy():
     report("C7", "Same state as a ring buffer written in place: time [ms]", in_place * 1e3)
 
 
+def check_sound_blocks():
+    """Blocks as Sounds: what wrapping each 10 ms block costs (Sound copies
+    its data and checks its shape)."""
+    block = NOISE[:441]
+    n = 20000
+    start = time.perf_counter()
+    for _ in range(n):
+        so.Sound(block, FS)
+    per_block = (time.perf_counter() - start) / n
+    report("C10", "Wrapping one 10 ms block (441 samples) in a Sound: time [ms]", per_block * 1e3)
+
+
 def check_stft_cost(frame):
     step, _ = make_stft_step(frame, FS)
     blocks = [NOISE[i : i + 441] for i in range(0, len(NOISE) - 441, 441)]
@@ -372,5 +384,6 @@ if __name__ == "__main__":
     check_gammatone()
     check_state_copy()
     check_stft_cost(frame)
+    check_sound_blocks()
     check_f0_locality()
     check_f0_lag()

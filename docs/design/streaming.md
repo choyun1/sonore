@@ -7,8 +7,8 @@ the F0 track. A streaming view takes sound a block at a time as it arrives,
 keeps what it needs from earlier blocks, and returns the time windows each
 block completes.
 
-Status: proposed 2026-10-28, decisions D1–D10 open. The claims are checked by
-`tools/check_streaming_claims.py` (C1–C9). It writes every streaming version
+Status: proposed 2026-10-28, decisions D1–D11 open. The claims are checked by
+`tools/check_streaming_claims.py` (C1–C10). It writes every streaming version
 out from its definition in NumPy and SciPy, as the step functions D1
 proposes, and imports sonore only for the batch results it compares them
 with. Every number below is what it printed on 2026-10-28 in the cloud
@@ -77,7 +77,7 @@ course (a sequence whose elements are computed only when read). Generators
 compose like a Unix pipe, so stages chain:
 
 ```python
-blocks = so.blocks(mic, 441)                  # any iterable of sample arrays
+blocks = so.blocks(snd, 441)                  # Sounds of 441 samples; any iterable of them
 for cochleagram in so.stream(bank, blocks):   # each item: the new time windows
     draw(cochleagram)
 ```
@@ -92,9 +92,9 @@ A microphone *pushes* blocks, and a callback runs for each one. Because
 state in one variable:
 
 ```python
-def on_audio(block):                          # called by the browser for every block
+def on_audio(buffer):                         # called by the browser for every block
     global state
-    state, windows = bank.step(state, block)
+    state, windows = bank.step(state, so.Sound(buffer, fs))
     draw(windows)
 ```
 
@@ -177,6 +177,9 @@ place. C7 measures this for the largest state in view.
   10 ms block takes 0.05 to 0.08 ms over two runs (under 1% of the block).
   Writing the block into a ring buffer in place takes 0.003 to 0.004 ms. So the pure step costs nothing that
   matters, and a ring buffer stays available if a larger state ever needs it.
+- **C10. Making each block a `Sound` costs almost nothing.** Wrapping a
+  441-sample block in a `Sound` (which copies the samples and checks their
+  shape) takes 0.0013 ms, about 0.01% of the block's 10 ms.
 - **C8. A live F0 track can decide 50 ms late without changing the result.**
   Today's tracker runs a Viterbi pass over the whole track. A live tracker
   has to commit to each time window after a fixed delay. Decoding with that
@@ -206,8 +209,8 @@ Each view that streams provides `start(fs) -> state`,
 are frozen dataclasses holding arrays. A public `typing.Protocol`,
 `Streamable`, names the three methods, because `so.stream` takes "anything
 that streams". `core/stream.py` holds the protocol, `so.stream`
-(the generator above) and `so.blocks` (cut an array or a `Sound` into
-blocks).
+(the generator above) and `so.blocks` (cut a `Sound` into blocks, which are
+`Sound`s, D11).
 *Alternatives.* (A) A stateful object per view, `s = so.STFTStream(frame, fs);
 s.push(block)`. It is familiar, and it is what most audio libraries do. Its
 best form is a thin class over the pure step, and that can be written
@@ -316,6 +319,23 @@ blocks, empty blocks, and a sound shorter than one time window. This checker
 stays as the record of the measurements above. Target: under 1 s added to
 the suite per stage.
 
+**D11. Blocks are Sounds.** (Cho asked 2026-10-29.) `step` takes a `Sound`,
+the same type every batch analysis takes, so a block can be listened to,
+plotted or analyzed on its own like any other sound. Its `fs` is checked
+against the state's, and a mismatch raises. `so.blocks` yields `Sound`s, and a
+microphone source wraps each buffer in one. The cost is negligible (C10).
+One caveat goes in the docstrings: analyzing a block on its own
+(`so.STFT(block)`) is not the streamed result. A lone block has no samples
+before or after it, so its first and last time windows see zeros where the
+stream sees the neighboring blocks.
+*Alternatives.* (A) Bare arrays only. This is slightly faster and is what
+audio callbacks deliver, but it adds a second input type that carries no
+`fs`. (B) Accept both, wrapping arrays with the state's `fs`. This is
+convenient in a callback, but it is two ways to do one thing, and the wrap
+is one call anyway.
+*Recommended: Sounds only.* That keeps "a sound is a value" and one input
+type, and inputs match D3's views-out.
+
 ## API sketch
 
 ```python
@@ -337,9 +357,9 @@ for subbands in so.stream(bank, so.blocks(snd, 441)):
 
 # pushed from a callback instead (a live page)
 state = bank.start(snd.fs)
-def on_audio(block):
+def on_audio(buffer):                         # the browser hands over a bare array
     global state
-    state, subbands = bank.step(state, block)
+    state, subbands = bank.step(state, so.Sound(buffer, snd.fs))
 ```
 
 Names are proposals. `blocks` and `stream` are functions (they make no class
