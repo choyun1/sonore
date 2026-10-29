@@ -375,10 +375,10 @@ def test_the_track_streams_like_batch_with_the_same_delay(delay):
     assert_track_streams_like_batch(tracker, STREAM_SOUND, so.f0_track(STREAM_SOUND, delay=delay))
 
 
+@pytest.mark.skipif(not SPEECH.exists(), reason="docs are not in the sdist")
 def test_stereo_speech_streams_like_batch():
-    import soundfile as sf
-
-    data, fs = sf.read(SPEECH / "bdl_arctic_a0131.flac")
+    snd = so.load(SPEECH / "bdl_arctic_a0131.flac")
+    data, fs = snd.data[:, 0], snd.fs
     data = data[int(0.5 * fs) : int(1.3 * fs)]
     stereo = so.Sound(np.stack([data, data[::-1]], axis=1), fs)
     assert_track_streams_like_batch(so.F0TrackStream(), stereo, so.f0_track(stereo, delay=0.05))
