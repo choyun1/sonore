@@ -124,7 +124,9 @@ def show(snd, fmin=100, fmax=5000, title="Spectrogram (Hann 30 ms)"):
     """A spectrogram on a log frequency axis, one panel per channel. Returns the figure and the
     panels the playhead follows."""
     n = snd.n_channels
-    fig, axes = plt.subplots(n, 1, figsize=(10, 2.6 + 1.6 * n), sharex=True, layout="constrained", squeeze=False)
+    fig, axes = plt.subplots(
+        n, 1, figsize=(10, 2.6 + 1.6 * n), sharex=True, layout="constrained", squeeze=False
+    )
     stft = so.STFT(snd, win_dur=30e-3, hop_dur=5e-3)
     keep = (stft.f >= fmin) & (stft.f <= fmax)
     top = stft.db[:, keep].max()
@@ -156,7 +158,8 @@ HIGHS, LOWS = (2500, 2000, 1600), (350, 430, 550)
 
 
 def six_tone_cycle(period, n_cycles, start=0.0, low_db=6.0):
-    cycle = [tone(f, period, db=low_db * (i % 2)) for pair in zip(HIGHS, LOWS) for i, f in enumerate(pair)]
+    pairs = zip(HIGHS, LOWS, strict=True)
+    cycle = [tone(f, period, db=low_db * (i % 2)) for pair in pairs for i, f in enumerate(pair)]
     return [(start + period * (6 * c + k), cycle[k]) for c in range(n_cycles) for k in range(6)]
 
 
@@ -332,12 +335,14 @@ def vowel(name, f0):
     tracks = {f"F{k + 1}": (times, [start[k], end[k]]) for k in range(3)}
     snd = so.klatt_synthesize(0.15, FS, F0=(times, f0), **tracks)
     t = snd.t
-    env = np.where(t < 0.02, t / 0.02, np.where(t < 0.1, 1 - 0.5 * (t - 0.02) / 0.08, 0.5 * np.exp(-(t - 0.1) / 0.01)))
+    decay = np.where(t < 0.1, 1 - 0.5 * (t - 0.02) / 0.08, 0.5 * np.exp(-(t - 0.1) / 0.01))
+    env = np.where(t < 0.02, t / 0.02, decay)
     return so.Sound(env * snd.data[:, 0], FS).normalize(rms=0.1)
 
 
 events, t = [], 0.0
-for pair, f0 in [(("ay", "o"), [112, 112]), (("a", "ee"), [112, 112]), (("aw", "ee"), [112, 112]), (("a", "ee"), [118, 92])]:
+pairs = [(("ay", "o"), [112, 112]), (("a", "ee"), [112, 112]), (("aw", "ee"), [112, 112])]
+for pair, f0 in pairs + [(("a", "ee"), [118, 92])]:
     two_vowels = [vowel(name, f0) for name in pair]
     for k in range(32):
         events.append((t, two_vowels[k % 2]))
@@ -363,7 +368,11 @@ def band(lo, hi, step):
     """Equal tones `step` Hz apart in random phase from `lo` to `hi`, at a spectrum level that
     does not depend on `step`: a burst of noise with sharp edges."""
     harmonics = np.arange(round(lo / step), round(hi / step) + 1)
-    snd = so.harmonic_complex(0.05, FS, step, harmonics=harmonics, amplitudes=np.full(len(harmonics), np.sqrt(step)), phases=rng.uniform(0, 2 * np.pi, len(harmonics)), ramp=0)
+    amplitudes = np.full(len(harmonics), np.sqrt(step))
+    phases = rng.uniform(0, 2 * np.pi, len(harmonics))
+    snd = so.harmonic_complex(
+        0.05, FS, step, harmonics=harmonics, amplitudes=amplitudes, phases=phases, ramp=0
+    )
     n = snd.n_samples
     ramp = np.minimum(1, np.minimum(np.arange(n), np.arange(n)[::-1]) / (5e-3 * FS))
     return so.Sound(ramp * snd.data[:, 0], FS)
@@ -371,7 +380,8 @@ def band(lo, hi, step):
 
 silences = np.geomspace(0.140, 0.010, 4 * 52)
 onsets = np.concatenate([[0], np.cumsum(0.05 + silences[:-1])])
-events = [(t, band(*((2000, 4000, 3) if i % 4 != 1 else (500, 1000, 2)))) for i, t in enumerate(onsets) if i % 4 != 3]
+high_band, low_band = (2000, 4000, 3), (500, 1000, 2)
+events = [(t, band(*(low_band if i % 4 == 1 else high_band))) for i, t in enumerate(onsets) if i % 4 != 3]
 sound = finish(place(events))
 fig, playhead = show(sound, fmin=300, fmax=5000)
 
@@ -380,10 +390,11 @@ fig, playhead = show(sound, fmin=300, fmax=5000)
 
 # %% [about]
 # Bregman & Ahad, Demonstration 12, after Bregman & Dannenbring (1973). The cycle 2000, 614, 1600,
-# 400 Hz, ten times (the booklet plays it twenty), first with each tone joined to the next by a glide (100 ms steady, 100 ms
-# gliding, straight on a log-frequency axis), then with the glides left out: 100 ms tones with 10
-# ms rises and decays and the rest of each 200 ms slot silent. The booklet reports the joined
-# sequence heard as more coherent, and streaming building up faster without the glides.
+# 400 Hz, ten times (the booklet plays it twenty), first with each tone joined to the next by a
+# glide (100 ms steady, 100 ms gliding, straight on a log-frequency axis), then with the glides
+# left out: 100 ms tones with 10 ms rises and decays and the rest of each 200 ms slot silent. The
+# booklet reports the joined sequence heard as more coherent, and streaming building up faster
+# without the glides.
 
 # %% [demo sg10] Tones joined by glides, then not
 FREQS = [2000, 614, 1600, 400]
@@ -451,7 +462,8 @@ def cycle_of(freqs, n_cycles, start, fade=False):
 
 events = []
 for start, (x, y) in ((0.0, (246, 455)), (12.0, (2760, 1860))):
-    events += cycle_of((3400, 1525, None, None), 6, start) + cycle_of((3400, 1525, x, y), 30, start + 2.0, fade=True)
+    events += cycle_of((3400, 1525, None, None), 6, start)
+    events += cycle_of((3400, 1525, x, y), 30, start + 2.0, fade=True)
 sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=5000)
 
@@ -559,7 +571,8 @@ PERIOD = 1 / 4.2
 def struck(freq, partials=(1, 2.76, 5.40), amps=(1, 0.3, 0.15), half_life=0.025):
     t = np.arange(round(0.2 * FS)) / FS
     env = np.minimum(1, t / 2e-3) * 0.5 ** (t / half_life)
-    return so.Sound(env * sum(a * np.sin(2 * np.pi * p * freq * t) for p, a in zip(partials, amps, strict=True)), FS)
+    waves = sum(a * np.sin(2 * np.pi * p * freq * t) for p, a in zip(partials, amps, strict=True))
+    return so.Sound(env * waves, FS)
 
 
 def interlocking(plan, timbres=(struck, struck), octave=(0, 0), start=0.0, n_cycles=2):
@@ -596,8 +609,14 @@ fig, playhead = show(sound, fmin=150, fmax=5000)
 # by timbre. The partials of both timbres are ours.
 
 # %% [demo sg17] The two parts in two timbres
-muffled = lambda f: struck(f, partials=(1, 2), amps=(1, 0.5))
-brittle = lambda f: struck(f, partials=(1, 4.7, 7.3, 10.9), amps=(0.3, 1, 0.8, 0.6), half_life=0.015)
+def muffled(f):
+    return struck(f, partials=(1, 2), amps=(1, 0.5))
+
+
+def brittle(f):
+    return struck(f, partials=(1, 4.7, 7.3, 10.9), amps=(0.3, 1, 0.8, 0.6), half_life=0.015)
+
+
 events, _ = interlocking([(0,), (0, 1), (1,), (0, 1)], timbres=(muffled, brittle))
 sound = finish(place(events))
 fig, playhead = show(sound, fmin=150, fmax=8000)
@@ -622,7 +641,8 @@ for k, p in enumerate(pan):
     for j, side in enumerate((-1, 1, -1)):
         burst = so.gaussian_noise(0.05, FS, rng=rng).ramp(1e-3, shape="linear").data[:, 0]
         angle = np.pi / 4 * (1 + side * p)
-        events.append((0.4 * k + 0.1 * j, so.Sound(np.column_stack([np.cos(angle) * burst, np.sin(angle) * burst]), FS)))
+        pair = np.column_stack([np.cos(angle) * burst, np.sin(angle) * burst])
+        events.append((0.4 * k + 0.1 * j, so.Sound(pair, FS)))
 sound = finish(place(events))
 fig, playhead = show(sound, fmin=100, fmax=8000)
 
@@ -659,8 +679,8 @@ fig, playhead = show(sound, fmin=100, fmax=8000)
 # %% [about]
 # After Bregman & Ahad, Demonstration 41. The interleaved parts of the stand-in above, first sent
 # equally to both ears for two cycles, then moving apart over three, the first part to the left
-# and the second to the right, and apart for two more. The booklet reports that the parts, once apart, are heard each with its own
-# even rhythm.
+# and the second to the right, and apart for two more. The booklet reports that the parts, once
+# apart, are heard each with its own even rhythm.
 
 # %% [demo sg20] The two parts moving apart
 events, end = interlocking([(0, 1)], n_cycles=7)
@@ -669,7 +689,8 @@ for onset, snd in events:
     first_part = round(onset / (PERIOD / 2)) % 2 == 0
     p = np.clip((onset - 2 * 12 * PERIOD) / (3 * 12 * PERIOD), 0, 1)
     angle = np.pi / 4 * (1 + (-1 if first_part else 1) * p)
-    stereo.append((onset, so.Sound(np.column_stack([np.cos(angle) * snd.data[:, 0], np.sin(angle) * snd.data[:, 0]]), FS)))
+    pair = np.column_stack([np.cos(angle) * snd.data[:, 0], np.sin(angle) * snd.data[:, 0]])
+    stereo.append((onset, so.Sound(pair, FS)))
 sound = finish(place(stereo))
 fig, playhead = show(sound, fmin=150, fmax=3000)
 
