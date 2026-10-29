@@ -50,12 +50,13 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import KW_ONLY, dataclass
 from functools import lru_cache
+from math import comb
 from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import scipy.fft as sp_fft
 from numpy.typing import ArrayLike
-from scipy.signal import hilbert
+from scipy.signal import freqz, hilbert, lfilter
 
 from sonore.core.fft import fast_padding, threads
 from sonore.core.sound import Sound
@@ -67,6 +68,7 @@ from sonore.core.utils import (
     amp_to_db,
     db_to_amp,
     erb_bandwidth,
+    time_axis,
 )
 from sonore.frames.frame import Frame, _check_frame
 
@@ -81,6 +83,7 @@ __all__ = [
     "Gammatone",
     "Morlet",
     "Filterbank",
+    "FilterbankState",
     "cosine_filterbank",
     "gammatone_filterbank",
     "morlet_filterbank",
@@ -466,8 +469,11 @@ class Filterbank(Frame):
         and its padding on both sides."""
         return int(n_samples) + 2 * self._pad_samples(pad, fs, n_samples)
 
-    def analyze(self, sound: Sound, *, pad: float | str = "auto") -> Subbands:
-        """Split ``sound`` into subbands (via FFT).
+    def analyze(
+        self, sound: Sound, *, pad: float | str = "auto", domain: Literal["frequency", "time"] = "frequency"
+    ) -> Subbands:
+        """Split ``sound`` into subbands (via FFT, or with ``domain="time"`` by
+        recursive filters).
 
         By default the sound is zero-padded by at least the filters' ringing
         time (:meth:`ringing`), so filter ringing near one end can't wrap
@@ -483,8 +489,30 @@ class Filterbank(Frame):
         ``pad=0`` makes the analysis circular, which is what you want for
         periodic signals and for texture synthesis (seamless loops). A number
         pads by that many seconds.
-        """
 
+        ``domain="time"`` runs each band as a recursive (IIR) filter instead,
+        which needs no padding and can run a block at a time (:meth:`step`).
+        Only a bank of ``Gammatone(phase="causal")`` filters without edge
+        filters (``edges=False``) has this form: the complex gammatone
+        ``k**(n-1) p**k``, ``p = exp((-2 pi b + 2 pi i cf) / fs)``, is the
+        analytic impulse response ``t**(n-1) exp(-2 pi b t) exp(2 pi i cf t)``
+        sampled at ``t = k / fs``, and its z-transform is rational,
+        ``p z^-1 A(p z^-1) / (1 - p z^-1)**n`` with ``A`` the Eulerian
+        polynomial of degree ``n - 2``. The bands are its real part, within
+        2e-5 rms of the frequency-domain bands (the FFT samples the
+        continuous filter's response, which differs by the aliasing of its
+        tails); :meth:`Subbands.envelopes` is its magnitude, with no Hilbert
+        transform, within 0.7% rms of the Hilbert envelope
+        (tools/check_streaming_claims.py, C4 and C5). These subbands are not
+        resynthesized: without edge filters the inverse divides by nearly
+        zero outside the bank's range, which turns that small difference
+        into an error larger than the sound.
+        """
+        if domain == "time":
+            _, subbands = self.step(self.start(sound.fs), sound)  # the whole sound as one block
+            return subbands
+        if domain != "frequency":
+            raise ValueError(f"domain must be 'frequency' or 'time', not {domain!r}")
         n_pad = self._pad_samples(pad, sound.fs, sound.data.shape[0])
         padded = np.pad(sound.data, ((n_pad, n_pad), (0, 0))) if n_pad else sound.data
         n_padded = padded.shape[0]
@@ -511,6 +539,7 @@ class Filterbank(Frame):
         non-iterative. Raises if the bank leaves a frequency
         uncovered (A = 0).
         """
+        coefs._require_frequency_domain()
         padded_bands, fs, n_pad = coefs._full, coefs.fs, coefs.pad
         n_padded = padded_bands.shape[0]
         transfer = self.rfft_response(n_padded, fs)
@@ -552,6 +581,7 @@ class Filterbank(Frame):
         """Filter each band with ``conj(H)`` and sum, with no division by
         ``s``, then remove the padding (the adjoint of zero-padding is
         cropping). For a bank with ``s = 1`` this equals :meth:`synthesize`."""
+        coefs._require_frequency_domain()
         padded_bands, fs, n_pad = coefs._full, coefs.fs, coefs.pad
         n_padded = padded_bands.shape[0]
         with threads():
@@ -560,6 +590,93 @@ class Filterbank(Frame):
             )
             signal = sp_fft.irfft(weighted_spectra.sum(axis=1), n=n_padded, axis=0)
         return Sound(signal[n_pad : n_padded - n_pad], fs)
+
+    # ------------------------------------------------------------ streaming
+    def start(self, fs: float) -> FilterbankState:
+        """Nothing seen yet: the time-domain filters at rest (see
+        :meth:`analyze` with ``domain="time"``, which this streams)."""
+        _time_domain_filters(self, float(fs))  # refuses a bank that has no time-domain form
+        return FilterbankState(float(fs), None, 0)
+
+    def step(self, state: FilterbankState, block: Sound) -> tuple[FilterbankState, Subbands]:
+        """Filter ``block`` with each band's recursive filter, carrying the
+        filters' state on. The subbands it returns start at sample
+        ``state.n_seen``, and joining them (:meth:`Subbands.concatenate`)
+        gives ``analyze(sound, domain="time")`` exactly."""
+        if not isinstance(block, Sound):
+            raise TypeError(f"a block is a Sound, not {type(block).__name__}")
+        if block.fs != state.fs:
+            raise ValueError(f"this stream runs at {state.fs:g} Hz; the block is at {block.fs:g} Hz")
+        filters = _time_domain_filters(self, state.fs)
+        samples = block.data.astype(complex)  # (n, C)
+        n_channels = samples.shape[1]
+        order = len(filters[0][1]) - 1
+        filter_state = state.filter_state
+        if filter_state is None:
+            filter_state = np.zeros((len(filters), order, n_channels), complex)
+        elif filter_state.shape[2] != n_channels:
+            raise ValueError(f"this stream has {filter_state.shape[2]} channels; the block has {n_channels}")
+        bands = np.empty((len(samples), len(filters), n_channels), complex)
+        if len(samples) == 0:  # lfilter returns an uninitialized state for an empty input
+            return state, Subbands._time_domain(bands, state.fs, self, state.n_seen)
+        new_filter_state = np.empty_like(filter_state)
+        for band, (numerator, denominator) in enumerate(filters):
+            bands[:, band, :], new_filter_state[band] = lfilter(
+                numerator, denominator, samples, axis=0, zi=filter_state[band]
+            )
+        new_filter_state.flags.writeable = False
+        new_state = FilterbankState(state.fs, new_filter_state, state.n_seen + len(samples))
+        return new_state, Subbands._time_domain(bands, state.fs, self, state.n_seen)
+
+    def finish(self, state: FilterbankState) -> Subbands:
+        """Nothing: a recursive filter has nothing left to compute at the end."""
+        n_channels = 1 if state.filter_state is None else state.filter_state.shape[2]
+        empty = np.zeros((0, self.n_filters, n_channels), complex)
+        return Subbands._time_domain(empty, state.fs, self, state.n_seen)
+
+
+@dataclass(frozen=True)
+class FilterbankState:
+    """The state of a :class:`Filterbank` stream: its sampling rate, each
+    band's recursive-filter state ``(n_bands, order, n_channels)`` (``None``
+    before the first block), and how many samples have arrived."""
+
+    fs: float
+    filter_state: np.ndarray | None
+    n_seen: int
+
+
+def _eulerian_numbers(n: int) -> np.ndarray:
+    """``A(n, k)``, ``k = 0 .. n - 1``: ``sum_k k**n x**k = x A_n(x) / (1 - x)**(n + 1)``."""
+    return np.array(
+        [sum((-1) ** j * comb(n + 1, j) * (k + 1 - j) ** n for j in range(k + 2)) for k in range(n)], float
+    )
+
+
+@lru_cache(maxsize=64)
+def _time_domain_filters(bank: Filterbank, fs: float) -> list[tuple[np.ndarray, np.ndarray]]:
+    """``(numerator, denominator)`` of each band's complex gammatone (see
+    :meth:`Filterbank.analyze`), scaled so the real part has unit gain at the
+    center frequency, as the frequency-domain responses are."""
+    filter_type = bank.filter_type
+    if not (isinstance(filter_type, Gammatone) and filter_type.phase == "causal" and not bank.edges):
+        raise ValueError(
+            "only a bank of causal gammatones without edge filters runs in the time domain, "
+            "e.g. so.gammatone_filterbank(..., edges=False)"
+        )
+    order = filter_type.order
+    filters = []
+    for cf in bank.band_cfs:
+        b = filter_type.bandwidth_factor * erb_bandwidth(cf)
+        pole = np.exp((-2 * np.pi * b + 2j * np.pi * cf) / fs)
+        numerator = np.concatenate([[0.0], _eulerian_numbers(order - 1) * pole ** np.arange(1, order)])
+        denominator = np.poly(np.full(order, pole))
+        at_cf = 2 * np.pi * cf / fs
+        _, positive = freqz(numerator, denominator, worN=[at_cf])
+        _, negative = freqz(numerator, denominator, worN=[-at_cf])
+        real_part_gain = np.abs((positive[0] + np.conj(negative[0])) / 2)  # the response of Re(h) at cf
+        filters.append((numerator / real_part_gain, denominator))
+    return filters
 
 
 @lru_cache(maxsize=64)
@@ -731,18 +848,53 @@ class _PaddedBands:
     filterbank (or, for an envelope with no filterbank, one band), stored as
     ``(n_samples, n_bands, n_channels)`` with ``pad`` zero samples at each end
     that :attr:`data` hides. The array is a copy, read-only, so the caller's
-    array stays writeable and the object can't change under its users."""
+    array stays writeable and the object can't change under its users. A
+    part of a stream starts at sample ``first_sample`` of the sound (0 for a
+    whole analysis) and has no padding."""
 
-    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank | None, pad: int = 0):
+    def __init__(
+        self, data: ArrayLike, fs: float, filterbank: Filterbank | None, pad: int = 0, first_sample: int = 0
+    ):
         bands = np.array(data, dtype=float)
         n_bands = 1 if filterbank is None else filterbank.n_filters
         if bands.ndim != 3 or bands.shape[1] != n_bands:
             raise ValueError(f"expected shape (n_samples, {n_bands}, n_channels), got {bands.shape}")
-        if 2 * pad >= bands.shape[0]:
+        if pad and 2 * pad >= bands.shape[0]:
             raise ValueError("padding is longer than the data")
+        if first_sample and pad:
+            raise ValueError("a part of a stream has no padding")
         bands = self._checked(bands)
         bands.flags.writeable = False
         self._full, self.fs, self.filterbank, self.pad = bands, fs, filterbank, int(pad)
+        self.first_sample = int(first_sample)
+
+    @classmethod
+    def _joined(cls, parts: Sequence[Any], what: str) -> tuple[Any, np.ndarray]:
+        """The first of ``parts`` and all their bands joined in time, after
+        checking that they are consecutive parts of one stream: the same
+        kind, rate, filterbank, bands and channels, no padding, and each
+        starting where the one before it ended."""
+        parts = list(parts)
+        if not parts:
+            raise ValueError(f"concatenate needs at least one {what}")
+        first = parts[0]
+        position = first.first_sample
+        for part in parts:
+            if not isinstance(part, cls):
+                raise TypeError(f"concatenate joins {what}, not {type(part).__name__}")
+            if part.pad:
+                raise ValueError("concatenate joins the parts of a stream, which have no padding")
+            if part.fs != first.fs or part.filterbank != first.filterbank:
+                raise ValueError("the parts have different sampling rates or filterbanks")
+            if part._full.shape[1:] != first._full.shape[1:]:
+                raise ValueError("the parts have different numbers of bands or channels")
+            if part.first_sample != position:
+                raise ValueError(
+                    f"a part starts at sample {part.first_sample}, "
+                    f"where the one before it ended at {position}"
+                )
+            position += part._full.shape[0]
+        return first, np.concatenate([part._full for part in parts])
 
     def _checked(self, bands: np.ndarray) -> np.ndarray:
         """A subclass's own check on the band values; TemporalEnvelope clips round-off negatives."""
@@ -756,6 +908,14 @@ class _PaddedBands:
     @property
     def n_samples(self) -> int:
         return self._full.shape[0] - 2 * self.pad
+
+    @property
+    def t(self) -> np.ndarray:
+        """Sample times in seconds (without the padding), starting at 0, or
+        at the part's first sample for a part of a stream."""
+        if self.first_sample:
+            return (self.first_sample + np.arange(self.n_samples)) / self.fs
+        return time_axis(self.n_samples, self.fs)
 
     @property
     def _bank(self) -> Filterbank:
@@ -807,13 +967,61 @@ class Subbands(_PaddedBands):
     so a vocoder is ``(speech.envelopes() * carrier.tfs()).to_sound()``.
     """
 
+    domain: Literal["frequency", "time"] = "frequency"
+    _analytic_full: np.ndarray | None = None  # the time-domain filters' complex output
+
+    @classmethod
+    def _time_domain(
+        cls, analytic: np.ndarray, fs: float, filterbank: Filterbank, first_sample: int
+    ) -> Subbands:
+        """Subbands from the time-domain filters: the real part is the bands,
+        and the complex output is kept for :meth:`envelopes` and :meth:`tfs`."""
+        subbands = cls(analytic.real, fs, filterbank, first_sample=first_sample)
+        kept = np.array(analytic, dtype=complex)
+        kept.flags.writeable = False
+        subbands.domain, subbands._analytic_full = "time", kept
+        return subbands
+
+    @classmethod
+    def concatenate(cls, parts: Sequence[Subbands]) -> Subbands:
+        """Join the parts of a stream (:meth:`Filterbank.step`) in order. The
+        result equals ``bank.analyze(sound, domain="time")`` exactly when the
+        parts cover the whole sound."""
+        parts = list(parts)
+        first, _ = cls._joined(parts, "Subbands")
+        if any(part._analytic_full is None for part in parts):
+            raise ValueError(
+                "concatenate joins the parts of a stream, which come from the time-domain filters"
+            )
+        analytic = np.concatenate([part._analytic_full for part in parts])
+        return cls._time_domain(analytic, first.fs, first._bank, first.first_sample)
+
+    def _require_frequency_domain(self) -> None:
+        if self.domain == "time":
+            raise ValueError(
+                "subbands from the time-domain filters are not resynthesized: "
+                "without edge filters the inverse "
+                "divides by nearly zero outside the bank's range (see Filterbank.analyze)"
+            )
+
     def __getitem__(self, i: int) -> Sound:
         return Sound(self.data[:, i, :], self.fs)
 
     def _new(self, full: np.ndarray, pad: int | None = None) -> Subbands:
+        if self.domain == "time":
+            raise TypeError("time-domain subbands change through _scaled, which keeps their complex output")
         return Subbands(full, self.fs, self.filterbank, self.pad if pad is None else pad)
 
+    def _scaled(self, gains: np.ndarray | float) -> Subbands:
+        """The bands multiplied by real ``gains`` (broadcast against the full
+        array), with the time-domain filters' complex output scaled alike."""
+        if self._analytic_full is None:
+            return self._new(self._full * gains)
+        return Subbands._time_domain(self._analytic_full * gains, self.fs, self._bank, self.first_sample)
+
     def _analytic(self) -> np.ndarray:
+        if self._analytic_full is not None:
+            return self._analytic_full
         with threads():
             return hilbert(self._full, axis=0)
 
@@ -823,7 +1031,9 @@ class Subbands(_PaddedBands):
         filterbank. Optionally lowpass-filtered [Hz] and then resampled to ``fs``."""
         from sonore.views.temporal_envelope import TemporalEnvelope
 
-        env = TemporalEnvelope(np.abs(self._analytic()), self.fs, self.filterbank, pad=self.pad)
+        env = TemporalEnvelope(
+            np.abs(self._analytic()), self.fs, self.filterbank, pad=self.pad, first_sample=self.first_sample
+        )
         if lowpass is not None:
             env = env.lowpass(lowpass)
         if fs is not None:
@@ -833,7 +1043,10 @@ class Subbands(_PaddedBands):
     def tfs(self) -> Subbands:
         """Temporal fine structure of every band: ``cos`` of the instantaneous
         phase (unit amplitude)."""
-        return self._new(np.cos(np.angle(self._analytic())))
+        phase = np.angle(self._analytic())
+        if self._analytic_full is not None:
+            return Subbands._time_domain(np.exp(1j * phase), self.fs, self._bank, self.first_sample)
+        return self._new(np.cos(phase))
 
     def __mul__(self, other):
         """``subbands * gain``: a number, or one gain per band (length
@@ -850,9 +1063,9 @@ class Subbands(_PaddedBands):
             case _:
                 return NotImplemented
         if gains.ndim == 0:
-            return self._new(self._full * gains)
+            return self._scaled(gains)
         if gains.shape == (len(self),):
-            return self._new(self._full * gains[None, :, None])
+            return self._scaled(gains[None, :, None])
         raise ValueError(
             f"multiply subbands by a number or one gain per band (length {len(self)}), not shape "
             f"{gains.shape}; for gains that change over time use a Mask"

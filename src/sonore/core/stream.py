@@ -27,7 +27,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, ClassVar, Protocol
 
 import numpy as np
 
@@ -96,7 +96,7 @@ class WindowState:
     between time windows."""
 
     fs: float
-    pending: np.ndarray  # (n_samples, n_channels)
+    pending: np.ndarray  # (n_samples, n_channels), or (n_samples, n_bands, n_channels) for envelopes
     next_window: int
     n_seen: int
     skip: int = 0
@@ -109,7 +109,13 @@ class SlidingWindowStream:
     out (:meth:`window_layout`), how many batch computes for a sound
     (:meth:`window_count`), and what a run of complete time windows becomes
     (:meth:`time_windows`, the same code its batch analysis runs). Samples
-    before the start and after the end are zeros, as in batch."""
+    before the start and after the end are zeros, as in batch.
+
+    Blocks are Sounds unless the subclass names another :attr:`block_type`
+    with ``fs``, ``n_channels`` and ``data`` of shape ``(n_samples, ...)``,
+    such as a :class:`~sonore.views.temporal_envelope.TemporalEnvelope`."""
+
+    block_type: ClassVar[type[Any]] = Sound
 
     @abstractmethod
     def window_layout(self, fs: float) -> tuple[int, int, int]:
@@ -132,15 +138,16 @@ class SlidingWindowStream:
         _, _, first_start = self.window_layout(fs)
         return WindowState(float(fs), np.zeros((max(-first_start, 0), 0)), 0, 0)
 
-    def step(self, state: WindowState, block: Sound) -> tuple[WindowState, Any]:
-        """Append ``block`` and return every time window now complete."""
-        if not isinstance(block, Sound):
-            raise TypeError(f"a block is a Sound, not {type(block).__name__}")
+    def step(self, state: WindowState, block: Any) -> tuple[WindowState, Any]:
+        """Append ``block`` (a :attr:`block_type`) and return every time window now complete."""
+        if not isinstance(block, self.block_type):
+            raise TypeError(f"a block is a {self.block_type.__name__}, not {type(block).__name__}")
         if block.fs != state.fs:
             raise ValueError(f"this stream runs at {state.fs:g} Hz; the block is at {block.fs:g} Hz")
-        if len(block) == 0 and state.pending.shape[1] == 0:  # an empty block does not fix the channels
-            return state, self.time_windows(np.zeros((0, block.n_channels)), state.fs, 0, 0, 0)
-        pending = self._with_channels(state.pending, block.n_channels)
+        sample_shape = block.data.shape[1:]
+        if len(block) == 0 and _no_channels_yet(state.pending):  # an empty block does not fix the channels
+            return state, self.time_windows(np.zeros((0, *sample_shape)), state.fs, 0, 0, 0)
+        pending = self._with_channels(state.pending, sample_shape)
         window_length, hop, _ = self.window_layout(state.fs)
         pending = np.concatenate([pending, block.data[state.skip :]])
         skip = max(state.skip - len(block), 0)
@@ -155,17 +162,30 @@ class SlidingWindowStream:
         """The remaining time windows, with zeros after the last sample."""
         window_length, hop, _ = self.window_layout(state.fs)
         count = max(self.window_count(state.n_seen, state.fs) - state.next_window, 0)
-        pending = self._with_channels(state.pending, max(state.pending.shape[1], 1))
+        pending = (
+            self._with_channels(state.pending, (1,)) if _no_channels_yet(state.pending) else state.pending
+        )
         needed = (count - 1) * hop + window_length if count else 0
         if len(pending) < needed:
-            pending = np.concatenate([pending, np.zeros((needed - len(pending), pending.shape[1]))])
+            pending = np.concatenate([pending, np.zeros((needed - len(pending), *pending.shape[1:]))])
         return self.time_windows(pending, state.fs, state.next_window, count, state.n_seen)
 
     @staticmethod
-    def _with_channels(pending: np.ndarray, n_channels: int) -> np.ndarray:
-        """``pending``, given its channels when the first block brings them."""
-        if pending.shape[1] == 0:
-            return np.zeros((len(pending), n_channels))
-        if pending.shape[1] != n_channels:
-            raise ValueError(f"this stream has {pending.shape[1]} channels; the block has {n_channels}")
+    def _with_channels(pending: np.ndarray, sample_shape: tuple[int, ...]) -> np.ndarray:
+        """``pending``, given its channels (and bands) when the first block brings them."""
+        if _no_channels_yet(pending):
+            return np.zeros((len(pending), *sample_shape))
+        if pending.shape[-1] != sample_shape[-1]:
+            raise ValueError(
+                f"this stream has {pending.shape[-1]} channels; the block has {sample_shape[-1]}"
+            )
+        if pending.shape[1:] != sample_shape:
+            raise ValueError(
+                f"this stream's samples have shape {pending.shape[1:]}; the block's {sample_shape}"
+            )
         return pending
+
+
+def _no_channels_yet(pending: np.ndarray) -> bool:
+    """Whether ``pending`` is still the zeros of :meth:`SlidingWindowStream.start`, before any block."""
+    return pending.shape[1:] == (0,)

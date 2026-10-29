@@ -42,15 +42,17 @@ cochlear-implant hearing.
 from __future__ import annotations
 
 import numbers
+from collections.abc import Sequence
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import numpy as np
 from numpy.typing import ArrayLike
 from scipy.signal import butter, resample, resample_poly, sosfiltfilt
 
-from sonore.core.utils import RNG, _fit_length, amp_to_db, as_rng, time_axis
+from sonore.core.stream import SlidingWindowStream, WindowState
+from sonore.core.utils import RNG, _fit_length, amp_to_db, as_rng
 from sonore.frames.filterbank import Subbands, _PaddedBands, cosine_filterbank
 from sonore.views.view import View
 
@@ -61,7 +63,7 @@ if TYPE_CHECKING:
     from sonore.frames.filterbank import Filterbank
     from sonore.views.modulation import ModulationSpectrum
 
-__all__ = ["TemporalEnvelope", "channel_vocode"]
+__all__ = ["TemporalEnvelope", "EnvelopePooling", "channel_vocode"]
 
 
 @dataclass(frozen=True)
@@ -187,7 +189,15 @@ class TemporalEnvelope(_PaddedBands, View):
 
     __array_ufunc__ = None
 
-    def __init__(self, data: ArrayLike, fs: float, filterbank: Filterbank | None = None, *, pad: int = 0):
+    def __init__(
+        self,
+        data: ArrayLike,
+        fs: float,
+        filterbank: Filterbank | None = None,
+        *,
+        pad: int = 0,
+        first_sample: int = 0,
+    ):
         values = np.asarray(data, dtype=float)
         if filterbank is None:
             if values.ndim == 1:
@@ -199,7 +209,7 @@ class TemporalEnvelope(_PaddedBands, View):
             values = values[:, None, :]
         elif values.ndim == 2:
             values = values[:, :, None]
-        super().__init__(values, fs, filterbank, pad)
+        super().__init__(values, fs, filterbank, pad, first_sample)
 
     def _checked(self, bands: np.ndarray) -> np.ndarray:
         return _nonnegative(bands)
@@ -244,11 +254,6 @@ class TemporalEnvelope(_PaddedBands, View):
         return self.n_samples / self.fs
 
     @property
-    def t(self) -> np.ndarray:
-        """Sample times in seconds, starting at 0."""
-        return time_axis(self.n_samples, self.fs)
-
-    @property
     def db(self) -> np.ndarray:
         """The envelope in dB (``20*log10``), the shape of :attr:`data`."""
         return amp_to_db(self.data)
@@ -261,9 +266,39 @@ class TemporalEnvelope(_PaddedBands, View):
         full = np.asarray(full, dtype=float)
         if self.filterbank is None:
             full = full[:, 0, :]
+        if self.first_sample and fs is not None and fs != self.fs:
+            raise ValueError("a part of a stream keeps its rate; join the parts (concatenate) first")
         return TemporalEnvelope(
-            full, self.fs if fs is None else fs, self.filterbank, pad=self.pad if pad is None else pad
+            full,
+            self.fs if fs is None else fs,
+            self.filterbank,
+            pad=self.pad if pad is None else pad,
+            first_sample=self.first_sample,
         )
+
+    @classmethod
+    def concatenate(cls, parts: Sequence[TemporalEnvelope]) -> TemporalEnvelope:
+        """Join the parts of a stream (for example of :class:`EnvelopePooling`,
+        or the envelopes of a time-domain filterbank's parts) in order."""
+        first, full = cls._joined(parts, "TemporalEnvelope")
+        if first.filterbank is None:
+            full = full[:, 0, :]
+        return cls(full, first.fs, first.filterbank, first_sample=first.first_sample)
+
+    def pooled(self, win_dur: float = 25e-3, hop_dur: float = 10e-3) -> TemporalEnvelope:
+        """The envelope's power averaged in Hann time windows of ``win_dur``
+        seconds every ``hop_dur``, as an amplitude, at rate ``1 / hop_dur``
+        (see :class:`EnvelopePooling`, which streams it)."""
+        if self.first_sample:
+            raise ValueError("this is a part of a stream; pool the stream with EnvelopePooling instead")
+        if self.pad:
+            raise ValueError(
+                "pooled works on envelopes without padding, such as those of a time-domain filterbank "
+                "(bank.analyze(sound, domain='time').envelopes())"
+            )
+        pooling = EnvelopePooling(win_dur, hop_dur, self.filterbank)
+        state, part = pooling.step(pooling.start(self.fs), self)
+        return TemporalEnvelope.concatenate([part, pooling.finish(state)])
 
     # ------------------------------------------------------------ smoothing and rates
     def lowpass(self, cutoff: float, *, order: int = 4) -> TemporalEnvelope:
@@ -353,6 +388,11 @@ class TemporalEnvelope(_PaddedBands, View):
                 return Sound(other.data * self._values_for(other), other.fs)
             case Sound():
                 return (self * self._bank.analyze(other)).to_sound()
+            case Subbands() if self.filterbank is not None and other.domain == "time":
+                if len(other) != self.n_bands:
+                    raise ValueError(f"band counts differ ({self.n_bands} vs {len(other)})")
+                _check_duration(self.n_samples, self.fs, other.n_samples, other.fs)
+                return other._scaled(self._on_grid(other.fs, other.n_samples, 0))
             case Subbands() if self.filterbank is not None:
                 if len(other) != self.n_bands:
                     raise ValueError(f"band counts differ ({self.n_bands} vs {len(other)})")
@@ -508,6 +548,78 @@ class TemporalEnvelope(_PaddedBands, View):
         if self.filterbank is None:
             return plot_envelope(self, ax=ax, **kwargs)
         return plot_envelopes(self, ax=ax, **kwargs)
+
+
+@dataclass(frozen=True)
+class EnvelopePooling(SlidingWindowStream):
+    """Envelopes pooled in time windows, a block at a time: the power of
+    the envelope weighted by a periodic Hann window of ``win_dur`` seconds,
+    one time window every ``hop_dur`` seconds, centered on the samples
+    ``0, hop, 2 hop, ...`` of the envelope, as an amplitude::
+
+        pooled[k] = sqrt(sum_j w[j] e[k hop - L // 2 + j]**2 / sum_j w[j])
+
+    with zeros before the first sample and after the last. The result is a
+    :class:`TemporalEnvelope` at ``fs / hop``, one time window per hop that
+    starts within the envelope. This is the cochleagram of 25 ms time
+    windows every 10 ms. :meth:`TemporalEnvelope.pooled` is the batch form;
+    a stream takes envelope blocks (``filterbank`` says whose bands they
+    are, ``None`` for a single envelope)::
+
+        bank = so.gammatone_filterbank(n_bands=64, edges=False)
+        pooling = so.EnvelopePooling(25e-3, 10e-3, bank)
+        envelopes = (part.envelopes() for part in so.stream(bank, so.blocks(snd, 441)))
+        so.TemporalEnvelope.concatenate(list(so.stream(pooling, envelopes)))
+        # == bank.analyze(snd, domain="time").envelopes().pooled(25e-3, 10e-3)
+
+    The sum runs over the window's samples in order, one array operation
+    per sample, so the result does not depend on how the envelope was cut
+    into blocks, to the last bit.
+    """
+
+    win_dur: float = 25e-3
+    hop_dur: float = 10e-3
+    filterbank: Filterbank | None = None
+
+    block_type: ClassVar[type[Any]] = TemporalEnvelope
+
+    def __post_init__(self):
+        if not (self.win_dur > 0 and self.hop_dur > 0):
+            raise ValueError("win_dur and hop_dur must be positive")
+
+    def window_layout(self, fs: float) -> tuple[int, int, int]:
+        length, hop = int(round(self.win_dur * fs)), int(round(self.hop_dur * fs))
+        if length < 1 or hop < 1:
+            raise ValueError(f"at {fs:g} Hz the time window or the hop is shorter than one sample")
+        return length, hop, -(length // 2)
+
+    def window_count(self, n_samples: int, fs: float) -> int:
+        _, hop, _ = self.window_layout(fs)
+        return -(-n_samples // hop)
+
+    def time_windows(
+        self, samples: np.ndarray, fs: float, first: int, count: int, n_samples: int
+    ) -> TemporalEnvelope:
+        length, hop, _ = self.window_layout(fs)
+        weights = 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(length) / length)
+        power = samples**2
+        total = np.zeros((count, *samples.shape[1:]))
+        for j, weight in enumerate(weights if count else []):
+            total += weight * power[j : j + (count - 1) * hop + 1 : hop]
+        pooled = np.sqrt(total / weights.sum())
+        if self.filterbank is not None and pooled.ndim == 2:  # no block brought the bands
+            pooled = np.zeros((count, self.filterbank.n_filters, pooled.shape[-1]))
+        return TemporalEnvelope(pooled, fs / hop, self.filterbank, first_sample=first)
+
+    def step(self, state: WindowState, block: TemporalEnvelope) -> tuple[WindowState, TemporalEnvelope]:
+        """Pool ``block``, an envelope of this pooling's filterbank, and return
+        every time window now complete."""
+        if isinstance(block, TemporalEnvelope):
+            if block.filterbank != self.filterbank:
+                raise ValueError("the block's envelopes are of a different filterbank than this pooling's")
+            if block.pad:
+                raise ValueError("a block of a stream has no padding")
+        return super().step(state, block)
 
 
 def channel_vocode(

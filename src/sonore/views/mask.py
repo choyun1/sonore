@@ -89,7 +89,7 @@ class Mask(View):
         if not _same_grid(coefs, self._like):
             raise ValueError("this mask was made for coefficients on a different grid")
         if isinstance(coefs, Subbands):
-            return coefs._new(coefs._full * self.values)
+            return coefs._scaled(self.values)
         return coefs._with_data(coefs.data * self.values)
 
     def __repr__(self) -> str:

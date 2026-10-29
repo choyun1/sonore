@@ -406,11 +406,11 @@ sound = vocoded
 # - Dorman, Loizou & Rainey (1997). Speech intelligibility as a function of the number of channels
 #   of stimulation for signal processors using sine-wave and noise-band outputs. *J. Acoust. Soc.
 #   Am.* 102(4), 2403–2411. [doi:10.1121/1.420354](https://doi.org/10.1121/1.420354).
-#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L513)
+#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L625)
 # - Friesen, Shannon, Baskent & Wang (2001). Speech recognition in noise as a function of the number
 #   of spectral channels: comparison of acoustic hearing and cochlear implants. *J. Acoust. Soc.
 #   Am.* 110(2), 1150–1163. [PubMed](https://pubmed.ncbi.nlm.nih.gov/11519582/).
-#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L513)
+#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L625)
 # - Fu, Chinchilla & Galvin (2004). The role of spectral and temporal cues in voice gender
 #   discrimination by normal-hearing listeners and cochlear implant users. *J. Assoc. Res.
 #   Otolaryngol.* 5(3), 253–260.
@@ -424,7 +424,7 @@ sound = vocoded
 # - Shannon, Zeng, Kamath, Wygonski & Ekelid (1995). Speech recognition with primarily temporal
 #   cues. *Science* 270(5234), 303–304.
 #   [doi:10.1126/science.270.5234.303](https://doi.org/10.1126/science.270.5234.303).
-#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L513)
+#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L625)
 # - Wilson, Finley, Lawson, Wolford, Eddington & Rabinowitz (1991). Better speech recognition with
 #   cochlear implants. *Nature* 352, 236–238. [PubMed](https://pubmed.ncbi.nlm.nih.gov/1857418/).
-#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L513)
+#   [`temporal_envelope.channel_vocode`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/temporal_envelope.py#L625)

@@ -60,6 +60,7 @@ NOT_ANALYSES = [
     "FrequencyScale",
     "SlidingWindowStream",
     "WindowState",
+    "FilterbankState",
 ]  # ModulationFilterbank: a tool that makes views; SlidingWindowStream and WindowState: how views stream
 
 
