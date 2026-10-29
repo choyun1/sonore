@@ -45,6 +45,21 @@ version (0.x.y) only fixes bugs.
   `ModulationSpectrogram.concatenate` joins them into the batch result to
   within 1e-12 of its peak (the stream carries sliding sums restarted
   every 1024 samples, the batch path convolves by FFT).
+- `f0_track(..., delay=)`: `None` (the default) is the whole-track
+  Viterbi pass as before; a number of seconds decides each time window that
+  long after it. `F0TrackStream` gives exactly that result block by block
+  (50 ms by default), each step an `F0Track` of the time windows it
+  decided; `F0Track.concatenate` joins them.
+
+### Changed
+
+- `f0_track` computes each candidate from its own time window's samples
+  alone: the refinement and the score used a window length taken from the
+  group of candidates computed together, so a candidate could change with
+  its neighbors. Rows are now padded to a length set by the candidate.
+  Candidates and F0s move by rounding only (under 4e-13 Hz on
+  `bdl_arctic_a0131`, no voicing change); on that recording the track
+  also ran faster, 1.2 s against 2.1 s (timed once).
 
 ## [0.9.0] - 2026-10-28
 

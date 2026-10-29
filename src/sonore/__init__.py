@@ -108,7 +108,7 @@ from sonore.views.aperiodicity import Aperiodicity, band_aperiodicity, harmonic_
 from sonore.views.cepstrum import Cepstrum
 from sonore.views.chroma import Chroma, chroma
 from sonore.views.envelope_peaks import EnvelopePeaks, envelope_peaks
-from sonore.views.f0 import F0Track, f0_track, scale_f0
+from sonore.views.f0 import F0State, F0Track, F0TrackStream, f0_track, scale_f0
 from sonore.views.lpc import LPC, FormantTrack, formant_track, levinson
 from sonore.views.mask import Mask, ideal_binary_mask, ideal_ratio_mask
 from sonore.views.mfcc import MFCC
@@ -192,6 +192,8 @@ __all__ = [
     "FormantTrack",
     "formant_track",
     "F0Track",
+    "F0TrackStream",
+    "F0State",
     "f0_track",
     "Aperiodicity",
     "SpectralEnvelope",

@@ -1794,7 +1794,7 @@ for ax, (label, pair), color in zip(axes, spectra.items(), ("C0", "C3"), strict=
 #   [`mfcc.MFCC`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/mfcc.py#L108)
 # - de Cheveigné & Kawahara (2002). YIN, a fundamental frequency estimator for speech and music.
 #   *J. Acoust. Soc. Am.* 111(4), 1917–1930. [doi:10.1121/1.1458024](https://doi.org/10.1121/1.1458024).
-#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L103)
+#   [`f0.f0_track`](https://github.com/choyun1/sonore/blob/main/src/sonore/views/f0.py#L138)
 # - Fant (1995). The LF-model revisited. Transformations and frequency domain analysis. *STL-QPSR*
 #   36(2–3), 119–156. The Rd parameter.
 #   [`waveforms.glottal_source`](https://github.com/choyun1/sonore/blob/main/src/sonore/sources/waveforms.py#L888)
