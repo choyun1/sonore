@@ -7,7 +7,7 @@ the F0 track. A streaming view takes sound a block at a time as it arrives,
 keeps what it needs from earlier blocks, and returns the time windows each
 block completes.
 
-Status: proposed 2026-10-28. Cho accepted D1–D6 and D8–D11 on 2026-10-29 (D2 with the mixin); D7 open. The claims are checked by
+Status: accepted 2026-10-29. Cho accepted D1–D11, D2 with the mixin and D7 with option (b). The claims are checked by
 `tools/check_streaming_claims.py` (C1–C11). It writes every streaming version
 out from its definition in NumPy and SciPy, as the step functions D1
 proposes, and imports sonore only for the batch results it compares them
@@ -320,7 +320,7 @@ hop_dur)`, Hann-weighted power in each time window, and a causal option for
 `resample`, with zeros rather than edge extension at the ends. Today's
 `lowpass` and `resample` stay as they are.
 
-**D7. The modulation spectrogram streams as already designed.** Its
+**D7. The modulation spectrogram streams as already designed. (accepted 2026-10-29, option (b))** Its
 accepted D6 (2026-10-01) set the rule: keep the last `L_k - 1` envelope
 samples per band, and match `align="causal"` exactly. Its C8 measured a
 64-sample block version against the offline causal result (worst
@@ -338,7 +338,7 @@ and D6. Four adaptations:
   equality, but is about 70 times slower (C11); (b) batch keeps its FFT, the
   step computes directly, and the test allows 1e-12, stated in the docstring
   as D4 allows. Cho first chose (a) on condition that the timing was close;
-  C11 shows it is not. *Recommended now: (b).*
+  C11 shows it is not, and Cho then chose (b). *Accepted: (b).*
 
 **D8. The F0 track gets a decision delay, and each time window's candidates
 are computed on their own. (accepted 2026-10-29)** Two changes, both measured on 16 recordings:
