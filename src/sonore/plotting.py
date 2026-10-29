@@ -87,12 +87,13 @@ def log_frequency_axis(ax: Axes, axis: Literal["x", "y", "both"] = "y") -> Axes:
     from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 
     class PlainLocator(LogLocator):
-        def tick_values(self, vmin: float, vmax: float) -> np.ndarray:
+        def tick_values(self, vmin: float, vmax: float) -> Sequence[float]:
             low, high = sorted((vmin, vmax))
             for subs in _PLAIN_SUBS:
                 self.set_params(subs=subs)
                 ticks = super().tick_values(vmin, vmax)
-                if np.count_nonzero((ticks >= low) & (ticks <= high)) >= 3:
+                values = np.asarray(ticks)
+                if np.count_nonzero((values >= low) & (values <= high)) >= 3:
                     break
             return ticks
 
