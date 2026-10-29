@@ -69,6 +69,13 @@ The contract is then one line: **concatenating what the scan yields gives
 the batch view, for any way of cutting the sound into blocks.** The tests
 check exactly that, with blocks of random length down to one sample.
 
+"Cutting" means the blocks are consecutive slices of the sound, with no gaps
+and no overlap. Their lengths are free and need not be equal: 441 samples
+(10 ms at 44.1 kHz) is the example here, and a browser's audio callback
+delivers 128. Blocks are not windowed. The view does its own windowing,
+and the state carries any time window a block leaves unfinished. So the
+latency is set by the view's window, not by the block length.
+
 ### Streams: where the blocks come from
 
 `scan` above is a Python generator: it produces its outputs lazily, one at a
@@ -368,6 +375,10 @@ of their own), and states are built by `start`, so no factory is involved.
 ## Out of scope
 
 - A live microphone page and its Pyodide timing (D9).
+- Microphone and sound-card input in Python. The proposed work runs on
+  existing `Sound`s cut into blocks. A later adapter, for example over
+  python-sounddevice as an optional extra, would wrap each input buffer in a
+  `Sound` (D11) and call `step`. Cho expects it will be needed (2026-10-29).
 - Streaming synthesis (Klatt, the source-filter synthesizer): a separate
   direction ("real-time synthesis").
 - Streaming the time-varying STFT (`TVGaborFrame`) and WORLD-style views: their
