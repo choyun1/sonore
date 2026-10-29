@@ -31,7 +31,17 @@ const { chromium } = require("playwright");
     page.on("console", (message) => { if (message.type() === "error") console.error("console:", message.text()); });
     await page.goto(`http://localhost:8766/docs/live/?wheel=/tools/live_page/${wheel}&keep=1`);
     const status = () => document.getElementById("status").textContent;
+    // The install's status lines as they change, and Start must stay disabled until it is done.
+    await page.evaluate(() => {
+      window.STATUSES = [];
+      new MutationObserver(() => window.STATUSES.push([document.getElementById("status").textContent, document.getElementById("start").disabled]))
+        .observe(document.getElementById("status"), { childList: true });
+    });
     await page.waitForFunction((text) => document.getElementById("status").textContent.includes(text), "is installed", { timeout: 600000 });
+    const statuses = await page.evaluate(() => window.STATUSES);
+    for (const [text] of statuses) console.log(`install: ${text}`);
+    const disabledWhileInstalling = statuses.filter(([text]) => !text.includes("is installed")).every(([, disabled]) => disabled);
+    console.log(`Start disabled until installed: ${disabledWhileInstalling}`);
     await page.click("#start");
     await page.waitForFunction(() => document.getElementById("status").textContent.startsWith("Listening"), null, { timeout: 600000 });
     await page.waitForTimeout(seconds * 1000);
@@ -48,7 +58,7 @@ const { chromium } = require("playwright");
     await page.waitForFunction(() => document.getElementById("status").textContent.startsWith("Listening"), null, { timeout: 60000 });
     const restartedOk = stopped.startsWith("Microphone off");
     console.log(`stop: "${stopped}"; started again: ${restartedOk}`);
-    const ok = check.windows > 100 && check.same_times && check.max_difference === 0 && check.voiced > 0 && restartedOk;
+    const ok = check.windows > 100 && check.same_times && check.max_difference === 0 && check.voiced > 0 && restartedOk && disabledWhileInstalling;
     if (check.restarts) console.log(`note: the page restarted ${check.restarts} time(s) after falling behind`);
     console.log(ok ? "OK: the page's F0s equal f0_track on the samples it received" : "FAILED");
     process.exitCode = ok ? 0 : 1;
