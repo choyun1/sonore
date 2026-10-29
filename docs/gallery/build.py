@@ -98,7 +98,8 @@ def file_name(key: str, title: str) -> str:
 #                              `sounds` and `playhead` as dicts from each sound's label to the sound and to its axes,
 #                              and optionally `scene`, sources to draw from above as the sound plays,
 #                              and `live`, an image that changes frame by frame as the sound plays,
-#                              and `lissajous`, two notes drawn against each other as the sound plays
+#                              and `lissajous`, two notes drawn against each other as the sound plays,
+#                              and `reveal`, a label: the example is folded away under it (an answer, say)
 #   # %% [figure KEY] Title    code that leaves `fig`: a figure without sound
 #   # %% [setup]               the setup every page opens with: docs/gallery/common.py, copied in full
 #                              (tools/sync_gallery_setup.py copies it, tests/test_docs.py checks the copies)
@@ -121,6 +122,7 @@ EXAMPLE_PAGES = [
     "ripples",
     "irn",
     "streams",
+    "fusion",
     "binaural",
     "classic",
     "textures",
@@ -279,6 +281,8 @@ def example_page(path: Path) -> dict:
                     part["live"] = live_json(ns.pop("live"))
                 if "lissajous" in ns:
                     part["lissajous"] = lissajous_json(ns.pop("lissajous"))
+                if "reveal" in ns:
+                    part["reveal"] = ns.pop("reveal")
             elif cell.kind == "figure":
                 png, _, size = encode_figure(ns.pop("fig"), [])
                 part.update(png=png, size=size)
@@ -409,6 +413,7 @@ pre code { font-size: inherit; }
 pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
 .cell { padding: 1.25rem 0; }
 details.code { grid-column: 1 / -1; }
+details.reveal > summary { font-family: var(--sans); color: var(--accent); font-weight: 600; cursor: pointer; margin: 1rem 0; }
 details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
 .hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
 .hljs-string { color: var(--string); }
@@ -732,6 +737,7 @@ TITLES = {
     "irn.html": "Iterated rippled noise",
     "ripples.html": "Spectrotemporal ripples",
     "streams.html": "Streams: reproducing Bregman & Ahad",
+    "fusion.html": "Fusion: reproducing Bregman & Ahad",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
     "events.html": "Events and pops",
@@ -781,6 +787,11 @@ TOPICS = [
                 "streams.html",
                 "sonore's reproductions of Bregman & Ahad's demonstrations of streaming: speed,"
                 " frequency, timbre, competition and place.",
+            ),
+            (
+                "fusion.html",
+                "sonore's reproductions of the demonstrations of fusion: harmonics heard as one tone or"
+                " apart, by mistuning, common motion, onsets, and masking undone by grouping.",
             ),
         ],
     ),
@@ -1363,22 +1374,23 @@ def build_example_page(site: Site, name: str) -> list[str]:
                 variants.append("")
             elif "sound" in part:
                 desc = f'<div class="desc">{part["about"]}</div>'
-                variants.append(
-                    sound_article(
-                        key,
-                        title,
-                        desc,
-                        part["sound"],
-                        src[0],
-                        src[1],
-                        part["regions"],
-                        part["size"],
-                        code=part["code"],
-                        scene=part.get("scene"),
-                        live=part.get("live"),
-                        lissajous=part.get("lissajous"),
-                    )
+                article = sound_article(
+                    key,
+                    title,
+                    desc,
+                    part["sound"],
+                    src[0],
+                    src[1],
+                    part["regions"],
+                    part["size"],
+                    code=part["code"],
+                    scene=part.get("scene"),
+                    live=part.get("live"),
+                    lissajous=part.get("lissajous"),
                 )
+                if part.get("reveal"):  # folded away until the reader asks
+                    article = f'<details class="reveal"><summary>{html.escape(part["reveal"])}</summary>{article}</details>'
+                variants.append(article)
             else:
                 variants.append(still_article(key, title, part["about"], src[0], part["size"], part["code"]))
         rendered[id(part)] = variants
