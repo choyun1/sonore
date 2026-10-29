@@ -43,8 +43,8 @@ version (0.x.y) only fixes bugs.
   (`align="causal"`) a block of envelopes at a time, each step a
   `ModulationSpectrogram` of the time windows that block completed;
   `ModulationSpectrogram.concatenate` joins them into the batch result to
-  within 1e-12 of its peak (the stream computes each time window directly,
-  the batch path by FFT).
+  within 1e-12 of its peak (the stream carries sliding sums restarted
+  every 1024 samples, the batch path convolves by FFT).
 
 ## [0.9.0] - 2026-10-28
 
