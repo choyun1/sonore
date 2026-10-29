@@ -149,6 +149,27 @@ def check_cepstrum_mfcc(frame):
         "MFCC of two halves of the time windows vs of all: worst difference",
         np.abs(halves_mfcc - whole_mfcc).max(),
     )
+    # Both floor the magnitude a fixed number of dB below each channel's
+    # largest value over the whole sound, which is not local: on a sound with
+    # silence, or one whose level changes, the halves differ from the whole.
+    signal = NOISE.copy()
+    signal[: int(1.0 * FS)] *= 2.0  # the loudest stretch in the first part
+    signal[int(2.0 * FS) : int(2.5 * FS)] = 0.0  # half a second of digital silence, in the second part
+    coefs = so.STFT(so.Sound(signal, FS), frame=frame)
+    first = coefs._with_data(coefs.data[..., :300])
+    second = coefs._with_data(coefs.data[..., 300:])
+    halves = np.concatenate([so.Cepstrum(first).data, so.Cepstrum(second).data], axis=-1)
+    halves_mfcc = np.concatenate([so.MFCC(first).data, so.MFCC(second).data], axis=-1)
+    report(
+        "C2",
+        "The same with 0.5 s of digital silence, cepstrum: worst difference",
+        np.abs(halves - so.Cepstrum(coefs).data).max(),
+    )
+    report(
+        "C2",
+        "                                          MFCC: worst difference",
+        np.abs(halves_mfcc - so.MFCC(coefs).data).max(),
+    )
 
 
 # ------------------------------------------------ the sampled gammatone as IIR

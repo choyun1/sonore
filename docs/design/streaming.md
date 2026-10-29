@@ -7,7 +7,7 @@ the F0 track. A streaming view takes sound a block at a time as it arrives,
 keeps what it needs from earlier blocks, and returns the time windows each
 block completes.
 
-Status: accepted 2026-10-29. Cho accepted D1–D11, D2 with the mixin and D7 with option (b). The claims are checked by
+Status: Cho accepted D1–D11 on 2026-10-29, D2 with the mixin and D7 with option (b). D12, added afterwards, is open. The claims are checked by
 `tools/check_streaming_claims.py` (C1–C11). It writes every streaming version
 out from its definition in NumPy and SciPy, as the step functions D1
 proposes, and imports sonore only for the batch results it compares them
@@ -129,7 +129,7 @@ place. C7 measures this for the largest state in view.
 | View | What a time window depends on | Streams exactly? | Latency |
 |---|---|---|---|
 | STFT (`GaborFrame`) | its own samples | yes, bit for bit (C1) | half a window: 10 ms at the default 20 ms |
-| Cepstrum, MFCC | one STFT time window | yes, bit for bit (C2) | the STFT's |
+| Cepstrum, MFCC | one STFT time window, and a floor set by the whole sound's peak | with a fixed floor (D12), bit for bit (C2) | the STFT's |
 | Gammatone subbands and envelopes | today: the whole sound (FFT, Hilbert) | not as they are; a time-domain gammatone does, bit for bit (C3) | the filter's own delay, nothing added |
 | Envelopes at a lower rate | today: zero-phase lowpass, edge-extended resampling | not as they are; any FIR rate change does | half the FIR |
 | Modulation spectrogram | the envelope over each kernel's length | with `align="causal"`, yes (its C8) | half a kernel: 3.0 s at 0.5 Hz, 23 ms at 64 Hz |
@@ -144,9 +144,15 @@ place. C7 measures this for the largest state in view.
   (one sample each, then up to 64, 441 and 4410 samples) is 0. A 20 ms window can be
   computed 10 ms after its center. The end of the sound needs a `finish` call
   for the last time windows, which SciPy computes with zeros past the end.
-- **C2. The cepstrum and MFCCs follow.** Each is computed from one STFT time
-  window. Computed from two halves of the time windows, both are identical
-  to computing them from all of them (worst difference 0).
+- **C2. The cepstrum and MFCCs follow, except for their floor.** Each is
+  computed from one STFT time window, apart from one global number: before the
+  logarithm, both floor the magnitude `floor_db` (default -200 dB) below the
+  largest value in each channel over the whole sound. On noise the floor
+  never binds, and the two halves of the time windows give exactly what all of
+  them give (worst difference 0). With 0.5 s of digital silence in the second
+  half and the loudest stretch in the first, the floors differ, and so do
+  the results: worst difference 0.60 in the cepstrum and 6.8 in the MFCCs
+  (found 2026-10-29, after D1–D11 were accepted; D12).
 - **C3. The sampled gammatone is an exact IIR filter, and it streams bit for
   bit.** The complex gammatone `k**(n-1) p**k`, with
   `p = exp((-2 pi b + 2 pi i cf) / fs)`, is the analytic impulse response
@@ -386,6 +392,19 @@ convenient in a callback, but it is two ways to do one thing, and the wrap
 is one call anyway.
 *Recommended: Sounds only.* That keeps "a sound is a value" and one input
 type, and inputs match D3's views-out.
+
+**D12. A fixed floor for streamed cepstra and MFCCs.** (Found after D1–D11
+were accepted; C2.) A stream can't know the whole sound's peak in advance.
+Proposed: `Cepstrum` and `MFCC` take `reference=None`. `None` is today's
+floor, `floor_db` below each channel's peak, so batch output is unchanged. A number
+puts the floor at `floor_db` below that amplitude, the same for every time
+window, which makes each time window depend on its own samples only. Streams
+require it, and the stream equals batch called with the same `reference`.
+*Alternatives.* (A) A running peak: the floor would rise as louder sound
+arrives, so early time windows would disagree with batch. (B) No relative
+floor in streams, only the smallest positive number: on silence that gives
+values near log(1e-308), which swamp a plot or a distance.
+*Recommended: `reference`.*
 
 ## API sketch
 
