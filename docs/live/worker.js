@@ -14,26 +14,40 @@ const BLOCK_SECONDS = 0.05;
 const MAX_BEHIND_SECONDS = 1.0;
 
 const options = new URL(self.location.href).searchParams;
-const say = (text) => self.postMessage({ type: "status", text });
+
+// The install, step by step, so the page can show how far it has got.
+const STEPS = 3 + PACKAGES.length;
+const progress = (step, text) => self.postMessage({ type: "progress", step, steps: STEPS, text });
 
 const ready = (async () => {
-  say("Downloading Python and its scientific packages (about 35 MB, once)…");
+  progress(0, "Downloading Python itself (Pyodide; with the packages, about 35 MB in all)");
   const { loadPyodide } = await import(PYODIDE + "pyodide.mjs");
   const pyodide = await loadPyodide({ indexURL: PYODIDE });
-  await pyodide.loadPackage(PACKAGES, { messageCallback: () => {} });
-  say("Installing sonore…");
+  // One package at a time, so each shows as a step; scipy is the largest.
+  for (const [i, name] of PACKAGES.entries()) {
+    progress(1 + i, `Downloading ${name} (${i + 1} of ${PACKAGES.length} packages)`);
+    await pyodide.loadPackage(name, { messageCallback: () => {} });
+  }
+  progress(1 + PACKAGES.length, "Installing sonore from PyPI");
   try {
     await pyodide.pyimport("micropip").install(options.get("wheel") || "sonore>=0.10");
   } catch (error) {
     throw new Error(`this page needs sonore 0.10 or later from PyPI, where the streams first appear (${error.message.trim().split("\n").pop()})`);
   }
+  progress(2 + PACKAGES.length, "Importing sonore (a few seconds)");
   const source = await (await fetch(new URL("live.py", import.meta.url))).text();
   pyodide.FS.writeFile("/home/pyodide/live.py", source);
   const version = pyodide.runPython("import sonore; sonore.__version__");
-  return { pyodide, live: pyodide.pyimport("live"), version };
+  const live = pyodide.pyimport("live");
+  return { pyodide, live, version };
 })();
+ready.then(
+  ({ version }) => self.postMessage({ type: "installed", version }),
+  (error) => self.postMessage({ type: "failed", text: String(error) }),
+);
 
 let analysis = null;  // a live.Live, once the page has said its sampling rate
+let audioPort = null;
 let fs = 0;
 let blockLength = 0;
 let pending = [];
@@ -95,6 +109,10 @@ function onAudio(samples, frame) {
 
 self.onmessage = async ({ data }) => {
   if (data.type === "start") {
+    pending = [];
+    pendingLength = 0;
+    received = 0;
+    audioPort = data.audio;
     data.audio.onmessage = ({ data: message }) => onAudio(message.samples, message.frame);
     try {
       const { live, version } = await ready;
@@ -107,6 +125,13 @@ self.onmessage = async ({ data }) => {
     } catch (error) {
       self.postMessage({ type: "failed", text: String(error) });
     }
+  } else if (data.type === "stop") {
+    // The microphone is off: no more buffers, and what waits is dropped. The
+    // analysis stays, so the page's check still covers what was heard.
+    if (audioPort) audioPort.close();
+    audioPort = null;
+    pending = [];
+    pendingLength = 0;
   } else if (data.type === "check" && analysis) {
     const result = analysis.check();
     self.postMessage({ type: "check", result: { ...result.toJs({ dict_converter: Object.fromEntries }), restarts, restartTimes, gaps, received, seconds: (performance.now() - firstAudio) / 1000 } });
