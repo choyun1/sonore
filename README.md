@@ -118,7 +118,7 @@ models of the ear or of perception; see "Related projects" below for those.
 ## Install
 
 ```bash
-pip install "sonore[notebook]"   # extras: sofa (HRIR files), play (sounddevice), dev (tests)
+pip install "sonore[notebook]"   # extras: sofa (HRIR files), play (sounddevice), live (microphone input), dev (tests)
 ```
 
 or, for the development version:

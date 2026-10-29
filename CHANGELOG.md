@@ -50,6 +50,14 @@ version (0.x.y) only fixes bugs.
   long after it. `F0TrackStream` gives exactly that result block by block
   (50 ms by default), each step an `F0Track` of the time windows it
   decided; `F0Track.concatenate` joins them.
+- `live_blocks(fs, size)`: blocks of sound from a microphone or sound card,
+  each a `Sound`, for any view that streams (`so.stream(view,
+  so.live_blocks(16000, 160))`). It needs python-sounddevice, installed with
+  the new `live` extra. A lost sample is an error, not a gap: once the blocks
+  before it have been read, `DroppedSamplesError` says how many samples
+  arrived intact. Tested with a stand-in for sounddevice (no sound card in
+  CI); docs/examples/live_f0.py prints a running F0 track from the
+  microphone.
 
 ### Changed
 
