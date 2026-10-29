@@ -6,6 +6,27 @@ version (0.x.y) only fixes bugs.
 
 ## [Unreleased]
 
+### Added
+
+- Streams: views computed one block of sound at a time, equal to the batch
+  analysis of the whole sound bit for bit (docs/design/streaming.md). A view
+  that streams has `start(fs)`, `step(state, block)` and `finish(state)`,
+  with an immutable state; `stream(view, blocks)` runs them lazily over any
+  iterable of `Sound` blocks, and `blocks(sound, size)` cuts a sound into
+  them. `GaborFrame` streams: each step returns an `STFT` of the time windows
+  that block completed, and `STFT.concatenate` joins the parts.
+  `SlidingWindowStream` gives the three methods to any view whose time
+  windows each depend on a fixed stretch of samples; `Streamable` is the
+  protocol `stream` takes.
+- `STFT.is_whole`: false for a part of a stream, which `to_sound`,
+  `griffin_lim` and the frame's `synthesize` and `adjoint` refuse.
+- `Cepstrum(..., reference=)` and `MFCC(..., reference=)`: a fixed floor,
+  `floor_db` below that magnitude in every time window, so each time window
+  depends on its own samples only. The default, `None`, is the floor below
+  each channel's peak as before. With it, cepstra and MFCCs of a stream's
+  STFT parts join (`Cepstrum.concatenate`, `MFCC.concatenate`) into exactly
+  those of the whole sound.
+
 ## [0.9.0] - 2026-10-28
 
 A release from the code audit's last sittings (14 to 23), with two

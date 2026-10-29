@@ -30,6 +30,7 @@ import numpy as np
 from scipy.signal import ShortTimeFFT, get_window
 
 from sonore.core.sound import Sound
+from sonore.core.stream import SlidingWindowStream
 from sonore.core.utils import RNG, amp_to_db, as_rng, n_samples
 from sonore.frames.frame import Frame, _check_frame
 
@@ -66,12 +67,18 @@ class _ShortTimeFourierFrame(Frame):
 
 
 @dataclass(frozen=True)
-class GaborFrame(_ShortTimeFourierFrame):
+class GaborFrame(_ShortTimeFourierFrame, SlidingWindowStream):
     """The one-sided short-time Fourier transform as a frame.
 
     Durations are rounded to samples per sampling rate, and the
     :class:`~scipy.signal.ShortTimeFFT` is built once per rate
     (:meth:`sft`). ``analyze`` returns an :class:`~sonore.STFT`.
+
+    It also streams (:class:`~sonore.core.stream.SlidingWindowStream`):
+    ``start``, ``step`` and ``finish`` take a sound a block at a time and
+    return STFTs of the time windows each block completes, and
+    :meth:`STFT.concatenate` of those parts is exactly :meth:`analyze` of
+    the whole sound. A time window is ready half a window after its center.
 
     Analysis always works, even for a window and hop that leave gaps
     (A = 0, including a hop longer than the window): the STFT is still a
@@ -149,10 +156,40 @@ class GaborFrame(_ShortTimeFourierFrame):
 
         return STFT(sound, frame=self)
 
+    def window_layout(self, fs: float) -> tuple[int, int, int]:
+        """``(window length, hop, start of time window 0)`` in samples, as
+        SciPy lays them out: time window 0 is the first that overlaps the sound."""
+        short_time_fft = _analysis_sft(self, float(fs))
+        return (
+            short_time_fft.m_num,
+            short_time_fft.hop,
+            short_time_fft.p_min * short_time_fft.hop - short_time_fft.m_num_mid,
+        )
+
+    def window_count(self, n_samples: int, fs: float) -> int:
+        """How many time windows the STFT of ``n_samples`` samples has."""
+        short_time_fft = _analysis_sft(self, float(fs))
+        _check_long_enough(n_samples, short_time_fft)
+        return short_time_fft.p_num(n_samples)
+
+    def time_windows(self, samples: np.ndarray, fs: float, first: int, count: int, n_samples: int) -> STFT:
+        """The STFT part with time windows ``first`` to ``first + count - 1``,
+        computed by SciPy from ``samples``, which start at time window ``first``'s
+        first sample."""
+        short_time_fft = _analysis_sft(self, float(fs))
+        n_channels = samples.shape[1]
+        if count == 0:
+            data = np.zeros((n_channels, short_time_fft.f_pts, 0), complex)
+        else:
+            # k_offset puts slice 0 at samples[0]: SciPy centers slice p at p * hop + k_offset
+            data = short_time_fft.stft(samples.T, p0=0, p1=count, k_offset=short_time_fft.m_num_mid, axis=-1)
+        return STFT._part(data, float(fs), self, first, n_samples)
+
     def synthesize(self, coefs: STFT) -> Sound:
         """SciPy's ``istft``: the weighted real least-squares signal for
         ``coefs``, exact for unmodified coefficients. Padding does not change
         this, since the frame operator is diagonal in time."""
+        coefs._require_whole()
         short_time_fft = self.sft(coefs.fs)
         if coefs.data.shape[-2] != short_time_fft.f_pts:
             raise ValueError(f"expected {short_time_fft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
@@ -163,6 +200,7 @@ class GaborFrame(_ShortTimeFourierFrame):
         """``n_fft`` times SciPy's ``istft`` with ``dual_win = win``: the
         adjoint for the bin-weighted inner product of :meth:`energy` (verified
         against a dense matrix, including odd and zero-padded FFTs)."""
+        coefs._require_whole()
         short_time_fft = _gabor_adjoint_sft(self, float(coefs.fs))
         if coefs.data.shape[-2] != short_time_fft.f_pts:
             raise ValueError(f"expected {short_time_fft.f_pts} frequency bins, got {coefs.data.shape[-2]}")
@@ -185,6 +223,7 @@ def _gabor_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
     return short_time_fft
 
 
+@lru_cache(maxsize=64)
 def _analysis_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
     """The frame's own ShortTimeFFT, or, when the window and hop leave gaps,
     one with the window as its own dual: analysis does not use the dual, so
@@ -200,6 +239,15 @@ def _gabor_adjoint_sft(frame: GaborFrame, fs: float) -> ShortTimeFFT:
     window = frame.window_samples(fs)
     _, hop, n_fft = frame.lengths(fs)
     return ShortTimeFFT(window, hop=hop, fs=fs, mfft=n_fft, dual_win=window, fft_mode="onesided")
+
+
+def _check_long_enough(n_samples: int, short_time_fft: ShortTimeFFT) -> None:
+    """SciPy needs at least half a window of sound."""
+    half_window = -(-short_time_fft.m_num // 2)
+    if n_samples < half_window:
+        raise ValueError(
+            f"the sound ({n_samples} samples) is shorter than half the window ({half_window} samples)"
+        )
 
 
 def _bin_weights(n_fft: int) -> np.ndarray:
@@ -516,20 +564,63 @@ class STFT(_ShortTimeCoefficients):
         self.frame = GaborFrame(win_dur, hop_dur) if frame is None else frame
         self.fs = sound.fs
         self.sft = _analysis_sft(self.frame, float(sound.fs))
-        half_window = -(-self.sft.m_num // 2)
-        if len(sound) < half_window:
-            raise ValueError(
-                f"the sound ({len(sound)} samples) is shorter than half the window ({half_window} samples)"
-            )
+        _check_long_enough(len(sound), self.sft)
         self.n_samples = len(sound)
+        self.first_window = 0
         self.data = self.sft.stft(sound.data.T, axis=-1)
+
+    @classmethod
+    def _part(cls, data: np.ndarray, fs: float, frame: GaborFrame, first_window: int, n_samples: int) -> STFT:
+        """Time windows ``first_window`` on of the STFT of a sound of which
+        ``n_samples`` samples have arrived: a part of a stream."""
+        new = cls.__new__(cls)
+        new.frame, new.fs, new.sft = frame, fs, _analysis_sft(frame, fs)
+        new.n_samples, new.first_window, new.data = int(n_samples), int(first_window), data
+        return new
 
     def _with_data(self, data: np.ndarray) -> STFT:
         """These coefficients' grid and frame, holding ``data`` instead."""
-        new = STFT.__new__(STFT)
-        new.frame, new.fs, new.sft = self.frame, self.fs, self.sft
-        new.n_samples, new.data = self.n_samples, data
-        return new
+        return STFT._part(data, self.fs, self.frame, self.first_window, self.n_samples)
+
+    @classmethod
+    def concatenate(cls, parts: Sequence[STFT | TVSTFT]) -> STFT:
+        """Parts of a stream joined in order: after the last part (the one
+        ``finish`` returns) this is the STFT of the whole sound, exactly."""
+        stft_parts = [part for part in parts if isinstance(part, STFT)]
+        if len(stft_parts) != len(parts):
+            raise TypeError("only STFT parts join (a TVGaborFrame does not stream)")
+        parts = stft_parts
+        if not parts:
+            raise ValueError("no parts to join")
+        first = parts[0]
+        expected = first.first_window
+        for part in parts:
+            if part.frame != first.frame or part.fs != first.fs:
+                raise ValueError("the parts come from different frames or sampling rates")
+            if part.first_window != expected:
+                raise ValueError(
+                    f"the parts are not consecutive: expected time window {expected}, got {part.first_window}"
+                )
+            expected += part.data.shape[-1]
+        n_channels = max(part.data.shape[0] for part in parts)
+        if any(part.data.shape[0] != n_channels and part.data.shape[-1] for part in parts):
+            raise ValueError("the parts have different numbers of channels")
+        data = np.concatenate([part.data for part in parts if part.data.shape[0] == n_channels], axis=-1)
+        return cls._part(data, first.fs, first.frame, first.first_window, parts[-1].n_samples)
+
+    @property
+    def is_whole(self) -> bool:
+        """Whether these are all the time windows of the sound so far, from the
+        first: false for a part of a stream, which can't be resynthesized alone."""
+        return self.first_window == 0 and self.data.shape[-1] == self.sft.p_num(self.n_samples)
+
+    def _require_whole(self) -> None:
+        if not self.is_whole:
+            raise ValueError(
+                f"this STFT holds time windows {self.first_window} to "
+                f"{self.first_window + self.data.shape[-1] - 1} of a stream; join the parts with "
+                "STFT.concatenate first"
+            )
 
     def __repr__(self) -> str:
         n_channels, n_freqs, n_windows = self.data.shape
@@ -546,7 +637,10 @@ class STFT(_ShortTimeCoefficients):
     @property
     def t(self) -> np.ndarray:
         """Window center times [s]."""
-        return self.sft.t(self.n_samples)
+        if self.is_whole:
+            return self.sft.t(self.n_samples)
+        first = self.sft.p_min + self.first_window
+        return np.arange(first, first + self.data.shape[-1]) * self.sft.delta_t
 
     @property
     def n_fft(self) -> int:
@@ -572,6 +666,7 @@ class STFT(_ShortTimeCoefficients):
     def griffin_lim(self, *, n_iter: int = 100, momentum: float = 0.99, rng: RNG = None) -> Sound:
         """Reconstruct a signal from the magnitude only (fast Griffin-Lim,
         Perraudin et al., 2013). ``momentum=0`` gives classic Griffin-Lim."""
+        self._require_whole()
         target_mag = self.magnitude
         rng = as_rng(rng)
         coefs = target_mag * np.exp(2j * np.pi * rng.random(target_mag.shape))

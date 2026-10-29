@@ -51,7 +51,12 @@ class Cepstrum(View):
     only ``c[0]``. Before the log, magnitudes are floored at ``floor_db``
     below the channel's largest magnitude over all time windows, so a time window of
     digital silence has a flat log spectrum rather than ``-inf``; real
-    recordings stay far above the default. Only the real cepstrum is
+    recordings stay far above the default. With ``reference`` the floor is
+    fixed instead, ``floor_db`` below that magnitude in every time window, so
+    each time window depends on its own samples only: this is what a stream
+    needs, since it can't know the loudest moment in advance, and cepstra of
+    a stream's STFT parts then join (:meth:`concatenate`) into exactly the
+    cepstrum of the whole sound with the same ``reference``. Only the real cepstrum is
     provided: the complex cepstrum needs phase unwrapping, and the minimum
     phase comes from the real one.
 
@@ -61,7 +66,11 @@ class Cepstrum(View):
         The coefficients to take the cepstrum of. They are kept (as
         :attr:`source`) for their phase, frame and times.
     floor_db
-        The floor, in dB below each channel's maximum; negative.
+        The floor, in dB below each channel's maximum (or below
+        ``reference``); negative.
+    reference
+        A fixed magnitude, in the STFT's units, for the floor to be set
+        below; ``None`` (the default) sets it below each channel's maximum.
     """
 
     discards = (
@@ -73,17 +82,23 @@ class Cepstrum(View):
         "exactly only for an unliftered cepstrum with phase='original'."
     )
 
-    def __init__(self, coefs: STFT | TVSTFT, *, floor_db: float = -200.0):
+    def __init__(self, coefs: STFT | TVSTFT, *, floor_db: float = -200.0, reference: float | None = None):
         if not isinstance(coefs, (STFT, TVSTFT)):
             raise TypeError(f"expected an STFT or TVSTFT, not {type(coefs).__name__}")
         if not floor_db < 0:
             raise ValueError(f"floor_db must be negative (dB below each channel's maximum), not {floor_db!r}")
+        if reference is not None and not reference > 0:
+            raise ValueError(f"reference must be a positive magnitude, not {reference!r}")
         self.source = coefs
         self.fs = coefs.fs
         self.n_fft = coefs.n_fft
+        self.floor_db, self.reference = floor_db, reference
         magnitude = np.abs(coefs.data)
-        peak = magnitude.max(axis=(1, 2), keepdims=True)
-        floor = np.where(peak > 0, peak * db_to_amp(floor_db), np.finfo(float).tiny)
+        if reference is None:
+            peak = magnitude.max(axis=(1, 2), keepdims=True, initial=0.0)
+            floor = np.where(peak > 0, peak * db_to_amp(floor_db), np.finfo(float).tiny)
+        else:
+            floor = np.asarray(reference * db_to_amp(floor_db))
         log_magnitude = np.log(np.maximum(magnitude, floor))
         self.data = np.fft.irfft(log_magnitude, n=self.n_fft, axis=1)[:, : self.n_fft // 2 + 1]
 
@@ -91,6 +106,30 @@ class Cepstrum(View):
     def _from(cls, template: Cepstrum, data: np.ndarray) -> Cepstrum:
         new = cls.__new__(cls)
         new.source, new.fs, new.n_fft, new.data = template.source, template.fs, template.n_fft, data
+        new.floor_db, new.reference = template.floor_db, template.reference
+        return new
+
+    @classmethod
+    def concatenate(cls, parts: Sequence[Cepstrum]) -> Cepstrum:
+        """Cepstra of a stream's STFT parts joined in order: exactly the
+        cepstrum of the whole sound, if every part has the same fixed
+        ``reference``."""
+        parts = list(parts)
+        if not parts:
+            raise ValueError("no parts to join")
+        first = parts[0]
+        if first.reference is None or any(
+            (part.reference, part.floor_db) != (first.reference, first.floor_db) for part in parts
+        ):
+            raise ValueError(
+                "cepstra join exactly only with the same fixed floor: "
+                "compute each part with the same reference="
+            )
+        source = STFT.concatenate([part.source for part in parts])  # also checks they are consecutive
+        n_channels = source.data.shape[0]
+        data = np.concatenate([part.data for part in parts if part.data.shape[0] == n_channels], axis=-1)
+        new = cls._from(first, data)
+        new.source = source
         return new
 
     def __repr__(self) -> str:

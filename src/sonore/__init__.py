@@ -29,6 +29,7 @@ from sonore.core.processing import (
     splice,
 )
 from sonore.core.sound import Sound, load
+from sonore.core.stream import SlidingWindowStream, Streamable, WindowState, blocks, stream
 from sonore.core.units import Decibels, dB
 from sonore.core.utils import (
     FrequencyScale,
@@ -281,6 +282,11 @@ __all__ = [
     "schroeder_complex",
     "silence",
     "set_fft_workers",
+    "SlidingWindowStream",
+    "Streamable",
+    "WindowState",
+    "blocks",
+    "stream",
     "simple_bir",
     "Sound",
     "spatialize",

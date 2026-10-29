@@ -3,6 +3,8 @@ bands on a mel scale, summarized by a discrete cosine transform."""
 
 from __future__ import annotations
 
+import copy
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -136,7 +138,13 @@ class MFCC(View):
     band power over all time windows before the log, so scaling a sound
     changes only ``c0`` and digital silence gives finite coefficients.
     Because the floor is set by the loudest moment, a deep floor (the
-    default) keeps each time window independent of the rest of the sound.
+    default) keeps each time window independent of the rest of the sound,
+    except where it binds (digital silence). With ``reference`` the floor is
+    fixed instead, at ``floor_db`` below ``reference**2`` in every time window, so
+    each time window depends on its own samples only. A stream needs that,
+    since it can't know the loudest moment in advance: MFCCs of a stream's
+    STFT parts then join (:meth:`concatenate`) into exactly the MFCCs of the
+    whole sound with the same ``reference``.
 
     The defaults follow Kaldi and HTK: HTK's mel scale, height-1 triangles
     straight in mel, and, for a sound, a symmetric Hamming window. With no
@@ -188,8 +196,12 @@ class MFCC(View):
         ``"mel"``: the triangles are straight lines in mel (HTK, Kaldi);
         ``"hz"``: straight in Hz (librosa).
     floor_db
-        Floor of the band powers, in dB below each channel's largest;
-        negative.
+        Floor of the band powers, in dB below each channel's largest (or
+        below ``reference**2``); negative.
+    reference
+        A fixed magnitude, in the STFT's units, whose square the floor is set
+        below; ``None`` (the default) sets it below each channel's largest
+        band power.
     lifter
         ``L`` of HTK's sinusoidal lifter, which multiplies ``c[n]`` by
         ``1 + (L / 2) sin(pi n / L)``; 0 for none. It is a fixed gain per
@@ -232,6 +244,7 @@ class MFCC(View):
         triangles: Literal["height", "area"] = "height",
         triangle_axis: Literal["mel", "hz"] = "mel",
         floor_db: float = -200.0,
+        reference: float | None = None,
         lifter: float = 0.0,
         win_dur: float | None = None,
         hop_dur: float | None = None,
@@ -260,11 +273,14 @@ class MFCC(View):
             raise ValueError(f"n_mfcc must be between 1 and n_mels ({n_mels}), not {n_mfcc}")
         if not floor_db < 0:
             raise ValueError(f"floor_db must be negative (dB below each channel's largest), not {floor_db!r}")
+        if reference is not None and not reference > 0:
+            raise ValueError(f"reference must be a positive magnitude, not {reference!r}")
         self.source = coefs
         self.fs = coefs.fs
         self.n_fft = coefs.n_fft
         self.mel_scale = mel_scale
         self.floor_db = floor_db
+        self.reference = reference
         self.lifter = lifter
         bin_freqs = np.arange(self.n_fft // 2 + 1) * self.fs / self.n_fft
         self.weights, self.edges = mel_filterbank(
@@ -285,9 +301,41 @@ class MFCC(View):
         )
 
     def _floored(self, mel_power: np.ndarray) -> np.ndarray:
-        peak = mel_power.max(axis=(1, 2), keepdims=True)
+        if self.reference is not None:
+            return np.maximum(mel_power, self.reference**2 * db_to_power(self.floor_db))
+        peak = mel_power.max(axis=(1, 2), keepdims=True, initial=0.0)
         floor = np.where(peak > 0, peak * db_to_power(self.floor_db), np.finfo(float).tiny)
         return np.maximum(mel_power, floor)
+
+    @classmethod
+    def concatenate(cls, parts: Sequence[MFCC]) -> MFCC:
+        """MFCCs of a stream's STFT parts joined in order: exactly the MFCCs
+        of the whole sound, if every part has the same settings and the same
+        fixed ``reference``."""
+        parts = list(parts)
+        if not parts:
+            raise ValueError("no parts to join")
+        first = parts[0]
+
+        def settings(mfcc: MFCC) -> tuple:
+            return (mfcc.reference, mfcc.floor_db, mfcc.lifter, mfcc.mel_scale, mfcc.data.shape[1])
+
+        if first.reference is None or any(
+            settings(part) != settings(first) or not np.array_equal(part.weights, first.weights)
+            for part in parts
+        ):
+            raise ValueError(
+                "MFCCs join exactly only with the same settings and the same fixed floor: "
+                "compute each part with the same reference="
+            )
+        source = STFT.concatenate([part.source for part in parts])  # also checks they are consecutive
+        n_channels = source.data.shape[0]
+        same_channels = [part for part in parts if part.data.shape[0] == n_channels]
+        new = copy.copy(first)
+        new.source = source
+        new.data = np.concatenate([part.data for part in same_channels], axis=-1)
+        new.mel_power = np.concatenate([part.mel_power for part in same_channels], axis=-1)
+        return new
 
     def _lifter_gains(self, n_mfcc: int) -> np.ndarray:
         if self.lifter == 0:
