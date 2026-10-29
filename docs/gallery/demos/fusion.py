@@ -515,8 +515,8 @@ fig, playhead = show(sound, fmin=300, fmax=3000)
 # **Listen for** words. Three gliding whistles: can you tell what the speaker is saying? The
 # booklet reports that after a little practice listeners can understand sine-wave speech,
 # sentences more easily than single words, although the three tones share no fundamental and do
-# not start or move together the way the harmonics of a voice do. The answer is the next
-# example.
+# not start or move together the way the harmonics of a voice do. The answer is folded away
+# below, under "Show the answer".
 #
 # A stand-in for Bregman & Ahad, Demonstration 23, after Remez, Rubin, Pisoni & Carrell (1981).
 # The disc plays sine-wave speech made from parameters supplied by Robert Remez and Philip Rubin,
@@ -558,6 +558,7 @@ fig, playhead = show(sound, fmin=100, fmax=5000, log=False)
 # %% [demo fu11] The sentence as recorded
 sound = speech
 fig, playhead = show(sound, fmin=100, fmax=5000, log=False)
+reveal = "Show the answer"  # the gallery folds this example away under that label
 
 # %% [markdown]
 # ## References

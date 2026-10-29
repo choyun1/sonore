@@ -90,6 +90,7 @@ pre code { font-size: inherit; }
 pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
 .cell { padding: 1.25rem 0; }
 details.code { grid-column: 1 / -1; }
+details.reveal > summary { font-family: var(--sans); color: var(--accent); font-weight: 600; cursor: pointer; margin: 1rem 0; }
 details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
 .hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
 .hljs-string { color: var(--string); }
@@ -778,8 +779,8 @@ fig, playhead = show(sound, fmin=300, fmax=3000)</code></pre></details>
     <div class="desc"><p><strong>Listen for</strong> words. Three gliding whistles: can you tell what the speaker is saying? The
 booklet reports that after a little practice listeners can understand sine-wave speech,
 sentences more easily than single words, although the three tones share no fundamental and do
-not start or move together the way the harmonics of a voice do. The answer is the next
-example.</p><p>A stand-in for Bregman &amp; Ahad, Demonstration 23, after Remez, Rubin, Pisoni &amp; Carrell (1981).
+not start or move together the way the harmonics of a voice do. The answer is folded away
+below, under "Show the answer".</p><p>A stand-in for Bregman &amp; Ahad, Demonstration 23, after Remez, Rubin, Pisoni &amp; Carrell (1981).
 The disc plays sine-wave speech made from parameters supplied by Robert Remez and Philip Rubin,
 which are not ours to use. This reproduction makes it from the male talker's recorded sentence (CMU
 ARCTIC, speaker bdl): <code>so.formant_track</code> follows the first three formants, and each becomes a
@@ -817,7 +818,7 @@ for k, db in enumerate((0, -6, -12)):
 sound = finish(so.Sound(whistles, speech.fs))
 fig, playhead = show(sound, fmin=100, fmax=5000, log=False)</code></pre></details>
 </article>
-
+<details class="reveal"><summary>Show the answer</summary>
 <article class="sound" id="d-fu11" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9957109090586364, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]">
   <div class="about">
     <h3>The sentence as recorded</h3>
@@ -831,8 +832,9 @@ delivered him through the maelstrom," read by the male talker. Then try the whis
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">sound = speech
-fig, playhead = show(sound, fmin=100, fmax=5000, log=False)</code></pre></details>
-</article>
+fig, playhead = show(sound, fmin=100, fmax=5000, log=False)
+reveal = &quot;Show the answer&quot;  # the gallery folds this example away under that label</code></pre></details>
+</article></details>
 </section>
 <section aria-labelledby="h-references">
 <h2 id="h-references">References</h2>
