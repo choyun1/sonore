@@ -32,8 +32,13 @@ const ready = (async () => {
   const version = pyodide.runPython("import sonore; sonore.__version__");
   return { pyodide, live: pyodide.pyimport("live"), version };
 })();
+ready.then(
+  ({ version }) => self.postMessage({ type: "installed", version }),
+  (error) => self.postMessage({ type: "failed", text: String(error) }),
+);
 
 let analysis = null;  // a live.Live, once the page has said its sampling rate
+let audioPort = null;
 let fs = 0;
 let blockLength = 0;
 let pending = [];
@@ -95,6 +100,10 @@ function onAudio(samples, frame) {
 
 self.onmessage = async ({ data }) => {
   if (data.type === "start") {
+    pending = [];
+    pendingLength = 0;
+    received = 0;
+    audioPort = data.audio;
     data.audio.onmessage = ({ data: message }) => onAudio(message.samples, message.frame);
     try {
       const { live, version } = await ready;
@@ -107,6 +116,13 @@ self.onmessage = async ({ data }) => {
     } catch (error) {
       self.postMessage({ type: "failed", text: String(error) });
     }
+  } else if (data.type === "stop") {
+    // The microphone is off: no more buffers, and what waits is dropped. The
+    // analysis stays, so the page's check still covers what was heard.
+    if (audioPort) audioPort.close();
+    audioPort = null;
+    pending = [];
+    pendingLength = 0;
   } else if (data.type === "check" && analysis) {
     const result = analysis.check();
     self.postMessage({ type: "check", result: { ...result.toJs({ dict_converter: Object.fromEntries }), restarts, restartTimes, gaps, received, seconds: (performance.now() - firstAudio) / 1000 } });

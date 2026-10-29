@@ -62,6 +62,7 @@ How it works: <a href="https://github.com/choyun1/sonore/blob/main/docs/design/l
 
 <div class="controls">
   <button id="start" type="button" disabled>Start microphone</button>
+  <button id="stop" type="button" hidden>Stop microphone</button>
   <span id="status" role="status">Loading…</span>
 </div>
 
@@ -87,6 +88,7 @@ const RANGE_DB = 60;        // levels drawn, below the running peak
 const PEAK_DECAY_DB = 0.02; // per column, so one loud moment does not darken the rest for ever
 
 const startButton = document.getElementById("start");
+const stopButton = document.getElementById("stop");
 const status = document.getElementById("status");
 const canvas = document.getElementById("picture");
 const context = canvas.getContext("2d");
@@ -101,6 +103,7 @@ let peakDb = -Infinity;
 let costs = [];
 let lastF0 = null;      // [x, y, column] of the last voiced point, to draw the line from
 let connectCapture = () => {};
+let stopCapture = () => {};
 
 function themeColors() {
   // From the plate to the ink, through the accent: readable in both themes.
@@ -189,12 +192,14 @@ function draw(part) {
 
 worker.onmessage = ({ data }) => {
   if (data.type === "status") say(data.text);
+  else if (data.type === "installed" && !startButton.hidden) say(`sonore ${data.version} is installed. Press Start microphone.`);
   else if (data.type === "failed") say(`Could not start: ${data.text}`, true);
   else if (data.type === "ready") {
     nBands = data.centers.length;
     drawAxis(data.centers);
     connectCapture();
     say(`Listening (sonore ${data.version}, ${data.fs / 1000} kHz).`);
+    stopButton.disabled = false;
   } else if (data.type === "part") draw(data.part);
   else if (data.type === "restarted") {
     say(data.gap
@@ -204,11 +209,14 @@ worker.onmessage = ({ data }) => {
   }
   else if (data.type === "check") window.CHECK = data.result;
 };
-say("Press Start; the first start downloads Python (about 35 MB).");
 startButton.disabled = false;
 
 startButton.addEventListener("click", async () => {
   startButton.disabled = true;
+  lastF0 = null;
+  newestColumn = -1;
+  peakDb = -Infinity;
+  costs = [];
   preparePalette();
   context.fillStyle = `rgb(${palette[0].join(",")})`;
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -221,16 +229,33 @@ startButton.addEventListener("click", async () => {
     const capture = new AudioWorkletNode(audio, "capture");
     audio.createMediaStreamSource(microphone).connect(capture);
     capture.connect(audio.destination);  // silent; keeps the node running in every browser
+    stopCapture = () => {
+      for (const track of microphone.getTracks()) track.stop();
+      audio.close();
+      worker.postMessage({ type: "stop" });
+    };
     // The worklet's buffers go straight to the worker, once the analysis is ready for them.
     const channel = new MessageChannel();
     connectCapture = () => capture.port.postMessage(channel.port2, [channel.port2]);
     worker.postMessage({ type: "start", fs: audio.sampleRate, audio: channel.port1 }, [channel.port1]);
     window.checkStreams = () => worker.postMessage({ type: "check" });
     say("Starting…");
+    startButton.hidden = true;
+    stopButton.hidden = false;
+    stopButton.disabled = true;  // until the analysis is listening
   } catch (error) {
     say(`No microphone: ${error.message}`, true);
     startButton.disabled = false;
   }
+});
+
+stopButton.addEventListener("click", () => {
+  stopCapture();
+  stopCapture = () => {};
+  stopButton.hidden = true;
+  startButton.hidden = false;
+  startButton.disabled = false;
+  say("Microphone off. The picture stays until you start again.");
 });
 </script>
 </body>
