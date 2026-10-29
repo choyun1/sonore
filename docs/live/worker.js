@@ -25,7 +25,7 @@ const ready = (async () => {
   try {
     await pyodide.pyimport("micropip").install(options.get("wheel") || "sonore>=0.10");
   } catch (error) {
-    throw new Error("this page needs sonore 0.10 or later from PyPI, where the streams first appear");
+    throw new Error(`this page needs sonore 0.10 or later from PyPI, where the streams first appear (${error.message.trim().split("\n").pop()})`);
   }
   const source = await (await fetch(new URL("live.py", import.meta.url))).text();
   pyodide.FS.writeFile("/home/pyodide/live.py", source);

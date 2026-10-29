@@ -748,6 +748,7 @@ TITLES = {
     "resynthesis.html": "Analysis and resynthesis",
     "modspectrogram.html": "Modulation spectrogram",
     "modtargets.html": "Hearing a modulation spectrum",
+    "../live/": "Live, on your microphone",  # docs/live/, written by hand (docs/design/live-page.md)
     "pv.html": "Phase vocoder",
     "whatisavoice.html": "What is a voice",
     "sourcefilter.html": "The source-filter model",
@@ -821,6 +822,11 @@ TOPICS = [
                 "modtargets.html",
                 "sounds made from a modulation spectrum: measured, edited, drawn, random spectrograms, or"
                 " traded between sounds.",
+            ),
+            (
+                "../live/",
+                "sonore's streams on your microphone, in the browser: a cochleagram and an F0 track as you"
+                " sing or speak.",
             ),
         ],
     ),
