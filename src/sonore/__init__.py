@@ -13,6 +13,7 @@ Typical use in a notebook::
 
 from sonore import texture
 from sonore.core.fft import fft_workers, set_fft_workers
+from sonore.core.live import DroppedSamplesError, live_blocks
 from sonore.core.processing import (
     amplitude_modulate,
     antiresonator,
@@ -294,6 +295,8 @@ __all__ = [
     "WindowState",
     "blocks",
     "stream",
+    "live_blocks",
+    "DroppedSamplesError",
     "simple_bir",
     "Sound",
     "spatialize",
