@@ -592,7 +592,7 @@ sound = finish(westminster(high_noise))
 fig, playhead = show(sound, fmin=100, fmax=5000)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk7" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.900045351473923}]">
+<article class="sound" id="d-pk7" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.900045351473923}]">
   <div class="about">
     <h3>The tune on random low harmonics</h3>
     <div class="desc"><p><strong>Listen for</strong> the same tune, now with each note made of three successive harmonics chosen at
@@ -601,7 +601,8 @@ that the melody stays clearly recognizable, which shows that it is not followed 
 one harmonic from note to note.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 23, after Houtsma (1984). Three successive harmonics
 of each note, with harmonic numbers between 2 and 6, as in the booklet. Ours: the tune and
 timing (0.4 s notes, one every 0.5 s), the random draws (seed 231), equal amplitudes and 20 ms
-ramps.</p></div>
+ramps.</p><p>The three figures share one frequency axis. Above each note are its harmonic numbers, and the
+dashed line is its fundamental, which is not in the sound.</p></div>
     <audio controls preload="metadata" src="audio/pk7_the_tune_on_random_low_harmonics.flac"></audio>
     <p class="file">pk7_the_tune_on_random_low_harmonics.flac, 3.9 s, mono</p>
   </div>
@@ -611,18 +612,38 @@ ramps.</p></div>
   </div></figure>
   <details class="code"><summary>Code</summary><pre><code class="language-python">def random_harmonics(lowest, highest, seed):
     rng = np.random.default_rng(seed)
-    events = []
+    events, firsts = [], []
     for k, f0 in enumerate(TUNE):
         first = rng.integers(lowest, highest - 1)  # three successive harmonics within the range
         events.append((0.5 * k, harmonics(f0, [first, first + 1, first + 2], 0.4)))
-    return place(events)
+        firsts.append(first)
+    return place(events), firsts
 
 
-sound = finish(random_harmonics(2, 6, seed=231))
-fig, playhead = show(sound, fmin=100, fmax=5000)</code></pre></details>
+def show_harmonics(snd, firsts):
+    &quot;&quot;&quot;The spectrogram on a linear axis, the same for all three parts, with the harmonic numbers
+    of each note written above it and its missing fundamental dashed.&quot;&quot;&quot;
+    fig, panels = show(snd, fmin=0, fmax=5400, log=False)
+    for k, (f0, first) in enumerate(zip(TUNE, firsts, strict=True)):
+        panels[0].plot([0.5 * k, 0.5 * k + 0.4], [f0, f0], color=&quot;white&quot;, linestyle=&quot;--&quot;, linewidth=1)
+        panels[0].text(
+            0.5 * k + 0.2,
+            f0 * (first + 2) + 150,
+            f&quot;{first}-{first + 2}&quot;,
+            color=&quot;white&quot;,
+            ha=&quot;center&quot;,
+            va=&quot;bottom&quot;,
+            fontsize=9,
+        )
+    return fig, panels
+
+
+sound, firsts = random_harmonics(2, 6, seed=231)
+sound = finish(sound)
+fig, playhead = show_harmonics(sound, firsts)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk7b" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.900045351473923}]">
+<article class="sound" id="d-pk7b" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.900045351473923}]">
   <div class="about">
     <h3>The tune on random middle harmonics</h3>
     <div class="desc"><p><strong>Listen for</strong> the tune again, with harmonics drawn from the fifth to the ninth.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 23, its second part: harmonic numbers between 5 and
@@ -634,11 +655,12 @@ fig, playhead = show(sound, fmin=100, fmax=5000)</code></pre></details>
     <img src="img/pk7b_the_tune_on_random_middle_harmonics.png" width="1000" height="320" alt="Plots of the the tune on random middle harmonics sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(random_harmonics(5, 9, seed=232))
-fig, playhead = show(sound, fmin=100, fmax=5000)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, firsts = random_harmonics(5, 9, seed=232)
+sound = finish(sound)
+fig, playhead = show_harmonics(sound, firsts)</code></pre></details>
 </article>
 
-<article class="sound" id="d-pk7c" data-regions="[{&quot;x0&quot;: 0.05356928949652778, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.900045351473923}]">
+<article class="sound" id="d-pk7c" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.900045351473923}]">
   <div class="about">
     <h3>The tune on random high harmonics</h3>
     <div class="desc"><p><strong>Listen for</strong> the tune once more, with harmonics drawn from the eighth to the twelfth: the
@@ -651,8 +673,9 @@ highest and most crowded together of the three.</p><p>Houtsma, Rossing &amp; Wag
     <img src="img/pk7c_the_tune_on_random_high_harmonics.png" width="1000" height="320" alt="Plots of the the tune on random high harmonics sound" loading="lazy">
     <div class="heads" aria-hidden="true"></div>
   </div></figure>
-  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(random_harmonics(8, 12, seed=233))
-fig, playhead = show(sound, fmin=100, fmax=6000)</code></pre></details>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound, firsts = random_harmonics(8, 12, seed=233)
+sound = finish(sound)
+fig, playhead = show_harmonics(sound, firsts)</code></pre></details>
 </article>
 </section>
 <section aria-labelledby="h-pitch-from-a-repetition">

@@ -348,19 +348,43 @@ fig, playhead = show(sound, fmin=100, fmax=5000)
 # of each note, with harmonic numbers between 2 and 6, as in the booklet. Ours: the tune and
 # timing (0.4 s notes, one every 0.5 s), the random draws (seed 231), equal amplitudes and 20 ms
 # ramps.
+#
+# The three figures share one frequency axis. Above each note are its harmonic numbers, and the
+# dashed line is its fundamental, which is not in the sound.
+
 
 # %% [demo pk7] The tune on random low harmonics
 def random_harmonics(lowest, highest, seed):
     rng = np.random.default_rng(seed)
-    events = []
+    events, firsts = [], []
     for k, f0 in enumerate(TUNE):
         first = rng.integers(lowest, highest - 1)  # three successive harmonics within the range
         events.append((0.5 * k, harmonics(f0, [first, first + 1, first + 2], 0.4)))
-    return place(events)
+        firsts.append(first)
+    return place(events), firsts
 
 
-sound = finish(random_harmonics(2, 6, seed=231))
-fig, playhead = show(sound, fmin=100, fmax=5000)
+def show_harmonics(snd, firsts):
+    """The spectrogram on a linear axis, the same for all three parts, with the harmonic numbers
+    of each note written above it and its missing fundamental dashed."""
+    fig, panels = show(snd, fmin=0, fmax=5400, log=False)
+    for k, (f0, first) in enumerate(zip(TUNE, firsts, strict=True)):
+        panels[0].plot([0.5 * k, 0.5 * k + 0.4], [f0, f0], color="white", linestyle="--", linewidth=1)
+        panels[0].text(
+            0.5 * k + 0.2,
+            f0 * (first + 2) + 150,
+            f"{first}-{first + 2}",
+            color="white",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
+    return fig, panels
+
+
+sound, firsts = random_harmonics(2, 6, seed=231)
+sound = finish(sound)
+fig, playhead = show_harmonics(sound, firsts)
 
 # %% [about]
 # **Listen for** the tune again, with harmonics drawn from the fifth to the ninth.
@@ -369,8 +393,9 @@ fig, playhead = show(sound, fmin=100, fmax=5000)
 # 9. Ours as before (seed 232).
 
 # %% [demo pk7b] The tune on random middle harmonics
-sound = finish(random_harmonics(5, 9, seed=232))
-fig, playhead = show(sound, fmin=100, fmax=5000)
+sound, firsts = random_harmonics(5, 9, seed=232)
+sound = finish(sound)
+fig, playhead = show_harmonics(sound, firsts)
 
 # %% [about]
 # **Listen for** the tune once more, with harmonics drawn from the eighth to the twelfth: the
@@ -380,8 +405,9 @@ fig, playhead = show(sound, fmin=100, fmax=5000)
 # 12. Ours as before (seed 233).
 
 # %% [demo pk7c] The tune on random high harmonics
-sound = finish(random_harmonics(8, 12, seed=233))
-fig, playhead = show(sound, fmin=100, fmax=6000)
+sound, firsts = random_harmonics(8, 12, seed=233)
+sound = finish(sound)
+fig, playhead = show_harmonics(sound, firsts)
 
 # %% [markdown]
 # ## Pitch from a repetition
@@ -457,6 +483,7 @@ fig, playhead = show(sound, fmin=50, fmax=5000)
 # Houtsma, Rossing & Wagenaars, Demonstration 26, its third part: bursts of white noise echoed
 # 15 ms to 0.94 ms later. Ours: 0.25 s bursts with 10 ms ramps, and the delay made exact by a
 # phase shift in the frequency domain.
+
 
 # %% [demo pk8c] A scale of echoed noise
 def echoed_noise(delay, rng):
