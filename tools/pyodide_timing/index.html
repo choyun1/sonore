@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>sonore stream timing in Pyodide</title>
+<!-- Runs tools/time_streams.py under Pyodide. Serve the repository root
+     (python -m http.server 8765), put a wheel of the working tree in
+     tools/pyodide_timing/ (pip wheel --no-deps -w tools/pyodide_timing .),
+     then open http://localhost:8765/tools/pyodide_timing/ or run
+     node tools/pyodide_timing/run.js. The table appears on the page. -->
+<pre id="out">Loading Pyodide…</pre>
+<script type="module">
+const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";  // as docs/try/worker.js
+const out = document.getElementById("out");
+const { loadPyodide } = await import(PYODIDE + "pyodide.mjs");
+const pyodide = await loadPyodide({ indexURL: PYODIDE });
+await pyodide.loadPackage(["numpy", "scipy", "soundfile", "micropip"]);
+const wheel = (await (await fetch("wheel.txt")).text()).trim();
+await pyodide.pyimport("micropip").install(new URL(wheel, location.href).href);
+for (const [path, name] of [["../time_streams.py", "time_streams.py"], ["../../docs/speech/bdl_arctic_a0131.flac", "speech.flac"]]) {
+  pyodide.FS.writeFile("/home/pyodide/" + name, new Uint8Array(await (await fetch(path)).arrayBuffer()));
+}
+out.textContent = "Timing…";
+const table = pyodide.runPython(
+  "import os, sys; os.chdir('/home/pyodide'); sys.path.insert(0, '.')\n" +
+  "import time_streams; time_streams.report(time_streams.run('speech.flac'))"
+);
+out.textContent = table + "\n\n" + navigator.userAgent;
+window.TABLE = out.textContent;
+</script>
