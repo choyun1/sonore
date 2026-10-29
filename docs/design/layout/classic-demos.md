@@ -11,8 +11,10 @@ point to, and the stimuli are ones sonore-infer can use.
 This note lists every demonstration, says what sonore already makes, and proposes pages. It adds
 no code; the decisions at the end come first.
 
-Status: draft for Cho, 2026-10-29. Revised the same day for Cho's note on language: always credit
-the originals, and frame every page as a reproduction that tests sonore (D10).
+Status: accepted by Cho (2026-10-29), all decisions as recommended (D1–D9), and D10 on language,
+which Cho set the same day: always credit the originals, and frame every page as a reproduction
+that tests sonore. The chorale piece for ASA 16, 29 and 31 is still to be chosen. Pages are built
+in the order below.
 
 ## What the pages are, and what they are not
 
@@ -210,18 +212,18 @@ of ASA 2.
 - **D1. Scope.** Rebuild every demonstration whose stimulus is synthetic and fully specified;
   use stand-ins where a recording made the point (D5); leave out absolute-threshold staircases
   (ASA 6), procedures (ASA 7 loudness scaling, ASA 17 the answer-keyed difference-limen test)
-  and recordings with no good substitute yet (ASA 24, Bregman 6). Recommended.
+  and recordings with no good substitute yet (ASA 24, Bregman 6). Accepted.
 - **D2. Where the pages go.** A new group, Classic demonstrations, with the six pages above,
   and the scale, tuning and timbre demonstrations added to the existing Music pages. The
   alternative is no new group: each demonstration goes on the existing page closest to it, which
-  scatters them and leaves nothing single to point to. Recommended: the new group.
+  scatters them and leaves nothing single to point to. Accepted: the new group.
 - **D3. Staircases.** Keep the level staircases where the masker is in the same sound (ASA 2, 8,
   9, 10, 38), since the step that disappears depends on the signal-to-masker ratio rather than
   on the reader's volume knob. Drop those against absolute threshold (ASA 6). Shorten each to one
-  pass instead of the disc's two. Recommended.
+  pass instead of the disc's two. Accepted.
 - **D4. Length.** The disc tracks run from 30 s to 4 min. Each example is trimmed to the
   shortest version that keeps the published parameters and the point, usually 5 to 20 s, with a
-  longer version only where buildup over time is the point (Bregman 4, 12). Recommended.
+  longer version only where buildup over time is the point (Bregman 4, 12). Accepted.
 - **D5. Stand-ins.** Amadinda (Bregman 7–9, 41): an interlocking pattern written for the page,
   two isochronous cycles on a pentatonic scale, played by a synthetic struck tone, rather than
   the traditional piece's notes. Sine-wave speech (Bregman 23) and the picket fence (31): the
@@ -229,19 +231,19 @@ of ASA 2.
   synthetic rooms, played backward. Bell (ASA 28): the booklet's partial frequencies with decay
   times labeled as estimates. The chorale demonstrations (ASA 29, 31) and the melody of ASA 16
   need a public-domain score typed in; Cho may want to choose the piece. The chime (ASA 24) and
-  the Telemann excerpt (Bregman 6) are left out for now. Recommended, with the piece open.
+  the Telemann excerpt (Bregman 6) are left out for now. Accepted, with the piece open.
 - **D6. No library code.** Every stimulus above is plain sonore calls plus page code (a tone
   sequence helper, a gate, a sharp-edged noise band as `harmonic_complex(f0=2, phases="random")`
   over a band). If the same helper ends up on three pages, it is shared from one page-side
-  module, not added to sonore. Recommended.
+  module, not added to sonore. Accepted.
 - **D7. Wording of what is heard.** Every perceptual statement is attributed to the booklet or
   the original paper. Where a page has no source for how something sounds, it says what the
-  stimulus is and stops. Recommended.
+  stimulus is and stops. Accepted.
 - **D8. Comodulation masking release.** It is on neither disc (Bregman 22's rhythmic masking
   release is a variant of it), but it is one of the classic stimuli. Add it to the Fusion page,
-  after Hall, Haggard & Fernandes (1984). Recommended.
+  after Hall, Haggard & Fernandes (1984). Accepted.
 - **D9. sonore-infer.** The pages are content only. sonore-infer copies a stimulus's few lines
-  when it needs one; no shared stimulus module now. Recommended.
+  when it needs one; no shared stimulus module now. Accepted.
 - **D10. Language (Cho, 2026-10-29).** The originals are always credited, and every page is
   framed as a reproduction that tests sonore, as set out in "What the pages are". Page titles say
   so, e.g. "Streams: reproducing Bregman & Ahad (1996)". Decided by Cho.
