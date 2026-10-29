@@ -173,3 +173,21 @@ def test_gallery_pages_have_notebooks():
         notebook = f"notebooks/{page.removesuffix('.html')}.ipynb"
         assert (GALLERY / notebook).exists(), f"{page} has no {notebook}"
         assert f'href="{notebook}"' in html, f"{page} does not link {notebook}"
+
+
+def test_the_api_reference_lists_every_module_and_only_real_ones():
+    import importlib
+
+    source = ROOT / "docs" / "api" / "source"
+    listed = set(
+        re.findall(r"^\.\. automodule:: (\S+)$", "".join(p.read_text() for p in source.glob("*.rst")), re.M)
+    )
+    package = ROOT / "src" / "sonore"
+    modules = {
+        "sonore." + ".".join(path.relative_to(package).with_suffix("").parts)
+        for path in package.glob("*/*.py")
+        if path.name != "__init__.py"
+    }
+    assert sorted(modules - listed) == []  # modules missing from the API reference
+    for name in listed:
+        importlib.import_module(name)  # a listed module that no longer exists fails here

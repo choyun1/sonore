@@ -181,6 +181,7 @@ More in the gallery:
 
 - [Streams: reproducing Bregman & Ahad](https://choyun1.github.io/sonore/gallery/streams.html): sonore's attempt to rebuild Bregman & Ahad's (1996) demonstrations of streaming from their booklet. [▶ a six-tone cycle](https://choyun1.github.io/sonore/gallery/streams.html#d-sg1)
 - [Fusion: reproducing Bregman & Ahad](https://choyun1.github.io/sonore/gallery/fusion.html): sonore's attempt to rebuild the demonstrations of fusion (Bregman & Ahad 1996; Houtsma, Rossing & Wagenaars 1987) and comodulation masking release (Hall, Haggard & Fernandes 1984). [▶ one harmonic mistuned](https://choyun1.github.io/sonore/gallery/fusion.html#d-fu2)
+- [Continuity and capture: reproducing Bregman & Ahad](https://choyun1.github.io/sonore/gallery/continuity.html): sonore's attempt to rebuild the old-plus-new demonstrations (Bregman & Ahad 1996; Houtsma, Rossing & Wagenaars 1987): tones captured out of a mixture, sounds heard continuing through noise, and residuals. [▶ a tone and a noise in its gap](https://choyun1.github.io/sonore/gallery/continuity.html#d-cc4)
 
 **Seeing and changing sound**
 
@@ -337,8 +338,9 @@ Only work still to do is listed here. Finished items are in
   coefficients moved in frequency only, so it stays exactly invertible) and partials tracked on
   the reassigned spectrogram, played by an oscillator bank (as in Fitz & Haken's Loris).
 - On-demand download of other public HRIR databases.
-- A block-by-block (streaming) modulation spectrogram, as the reference for a
-  live version on a phone: the modulation spectrum of everyday sounds as they happen.
+- Live input: an optional `sonore[live]` adapter from a sound card
+  (python-sounddevice) to the streaming views, then a page in the browser
+  that runs them on the microphone.
 - Quilts longer than their source, which would reuse segments. The paper's rule picks
   the best match every time, so a reused segment would start a loop that repeats; it
   would need a random pick among the best few and a minimum gap before a segment
