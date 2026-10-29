@@ -338,9 +338,9 @@ Only work still to do is listed here. Finished items are in
   coefficients moved in frequency only, so it stays exactly invertible) and partials tracked on
   the reassigned spectrogram, played by an oscillator bank (as in Fitz & Haken's Loris).
 - On-demand download of other public HRIR databases.
-- Live input: an optional `sonore[live]` adapter from a sound card
-  (python-sounddevice) to the streaming views, then a page in the browser
-  that runs them on the microphone.
+- Live input in the browser: a page that runs the streaming views on the
+  microphone. The Python side, `so.live_blocks` (the `sonore[live]` extra),
+  is in but has only been tested with a stand-in for the sound card.
 - Quilts longer than their source, which would reuse segments. The paper's rule picks
   the best match every time, so a reused segment would start a loop that repeats; it
   would need a random pick among the best few and a minimum gap before a segment
