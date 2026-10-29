@@ -72,6 +72,7 @@ __all__ = [
 
 # Tick multiples of each power of ten for log_frequency_axis, coarsest first.
 _PLAIN_SUBS = (
+    (1.0,),
     (1.0, 2.0, 5.0),
     (1.0, 2.0, 3.0, 5.0),
     (1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0),
@@ -81,21 +82,27 @@ _PLAIN_SUBS = (
 
 def log_frequency_axis(ax: Axes, axis: Literal["x", "y", "both"] = "y") -> Axes:
     """Put ``axis`` of ``ax`` on a log scale labeled in plain numbers (20, 50,
-    100, 200, 500, 1000, ...) instead of powers of ten. A narrower range gets
-    denser ticks (100, 200, 300, 500; then 800, 1000, 1500, ...), the first set
-    that puts at least three ticks on it. Returns ``ax``."""
+    100, 200, 500, 1000, ...) instead of powers of ten. The ticks are the
+    densest set that fits the axis's length: a range of many decades on a
+    small panel gets only 10, 100, 1000, ..., and a narrow one gets denser
+    ticks (100, 200, 300, 500; then 800, 1000, 1500, ...). Returns ``ax``."""
     from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 
     class PlainLocator(LogLocator):
         def tick_values(self, vmin: float, vmax: float) -> Sequence[float]:
             low, high = sorted((vmin, vmax))
+            room = max(self.axis.get_tick_space() if self.axis is not None else 9, 3)
+            sets, counts = [], []
             for subs in _PLAIN_SUBS:
                 self.set_params(subs=subs)
-                ticks = super().tick_values(vmin, vmax)
-                values = np.asarray(ticks)
-                if np.count_nonzero((values >= low) & (values <= high)) >= 3:
-                    break
-            return ticks
+                sets.append(super().tick_values(vmin, vmax))
+                values = np.asarray(sets[-1])
+                counts.append(np.count_nonzero((values >= low) & (values <= high)))
+            # the 1-2-5 set or the first denser one with three ticks, coarser while it does not fit
+            pick = next((k for k in range(1, len(sets)) if counts[k] >= 3), len(sets) - 1)
+            while pick > 0 and counts[pick] > room:
+                pick -= 1
+            return sets[pick]
 
     for name in ("x", "y") if axis == "both" else (axis,):
         getattr(ax, f"set_{name}scale")("log")

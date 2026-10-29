@@ -10,7 +10,7 @@ version (0.x.y) only fixes bugs.
 
 - `sonore.plotting.log_frequency_axis(ax, axis)`: a log axis labeled in
   plain numbers (20, 50, 100, 200, 500, 1000, ...) instead of powers of ten,
-  with denser ticks on narrow ranges.
+  with as many ticks as fit the axis and denser ticks on narrow ranges.
 
 ### Changed
 

@@ -325,3 +325,16 @@ def test_plot_formant_track_follows_the_spectrogram_unit():
     assert ax.get_ylabel() == "Frequency [Hz]"
     np.testing.assert_array_equal(ax.lines[0].get_ydata(), track.frequencies[0, 0])
     plt.close("all")
+
+
+def test_log_frequency_axis_thins_ticks_on_a_small_panel():
+    import matplotlib.pyplot as plt
+
+    from sonore.plotting import log_frequency_axis
+
+    fig, ax = plt.subplots(figsize=(3, 2))
+    log_frequency_axis(ax, "x")
+    ax.set_xlim(20, 20000)
+    fig.canvas.draw()
+    assert [t for t in ax.get_xticks() if 20 <= t <= 20000] == [100, 1000, 10000]
+    plt.close(fig)
