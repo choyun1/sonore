@@ -276,6 +276,130 @@ report(
     0.15,
 )
 
+# Bregman & Ahad, Demonstration 25: B 650 and C 300 Hz always, A 1800 Hz in the first example; in
+# each 0.8 s cycle A sounds at 0 s and B and C at 0.4 s, equal in amplitude, after four cycles of
+# the standard.
+data, fs = load("cc1")
+x = data[:, 0]
+cycle = x[round((0.8 * 6) * fs) : round((0.8 * 7) * fs)]
+a, chord = cycle[round(0.03 * fs) : round(0.17 * fs)], cycle[round(0.43 * fs) : round(0.57 * fs)]
+report(
+    "cc1 A, B and C [Hz]",
+    [peak_in_band(a, fs, 1000, 3000), peak_in_band(chord, fs, 500, 800), peak_in_band(chord, fs, 200, 400)],
+    [1800, 650, 300],
+    1.0,
+)
+report(
+    "cc1 C re B, and A re B [dB]",
+    [
+        peak_level(chord, fs, 200, 400) - peak_level(chord, fs, 500, 800),
+        peak_level(a, fs, 1000, 3000) - peak_level(chord, fs, 500, 800),
+    ],
+    [0, 0],
+    0.3,
+)
+
+# Bregman & Ahad, Demonstration 26, third example: C starts and stops 60 ms after B.
+data, fs = load("cc2c")
+x = data[round(0.8 * 6 * fs) : round(0.8 * 7 * fs), 0]
+starts = [
+    np.argmax(band_envelope(x, fs, f, 60) > 0.5 * band_envelope(x, fs, f, 60).max()) for f in (650, 300)
+]
+report("cc2c C's onset after B's [ms]", 1000 * (starts[1] - starts[0]) / fs, 60, 2.0)
+
+# Bregman & Ahad, Demonstration 28: 900 ms of a 1000 Hz tone and 100 ms of white noise each
+# second, two seconds at each noise amplitude; at the last, the noise is 20 times the tone.
+data, fs = load("cc4")
+x = data[:, 0]
+tone_rms = np.sqrt(np.mean(x[round(0.2 * fs) : round(0.8 * fs)] ** 2))
+noise_rms = [
+    np.sqrt(np.mean(x[round((k + 0.92) * fs) : round((k + 0.98) * fs)] ** 2)) for k in range(1, 14, 2)
+]
+report(
+    "cc4 noise re tone (RMS), each level",
+    np.array(noise_rms) / tone_rms,
+    20 * np.array([0, 0.025, 0.05, 0.1, 0.2, 0.5, 1]),
+    0.1 * 20 * np.array([0.025, 0.025, 0.05, 0.1, 0.2, 0.5, 1]),
+)
+
+# Houtsma, Rossing & Wagenaars, Demonstration 11: a 2000 Hz tone (125 ms) alternating with a
+# noise band (125 ms), the tone starting at the noise's level and dropping 1 dB every four tones.
+data, fs = load("cc5")
+x = data[:, 0]
+tone_db = [
+    rms_db(
+        np.concatenate(
+            [x[round((s + 0.015) * fs) : round((s + 0.11) * fs)] for s in step + 0.25 * np.arange(4)]
+        )
+    )
+    for step in range(16)
+]
+noise_db = rms_db(
+    np.concatenate(
+        [x[round((s + 0.015) * fs) : round((s + 0.11) * fs)] for s in 0.125 + 0.25 * np.arange(64)]
+    )
+)
+report("cc5 first tone re noise [dB]", tone_db[0] - noise_db, 0.0, 0.5)
+report(
+    "cc5 tone steps re the first, largest error [dB]",
+    np.max(np.abs(np.subtract(tone_db, tone_db[0]) + np.arange(16))),
+    0,
+    0.05,
+)
+
+# Bregman & Ahad, Demonstration 30 with noise: the 1500-3000 Hz band at an RMS 10.4 times the
+# tone's (the page's reading of "3 dB above the tone's spectrum level"), the first cut 400 ms wide
+# around the top at 0.75 s.
+data, fs = load("cc7b")
+x = data[:, 0]
+ratio = np.sqrt(
+    np.mean(x[round(0.6 * fs) : round(0.9 * fs)] ** 2) / np.mean(x[round(1.2 * fs) : round(1.7 * fs)] ** 2)
+)
+report("cc7b noise re tone (RMS) (page's own reading)", ratio, 10.4, 0.5)
+
+# Bregman & Ahad, Demonstration 31: noise with twice the RMS of the loudest sixth of a second of
+# speech kept. The sound is the gapped sentence, 0.75 s of silence, then the filled one.
+data, fs = load("cc8")
+x = data[:, 0]
+length = 2.525
+kept = [x[round(s * fs) : round((s + 1 / 6) * fs)] for s in np.arange(0, length, 1 / 3)]
+gaps = [
+    x[round((length + 0.75 + s) * fs) : round((length + 0.75 + s + 1 / 6) * fs)]
+    for s in np.arange(1 / 6, length - 1 / 6, 1 / 3)
+]
+loudest = max(np.sqrt(np.mean(k**2)) for k in kept)
+report(
+    "cc8 noise re loudest speech (RMS), median over gaps",
+    np.median([np.sqrt(np.mean(g**2)) for g in gaps]) / loudest,
+    2.0,
+    0.15,
+)
+
+# Bregman & Ahad, Demonstration 33: B holds harmonics 1, 3, 5, 6 and 9 of 300 Hz at 0, -20, -28,
+# -33 and -38 dB (alone from 0.4 to 0.8 s).
+data, fs = load("cc10")
+b = data[round(0.45 * fs) : round(0.75 * fs), 0]
+report(
+    "cc10 harmonics 3, 5, 6, 9 re 1 [dB]",
+    [peak_level(b, fs, 300 * n - 50, 300 * n + 50) - peak_level(b, fs, 250, 350) for n in (3, 5, 6, 9)],
+    [-20, -28, -33, -38],
+    0.3,
+)
+
+# Bregman & Ahad, Demonstration 37: the third harmonic (375 Hz) of "i" at the same level when it
+# sounds on its own between vowels in the last part; absent from "en".
+data, fs = load("cc14")
+x = data[:, 0]
+in_vowel = peak_level(x[round(0.35 * fs) : round(0.65 * fs)], fs, 340, 410)
+between = peak_level(x[round(9.75 * fs) : round(10.05 * fs)], fs, 340, 410)
+in_en = peak_level(x[round(4.35 * fs) : round(4.65 * fs)], fs, 340, 410)
+report(
+    "cc14 third harmonic between vowels, and in en (floor -60), re in i [dB]",
+    [between - in_vowel, max(in_en - in_vowel, -60)],
+    [0, -60],
+    0.3,
+)
+
 print()
 print(f"{len(failures)} failed" + (": " + ", ".join(failures) if failures else ""))
 raise SystemExit(bool(failures))
