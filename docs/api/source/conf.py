@@ -28,6 +28,9 @@ extensions = [
 # The docstrings are numpy style; parameter types live in the signatures.
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
+# An "Attributes" section becomes a list in its class's entry: as separate
+# entries it repeated the dataclass fields autodoc already lists.
+napoleon_use_ivar = True
 autodoc_typehints = "signature"
 autodoc_member_order = "bysource"
 # Keep numpy's ArrayLike as one word instead of its long expansion.
