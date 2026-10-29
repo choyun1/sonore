@@ -265,3 +265,70 @@ def test_band_widths_are_minus_3_db_widths():
 
         low, high = brentq(above_half_power, cf / 4, cf), brentq(above_half_power, cf, 2 * cf)
         assert widths[k] == pytest.approx(high - low, rel=2e-3)
+
+
+# ------------------------------------------------------------ streaming
+STREAM_BANK = so.gammatone_filterbank(n_bands=4, f_lo=200.0, f_hi=4000.0, edges=False)
+STREAM_ENV = so.TemporalEnvelope(
+    np.abs(np.random.default_rng(3).standard_normal((2500, 4, 2))), 1000.0, STREAM_BANK
+)
+
+
+def envelope_cuts(env, lengths):
+    """``env`` cut into consecutive parts of the given lengths (0 for an empty one)."""
+    parts, start = [], 0
+    for length in lengths:
+        parts.append(so.TemporalEnvelope(env.data[start : start + length], env.fs, env.filterbank))
+        start += length
+    return parts
+
+
+@pytest.mark.parametrize("hop", [0.010, 0.0035])
+def test_the_causal_spectrogram_streams_like_batch(hop):
+    stream = so.ModulationSpectrogramStream(STREAM_BANK, f_lo=2.0, hop=hop)
+    batch = so.ModulationSpectrogram(STREAM_ENV, f_lo=2.0, hop=hop, align="causal")
+    rng = np.random.default_rng(0)
+    random_lengths = []
+    while sum(random_lengths) < len(STREAM_ENV):
+        random_lengths += [0] if rng.random() < 0.1 else []
+        random_lengths.append(int(rng.integers(1, 300)))
+    cuttings = {
+        "one block": [len(STREAM_ENV)],
+        "one sample each": [1] * len(STREAM_ENV),
+        "random with empty blocks": random_lengths,
+    }
+    for name, lengths in cuttings.items():
+        joined = so.ModulationSpectrogram.concatenate(
+            list(so.stream(stream, envelope_cuts(STREAM_ENV, lengths)))
+        )
+        assert joined.power.shape == batch.power.shape, name
+        assert np.allclose(joined.power, batch.power, rtol=0, atol=1e-12 * batch.power.max()), name
+        assert np.allclose(joined.mean, batch.mean, rtol=0, atol=1e-12 * batch.mean.max()), name
+        assert np.array_equal(joined.valid, batch.valid) and np.array_equal(joined.t, batch.t), name
+        assert np.array_equal(joined.f, batch.f) and np.array_equal(joined.fm, batch.fm), name
+
+
+def test_parts_are_spectrograms_of_their_own_time_windows():
+    stream = so.ModulationSpectrogramStream(STREAM_BANK, f_lo=2.0)
+    parts = list(so.stream(stream, envelope_cuts(STREAM_ENV, [1000, 1000, 500])))
+    assert [part.first_window for part in parts] == [0, 100, 200, 250]
+    assert parts[1].t[0] == 1.0 and parts[1].power.shape[-1] == 100
+    assert parts[-1].power.shape[-1] == 0  # every time window ends at a sample already seen
+    assert np.all(np.isfinite(parts[1].at(1.5)))
+
+
+def test_the_stream_checks_its_blocks_and_parts():
+    stream = so.ModulationSpectrogramStream(STREAM_BANK, f_lo=2.0)
+    state = stream.start(1000.0)
+    with pytest.raises(ValueError, match="different filterbank"):
+        stream.step(state, so.TemporalEnvelope(np.ones((10, 2)), 1000.0))
+    with pytest.raises(TypeError, match="TemporalEnvelope"):
+        stream.step(state, so.Sound(np.ones(10), 1000.0))
+    with pytest.raises(ValueError, match="too low"):
+        stream.start(100.0)
+    parts = list(so.stream(stream, envelope_cuts(STREAM_ENV, [1000, 1000, 500])))
+    with pytest.raises(ValueError, match="not consecutive"):
+        so.ModulationSpectrogram.concatenate([parts[0], parts[2]])
+    other = so.ModulationSpectrogram(STREAM_ENV, f_lo=2.0)  # centered: another analysis
+    with pytest.raises(ValueError, match="different analyses"):
+        so.ModulationSpectrogram.concatenate([other, parts[1]])

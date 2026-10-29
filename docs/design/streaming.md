@@ -8,7 +8,7 @@ keeps what it needs from earlier blocks, and returns the time windows each
 block completes.
 
 Status: Cho accepted D1–D11 on 2026-10-29, D2 with the mixin and D7 with option (b). D12, added afterwards, was accepted the same day. The claims are checked by
-`tools/check_streaming_claims.py` (C1–C11). It writes every streaming version
+`tools/check_streaming_claims.py` (C1–C12). It writes every streaming version
 out from its definition in NumPy and SciPy, as the step functions D1
 proposes, and imports sonore only for the batch results it compares them
 with. Every number below is what it printed on 2026-10-28 in the cloud
@@ -220,6 +220,19 @@ place. C7 measures this for the largest state in view.
   to 1.5e-15 of the peak. For 10 s of 24 envelopes at 1 kHz, a 10 ms hop and
   the default 15 kernels, it takes 17.4 s against 0.24 s, about 70 times
   slower (a straightforward NumPy version; a better-written one was not tried).
+- **C12. Sliding sums make the streamed modulation spectrogram cheaper, and
+  stay within 1e-12 of batch.** A Hann window times a complex exponential
+  is a sum of three complex exponentials, so each kernel's `y` and mean
+  are five sliding sums `S_n(a) = sum_j e[n - L + 1 + j] a**j` with
+  `|a| = 1`, each moved on one sample at a time with
+  `S_n = conj(a) (S_(n-1) - e[n - L]) + e[n] a**(L - 1)`. They are summed
+  again directly every 1024 samples so that rounding cannot build up. On
+  10 min of 4 envelopes at 1 kHz, cut into random blocks, the worst
+  difference from the batch FFT is 3.2e-14 of the peak (2.1e-14 in the last
+  minute, so it does not grow). A 10 ms block takes 0.81 ms with 24 bands
+  and 2.2 ms with 64 bands; computing each time window directly (the code
+  first written for D7) took about 2 ms and 6 ms on the same container, a
+  measurement made while writing it and not kept in the checker.
 
 ## Decisions
 
@@ -344,7 +357,10 @@ and D6. Four adaptations:
   equality, but is about 70 times slower (C11); (b) batch keeps its FFT, the
   step computes directly, and the test allows 1e-12, stated in the docstring
   as D4 allows. Cho first chose (a) on condition that the timing was close;
-  C11 shows it is not, and Cho then chose (b). *Accepted: (b).*
+  C11 shows it is not, and Cho then chose (b). *Accepted: (b).* The step
+  was first written with the direct sum; Cho then asked (2026-10-29) for
+  the sliding sums of C12, about three times faster, which keep (b)'s
+  1e-12 tolerance.
 
 **D8. The F0 track gets a decision delay, and each time window's candidates
 are computed on their own. (accepted 2026-10-29)** Two changes, both measured on 16 recordings:

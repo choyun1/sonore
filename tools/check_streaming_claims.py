@@ -323,6 +323,41 @@ def check_modulation_direct():
     report("C11", "Time computing each kept time window directly [ms]", direct_time * 1e3)
 
 
+def check_modulation_sliding_sums():
+    """The stream as written (sliding sums restarted every 1024 samples)
+    against the batch causal spectrogram: 10 min of 4 envelopes at 1 kHz cut
+    into random blocks, and the time per 10 ms block for 24 and 64 bands."""
+    rng = np.random.default_rng(1)
+    bank = so.gammatone_filterbank(n_bands=4, edges=False)
+    n = 600_000
+    slow_wave = np.sin(np.arange(n) / 50)[:, None, None]
+    env = so.TemporalEnvelope(np.abs(rng.standard_normal((n, 4, 1))) + slow_wave + 1.5, 1000.0, bank)
+    batch = so.ModulationSpectrogram(env, align="causal")
+    edges = np.concatenate([[0], np.cumsum(rng.integers(1, 700, size=3000))])
+    edges = [*edges[edges < n].tolist(), n]
+    blocks = [
+        so.TemporalEnvelope(env.data[a:b], 1000.0, bank) for a, b in zip(edges[:-1], edges[1:], strict=True)
+    ]
+    joined = so.ModulationSpectrogram.concatenate(
+        list(so.stream(so.ModulationSpectrogramStream(bank), blocks))
+    )
+    worst = np.abs(joined.power - batch.power).max(axis=(0, 1, 2)) / batch.power.max()
+    report("C12", "Sliding sums vs batch FFT, 10 min in random blocks: worst difference / peak", worst.max())
+    report("C12", "The same, in the last minute only", worst[-6000:].max())
+    for n_bands in (24, 64):
+        bank = so.gammatone_filterbank(n_bands=n_bands, edges=False)
+        env = so.TemporalEnvelope(np.abs(rng.standard_normal((10_000, n_bands, 1))), 1000.0, bank)
+        blocks = [so.TemporalEnvelope(env.data[i : i + 10], 1000.0, bank) for i in range(0, 10_000, 10)]
+        start = time.perf_counter()
+        list(so.stream(so.ModulationSpectrogramStream(bank), blocks))
+        per_block = (time.perf_counter() - start) / len(blocks)
+        report(
+            "C12",
+            f"Streamed modulation spectrogram, {n_bands} bands, one 10 ms block: time [ms]",
+            per_block * 1e3,
+        )
+
+
 def check_stft_cost(frame):
     step, _ = make_stft_step(frame, FS)
     blocks = [NOISE[i : i + 441] for i in range(0, len(NOISE) - 441, 441)]
@@ -434,5 +469,6 @@ if __name__ == "__main__":
     check_stft_cost(frame)
     check_sound_blocks()
     check_modulation_direct()
+    check_modulation_sliding_sums()
     check_f0_locality()
     check_f0_lag()
