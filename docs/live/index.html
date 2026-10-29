@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>sonore live</title>
+<link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
+<meta name="description" content="sonore's streaming views on your microphone, in the browser: a cochleagram and an F0 track as you sing or speak.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* The landing page's colors and fonts (docs/index.html). */
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --code: #F7F9FA; --error: #9B2C2C; --trace: #D9480F;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --error: #F0A0A0; --trace: #FF9F6B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --error: #F0A0A0; --trace: #FF9F6B; }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { max-width: 52rem; margin: 0 auto; padding: 3.5rem 16px 5rem; }
+h1 { font-weight: 500; font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.1; margin: 0 0 0.75rem; }
+p { margin: 0 0 1rem; max-width: 44rem; }
+a { color: var(--accent); }
+code { font-family: var(--mono); font-size: 0.9em; }
+.how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin: 1.25rem 0 0.75rem; font-family: var(--sans); }
+button { font: inherit; font-size: 0.95rem; padding: 0.4rem 1.1rem; border-radius: 3px; cursor: pointer;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--paper); }
+button:disabled { opacity: 0.55; cursor: progress; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#status { font-size: 0.9rem; color: var(--muted); }
+#status.error { color: var(--error); }
+figure { margin: 0; }
+.plot { position: relative; display: grid; grid-template-columns: 3.2rem 1fr; gap: 0 0.4rem; }
+.axis { position: relative; font-family: var(--sans); font-size: 0.75rem; color: var(--muted); }
+.axis span { position: absolute; right: 0; transform: translateY(-50%); }
+canvas { display: block; width: 100%; height: 16rem; background: var(--plate); border-radius: 2px; }
+figcaption { font-family: var(--sans); font-size: 0.85rem; color: var(--muted); margin: 0.4rem 0 0 3.6rem; }
+.readout { display: flex; flex-wrap: wrap; gap: 0.25rem 2rem; font-family: var(--sans); font-size: 0.95rem; margin: 0.9rem 0 0 3.6rem; }
+.readout strong { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main>
+<h1>sonore, live</h1>
+<p>Sing or speak into your computer and watch two of sonore's views of it as it happens: a
+cochleagram (the sound's envelope in 32 gammatone bands, every 10 ms) and the F0 track drawn
+over it where the sound is voiced. Both are sonore's streams, the same code that
+<code>so.stream</code> runs in Python, here in Pyodide in your browser. A stream gives exactly
+what the analysis of the whole recording would give.</p>
+<p class="how">Nothing is recorded or sent anywhere: the sound stays in this page. The browser's
+echo cancellation, noise suppression and automatic gain are asked to be off, but a browser may
+still change the sound and resamples it to 16 kHz, so this shows the streams at work; it is not a
+calibrated measurement. The picture runs a little more than 0.1 s behind: 50 ms to gather a block, and the
+F0 tracker decides each moment once the 50 ms after it, and the samples its windows reach, have arrived.
+How it works: <a href="https://github.com/choyun1/sonore/blob/main/docs/design/live-page.md">docs/design/live-page.md</a>.</p>
+
+<div class="controls">
+  <button id="start" type="button" disabled>Start microphone</button>
+  <span id="status" role="status">Loading…</span>
+</div>
+
+<figure>
+  <div class="plot">
+    <div class="axis" id="axis" aria-hidden="true"></div>
+    <canvas id="picture" width="500" height="256" role="img"
+      aria-label="Scrolling cochleagram of the last 5 seconds, with the F0 track drawn over it"></canvas>
+  </div>
+  <figcaption>The last 5 s, newest on the right. Darker is louder (dB below the loudest moment
+  so far); the line is the F0, at the height of the band whose center it matches.</figcaption>
+  <div class="readout">
+    <span>F0 <strong id="f0">–</strong></span>
+    <span>Computing <strong id="cost">–</strong> per 10 ms of sound</span>
+  </div>
+</figure>
+</main>
+
+<script type="module">
+const FS = 16000;
+const COLUMNS = 500;        // 5 s of 10 ms columns
+const RANGE_DB = 60;        // levels drawn, below the running peak
+const PEAK_DECAY_DB = 0.02; // per column, so one loud moment does not darken the rest for ever
+
+const startButton = document.getElementById("start");
+const status = document.getElementById("status");
+const canvas = document.getElementById("picture");
+const context = canvas.getContext("2d");
+const f0Readout = document.getElementById("f0");
+const costReadout = document.getElementById("cost");
+const say = (text, isError = false) => { status.textContent = text; status.classList.toggle("error", isError); };
+
+const worker = new Worker(new URL("worker.js" + location.search, import.meta.url), { type: "module" });
+let nBands = 32;
+let newestColumn = -1;  // the column number at the right edge
+let peakDb = -Infinity;
+let costs = [];
+let lastF0 = null;      // [x, y, column] of the last voiced point, to draw the line from
+let connectCapture = () => {};
+
+function themeColors() {
+  // From the plate to the ink, through the accent: readable in both themes.
+  const style = getComputedStyle(document.documentElement);
+  return [style.getPropertyValue("--plate"), style.getPropertyValue("--accent"), style.getPropertyValue("--ink")];
+}
+let palette = null;
+function shade(fraction) {
+  const f = Math.min(1, Math.max(0, fraction));
+  const [a, b] = f < 0.5 ? [palette[0], palette[1]] : [palette[1], palette[2]];
+  const t = f < 0.5 ? f * 2 : (f - 0.5) * 2;
+  return a.map((value, i) => Math.round(value + (b[i] - value) * t));
+}
+function rgb(css) {
+  const probe = document.createElement("span");
+  probe.style.color = css;
+  document.body.appendChild(probe);
+  const values = getComputedStyle(probe).color.match(/\d+/g).slice(0, 3).map(Number);
+  probe.remove();
+  return values;
+}
+function preparePalette() { palette = themeColors().map((css) => rgb(css.trim())); }
+
+function drawAxis(centers) {
+  const axis = document.getElementById("axis");
+  axis.textContent = "";
+  for (const hz of [100, 200, 500, 1000, 2000, 5000]) {
+    let band = -1;
+    for (let i = 0; i + 1 < centers.length; i++) {
+      if (centers[i] <= hz && hz < centers[i + 1]) band = i + Math.log(hz / centers[i]) / Math.log(centers[i + 1] / centers[i]);
+    }
+    if (band < 0) continue;
+    const label = document.createElement("span");
+    label.style.top = `${(1 - (band + 0.5) / centers.length) * 100}%`;
+    label.textContent = hz >= 1000 ? `${hz / 1000} kHz` : `${hz} Hz`;
+    axis.appendChild(label);
+  }
+}
+
+function scrollTo(column) {
+  const shift = column - newestColumn;
+  if (shift <= 0) return;
+  context.drawImage(canvas, -shift, 0);
+  context.fillStyle = `rgb(${palette[0].join(",")})`;
+  context.fillRect(COLUMNS - shift, 0, shift, canvas.height);
+  newestColumn = column;
+}
+
+function draw(part) {
+  const rows = canvas.height / nBands;
+  const nColumns = part.levels.length / nBands;
+  scrollTo(part.first_column + nColumns - 1);
+  for (let c = 0; c < nColumns; c++) {
+    const column = part.first_column + c;
+    const x = COLUMNS - 1 - (newestColumn - column);
+    const levels = part.levels.slice(c * nBands, (c + 1) * nBands);
+    peakDb = Math.max(peakDb - PEAK_DECAY_DB, ...levels);
+    for (let band = 0; band < nBands; band++) {
+      const [r, g, b] = shade(1 - (peakDb - levels[band]) / RANGE_DB);
+      context.fillStyle = `rgb(${r},${g},${b})`;
+      context.fillRect(x, canvas.height - (band + 1) * rows, 1, rows);
+    }
+  }
+  context.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--trace");
+  context.lineWidth = 2;
+  for (let i = 0; i < part.f0s.length; i++) {
+    const voiced = part.f0s[i] > 0 && Number.isFinite(part.f0_bands[i]);
+    const column = part.f0_columns[i];
+    if (!voiced) { lastF0 = null; continue; }
+    const point = [COLUMNS - 1 - (newestColumn - column), canvas.height - (part.f0_bands[i] + 0.5) * rows];
+    context.beginPath();
+    context.moveTo(...(lastF0 && column - lastF0[2] < 1 ? lastF0 : point));
+    context.lineTo(...point);
+    context.stroke();
+    lastF0 = [...point, column];
+  }
+  if (part.f0s.length) {
+    const f0 = part.f0s[part.f0s.length - 1];
+    f0Readout.textContent = f0 > 0 ? `${f0.toFixed(1)} Hz` : "unvoiced";
+  }
+  costs.push(part.seconds);
+  if (costs.length > 40) costs.shift();
+  const perTen = (1000 * costs.reduce((a, b) => a + b, 0) / costs.length) / 5;  // a block is 5 × 10 ms
+  costReadout.textContent = `${perTen.toFixed(1)} ms`;
+}
+
+worker.onmessage = ({ data }) => {
+  if (data.type === "status") say(data.text);
+  else if (data.type === "failed") say(`Could not start: ${data.text}`, true);
+  else if (data.type === "ready") {
+    nBands = data.centers.length;
+    drawAxis(data.centers);
+    connectCapture();
+    say(`Listening (sonore ${data.version}, ${data.fs / 1000} kHz).`);
+  } else if (data.type === "part") draw(data.part);
+  else if (data.type === "restarted") {
+    say(data.gap
+      ? "The browser skipped some sound, so the analysis started again from there."
+      : "The analysis fell more than 1 s behind on this computer, so it started again.", true);
+    lastF0 = null;
+  }
+  else if (data.type === "check") window.CHECK = data.result;
+};
+say("Press Start; the first start downloads Python (about 35 MB).");
+startButton.disabled = false;
+
+startButton.addEventListener("click", async () => {
+  startButton.disabled = true;
+  preparePalette();
+  context.fillStyle = `rgb(${palette[0].join(",")})`;
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  try {
+    const microphone = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
+    });
+    const audio = new AudioContext({ sampleRate: FS });
+    await audio.audioWorklet.addModule(new URL("capture.js", import.meta.url));
+    const capture = new AudioWorkletNode(audio, "capture");
+    audio.createMediaStreamSource(microphone).connect(capture);
+    capture.connect(audio.destination);  // silent; keeps the node running in every browser
+    // The worklet's buffers go straight to the worker, once the analysis is ready for them.
+    const channel = new MessageChannel();
+    connectCapture = () => capture.port.postMessage(channel.port2, [channel.port2]);
+    worker.postMessage({ type: "start", fs: audio.sampleRate, audio: channel.port1 }, [channel.port1]);
+    window.checkStreams = () => worker.postMessage({ type: "check" });
+    say("Starting…");
+  } catch (error) {
+    say(`No microphone: ${error.message}`, true);
+    startButton.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
