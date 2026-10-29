@@ -190,8 +190,9 @@ report("fu2 frame's second harmonic, largest error [Hz]", np.max(np.abs(errors))
 
 def peak_level(x, fs, lo, hi):
     """Height in dB of the largest spectral peak of `x` between `lo` and `hi` Hz."""
-    spectrum = np.abs(np.fft.rfft(x * np.hanning(len(x)), 1 << 16))
-    freqs = np.fft.rfftfreq(1 << 16, 1 / fs)
+    n = max(1 << 16, 1 << int(np.ceil(np.log2(len(x)))))
+    spectrum = np.abs(np.fft.rfft(x * np.hanning(len(x)), n))
+    freqs = np.fft.rfftfreq(n, 1 / fs)
     return 20 * np.log10(spectrum[(freqs >= lo) & (freqs <= hi)].max())
 
 
@@ -397,6 +398,119 @@ report(
     "cc14 third harmonic between vowels, and in en (floor -60), re in i [dB]",
     [between - in_vowel, max(in_en - in_vowel, -60)],
     [0, -60],
+    0.3,
+)
+
+# Houtsma, Rossing & Wagenaars, Demonstration 13: bursts of 1, 2, 4, ... 128 periods; the 300 Hz
+# series comes first, a burst every 0.6 s.
+data, fs = load("pk1")
+x = data[:, 0]
+lengths = []
+for k in range(8):
+    burst = np.flatnonzero(np.abs(x[round(0.6 * k * fs) : round((0.6 * k + 0.5) * fs)]) > 1e-4)
+    lengths.append((burst[-1] - burst[0] + 1) / fs)
+report(
+    "pk1 300 Hz bursts, length in periods",
+    np.array(lengths) * 300,
+    2 ** np.arange(8),
+    0.1 * 2 ** np.arange(8) + 0.1,
+)
+
+# Demonstration 15: 500 Hz alternating with 985 to 1035 Hz in 5 Hz steps, a pair every 2.7 s.
+data, fs = load("pk2")
+x = data[:, 0]
+uppers = [peak_frequency(x[round((2.7 * k + 1.3) * fs) : round((2.7 * k + 2.1) * fs)], fs) for k in range(11)]
+report("pk2 comparison tones [Hz]", uppers, np.arange(985, 1036, 5), 0.1)
+
+# Demonstration 20: ten equal harmonics of 200 Hz, and noise below 300 Hz 10 dB below them all.
+data, fs = load("pk3")
+x = data[:, 0]
+first = x[round(0.05 * fs) : round(0.75 * fs)]
+report(
+    "pk3 harmonics 2 to 10 re harmonic 1, largest error [dB]",
+    max(
+        abs(peak_level(first, fs, 200 * n - 50, 200 * n + 50) - peak_level(first, fs, 350, 450))
+        for n in range(3, 11)
+    ),
+    0,
+    0.3,
+)
+gap = x[round(0.85 * fs) : round(1.15 * fs)]  # noise alone, between the first two tones
+tone_part = first - np.real(
+    np.fft.ifft(np.fft.fft(first) * (np.abs(np.fft.fftfreq(len(first), 1 / fs)) < 320))
+)
+report("pk3 noise re the full ten-harmonic tone (RMS) [dB]", rms_db(gap) - rms_db(tone_part), -10, 0.5)
+
+# Demonstration 21: three partials 200 Hz apart, starting at 800 Hz and moving up 20 Hz a step.
+data, fs = load("pk4")
+x = data[:, 0]
+steps = [x[round((0.75 * k + 0.05) * fs) : round((0.75 * k + 0.45) * fs)] for k in (0, 5, 10)]
+report(
+    "pk4 partials at steps 0, 5 and 10 [Hz]",
+    [
+        peak_in_band(seg, fs, f - 30, f + 30)
+        for seg, k in zip(steps, (0, 5, 10), strict=True)
+        for f in 20 * k + np.array([800, 1000, 1200])
+    ],
+    [800, 1000, 1200, 900, 1100, 1300, 1000, 1200, 1400],
+    0.5,
+)
+
+# Demonstration 22: the complex tones (harmonics 4 to 6) at the pure tones' RMS.
+data, fs = load("pk6")
+x = data[:, 0]
+pure, high = x[round(0.05 * fs) : round(0.35 * fs)], x[round(0.55 * fs) : round(0.85 * fs)]
+report("pk6 first note, complex re pure (RMS) [dB] (page's own)", rms_db(high) - rms_db(pure), 0, 0.2)
+
+# Demonstration 26: in the first note the clicks of a pair are 15 ms apart, in the last 15/32 ms.
+data, fs = load("pk8")
+x = data[:, 0]
+
+
+def pair_delay(segment, longest):
+    """The lag of the largest autocorrelation peak between 0.3 ms and `longest` s."""
+    lags = np.correlate(segment, segment, "full")[len(segment) - 1 :]
+    lo, hi = round(0.3e-3 * fs), round(longest * fs)
+    k = lo + int(np.argmax(lags[lo:hi]))
+    a, b, c = lags[k - 1 : k + 2]
+    return (k + 0.5 * (a - c) / (a - 2 * b + c)) / fs
+
+
+report(
+    "pk8 click delay, first and last note [ms]",
+    [1000 * pair_delay(x[: round(0.25 * fs)], 0.02), 1000 * pair_delay(x[-round(0.25 * fs) :], 0.003)],
+    [15, 15 / 32],
+    0.02,
+)
+
+# Demonstration 32: 1000 Hz with 2004, 1502 and 1334.67 Hz in turn (4 s each, 0.5 s pauses).
+data, fs = load("pk9b")
+x = data[:, 0]
+report(
+    "pk9b upper tones [Hz]",
+    [
+        peak_in_band(x[round((4.5 * k + 0.5) * fs) : round((4.5 * k + 3.5) * fs)], fs, 1100, 2500)
+        for k in range(3)
+    ],
+    [2004, 1502, 1334.67],
+    0.05,
+)
+
+# Demonstration 34: 1000 and 1200 Hz with nothing at 2f1 - f2 = 800 Hz or f2 - f1 = 200 Hz in the
+# sound (the first 3 s, before the 804 Hz probe), then the probe 20 dB below the two tones.
+data, fs = load("pk10")
+x = data[:, 0]
+before, after = x[round(0.5 * fs) : round(2.5 * fs)], x[round(4.0 * fs) : round(7.5 * fs)]
+report(
+    "pk10 energy at 800 and 200 Hz re 1000 Hz, before the probe [dB] (below -100 counts as -100)",
+    [max(peak_level(before, fs, f - 5, f + 5) - peak_level(before, fs, 995, 1005), -100) for f in (800, 200)],
+    [-100, -100],
+    0,
+)
+report(
+    "pk10 probe re the 1000 Hz tone [dB]",
+    peak_level(after, fs, 800, 810) - peak_level(after, fs, 995, 1005),
+    -20,
     0.3,
 )
 
