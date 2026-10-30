@@ -2,7 +2,7 @@
 // docs/design/live-page.md): the page draws, and the F0s it streamed equal
 // f0_track(..., delay=0.05) on the samples its worker received. Local only,
 // like tools/pyodide_timing/ (it downloads Pyodide). From the repository root:
-//     node tools/live_page/check.js [seconds]
+//     node tools/live_page/check.js [seconds] [bands]
 // It builds a wheel of the working tree, plays docs/speech/bdl_arctic_a0131
 // as the microphone (Chromium loops the file), and saves a screenshot to
 // tools/live_page/screenshot.png.
@@ -13,6 +13,7 @@ const { chromium } = require("playwright");
 
 (async () => {
   const seconds = Number(process.argv[2] || 8);
+  const bands = process.argv[3] || "32";
   const here = path.join("tools", "live_page");
   for (const old of fs.readdirSync(here).filter((name) => name.endsWith(".whl"))) fs.unlinkSync(path.join(here, old));
   execSync(`pip wheel -q --no-deps -w ${here} .`, { stdio: "inherit" });
@@ -42,14 +43,16 @@ const { chromium } = require("playwright");
     for (const [text] of statuses) console.log(`install: ${text}`);
     const disabledWhileInstalling = statuses.filter(([text]) => !text.includes("is installed")).every(([, disabled]) => disabled);
     console.log(`Start disabled until installed: ${disabledWhileInstalling}`);
+    await page.selectOption("#bands", bands);
     await page.click("#start");
     await page.waitForFunction(() => document.getElementById("status").textContent.startsWith("Listening"), null, { timeout: 600000 });
     await page.waitForTimeout(seconds * 1000);
+    // The screenshot first: the check pauses the worker long enough to make it restart.
+    await page.screenshot({ path: path.join(here, "screenshot.png"), fullPage: true });
     await page.evaluate(() => window.checkStreams());
     await page.waitForFunction(() => window.CHECK, null, { timeout: 120000 });
     const check = await page.evaluate(() => window.CHECK);
     const readout = await page.evaluate(() => [document.getElementById("f0").textContent, document.getElementById("cost").textContent, document.getElementById("status").textContent]);
-    await page.screenshot({ path: path.join(here, "screenshot.png"), fullPage: true });
     console.log(JSON.stringify({ check, readout }, null, 1));
     // Stop and start again: the microphone goes off, and a second start listens again.
     await page.click("#stop");

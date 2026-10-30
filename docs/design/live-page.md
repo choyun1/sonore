@@ -135,3 +135,25 @@ in this cloud machine: over 10 s, the page's 1,969 F0s equal
 `f0_track(..., delay=0.05)` on the samples the worker received, exactly,
 with no restart, and the page reported 8.1 ms of computing per 10 ms of
 sound.
+
+After Cho tried it on a real microphone (2026-10-30), the picture changed
+to match sonore's own plots: the cochleagram is drawn in magma over the
+40 dB below the running peak, as `plot_envelopes` draws one, instead of a
+60 dB range in the page's theme colors, which had little contrast. The
+page keeps the last 60 s and the visitor picks how much to show (5, 10, 30
+or 60 s, 10 by default), with a time axis under the picture. The F0 line
+is light blue with a dark edge so it shows on every color of magma. Each
+pixel row takes the level interpolated between the two nearest band
+centers, so the 32 bands blend instead of showing as flat stripes. After a
+restart the streams number their columns from 0 again, so the page adds an
+offset and the picture carries on where it was.
+
+Cho first tried the page on a phone, which the design left out of scope.
+For phones and for more detail on laptops:
+
+- A narrow screen (under 600 px) shows 5 s by default.
+- A switch picks 32 or 64 bands (32 by default), taking effect at the next
+  Start. With the check above, 64 bands took 8.2 ms of computing per 10 ms
+  of sound against 7.1 for 32, both without a restart.
+- Once the computing time passes 8.5 ms per 10 ms, the readout turns red
+  and says the computer may fall behind.

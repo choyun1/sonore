@@ -1,7 +1,7 @@
 """The live page's Python side (docs/design/live-page.md): sonore's streams
 stepped on the microphone's blocks, in the page's Pyodide worker.
 
-Each block goes through a cochleagram (32 gammatones without edge filters,
+Each block goes through a cochleagram (32 or 64 gammatones without edge filters,
 envelopes pooled to 10 ms) and the F0 tracker, deciding 50 ms late. The
 page draws what each step returns. With ``keep``, the samples are kept so
 that :func:`Live.check` can compare the streamed F0s with ``f0_track`` on
@@ -14,19 +14,18 @@ import numpy as np
 
 import sonore as so
 
-N_BANDS = 32
 POOL = (25e-3, 10e-3)  # pooled envelope window and hop [s]: one column every 10 ms
 FLOOR = 1e-5  # envelope floor before taking dB, 100 dB below a full-scale sine
 
 
 class Live:
-    def __init__(self, fs, keep=False):
+    def __init__(self, fs, keep=False, n_bands=32):
         self.fs = float(fs)
         self.keep = keep
-        self.bank = so.gammatone_filterbank(n_bands=N_BANDS, edges=False)
+        self.bank = so.gammatone_filterbank(n_bands=n_bands, edges=False)
         self.pooling = so.EnvelopePooling(*POOL, self.bank)
         self.tracker = so.F0TrackStream()
-        self.band_numbers = np.arange(N_BANDS, dtype=float)
+        self.band_numbers = np.arange(n_bands, dtype=float)
         self.restart()
         # One second of quiet noise through the streams first, so that their
         # cached kernels and the first slow steps are done before the microphone starts.
