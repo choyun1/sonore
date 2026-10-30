@@ -48,7 +48,7 @@ def test_tv_and_power_plots():
     snd = _pulses(125.0, 0.3, 16000)
     tv = so.TVGaborFrame.pitch_adaptive(t, np.full_like(t, 125.0), t_end=0.3)
     ax = tv.analyze(snd).plot(fmax=4000)
-    assert ax.get_title() == "Time-varying spectrogram" and ax.get_ylim() == (0, 4.0)
+    assert ax.get_title() == "Time-varying spectrogram" and ax.get_ylim() == (0, 4000.0)
     ax = so.tandem_power(snd, t, np.full_like(t, 125.0)).plot(db_range=40, title="TANDEM")
     lo, hi = ax.collections[0].get_clim()
     assert hi - lo == 40 and ax.get_title() == "TANDEM"

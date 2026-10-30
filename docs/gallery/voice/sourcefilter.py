@@ -128,7 +128,7 @@ def draw(container, snd, title, formants=(), long_titles=True):
         ax1.set_title("Spectrogram (Hann 6 ms), formants given dashed")
     for f in formants:
         t, v = ([0], [f]) if np.isscalar(f) else f  # a track is held after its last point
-        ax1.plot([*t, snd.duration], np.array([*v, v[-1]]) / 1000, color="c", lw=1, ls="--")  # in kHz
+        ax1.plot([*t, snd.duration], np.array([*v, v[-1]]), color="c", lw=1, ls="--")
     for ax in (ax0, ax1):
         ax.set_xlim(0, snd.duration)
     return [ax0, ax1]
@@ -172,7 +172,7 @@ def show_talkers(sounds, title, contours=None, win_dur=0.0333):
         bottom.set_title(f"Spectrogram (Hann {win_dur * 1e3:.0f} ms)")
         if contours is not None:
             times, values = contour_of(contours[label])
-            bottom.plot(times, values / 1000, color="c", lw=1.2)  # the spectrogram's axis is in kHz
+            bottom.plot(times, values, color="c", lw=1.2)
         for ax in (top, bottom):
             ax.set_xlim(0, snd.duration)
         playhead[label] = [top, bottom]
@@ -1094,11 +1094,11 @@ ax.legend(loc="upper right", fontsize=8, ncols=3)
 
 # %%
 def draw_tracks(axes, track, voiced=None):
-    """F1 to F3 from a FormantTrack over a spectrogram panel (in kHz), voiced time windows only."""
+    """F1 to F3 from a FormantTrack over a spectrogram panel (in Hz), voiced time windows only."""
     keep = np.ones(len(track.t), bool) if voiced is None else voiced
     for number in range(3):
-        axes.plot(track.t, np.where(keep, track.frequencies[0, number], np.nan) / 1000, color="w", lw=1.4)
-        axes.plot(track.t, np.where(keep, track.frequencies[0, number], np.nan) / 1000, color="C3", lw=0.8)
+        axes.plot(track.t, np.where(keep, track.frequencies[0, number], np.nan), color="w", lw=1.4)
+        axes.plot(track.t, np.where(keep, track.frequencies[0, number], np.nan), color="C3", lw=0.8)
 
 
 CEILINGS = {"Male talker": 5000, "Female talker": 5500}

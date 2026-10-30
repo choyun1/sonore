@@ -10,7 +10,7 @@ version (0.x.y) only fixes bugs.
 
 - `sonore.plotting.log_frequency_axis(ax, axis)`: a log axis labeled in
   plain numbers (20, 50, 100, 200, 500, 1000, ...) instead of powers of ten,
-  with denser ticks on narrow ranges.
+  with as many ticks as fit the axis and denser ticks on narrow ranges.
 
 ### Changed
 
@@ -18,6 +18,10 @@ version (0.x.y) only fixes bugs.
   modulation spectrograms and slices, cochleagrams, the decimated filterbank,
   ripple patterns, spectra) is labeled in plain numbers, and so are the
   gallery's figures.
+- Linear frequency axes (`plot_stft`, `plot_tf_db`, `plot_lpc`, masks, the
+  linear cochleagram, formant tracks) are in Hz when the axis tops out below
+  10 kHz and in kHz from there up, instead of always in kHz. A formant track
+  drawn over a spectrogram follows the spectrogram's unit.
 
 ## [0.10.0] - 2026-10-29
 

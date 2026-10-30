@@ -193,7 +193,7 @@ def show_pair(sounds, title, contours=None, fmax=5000):
         bottom.set_title("Spectrogram (Hann 33 ms)")
         if contours is not None:
             track = contours[label]
-            bottom.plot(track.t, np.where(track.voiced[0], track.f0[0] / 1000, np.nan), color="c", lw=1.2)
+            bottom.plot(track.t, np.where(track.voiced[0], track.f0[0], np.nan), color="c", lw=1.2)
         for ax in (top, bottom):
             ax.set_xlim(0, snd.duration)
         playhead[label] = [top, bottom]

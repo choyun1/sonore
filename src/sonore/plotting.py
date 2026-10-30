@@ -72,6 +72,7 @@ __all__ = [
 
 # Tick multiples of each power of ten for log_frequency_axis, coarsest first.
 _PLAIN_SUBS = (
+    (1.0,),
     (1.0, 2.0, 5.0),
     (1.0, 2.0, 3.0, 5.0),
     (1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0),
@@ -81,21 +82,27 @@ _PLAIN_SUBS = (
 
 def log_frequency_axis(ax: Axes, axis: Literal["x", "y", "both"] = "y") -> Axes:
     """Put ``axis`` of ``ax`` on a log scale labeled in plain numbers (20, 50,
-    100, 200, 500, 1000, ...) instead of powers of ten. A narrower range gets
-    denser ticks (100, 200, 300, 500; then 800, 1000, 1500, ...), the first set
-    that puts at least three ticks on it. Returns ``ax``."""
+    100, 200, 500, 1000, ...) instead of powers of ten. The ticks are the
+    densest set that fits the axis's length: a range of many decades on a
+    small panel gets only 10, 100, 1000, ..., and a narrow one gets denser
+    ticks (100, 200, 300, 500; then 800, 1000, 1500, ...). Returns ``ax``."""
     from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 
     class PlainLocator(LogLocator):
         def tick_values(self, vmin: float, vmax: float) -> Sequence[float]:
             low, high = sorted((vmin, vmax))
+            room = max(self.axis.get_tick_space() if self.axis is not None else 9, 3)
+            sets, counts = [], []
             for subs in _PLAIN_SUBS:
                 self.set_params(subs=subs)
-                ticks = super().tick_values(vmin, vmax)
-                values = np.asarray(ticks)
-                if np.count_nonzero((values >= low) & (values <= high)) >= 3:
-                    break
-            return ticks
+                sets.append(super().tick_values(vmin, vmax))
+                values = np.asarray(sets[-1])
+                counts.append(np.count_nonzero((values >= low) & (values <= high)))
+            # the 1-2-5 set or the first denser one with three ticks, coarser while it does not fit
+            pick = next((k for k in range(1, len(sets)) if counts[k] >= 3), len(sets) - 1)
+            while pick > 0 and counts[pick] > room:
+                pick -= 1
+            return sets[pick]
 
     for name in ("x", "y") if axis == "both" else (axis,):
         getattr(ax, f"set_{name}scale")("log")
@@ -203,9 +210,29 @@ def _tf_image(
     vmax: float,
     colorbar: bool,
     label: str,
+    fmax: float | None = None,
 ) -> QuadMesh:
-    ax.set(xlabel="Time [s]", ylabel="Frequency [kHz]")
-    return _image(ax, t, f / 1000, values, cmap, vmin, vmax, colorbar, label)
+    """A linear time-frequency image, in Hz up to ``fmax`` (or the top of
+    ``f``) under 10 kHz, in kHz above; ``fmax`` [Hz] also limits the axis."""
+    top = fmax if fmax else float(np.max(f))
+    scale, unit = _frequency_unit(top)
+    ax.set(xlabel="Time [s]", ylabel=f"Frequency [{unit}]")
+    image = _image(ax, t, f / scale, values, cmap, vmin, vmax, colorbar, label)
+    if fmax:
+        ax.set_ylim(0, fmax / scale)
+    return image
+
+
+def _frequency_unit(top: float) -> tuple[float, str]:
+    """(divisor, unit) for a linear frequency axis reaching ``top`` [Hz]: Hz
+    below 10 kHz, kHz from there up."""
+    return (1000.0, "kHz") if top >= 10000 else (1.0, "Hz")
+
+
+def _axis_frequency_scale(ax: Axes) -> float:
+    """The divisor an axis drawn by this module uses for frequency: 1000 if its
+    label says kHz, otherwise 1 (Hz)."""
+    return 1000.0 if "[kHz]" in ax.get_ylabel() else 1.0
 
 
 def _interior(stft: STFT) -> slice:
@@ -227,19 +254,19 @@ def plot_stft(
     fmax: float | None = None,
     trim_edges: bool = True,
 ) -> Axes:
-    """One channel's spectrogram in dB, frequency in kHz, the colors spanning
+    """One channel's spectrogram in dB, the colors spanning
     the ``db_range`` dB below its maximum. With ``trim_edges`` (the default)
     the time windows that reach past either end of the sound are left out:
     they are zero-padded, which looks like a click. ``fmax`` [Hz] limits the
-    frequency axis."""
+    frequency axis. Frequency is in Hz when the axis tops out below 10 kHz,
+    in kHz above."""
     ax = _ax(ax)
     keep = _interior(stft) if trim_edges else slice(None)
     levels_db = stft.db[channel][:, keep]
-    _tf_image(ax, levels_db, stft.t[keep], stft.f, cmap, *_db_limits(levels_db, db_range), colorbar, "dB")
+    limits = _db_limits(levels_db, db_range)
+    _tf_image(ax, levels_db, stft.t[keep], stft.f, cmap, *limits, colorbar, "dB", fmax)
     ax.set_title("Spectrogram")
     ax.set_xlim(0, stft.n_samples / stft.fs)
-    if fmax:
-        ax.set_ylim(0, fmax / 1000)
     return ax
 
 
@@ -250,9 +277,11 @@ def plot_mask(
     channel: int = 0,
     cmap: str | Colormap = "Greys_r",
     colorbar: bool = False,
+    fmax: float | None = None,
 ) -> Axes:
     """A mask's gains as an image, black 0 to white 1: time windows by FFT
-    bins for an STFT mask, samples by bands for a subband mask."""
+    bins for an STFT mask (frequency in Hz or kHz as in :func:`plot_stft`,
+    up to ``fmax`` [Hz] if given), samples by bands for a subband mask."""
     from sonore.frames.filterbank import Subbands
 
     ax = _ax(ax)
@@ -263,7 +292,7 @@ def plot_mask(
         ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]")
         log_frequency_axis(ax)
     else:
-        _tf_image(ax, mask.values[channel], mask.t, mask.f, cmap, 0, 1, colorbar, "")
+        _tf_image(ax, mask.values[channel], mask.t, mask.f, cmap, 0, 1, colorbar, "", fmax)
     ax.set_title("Mask")
     return ax
 
@@ -600,15 +629,16 @@ def plot_envelopes(
     ``align="peak"`` draws each band earlier by its filter's
     ``envelope_peak_delay`` (a causal gammatone bank's latency), so a click
     is a vertical line; only the drawing moves, not the data.
-    ``fscale="linear"`` draws frequency linearly in kHz, matching
-    :func:`plot_stft`, with an optional ``fmax`` [Hz].
+    ``fscale="linear"`` draws frequency linearly, in Hz or kHz as
+    :func:`plot_stft` does, with an optional ``fmax`` [Hz].
     """
     ax = _ax(ax)
     sel = slice(None) if edges or not env._bank.edges else slice(1, -1)
     db = env.db[:, sel, channel]
-    cfs = env.cfs[sel] / (1000 if fscale == "linear" else 1)
     if fscale not in ("log", "linear"):
         raise ValueError("fscale must be 'log' or 'linear'")
+    scale, unit = _frequency_unit(fmax if fmax else float(env.cfs[sel].max()))
+    cfs = env.cfs[sel] / (scale if fscale == "linear" else 1)
     if align is None:
         t, f = env.t, cfs
     elif align == "peak":
@@ -622,9 +652,9 @@ def plot_envelopes(
         log_frequency_axis(ax)
         ax.set(xlabel="Time [s]", ylabel="Frequency [Hz]", title="Envelopes (cochleagram)")
     else:
-        ax.set(xlabel="Time [s]", ylabel="Frequency [kHz]", title="Envelopes (cochleagram)")
+        ax.set(xlabel="Time [s]", ylabel=f"Frequency [{unit}]", title="Envelopes (cochleagram)")
         if fmax:
-            ax.set_ylim(0, fmax / 1000)
+            ax.set_ylim(0, fmax / scale)
     if align == "peak":
         ax.set_xlim(env.t[0], env.t[-1])
     return ax
@@ -695,12 +725,10 @@ def plot_tf_db(
 ) -> Axes:
     """A time-frequency image from levels ``db`` (shape ``(n_freqs, n_windows)``)
     at window times ``t`` [s] and frequencies ``f`` [Hz], which need not be
-    uniform: each cell extends halfway to its neighbors. Frequency is linear
-    in kHz, as in :func:`plot_stft`."""
+    uniform: each cell extends halfway to its neighbors. Frequency is linear,
+    in Hz or kHz as in :func:`plot_stft`."""
     ax = _ax(ax)
-    _tf_image(ax, db, np.asarray(t), np.asarray(f), cmap, *_db_limits(db, db_range), colorbar, "dB")
-    if fmax:
-        ax.set_ylim(0, fmax / 1000)
+    _tf_image(ax, db, np.asarray(t), np.asarray(f), cmap, *_db_limits(db, db_range), colorbar, "dB", fmax)
     if title:
         ax.set_title(title)
     return ax
@@ -818,7 +846,7 @@ def plot_lpc(
     colorbar: bool = True,
 ) -> Axes:
     """An :class:`~sonore.views.lpc.LPC` model: its envelope in dB as a
-    time-frequency image (frequency in kHz), with every candidate resonance
+    time-frequency image, with every candidate resonance
     as a dot, darker for a narrower one."""
     freqs = np.arange(lpc.n_fft // 2 + 1) * lpc.fs / lpc.n_fft
     db = 10 * np.log10(lpc.envelope(freqs)[channel])
@@ -831,13 +859,14 @@ def plot_lpc(
 
 
 def _scatter_candidates(ax: Axes, t: np.ndarray, freqs: np.ndarray, bandwidths: np.ndarray) -> None:
-    """Resonances as dots in kHz, white for narrow ones fading to gray at 500 Hz wide."""
+    """Resonances as dots in the axis's frequency unit, white for narrow ones fading to gray at
+    500 Hz wide."""
     times = np.broadcast_to(t[None, :], freqs.shape)
     finite = np.isfinite(freqs)
     gray_level = np.clip(bandwidths[finite] / 500, 0, 1)
     ax.scatter(
         times[finite],
-        freqs[finite] / 1000,
+        freqs[finite] / _axis_frequency_scale(ax),
         s=3,
         c=gray_level,
         cmap="gray_r",
@@ -858,20 +887,22 @@ def plot_formant_track(
     colors: Sequence[Any] = ("C0", "C1", "C2"),
     **kwargs,
 ) -> Axes:
-    """A :class:`~sonore.views.lpc.FormantTrack`: F1 to F3 [kHz] against time
+    """A :class:`~sonore.views.lpc.FormantTrack`: F1 to F3 against time
     [s], each broken where missing or, given ``voiced`` (a boolean per time
     window, such as an F0 track's voicing on the same grid), where unvoiced.
-    Frequency is in kHz so the tracks can be drawn over :func:`plot_stft`.
+    Frequency is in kHz if ``ax`` is already labeled so (a spectrogram drawn
+    by :func:`plot_stft` up to 10 kHz or more), otherwise in Hz.
     With ``candidates=True`` every resonance the tracker chose from is a gray
     dot, darker for a narrower one."""
     ax = _ax(ax)
+    scale = _axis_frequency_scale(ax)
     if candidates:
         _scatter_candidates(ax, track.t, track.candidates[channel], track.candidate_bandwidths[channel])
     keep = np.ones(len(track.t), bool) if voiced is None else np.asarray(voiced, bool)
     for number, color in enumerate(colors[: track.frequencies.shape[1]]):
         values = np.where(keep, track.frequencies[channel, number], np.nan)
-        ax.plot(track.t, values / 1000, color=color, zorder=3, label=f"F{number + 1}", **kwargs)
-    ax.set(title="Formants", xlabel="Time [s]", ylabel="Frequency [kHz]")
+        ax.plot(track.t, values / scale, color=color, zorder=3, label=f"F{number + 1}", **kwargs)
+    ax.set(title="Formants", xlabel="Time [s]", ylabel="Frequency [kHz]" if scale > 1 else "Frequency [Hz]")
     return ax
 
 

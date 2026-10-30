@@ -392,7 +392,7 @@ def show_pair(sounds, title, contours=None, fmax=5000):
         bottom.set_title(&quot;Spectrogram (Hann 33 ms)&quot;)
         if contours is not None:
             track = contours[label]
-            bottom.plot(track.t, np.where(track.voiced[0], track.f0[0] / 1000, np.nan), color=&quot;c&quot;, lw=1.2)
+            bottom.plot(track.t, np.where(track.voiced[0], track.f0[0], np.nan), color=&quot;c&quot;, lw=1.2)
         for ax in (top, bottom):
             ax.set_xlim(0, snd.duration)
         playhead[label] = [top, bottom]
@@ -405,10 +405,10 @@ def show_pair(sounds, title, contours=None, fmax=5000):
 0.1 s longer. The female talker's harmonics, the horizontal lines, are visibly farther apart.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.042647414496527786, &quot;x1&quot;: 0.4858973943817884, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
+    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.48566091023631774, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.525}]"></audio>
     <p class="file">tk1_the_sentence_read_by_each_talker_male_talker.flac, 2.5 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
+    <audio controls preload="metadata" src="audio/tk1_the_sentence_read_by_each_talker_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 2.6350625}]"></audio>
     <p class="file">tk1_the_sentence_read_by_each_talker_female_talker.flac, 2.6 s, mono</p></div>
     </div>
   </div>
@@ -591,10 +591,10 @@ breathy: Klatt &amp; Klatt (1990) found aspiration noise the most important cue 
 which is why <a href="sourcefilter.html#d-fn3">A breathy vowel</a> adds it.</p></div>
     <div class="players">
     <div><p class="track">Male talker</p>
-    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.04855328472222222, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.04855328472222222, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]"></audio>
+    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices_male_talker.flac" data-regions="[{&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.0662958519965278, &quot;x1&quot;: 0.490833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]"></audio>
     <p class="file">fq3_one_vowel_three_voices_male_talker.flac, 3.4 s, mono</p></div>
     <div><p class="track">Female talker</p>
-    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.5476474144965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]"></audio>
+    <audio controls preload="metadata" src="audio/fq3_one_vowel_three_voices_female_talker.flac" data-regions="[{&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.05898907828282818, &quot;bottom&quot;: 0.2728642073638168, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}, {&quot;x0&quot;: 0.5712958519965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.3523717199900792, &quot;bottom&quot;: 0.8870595426925505, &quot;t0&quot;: 0.0, &quot;t1&quot;: 3.4}]"></audio>
     <p class="file">fq3_one_vowel_three_voices_female_talker.flac, 3.4 s, mono</p></div>
     </div>
   </div>
