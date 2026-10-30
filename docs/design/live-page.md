@@ -147,3 +147,13 @@ pixel row takes the level interpolated between the two nearest band
 centers, so the 32 bands blend instead of showing as flat stripes. After a
 restart the streams number their columns from 0 again, so the page adds an
 offset and the picture carries on where it was.
+
+Cho first tried the page on a phone, which the design left out of scope.
+For phones and for more detail on laptops:
+
+- A narrow screen (under 600 px) shows 5 s by default.
+- A switch picks 32 or 64 bands (32 by default), taking effect at the next
+  Start. With the check above, 64 bands took 8.2 ms of computing per 10 ms
+  of sound against 7.1 for 32, both without a restart.
+- Once the computing time passes 8.5 ms per 10 ms, the readout turns red
+  and says the computer may fall behind.

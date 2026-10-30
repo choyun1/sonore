@@ -119,7 +119,7 @@ self.onmessage = async ({ data }) => {
       fs = data.fs;
       blockLength = Math.round(BLOCK_SECONDS * fs);
       if (analysis) analysis.destroy();
-      analysis = live.Live(fs, options.get("keep") === "1");
+      analysis = live.Live(fs, options.get("keep") === "1", data.bands);
       const centers = analysis.band_centers().toJs();
       self.postMessage({ type: "ready", version, centers, fs });
     } catch (error) {

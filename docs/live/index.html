@@ -44,7 +44,10 @@ canvas { display: block; width: 100%; height: 16rem; background: var(--plate); b
 .times span { position: absolute; top: 0.1rem; transform: translateX(-50%); white-space: nowrap; }
 .times span:first-child { transform: none; }
 .times span:last-child { transform: translateX(-100%); }
-figcaption select { font: inherit; }
+figcaption select, .bands select { font: inherit; }
+.bands { font-size: 0.9rem; color: var(--muted); }
+.readout .tight strong { color: var(--error); }
+.readout .tight::after { content: " (close to the limit: this computer may fall behind)"; color: var(--error); font-size: 0.85rem; }
 figcaption { font-family: var(--sans); font-size: 0.85rem; color: var(--muted); margin: 0.4rem 0 0 3.6rem; }
 .readout { display: flex; flex-wrap: wrap; gap: 0.25rem 2rem; font-family: var(--sans); font-size: 0.95rem; margin: 0.9rem 0 0 3.6rem; }
 .readout strong { font-variant-numeric: tabular-nums; }
@@ -55,7 +58,7 @@ figcaption { font-family: var(--sans); font-size: 0.85rem; color: var(--muted); 
 <nav class="back"><a href="../">sonore</a> · <a href="../gallery/">Listening gallery</a></nav>
 <h1>sonore, live</h1>
 <p>Sing or speak into your computer and watch two of sonore's views of it as it happens: a
-cochleagram (the sound's envelope in 32 gammatone bands, every 10 ms) and the F0 track drawn
+cochleagram (the sound's envelope in 32 or 64 gammatone bands, every 10 ms) and the F0 track drawn
 over it where the sound is voiced. Both are sonore's streams, the same code that
 <code>so.stream</code> runs in Python, here in Pyodide in your browser. A stream gives exactly
 what the analysis of the whole recording would give.</p>
@@ -69,6 +72,7 @@ How it works: <a href="https://github.com/choyun1/sonore/blob/main/docs/design/l
 <div class="controls">
   <button id="start" type="button" disabled>Start microphone</button>
   <button id="stop" type="button" hidden>Stop microphone</button>
+  <label class="bands">Bands <select id="bands"><option>32</option><option>64</option></select></label>
   <progress id="install" value="0" max="1" aria-label="Installing Python and sonore"></progress>
   <span id="status" role="status">Loading…</span>
 </div>
@@ -131,8 +135,15 @@ let columnOffset = 0;   // added to the streams' column numbers, which start aga
 let connectCapture = () => {};
 let stopCapture = () => {};
 
+// A narrow screen (a phone) shows 5 s by default, so the columns are not squeezed.
+const defaultWindow = window.innerWidth < 600 ? 5 : 10;
+windowSeconds = defaultWindow;
 try { windowSeconds = Number(localStorage.getItem("sonore-live-window")) || windowSeconds; } catch {}
-if (!WINDOWS.includes(windowSeconds)) windowSeconds = 10;
+if (!WINDOWS.includes(windowSeconds)) windowSeconds = defaultWindow;
+// 64 bands cost more computing (docs/design/live-page.md); the choice takes effect at the next Start.
+const bandsChoice = document.getElementById("bands");
+try { bandsChoice.value = localStorage.getItem("sonore-live-bands") || "32"; } catch {}
+bandsChoice.addEventListener("change", () => { try { localStorage.setItem("sonore-live-bands", bandsChoice.value); } catch {} });
 for (const seconds of WINDOWS) windowChoice.add(new Option(`${seconds} s`, seconds, false, seconds === windowSeconds));
 windowChoice.addEventListener("change", () => {
   windowSeconds = Number(windowChoice.value);
@@ -250,6 +261,8 @@ function draw(part) {
   if (costs.length > 40) costs.shift();
   const perTen = (1000 * costs.reduce((a, b) => a + b, 0) / costs.length) / 5;  // a block is 5 × 10 ms
   costReadout.textContent = `${perTen.toFixed(1)} ms`;
+  // Over 10 ms the analysis cannot keep up and will restart; near it, say so before it does.
+  costReadout.parentElement.classList.toggle("tight", costs.length >= 10 && perTen > 8.5);
 }
 
 worker.onmessage = ({ data }) => {
@@ -307,10 +320,11 @@ startButton.addEventListener("click", async () => {
     // The worklet's buffers go straight to the worker, once the analysis is ready for them.
     const channel = new MessageChannel();
     connectCapture = () => capture.port.postMessage(channel.port2, [channel.port2]);
-    worker.postMessage({ type: "start", fs: audio.sampleRate, audio: channel.port1 }, [channel.port1]);
+    worker.postMessage({ type: "start", fs: audio.sampleRate, bands: Number(bandsChoice.value), audio: channel.port1 }, [channel.port1]);
     window.checkStreams = () => worker.postMessage({ type: "check" });
     say("Starting…");
     startButton.hidden = true;
+    bandsChoice.disabled = true;
     stopButton.hidden = false;
     stopButton.disabled = true;  // until the analysis is listening
   } catch (error) {
@@ -323,6 +337,7 @@ stopButton.addEventListener("click", () => {
   stopCapture();
   stopCapture = () => {};
   stopButton.hidden = true;
+  bandsChoice.disabled = false;
   startButton.hidden = false;
   startButton.disabled = false;
   say("Microphone off. The picture stays until you start again.");
