@@ -287,7 +287,9 @@ worker.onmessage = ({ data }) => {
     say(`Listening (sonore ${data.version}, ${data.fs / 1000} kHz).`);
     stopButton.disabled = false;
   } else if (data.type === "part") draw(data.part);
-  else if (data.type === "restarted") {
+  else if (data.type === "restarted" && !startButton.hidden) {
+    // Sent before a Stop, arriving after it: the microphone is off, nothing restarted.
+  } else if (data.type === "restarted") {
     say(data.gap
       ? "The browser skipped some sound, so the analysis started again from there."
       : "The analysis fell more than 1 s behind on this computer, so it started again.", true);
