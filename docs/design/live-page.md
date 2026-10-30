@@ -142,6 +142,8 @@ to match sonore's own plots: the cochleagram is drawn in magma over the
 60 dB range in the page's theme colors, which had little contrast. The
 page keeps the last 60 s and the visitor picks how much to show (5, 10, 30
 or 60 s, 10 by default), with a time axis under the picture. The F0 line
-is light blue with a dark edge so it shows on every color of magma. After a
+is light blue with a dark edge so it shows on every color of magma. Each
+pixel row takes the level interpolated between the two nearest band
+centers, so the 32 bands blend instead of showing as flat stripes. After a
 restart the streams number their columns from 0 again, so the page adds an
 offset and the picture carries on where it was.
