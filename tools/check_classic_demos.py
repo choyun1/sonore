@@ -514,6 +514,211 @@ report(
     0.3,
 )
 
+
+# Levels and masking. The page states its levels in dB re a pure tone at RMS 1; each series of
+# sounds shares one playback gain, so levels can be compared across the files of a series.
+def segment(x, fs, start, stop):
+    return x[round(start * fs) : round(stop * fs)]
+
+
+def band_power_db(x, fs, lo, hi):
+    """Power in dB of the part of `x` between `lo` and `hi` Hz (a rectangular window)."""
+    spectrum = np.fft.rfft(x)
+    freqs = np.fft.rfftfreq(len(x), 1 / fs)
+    return 10 * np.log10(2 * np.sum(np.abs(spectrum[(freqs >= lo) & (freqs < hi)]) ** 2) / len(x) ** 2)
+
+
+# Demonstration 4: noise bursts of 0.4 s every 0.6 s in steps of 6, 3 and 1 dB.
+for key, step, count in (("lm1", 6, 10), ("lm1b", 3, 15), ("lm1c", 1, 20)):
+    x = load(key)[0][:, 0]
+    levels = [rms_db(segment(x, fs, 0.6 * k + 0.05, 0.6 * k + 0.35)) for k in range(count)]
+    report(f"{key} steps between bursts [dB]", np.diff(levels).mean(), -step, 0.1)
+    report(f"{key} largest step error [dB]", np.max(np.abs(np.diff(levels) + step)), 0, 0.3)
+
+# Demonstration 5: each band at the spectrum level of the white noise before it, so its level
+# re the white noise is 10 log10 of its share of the bandwidth.
+data, fs = load("lm2")
+nyquist = fs / 2
+bands = {
+    "lm2": [(0, c) for c in (10000, 4000, 2000, 1000, 500)],
+    "lm2b": [(c, nyquist) for c in (500, 1000, 2000, 4000, 10000)],
+    "lm2c": [(c * 2 ** (-1 / 6), c * 2 ** (1 / 6)) for c in (500, 1000, 2000, 4000, 8000)],
+}
+for key, key_bands in bands.items():
+    x = load(key)[0][:, 0]
+    white = rms_db(segment(x, fs, 0.1, 1.4))
+    report(
+        f"{key} bands re the white noise [dB]",
+        [rms_db(segment(x, fs, 1.8 * k + 0.1, 1.8 * k + 1.4)) - white for k in range(1, 6)],
+        np.round([10 * np.log10((hi - lo) / nyquist) for lo, hi in key_bands], 2),
+        0.3,
+    )
+x = load("lm2d")[0][:, 0]
+white, pink = segment(x, fs, 0.1, 1.9), segment(x, fs, 2.6, 4.4)
+report("lm2d pink re white noise [dB]", rms_db(pink) - rms_db(white), 0, 0.3)
+report(
+    "lm2d pink, 4000-8000 Hz re 500-1000 Hz [dB] (white: 10 log10 8 = 9.03)",
+    band_power_db(pink, fs, 4000, 8000) - band_power_db(pink, fs, 500, 1000),
+    0,
+    0.5,
+)
+
+# Demonstration 2: the 2000 Hz tone in 10 steps of 5 dB, then in noise of spectrum level 50 dB
+# below the first step, over bands of 9980, 1000, 250 and 10 Hz.
+x = load("lm3")[0][:, 0]
+steps = [rms_db(segment(x, fs, 0.25 + 0.5 * k + 0.05, 0.25 + 0.5 * k + 0.25)) for k in range(10)]
+report("lm3 tone steps [dB]", np.diff(steps), [-5.0] * 9, 0.05)
+tone_alone = x
+for key, width in (("lm3b", 9980), ("lm3c", 1000), ("lm3d", 250), ("lm3e", 10)):
+    # The tone is the same in every file, so the difference is the noise alone, over all 5.25 s.
+    masker = load(key)[0][:, 0] - tone_alone
+    report(
+        f"{key} noise re the first tone step [dB]",
+        rms_db(masker) - steps[0],
+        round(-50 + 10 * np.log10(width), 2),
+        0.1,
+    )
+
+# Demonstration 3: reference band 930-1075 Hz and test bands k x 145 Hz wide around 1000 Hz
+# (geometric center), all at one RMS.
+x = load("lm4")[0][:, 0]
+levels = [
+    rms_db(segment(x, fs, 0.2 + 1.8 * k + offset, 0.2 + 1.8 * k + offset + 0.5))
+    for k in range(8)
+    for offset in (0, 0.7)
+]
+# Each band is at RMS 1 before its 10 ms ramps; what the ramps take depends on the noise near its
+# ends, a few hundredths of a dB for a band this narrow.
+report("lm4 largest level difference across bursts [dB]", np.ptp(levels), 0, 0.25)
+edges = []
+for k in range(8):
+    test = segment(x, fs, 0.2 + 1.8 * k + 0.7, 0.2 + 1.8 * k + 1.2)
+    power = np.abs(np.fft.rfft(test, 1 << 16)) ** 2
+    freqs = np.fft.rfftfreq(1 << 16, 1 / fs)
+    cumulative = np.cumsum(power) / power.sum()
+    edges.append(np.interp([0.005, 0.995], cumulative, freqs))
+edges = np.array(edges)
+report(
+    "lm4 test bandwidths / 145 Hz (99% of the power)",
+    (edges[:, 1] - edges[:, 0]) / 145,
+    list(range(1, 9)),
+    0.15,
+)
+report("lm4 test bands' geometric centers [Hz]", np.sqrt(edges[:, 0] * edges[:, 1]), [1000] * 8, 15)
+
+# Demonstration 8: one-second bursts at 0, -16, -20, ... -40 dB in a masker at -45 dB.
+x = load("lm5")[0][:, 0]
+masker = rms_db(segment(x, fs, 0.1, 0.45))
+bursts = [rms_db(segment(x, fs, 0.5 + 1.5 * k + 0.1, 0.5 + 1.5 * k + 0.9)) for k in range(8)]
+burst_levels = 10 * np.log10(10 ** (np.array(bursts) / 10) - 10 ** (masker / 10))
+report(
+    "lm5 bursts re the first [dB]",
+    burst_levels - burst_levels[0],
+    [0, -16, -20, -24, -28, -32, -36, -40],
+    0.3,
+)
+report("lm5 masker re the first burst [dB]", masker - burst_levels[0], -45, 0.3)
+for key, burst in (("lm5d", 0.03), ("lm5e", 0.01), ("lm5g", 0.001)):
+    # Each burst is at its RMS before its linear ramps, which take away 2/3 of their length.
+    ramp = min(0.5e-3, burst / 4)
+    x = load(key)[0][:, 0]
+    background = np.mean(segment(x, fs, 0.1, 0.45) ** 2) * (burst + 0.02) * fs
+    energy = np.sum(segment(x, fs, 0.49, 0.5 + burst + 0.01) ** 2) - background
+    report(
+        f"{key} first burst's energy re 1 s at its level, less its ramps [dB]",
+        10 * np.log10(energy / fs / (burst - 4 * ramp / 3)) - burst_levels[0],
+        0,
+        0.3 if burst > 0.005 else 1.0,
+    )
+
+# Demonstration 10: the 10 ms blip in steps of 4 dB, and the noise 100 or 20 ms after (backward)
+# or before (forward) it.
+x = load("lm6")[0][:, 0]
+blips = [rms_db(segment(x, fs, 0.2 + 0.6 * k + 0.002, 0.2 + 0.6 * k + 0.008)) for k in range(10)]
+report("lm6 blip steps [dB]", np.diff(blips), [-4.0] * 9, 0.1)
+for key, gap, before in (
+    ("lm6b", 0.1, False),
+    ("lm6c", 0.02, False),
+    ("lm6e", 0.1, True),
+    ("lm6f", 0.02, True),
+):
+    x = load(key)[0][:, 0]
+    first = onsets(segment(x, fs, 0.1, 0.75), fs, gap=2e-3) + 0.1
+    measured = first[1] - first[0] - (0.25 if before else 0.01)
+    report(f"{key} gap between tone and noise [ms]", 1000 * measured, 1000 * gap, 0.5)
+
+# Demonstration 9: test tone pulses at 0, then -15 to -55 dB re the masker, low masking high and
+# high masking low.
+for key, masker_freq, test_freq in (("lm7", 1200, 2000), ("lm7b", 2000, 1200)):
+    x = load(key)[0][:, 0]
+    levels = []
+    for k in range(4):
+        pulse = segment(x, fs, 0.6 * k + 0.32, 0.6 * k + 0.48)
+        hi = peak_level(pulse, fs, test_freq - 20, test_freq + 20)
+        levels.append(hi - peak_level(pulse, fs, masker_freq - 20, masker_freq + 20))
+    report(f"{key} test re masker, first four steps [dB]", levels, [0, -15, -20, -25], 0.3)
+
+# Demonstration 14: noise 20-900 Hz 20 dB above the 1000 Hz tone. The second pair's sound less
+# the fourth pair's (the same tone, no noise) is the noise alone; both have 20 ms linear ramps.
+x = load("lm8")[0][:, 0]
+masker = segment(x, fs, 1.8, 2.5) - segment(x, fs, 5.4, 6.1)
+probe = segment(x, fs, 5.5, 6.0)
+report(
+    "lm8 noise re the tone, less their ramps [dB]",
+    rms_db(masker)
+    - 10 * np.log10((0.7 - 0.04 * 2 / 3) / 0.7)
+    - rms_db(probe)
+    + 10 * np.log10((0.5 - 0.04 * 2 / 3) / 0.5),
+    20,
+    0.05,
+)
+
+# Demonstration 12: pairs of tones 30 dB apart.
+x = load("lm9")[0][:, 0]
+pairs = [
+    rms_db(segment(x, fs, 1.5 + 2 * k + 0.8 + 0.05, 1.5 + 2 * k + 1.25))
+    - rms_db(segment(x, fs, 1.5 + 2 * k + 0.05, 1.5 + 2 * k + 0.45))
+    for k in range(5)
+]
+report("lm9 loud re soft tone of each pair [dB]", pairs, [30.0] * 5, 0.05)
+
+# Demonstration 33: a symmetric compressor adds odd harmonics only, a rectifier even ones; the
+# pointer tone sits at the level of the harmonic it points to.
+for key, odd in (("lm10", True), ("lm10b", False)):
+    x = load(key)[0][:, 0]
+    distorted = segment(x, fs, 0.1, 0.9)
+    fundamental = peak_level(distorted, fs, 430, 450)
+    second, third = (peak_level(distorted, fs, f - 10, f + 10) - fundamental for f in (880, 1320))
+    if odd:
+        report(
+            f"{key} second harmonic re third [dB] (below -60 counts as -60)", max(second - third, -60), -60, 0
+        )
+    else:
+        report(f"{key} second harmonic re fundamental [dB], above -20", min(second, -20), -20, 0)
+    target = 1320 if odd else 880
+    pointer = segment(x, fs, 1.4, 2.2)
+    report(
+        f"{key} pointer re the harmonic it points to [dB]",
+        peak_level(pointer, fs, target - 10, target + 10)
+        - peak_level(distorted, fs, target - 10, target + 10),
+        0,
+        0.3,
+    )
+x = load("lm10c")[0][:, 0]
+distorted = segment(x, fs, 0.1, 0.9)
+report(
+    "lm10c 400 Hz re the 700 Hz tone [dB], above -40",
+    min(peak_level(distorted, fs, 390, 410) - peak_level(distorted, fs, 690, 710), -40),
+    -40,
+    0,
+)
+report(
+    "lm10c 300 Hz (f2 - f1, even order) re the 700 Hz tone [dB] (below -60 counts as -60)",
+    max(peak_level(distorted, fs, 290, 310) - peak_level(distorted, fs, 690, 710), -60),
+    -60,
+    0,
+)
+
 print()
 print(f"{len(failures)} failed" + (": " + ", ".join(failures) if failures else ""))
 raise SystemExit(bool(failures))

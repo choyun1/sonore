@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Levels and masking: reproducing Houtsma, Rossing &amp; Wagenaars</title>
+<link rel="icon" href="../logo/sonore-mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script>function renderTex() { document.querySelectorAll(".tex").forEach((el) => katex.render(el.textContent, el,
+  { displayMode: el.classList.contains("display"), throwOnError: false })); }</script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous" onload="renderTex()"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="hljs.highlightAll()"></script>
+<script>try { if (localStorage.getItem("sonore-side") === "closed") document.documentElement.classList.add("side-closed"); } catch (e) {}</script>
+<style>
+:root { --paper: #ECEFF1; --plate: #FFFFFF; --ink: #16202A; --muted: #566573; --accent: #235B7C;
+  --rule: #CDD4DA; --head: #235B7C; --code: #F7F9FA; --string: #2F6B3A; --number: #8A4B12;
+  --serif: "Spectral", Georgia, "Times New Roman", serif;
+  --sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #121A21; --ink: #E4E9ED;
+  --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46; --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; } }
+:root[data-theme="dark"] { --paper: #121A21; --ink: #E4E9ED; --muted: #9AA8B4; --accent: #7FB6D6; --rule: #2C3A46;
+  --code: #0C1318; --string: #9CCB8E; --number: #E0A76B; }
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 1.0625rem; line-height: 1.6; }
+main { width: 100%; max-width: 76rem; margin: 0 auto; padding: 3.5rem clamp(1rem, 4vw, 2.5rem) 5rem; }
+header { max-width: 44rem; margin-bottom: 3.5rem; }
+h1 { font-weight: 500; font-size: clamp(2.4rem, 5vw, 3.6rem); line-height: 1.05; letter-spacing: -0.015em; margin: 0 0 1.25rem; }
+header p { margin: 0 0 0.9rem; }
+header ul { margin: 0 0 0.9rem; padding-left: 1.25rem; }
+header li { margin: 0 0 0.35rem; }
+header .how { font-family: var(--sans); font-size: 0.95rem; color: var(--muted); line-height: 1.55; }
+nav.pages { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.5rem; font-family: var(--sans); font-size: 0.95rem; margin: 0 0 2rem; }
+nav.pages a { color: var(--accent); }
+nav.pages a[aria-current] { color: var(--ink); font-weight: 700; text-decoration: none; }
+nav.pages a.home { display: inline-flex; align-items: center; gap: 0.3rem; }
+nav.pages .home .logo { width: 2.1rem; height: 2.1rem; margin: -0.5rem 0 -0.5rem -0.4rem; }
+nav.pages details { position: relative; }
+nav.pages summary { color: var(--accent); cursor: pointer; list-style: none; }
+nav.pages summary::-webkit-details-marker { display: none; }
+nav.pages summary::after { content: "\25BE"; margin-left: 0.3rem; font-size: 0.8em; }
+nav.pages details.here > summary { color: var(--ink); font-weight: 700; }
+nav.pages details ul { position: absolute; z-index: 10; top: calc(100% + 0.4rem); left: 0; min-width: 15rem; margin: 0;
+  padding: 0.4rem 0; list-style: none; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12); }
+nav.pages details li a { display: block; padding: 0.35rem 0.9rem; white-space: nowrap; }
+.links { display: flex; align-items: center; gap: 0.5rem 1.25rem; font-family: var(--sans); }
+.links a { display: inline-flex; align-items: center; gap: 0.45rem; }
+.links svg { width: 1.15rem; height: 1.15rem; }
+footer .links { margin-top: 1rem; font-size: 0.95rem; }
+a { color: var(--accent); }
+section { border-top: 1px solid var(--rule); padding-top: 2.25rem; margin-top: 3rem; }
+h2 { font-weight: 500; font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+.section-intro { max-width: 44rem; color: var(--muted); margin: 0 0 1rem; }
+section > p, section > ul, section > .tex.display { max-width: 44rem; }
+section > p, header > p { margin: 0 0 1rem; }
+.sound, .still { display: grid; grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr); gap: 1.25rem 2rem; align-items: start; padding: 1.75rem 0; }
+.sound > *, .still > * { min-width: 0; }
+article + article, .cell + article, article + .cell { border-top: 1px dotted var(--rule); }
+article.sound, article.still { scroll-margin-top: 1.5rem; }
+article:target h3 { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+h3 { font-weight: 600; font-size: 1.25rem; line-height: 1.25; margin: 0 0 0.5rem; }
+h3.sub { font-weight: 500; font-size: 1.45rem; margin: 2.5rem 0 0.5rem; }
+.desc { margin: 0 0 1rem; }
+.desc p { margin: 0 0 0.75rem; }
+.headphones { font-size: 1rem; font-weight: 400; margin-left: 0.35rem; cursor: help; }
+audio { width: 100%; max-width: 19rem; display: block; }
+.track { font-family: var(--sans); font-size: 0.9rem; font-weight: 700; margin: 0.9rem 0 0.3rem; }
+.sound.pair { grid-template-columns: minmax(0, 1fr); }
+.pair .desc { max-width: 42rem; }
+.players { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0 2rem; }
+.scene { display: block; width: 100%; max-width: 19rem; aspect-ratio: 1; margin-top: 1rem; }
+.live { display: block; width: 100%; max-width: 19rem; aspect-ratio: 0.95; margin-top: 1rem; }
+.lissajous { display: block; width: 100%; max-width: 16rem; aspect-ratio: 1; margin-top: 1rem; }
+audio:focus-visible, .plate:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.file { font-family: var(--sans); font-size: 0.8rem; color: var(--muted); margin: 0.5rem 0 0; overflow-wrap: anywhere; }
+figure { margin: 0; }
+.plate { position: relative; width: fit-content; max-width: 100%; background: var(--plate); border-radius: 2px; cursor: crosshair; }
+.still .plate { cursor: auto; }
+.plate img { display: block; max-width: 100%; height: auto; }
+.heads { position: absolute; inset: 0; pointer-events: none; }
+.head { position: absolute; width: 2px; margin-left: -1px; background: var(--head); box-shadow: 0 0 0 1px rgba(255,255,255,0.7); display: none; }
+code { font-family: var(--mono); font-size: 0.86em; }
+pre { font-family: var(--mono); font-size: 0.8rem; line-height: 1.5; background: var(--code); border: 1px solid var(--rule);
+  border-radius: 3px; padding: 0.85rem 1rem; margin: 0; overflow-x: auto; }
+pre code { font-size: inherit; }
+pre.out { background: transparent; border-style: dashed; margin-top: 0.5rem; }
+.cell { padding: 1.25rem 0; }
+details.code { grid-column: 1 / -1; }
+details.reveal > summary { font-family: var(--sans); color: var(--accent); font-weight: 600; cursor: pointer; margin: 1rem 0; }
+details.code summary { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); cursor: pointer; margin: 0 0 0.5rem; }
+.hljs-keyword, .hljs-built_in, .hljs-literal { color: var(--accent); }
+.hljs-string { color: var(--string); }
+.hljs-number { color: var(--number); }
+.hljs-comment { color: var(--muted); font-style: italic; }
+.tex.display { display: block; margin: 1rem 0 1.25rem; overflow-x: auto; overflow-y: hidden; }
+footer { margin-top: 4rem; font-family: var(--sans); font-size: 0.85rem; color: var(--muted); max-width: 40rem; }
+@media (max-width: 54rem) { .sound, .still { grid-template-columns: minmax(0, 1fr); gap: 1rem; } audio { max-width: none; } }
+.side { display: none; }
+@media (min-width: 75rem) {
+  .layout { display: grid; grid-template-columns: 17rem minmax(0, 1fr); }
+  .side { display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 2.5rem 1.25rem 2rem 1.75rem; border-right: 1px solid var(--rule); font-family: var(--sans); font-size: 0.9rem; line-height: 1.4; }
+  nav.pages > a.home, html:not(.side-closed) nav.pages details { display: none; }
+  footer .links { display: none; }
+  .side-repo { display: none; }
+  .side-closed .side-repo { display: flex; justify-content: center; margin-top: auto; color: var(--muted); }
+  .side-closed .side-repo:hover { color: var(--ink); }
+  .side-body { flex: 1 0 auto; display: flex; flex-direction: column; }
+  .side-foot { margin-top: auto; padding-top: 2rem; }
+  .side-foot .links { flex-direction: column; align-items: flex-start; gap: 0.6rem; padding-top: 1rem;
+    border-top: 1px solid var(--rule); }
+  .side-closed .layout { grid-template-columns: 4.25rem minmax(0, 1fr); }
+  .side { scrollbar-gutter: stable; }  /* room for a scrollbar always, so opening a list never rewraps the menu */
+  .side-closed .side { padding: 2.5rem 0 1.5rem; overflow: hidden; scrollbar-gutter: auto; }
+  .side-closed .side .home-title, .side-closed .side-body { display: none; }
+  .side-closed .side-top { flex-direction: column; align-items: center; gap: 1rem; }
+  .side-closed .side .home { padding: 0; border: 0; }
+  .side-closed .side .home .logo { width: 2.8rem; height: 2.8rem; margin: 0; }
+  .side-toggle { margin-top: 3.8rem; }  /* level with where it sits under the logo in the folded strip */
+  .side-closed .side-toggle { margin-top: 0; }
+  /* With the sidebar folded, the top menu stays in view while the page scrolls. */
+  .side-closed nav.pages { position: sticky; top: 0; z-index: 20; background: var(--paper);
+    padding: 0.9rem 0; margin-top: -0.9rem; border-bottom: 1px solid var(--rule); }
+  html.side-closed { scroll-padding-top: 4rem; }
+  .layout { transition: grid-template-columns 0.25s ease; }
+  .side-opening .side .home-title, .side-opening .side-body { animation: side-in 0.25s ease both; }
+  .side-closing .side .home-title, .side-closing .side-body { animation: side-in 0.15s ease reverse both; }
+  .side-opening .side { overflow: hidden; }
+  .side-opening .side-top, .side-opening .side-body { min-width: 13rem; }
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(-0.75rem); } to { opacity: 1; transform: none; } }
+.side .has-sections { display: flex; flex-wrap: wrap; align-items: baseline; }
+.side .has-sections > a { flex: 1; }
+.sections-toggle { flex: none; font: inherit; font-size: 0.8rem; line-height: 1; color: var(--muted); background: none;
+  border: 0; padding: 0.2rem 0.3rem; cursor: pointer; }
+.sections-toggle:hover { color: var(--ink); }
+.sections-toggle::before { content: "\25B8"; display: inline-block; transition: transform 0.15s; }
+.sections-toggle[aria-expanded="true"]::before { transform: rotate(90deg); }
+.side .sections { flex-basis: 100%; display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows 0.2s ease, visibility 0.2s; }
+.side .sections.open { grid-template-rows: 1fr; visibility: visible; }
+.side .sections > div { overflow: hidden; min-height: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .layout, .side .sections, .sections-toggle::before { transition: none; }
+  .side-opening .side .home-title, .side-opening .side-body, .side-closing .side .home-title, .side-closing .side-body { animation: none; }
+}
+.side a { text-decoration: none; }
+.side a:hover { text-decoration: underline; }
+.side a[aria-current] { color: var(--ink); font-weight: 700; }
+.side-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin: 0 0 1.25rem; }
+.side .home { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; line-height: 1.1; color: var(--ink);
+  letter-spacing: -0.01em; padding-bottom: 0.9rem; border-bottom: 2px solid var(--accent); }
+.side .home:hover { color: var(--accent); text-decoration: none; }
+.side .home-title { display: block; }
+.side .home .logo { display: block; width: 2.6rem; height: 2.6rem; margin: -0.4rem 0 0.1rem -0.35rem; }
+.logo .logo-ink { stroke: var(--ink); } .logo .logo-accent { stroke: var(--accent); }
+.side .home[aria-current] { font-weight: 600; }
+.side-toggle { flex: none; font: inherit; font-size: 1.1rem; line-height: 1; color: var(--muted); background: none;
+  border: 1px solid var(--rule); border-radius: 4px; width: 1.9rem; height: 1.9rem; cursor: pointer; }
+.side-toggle:hover { color: var(--ink); border-color: var(--muted); }
+.side .group { margin: 1.1rem 0 0; }
+.side .group > summary { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+  cursor: pointer; list-style: none; padding: 0.2rem 0; margin: 0 0 0.3rem; }
+.side .group > summary::-webkit-details-marker { display: none; }
+.side .group > summary::before { content: "\25B8"; display: inline-block; width: 1em; transition: transform 0.15s; }
+.side .group[open] > summary::before { transform: rotate(90deg); }
+.side .group > summary:hover { color: var(--ink); }
+.side .group > ul { padding-left: 1em; }
+.side ul { list-style: none; margin: 0; padding: 0; }
+.side li a { display: block; padding: 0.2rem 0; }
+.side ul ul { margin: 0.25rem 0 0.5rem 0.2rem; padding-left: 0.75rem; border-left: 2px solid var(--rule); }
+.side ul ul a { color: var(--muted); font-size: 0.85rem; }
+.side ul ul a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side" aria-label="All gallery pages"><div class="side-top"><a class="home" href="index.html" aria-label="Listening gallery"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="home-title">Listening gallery</span></a><button class="side-toggle" type="button" aria-expanded="true" aria-label="Hide the menu" title="Hide the menu">&laquo;</button></div><div class="side-body"><details class="group"><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="group here" open><summary>Classic demonstrations</summary><ul><li><a href="streams.html">Streams: reproducing Bregman & Ahad</a></li><li><a href="fusion.html">Fusion: reproducing Bregman & Ahad</a></li><li><a href="continuity.html">Continuity and capture: reproducing Bregman & Ahad</a></li><li><a href="complexpitch.html">Pitch of complex tones: reproducing Houtsma, Rossing & Wagenaars</a></li><li class="has-sections"><a href="masking.html" aria-current="page">Levels and masking: reproducing Houtsma, Rossing & Wagenaars</a><button class="sections-toggle" type="button" aria-expanded="false" aria-label="Show this page's sections" title="Show this page's sections"></button><div class="sections"><div><ul><li><a href="#h-code-the-examples-share">Code the examples share</a></li><li><a href="#h-decibels-and-filtered-noise">Decibels and filtered noise</a></li><li><a href="#h-critical-bands">Critical bands</a></li><li><a href="#h-masking-in-time">Masking in time</a></li><li><a href="#h-masking-in-frequency">Masking in frequency</a></li><li><a href="#h-distortion">Distortion</a></li><li><a href="#h-references">References</a></li></ul></div></div></li></ul></details><details class="group"><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="../live/">Live, on your microphone</a></li></ul></details><details class="group"><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details class="group"><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details class="group"><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details class="group"><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><div class="side-foot"><div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></div></div><a class="side-repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener" title="sonore on GitHub" aria-label="sonore on GitHub"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a><script>(() => { const root = document.documentElement, side = document.currentScript.parentElement;
+  const toggle = side.querySelector(".side-toggle"), groups = [...side.querySelectorAll("details.group")];
+  const save = (key, value) => { try { localStorage.setItem(key, value); } catch (e) {} };
+  const show = (closed) => { root.classList.toggle("side-closed", closed); toggle.setAttribute("aria-expanded", String(!closed));
+    const label = closed ? "Show the menu" : "Hide the menu"; toggle.setAttribute("aria-label", label); toggle.title = label;
+    toggle.innerHTML = closed ? "&raquo;" : "&laquo;"; };
+  show(root.classList.contains("side-closed"));
+  // Opening widens the strip as the menu slides in; closing fades the menu out, then narrows the strip.
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const after = (ms, then) => (still ? then() : setTimeout(then, ms));
+  toggle.addEventListener("click", () => { const closed = !root.classList.contains("side-closed");
+    save("sonore-side", closed ? "closed" : "open");
+    if (closed) { root.classList.add("side-closing");
+      after(150, () => { root.classList.remove("side-closing"); show(true); }); }
+    else { show(false); root.classList.add("side-opening"); after(250, () => root.classList.remove("side-opening")); } });
+  // The page's own sections fold under its title, folded on every page load.
+  const sectionsToggle = side.querySelector(".sections-toggle"), sections = side.querySelector(".sections");
+  if (sectionsToggle) { const showSections = (open) => { sections.classList.toggle("open", open);
+      sectionsToggle.setAttribute("aria-expanded", String(open));
+      const label = open ? "Hide this page's sections" : "Show this page's sections";
+      sectionsToggle.setAttribute("aria-label", label); sectionsToggle.title = label; };
+    showSections(false);
+    // Going back to a page can restore it as it was left; fold its sections then too.
+    addEventListener("pageshow", (event) => { if (event.persisted) showSections(false); });
+    sectionsToggle.addEventListener("click", () => showSections(!sections.classList.contains("open"))); }
+  // Only the group of the page being read starts open; groups opened on another page do not stay open.
+  addEventListener("pageshow", (event) => { if (event.persisted)
+    groups.forEach((group) => { group.open = group.classList.contains("here"); }); });
+  groups.forEach((group) => {
+    // A group's pages slide open and shut rather than appearing at once.
+    const list = group.querySelector("ul"); let running = null;
+    group.querySelector("summary").addEventListener("click", (event) => { if (still) return;
+      event.preventDefault(); const opening = running ? !running.opening : !group.open;
+      if (running) running.cancel(); if (opening) group.open = true;
+      const full = list.scrollHeight + "px";
+      running = list.animate(opening ? [{ height: "0px", opacity: 0 }, { height: full, opacity: 1 }]
+        : [{ height: full, opacity: 1 }, { height: "0px", opacity: 0 }], { duration: 200, easing: "ease" });
+      running.opening = opening; list.style.overflow = "hidden";
+      running.onfinish = () => { running = null; list.style.overflow = ""; if (!opening) group.open = false; };
+      running.oncancel = () => { list.style.overflow = ""; }; }); });
+})();</script></aside>
+<main>
+<nav class="pages" aria-label="Gallery pages"><a class="home" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -26 104 104" class="logo" aria-hidden="true"><path d="M-27,8 V44" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-20,4 V40" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M-13,12 V48" stroke="#7D8891" stroke-width="5" stroke-linecap="round"/><path d="M0,0 H36 C42,0 50,16 56,16 H60" class="logo-accent" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,32 H2 C10,32 10,16 18,16 H24 C32,16 32,32 40,32 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M0,52 H60" class="logo-ink" fill="none" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/></svg>Listening gallery</a><details><summary>Synthetic sounds</summary><ul><li><a href="classic.html">Tones and noises</a></li><li><a href="irn.html">Iterated rippled noise</a></li><li><a href="ripples.html">Spectrotemporal ripples</a></li></ul></details><details class="here"><summary>Classic demonstrations</summary><ul><li><a href="streams.html">Streams: reproducing Bregman & Ahad</a></li><li><a href="fusion.html">Fusion: reproducing Bregman & Ahad</a></li><li><a href="continuity.html">Continuity and capture: reproducing Bregman & Ahad</a></li><li><a href="complexpitch.html">Pitch of complex tones: reproducing Houtsma, Rossing & Wagenaars</a></li><li><a href="masking.html" aria-current="page">Levels and masking: reproducing Houtsma, Rossing & Wagenaars</a></li></ul></details><details><summary>Seeing and changing sound</summary><ul><li><a href="speech.html">Seeing speech</a></li><li><a href="resynthesis.html">Analysis and resynthesis</a></li><li><a href="pv.html">Phase vocoder</a></li><li><a href="vocoder.html">Hearing through a vocoder</a></li><li><a href="modspectrogram.html">Modulation spectrogram</a></li><li><a href="modtargets.html">Hearing a modulation spectrum</a></li><li><a href="../live/">Live, on your microphone</a></li></ul></details><details><summary>Textures</summary><ul><li><a href="textures.html">Sound textures</a></li><li><a href="events.html">Events and pops</a></li><li><a href="quilts.html">Sound quilts</a></li></ul></details><details><summary>Voices</summary><ul><li><a href="whatisavoice.html">What is a voice</a></li><li><a href="sourcefilter.html">The source-filter model</a></li><li><a href="richer.html">A richer source-filter model</a></li><li><a href="voice.html">Rebuilding and changing a voice</a></li></ul></details><details><summary>Spatial hearing</summary><ul><li><a href="binaural.html">Binaural cues</a></li><li><a href="reverb.html">Rooms</a></li><li><a href="moving.html">Moving talkers</a></li><li><a href="cocktail.html">A "cocktail party"</a></li></ul></details><details><summary>Music</summary><ul><li><a href="timbre.html">Timbre</a></li><li><a href="temperament.html">Tuning and temperament</a></li><li><a href="chroma.html">Pitch class and height</a></li><li><a href="organ.html">The pipe organ</a></li></ul></details><script>(() => { const menus = [...document.querySelectorAll("nav.pages details")];
+  menus.forEach((m) => m.addEventListener("toggle", () => { if (m.open) menus.forEach((o) => { if (o !== m) o.open = false; }); }));
+  document.addEventListener("click", (e) => menus.forEach((m) => { if (!m.contains(e.target)) m.open = false; }));
+  if (matchMedia("(hover: hover)").matches) menus.forEach((m) => { let t;
+    m.addEventListener("mouseenter", () => { clearTimeout(t); m.open = true; });
+    m.addEventListener("mouseleave", () => { t = setTimeout(() => { m.open = false; }, 200); });
+    m.querySelector("summary").addEventListener("click", (e) => { if (e.detail && m.open) e.preventDefault(); }); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") menus.forEach((m) => { if (m.open) { m.open = false; m.querySelector("summary").focus(); } }); });
+})();</script></nav>
+<header>
+  <h1>Levels and masking: reproducing Houtsma, Rossing &amp; Wagenaars</h1>
+<p>Every sound on this page is sonore's reproduction of a demonstration from the Acoustical
+Society of America's <em>Auditory Demonstrations</em> (Houtsma, Rossing &amp; Wagenaars, 1987), the
+compact disc made at the Institute for Perception Research (IPO) in Eindhoven. The
+demonstrations, their design and what they show are their authors' work; their booklet is
+published by the Eindhoven University of Technology
+(<a href="https://research.tue.nl/en/publications/auditory-demonstrations" target="_blank" rel="noopener">TU/e</a>).</p>
+<p><strong>What they show.</strong> One sound can hide another: a tone is lost in noise, or behind a louder
+tone, or even behind a noise that comes just before or just after it. How much is hidden
+depends on how close the two are in frequency and in time, which is how these demonstrations
+measure the ear's frequency bands (the <em>critical bands</em>) and how long it takes in sound. Most
+of them are <em>staircases</em>: a sound repeated in steps that get quieter, against a masker that
+stays the same. You count the steps you can hear. Because the masker is in the same sound, the
+count depends on the level of each step relative to the masker, not on your volume knob. The
+page starts with the decibel itself, in noise stepped down by 6, 3 and 1 dB, and ends with
+distortion, where a sound gains frequencies it did not have.</p>
+<p>This page is a test of sonore: can its generators rebuild each stimulus from the description
+in the booklet? Each example names the demonstration it reproduces, rebuilds it from the
+booklet's frequencies, levels and timing, and says where it departs from them: where the
+booklet leaves a value open, such as the level of a staircase against its masker, or where a
+staircase the disc plays twice is played once. What listeners hear is reported as the booklet
+reports it; this page has not tested any of it. Related pages: <a href="classic.html">Tones and noises</a>
+has the generators on their own, and <a href="continuity.html">Continuity and capture</a> has the
+pulsation threshold (Demonstration 11).</p>
+<ul><li><a href="#h-decibels-and-filtered-noise">Decibels and filtered noise</a>: noise in steps of 6, 3 and 1 dB, a voice at four distances, and noise through low-, high- and band-pass filters (Demonstrations 4 and 5).</li><li><a href="#h-critical-bands">Critical bands</a>: a tone in noise of shrinking bandwidth, and noise bands of growing bandwidth at one power (Demonstrations 2 and 3).</li><li><a href="#h-masking-in-time">Masking in time</a>: noise bursts from 1 s to 1 ms in noise, and a tone masked by a noise that follows or comes before it (Demonstrations 8 and 10).</li><li><a href="#h-masking-in-frequency">Masking in frequency</a>: a low tone masking a high one and the other way round, and pitch under masking and at two levels (Demonstrations 9, 14 and 12).</li><li><a href="#h-distortion">Distortion</a>: a tone through a compressor, a rectifier and a square law (Demonstration 33).</li></ul>
+<div class="cell"><details class="code"><summary>Setup, the same on every page</summary><pre><code class="language-python">import os
+import urllib.request
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import sonore as so
+
+plt.rcParams.update({&quot;font.size&quot;: 9, &quot;axes.titlesize&quot;: 10, &quot;figure.dpi&quot;: 100})
+
+
+def fetch(path):
+    &quot;&quot;&quot;A file from the sonore repository, by its path there: the local copy when this runs from
+    the repository root, otherwise downloaded from GitHub to the same relative path.&quot;&quot;&quot;
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path) or &quot;.&quot;, exist_ok=True)
+        urllib.request.urlretrieve(&quot;https://raw.githubusercontent.com/choyun1/sonore/main/&quot; + path, path)
+    return path
+
+
+def finish(snd):
+    &quot;&quot;&quot;How every sound in the gallery is played: 5 ms ramps, RMS 0.1, peak at most 0.95.&quot;&quot;&quot;
+    snd = snd.ramp(5e-3).normalize(rms=0.1)
+    return snd.normalize(peak=0.95) if snd.peak &gt; 0.95 else snd</code></pre></details></div>
+<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
+  axis to play from that point. Start with your volume low.</p>
+<p class="how">To run this page yourself, open it as a notebook <a href="https://colab.research.google.com/github/choyun1/sonore/blob/main/docs/gallery/notebooks/masking.ipynb" target="_blank" rel="noopener">in Colab</a> or <a href="notebooks/masking.ipynb" download>download it</a>. It is the same code, and it fetches the recordings it needs from the sonore repository.</p>
+</header>
+<section aria-labelledby="h-code-the-examples-share">
+<h2 id="h-code-the-examples-share">Code the examples share</h2>
+<p>Levels on this page are in dB re a pure tone at RMS 1, which is how <code>so.pure_tone</code> makes it.
+<code>so.gaussian_noise</code> also makes its noise at RMS 1, so <code>noise</code> sets a band's RMS from there,
+and <code>spectrum_noise</code> sets it from a <em>spectrum level</em>, the power in each 1 Hz of the band: a
+band B Hz wide at spectrum level N dB has an RMS of N + 10 log10(B) dB. The examples of one
+demonstration are scaled together by <code>finish_together</code>, so that a step at the same level in two
+of them plays at the same level. The sample rate is 22.05 kHz, so the widest noise reaches
+11 kHz.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">FS = 22050
+BROADBAND = (20, 10000)  # the page&#x27;s broadband noise
+
+
+def envelope(n, rise, decay):
+    &quot;&quot;&quot;Linear rise and decay ramps, in seconds, over `n` samples.&quot;&quot;&quot;
+    i = np.arange(n)
+    return np.clip(np.minimum(i / max(rise * FS, 1), (n - 1 - i) / max(decay * FS, 1)), 0, 1)
+
+
+def ramped(snd, ramp=10e-3):
+    &quot;&quot;&quot;`snd` with linear ramps at both ends.&quot;&quot;&quot;
+    return so.Sound(envelope(snd.n_samples, ramp, ramp) * snd.data[:, 0], FS)
+
+
+def tone(freq, dur, level_db=0.0, ramp=10e-3):
+    &quot;&quot;&quot;A sine tone at `level_db` dB re RMS 1, `dur` seconds long including linear ramps.&quot;&quot;&quot;
+    return ramped(so.pure_tone(dur, FS, freq, phase=-np.pi / 2), ramp).gain_db(level_db)
+
+
+def noise(dur, band, level_db, rng, ramp=10e-3):
+    &quot;&quot;&quot;Gaussian noise in `band` (Hz, brick-wall) at an RMS of `level_db` dB re a pure tone&#x27;s.&quot;&quot;&quot;
+    snd = so.gaussian_noise(dur, FS, band=band, rng=rng).gain_db(level_db)
+    return ramped(snd, ramp)
+
+
+def spectrum_noise(dur, band, spectrum_db, rng, ramp=10e-3):
+    &quot;&quot;&quot;Gaussian noise in `band` at a spectrum level of `spectrum_db` dB per Hz.&quot;&quot;&quot;
+    return noise(dur, band, spectrum_db + 10 * np.log10(band[1] - band[0]), rng, ramp)
+
+
+def place(events, dur=None):
+    &quot;&quot;&quot;Sounds added at their onset times: `events` is a list of (onset in seconds, Sound).&quot;&quot;&quot;
+    end = max(onset + snd.duration for onset, snd in events)
+    out = np.zeros((round((dur or end) * FS), 1))
+    for onset, snd in events:
+        i = round(onset * FS)
+        out[i : i + snd.n_samples] += snd.data[: len(out) - i]
+    return so.Sound(out, FS)
+
+
+def finish_together(sounds):
+    &quot;&quot;&quot;Sounds scaled by one gain, as `finish` would scale the loudest of them, so their levels
+    keep their relation from one sound to the next.&quot;&quot;&quot;
+    loudest = max(sounds, key=lambda snd: snd.rms)
+    gain = 0.1 / loudest.rms
+    gain = min(gain, 0.95 / max(snd.peak for snd in sounds))
+    return [(snd * gain).ramp(5e-3) for snd in sounds]
+
+
+def show(snd, fmin=50, fmax=11000, log=True, win=30e-3):
+    &quot;&quot;&quot;A spectrogram, on a log frequency axis unless `log` is False. Returns the figure and the
+    panels the playhead follows.&quot;&quot;&quot;
+    fig, ax = plt.subplots(figsize=(10, 3.2), layout=&quot;constrained&quot;)
+    stft = so.STFT(snd, win_dur=win, hop_dur=5e-3)
+    step = stft.f[1] - stft.f[0]
+    keep = (stft.f &gt;= fmin - step) &amp; (stft.f &lt;= fmax + step)  # one bin past each edge
+    top = stft.db[:, keep].max()
+    ax.pcolormesh(stft.t, stft.f[keep], stft.db[0][keep], vmin=top - 70, vmax=top, cmap=&quot;magma&quot;)
+    if log:
+        so.plotting.log_frequency_axis(ax)
+    ax.set(ylim=(fmin, fmax), ylabel=&quot;Frequency [Hz]&quot;, title=f&quot;Spectrogram (Hann {win * 1000:g} ms)&quot;)
+    ax.set(xlabel=&quot;Time [s]&quot;, xlim=(0, snd.duration))
+    return fig, [ax]</code></pre></details></div>
+</section>
+<section aria-labelledby="h-decibels-and-filtered-noise">
+<h2 id="h-decibels-and-filtered-noise">Decibels and filtered noise</h2>
+<p>The decibel is a ratio: each step of 6 dB halves the amplitude, and 3 dB halves the power.
+These first examples give a feel for the steps, then pass noise through filters.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">decibel_rng = np.random.default_rng(4)
+
+
+def decibel_steps(step_db, n):
+    &quot;&quot;&quot;`n` bursts of broadband noise, each `step_db` dB below the one before.&quot;&quot;&quot;
+    return place([(0.6 * k, noise(0.4, BROADBAND, -step_db * k, decibel_rng)) for k in range(n)])
+
+
+decibel_sounds = finish_together([decibel_steps(6, 10), decibel_steps(3, 15), decibel_steps(1, 20)])</code></pre></details></div>
+
+<article class="sound" id="d-lm1" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.8}]">
+  <div class="about">
+    <h3>Noise in steps of 6 dB</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm1_noise_in_steps_of_6_db.flac"></audio>
+    <p class="file">lm1_noise_in_steps_of_6_db.flac, 5.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm1_noise_in_steps_of_6_db.png" width="1000" height="320" alt="Plots of the noise in steps of 6 db sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = decibel_sounds[0]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm1b" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.8}]">
+  <div class="about">
+    <h3>Noise in steps of 3 dB</h3>
+    <div class="desc"><p><strong>Listen for</strong> the same noise in fifteen steps of 3 dB, half as large.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 4: broadband noise reduced in 15 steps of 3 dB.
+Ours as before; the first burst is at the same level as in the 6 dB steps.</p></div>
+    <audio controls preload="metadata" src="audio/lm1b_noise_in_steps_of_3_db.flac"></audio>
+    <p class="file">lm1b_noise_in_steps_of_3_db.flac, 8.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm1b_noise_in_steps_of_3_db.png" width="1000" height="320" alt="Plots of the noise in steps of 3 db sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = decibel_sounds[1]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm1c" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.8}]">
+  <div class="about">
+    <h3>Noise in steps of 1 dB</h3>
+    <div class="desc"><p><strong>Listen for</strong> twenty steps of 1 dB each, close to the smallest change in level that can be
+heard.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 4: broadband noise reduced in 20 steps of 1 dB.
+Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm1c_noise_in_steps_of_1_db.flac"></audio>
+    <p class="file">lm1c_noise_in_steps_of_1_db.flac, 11.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm1c_noise_in_steps_of_1_db.png" width="1000" height="320" alt="Plots of the noise in steps of 1 db sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = decibel_sounds[2]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm1d" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.900136054421768}]">
+  <div class="about">
+    <h3>A voice at four distances</h3>
+    <div class="desc"><p><strong>Listen for</strong> one sentence at four distances from a microphone: 25, 50, 100 and 200 cm. Each
+doubling of the distance lowers the level by 6 dB, which the booklet says holds in a room
+without echoes; in an ordinary room the reflections keep it from falling that fast.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 4, its second part. The disc has a voice recorded
+at the four distances in an anechoic room. This is a stand-in: a recorded sentence (the male
+talker of the <a href="speech.html">Seeing speech</a> page) scaled by the inverse-square law with
+<code>so.distance_gain_db</code>, 0, -6, -12 and -18 dB, which changes the level and nothing else. Ours:
+0.6 s between the sentences.</p></div>
+    <audio controls preload="metadata" src="audio/lm1d_a_voice_at_four_distances.flac"></audio>
+    <p class="file">lm1d_a_voice_at_four_distances.flac, 11.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm1d_a_voice_at_four_distances.png" width="1000" height="320" alt="Plots of the a voice at four distances sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">speech = so.load(fetch(&quot;docs/speech/bdl_arctic_a0131.flac&quot;)).resample(FS)
+gains = so.distance_gain_db(np.array([0.25, 0.5, 1.0, 2.0]), ref=0.25)
+step = speech.duration + 0.6
+sound = finish(place([(step * k, speech.gain_db(g)) for k, g in enumerate(gains)]))
+fig, playhead = show(sound, fmax=8000)</code></pre></details>
+</article>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">filter_rng = np.random.default_rng(5)
+FULL = (0, FS / 2)
+
+
+def white_through(bands):
+    &quot;&quot;&quot;White noise, then the same spectrum level in each band of `bands` in turn.&quot;&quot;&quot;
+    level = -10 * np.log10(FULL[1])  # the spectrum level of white noise at RMS 1
+    parts = [spectrum_noise(1.5, band, level, filter_rng) for band in [FULL, *bands]]
+    return place([(1.8 * k, part) for k, part in enumerate(parts)])
+
+
+def third_octave(center):
+    &quot;&quot;&quot;The band one third of an octave wide around `center`.&quot;&quot;&quot;
+    return (center * 2 ** (-1 / 6), center * 2 ** (1 / 6))
+
+
+filter_sounds = finish_together(
+    [
+        white_through([(0, cutoff) for cutoff in (10000, 4000, 2000, 1000, 500)]),
+        white_through([(cutoff, FULL[1]) for cutoff in (500, 1000, 2000, 4000, 10000)]),
+        white_through([third_octave(center) for center in (500, 1000, 2000, 4000, 8000)]),
+    ]
+)</code></pre></details></div>
+
+<article class="sound" id="d-lm2" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.5}]">
+  <div class="about">
+    <h3>Noise through low-pass filters</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm2_noise_through_low-pass_filters.flac"></audio>
+    <p class="file">lm2_noise_through_low-pass_filters.flac, 10.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm2_noise_through_low-pass_filters.png" width="1000" height="320" alt="Plots of the noise through low-pass filters sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = filter_sounds[0]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm2b" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.5}]">
+  <div class="about">
+    <h3>Noise through high-pass filters</h3>
+    <div class="desc"><p><strong>Listen for</strong> the opposite: white noise, then high-pass filters with cutoffs at 0.5, 1, 2, 4
+and 10 kHz, leaving less and less of the top.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 5, with the booklet's cutoffs. Ours as before; at
+this page's sample rate the noise stops at 11 kHz, so the last band is 10 to 11 kHz.</p></div>
+    <audio controls preload="metadata" src="audio/lm2b_noise_through_high-pass_filters.flac"></audio>
+    <p class="file">lm2b_noise_through_high-pass_filters.flac, 10.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm2b_noise_through_high-pass_filters.png" width="1000" height="320" alt="Plots of the noise through high-pass filters sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = filter_sounds[1]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm2c" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.5}]">
+  <div class="about">
+    <h3>Third-octave bands of noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> white noise, then noise bands one third of an octave wide, centered at 0.5, 1,
+2, 4 and 8 kHz, each higher in pitch than the one before.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 5, with the booklet's center frequencies. Ours as
+before: each band spans 2^(-1/6) to 2^(1/6) times its center.</p></div>
+    <audio controls preload="metadata" src="audio/lm2c_third-octave_bands_of_noise.flac"></audio>
+    <p class="file">lm2c_third-octave_bands_of_noise.flac, 10.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm2c_third-octave_bands_of_noise.png" width="1000" height="320" alt="Plots of the third-octave bands of noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = filter_sounds[2]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm2d" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.9864931562500001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.5}]">
+  <div class="about">
+    <h3>White and pink noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> white noise, then pink noise of the same power. White noise has the same power
+in every hertz, so most of its power is high; pink noise has the same power in every octave,
+and the booklet's figures show it falling 3 dB per octave against white noise.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 5, its last part: white and pink noise with the
+same power from 50 Hz to 10 kHz, as in the booklet. Ours: both noises made only in that band,
+pink by <code>so.gaussian_noise(tilt=-3)</code>, 2 s each, 0.5 s apart.</p></div>
+    <audio controls preload="metadata" src="audio/lm2d_white_and_pink_noise.flac"></audio>
+    <p class="file">lm2d_white_and_pink_noise.flac, 4.5 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm2d_white_and_pink_noise.png" width="1000" height="320" alt="Plots of the white and pink noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">white = noise(2.0, (50, 10000), 0, filter_rng)
+pink = ramped(so.gaussian_noise(2.0, FS, band=(50, 10000), tilt=-3, rng=filter_rng))
+sound = finish(place([(0, white), (2.5, pink)]))
+fig, playhead = show(sound)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-critical-bands">
+<h2 id="h-critical-bands">Critical bands</h2>
+<p>The ear analyzes sound in overlapping frequency bands. Noise masks a tone only through the band
+around the tone, and noise bands sound louder once they spread over more than one band.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">band_rng = np.random.default_rng(2)
+NOISE_SPECTRUM_DB = -50  # the noise&#x27;s spectrum level, dB per Hz re the first tone step
+
+
+def tone_staircase():
+    &quot;&quot;&quot;The 2000 Hz tone in 10 steps of 5 dB, starting at RMS 1.&quot;&quot;&quot;
+    return place([(0.25 + 0.5 * k, tone(2000, 0.3, -5 * k)) for k in range(10)], dur=5.25)
+
+
+def in_noise(band):
+    &quot;&quot;&quot;The staircase in noise over `band` at the page&#x27;s spectrum level.&quot;&quot;&quot;
+    return place([(0, tone_staircase()), (0, spectrum_noise(5.25, band, NOISE_SPECTRUM_DB, band_rng))])
+
+
+critical_sounds = finish_together(
+    [tone_staircase()] + [in_noise(band) for band in (BROADBAND, (1500, 2500), (1875, 2125), (1995, 2005))]
+)</code></pre></details></div>
+
+<article class="sound" id="d-lm3" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.249977324263039}]">
+  <div class="about">
+    <h3>A tone staircase alone</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm3_a_tone_staircase_alone.flac"></audio>
+    <p class="file">lm3_a_tone_staircase_alone.flac, 5.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm3_a_tone_staircase_alone.png" width="1000" height="320" alt="Plots of the a tone staircase alone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = critical_sounds[0]
+fig, playhead = show(sound, fmin=500, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm3b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.249977324263039}]">
+  <div class="about">
+    <h3>The staircase in broadband noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> the staircase in broadband noise, and count how many steps you hear now. The
+noise masks the quieter steps.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 2, with broadband noise. The booklet does not give
+the levels; ours: the noise from 20 Hz to 10 kHz at a spectrum level 50 dB below the first
+step of the tone, so the last step is 5 dB above the noise's spectrum level.</p></div>
+    <audio controls preload="metadata" src="audio/lm3b_the_staircase_in_broadband_noise.flac"></audio>
+    <p class="file">lm3b_the_staircase_in_broadband_noise.flac, 5.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm3b_the_staircase_in_broadband_noise.png" width="1000" height="320" alt="Plots of the the staircase in broadband noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = critical_sounds[1]
+fig, playhead = show(sound, fmin=500, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm3c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.249977324263039}]">
+  <div class="about">
+    <h3>The staircase in noise 1000 Hz wide</h3>
+    <div class="desc"><p><strong>Listen for</strong> the staircase in noise only 1000 Hz wide, centered on the tone. The noise is
+much quieter, since it has the same spectrum level over a narrower band.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 2: noise with a bandwidth of 1000 Hz, at the same
+spectrum level, as in the booklet. Ours: from 1500 to 2500 Hz.</p></div>
+    <audio controls preload="metadata" src="audio/lm3c_the_staircase_in_noise_1000_hz_wide.flac"></audio>
+    <p class="file">lm3c_the_staircase_in_noise_1000_hz_wide.flac, 5.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm3c_the_staircase_in_noise_1000_hz_wide.png" width="1000" height="320" alt="Plots of the the staircase in noise 1000 hz wide sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = critical_sounds[2]
+fig, playhead = show(sound, fmin=500, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm3d" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.249977324263039}]">
+  <div class="about">
+    <h3>The staircase in noise 250 Hz wide</h3>
+    <div class="desc"><p><strong>Listen for</strong> the staircase in noise 250 Hz wide. The booklet gives the critical band at
+2000 Hz as about 280 Hz, and expects more steps to be heard once the noise is narrower than
+that.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 2: a bandwidth of 250 Hz. Ours: from 1875 to
+2125 Hz.</p></div>
+    <audio controls preload="metadata" src="audio/lm3d_the_staircase_in_noise_250_hz_wide.flac"></audio>
+    <p class="file">lm3d_the_staircase_in_noise_250_hz_wide.flac, 5.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm3d_the_staircase_in_noise_250_hz_wide.png" width="1000" height="320" alt="Plots of the the staircase in noise 250 hz wide sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = critical_sounds[3]
+fig, playhead = show(sound, fmin=500, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm3e" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.249977324263039}]">
+  <div class="about">
+    <h3>The staircase in noise 10 Hz wide</h3>
+    <div class="desc"><p><strong>Listen for</strong> the staircase in noise only 10 Hz wide, heard as a wavering tone of its own.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 2: a bandwidth of 10 Hz. Ours: from 1995 to
+2005 Hz.</p></div>
+    <audio controls preload="metadata" src="audio/lm3e_the_staircase_in_noise_10_hz_wide.flac"></audio>
+    <p class="file">lm3e_the_staircase_in_noise_10_hz_wide.flac, 5.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm3e_the_staircase_in_noise_10_hz_wide.png" width="1000" height="320" alt="Plots of the the staircase in noise 10 hz wide sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = critical_sounds[4]
+fig, playhead = show(sound, fmin=500, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm4" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9892509687500001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 14.0}]">
+  <div class="about">
+    <h3>Noise bands of growing width at one power</h3>
+    <div class="desc"><p><strong>Listen for</strong> eight pairs of noise bands. In each pair a reference band comes first, then a
+test band with the same power, wider each time. Compare their loudness: the booklet says the
+test band begins to sound louder once it is wider than a critical band.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 3. A noise band centered on 1000 Hz from 930 to
+1075 Hz, as in the booklet, is the reference, and the first test band is the same. The booklet
+calls this band 1.5% wide; it is 145 Hz, about 15% of its center, and the booklet then widens
+the test band in 7 steps of 15%. Ours: test bands 1 to 8 times 145 Hz wide, centered on 1000 Hz
+on a log scale like the reference, all at the same RMS, 0.5 s each with 10 ms ramps, 0.2 s
+between the two bands of a pair and 0.6 s between pairs, and one pass where the disc plays two.</p></div>
+    <audio controls preload="metadata" src="audio/lm4_noise_bands_of_growing_width_at_one_power.flac"></audio>
+    <p class="file">lm4_noise_bands_of_growing_width_at_one_power.flac, 14.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm4_noise_bands_of_growing_width_at_one_power.png" width="1000" height="320" alt="Plots of the noise bands of growing width at one power sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">loudness_rng = np.random.default_rng(3)
+
+
+def centered_band(width, center=1000.0):
+    &quot;&quot;&quot;The band `width` Hz wide whose edges have `center` as their geometric mean.&quot;&quot;&quot;
+    low = (-width + np.sqrt(width**2 + 4 * center**2)) / 2
+    return (low, low + width)
+
+
+reference = (930, 1075)
+pairs = []
+for k in range(1, 9):
+    onset = 0.2 + 1.8 * (k - 1)
+    pairs.append((onset, noise(0.5, reference, 0, loudness_rng)))
+    pairs.append((onset + 0.7, noise(0.5, centered_band(145 * k), 0, loudness_rng)))
+sound = finish(place(pairs))
+fig, playhead = show(sound, fmin=200, fmax=5000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-masking-in-time">
+<h2 id="h-masking-in-time">Masking in time</h2>
+<p>A brief sound is harder to hear than a long one at the same level, and a tone can be masked by
+a noise that is not there at the same time, one that ends just before it or begins just after.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">integration_rng = np.random.default_rng(8)
+BURST_LEVELS = [0, -16, -20, -24, -28, -32, -36, -40]
+MASKER_DB = -45
+
+
+def burst_staircase(burst):
+    &quot;&quot;&quot;Broadband noise bursts `burst` seconds long at the booklet&#x27;s 8 levels, in the masker.&quot;&quot;&quot;
+    period = burst + 0.5 if burst &gt;= 0.1 else 0.6
+    ramp = min(0.5e-3, burst / 4)
+    bursts = [
+        (0.5 + period * k, noise(burst, BROADBAND, level, integration_rng, ramp))
+        for k, level in enumerate(BURST_LEVELS)
+    ]
+    dur = 0.5 + 8 * period + 0.3
+    masker = noise(dur, BROADBAND, MASKER_DB, integration_rng, ramp=20e-3)
+    return place([(0, place(bursts, dur)), (0, masker)])
+
+
+DURATIONS = [1.0, 0.3, 0.1, 0.03, 0.01, 0.003, 0.001]
+integration_sounds = finish_together([burst_staircase(burst) for burst in DURATIONS])</code></pre></details></div>
+
+<article class="sound" id="d-lm5" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.8}]">
+  <div class="about">
+    <h3>Noise bursts of 1 s in noise</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm5_noise_bursts_of_1_s_in_noise.flac"></audio>
+    <p class="file">lm5_noise_bursts_of_1_s_in_noise.flac, 12.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm5_noise_bursts_of_1_s_in_noise.png" width="1000" height="320" alt="Plots of the noise bursts of 1 s in noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = integration_sounds[0]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm5b" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.2}]">
+  <div class="about">
+    <h3>Bursts of 300 ms</h3>
+    <div class="desc"><p><strong>Listen for</strong> the same staircase with bursts of 300 ms.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 8: bursts of 300 ms. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm5b_bursts_of_300_ms.flac"></audio>
+    <p class="file">lm5b_bursts_of_300_ms.flac, 7.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm5b_bursts_of_300_ms.png" width="1000" height="320" alt="Plots of the bursts of 300 ms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = integration_sounds[1]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm5c" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.6}]">
+  <div class="about">
+    <h3>Bursts of 100 ms</h3>
+    <div class="desc"><p><strong>Listen for</strong> bursts of 100 ms. The booklet says hearing averages energy over about 200 ms,
+so bursts shorter than that sound softer at the same level.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 8: bursts of 100 ms. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm5c_bursts_of_100_ms.flac"></audio>
+    <p class="file">lm5c_bursts_of_100_ms.flac, 5.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm5c_bursts_of_100_ms.png" width="1000" height="320" alt="Plots of the bursts of 100 ms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = integration_sounds[2]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm5d" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.6}]">
+  <div class="about">
+    <h3>Bursts of 30 ms</h3>
+    <div class="desc"><p><strong>Listen for</strong> bursts of 30 ms.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 8: bursts of 30 ms. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm5d_bursts_of_30_ms.flac"></audio>
+    <p class="file">lm5d_bursts_of_30_ms.flac, 5.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm5d_bursts_of_30_ms.png" width="1000" height="320" alt="Plots of the bursts of 30 ms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = integration_sounds[3]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm5e" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.6}]">
+  <div class="about">
+    <h3>Bursts of 10 ms</h3>
+    <div class="desc"><p><strong>Listen for</strong> bursts of 10 ms, short enough to sound like clicks.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 8: bursts of 10 ms. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm5e_bursts_of_10_ms.flac"></audio>
+    <p class="file">lm5e_bursts_of_10_ms.flac, 5.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm5e_bursts_of_10_ms.png" width="1000" height="320" alt="Plots of the bursts of 10 ms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = integration_sounds[4]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm5f" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.6}]">
+  <div class="about">
+    <h3>Bursts of 3 ms</h3>
+    <div class="desc"><p><strong>Listen for</strong> bursts of 3 ms.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 8: bursts of 3 ms. Ours as before, with ramps of
+0.5 ms.</p></div>
+    <audio controls preload="metadata" src="audio/lm5f_bursts_of_3_ms.flac"></audio>
+    <p class="file">lm5f_bursts_of_3_ms.flac, 5.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm5f_bursts_of_3_ms.png" width="1000" height="320" alt="Plots of the bursts of 3 ms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = integration_sounds[5]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm5g" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.6}]">
+  <div class="about">
+    <h3>Bursts of 1 ms</h3>
+    <div class="desc"><p><strong>Listen for</strong> bursts of 1 ms, the shortest.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 8: bursts of 1 ms. Ours as before, with ramps of
+0.25 ms.</p></div>
+    <audio controls preload="metadata" src="audio/lm5g_bursts_of_1_ms.flac"></audio>
+    <p class="file">lm5g_bursts_of_1_ms.flac, 5.6 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm5g_bursts_of_1_ms.png" width="1000" height="320" alt="Plots of the bursts of 1 ms sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = integration_sounds[6]
+fig, playhead = show(sound)</code></pre></details>
+</article>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">temporal_rng = np.random.default_rng(10)
+SIGNAL_LEVELS = [-4 * k for k in range(10)]
+
+
+def blip(level_db):
+    &quot;&quot;&quot;The 10 ms signal: a 2000 Hz tone with 2 ms ramps.&quot;&quot;&quot;
+    return tone(2000, 0.01, level_db, ramp=2e-3)
+
+
+def masker_burst():
+    &quot;&quot;&quot;The 250 ms noise burst from 1900 to 2100 Hz, at RMS 1.&quot;&quot;&quot;
+    return noise(0.25, (1900, 2100), 0, temporal_rng, ramp=2e-3)
+
+
+def masked_staircase(gap, before):
+    &quot;&quot;&quot;Each step: the signal and the noise `gap` seconds apart, the noise after the signal
+    (backward masking) or `before` it (forward masking), then the noise alone.&quot;&quot;&quot;
+    events = []
+    for k, level in enumerate(SIGNAL_LEVELS):
+        onset = 0.2 + 1.2 * k
+        if before:
+            events += [(onset, masker_burst()), (onset + 0.25 + gap, blip(level))]
+        else:
+            events += [(onset, blip(level)), (onset + 0.01 + gap, masker_burst())]
+        events.append((onset + 0.6, masker_burst()))
+    return place(events, dur=12.2)
+
+
+alone = place([(0.2 + 0.6 * k, blip(level)) for k, level in enumerate(SIGNAL_LEVELS)], dur=6.2)
+temporal_sounds = finish_together(
+    [alone]
+    + [masked_staircase(gap, before=False) for gap in (0.1, 0.02, 0.0)]
+    + [masked_staircase(gap, before=True) for gap in (0.1, 0.02, 0.0)]
+)</code></pre></details></div>
+
+<article class="sound" id="d-lm6" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.2}]">
+  <div class="about">
+    <h3>A brief tone staircase alone</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm6_a_brief_tone_staircase_alone.flac"></audio>
+    <p class="file">lm6_a_brief_tone_staircase_alone.flac, 6.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm6_a_brief_tone_staircase_alone.png" width="1000" height="320" alt="Plots of the a brief tone staircase alone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = temporal_sounds[0]
+fig, playhead = show(sound, fmin=200, fmax=8000, win=5e-3)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm6b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.2}]">
+  <div class="about">
+    <h3>Noise 100 ms after the tone</h3>
+    <div class="desc"><p><strong>Listen for</strong> the brief tone followed after 100 ms by a burst of noise, alternating with the
+noise alone. Count the steps in which you hear the tone before the noise.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 10, backward masking: the signal, then after a gap
+of 100 ms a 250 ms noise burst from 1900 to 2100 Hz, alternating with the noise alone, as in the
+booklet. The booklet does not give the level of the noise against the signal; ours: the first
+step of the tone at the noise's RMS. Ours also: the noise alone 0.6 s after each step begins,
+a step every 1.2 s, and one pass where the disc plays two.</p></div>
+    <audio controls preload="metadata" src="audio/lm6b_noise_100_ms_after_the_tone.flac"></audio>
+    <p class="file">lm6b_noise_100_ms_after_the_tone.flac, 12.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm6b_noise_100_ms_after_the_tone.png" width="1000" height="320" alt="Plots of the noise 100 ms after the tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = temporal_sounds[1]
+fig, playhead = show(sound, fmin=200, fmax=8000, win=5e-3)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm6c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.2}]">
+  <div class="about">
+    <h3>Noise 20 ms after the tone</h3>
+    <div class="desc"><p><strong>Listen for</strong> the same with a gap of 20 ms between the tone and the noise.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 10, backward masking with a gap of 20 ms. The
+booklet reports that a noise can mask a tone that ends up to 10 ms before it begins. Ours as
+before.</p></div>
+    <audio controls preload="metadata" src="audio/lm6c_noise_20_ms_after_the_tone.flac"></audio>
+    <p class="file">lm6c_noise_20_ms_after_the_tone.flac, 12.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm6c_noise_20_ms_after_the_tone.png" width="1000" height="320" alt="Plots of the noise 20 ms after the tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = temporal_sounds[2]
+fig, playhead = show(sound, fmin=200, fmax=8000, win=5e-3)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm6d" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.2}]">
+  <div class="about">
+    <h3>Noise right after the tone</h3>
+    <div class="desc"><p><strong>Listen for</strong> the noise starting the moment the tone ends.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 10, backward masking with no gap. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm6d_noise_right_after_the_tone.flac"></audio>
+    <p class="file">lm6d_noise_right_after_the_tone.flac, 12.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm6d_noise_right_after_the_tone.png" width="1000" height="320" alt="Plots of the noise right after the tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = temporal_sounds[3]
+fig, playhead = show(sound, fmin=200, fmax=8000, win=5e-3)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm6e" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.2}]">
+  <div class="about">
+    <h3>The tone 100 ms after the noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> the noise first and the brief tone 100 ms after it ends, alternating with the
+noise alone. Count the steps in which you hear the tone after the noise.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 10, forward masking with a gap of 100 ms. The
+booklet reports forward masking up to about 20 or 30 ms after the masker ends. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm6e_the_tone_100_ms_after_the_noise.flac"></audio>
+    <p class="file">lm6e_the_tone_100_ms_after_the_noise.flac, 12.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm6e_the_tone_100_ms_after_the_noise.png" width="1000" height="320" alt="Plots of the the tone 100 ms after the noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = temporal_sounds[4]
+fig, playhead = show(sound, fmin=200, fmax=8000, win=5e-3)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm6f" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.2}]">
+  <div class="about">
+    <h3>The tone 20 ms after the noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> the tone 20 ms after the noise.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 10, forward masking with a gap of 20 ms. Ours as
+before.</p></div>
+    <audio controls preload="metadata" src="audio/lm6f_the_tone_20_ms_after_the_noise.flac"></audio>
+    <p class="file">lm6f_the_tone_20_ms_after_the_noise.flac, 12.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm6f_the_tone_20_ms_after_the_noise.png" width="1000" height="320" alt="Plots of the the tone 20 ms after the noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = temporal_sounds[5]
+fig, playhead = show(sound, fmin=200, fmax=8000, win=5e-3)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm6g" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 12.2}]">
+  <div class="about">
+    <h3>The tone right after the noise</h3>
+    <div class="desc"><p><strong>Listen for</strong> the tone starting the moment the noise ends.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 10, forward masking with no gap. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm6g_the_tone_right_after_the_noise.flac"></audio>
+    <p class="file">lm6g_the_tone_right_after_the_noise.flac, 12.2 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm6g_the_tone_right_after_the_noise.png" width="1000" height="320" alt="Plots of the the tone right after the noise sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = temporal_sounds[6]
+fig, playhead = show(sound, fmin=200, fmax=8000, win=5e-3)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-masking-in-frequency">
+<h2 id="h-masking-in-frequency">Masking in frequency</h2>
+<p>A tone masks tones above it in frequency more than tones below it. Masking can also shift the
+pitch of the tone it partly hides.</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">TEST_LEVELS = [0] + [-15 - 5 * k for k in range(9)]
+
+
+def pulsed(masker_freq, test_freq):
+    &quot;&quot;&quot;Masker pulses of 200 ms every 300 ms, the test tone added to every other one.&quot;&quot;&quot;
+    events = []
+    for k, level in enumerate(TEST_LEVELS):
+        events.append((0.6 * k, tone(masker_freq, 0.2)))
+        events += [(0.6 * k + 0.3, tone(masker_freq, 0.2)), (0.6 * k + 0.3, tone(test_freq, 0.2, level))]
+    return place(events)
+
+
+asymmetry_sounds = finish_together([pulsed(1200, 2000), pulsed(2000, 1200)])</code></pre></details></div>
+
+<article class="sound" id="d-lm7" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.9}]">
+  <div class="about">
+    <h3>A low tone masking a high one</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm7_a_low_tone_masking_a_high_one.flac"></audio>
+    <p class="file">lm7_a_low_tone_masking_a_high_one.flac, 5.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm7_a_low_tone_masking_a_high_one.png" width="1000" height="320" alt="Plots of the a low tone masking a high one sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = asymmetry_sounds[0]
+fig, playhead = show(sound, fmin=500, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm7b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 5.9}]">
+  <div class="about">
+    <h3>A high tone masking a low one</h3>
+    <div class="desc"><p><strong>Listen for</strong> the roles swapped: a pulsing 2000 Hz tone, and a 1200 Hz tone joining every
+other pulse. Compare the count with the last example.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 9, with the 2000 Hz masker and the 1200 Hz test
+tone. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm7b_a_high_tone_masking_a_low_one.flac"></audio>
+    <p class="file">lm7b_a_high_tone_masking_a_low_one.flac, 5.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm7b_a_high_tone_masking_a_low_one.png" width="1000" height="320" alt="Plots of the a high tone masking a low one sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = asymmetry_sounds[1]
+fig, playhead = show(sound, fmin=500, fmax=5000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm8" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.7}]">
+  <div class="about">
+    <h3>Pitch in a noise below the tone</h3>
+    <div class="desc"><p><strong>Listen for</strong> a 1000 Hz tone in a noise below it, then the same tone alone, three times; then
+the two tones with no noise, twice. The booklet reports the tone in the noise as slightly
+higher in pitch, and asks whether you agree; without the noise the two are the same.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 14, after Terhardt &amp; Fastl (1971): a 1000 Hz tone of
+500 ms, partly masked by noise low-pass filtered at 900 Hz, alternating with the same tone
+without noise, as in the booklet. The booklet does not give the noise's level or timing; ours:
+noise from 20 to 900 Hz at an RMS 20 dB above the tone, from 0.1 s before the tone to 0.1 s
+after it, tones 0.4 s apart, and 20 ms ramps.</p></div>
+    <audio controls preload="metadata" src="audio/lm8_pitch_in_a_noise_below_the_tone.flac"></audio>
+    <p class="file">lm8_pitch_in_a_noise_below_the_tone.flac, 8.7 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm8_pitch_in_a_noise_below_the_tone.png" width="1000" height="320" alt="Plots of the pitch in a noise below the tone sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">shift_rng = np.random.default_rng(14)
+events = []
+for k in range(5):
+    onset = 1.8 * k
+    if k &lt; 3:
+        events.append((onset, noise(0.7, (20, 900), 20, shift_rng, ramp=20e-3)))
+    events += [(onset + 0.1, tone(1000, 0.5, ramp=20e-3)), (onset + 1.0, tone(1000, 0.5, ramp=20e-3))]
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=100, fmax=4000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm9" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 10.8}]">
+  <div class="about">
+    <h3>Pitch at two levels</h3>
+    <div class="desc"><p><strong>Listen for</strong> pairs of tones, the second 30 dB louder than the first, at 200, 500, 1000,
+3000 and 4000 Hz. Compare the pitch within each pair. The booklet reports that for most pairs a
+slight change of pitch is audible, and that the effect is small and varies from listener to
+listener.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 12: tone bursts of 500 ms at 200, 500, 1000, 3000
+and 4000 Hz, the second of each pair 30 dB above the first, as in the booklet. The disc begins
+with a 200 Hz tone to be set just audible, and plays the first tone of each pair 5 dB above it;
+a page cannot set your playback level, so the calibration tone is here only as a reference,
+5 dB below the quieter tones. The booklet plays six pairs; ours: one pair at each of its five
+frequencies, 0.3 s apart within a pair and 2 s from pair to pair, with 20 ms ramps.</p></div>
+    <audio controls preload="metadata" src="audio/lm9_pitch_at_two_levels.flac"></audio>
+    <p class="file">lm9_pitch_at_two_levels.flac, 10.8 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm9_pitch_at_two_levels.png" width="1000" height="320" alt="Plots of the pitch at two levels sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">events = [(0, tone(200, 1.0, -35, ramp=20e-3))]
+for k, freq in enumerate((200, 500, 1000, 3000, 4000)):
+    onset = 1.5 + 2.0 * k
+    events += [(onset, tone(freq, 0.5, -30, ramp=20e-3)), (onset + 0.8, tone(freq, 0.5, 0, ramp=20e-3))]
+sound = finish(place(events))
+fig, playhead = show(sound, fmin=100, fmax=8000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-distortion">
+<h2 id="h-distortion">Distortion</h2>
+<p>Distortion in a system the sound passes through adds frequencies the sound did not have:
+harmonics of each tone, and for two tones, tones at sums and differences of their frequencies.
+The booklet notes that this demonstration repeats one by W. M. Hartmann on the Harvard
+demonstration tapes (1978).</p>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def compressor(x):
+    &quot;&quot;&quot;A symmetric compressor: an odd function, so it adds only odd harmonics.&quot;&quot;&quot;
+    return np.tanh(4 * x) / np.tanh(4)
+
+
+def rectifier(x):
+    &quot;&quot;&quot;A half-wave rectifier, its mean removed: it adds even harmonics.&quot;&quot;&quot;
+    y = np.maximum(x, 0)
+    return y - y.mean()
+
+
+def sines(freqs, dur):
+    &quot;&quot;&quot;Sines at `freqs`, added and scaled to a peak of 1.&quot;&quot;&quot;
+    t = np.arange(round(dur * FS)) / FS
+    x = sum(np.sin(2 * np.pi * f * t) for f in freqs)
+    return x / np.max(np.abs(x))
+
+
+def level_at(x, freq):
+    &quot;&quot;&quot;The RMS level in dB of the component of `x` at `freq` (a whole number of cycles in `x`).&quot;&quot;&quot;
+    t = np.arange(len(x)) / FS
+    amplitude = 2 * np.abs(np.mean(x * np.exp(-2j * np.pi * freq * t)))
+    return 20 * np.log10(amplitude / np.sqrt(2))
+
+
+def with_pointer(distorted, pointer_freq):
+    &quot;&quot;&quot;The distorted tone (at RMS 1) and a pure tone at the level of its `pointer_freq` component,
+    alternating twice.&quot;&quot;&quot;
+    distorted = distorted / np.sqrt(np.mean(distorted**2))
+    snd = ramped(so.Sound(distorted, FS), 20e-3)
+    pointer = tone(pointer_freq, 1.0, level_at(distorted, pointer_freq), ramp=20e-3)
+    return place([(0, snd), (1.3, pointer), (2.6, snd), (3.9, pointer)])</code></pre></details></div>
+
+<article class="sound" id="d-lm10" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.9}]">
+  <div class="about">
+    <h3>A tone through a compressor</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm10_a_tone_through_a_compressor.flac"></audio>
+    <p class="file">lm10_a_tone_through_a_compressor.flac, 4.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm10_a_tone_through_a_compressor.png" width="1000" height="320" alt="Plots of the a tone through a compressor sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(with_pointer(compressor(sines([440], 1.0)), 1320))
+fig, playhead = show(sound, fmin=200, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm10b" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.9}]">
+  <div class="about">
+    <h3>A tone through a rectifier</h3>
+    <div class="desc"><p><strong>Listen for</strong> a 440 Hz tone through a half-wave rectifier, which keeps only its positive
+half-cycles, alternating with a pointer at its second harmonic, 880 Hz. The rectifier is not
+symmetric, and the booklet says it adds strong even harmonics.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 33: a 440 Hz tone through a half-wave rectifier,
+alternating with its second harmonic, as in the booklet. Ours as before.</p></div>
+    <audio controls preload="metadata" src="audio/lm10b_a_tone_through_a_rectifier.flac"></audio>
+    <p class="file">lm10b_a_tone_through_a_rectifier.flac, 4.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm10b_a_tone_through_a_rectifier.png" width="1000" height="320" alt="Plots of the a tone through a rectifier sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(with_pointer(rectifier(sines([440], 1.0)), 880))
+fig, playhead = show(sound, fmin=200, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm10c" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 4.9}]">
+  <div class="about">
+    <h3>Two tones through a compressor</h3>
+    <div class="desc"><p><strong>Listen for</strong> two tones, 700 and 1000 Hz, through the symmetric compressor, alternating with
+a pointer at 400 Hz, the cubic difference tone 2 x 700 - 1000. Listen for the low tone in the
+distorted pair.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 33: tones of 700 and 1000 Hz through a symmetric
+compressor, alternating with a 400 Hz pointer, as in the booklet. Ours as before: the two tones
+at equal amplitudes, their sum scaled to a peak of 1 before the compressor.</p></div>
+    <audio controls preload="metadata" src="audio/lm10c_two_tones_through_a_compressor.flac"></audio>
+    <p class="file">lm10c_two_tones_through_a_compressor.flac, 4.9 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm10c_two_tones_through_a_compressor.png" width="1000" height="320" alt="Plots of the two tones through a compressor sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(with_pointer(compressor(sines([700, 1000], 1.0)), 400))
+fig, playhead = show(sound, fmin=200, fmax=8000)</code></pre></details>
+</article>
+<div class="cell"><details class="code"><summary>Code</summary><pre><code class="language-python">def phase_sweep(dur=6.0):
+    &quot;&quot;&quot;440 Hz plus 880 Hz, the phase of the 880 Hz going from -90 to +90 degrees over `dur`.&quot;&quot;&quot;
+    t = np.arange(round(dur * FS)) / FS
+    phase = np.pi * (t / dur - 0.5)
+    return np.sin(2 * np.pi * 440 * t) + np.sin(2 * np.pi * 880 * t + phase)
+
+
+sweep = phase_sweep()</code></pre></details></div>
+
+<article class="sound" id="d-lm10d" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
+  <div class="about">
+    <h3>The phase of a harmonic moving</h3>
+    <div class="desc"></div>
+    <audio controls preload="metadata" src="audio/lm10d_the_phase_of_a_harmonic_moving.flac"></audio>
+    <p class="file">lm10d_the_phase_of_a_harmonic_moving.flac, 6.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm10d_the_phase_of_a_harmonic_moving.png" width="1000" height="320" alt="Plots of the the phase of a harmonic moving sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">sound = finish(ramped(so.Sound(sweep, FS), 20e-3))
+fig, playhead = show(sound, fmin=200, fmax=8000)</code></pre></details>
+</article>
+
+<article class="sound" id="d-lm10e" data-regions="[{&quot;x0&quot;: 0.0658427269965278, &quot;x1&quot;: 0.9919580000000001, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 6.0}]">
+  <div class="about">
+    <h3>The phase moving through a square law</h3>
+    <div class="desc"><p><strong>Listen for</strong> the same tone and harmonic through a square law. Now the booklet says the
+quality of the tone changes as the phase moves: the distortion adds a component at 440 Hz (880
+- 440), whose sum with the 440 Hz tone depends on the phase.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 33: the same tones through a square-law device, as
+in the booklet. The booklet does not give the device; ours: y = x + x^2 / 2 for the sum x of
+the two sines, its mean removed.</p></div>
+    <audio controls preload="metadata" src="audio/lm10e_the_phase_moving_through_a_square_law.flac"></audio>
+    <p class="file">lm10e_the_phase_moving_through_a_square_law.flac, 6.0 s, mono</p>
+  </div>
+  <figure class="plot"><div class="plate">
+    <img src="img/lm10e_the_phase_moving_through_a_square_law.png" width="1000" height="320" alt="Plots of the the phase moving through a square law sound" loading="lazy">
+    <div class="heads" aria-hidden="true"></div>
+  </div></figure>
+  <details class="code"><summary>Code</summary><pre><code class="language-python">squared = sweep + sweep**2 / 2
+sound = finish(ramped(so.Sound(squared - squared.mean(), FS), 20e-3))
+fig, playhead = show(sound, fmin=200, fmax=8000)</code></pre></details>
+</article>
+</section>
+<section aria-labelledby="h-references">
+<h2 id="h-references">References</h2>
+<ul><li>Houtsma, Rossing &amp; Wagenaars (1987). <em>Auditory Demonstrations</em> (compact disc and booklet). Institute for Perception Research (IPO), Eindhoven, and the Acoustical Society of America. <a href="https://research.tue.nl/en/publications/auditory-demonstrations" target="_blank" rel="noopener">Booklet</a>.</li><li>Fletcher (1940). Auditory patterns. <em>Rev. Mod. Phys.</em> 12(1), 47–65. <a href="https://doi.org/10.1103/RevModPhys.12.47" target="_blank" rel="noopener">doi:10.1103/RevModPhys.12.47</a>.</li><li>Terhardt &amp; Fastl (1971). Zum Einfluß von Störtönen und Störgeräuschen auf die Tonhöhe von Sinustönen. <em>Acustica</em> 25, 53–61 (as the booklet cites it; it has no DOI).</li></ul>
+<p>The papers were checked for their publication details only; the parameters on this page come
+from the booklet, and those marked as ours are choices made for this page.</p>
+</section>
+<footer>This page is the script <code>docs/gallery/demos/masking.py</code> in the <a href="https://github.com/choyun1/sonore" target="_blank" rel="noopener">sonore repository</a>, run cell by cell by <code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself from the repository root with <code>python docs/gallery/demos/masking.py</code>, or a cell at a time.<div class="links"><a class="repo" href="https://github.com/choyun1/sonore" target="_blank" rel="noopener"><svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>GitHub</a><a class="ref" href="../api/">API reference</a></div></footer>
+</main>
+</div>
+<script>
+(() => {
+  // One item per player. A demo with several sounds has a player for each, against one figure,
+  // and each player's regions name the axes it plays along.
+  const items = [...document.querySelectorAll(".sound")].flatMap((el) => [...el.querySelectorAll("audio")].map((audio, k) => {
+    const regions = JSON.parse(audio.dataset.regions || el.dataset.regions);
+    const heads = el.querySelector(".heads");
+    const lines = regions.map((r) => {
+      const d = document.createElement("div");
+      d.className = "head";
+      d.style.top = (r.top * 100) + "%";
+      d.style.height = ((r.bottom - r.top) * 100) + "%";
+      heads.appendChild(d);
+      return d;
+    });
+    const extras = k === 0;  // a live image or Lissajous figure belongs to a demo with one sound
+    // A pair shares one view from above, with a scene for each of its sounds.
+    const sceneCanvas = el.querySelector(".scene");
+    const scenes = sceneCanvas && sceneCanvas.dataset.scenes ? JSON.parse(sceneCanvas.dataset.scenes) : null;
+    const scene = scenes ? JSON.parse(scenes[k]) : (extras && sceneCanvas ? JSON.parse(sceneCanvas.dataset.scene) : null);
+    const canvas = scene ? sceneCanvas : null;
+    const liveCanvas = extras && el.querySelector(".live");
+    let live = null;
+    if (liveCanvas) {
+      live = JSON.parse(liveCanvas.dataset.live);
+      live.bytes = Uint8Array.from(atob(live.data), (c) => c.charCodeAt(0));
+      live.played = false;
+    }
+    const figureCanvas = extras && el.querySelector(".lissajous");
+    const figure = figureCanvas ? JSON.parse(figureCanvas.dataset.lissajous) : null;
+    return { el, audio, plate: el.querySelector(".plate"), regions, lines, canvas, scene,
+      liveCanvas, live, figureCanvas, figure };
+  }));
+  // A top-down view: the listener's head in the middle, nose up (the front), and each source on a
+  // circle at its azimuth (clockwise from straight ahead) at the current time.
+  function drawScene(item) {
+    const c = item.canvas;
+    if (!c) return;
+    const dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    // Sources at 1 m unless the scene gives distances; the farthest one sets the scale.
+    const farthest = Math.max(1, ...item.scene.flatMap((src) => src.r || [1]));
+    const cx = size / 2, cy = size / 2, R = size * 0.38, unit = R / farthest, t = item.audio.currentTime;
+    const head = Math.min(size * 0.07, unit * 0.12);
+    g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([3, 4]);
+    g.fillStyle = muted; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+    (farthest > 1.5 ? [1, Math.round(farthest)] : [1]).forEach((m) => {
+      g.beginPath(); g.arc(cx, cy, unit * m, 0, 2 * Math.PI); g.stroke();
+      g.fillText(`${m} m`, cx + unit * m * 0.72, cy + unit * m * 0.72 + 14);
+    });
+    g.setLineDash([]);
+    g.strokeStyle = ink; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(cx - head * 0.45, cy - head * 0.9); g.lineTo(cx, cy - head * 1.45); g.lineTo(cx + head * 0.45, cy - head * 0.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, head, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx - head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx + head, cy, head * 0.18, head * 0.4, 0, 0, 2 * Math.PI); g.stroke();
+    const at = (src, values, time) => {
+      if (!src.t) return values[0];
+      const k = Math.min(values.length - 1, Math.max(0, time / src.t)), i = Math.floor(k), f = k - i;
+      return i + 1 < values.length ? values[i] * (1 - f) + values[i + 1] * f : values[i];
+    };
+    const xy = (az, r) => [cx + unit * r * Math.sin(az * Math.PI / 180), cy - unit * r * Math.cos(az * Math.PI / 180)];
+    item.scene.forEach((src) => {
+      const distances = src.r || src.az.map(() => 1);
+      if (src.t) {  // the path it travels, faintly
+        g.strokeStyle = src.color; g.globalAlpha = 0.25; g.lineWidth = 6; g.lineCap = "round"; g.lineJoin = "round";
+        g.beginPath();
+        src.az.forEach((az, i) => { const [x, y] = xy(az, distances[i]); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+        g.stroke();
+        g.globalAlpha = 1;
+      }
+      const [x, y] = xy(at(src, src.az, t), at(src, distances, t));
+      g.fillStyle = src.color; g.beginPath(); g.arc(x, y, size * 0.035, 0, 2 * Math.PI); g.fill();
+      g.fillStyle = ink; g.fillText(src.label, x, y + size * 0.035 + 13);
+    });
+  }
+  // One frame of a live image: cells on an even grid (the axes are log-spaced), round values
+  // marked on each axis, and a color bar. Before the sound has played, the frame at live.start.
+  function drawLive(item) {
+    const c = item.liveCanvas;
+    if (!c) return;
+    const L = item.live, dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, W, H);
+    const t = L.played || item.audio.currentTime > 0 ? item.audio.currentTime : L.start;
+    const n = L.bytes.length / (L.rows * L.cols), f = Math.min(n - 1, Math.max(0, Math.round(t / L.dt)));
+    const left = 52, right = 40, top = 22, bottom = 34, w = W - left - right, h = H - top - bottom;
+    const cw = w / L.cols, ch = h / L.rows, off = f * L.rows * L.cols;
+    for (let r = 0; r < L.rows; r++) {
+      for (let k = 0; k < L.cols; k++) {
+        const v = L.bytes[off + r * L.cols + k];
+        g.fillStyle = v === 255 ? "#bfbfbf" : L.colors[v];
+        g.fillRect(left + k * cw, top + h - (r + 1) * ch, Math.ceil(cw), Math.ceil(ch));
+      }
+    }
+    g.fillStyle = ink; g.strokeStyle = muted; g.lineWidth = 1;
+    g.font = "11px system-ui, sans-serif"; g.textAlign = "center"; g.textBaseline = "top";
+    L.xticks.forEach(([p, s]) => { const x = left + (p + 0.5) * cw; g.fillText(s, x, top + h + 4); });
+    g.fillText(L.xlabel, left + w / 2, top + h + 18);
+    g.textAlign = "right"; g.textBaseline = "middle";
+    L.yticks.forEach(([p, s]) => { const y = top + h - (p + 0.5) * ch; g.fillText(s, left - 4, y); });
+    g.save(); g.translate(9, top + h / 2); g.rotate(-Math.PI / 2); g.textAlign = "center";
+    g.fillText(L.ylabel, 0, 0); g.restore();
+    g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText(L.title + " at " + (f * L.dt).toFixed(2) + " s", left, 4);
+    const bx = left + w + 8, bw = 8;  // the color bar
+    for (let i = 0; i < 255; i++) { g.fillStyle = L.colors[i]; g.fillRect(bx, top + h - (i + 1) * h / 255, bw, Math.ceil(h / 255)); }
+    g.fillStyle = ink; g.textBaseline = "middle";
+    g.fillText(L.range[1] + "", bx + bw + 2, top + 4); g.fillText(L.range[0] + "", bx + bw + 2, top + h - 4);
+    g.fillText("dB", bx + bw + 2, top + h / 2);
+  }
+  // A Lissajous figure of the two notes sounding at the playhead, as two sine waves at their
+  // fundamentals with phases counted from the notes' start: x the first, y the second, over a
+  // short stretch. Before the sound has played, the notes at figure.start. For the first
+  // tenth of a second of a note that follows another without a gap, the curve morphs from the
+  // last note's figure to the new one, point by point, rather than jumping.
+  function drawLissajous(item) {
+    const c = item.figureCanvas;
+    if (!c) return;
+    const F = item.figure, dpr = window.devicePixelRatio || 1, size = c.clientWidth;
+    if (c.width !== Math.round(size * dpr)) { c.width = c.height = Math.round(size * dpr); }
+    const g = c.getContext("2d"), css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--ink").trim(), muted = css.getPropertyValue("--muted").trim();
+    const accent = css.getPropertyValue("--accent").trim() || ink;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, size, size);
+    const t = F.played || item.audio.currentTime > 0 ? item.audio.currentTime : F.start;
+    const index = F.notes.findIndex((n) => t >= n[0] && t < n[1]), note = F.notes[index];
+    const cx = size / 2, cy = size / 2 + 8, R = size * 0.4;
+    g.strokeStyle = muted; g.lineWidth = 1; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R);
+    g.fillStyle = ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+    if (!note) { g.fillText(F.title, 2, 2); return; }
+    const before = index > 0 && Math.abs(F.notes[index - 1][1] - note[0]) < 0.02 ? F.notes[index - 1] : null;
+    const morph = 0.1, w = before ? Math.min(1, (t - note[0]) / morph) : 1, mix = w * w * (3 - 2 * w);
+    const label = note[4], steps = 600;
+    g.fillText(label || F.title, 2, 2);
+    g.strokeStyle = accent; g.lineWidth = 1.5; g.beginPath();
+    const at = (n, s) => { const tau = t - n[0] + s;
+      return [Math.sin(2 * Math.PI * n[2] * tau), Math.sin(2 * Math.PI * n[3] * tau)]; };
+    for (let i = 0; i <= steps; i++) {
+      const s = (i / steps) * F.window, [xn, yn] = at(note, s);
+      const [xb, yb] = mix < 1 ? at(before, s) : [xn, yn];
+      const x = cx + R * (xb + mix * (xn - xb)), y = cy - R * (yb + mix * (yn - yb));
+      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    }
+    g.stroke();
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "top";
+    g.fillText(F.xlabel, cx, cy + R + 4);
+    g.save(); g.translate(cx - R - 6, cy); g.rotate(-Math.PI / 2); g.textBaseline = "bottom";
+    g.fillText(F.ylabel, 0, 0); g.restore();
+  }
+  function draw(item) {
+    drawScene(item);
+    drawLive(item);
+    drawLissajous(item);
+    const t = item.audio.currentTime;
+    item.regions.forEach((r, i) => {
+      const line = item.lines[i];
+      if (t < r.t0 || t > r.t1) { line.style.display = "none"; return; }
+      line.style.left = ((r.x0 + (t - r.t0) / (r.t1 - r.t0) * (r.x1 - r.x0)) * 100) + "%";
+      line.style.display = "block";
+    });
+  }
+  let active = null;
+  function loop() { if (!active) return; draw(active); if (!active.audio.paused) requestAnimationFrame(loop); }
+  items.forEach((item) => {
+    drawScene(item);
+    if (item.liveCanvas) {
+      drawLive(item);
+      new ResizeObserver(() => drawLive(item)).observe(item.liveCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLive(item));
+    }
+    if (item.figureCanvas) {
+      drawLissajous(item);
+      new ResizeObserver(() => drawLissajous(item)).observe(item.figureCanvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawLissajous(item));
+    }
+    if (item.canvas) {
+      new ResizeObserver(() => drawScene(item)).observe(item.canvas);
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawScene(item));
+    }
+    item.audio.addEventListener("play", () => {
+      items.forEach((o) => { if (o !== item && !o.audio.paused) o.audio.pause(); });
+      items.forEach((o) => { if (o !== item && o.el === item.el) o.lines.forEach((l) => (l.style.display = "none")); });
+      if (item.live) item.live.played = true;
+      if (item.figure) item.figure.played = true;
+      active = item; requestAnimationFrame(loop);
+    });
+    item.audio.addEventListener("seeked", () => draw(item));
+    item.audio.addEventListener("ended", () => item.lines.forEach((l) => (l.style.display = "none")));
+  });
+  // Clicking a time axis plays from there the sound that axis belongs to; Enter or space plays or
+  // pauses the sound last played (the first one at the start).
+  [...new Set(items.map((item) => item.el))].forEach((el) => {
+    const own = items.filter((o) => o.el === el), item = own[0];
+    const last = () => own.find((o) => o === active) || own[0];
+    item.plate.tabIndex = 0;
+    item.plate.setAttribute("role", "button");
+    item.plate.setAttribute("aria-label", "Play or pause; click a time axis to play from that point");
+    item.plate.addEventListener("click", (e) => {
+      const box = item.plate.getBoundingClientRect();
+      const fx = (e.clientX - box.left) / box.width, fy = (e.clientY - box.top) / box.height;
+      for (const o of own) {
+        const r = o.regions.find((r) => fx >= r.x0 && fx <= r.x1 && fy >= r.top && fy <= r.bottom);
+        if (r) { o.audio.currentTime = Math.max(0, r.t0 + (fx - r.x0) / (r.t1 - r.t0) * (r.t1 - r.t0)); o.audio.play(); break; }
+      }
+    });
+    item.plate.addEventListener("keydown", (e) => {
+      const o = last();
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.audio.paused ? o.audio.play() : o.audio.pause(); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

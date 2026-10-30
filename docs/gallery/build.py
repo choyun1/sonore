@@ -125,6 +125,7 @@ EXAMPLE_PAGES = [
     "fusion",
     "continuity",
     "complexpitch",
+    "masking",
     "binaural",
     "classic",
     "textures",
@@ -742,6 +743,7 @@ TITLES = {
     "fusion.html": "Fusion: reproducing Bregman & Ahad",
     "continuity.html": "Continuity and capture: reproducing Bregman & Ahad",
     "complexpitch.html": "Pitch of complex tones: reproducing Houtsma, Rossing & Wagenaars",
+    "masking.html": "Levels and masking: reproducing Houtsma, Rossing & Wagenaars",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
     "events.html": "Events and pops",
@@ -807,6 +809,11 @@ TOPICS = [
                 "complexpitch.html",
                 "sonore's reproductions of the ASA pitch demonstrations: the missing fundamental, shifted"
                 " partials, melodies of virtual pitch, repetition pitch, beats and combination tones.",
+            ),
+            (
+                "masking.html",
+                "sonore's reproductions of the ASA demonstrations of level and masking: decibel steps,"
+                " critical bands, masking in time and frequency, and distortion.",
             ),
         ],
     ),
