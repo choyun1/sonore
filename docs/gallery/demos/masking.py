@@ -162,13 +162,14 @@ def show(snd, fmin=50, fmax=11000, log=True, win=30e-3):
 # These first examples give a feel for the steps, then pass noise through filters.
 
 # %% [about]
-# **Listen for** a noise getting quieter in fifteen steps of 3 dB each. Listen for how large one
-# step is: the booklet offers these steps to get a feeling for the decibel scale, and 3 dB halves
-# the power.
+# **Listen for** a noise getting quieter in thirteen steps of 3 dB each, about 8 s. Listen for
+# how large one step is: the booklet offers these steps to get a feeling for the decibel scale,
+# and 3 dB halves the power.
 #
-# Houtsma, Rossing & Wagenaars, Demonstration 4, its first part: broadband noise reduced in 15
-# steps of 3 dB, as in the booklet. Ours: noise from 20 Hz to 10 kHz, bursts of 0.4 s with 10 ms
-# ramps, one every 0.6 s. The disc also has 10 steps of 6 dB, left out here for length.
+# Houtsma, Rossing & Wagenaars, Demonstration 4, its first part: broadband noise reduced in steps
+# of 3 dB, as in the booklet, which has 15 steps; ours has 13. Ours also: noise from 20 Hz to
+# 10 kHz, bursts of 0.4 s with 10 ms ramps, one every 0.6 s, and the first burst 10 dB below the
+# page's usual playback level. The disc also has 10 steps of 6 dB, left out here for length.
 
 # %%
 decibel_rng = np.random.default_rng(4)
@@ -179,18 +180,19 @@ def decibel_steps(step_db, n):
     return place([(0.6 * k, noise(0.4, BROADBAND, -step_db * k, decibel_rng)) for k in range(n)])
 
 
-decibel_sounds = finish_together([decibel_steps(3, 15), decibel_steps(1, 20)])
+decibel_sounds = [snd.gain_db(-10) for snd in finish_together([decibel_steps(3, 13), decibel_steps(1, 13)])]
 
 # %% [demo lm1] Noise in steps of 3 dB
 sound = decibel_sounds[0]
 fig, playhead = show(sound)
 
 # %% [about]
-# **Listen for** twenty steps of 1 dB each, close to the smallest change in level that can be
+# **Listen for** thirteen steps of 1 dB each, close to the smallest change in level that can be
 # heard.
 #
-# Houtsma, Rossing & Wagenaars, Demonstration 4: broadband noise reduced in 20 steps of 1 dB.
-# Ours as before; the first burst is at the same level as in the 3 dB steps.
+# Houtsma, Rossing & Wagenaars, Demonstration 4: broadband noise reduced in steps of 1 dB; the
+# booklet has 20 steps, ours 13. Ours as before; the first burst is at the same level as in the
+# 3 dB steps.
 
 # %% [demo lm1b] Noise in steps of 1 dB
 sound = decibel_sounds[1]

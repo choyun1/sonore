@@ -529,7 +529,7 @@ def band_power_db(x, fs, lo, hi):
 
 
 # Demonstration 4: noise bursts of 0.4 s every 0.6 s in steps of 3 and 1 dB.
-for key, step, count in (("lm1", 3, 15), ("lm1b", 1, 20)):
+for key, step, count in (("lm1", 3, 13), ("lm1b", 1, 13)):
     x = load(key)[0][:, 0]
     levels = [rms_db(segment(x, fs, 0.6 * k + 0.05, 0.6 * k + 0.35)) for k in range(count)]
     report(f"{key} steps between bursts [dB]", np.diff(levels).mean(), -step, 0.1)

@@ -370,14 +370,14 @@ def decibel_steps(step_db, n):
     return place([(0.6 * k, noise(0.4, BROADBAND, -step_db * k, decibel_rng)) for k in range(n)])
 
 
-decibel_sounds = finish_together([decibel_steps(3, 15), decibel_steps(1, 20)])</code></pre></details></div>
+decibel_sounds = [snd.gain_db(-10) for snd in finish_together([decibel_steps(3, 13), decibel_steps(1, 13)])]</code></pre></details></div>
 
-<article class="sound" id="d-lm1" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.9958329999999999, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 8.8}]">
+<article class="sound" id="d-lm1" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.6}]">
   <div class="about">
     <h3>Noise in steps of 3 dB</h3>
     <div class="desc"></div>
     <audio controls preload="metadata" src="audio/lm1_noise_in_steps_of_3_db.flac"></audio>
-    <p class="file">lm1_noise_in_steps_of_3_db.flac, 8.8 s, mono</p>
+    <p class="file">lm1_noise_in_steps_of_3_db.flac, 7.6 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/lm1_noise_in_steps_of_3_db.png" width="1000" height="320" alt="Plots of the noise in steps of 3 db sound" loading="lazy">
@@ -387,14 +387,15 @@ decibel_sounds = finish_together([decibel_steps(3, 15), decibel_steps(1, 20)])</
 fig, playhead = show(sound)</code></pre></details>
 </article>
 
-<article class="sound" id="d-lm1b" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 11.8}]">
+<article class="sound" id="d-lm1b" data-regions="[{&quot;x0&quot;: 0.07118647699652779, &quot;x1&quot;: 0.995833, &quot;top&quot;: 0.0811099826388888, &quot;bottom&quot;: 0.844706871202257, &quot;t0&quot;: 0.0, &quot;t1&quot;: 7.6}]">
   <div class="about">
     <h3>Noise in steps of 1 dB</h3>
-    <div class="desc"><p><strong>Listen for</strong> twenty steps of 1 dB each, close to the smallest change in level that can be
-heard.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 4: broadband noise reduced in 20 steps of 1 dB.
-Ours as before; the first burst is at the same level as in the 3 dB steps.</p></div>
+    <div class="desc"><p><strong>Listen for</strong> thirteen steps of 1 dB each, close to the smallest change in level that can be
+heard.</p><p>Houtsma, Rossing &amp; Wagenaars, Demonstration 4: broadband noise reduced in steps of 1 dB; the
+booklet has 20 steps, ours 13. Ours as before; the first burst is at the same level as in the
+3 dB steps.</p></div>
     <audio controls preload="metadata" src="audio/lm1b_noise_in_steps_of_1_db.flac"></audio>
-    <p class="file">lm1b_noise_in_steps_of_1_db.flac, 11.8 s, mono</p>
+    <p class="file">lm1b_noise_in_steps_of_1_db.flac, 7.6 s, mono</p>
   </div>
   <figure class="plot"><div class="plate">
     <img src="img/lm1b_noise_in_steps_of_1_db.png" width="1000" height="320" alt="Plots of the noise in steps of 1 db sound" loading="lazy">
