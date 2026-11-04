@@ -725,6 +725,108 @@ report(
     0,
 )
 
+
+# Two ears. Channel 0 is the left ear, 1 the right.
+def interaural_phase_deg(left, right, fs, freq):
+    """Phase of the left ear's component at `freq` minus the right's, in degrees."""
+    t = np.arange(len(left)) / fs
+    probe = np.exp(-2j * np.pi * freq * t)
+    return np.degrees(np.angle(np.sum(left * probe) / np.sum(right * probe)))
+
+
+# Demonstration 37: tone bursts with interaural phases of +45 and -45 degrees, left first.
+for key, freq in (("te1", 500), ("te1b", 2000)):
+    data, fs = load(key)
+    phases = []
+    for k in range(8):
+        part = segment(data, fs, 0.1 + 0.6 * k + 0.05, 0.1 + 0.6 * k + 0.35)
+        phases.append(interaural_phase_deg(part[:, 0], part[:, 1], fs, freq))
+    report(f"{key} interaural phase, left minus right [deg]", phases, [45, -45] * 4, 0.5)
+
+# The click's interaural delay: the left ear 0.5 ms first, swinging to the right 0.5 ms first and
+# back every 2 s. Each click's delay is measured from its cross-correlation, refined by a
+# parabola.
+data, fs = load("te2")
+delays = []
+for k in (0, 5, 10, 15, 20):
+    part = segment(data, fs, 0.1 + 0.1 * k - 0.002, 0.1 + 0.1 * k + 0.004)
+    xcorr = np.correlate(part[:, 1], part[:, 0], "full")
+    i = int(np.argmax(xcorr))
+    a, b, c = xcorr[i - 1 : i + 2]
+    lag = (i - (len(part) - 1) + 0.5 * (a - c) / (a - 2 * b + c)) / fs
+    delays.append(1000 * lag)  # positive when the right ear lags
+report("te2 clicks 0, 0.5, 1, 1.5, 2 s: right ear's lag [ms]", delays, [0.5, 0.0, -0.5, 0.0, 0.5], 0.03)
+
+# Level sweeps: 32 dB louder in the left ear at 0 s, in the right at 1.25 s, left again at 2.5 s.
+for key in ("te3", "te3b"):
+    data, fs = load(key)
+    ilds = []
+    for t in (0.1, 1.25, 2.5):
+        part = segment(data, fs, t - 0.01, t + 0.01)
+        ilds.append(rms_db(part[:, 0]) - rms_db(part[:, 1]))
+    # At 0.1 s the sweep has moved 0.1 / 1.25 of the way: 32 - 64 * 0.08.
+    report(f"{key} left re right ear at 0.1, 1.25, 2.5 s [dB]", ilds, [26.88, -32, 32], 0.3)
+
+# Demonstration 38: a 500 Hz staircase, -10 dB then 3 dB steps; the noise the same in both ears
+# where both have it; the right ear's signal inverted in the last example.
+data, fs = load("te4")
+steps = [rms_db(segment(data, fs, 0.25 + 0.5 * k + 0.02, 0.25 + 0.5 * k + 0.08)[:, 0]) for k in range(10)]
+report("te4 signal steps [dB]", np.diff(steps), [-3.0] * 9, 0.05)
+report("te4 right ear silent (peak)", np.abs(data[:, 1]).max(), 0, 0)
+first = steps[0]
+for key, right in (("te4b", "none"), ("te4c", "noise"), ("te4d", "same"), ("te4e", "inverted")):
+    data, fs = load(key)
+    left, right_ear = data[:, 0], data[:, 1]
+    alone = load("te4")[0][:, 0]
+    noise = left - alone  # the left ear's noise, the signal being the same as in te4
+    if right == "none":
+        report(f"{key} right ear silent (peak)", np.abs(right_ear).max(), 0, 0)
+    else:
+        expected = {"noise": noise, "same": left, "inverted": noise - alone}[right]
+        report(
+            f"{key} right ear re its expected mixture, largest difference",
+            np.abs(right_ear - expected).max(),
+            0,
+            1e-3,
+        )
+    spectrum_level = rms_db(noise) - 10 * np.log10(10000 - 20)
+    report(f"{key} noise spectrum level re the first step [dB/Hz]", spectrum_level - first, -26, 0.1)
+
+# Demonstration 39: 400 and 800 Hz alternating every 250 ms, the ears always opposite.
+data, fs = load("te5")
+heard = [
+    [peak_frequency(segment(data, fs, 0.25 * k + 0.03, 0.25 * k + 0.22)[:, ch], fs) for ch in (0, 1)]
+    for k in range(4)
+]
+report(
+    "te5 first four tones, left and right [Hz]", heard, [[400, 800], [800, 400], [400, 800], [800, 400]], 0.5
+)
+
+
+# Bregman & Ahad, Demonstration 40: identical noise in both ears, then independent; and the left
+# noise joined at 2 s by the same or by a different noise on the right.
+def correlation(a, b):
+    return np.corrcoef(a, b)[0, 1]
+
+
+data, fs = load("te6")
+mono, stereo = segment(data, fs, 0.1, 1.9), segment(data, fs, 2.6, 4.4)
+report(
+    "te6 correlation between the ears, mono then stereo",
+    [correlation(*mono.T), correlation(*stereo.T)],
+    [1, 0],
+    0.02,
+)
+for key, expected in (("te6b", 1), ("te6c", 0)):
+    data, fs = load(key)
+    report(
+        f"{key} right ear silent for the first 2 s (peak)",
+        np.abs(segment(data, fs, 0, 1.99)[:, 1]).max(),
+        0,
+        0,
+    )
+    report(f"{key} correlation after 2 s", correlation(*segment(data, fs, 2.1, 3.9).T), expected, 0.02)
+
 print()
 print(f"{len(failures)} failed" + (": " + ", ".join(failures) if failures else ""))
 raise SystemExit(bool(failures))
