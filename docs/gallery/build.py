@@ -126,6 +126,7 @@ EXAMPLE_PAGES = [
     "continuity",
     "complexpitch",
     "masking",
+    "twoears",
     "binaural",
     "classic",
     "textures",
@@ -273,12 +274,16 @@ def example_page(path: Path) -> dict:
                 snd = ns.pop("sounds") if "sounds" in ns else ns.pop("sound")
                 ns.pop("sound", None)
                 png, regions, size = encode_figure(ns.pop("fig"), ns.pop("playhead"))
-                audio = {k: flac_bytes(v) for k, v in snd.items()} if isinstance(snd, dict) else flac_bytes(snd)
+                audio = (
+                    {k: flac_bytes(v) for k, v in snd.items()} if isinstance(snd, dict) else flac_bytes(snd)
+                )
                 part.update(sound=snd, audio=audio, png=png, regions=regions, size=size)
                 if "scene" in ns:  # one scene, or one per sound of a pair
                     scene = ns.pop("scene")
                     part["scene"] = (
-                        {label: scene_json(s) for label, s in scene.items()} if isinstance(scene, dict) else scene_json(scene)
+                        {label: scene_json(s) for label, s in scene.items()}
+                        if isinstance(scene, dict)
+                        else scene_json(scene)
                     )
                 if "live" in ns:
                     part["live"] = live_json(ns.pop("live"))
@@ -315,7 +320,9 @@ def notebook(name: str, title: str, cells: list[tuple[str, str]]) -> str:
         "bottom: the first cell installs sonore, and the recordings come from the sonore repository."
     )
     install = "%pip install --quiet git+https://github.com/choyun1/sonore"
-    cells = [("markdown", intro), ("code", install)] + [(k, absolute(t) if k == "markdown" else t) for k, t in cells]
+    cells = [("markdown", intro), ("code", install)] + [
+        (k, absolute(t) if k == "markdown" else t) for k, t in cells
+    ]
 
     def lines(text: str) -> list[str]:
         return text.splitlines(keepends=True)
@@ -744,6 +751,7 @@ TITLES = {
     "continuity.html": "Continuity and capture: reproducing Bregman & Ahad",
     "complexpitch.html": "Pitch of complex tones: reproducing Houtsma, Rossing & Wagenaars",
     "masking.html": "Levels and masking: reproducing Houtsma, Rossing & Wagenaars",
+    "twoears.html": "Two ears: reproducing Houtsma, Rossing & Wagenaars and Bregman & Ahad",
     "binaural.html": "Binaural cues",
     "textures.html": "Sound textures",
     "events.html": "Events and pops",
@@ -814,6 +822,12 @@ TOPICS = [
                 "masking.html",
                 "sonore's reproductions of the ASA demonstrations of level and masking: decibel steps,"
                 " critical bands, masking in time and frequency, and distortion.",
+            ),
+            (
+                "twoears.html",
+                "sonore's reproductions of demonstrations of hearing with two ears: lateralization by"
+                " time and level, masking level differences, the octave illusion, and fusion by"
+                " correlation.",
             ),
         ],
     ),
@@ -915,7 +929,11 @@ TOPICS = [
 
 # sonore's own mark (docs/logo/make_logo.py draws it), inline in the sidebar so it takes the
 # page's ink and accent colors rather than the browser's light or dark setting.
-LOGO_MARK = re.sub(r"<title>.*?</title>|<style>.*?</style>", "", (HERE.parent / "logo" / "sonore-mark.svg").read_text().strip())
+LOGO_MARK = re.sub(
+    r"<title>.*?</title>|<style>.*?</style>",
+    "",
+    (HERE.parent / "logo" / "sonore-mark.svg").read_text().strip(),
+)
 LOGO_MARK = LOGO_MARK.replace('role="img" aria-label="sonore"', 'class="logo" aria-hidden="true"')
 
 # GitHub's mark (Octicons, MIT license), so the repository link reads as a link out, not a page.
@@ -1064,7 +1082,9 @@ def sidebar(current: str, sections_html: str) -> str:
 
 def how(binaural: bool) -> str:
     """The note on playing a page's sounds; the lossless remark only where it matters."""
-    lossless = " The audio is lossless, since compression would alter the binaural sounds." if binaural else ""
+    lossless = (
+        " The audio is lossless, since compression would alter the binaural sounds." if binaural else ""
+    )
     return f"""<p class="how">Press play and a line follows the sound across every time axis in its plots. Click any time
   axis to play from that point.{lossless} Start with your volume low.</p>"""
 
@@ -1072,7 +1092,9 @@ def how(binaural: bool) -> str:
 # Links to other sites open in a new tab; links within sonore and to sonore-sketch, both on
 # choyun1.github.io, stay in this one. docs/index.html and the API reference (docs/api/source/conf.py)
 # follow the same rule.
-OUTSIDE_LINK = re.compile(r'<a ((?:(?!target=)[^>])*?)href="(https?://(?!choyun1\.github\.io/)[^"]*)"((?:(?!target=)[^>])*)>')
+OUTSIDE_LINK = re.compile(
+    r'<a ((?:(?!target=)[^>])*?)href="(https?://(?!choyun1\.github\.io/)[^"]*)"((?:(?!target=)[^>])*)>'
+)
 
 
 def outside_links(page_html: str) -> str:
@@ -1222,7 +1244,11 @@ HEADPHONES = "Headphones required for binaural sounds"
 def headphones(binaural: bool) -> str:
     """The headphones mark after a demo's title. Every two-channel demo is binaural: its effect
     is lost over speakers."""
-    return f' <span class="headphones" title="{HEADPHONES}" role="img" aria-label="{HEADPHONES}">🎧</span>' if binaural else ""
+    return (
+        f' <span class="headphones" title="{HEADPHONES}" role="img" aria-label="{HEADPHONES}">🎧</span>'
+        if binaural
+        else ""
+    )
 
 
 def sound_article(
@@ -1332,7 +1358,11 @@ class Site:
         """(audio, image) sources for the site and for the single file. Several sounds (a dict
         by label) give a dict of sources, each file named for its label."""
         rel, inl = [], []
-        tracks = {f"{name}_{file_name('', label)[1:]}": label for label in audio} if isinstance(audio, dict) else {}
+        tracks = (
+            {f"{name}_{file_name('', label)[1:]}": label for label in audio}
+            if isinstance(audio, dict)
+            else {}
+        )
         if self.out_dir:
             if tracks:
                 for file, label in tracks.items():
@@ -1344,6 +1374,7 @@ class Site:
             (self.out_dir / "img" / f"{name}.png").write_bytes(png)
             rel.append(f"img/{name}.png")
         if self.single:
+
             def data(b):
                 return "data:audio/flac;base64," + base64.b64encode(b).decode()
 
@@ -1427,7 +1458,9 @@ def build_example_page(site: Site, name: str) -> list[str]:
     binaural = any(
         isinstance(p, dict)
         and "sound" in p
-        and any(s.n_channels == 2 for s in (p["sound"].values() if isinstance(p["sound"], dict) else [p["sound"]]))
+        and any(
+            s.n_channels == 2 for s in (p["sound"].values() if isinstance(p["sound"], dict) else [p["sound"]])
+        )
         for p in [p for s in content["sections"] for p in s["parts"]] + content["intro"]
     )
 
@@ -1450,12 +1483,16 @@ def build_example_page(site: Site, name: str) -> list[str]:
             "<code>docs/gallery/build.py</code>: each block of code is shown exactly as it ran. Run it yourself "
             f"from the repository root with <code>python {script}</code>, or a cell at a time."
         )
-        return page(content["title"], f"{name}.html", header, sections, EXAMPLE_HEAD + moved_head(name), footer)
+        return page(
+            content["title"], f"{name}.html", header, sections, EXAMPLE_HEAD + moved_head(name), footer
+        )
 
     site.write(f"{name}.html", make)
     if site.out_dir:
         (site.out_dir / NOTEBOOKS).mkdir(exist_ok=True)
-        (site.out_dir / NOTEBOOKS / f"{name}.ipynb").write_text(notebook(name, content["title"], content["cells"]))
+        (site.out_dir / NOTEBOOKS / f"{name}.ipynb").write_text(
+            notebook(name, content["title"], content["cells"])
+        )
     return keys
 
 
@@ -1475,15 +1512,19 @@ WHAT = "whatisavoice.html"  # where Two talkers went
 def _merged(anchors: str, others: dict[str, str], default: str) -> dict[str, str]:
     """The map for a page merged into The source-filter model: anchors kept under the same id,
     others moved to a new one, and where a link with no anchor it knows lands."""
-    return {"": f"{SF}#{default}", **{a: f"{SF}#{a}" for a in anchors.split()},
-            **{a: f"{SF}#{b}" for a, b in others.items()}}
+    return {
+        "": f"{SF}#{default}",
+        **{a: f"{SF}#{a}" for a in anchors.split()},
+        **{a: f"{SF}#{b}" for a, b in others.items()},
+    }
 
 
 MOVED = {
     "harmonics": {
         "": "voice.html",
         **{f"d-{key}": f"voice.html#d-{key}" for key in ("hm3", "hm4")},
-        "d-he2": "vocoder.html#d-ci16", "d-he3": "vocoder.html#d-he3",
+        "d-he2": "vocoder.html#d-ci16",
+        "d-he3": "vocoder.html#d-he3",
         **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
         "d-he1": f"{SF}#d-he1",
         "d-hu1": f"{SF}#d-he1",
@@ -1500,32 +1541,56 @@ MOVED = {
         "h-phases-on-a-moving-pitch": f"{RICHER}#h-phases-on-a-moving-pitch",
         **{f"h-{slug}": f"voice.html#h-{slug}" for slug in ("what-this-page-leaves-out", "references")},
     },
-    "speech": {"d-f1": f"{SF}#d-f1", "h-nothing-is-lost": "resynthesis.html#h-nothing-is-lost",
-               "h-a-higher-voice": WHAT},
-    "talkers": {"": WHAT, **{a: f"{WHAT}#{a}" for a in ("d-tk1", "d-tk2", "d-tk3", "h-pitch", "h-references")},
-                "h-the-sentence-read-twice": f"{WHAT}#h-the-two-talkers",
-                "h-spectral-envelopes": f"{WHAT}#h-size-the-spectral-envelopes",
-                "d-tk4": f"{SF}#d-tk4", "d-tk5": f"{SF}#d-tk5", "h-long-term-spectra": f"{SF}#d-tk4",
-                "h-harmonics-sample-the-envelope": f"{SF}#h-harmonics-sample-the-envelope"},
+    "speech": {
+        "d-f1": f"{SF}#d-f1",
+        "h-nothing-is-lost": "resynthesis.html#h-nothing-is-lost",
+        "h-a-higher-voice": WHAT,
+    },
+    "talkers": {
+        "": WHAT,
+        **{a: f"{WHAT}#{a}" for a in ("d-tk1", "d-tk2", "d-tk3", "h-pitch", "h-references")},
+        "h-the-sentence-read-twice": f"{WHAT}#h-the-two-talkers",
+        "h-spectral-envelopes": f"{WHAT}#h-size-the-spectral-envelopes",
+        "d-tk4": f"{SF}#d-tk4",
+        "d-tk5": f"{SF}#d-tk5",
+        "h-long-term-spectra": f"{SF}#d-tk4",
+        "h-harmonics-sample-the-envelope": f"{SF}#h-harmonics-sample-the-envelope",
+    },
     "sourcefilter": {"d-fq3": f"{WHAT}#d-fq3"},
-    "voice": {"d-vc13": "voice.html#d-vc1", "d-vc16": f"{WHAT}#h-size-the-spectral-envelopes",
-              "d-he2": "vocoder.html#d-ci16", "d-he3": "vocoder.html#d-he3",
-              "h-envelopes-on-harmonics-and-on-noise": "vocoder.html#h-a-harmonic-carrier-that-follows-the-pitch",
-              "d-he1": f"{SF}#d-he1", "d-hu1": f"{SF}#d-he1", "d-hu2": f"{SF}#d-hu2",
-              "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply", "h-unvoiced-gaps": f"{SF}#d-hu2",
-              **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
-              "h-phases-on-a-moving-pitch": f"{RICHER}#h-phases-on-a-moving-pitch"},
+    "voice": {
+        "d-vc13": "voice.html#d-vc1",
+        "d-vc16": f"{WHAT}#h-size-the-spectral-envelopes",
+        "d-he2": "vocoder.html#d-ci16",
+        "d-he3": "vocoder.html#d-he3",
+        "h-envelopes-on-harmonics-and-on-noise": "vocoder.html#h-a-harmonic-carrier-that-follows-the-pitch",
+        "d-he1": f"{SF}#d-he1",
+        "d-hu1": f"{SF}#d-he1",
+        "d-hu2": f"{SF}#d-hu2",
+        "h-putting-the-envelope-back": f"{SF}#h-putting-it-back-simply",
+        "h-unvoiced-gaps": f"{SF}#d-hu2",
+        **{f"d-hf{i}": f"{RICHER}#d-hf{i}" for i in range(4)},
+        "h-phases-on-a-moving-pitch": f"{RICHER}#h-phases-on-a-moving-pitch",
+    },
     "formants": _merged(
         "h-a-vowel-piece-by-piece h-source-times-filter h-six-vowels h-consonants-from-transitions h-noise"
         " h-voice-quality h-sonore-says-its-name d-fv1 d-fv2 d-fv3 d-fv4 d-fv5 d-fs1 d-fw1 d-fw2 d-fc1 d-fc2"
         " d-fc3 d-fn1 d-fn2 d-fn3 d-fq1 d-fq2 d-fl1 d-ft1 d-ft4 d-ft5 d-ft6 h-a-recording"
         " h-copy-synthesis",
-        {"d-fw3": "d-fw1", "d-fw4": "d-fw1", "d-fw5": "d-fw2", "h-female-vowels": "d-fw1",
-         "d-fp1": "h-synthesis-by-rule", "h-cascade-and-parallel": "h-synthesis-by-rule",
-         "d-ft2": "d-ft1", "d-ft3": "d-ft1", "h-finding-the-formants-again": "h-linear-prediction",
-         "h-code-the-examples-share": "h-the-sentence-and-code-the-examples-share"},
+        {
+            "d-fw3": "d-fw1",
+            "d-fw4": "d-fw1",
+            "d-fw5": "d-fw2",
+            "h-female-vowels": "d-fw1",
+            "d-fp1": "h-synthesis-by-rule",
+            "h-cascade-and-parallel": "h-synthesis-by-rule",
+            "d-ft2": "d-ft1",
+            "d-ft3": "d-ft1",
+            "h-finding-the-formants-again": "h-linear-prediction",
+            "h-code-the-examples-share": "h-the-sentence-and-code-the-examples-share",
+        },
         "h-synthesis-by-rule",
-    ) | {f"d-fq{i}": f"{WHAT}#d-fq3" for i in (3, 4, 5)},
+    )
+    | {f"d-fq{i}": f"{WHAT}#d-fq3" for i in (3, 4, 5)},
     "pitch": _merged(
         "h-pitch-from-the-cepstrum h-a-tracker-beside-the-cepstrum h-octave-and-voicing-errors d-c2 d-f1 d-pt1"
         " d-hp0 d-hp2",
@@ -1534,7 +1599,11 @@ MOVED = {
     ),
     "lpc": _merged(
         "h-linear-prediction h-a-recording h-copy-synthesis d-ft1 d-ft4 d-ft5 d-ft6",
-        {"d-ft2": "d-ft1", "d-ft3": "d-ft1", "h-code-the-examples-share": "h-the-sentence-and-code-the-examples-share"},
+        {
+            "d-ft2": "d-ft1",
+            "d-ft3": "d-ft1",
+            "h-code-the-examples-share": "h-the-sentence-and-code-the-examples-share",
+        },
         "h-measuring-the-filter-formants",
     ),
     "cepstrum": _merged(
@@ -1546,33 +1615,64 @@ MOVED = {
     ),
     "aperiodicity": {
         "": RICHER,
-        **{anchor: f"{RICHER}#{anchor}" for anchor in (
-            [f"d-ap{i}" for i in range(1, 14)]
-            + ["h-buzz-hiss-and-both", "h-fit-the-harmonics-keep-the-rest", "h-a-sentence",
-               "h-what-this-page-leaves-out", "h-references"])},
+        **{
+            anchor: f"{RICHER}#{anchor}"
+            for anchor in (
+                [f"d-ap{i}" for i in range(1, 14)]
+                + [
+                    "h-buzz-hiss-and-both",
+                    "h-fit-the-harmonics-keep-the-rest",
+                    "h-a-sentence",
+                    "h-what-this-page-leaves-out",
+                    "h-references",
+                ]
+            )
+        },
         "h-what-world-reports": f"{RICHER}#h-what-d4c-reports",
         "h-listening": f"{RICHER}#h-putting-it-back",
         "h-the-vowel-and-code-the-examples-share": f"{RICHER}#h-the-sentence-the-vowel-and-code-the-examples-share",
         "h-a-higher-voice": WHAT,
     },
     "pv": {"d-p4": "pv.html#d-p1", "d-p5": "pv.html#d-p3", "h-a-higher-voice": "pv.html#d-p3"},
-    "vocoder": {"d-cf0": "vocoder.html#d-ci0", "d-cf8": "vocoder.html#d-ci8", "d-cf8p": "vocoder.html#d-cp8",
-                "h-a-higher-voice": "vocoder.html#h-pitch-from-the-envelope"},
-    "classic": {"d-k2": f"{SF}#d-tk4", "d-b4": "binaural.html#d-b4", "h-binaural-beats": "binaural.html#d-b4"},
+    "vocoder": {
+        "d-cf0": "vocoder.html#d-ci0",
+        "d-cf8": "vocoder.html#d-ci8",
+        "d-cf8p": "vocoder.html#d-cp8",
+        "h-a-higher-voice": "vocoder.html#h-pitch-from-the-envelope",
+    },
+    "classic": {
+        "d-k2": f"{SF}#d-tk4",
+        "d-b4": "binaural.html#d-b4",
+        "h-binaural-beats": "binaural.html#d-b4",
+    },
     "reverb": {"d-r3": "reverb.html#d-r1"},
-    "moving": {"d-m8": "moving.html#d-m2", "d-m9": "moving.html#d-m3", "h-a-different-voice": "moving.html#h-three-talkers",
-               **{f"d-cp{i}": f"cocktail.html#d-cp{i}" for i in range(1, 6)},
-               "h-a-cocktail-party": "cocktail.html"},
-    "modspectrogram": {"d-sv1": "modspectrogram.html#d-s1",
-                       "h-a-higher-voice": "modspectrogram.html#h-speech-babble-and-noise"},
+    "moving": {
+        "d-m8": "moving.html#d-m2",
+        "d-m9": "moving.html#d-m3",
+        "h-a-different-voice": "moving.html#h-three-talkers",
+        **{f"d-cp{i}": f"cocktail.html#d-cp{i}" for i in range(1, 6)},
+        "h-a-cocktail-party": "cocktail.html",
+    },
+    "modspectrogram": {
+        "d-sv1": "modspectrogram.html#d-s1",
+        "h-a-higher-voice": "modspectrogram.html#h-speech-babble-and-noise",
+    },
     "irn": {"h-rippled-noise-and-moving-ripples": "ripples.html#h-ripples-and-rippled-noise"},
     "textures": {
-        **{f"d-{key}": f"events.html#d-{key}" for key in
-           ("e00", "e02", "e04", "e06", "e08", "e10", "e11", "e12", "e13", "e14")},
+        **{
+            f"d-{key}": f"events.html#d-{key}"
+            for key in ("e00", "e02", "e04", "e06", "e08", "e10", "e11", "e12", "e13", "e14")
+        },
         **{f"d-tp{i}": f"events.html#d-tp{i}" for i in range(7)},
-        **{f"h-{slug}": f"events.html#h-{slug}" for slug in (
-            "from-single-events-to-a-texture", "level-pitch-and-timing", "how-big-the-pops-are",
-            "background-plus-pops")},
+        **{
+            f"h-{slug}": f"events.html#h-{slug}"
+            for slug in (
+                "from-single-events-to-a-texture",
+                "level-pitch-and-timing",
+                "how-big-the-pops-are",
+                "background-plus-pops",
+            )
+        },
     },
 }
 
