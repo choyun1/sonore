@@ -528,8 +528,8 @@ def band_power_db(x, fs, lo, hi):
     return 10 * np.log10(2 * np.sum(np.abs(spectrum[(freqs >= lo) & (freqs < hi)]) ** 2) / len(x) ** 2)
 
 
-# Demonstration 4: noise bursts of 0.4 s every 0.6 s in steps of 6, 3 and 1 dB.
-for key, step, count in (("lm1", 6, 10), ("lm1b", 3, 15), ("lm1c", 1, 20)):
+# Demonstration 4: noise bursts of 0.4 s every 0.6 s in steps of 3 and 1 dB.
+for key, step, count in (("lm1", 3, 15), ("lm1b", 1, 20)):
     x = load(key)[0][:, 0]
     levels = [rms_db(segment(x, fs, 0.6 * k + 0.05, 0.6 * k + 0.35)) for k in range(count)]
     report(f"{key} steps between bursts [dB]", np.diff(levels).mean(), -step, 0.1)
@@ -546,21 +546,28 @@ bands = {
 }
 for key, key_bands in bands.items():
     x = load(key)[0][:, 0]
-    white = rms_db(segment(x, fs, 0.1, 1.4))
+    # Whole parts: each is at its RMS before its ramps, which are the same for all.
+    white = rms_db(segment(x, fs, 0, 1.0))
     report(
         f"{key} bands re the white noise [dB]",
-        [rms_db(segment(x, fs, 1.8 * k + 0.1, 1.8 * k + 1.4)) - white for k in range(1, 6)],
+        [rms_db(segment(x, fs, 1.3 * k, 1.3 * k + 1.0)) - white for k in range(1, 6)],
         np.round([10 * np.log10((hi - lo) / nyquist) for lo, hi in key_bands], 2),
         0.3,
     )
 x = load("lm2d")[0][:, 0]
-white, pink = segment(x, fs, 0.1, 1.9), segment(x, fs, 2.6, 4.4)
-report("lm2d pink re white noise [dB]", rms_db(pink) - rms_db(white), 0, 0.3)
+# White, pink (3 dB per octave down) and brown (6 dB per octave down) noise at one power.
+white, pink, brown = (segment(x, fs, 2.0 * k + 0.05, 2.0 * k + 1.45) for k in range(3))
 report(
-    "lm2d pink, 4000-8000 Hz re 500-1000 Hz [dB] (white: 10 log10 8 = 9.03)",
-    band_power_db(pink, fs, 4000, 8000) - band_power_db(pink, fs, 500, 1000),
-    0,
-    0.5,
+    "lm2d pink and brown re white noise [dB]",
+    [rms_db(pink) - rms_db(white), rms_db(brown) - rms_db(white)],
+    [0, 0],
+    0.3,
+)
+report(
+    "lm2d white, pink, brown: 4000-8000 Hz re 500-1000 Hz [dB]",
+    [band_power_db(n, fs, 4000, 8000) - band_power_db(n, fs, 500, 1000) for n in (white, pink, brown)],
+    [9.03, 0, -9.03],
+    0.6,
 )
 
 # Demonstration 2: the 2000 Hz tone in 10 steps of 5 dB, then in noise of spectrum level 50 dB
@@ -606,10 +613,10 @@ report(
 )
 report("lm4 test bands' geometric centers [Hz]", np.sqrt(edges[:, 0] * edges[:, 1]), [1000] * 8, 15)
 
-# Demonstration 8: one-second bursts at 0, -16, -20, ... -40 dB in a masker at -45 dB.
+# Demonstration 8: 300 ms bursts at 0, -16, -20, ... -40 dB in a masker at -45 dB.
 x = load("lm5")[0][:, 0]
 masker = rms_db(segment(x, fs, 0.1, 0.45))
-bursts = [rms_db(segment(x, fs, 0.5 + 1.5 * k + 0.1, 0.5 + 1.5 * k + 0.9)) for k in range(8)]
+bursts = [rms_db(segment(x, fs, 0.5 + 0.6 * k + 0.02, 0.5 + 0.6 * k + 0.28)) for k in range(8)]
 burst_levels = 10 * np.log10(10 ** (np.array(bursts) / 10) - 10 ** (masker / 10))
 report(
     "lm5 bursts re the first [dB]",
@@ -618,29 +625,28 @@ report(
     0.3,
 )
 report("lm5 masker re the first burst [dB]", masker - burst_levels[0], -45, 0.3)
-for key, burst in (("lm5d", 0.03), ("lm5e", 0.01), ("lm5g", 0.001)):
+for key, burst in (("lm5b", 0.03), ("lm5c", 0.003)):
     # Each burst is at its RMS before its linear ramps, which take away 2/3 of their length.
     ramp = min(0.5e-3, burst / 4)
     x = load(key)[0][:, 0]
     background = np.mean(segment(x, fs, 0.1, 0.45) ** 2) * (burst + 0.02) * fs
     energy = np.sum(segment(x, fs, 0.49, 0.5 + burst + 0.01) ** 2) - background
     report(
-        f"{key} first burst's energy re 1 s at its level, less its ramps [dB]",
+        f"{key} first burst's energy re the 300 ms burst's level, less its ramps [dB]",
         10 * np.log10(energy / fs / (burst - 4 * ramp / 3)) - burst_levels[0],
         0,
         0.3 if burst > 0.005 else 1.0,
     )
 
-# Demonstration 10: the 10 ms blip in steps of 4 dB, and the noise 100 or 20 ms after (backward)
-# or before (forward) it.
+# Demonstration 10: the 10 ms blip in steps of 4 dB, and the noise 20 ms after it (backward), or
+# 20 or 100 ms before it (forward).
 x = load("lm6")[0][:, 0]
 blips = [rms_db(segment(x, fs, 0.2 + 0.6 * k + 0.002, 0.2 + 0.6 * k + 0.008)) for k in range(10)]
 report("lm6 blip steps [dB]", np.diff(blips), [-4.0] * 9, 0.1)
 for key, gap, before in (
-    ("lm6b", 0.1, False),
-    ("lm6c", 0.02, False),
-    ("lm6e", 0.1, True),
-    ("lm6f", 0.02, True),
+    ("lm6b", 0.02, False),
+    ("lm6c", 0.02, True),
+    ("lm6d", 0.1, True),
 ):
     x = load(key)[0][:, 0]
     first = onsets(segment(x, fs, 0.1, 0.75), fs, gap=2e-3) + 0.1
